@@ -1,12 +1,29 @@
-import React from 'react';
-import { UserPlus, Users, Search, Mail } from 'lucide-react';
-import { MOCK_USERS } from '../services/mockData';
-import { Avatar, Button } from '../components/Shared';
+import React, { useEffect, useState } from 'react';
+import { UserPlus, Users, Search } from 'lucide-react';
+import { userService } from '../services/userService';
+import { useAuth } from '../contexts/AuthContext';
+import { User } from '../types';
+import { Avatar, Button } from '../components/ui';
 
 const ContactsPage: React.FC = () => {
+  const { user: currentUser } = useAuth();
+  const [friends, setFriends] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (currentUser) {
+        const data = await userService.getAllFriends(currentUser.id);
+        setFriends(data);
+      }
+      setIsLoading(false);
+    };
+    fetchFriends();
+  }, [currentUser]);
+
   return (
     <div className="flex h-full w-full bg-white">
-      {/* Sidebar List (Similar to chat but for contact categories) */}
+      {/* Sidebar List */}
       <div className="hidden md:flex flex-col w-[300px] border-r border-gray-200 bg-white pt-4">
         <div className="px-4 mb-4">
           <div className="relative">
@@ -36,35 +53,33 @@ const ContactsPage: React.FC = () => {
       <div className="flex-1 flex flex-col h-full bg-white">
         <div className="p-4 border-b border-gray-200 flex items-center gap-2 bg-white">
           <Users size={24} className="text-gray-700" />
-          <h2 className="text-lg font-semibold text-gray-800">Danh sách bạn bè ({MOCK_USERS.length})</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Danh sách bạn bè ({friends.length})</h2>
         </div>
         
-        <div className="p-4 bg-primary-50 flex items-center gap-3 text-sm text-gray-600 mb-2 md:hidden">
-          <UserPlus size={18} />
-          <span>Bạn có 2 lời mời kết bạn chưa xem</span>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4">
-           {/* Section for mobile grouping or sorting could go here */}
-           <div className="space-y-1">
-             <div className="text-sm font-bold text-gray-500 mb-2 px-2">A-Z</div>
-             {MOCK_USERS.map(user => (
-               <div key={user.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors group border-b border-gray-100 last:border-0">
-                 <div className="flex items-center gap-4">
-                   <Avatar src={user.avatar} name={user.name} size="md" status={user.status} />
-                   <div>
-                     <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                     <p className="text-xs text-gray-500">{user.phone ? user.phone : 'Chưa cập nhật số điện thoại'}</p>
-                   </div>
-                 </div>
-                 <div className="flex gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                   <Button variant="secondary" size="sm">Nhắn tin</Button>
-                   <Button variant="ghost" size="sm"><MoreHorizontalIcon /></Button>
-                 </div>
-               </div>
-             ))}
-           </div>
-        </div>
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center">Đang tải...</div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-1">
+              <div className="text-sm font-bold text-gray-500 mb-2 px-2">A-Z</div>
+              {friends.map(user => (
+                <div key={user.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors group border-b border-gray-100 last:border-0">
+                  <div className="flex items-center gap-4">
+                    <Avatar src={user.avatar} name={user.name} size="md" status={user.status} />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{user.name}</h3>
+                      <p className="text-xs text-gray-500">{user.phone ? user.phone : 'Chưa cập nhật số điện thoại'}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="secondary" size="sm">Nhắn tin</Button>
+                    <Button variant="ghost" size="sm"><MoreHorizontalIcon /></Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
 import { Post, User } from '../types';
-import { Avatar, Spinner } from '../components/Shared';
+import { Avatar, Spinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 
 const FeedPage: React.FC = () => {
@@ -18,10 +18,9 @@ const FeedPage: React.FC = () => {
         try {
             const [fetchedPosts, friends] = await Promise.all([
                 postService.getFeed(),
-                userService.getAllFriends()
+                userService.getAllFriends(currentUser?.id || '')
             ]);
             
-            // Build user map for quick lookup
             const uMap: Record<string, User> = {};
             friends.forEach(u => uMap[u.id] = u);
             if(currentUser) uMap['me'] = currentUser;
@@ -38,9 +37,10 @@ const FeedPage: React.FC = () => {
   }, [currentUser]);
 
   const handleLike = async (postId: string) => {
-      if(!currentUser) return;
-      await postService.likePost(postId, currentUser.id);
-      // Optimistic update
+      const post = posts.find(p => p.id === postId);
+      if(!currentUser || !post) return;
+      const isLiked = post.likes.includes(currentUser.id);
+      await postService.likePost(postId, currentUser.id, isLiked);
       setPosts(prev => prev.map(p => {
           if (p.id !== postId) return p;
           const isLiked = p.likes.includes(currentUser.id);

@@ -1,19 +1,27 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button, Input } from '../components/Shared';
+import { Button, Input } from '../components/ui';
 import { Smartphone, Lock } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const { login, isLoading } = useAuth();
+  const { login, register, isLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [formData, setFormData] = useState({ phone: '', password: '', name: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login();
-    navigate('/');
+    try {
+      if (activeTab === 'login') {
+        await login(formData.phone, formData.password);
+      } else {
+        await register(formData.phone, formData.password, formData.name);
+      }
+      navigate('/');
+    } catch (error: any) {
+      alert(error.message || "Thao tác thất bại");
+    }
   };
 
   return (

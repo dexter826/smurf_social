@@ -7,7 +7,7 @@ import { chatService } from '../services/chatService';
 import { userService } from '../services/userService';
 import { Conversation, Message, User } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Avatar, Input, Button, Spinner } from '../components/Shared';
+import { Avatar, Input, Button, Spinner } from '../components/ui';
 import { MessageBubble } from '../components/chat/MessageBubble';
 import { format } from 'date-fns';
 
@@ -22,14 +22,13 @@ const ChatPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [participantsMap, setParticipantsMap] = useState<Record<string, User>>({});
 
-  // Fetch Conversations
   useEffect(() => {
+    if (!currentUser) return;
     const fetchChats = async () => {
         setLoadingChats(true);
         try {
-            const data = await chatService.getConversations();
+            const data = await chatService.getConversations(currentUser.id);
             setConversations(data);
-            // Cache participants for easy lookup
             const users: Record<string, User> = {};
             data.forEach(c => c.participants.forEach(p => users[p.id] = p));
             setParticipantsMap(users);
@@ -40,24 +39,19 @@ const ChatPage: React.FC = () => {
         }
     };
     fetchChats();
-  }, []);
+  }, [currentUser]);
 
-  // Fetch Messages when chat selected
   useEffect(() => {
-    if (!selectedChatId) return;
+    if (!selectedChatId || !currentUser) return;
     
-    const fetchMessages = async () => {
-        try {
-            const msgs = await chatService.getMessages(selectedChatId);
-            setMessages(msgs);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-    fetchMessages();
-  }, [selectedChatId]);
+    // Sử dụng onSnapshot để nhận tin nhắn realtime
+    const unsubscribe = chatService.getMessages(selectedChatId, (msgs) => {
+      setMessages(msgs);
+    });
 
-  // Scroll to bottom
+    return () => unsubscribe();
+  }, [selectedChatId, currentUser]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [messages, selectedChatId]);
@@ -66,18 +60,11 @@ const ChatPage: React.FC = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || !selectedChatId) return;
+    if (!inputText.trim() || !selectedChatId || !currentUser) return;
     
     try {
-        const msg = await chatService.sendMessage(selectedChatId, inputText);
-        setMessages(prev => [...prev, msg]);
+        await chatService.sendMessage(selectedChatId, currentUser.id, inputText);
         setInputText('');
-        
-        // Update list preview
-        setConversations(prev => {
-            const updated = prev.map(c => c.id === selectedChatId ? { ...c, lastMessage: msg, updatedAt: new Date() } : c);
-            return updated.sort((a,b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-        });
     } catch (error) {
         console.error("Failed to send", error);
     }

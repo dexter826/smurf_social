@@ -1,11 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  User as FirebaseUser, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  signOut 
+} from 'firebase/auth';
+import { auth } from '../firebase/config';
 import { User } from '../types';
 import { userService } from '../services/userService';
 
 interface AuthContextType {
   user: User | null;
-  login: () => Promise<void>;
-  logout: () => void;
+  login: (phone: string, pass: string) => Promise<void>;
+  register: (phone: string, pass: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -16,43 +25,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
-        const storedUser = localStorage.getItem('zalo_user_id');
-        if (storedUser) {
-            try {
-                // In real app, verify token. Here we fetch mock user
-                const userData = await userService.getUserById(storedUser);
-                if (userData) setUser(userData);
-            } catch (error) {
-                console.error("Auth check failed", error);
-                localStorage.removeItem('zalo_user_id');
-            }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userData = await userService.getUserById(firebaseUser.uid);
+          if (userData) {
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error("Lỗi đồng bộ user", error);
         }
-        setIsLoading(false);
-    };
-    initAuth();
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = async () => {
+  const phoneToEmail = (phone: string) => `${phone}@smurfy.com`;
+
+  const login = async (phone: string, pass: string) => {
     setIsLoading(true);
     try {
-        const userData = await userService.getCurrentUser();
-        setUser(userData);
-        localStorage.setItem('zalo_user_id', userData.id);
+      await signInWithEmailAndPassword(auth, phoneToEmail(phone), pass);
     } catch (error) {
-        console.error("Login failed", error);
+      console.error("Đăng nhập thất bại", error);
+      throw error;
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('zalo_user_id');
+  const register = async (phone: string, pass: string, name: string) => {
+    setIsLoading(true);
+    try {
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+      
+      const newUser = await userService.updateProfile(firebaseUser.uid, {
+        id: firebaseUser.uid,
+        name: name || 'Người dùng mới',
+        avatar: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
+        phone: phone,
+      });
+      setUser(newUser);
+    } catch (error) {
+      console.error("Đăng ký thất bại", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Đăng xuất thất bại", error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

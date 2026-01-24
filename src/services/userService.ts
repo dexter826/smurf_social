@@ -1,63 +1,62 @@
+import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { User, UserStatus } from '../types';
 
-// Initial Mock Data
-const MOCK_USERS: User[] = [
-  { 
-    id: 'u1', 
-    name: 'Nguyễn Thu Hà', 
-    avatar: 'https://i.pravatar.cc/150?u=u1', 
-    phone: '0901234567', 
-    status: UserStatus.ONLINE,
-    bio: 'Cuộc sống là những chuyến đi ✈️',
-    coverImage: 'https://picsum.photos/800/300?random=1'
-  },
-  { 
-    id: 'u2', 
-    name: 'Trần Minh Tuấn', 
-    avatar: 'https://i.pravatar.cc/150?u=u2', 
-    phone: '0912345678', 
-    status: UserStatus.OFFLINE,
-    bio: 'Work hard, play hard',
-    coverImage: 'https://picsum.photos/800/300?random=2'
-  },
-  { 
-    id: 'u3', 
-    name: 'Design Team', 
-    avatar: 'https://ui-avatars.com/api/?name=DT&background=0D8ABC&color=fff', 
-    phone: '', 
-    status: UserStatus.BUSY 
-  },
-  { 
-    id: 'me', 
-    name: 'Phạm Văn Nam', 
-    avatar: 'https://i.pravatar.cc/150?u=me', 
-    phone: '0987654321', 
-    status: UserStatus.ONLINE, 
-    bio: 'Fullstack Developer tại HCM',
-    coverImage: 'https://picsum.photos/800/300?random=3'
-  },
-];
-
 export const userService = {
-  getCurrentUser: async (): Promise<User> => {
-    return new Promise(resolve => setTimeout(() => resolve(MOCK_USERS.find(u => u.id === 'me')!), 500));
+  getCurrentUser: async (uid: string): Promise<User | undefined> => {
+    return userService.getUserById(uid);
   },
 
   getUserById: async (id: string): Promise<User | undefined> => {
-    return MOCK_USERS.find(u => u.id === id);
+    try {
+      const userDoc = await getDoc(doc(db, 'users', id));
+      if (userDoc.exists()) {
+        return userDoc.data() as User;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Lỗi lấy thông tin user", error);
+      return undefined;
+    }
   },
 
-  getAllFriends: async (): Promise<User[]> => {
-    return MOCK_USERS.filter(u => u.id !== 'me');
+  getAllFriends: async (currentUserId: string): Promise<User[]> => {
+    try {
+      const q = query(collection(db, 'users'), where('id', '!=', currentUserId));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => doc.data() as User);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách bạn bè", error);
+      return [];
+    }
   },
 
   updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
-    // Logic update mock user
-    const userIndex = MOCK_USERS.findIndex(u => u.id === userId);
-    if (userIndex > -1) {
-      MOCK_USERS[userIndex] = { ...MOCK_USERS[userIndex], ...data };
-      return MOCK_USERS[userIndex];
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      let updatedData: User;
+      if (userDoc.exists()) {
+        updatedData = { ...userDoc.data() as User, ...data };
+      } else {
+        updatedData = {
+          id: userId,
+          name: data.name || 'Người dùng mới',
+          avatar: data.avatar || `https://i.pravatar.cc/150?u=${userId}`,
+          phone: data.phone || '',
+          status: UserStatus.ONLINE,
+          bio: data.bio || '',
+          coverImage: data.coverImage || '',
+          ...data
+        };
+      }
+      
+      await setDoc(userRef, updatedData, { merge: true });
+      return updatedData;
+    } catch (error) {
+      console.error("Lỗi cập nhật profile", error);
+      throw error;
     }
-    throw new Error('User not found');
   }
 };

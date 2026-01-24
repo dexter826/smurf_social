@@ -3,7 +3,7 @@ import { Camera, Edit3, Grid, Image as ImageIcon, User as UserIcon, Mail, Phone,
 import { userService } from '../services/userService';
 import { User } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Avatar, Button, Spinner } from '../components/Shared';
+import { Avatar, Button, Spinner } from '../components/ui';
 
 const ProfilePage: React.FC = () => {
   const { user: currentUser } = useAuth();

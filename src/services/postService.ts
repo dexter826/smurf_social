@@ -1,43 +1,44 @@
+import { collection, addDoc, getDocs, query, orderBy, updateDoc, doc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { Post } from '../types';
-
-const MOCK_POSTS: Post[] = [
-  {
-    id: 'p1',
-    userId: 'u1',
-    content: 'Hôm nay trời đẹp quá! Đi cà phê thôi mọi người ☕️\nKhông gian thật tuyệt vời để làm việc.',
-    images: ['https://picsum.photos/seed/cafe/800/600'],
-    likes: ['u2', 'u3', 'me'],
-    comments: [
-        { id: 'c1', userId: 'u2', content: 'Ở đâu đấy?', timestamp: new Date() }
-    ],
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    visibility: 'public'
-  },
-  {
-    id: 'p2',
-    userId: 'u2',
-    content: 'Vừa hoàn thành xong project mới. Mệt nhưng vui! 💻🔥',
-    likes: ['u1'],
-    comments: [],
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
-    visibility: 'friends'
-  }
-];
 
 export const postService = {
   getFeed: async (): Promise<Post[]> => {
-    // Simulate network delay
-    return new Promise(resolve => setTimeout(() => resolve(MOCK_POSTS), 600));
+    try {
+      const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+        timestamp: doc.data().timestamp?.toDate() || new Date(),
+      })) as Post[];
+    } catch (error) {
+      console.error("Lỗi lấy bài viết", error);
+      return [];
+    }
   },
 
-  likePost: async (postId: string, userId: string): Promise<void> => {
-    const post = MOCK_POSTS.find(p => p.id === postId);
-    if (post) {
-        if (post.likes.includes(userId)) {
-            post.likes = post.likes.filter(id => id !== userId);
-        } else {
-            post.likes.push(userId);
-        }
+  createPost: async (postData: Omit<Post, 'id'>): Promise<string> => {
+    try {
+      const docRef = await addDoc(collection(db, 'posts'), {
+        ...postData,
+        timestamp: new Date()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error("Lỗi tạo bài viết", error);
+      throw error;
+    }
+  },
+
+  likePost: async (postId: string, userId: string, isLiked: boolean): Promise<void> => {
+    try {
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        likes: isLiked ? arrayRemove(userId) : arrayUnion(userId)
+      });
+    } catch (error) {
+      console.error("Lỗi like bài viết", error);
     }
   }
 };
