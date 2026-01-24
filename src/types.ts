@@ -31,7 +31,7 @@ export interface Message {
   fileName?: string;
   fileSize?: string;
   isRead?: boolean;
-  reactions?: Record<string, string>; // userId -> emoji
+  reactions?: Record<string, string>;
 }
 
 export interface Conversation {
@@ -58,7 +58,7 @@ export interface Post {
   userId: string;
   content: string;
   images?: string[];
-  likes: string[]; // array of userIds
+  likes: string[];
   comments: Comment[];
   timestamp: Date;
   visibility: 'public' | 'friends' | 'private';

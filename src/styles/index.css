@@ -3,16 +3,15 @@
 @tailwind utilities;
 
 :root {
-  /* Zalo Brand Colors */
   --color-primary: #0068ff;
   --color-primary-dark: #0054cc;
-  --color-primary-50: #e6f0ff;
-  --color-primary-100: #cce0ff;
+  --color-primary-light: #e6f0ff;
+  --color-primary-sidebar: #0068ff;
 
   /* Backgrounds */
   --bg-main: #ffffff;
   --bg-secondary: #f4f5f7;
-  --bg-hover: #f1f2f4;
+  --bg-hover: #ebeef2;
 
   /* Text */
   --text-main: #0f172a;
@@ -22,22 +21,25 @@
 .dark {
   --color-primary: #3384ff;
   --color-primary-dark: #66a3ff;
-  --color-primary-50: #1e293b;
-  --color-primary-100: #0f172a;
+  --color-primary-light: #1e293b;
+  --color-primary-sidebar: #1e293b;
 
   --bg-main: #111827;
-  --bg-secondary: #1f2937;
-  --bg-hover: #374151;
+  --bg-secondary: #0f172a;
+  --bg-hover: #1e293b;
 
   --text-main: #f3f4f6;
   --text-secondary: #9ca3af;
+}
+
+.shadow-zalo {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 body {
   @apply bg-bg-secondary text-text-main antialiased overflow-hidden h-screen w-screen selection:bg-primary-100 selection:text-primary-600;
 }
 
-/* Professional Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -56,7 +58,6 @@ body {
   background: #94a3b8;
 }
 
-/* Animations */
 .fade-in {
   opacity: 0;
   animation: fadeIn 0.2s ease-in-out forwards;

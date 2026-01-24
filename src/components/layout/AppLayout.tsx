@@ -23,27 +23,25 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-bg-main overflow-hidden transition-colors duration-200">
-      
-      {/* --- DESKTOP SIDEBAR --- */}
-      <aside className="hidden md:flex w-[64px] flex-col items-center bg-primary-500 py-6 z-50 shadow-zalo">
-        <div className="mb-8" onClick={() => navigate('/profile')}>
+      <aside className="hidden md:flex w-[64px] flex-col items-center bg-[var(--color-primary-sidebar)] py-6 z-50 shadow-zalo">
+        <div className="mb-6" onClick={() => navigate('/profile')}>
           <Avatar 
              src={user?.avatar} 
              size="md" 
-             className="cursor-pointer ring-2 ring-primary-100 hover:opacity-90 transition-opacity" 
+             className="cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all" 
           />
         </div>
         
-        <nav className="flex-1 flex flex-col gap-6 w-full items-center">
+        <nav className="flex-1 flex flex-col gap-2 w-full items-center">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `p-3 rounded-xl transition-all duration-200 group relative ${
+                `w-full flex justify-center py-4 transition-all duration-200 relative ${
                   isActive 
-                  ? 'bg-primary-700 text-white shadow-lg' 
-                  : 'text-primary-100 hover:bg-primary-600 hover:text-white'
+                  ? 'bg-black/10 text-white' 
+                  : 'text-white/70 hover:bg-black/5 hover:text-white'
                 }`
               }
               title={item.label}
@@ -53,28 +51,31 @@ export const AppLayout: React.FC = () => {
           ))}
         </nav>
 
-        <div className="flex flex-col gap-4 mb-4 items-center">
+        <div className="flex flex-col gap-2 mt-auto w-full items-center">
            <button 
                 onClick={toggleTheme} 
-                className="text-primary-100 hover:text-white p-2 rounded-lg hover:bg-primary-600 transition-colors"
+                className="w-full flex justify-center py-4 text-white/70 hover:bg-black/5 hover:text-white transition-all"
+                title="Chế độ tối"
            >
-               {mode === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+               {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
            </button>
-           <button className="text-primary-100 hover:text-white p-2 rounded-lg hover:bg-primary-600 transition-colors">
-             <Settings size={24} />
+           <button className="w-full flex justify-center py-4 text-white/70 hover:bg-black/5 hover:text-white transition-all" title="Cài đặt">
+             <Settings size={22} />
            </button>
-           <button onClick={handleLogout} className="text-primary-100 hover:text-white p-2 rounded-lg hover:bg-primary-600 transition-colors" title="Đăng xuất">
-             <LogOut size={24} />
+           <button 
+                onClick={handleLogout} 
+                className="w-full flex justify-center py-4 text-white/70 hover:bg-black/5 hover:text-white transition-all" 
+                title="Đăng xuất"
+           >
+             <LogOut size={22} />
            </button>
         </div>
       </aside>
 
-      {/* --- MAIN CONTENT --- */}
       <main className="flex-1 relative flex flex-col h-full overflow-hidden bg-bg-secondary">
         <Outlet />
       </main>
 
-      {/* --- MOBILE BOTTOM NAV --- */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center h-[60px] z-50 pb-safe">
         {navItems.map((item) => (
           <NavLink
