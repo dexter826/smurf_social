@@ -5,9 +5,9 @@ import { Button, Input } from '../components/ui';
 import { Mail, Lock } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const { login, register, isLoading } = useAuth();
+  const { login, register, resetPassword, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -50,96 +50,199 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleTabChange = (tab: 'login' | 'register') => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email) {
+      setErrors({ email: 'Vui lòng nhập email để khôi phục mật khẩu' });
+      return;
+    }
+    
+    try {
+      await resetPassword(formData.email);
+       
+      alert('Email khôi phục mật khẩu đã được gửi!');
+      setActiveTab('login');
+      setErrors({});
+    } catch (error: any) {
+      setErrors({ form: error.message || "Không thể gửi email khôi phục" });
+    }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email) {
+      setErrors({ email: 'Vui lòng nhập email' });
+      return;
+    }
+
+    try {
+      await resetPassword(formData.email);
+      setErrors({ success: 'Email đặt lại mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư.' });
+    } catch (error: any) {
+      setErrors({ form: "Không tìm thấy email hoặc có lỗi xảy ra." });
+    }
+  };
+
+  const handleTabChange = (tab: 'login' | 'register' | 'forgot') => {
     setActiveTab(tab);
     setErrors({});
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-primary-50 p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
-        <div className="bg-primary-500 p-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">Smurfy</h1>
-          <p className="text-primary-100">Đăng nhập tài khoản Smurfy <br/> để kết nối với ứng dụng Smurfy Web</p>
+      <div className="w-full max-w-[400px] bg-white rounded-xl shadow-[0_15px_30px_rgba(8,_112,_184,_0.1)] overflow-hidden transition-all">
+        <div className="bg-primary-500 p-6 text-center">
+          <h1 className="text-2xl font-bold text-white mb-2">Smurfy</h1>
+          <p className="text-white/80 text-xs leading-relaxed">
+            {activeTab === 'forgot' 
+              ? 'Nhập email để lấy lại mật khẩu'
+              : <>Kết nối cùng Smurfy Web <br/> Trò chuyện & sẻ chia mọi lúc</>
+            }
+          </p>
         </div>
 
-        <div className="flex border-b border-gray-100">
-          <button
-            onClick={() => handleTabChange('login')}
-            className={`flex-1 py-4 text-sm font-medium text-center transition-colors ${
-              activeTab === 'login' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            VỚI MẬT KHẨU
-          </button>
-          <button
-            onClick={() => handleTabChange('register')}
-            className={`flex-1 py-4 text-sm font-medium text-center transition-colors ${
-              activeTab === 'register' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            ĐĂNG KÝ
-          </button>
-        </div>
-
-        <div className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {errors.form && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
-                {errors.form}
-              </div>
-            )}
-
-            {activeTab === 'register' && (
-              <Input
-                placeholder="Họ tên"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                error={errors.name}
-                className="h-12"
-              />
-            )}
-            
-            <Input
-              icon={<Mail size={18} />}
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-              error={errors.email}
-              className="h-12"
-              autoComplete="email"
-            />
-            
-            <Input
-              icon={<Lock size={18} />}
-              type="password"
-              placeholder="Mật khẩu"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              error={errors.password}
-              className="h-12"
-            />
-
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full h-12 text-lg font-semibold shadow-md mt-6"
-              disabled={isLoading}
+        {activeTab !== 'forgot' && (
+          <div className="flex border-b border-gray-100">
+            <button
+              onClick={() => handleTabChange('login')}
+              className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
+                activeTab === 'login' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'
+              }`}
             >
-              {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập với mật khẩu' : 'Đăng ký ngay')}
-            </Button>
+              Đăng nhập
+            </button>
+            <button
+              onClick={() => handleTabChange('register')}
+              className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
+                activeTab === 'register' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Đăng ký
+            </button>
+          </div>
+        )}
 
-            {activeTab === 'login' && (
-              <div className="text-center mt-4">
-                <a href="#" className="text-sm text-primary-600 hover:underline">Quên mật khẩu?</a>
+        <div className="p-6">
+          {activeTab === 'forgot' ? (
+             <form onSubmit={handleResetSubmit} className="space-y-4">
+                {errors.success && (
+                  <div className="p-2 text-xs text-green-600 bg-green-50 rounded border border-green-100 mb-2">
+                    {errors.success}
+                  </div>
+                )}
+                {errors.form && (
+                  <div className="p-2 text-xs text-red-600 bg-red-50 rounded border border-red-100 mb-2">
+                    {errors.form}
+                  </div>
+                )}
+                
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700 ml-1">Email đã đăng ký</label>
+                  <Input
+                    icon={<Mail size={16} />}
+                    type="email"
+                    placeholder="Nhập email của bạn"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    error={errors.email}
+                    className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                    autoComplete="email"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full h-10 text-sm font-bold shadow-md hover:shadow-lg transition-all mt-2"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Đang gửi...' : 'Gửi link khôi phục'}
+                </Button>
+
+                <div className="text-center mt-3">
+                  <button 
+                    type="button"
+                    onClick={() => handleTabChange('login')}
+                    className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                  >
+                    Quay lại đăng nhập
+                  </button>
+                </div>
+             </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {errors.form && (
+                <div className="p-2 text-xs text-red-600 bg-red-50 rounded border border-red-100 mb-2">
+                  {errors.form}
+                </div>
+              )}
+
+              {activeTab === 'register' && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700 ml-1">Họ tên</label>
+                  <Input
+                    placeholder="Nhập họ tên của bạn"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    error={errors.name}
+                    className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                  />
+                </div>
+              )}
+              
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700 ml-1">Email</label>
+                <Input
+                  icon={<Mail size={16} />}
+                  type="email"
+                  placeholder="Nhập email của bạn"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  error={errors.email}
+                  className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                  autoComplete="email"
+                />
               </div>
-            )}
-          </form>
+              
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700 ml-1">Mật khẩu</label>
+                <Input
+                  icon={<Lock size={16} />}
+                  type="password"
+                  placeholder="Nhập mật khẩu của bạn"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  error={errors.password}
+                  className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full h-10 text-sm font-bold shadow-md hover:shadow-lg transition-all mt-2"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập' : 'Tạo tài khoản')}
+              </Button>
+
+              {activeTab === 'login' && (
+                <div className="text-center mt-3">
+                  <button 
+                    type="button"
+                    onClick={() => handleTabChange('forgot')}
+                    className="text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                  >
+                    Quên mật khẩu?
+                  </button>
+                </div>
+              )}
+            </form>
+          )}
         </div>
         
-        <div className="bg-gray-50 p-4 text-center text-xs text-gray-500">
-          Sử dụng ứng dụng này đồng nghĩa với việc bạn đồng ý với <a href="#" className="underline">Điều khoản sử dụng</a>
+        <div className="bg-gray-50 p-3 text-center text-[10px] text-gray-400 border-t border-gray-100">
+          Chấp nhận <a href="#" className="text-primary-500 hover:underline">Điều khoản & Bảo mật</a> khi sử dụng Smurfy.
         </div>
       </div>
     </div>

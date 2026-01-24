@@ -2,15 +2,13 @@ export type ThemeMode = 'light' | 'dark';
 
 export enum UserStatus {
   ONLINE = 'online',
-  OFFLINE = 'offline',
-  BUSY = 'busy'
+  OFFLINE = 'offline'
 }
 
 export interface User {
   id: string;
   name: string;
   avatar: string;
-  coverImage?: string; // New: Cover image for profile
   email: string;
   phone?: string;
   gender?: 'male' | 'female' | 'other';
