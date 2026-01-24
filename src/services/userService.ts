@@ -44,7 +44,7 @@ export const userService = {
           id: userId,
           name: data.name || 'Người dùng mới',
           avatar: data.avatar || `https://i.pravatar.cc/150?u=${userId}`,
-          phone: data.phone || '',
+          email: data.email || '',
           status: UserStatus.ONLINE,
           bio: data.bio || '',
           coverImage: data.coverImage || '',

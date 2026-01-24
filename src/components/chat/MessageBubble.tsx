@@ -2,7 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { FileText, Download, CheckCheck } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar } from '../Shared';
+import { Avatar } from '../ui';
 
 interface MessageBubbleProps {
   message: Message;

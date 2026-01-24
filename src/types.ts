@@ -11,7 +11,8 @@ export interface User {
   name: string;
   avatar: string;
   coverImage?: string; // New: Cover image for profile
-  phone: string;
+  email: string;
+  phone?: string;
   gender?: 'male' | 'female' | 'other';
   birthDate?: Date;
   status: UserStatus;

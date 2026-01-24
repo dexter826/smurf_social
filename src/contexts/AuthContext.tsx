@@ -12,8 +12,8 @@ import { userService } from '../services/userService';
 
 interface AuthContextType {
   user: User | null;
-  login: (phone: string, pass: string) => Promise<void>;
-  register: (phone: string, pass: string, name: string) => Promise<void>;
+  login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -44,12 +44,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const phoneToEmail = (phone: string) => `${phone}@smurfy.com`;
-
-  const login = async (phone: string, pass: string) => {
+  const login = async (email: string, pass: string) => {
     setIsLoading(true);
+    const normalizedEmail = email.trim();
     try {
-      await signInWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+      await signInWithEmailAndPassword(auth, normalizedEmail, pass);
     } catch (error) {
       console.error("Đăng nhập thất bại", error);
       throw error;
@@ -58,16 +57,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (phone: string, pass: string, name: string) => {
+  const register = async (email: string, pass: string, name: string) => {
     setIsLoading(true);
+    const normalizedEmail = email.trim();
     try {
-      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, normalizedEmail, pass);
       
       const newUser = await userService.updateProfile(firebaseUser.uid, {
         id: firebaseUser.uid,
         name: name || 'Người dùng mới',
         avatar: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
-        phone: phone,
+        email: normalizedEmail,
       });
       setUser(newUser);
     } catch (error) {
