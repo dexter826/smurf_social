@@ -1,0 +1,65 @@
+export type ThemeMode = 'light' | 'dark';
+
+export enum UserStatus {
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+  BUSY = 'busy'
+}
+
+export interface User {
+  id: string;
+  name: string;
+  avatar: string;
+  coverImage?: string; // New: Cover image for profile
+  phone: string;
+  gender?: 'male' | 'female' | 'other';
+  birthDate?: Date;
+  status: UserStatus;
+  bio?: string;
+}
+
+export type MessageType = 'text' | 'image' | 'video' | 'file' | 'sticker';
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  timestamp: Date;
+  type: MessageType;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: string;
+  isRead?: boolean;
+  reactions?: Record<string, string>; // userId -> emoji
+}
+
+export interface Conversation {
+  id: string;
+  participants: User[];
+  lastMessage?: Message;
+  unreadCount: number;
+  isGroup: boolean;
+  groupName?: string;
+  groupAvatar?: string;
+  updatedAt: Date;
+  pinned?: boolean;
+}
+
+export interface Comment {
+  id: string;
+  userId: string;
+  content: string;
+  timestamp: Date;
+}
+
+export interface Post {
+  id: string;
+  userId: string;
+  content: string;
+  images?: string[];
+  likes: string[]; // array of userIds
+  comments: Comment[];
+  timestamp: Date;
+  visibility: 'public' | 'friends' | 'private';
+}
