@@ -11,8 +11,10 @@ export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      logout();
+      navigate('/login');
+    }
   };
 
   const navItems = [

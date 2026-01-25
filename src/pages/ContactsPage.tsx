@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserPlus, Users, Search, Bell } from 'lucide-react';
 import { userService } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
@@ -10,6 +11,7 @@ import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/con
 type TabType = 'all' | 'requests' | 'sent';
 
 const ContactsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const { 
     friends, 
@@ -115,6 +117,21 @@ const ContactsPage: React.FC = () => {
       } catch (error) {
         console.error('Lỗi chặn người dùng:', error);
       }
+    }
+  };
+
+  const handleMessage = async (friendId: string) => {
+    if (!currentUser) return;
+    
+    try {
+      const { useChatStore } = await import('../store/chatStore');
+      const conversationId = await useChatStore.getState().getOrCreateConversation(
+        currentUser.id,
+        friendId
+      );
+      navigate('/');
+    } catch (error) {
+      console.error('Lỗi mở chat:', error);
     }
   };
 
@@ -291,6 +308,7 @@ const ContactsPage: React.FC = () => {
                               friend={friend}
                               onUnfriend={handleUnfriend}
                               onBlock={handleBlockUser}
+                              onMessage={handleMessage}
                             />
                           ))}
                         </div>

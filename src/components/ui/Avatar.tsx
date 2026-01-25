@@ -34,11 +34,15 @@ export const Avatar: React.FC<AvatarProps> = ({ src, name, size = 'md', status, 
             src={src}
             alt={name}
             onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${name || 'U'}&background=random`;
+                (e.target as HTMLImageElement).src = '/blank-avatar.png';
             }}
           />
         ) : (
-            <span className="font-semibold text-gray-600">{name?.charAt(0).toUpperCase()}</span>
+          <img
+            className="w-full h-full object-cover"
+            src="/blank-avatar.png"
+            alt={name || 'User'}
+          />
         )}
       </div>
       {status && (

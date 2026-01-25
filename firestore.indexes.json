@@ -78,7 +78,7 @@
         },
         {
           "fieldPath": "timestamp",
-          "order": "DESCENDING"
+          "order": "ASCENDING"
         }
       ]
     },
@@ -87,7 +87,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "participants",
+          "fieldPath": "participantIds",
           "arrayConfig": "CONTAINS"
         },
         {
