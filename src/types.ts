@@ -18,6 +18,10 @@ export interface User {
   friendIds?: string[];
   blockedUserIds?: string[];
   createdAt?: Date;
+  coverImage?: string;
+  location?: string;
+  workplace?: string;
+  education?: string;
 }
 
 export enum FriendRequestStatus {

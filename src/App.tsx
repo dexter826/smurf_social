@@ -48,6 +48,7 @@ const App: React.FC = () => {
           <Route path="feed" element={<FeedPage />} />
           <Route path="contacts" element={<ContactsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="profile/:userId" element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

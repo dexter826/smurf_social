@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../firebase/config';
 import { User, UserStatus } from '../types';
 
 export const userService = {
@@ -92,6 +93,67 @@ export const userService = {
     } catch (error) {
       console.error("Lỗi cập nhật profile", error);
       throw error;
+    }
+  },
+
+  uploadAvatar: async (userId: string, file: File): Promise<string> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
+      const storageRef = ref(storage, `avatars/${userId}/${fileName}`);
+
+      // Upload file
+      await uploadBytes(storageRef, file);
+      
+      // Get download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update user profile
+      await userService.updateProfile(userId, { avatar: downloadURL });
+      
+      return downloadURL;
+    } catch (error) {
+      console.error("Lỗi upload avatar", error);
+      throw error;
+    }
+  },
+
+  uploadCoverImage: async (userId: string, file: File): Promise<string> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `cover_${userId}_${Date.now()}.${fileExt}`;
+      const storageRef = ref(storage, `covers/${userId}/${fileName}`);
+
+      // Upload file
+      await uploadBytes(storageRef, file);
+      
+      // Get download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update user profile
+      await userService.updateProfile(userId, { coverImage: downloadURL });
+      
+      return downloadURL;
+    } catch (error) {
+      console.error("Lỗi upload cover image", error);
+      throw error;
+    }
+  },
+
+  getUserStats: async (userId: string): Promise<{ friendCount: number, postCount: number }> => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      const friendCount = (userDoc.data()?.friendIds || []).length;
+      
+      // Count posts
+      const postsQuery = query(collection(db, 'posts'), where('userId', '==', userId));
+      const postsSnapshot = await getDocs(postsQuery);
+      const postCount = postsSnapshot.size;
+      
+      return { friendCount, postCount };
+    } catch (error) {
+      console.error("Lỗi lấy thống kê user", error);
+      return { friendCount: 0, postCount: 0 };
     }
   }
 };
