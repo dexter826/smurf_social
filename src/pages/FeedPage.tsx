@@ -1,148 +1,217 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Image as ImageIcon, Video } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { postService } from '../services/postService';
+import { Image as ImageIcon, Loader2 } from 'lucide-react';
 import { userService } from '../services/userService';
-import { Post, User } from '../types';
+import { User } from '../types';
 import { Avatar, Spinner } from '../components/ui';
 import { useAuthStore } from '../store/authStore';
+import { usePostStore } from '../store/postStore';
+import { CreatePostModal, PostItem, CommentSection, EditPostModal } from '../components/feed';
 
 const FeedPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    posts,
+    isLoading,
+    hasMore,
+    subscribeToPosts,
+    likePost,
+    createPost,
+    updatePost,
+    deletePost,
+    uploadImages
+  } = usePostStore();
+
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState<string | null>(null);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
   useEffect(() => {
-    const loadData = async () => {
-        try {
-            const [fetchedPosts, friends] = await Promise.all([
-                postService.getFeed(),
-                userService.getAllFriends(currentUser?.id || '')
-            ]);
-            
-            const uMap: Record<string, User> = {};
-            friends.forEach(u => uMap[u.id] = u);
-            if(currentUser) uMap['me'] = currentUser;
-            
-            setUsersMap(uMap);
-            setPosts(fetchedPosts);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
-    loadData();
-  }, [currentUser]);
+    if (!currentUser) return;
 
-  const handleLike = async (postId: string) => {
-      const post = posts.find(p => p.id === postId);
-      if(!currentUser || !post) return;
-      const isLiked = post.likes.includes(currentUser.id);
-      await postService.likePost(postId, currentUser.id, isLiked);
-      setPosts(prev => prev.map(p => {
-          if (p.id !== postId) return p;
-          const isLiked = p.likes.includes(currentUser.id);
-          return {
-              ...p,
-              likes: isLiked ? p.likes.filter(id => id !== currentUser.id) : [...p.likes, currentUser.id]
-          };
-      }));
+    const friendIds = currentUser.friendIds || [];
+    const unsubscribe = subscribeToPosts(currentUser.id, friendIds);
+    loadUsers();
+
+    return () => {
+      unsubscribe();
+    };
+  }, [currentUser, subscribeToPosts]);
+
+  useEffect(() => {
+    if (posts.length > 0) {
+      loadUsers();
+    }
+  }, [posts]);
+
+  const loadUsers = async () => {
+    if (!currentUser) return;
+
+    try {
+      const userIds = [...new Set(posts.map(p => p.userId))];
+      const users: Record<string, User> = { [currentUser.id]: currentUser };
+
+      for (const userId of userIds) {
+        if (userId !== currentUser.id && !usersMap[userId]) {
+          const user = await userService.getUserById(userId);
+          if (user) users[userId] = user;
+        }
+      }
+
+      setUsersMap(prev => ({ ...prev, ...users }));
+    } finally {
+      setLoadingUsers(false);
+    }
   };
 
-  if (loading) return <div className="h-full flex items-center justify-center"><Spinner /></div>;
+  const handleCreatePost = async (
+    content: string,
+    images: string[],
+    visibility: 'public' | 'friends' | 'private'
+  ) => {
+    if (!currentUser) return;
+    await createPost(currentUser.id, content, images, visibility);
+  };
+
+  const handleLike = async (postId: string) => {
+    if (!currentUser) return;
+    await likePost(postId, currentUser.id);
+  };
+
+  const handleEditPost = async (content: string) => {
+    if (!showEditModal) return;
+    await updatePost(showEditModal, content);
+    setShowEditModal(null);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
+
+    const post = posts.find(p => p.id === postId);
+    await deletePost(postId, post?.images);
+  };
+
+  const handleUploadImages = async (files: File[]) => {
+    if (!currentUser) throw new Error('Not authenticated');
+    return await uploadImages(files, currentUser.id);
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-gray-500">Vui lòng đăng nhập</p>
+      </div>
+    );
+  }
+
+  if (isLoading && posts.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  const editPost = posts.find(p => p.id === showEditModal);
 
   return (
-    <div className="flex justify-center h-full w-full overflow-y-auto bg-[#eef0f1] dark:bg-gray-900">
+    <div className="flex justify-center h-full w-full overflow-y-auto bg-gray-50">
       <div className="w-full max-w-[640px] py-6 space-y-4 px-2 md:px-0 pb-20">
-        
-        {/* Create Post */}
-        <div className="bg-bg-main rounded-xl p-4 shadow-card border border-gray-100">
-            <div className="flex gap-3 mb-4">
-                <Avatar src={currentUser?.avatar} size="md" />
-                <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2.5 flex items-center text-text-secondary cursor-pointer hover:bg-gray-200 transition-colors">
-                    Hôm nay bạn thế nào?
-                </div>
-            </div>
-            <div className="flex gap-2 pt-2 border-t border-gray-100">
-                 <button className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-50 rounded-lg text-sm font-medium text-text-secondary">
-                     <ImageIcon className="text-green-500" size={20} /> Ảnh
-                 </button>
-                 <button className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-50 rounded-lg text-sm font-medium text-text-secondary">
-                     <Video className="text-red-500" size={20} /> Video
-                 </button>
-            </div>
+        {/* Create Post Card */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex gap-3 mb-4">
+            <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2.5 flex items-center text-gray-500 cursor-pointer transition-colors text-left"
+            >
+              {currentUser.name} ơi, bạn đang nghĩ gì thế?
+            </button>
+          </div>
+          <div className="flex gap-2 pt-2 border-t border-gray-100">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-50 rounded-lg text-sm font-medium text-gray-600 transition-colors"
+            >
+              <ImageIcon className="text-green-500" size={20} />
+              Ảnh/Video
+            </button>
+          </div>
         </div>
 
-        {/* Posts */}
-        {posts.map(post => {
-            const author = usersMap[post.userId];
-            const isLiked = post.likes.includes(currentUser?.id || '');
+        {/* Posts List */}
+        {loadingUsers && posts.length > 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="animate-spin text-primary-500" size={32} />
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-100 text-center">
+            <p className="text-gray-500 text-lg font-medium">Chưa có bài viết nào</p>
+            <p className="text-gray-400 text-sm mt-2">
+              Hãy tạo bài viết đầu tiên của bạn!
+            </p>
+          </div>
+        ) : (
+          posts.map((post) => {
+            const author = usersMap[post.userId] || {
+              id: post.userId,
+              name: 'Unknown User',
+              avatar: '',
+              email: '',
+              status: 'offline' as const
+            };
 
             return (
-                <div key={post.id} className="bg-bg-main rounded-xl shadow-card border border-gray-100 overflow-hidden">
-                    {/* Header */}
-                    <div className="p-4 flex items-start justify-between">
-                        <div className="flex gap-3">
-                            <Avatar src={author?.avatar} size="md" />
-                            <div>
-                                <h3 className="font-bold text-text-main text-[15px]">{author?.name || 'Unknown User'}</h3>
-                                <p className="text-xs text-text-secondary mt-0.5">
-                                    {formatDistanceToNow(post.timestamp, { addSuffix: true })}
-                                    <span className="mx-1">•</span>
-                                    {post.visibility === 'public' ? 'Công khai' : 'Bạn bè'}
-                                </p>
-                            </div>
-                        </div>
-                        <button className="text-text-secondary hover:bg-gray-100 p-1.5 rounded-full"><MoreHorizontal size={20} /></button>
-                    </div>
+              <PostItem
+                key={post.id}
+                post={post}
+                author={author}
+                currentUser={currentUser}
+                onLike={handleLike}
+                onComment={(postId) => setShowCommentModal(postId)}
+                onEdit={(postId) => setShowEditModal(postId)}
+                onDelete={handleDeletePost}
+              />
+            );
+          })
+        )}
 
-                    {/* Content */}
-                    <div className="px-4 pb-3 text-text-main whitespace-pre-line text-[15px] leading-relaxed">
-                        {post.content}
-                    </div>
-
-                    {/* Images */}
-                    {post.images && post.images.length > 0 && (
-                        <div className="cursor-pointer bg-gray-100">
-                            <img src={post.images[0]} className="w-full h-auto max-h-[600px] object-contain" loading="lazy" />
-                        </div>
-                    )}
-
-                    {/* Stats */}
-                    <div className="px-4 py-3 flex justify-between items-center border-b border-gray-50">
-                        <div className="flex items-center gap-1.5">
-                            <div className="bg-primary-500 p-1 rounded-full"><Heart size={12} className="text-white fill-white" /></div>
-                            <span className="text-sm text-text-secondary font-medium">{post.likes.length}</span>
-                        </div>
-                        <div className="text-sm text-text-secondary hover:underline cursor-pointer">
-                            {post.comments.length} bình luận
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex px-2 py-1">
-                        <button 
-                            onClick={() => handleLike(post.id)}
-                            className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-all active:scale-95 ${isLiked ? 'text-primary-500' : 'text-text-secondary hover:bg-gray-50'}`}
-                        >
-                            <Heart size={20} className={isLiked ? "fill-current" : ""} /> 
-                            <span className="text-sm font-medium">Thích</span>
-                        </button>
-                        <button className="flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-gray-50 transition-all">
-                            <MessageCircle size={20} />
-                            <span className="text-sm font-medium">Bình luận</span>
-                        </button>
-                        <button className="flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-gray-50 transition-all">
-                            <Share2 size={20} />
-                            <span className="text-sm font-medium">Chia sẻ</span>
-                        </button>
-                    </div>
-                </div>
-            )
-        })}
+        {/* Load More */}
+        {hasMore && posts.length > 0 && (
+          <div className="flex justify-center py-4">
+            <button className="text-primary-500 hover:text-primary-600 font-medium text-sm">
+              Xem thêm bài viết
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Modals */}
+      <CreatePostModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        currentUser={currentUser}
+        onSubmit={handleCreatePost}
+        onUploadImages={handleUploadImages}
+      />
+
+      {showCommentModal && (
+        <CommentSection
+          postId={showCommentModal}
+          currentUser={currentUser}
+          onClose={() => setShowCommentModal(null)}
+        />
+      )}
+
+      {showEditModal && editPost && (
+        <EditPostModal
+          isOpen={true}
+          onClose={() => setShowEditModal(null)}
+          initialContent={editPost.content}
+          onSubmit={handleEditPost}
+        />
+      )}
     </div>
   );
 };

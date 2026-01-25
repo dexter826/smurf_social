@@ -66,9 +66,11 @@ export interface Conversation {
 
 export interface Comment {
   id: string;
+  postId: string;
   userId: string;
   content: string;
   timestamp: Date;
+  likes?: string[];
 }
 
 export interface Post {
@@ -77,7 +79,9 @@ export interface Post {
   content: string;
   images?: string[];
   likes: string[];
-  comments: Comment[];
+  commentCount: number;
   timestamp: Date;
   visibility: 'public' | 'friends' | 'private';
+  edited?: boolean;
+  editedAt?: Date;
 }
