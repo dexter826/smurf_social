@@ -47,21 +47,26 @@ export interface Message {
   type: MessageType;
   fileUrl?: string;
   fileName?: string;
-  fileSize?: string;
-  isRead?: boolean;
+  fileSize?: number;
+  readBy?: string[];
+  deliveredAt?: Date;
   reactions?: Record<string, string>;
 }
 
 export interface Conversation {
   id: string;
+  participantIds: string[];
   participants: User[];
   lastMessage?: Message;
-  unreadCount: number;
+  unreadCount: Record<string, number>;
   isGroup: boolean;
   groupName?: string;
   groupAvatar?: string;
   updatedAt: Date;
+  createdAt: Date;
   pinned?: boolean;
+  muted?: boolean;
+  typingUsers?: string[];
 }
 
 export interface Comment {

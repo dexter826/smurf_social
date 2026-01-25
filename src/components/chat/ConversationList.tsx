@@ -1,0 +1,112 @@
+import React, { useState } from 'react';
+import { Search, Users } from 'lucide-react';
+import { Conversation } from '../../types';
+import { Input, Spinner } from '../ui';
+import { ConversationItem } from './ConversationItem';
+
+interface ConversationListProps {
+  conversations: Conversation[];
+  selectedId: string | null;
+  currentUserId: string;
+  isLoading: boolean;
+  onSelectConversation: (id: string) => void;
+  onSearch: (term: string) => void;
+  onPin: (id: string, pinned: boolean) => void;
+  onMute: (id: string, muted: boolean) => void;
+  onDelete: (id: string) => void;
+  onNewChat?: () => void;
+}
+
+export const ConversationList: React.FC<ConversationListProps> = ({
+  conversations,
+  selectedId,
+  currentUserId,
+  isLoading,
+  onSelectConversation,
+  onSearch,
+  onPin,
+  onMute,
+  onDelete,
+  onNewChat
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    onSearch(value);
+  };
+
+  // Sắp xếp: pinned trước, sau đó theo updatedAt
+  const sortedConversations = [...conversations].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
+  return (
+    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+      {/* Header */}
+      <div className="flex-shrink-0 p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-bold text-gray-900">Tin nhắn</h2>
+          {onNewChat && (
+            <button
+              onClick={onNewChat}
+              className="p-2 text-primary-600 hover:bg-primary-50 rounded-full transition-colors"
+              title="Tạo cuộc trò chuyện mới"
+            >
+              <Users size={20} />
+            </button>
+          )}
+        </div>
+        
+        <Input
+          icon={<Search size={18} />}
+          placeholder="Tìm kiếm cuộc trò chuyện..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="bg-gray-100 border-none h-9 text-sm"
+        />
+      </div>
+
+      {/* Conversations List */}
+      <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Spinner size="md" />
+          </div>
+        ) : sortedConversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Users size={32} className="text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {searchTerm ? 'Không tìm thấy' : 'Chưa có cuộc trò chuyện'}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {searchTerm 
+                ? 'Thử tìm kiếm với từ khóa khác' 
+                : 'Bắt đầu trò chuyện với bạn bè của bạn'}
+            </p>
+          </div>
+        ) : (
+          <div className="group">
+            {sortedConversations.map((conversation) => (
+              <ConversationItem
+                key={conversation.id}
+                conversation={conversation}
+                isActive={conversation.id === selectedId}
+                currentUserId={currentUserId}
+                onClick={() => onSelectConversation(conversation.id)}
+                onPin={() => onPin(conversation.id, !conversation.pinned)}
+                onMute={() => onMute(conversation.id, !conversation.muted)}
+                onDelete={() => onDelete(conversation.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

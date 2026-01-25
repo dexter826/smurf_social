@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { FileText, Download, CheckCheck } from 'lucide-react';
+import { FileText, Download, CheckCheck, Check, MoreVertical, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Message, User } from '../../types';
 import { Avatar } from '../ui';
 
@@ -10,83 +10,198 @@ interface MessageBubbleProps {
   sender?: User;
   showAvatar: boolean;
   showName: boolean;
+  onDelete?: (messageId: string, fileUrl?: string) => void;
 }
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, sender, showAvatar, showName }) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
+  message, 
+  isMe, 
+  sender, 
+  showAvatar, 
+  showName,
+  onDelete
+}) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
+
+  const isRead = message.readBy && message.readBy.length > 1;
   
   const renderContent = () => {
     switch (message.type) {
-        case 'image':
-            return (
-                <div className="rounded-lg overflow-hidden max-w-[280px]">
-                    <img src={message.content} alt="sent" className="w-full h-auto" />
-                </div>
-            );
-        case 'file':
-            return (
-                <div className="flex items-center gap-3 p-3 bg-white/10 rounded border border-current/20 min-w-[200px]">
-                    <div className="bg-gray-100 p-2 rounded">
-                        <FileText size={24} className="text-primary-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate text-sm">{message.fileName || 'Document'}</div>
-                        <div className="text-xs opacity-70">{message.fileSize}</div>
-                    </div>
-                    <button className="p-1 hover:bg-black/10 rounded-full transition-colors">
-                        <Download size={18} />
-                    </button>
-                </div>
-            );
-        case 'sticker':
-             return (
-                 <img src={message.content} alt="sticker" className="w-24 h-24 object-contain" />
-             );
-        default:
-            return <div className="whitespace-pre-wrap break-words">{message.content}</div>;
+      case 'image':
+        return (
+          <div className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative">
+            <img 
+              src={message.fileUrl || message.content} 
+              alt="sent" 
+              className="w-full h-auto"
+              onClick={() => setShowFullImage(true)}
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+              <ImageIcon className="opacity-0 group-hover:opacity-100 text-white" size={32} />
+            </div>
+          </div>
+        );
+        
+      case 'file':
+        const fileSize = message.fileSize 
+          ? `${(message.fileSize / 1024).toFixed(1)} KB`
+          : 'N/A';
+          
+        return (
+          <div className={`flex items-center gap-3 p-3 rounded-lg border min-w-[220px] ${
+            isMe ? 'bg-primary-50 border-primary-200' : 'bg-white border-gray-200'
+          }`}>
+            <div className={`p-2 rounded ${isMe ? 'bg-primary-100' : 'bg-gray-100'}`}>
+              <FileText size={24} className={isMe ? 'text-primary-600' : 'text-gray-600'} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate text-sm">{message.fileName || 'Document'}</div>
+              <div className="text-xs opacity-70">{fileSize}</div>
+            </div>
+            <a
+              href={message.fileUrl}
+              download={message.fileName}
+              className="p-1 hover:bg-black/10 rounded-full transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Download size={18} />
+            </a>
+          </div>
+        );
+        
+      case 'sticker':
+        return (
+          <img src={message.content} alt="sticker" className="w-24 h-24 object-contain" />
+        );
+        
+      default:
+        return <div className="whitespace-pre-wrap break-words">{message.content}</div>;
     }
   };
 
   return (
-    <div className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start'}`}>
-      
-      {/* Avatar for receiver */}
-      {!isMe && (
-        <div className="w-[42px] flex-shrink-0 flex items-end pb-1 mr-2">
+    <>
+      <div className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start'}`}>
+        {/* Avatar for receiver */}
+        {!isMe && (
+          <div className="w-8 flex-shrink-0 flex items-end pb-1 mr-2">
             {showAvatar && <Avatar src={sender?.avatar} size="sm" />}
-        </div>
-      )}
-
-      <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
-        
-        {/* Sender Name in Group */}
-        {!isMe && showName && (
-             <span className="text-[11px] text-gray-500 ml-1 mb-1">{sender?.name}</span>
+          </div>
         )}
 
-        {/* Bubble */}
-        <div 
-            className={`
+        <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : 'items-start'} relative`}>
+          {/* Sender Name in Group */}
+          {!isMe && showName && (
+            <span className="text-[11px] text-gray-500 ml-1 mb-1 font-medium">
+              {sender?.name}
+            </span>
+          )}
+
+          <div className="relative group/message">
+            {/* Bubble */}
+            <div 
+              className={`
                 relative px-3 py-2 text-[15px] shadow-sm
-                ${message.type === 'text' ? 'rounded-xl' : 'rounded-lg bg-transparent shadow-none p-0'}
+                ${message.type === 'text' ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe 
-                    ? (message.type === 'text' ? 'bg-primary-50 text-text-main border border-primary-100 rounded-tr-none' : '') 
-                    : (message.type === 'text' ? 'bg-white text-text-main border border-gray-200 rounded-tl-none' : '')
+                  ? (message.type === 'text' ? 'bg-primary-500 text-white rounded-br-sm' : '') 
+                  : (message.type === 'text' ? 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm' : '')
                 }
-            `}
-        >
-            {renderContent()}
-            
-            {/* Timestamp & Status Overlay (for text) */}
-             {message.type === 'text' && (
-                <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 opacity-60 select-none`}>
-                    {format(new Date(message.timestamp), 'HH:mm')}
+              `}
+            >
+              {renderContent()}
+              
+              {/* Timestamp & Status for text messages */}
+              {message.type === 'text' && (
+                <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
+                  isMe ? 'text-white/80' : 'text-gray-500'
+                }`}>
+                  <span>{format(new Date(message.timestamp), 'HH:mm')}</span>
+                  {isMe && (
+                    isRead 
+                      ? <CheckCheck size={14} className="text-blue-400" />
+                      : <Check size={14} />
+                  )}
                 </div>
-             )}
+              )}
+            </div>
+
+            {/* Menu cho tin nhắn */}
+            {isMe && onDelete && (
+              <div className="absolute top-0 right-full mr-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-1 hover:bg-gray-200 rounded-full"
+                >
+                  <MoreVertical size={14} />
+                </button>
+
+                {showMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowMenu(false)}
+                    />
+                    <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-32">
+                      <button
+                        onClick={() => {
+                          if (confirm('Xóa tin nhắn này?')) {
+                            onDelete(message.id, message.fileUrl);
+                          }
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                      >
+                        <Trash2 size={14} />
+                        Xóa
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Timestamp for images/files */}
+          {message.type !== 'text' && (
+            <span className="text-[10px] text-gray-500 mt-1">
+              {format(new Date(message.timestamp), 'HH:mm')}
+              {isMe && (
+                <span className="ml-1">
+                  {isRead 
+                    ? <CheckCheck size={12} className="inline text-blue-500" />
+                    : <Check size={12} className="inline" />
+                  }
+                </span>
+              )}
+            </span>
+          )}
         </div>
 
-        {/* Reaction logic placeholder */}
-        <div className="h-4"></div>
+        {/* Avatar placeholder for sender */}
+        {isMe && <div className="w-8" />}
       </div>
-    </div>
+
+      {/* Full Image Modal */}
+      {showFullImage && message.type === 'image' && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setShowFullImage(false)}
+        >
+          <img
+            src={message.fileUrl || message.content}
+            alt="full"
+            className="max-w-full max-h-full object-contain"
+          />
+          <button
+            className="absolute top-4 right-4 text-white text-2xl hover:text-gray-300"
+            onClick={() => setShowFullImage(false)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </>
   );
 };
