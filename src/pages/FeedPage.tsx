@@ -5,10 +5,10 @@ import { postService } from '../services/postService';
 import { userService } from '../services/userService';
 import { Post, User } from '../types';
 import { Avatar, Spinner } from '../components/ui';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 
 const FeedPage: React.FC = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser } = useAuthStore();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});

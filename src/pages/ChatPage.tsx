@@ -6,13 +6,13 @@ import {
 import { chatService } from '../services/chatService';
 import { userService } from '../services/userService';
 import { Conversation, Message, User } from '../types';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 import { Avatar, Input, Button, Spinner } from '../components/ui';
 import { MessageBubble } from '../components/chat/MessageBubble';
 import { format } from 'date-fns';
 
 const ChatPage: React.FC = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser } = useAuthStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);

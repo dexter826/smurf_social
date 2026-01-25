@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 import { Button, Input } from '../components/ui';
 import { Mail, Lock } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const { login, register, resetPassword, isLoading } = useAuth();
+  const { login, register, resetPassword, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });

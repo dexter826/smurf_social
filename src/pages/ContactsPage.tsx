@@ -1,25 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { UserPlus, Users, Search } from 'lucide-react';
 import { userService } from '../services/userService';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
+import { useContactStore } from '../store/contactStore';
 import { User } from '../types';
 import { Avatar, Button } from '../components/ui';
 
 const ContactsPage: React.FC = () => {
-  const { user: currentUser } = useAuth();
-  const [friends, setFriends] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user: currentUser } = useAuthStore();
+  const { friends, isLoading, fetchFriends } = useContactStore();
 
   useEffect(() => {
-    const fetchFriends = async () => {
-      if (currentUser) {
-        const data = await userService.getAllFriends(currentUser.id);
-        setFriends(data);
-      }
-      setIsLoading(false);
-    };
-    fetchFriends();
-  }, [currentUser]);
+    if (currentUser) {
+      fetchFriends(currentUser.id);
+    }
+  }, [currentUser, fetchFriends]);
 
   return (
     <div className="flex h-full w-full bg-white">

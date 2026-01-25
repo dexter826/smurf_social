@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Camera, Edit3, Grid, Image as ImageIcon, User as UserIcon, Mail, Phone, Calendar } from 'lucide-react';
 import { userService } from '../services/userService';
 import { User } from '../types';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 import { Avatar, Button, Input, Spinner } from '../components/ui';
 
 const ProfilePage: React.FC = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser } = useAuthStore();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);

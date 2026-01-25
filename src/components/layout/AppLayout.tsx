@@ -1,13 +1,13 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { MessageCircle, Users, Clock, Settings, LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { Avatar } from '../ui';
 
 export const AppLayout: React.FC = () => {
-  const { user, logout } = useAuth();
-  const { mode, toggleTheme } = useTheme();
+  const { user, logout } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
 
   const handleLogout = () => {
