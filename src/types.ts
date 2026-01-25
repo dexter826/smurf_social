@@ -15,6 +15,25 @@ export interface User {
   birthDate?: Date;
   status: UserStatus;
   bio?: string;
+  friendIds?: string[];
+  blockedUserIds?: string[];
+  createdAt?: Date;
+}
+
+export enum FriendRequestStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected'
+}
+
+export interface FriendRequest {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  status: FriendRequestStatus;
+  message?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type MessageType = 'text' | 'image' | 'video' | 'file' | 'sticker';

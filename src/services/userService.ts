@@ -22,11 +22,46 @@ export const userService = {
 
   getAllFriends: async (currentUserId: string): Promise<User[]> => {
     try {
-      const q = query(collection(db, 'users'), where('id', '!=', currentUserId));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => doc.data() as User);
+      const userDoc = await getDoc(doc(db, 'users', currentUserId));
+      if (!userDoc.exists()) return [];
+      
+      const userData = userDoc.data() as User;
+      const friendIds = userData.friendIds || [];
+      
+      if (friendIds.length === 0) return [];
+
+      const friends: User[] = [];
+      for (const friendId of friendIds) {
+        const friendDoc = await getDoc(doc(db, 'users', friendId));
+        if (friendDoc.exists()) {
+          friends.push(friendDoc.data() as User);
+        }
+      }
+      
+      return friends;
     } catch (error) {
       console.error("Lỗi lấy danh sách bạn bè", error);
+      return [];
+    }
+  },
+
+  searchUsers: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
+    try {
+      const usersRef = collection(db, 'users');
+      const querySnapshot = await getDocs(usersRef);
+      
+      const users = querySnapshot.docs
+        .map(doc => doc.data() as User)
+        .filter(user => 
+          user.id !== currentUserId &&
+          (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           user.phone?.includes(searchTerm))
+        );
+      
+      return users;
+    } catch (error) {
+      console.error("Lỗi tìm kiếm người dùng", error);
       return [];
     }
   },
