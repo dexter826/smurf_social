@@ -1,4 +1,4 @@
 export * from './PostItem';
+export * from './PostItem';
 export * from './CommentSection';
-export * from './CreatePostModal';
-export * from './EditPostModal';
+export * from './PostModal';

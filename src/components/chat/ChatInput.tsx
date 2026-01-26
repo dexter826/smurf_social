@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X } from 'lucide-react';
+import { EmojiPicker } from '../ui';
 
 interface ChatInputProps {
   onSendText: (text: string) => void;
@@ -214,13 +215,26 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             className="w-full resize-none border border-gray-300 rounded-2xl px-4 py-2 pr-10 text-sm focus:outline-none focus:border-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed max-h-[120px]"
             rows={1}
           />
-          <button
-            type="button"
-            className="absolute right-2 bottom-2 p-1 text-gray-500 hover:text-gray-700 transition-colors"
-            title="Emoji (Chưa hỗ trợ)"
-          >
-            <Smile size={20} />
-          </button>
+          <div className="absolute right-2 bottom-1.5">
+            <EmojiPicker
+              onEmojiSelect={(emoji) => {
+                const start = inputRef.current?.selectionStart || 0;
+                const end = inputRef.current?.selectionEnd || 0;
+                const newText = inputText.substring(0, start) + emoji + inputText.substring(end);
+                setInputText(newText);
+                
+                // Đặt lại con trỏ sau emoji
+                setTimeout(() => {
+                  if (inputRef.current) {
+                    const newPos = start + emoji.length;
+                    inputRef.current.focus();
+                    inputRef.current.setSelectionRange(newPos, newPos);
+                  }
+                }, 0);
+              }}
+              disabled={disabled || isSending}
+            />
+          </div>
         </div>
 
         {/* Send Button */}

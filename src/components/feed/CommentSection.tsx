@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Heart, Loader2, Image as ImageIcon } from 'lucide-react';
-import { Avatar, Button } from '../ui';
+import { Avatar, Button, EmojiPicker } from '../ui';
 import { Comment, User } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
@@ -216,23 +216,40 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={editingContent}
-                      onChange={(e) => setEditingContent(e.target.value)}
-                      className="w-full bg-gray-100 rounded-full px-4 py-2 pr-10 text-sm border-none outline-none focus:ring-1 focus:ring-primary-500"
-                      disabled={isSubmitting}
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={() => editFileInputRef.current?.click()}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-500"
-                      disabled={isSubmitting}
-                    >
-                      <ImageIcon size={18} />
-                    </button>
+                    <div className="flex-1 relative">
+                      <input
+                        id={`edit-comment-${comment.id}`}
+                        type="text"
+                        value={editingContent}
+                        onChange={(e) => setEditingContent(e.target.value)}
+                        className="w-full bg-gray-100 rounded-full px-4 py-2 pr-20 text-sm border-none outline-none focus:ring-1 focus:ring-primary-500"
+                        disabled={isSubmitting}
+                        autoFocus
+                      />
+                      <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                        <EmojiPicker
+                          onEmojiSelect={(emoji) => {
+                            const input = document.getElementById(`edit-comment-${comment.id}`) as HTMLInputElement;
+                            const start = input?.selectionStart || 0;
+                            const end = input?.selectionEnd || 0;
+                            const newText = editingContent.substring(0, start) + emoji + editingContent.substring(end);
+                            setEditingContent(newText);
+                            setTimeout(() => {
+                              input?.focus();
+                              input?.setSelectionRange(start + emoji.length, start + emoji.length);
+                            }, 0);
+                          }}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => editFileInputRef.current?.click()}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-500"
+                        disabled={isSubmitting}
+                      >
+                        <ImageIcon size={18} />
+                      </button>
                     <input 
                       ref={editFileInputRef}
                       type="file" 
@@ -380,13 +397,30 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           <div className="flex-1 flex gap-2">
             <div className="flex-1 relative">
               <input
+                id="comment-input-main"
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
-                className="w-full bg-gray-100 rounded-full px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full bg-gray-100 rounded-full px-4 py-2 pr-20 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                 disabled={isSubmitting}
               />
+              <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                <EmojiPicker
+                  onEmojiSelect={(emoji) => {
+                    const input = document.getElementById('comment-input-main') as HTMLInputElement;
+                    const start = input?.selectionStart || 0;
+                    const end = input?.selectionEnd || 0;
+                    const newText = newComment.substring(0, start) + emoji + newComment.substring(end);
+                    setNewComment(newText);
+                    setTimeout(() => {
+                      input?.focus();
+                      input?.setSelectionRange(start + emoji.length, start + emoji.length);
+                    }, 0);
+                  }}
+                  disabled={isSubmitting}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}

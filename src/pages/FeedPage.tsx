@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Image as ImageIcon, Video, Loader2 } from 'lucide-react';
-import { PostItem, CreatePostModal, EditPostModal } from '../components/feed';
+import { PostItem, PostModal } from '../components/feed';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
@@ -269,29 +269,20 @@ const FeedPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modals */}
-      <CreatePostModal
-        isOpen={showCreateModal}
+      {/* Modal */}
+      <PostModal
+        isOpen={showCreateModal || !!showEditModal}
         onClose={() => {
           setShowCreateModal(false);
+          setShowEditModal(null);
           setPendingFiles([]);
         }}
         currentUser={currentUser}
-        onSubmit={handleCreatePost}
-        onUploadImages={handleUploadImages}
+        initialPost={editPost}
         initialFiles={pendingFiles}
+        onSubmit={showEditModal ? handleEditPost : handleCreatePost}
+        onUploadImages={handleUploadImages}
       />
-
-      {showEditModal && editPost && (
-        <EditPostModal
-          isOpen={true}
-          onClose={() => setShowEditModal(null)}
-          post={editPost}
-          currentUser={currentUser}
-          onSubmit={handleEditPost}
-          onUploadImages={handleUploadImages}
-        />
-      )}
     </div>
   );
 };

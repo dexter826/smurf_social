@@ -239,7 +239,12 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         </button>
       </div>
 
-// ... existing logic
+      {showComments && (
+        <CommentSection
+          postId={post.id}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 };
