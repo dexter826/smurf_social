@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-type TabType = 'about' | 'posts' | 'friends' | 'photos' | 'videos';
+type TabType = 'media' | 'posts' | 'friends';
 
 interface ProfileTabsProps {
   activeTab: TabType;
@@ -12,29 +12,25 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   onTabChange
 }) => {
   const tabs: { id: TabType; label: string }[] = [
-    { id: 'posts', label: 'Bài viết' },
-    { id: 'photos', label: 'Ảnh' },
-    { id: 'videos', label: 'Video' }
+    { id: 'posts', label: 'Tất cả' },
+    { id: 'media', label: 'Ảnh/Video' }
   ];
 
   return (
-    <div className="border-b border-divider bg-bg-primary transition-theme">
-      <div className="max-w-5xl mx-auto px-4">
+    <div className="transition-theme">
+      <div className="max-w-5xl mx-auto px-4 border-b border-divider">
         <div className="flex gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-3 font-medium text-sm transition-colors relative ${
+              className={`px-4 py-3 text-sm transition-all relative ${
                 activeTab === tab.id
-                  ? 'text-primary-500'
-                  : 'text-text-secondary hover:bg-bg-hover'
+                  ? 'text-primary-600 font-bold'
+                  : 'text-text-secondary font-medium hover:bg-bg-hover'
               }`}
             >
               {tab.label}
-              {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500" />
-              )}
             </button>
           ))}
         </div>

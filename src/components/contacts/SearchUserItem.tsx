@@ -57,7 +57,7 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
         <div>
           <h3 className="font-semibold text-text-primary">{user.name}</h3>
           <p className="text-xs text-text-secondary">
-            {user.email || user.phone || 'Người dùng Smurf Social'}
+            {user.email || 'Người dùng Smurf Social'}
           </p>
         </div>
       </div>

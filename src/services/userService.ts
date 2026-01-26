@@ -55,9 +55,7 @@ export const userService = {
         .map(doc => doc.data() as User)
         .filter(user => 
           user.id !== currentUserId &&
-          (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           user.phone?.includes(searchTerm))
+          user.email?.toLowerCase().includes(searchTerm.toLowerCase())
         );
       
       return users;

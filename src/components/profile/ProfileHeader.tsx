@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit } from 'lucide-react';
 import { User } from '../../types';
 import { Avatar, Button } from '../ui';
 
@@ -58,9 +58,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   };
 
   return (
-    <>
+    <div className="max-w-5xl mx-auto">
       {/* Cover */}
-      <div className="relative h-[200px] md:h-[320px] w-full bg-gradient-to-br from-primary-400 to-primary-600">
+      <div className="relative h-[200px] md:h-[320px] w-full bg-gradient-to-br from-primary-400 to-primary-600 md:rounded-b-2xl overflow-hidden shadow-sm">
         <img 
           src={user.coverImage || '/cover-image.jpg'} 
           className="w-full h-full object-cover" 
@@ -88,9 +88,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       </div>
 
       {/* Profile Info */}
-      <div className="max-w-5xl mx-auto px-4">
-        <div className="relative -mt-12 md:-mt-16 pb-6 border-b border-divider">
-          <div className="flex flex-col md:flex-row md:items-end gap-6">
+      <div className="px-4">
+        <div className="relative -mt-12 md:-mt-16 pb-0 transition-theme">
+          <div className="flex flex-col md:flex-row md:items-end gap-6 pb-6">
             
             {/* Avatar */}
             <div className="relative group">
@@ -120,8 +120,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
 
             {/* Info */}
-            <div className="flex-1 md:mb-2">
-              <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
+            <div className="flex-1 md:mb-1 mt-2 md:mt-0">
+              <h1 className="text-3xl font-bold text-text-primary pt-2 md:pt-0">{user.name}</h1>
               
               {/* Stats */}
               <div className="flex items-center gap-6 mt-2 text-sm text-text-secondary">
@@ -135,8 +135,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {/* Actions */}
             <div className="flex items-center gap-2 md:mb-2">
               {isOwnProfile ? (
-                <Button variant="secondary" onClick={onEditClick} className="rounded-xl px-6 h-11 border-primary-200 text-primary-600 hover:bg-primary-50">
-                  Chỉnh sửa trang cá nhân
+                <Button variant="secondary" onClick={onEditClick} className="rounded-xl px-4 h-11 border-border-medium text-text-primary hover:bg-bg-hover flex items-center gap-2">
+                  <Edit size={18} />
+                  <span>Chỉnh sửa thông tin</span>
                 </Button>
               ) : (
                 <>
@@ -163,6 +164,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };

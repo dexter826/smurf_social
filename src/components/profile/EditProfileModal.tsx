@@ -21,28 +21,37 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  const [provinces, setProvinces] = useState<{ id: string, name: string }[]>([]);
+
   useEffect(() => {
     if (isOpen) {
       setFormData({
         name: user.name,
         bio: user.bio || '',
-        phone: user.phone || '',
+        location: user.location || '',
         gender: user.gender || 'male',
         birthDate: user.birthDate
       });
       setErrors({});
+      fetchProvinces();
     }
   }, [isOpen, user]);
+
+  const fetchProvinces = async () => {
+    try {
+      const response = await fetch('https://provinces.open-api.vn/api/p/');
+      const data = await response.json();
+      setProvinces(data.map((p: any) => ({ value: p.name, label: p.name })));
+    } catch (error) {
+      console.error('Không thể tải danh sách tỉnh/thành phố', error);
+    }
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name?.trim()) {
       newErrors.name = 'Tên không được để trống';
-    }
-    
-    if (formData.phone && !/^\d{10,11}$/.test(formData.phone)) {
-      newErrors.phone = 'Số điện thoại không hợp lệ (10-11 số)';
     }
     
     setErrors(newErrors);
@@ -85,8 +94,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-5">
             
-            {/* Thông tin cơ bản */}
-            {/* Thông tin cơ bản & Liên hệ */}
+            {/* Thông tin chung */}
             <div>
               <h3 className="font-semibold mb-3 text-text-primary">Thông tin chung</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -95,7 +103,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     Tên hiển thị *
                   </label>
                   <Input
-                    value={formData.name}
+                    value={formData.name || ''}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     error={errors.name}
                     placeholder="Nhập tên của bạn"
@@ -108,7 +116,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </label>
                   <div className="relative">
                     <textarea
-                      value={formData.bio}
+                      value={formData.bio || ''}
                       onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
                       placeholder="Viết vài dòng giới thiệu về bản thân..."
                       rows={2}
@@ -125,28 +133,26 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     Email
                   </label>
                   <Input
-                    value={user.email}
+                    value={user.email || ''}
                     disabled
                     className="bg-bg-secondary cursor-not-allowed"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Số điện thoại
-                  </label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    error={errors.phone}
-                    placeholder="Nhập số điện thoại"
+                  <Select
+                    label="Tỉnh/Thành phố"
+                    value={formData.location || ''}
+                    onChange={(val) => setFormData({ ...formData, location: val })}
+                    options={provinces}
+                    placeholder="Chọn địa điểm"
                   />
                 </div>
 
                 <div>
                   <Select
                     label="Giới tính"
-                    value={formData.gender}
+                    value={formData.gender || 'male'}
                     onChange={(val) => setFormData({ ...formData, gender: val as any })}
                     options={[
                       { value: 'male', label: 'Nam' },
@@ -156,12 +162,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   />
                 </div>
 
+                <div>
                   <DatePicker
                     label="Ngày sinh"
                     value={formData.birthDate}
                     onChange={(ts) => setFormData({ ...formData, birthDate: ts })}
                     placeholder="Chọn ngày sinh"
                   />
+                </div>
               </div>
             </div>
 

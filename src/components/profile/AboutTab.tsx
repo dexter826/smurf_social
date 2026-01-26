@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Phone, Calendar, User as UserIcon } from 'lucide-react';
+import { Mail, MapPin, Calendar, User as UserIcon } from 'lucide-react';
 import { User } from '../../types';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -24,12 +24,12 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
               </div>
             </div>
 
-            {user.phone && (
+            {user.location && (
               <div className="flex items-start gap-3">
-                <Phone size={20} className="text-text-secondary mt-0.5" />
+                <MapPin size={20} className="text-text-secondary mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-xs text-text-secondary">Số điện thoại</p>
-                  <p className="text-text-primary">{user.phone}</p>
+                  <p className="text-xs text-text-secondary">Địa điểm</p>
+                  <p className="text-text-primary">{user.location}</p>
                 </div>
               </div>
             )}

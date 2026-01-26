@@ -136,8 +136,7 @@ const ContactsPage: React.FC = () => {
 
   const filteredFriends = friends.filter(friend =>
     friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    friend.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    friend.phone?.includes(searchTerm)
+    friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const groupFriendsByLetter = () => {

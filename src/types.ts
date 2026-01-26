@@ -10,7 +10,7 @@ export interface User {
   name: string;
   avatar: string;
   email: string;
-  phone?: string;
+  location?: string;
   gender?: 'male' | 'female' | 'other';
   birthDate?: Date;
   status: UserStatus;
