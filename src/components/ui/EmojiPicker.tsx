@@ -45,7 +45,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`p-2 text-gray-500 hover:text-primary-500 transition-colors disabled:opacity-50 ${buttonClassName}`}
+        className={`p-2 text-secondary hover:text-primary transition-colors disabled:opacity-50 ${buttonClassName}`}
         title="Emoji"
       >
         <Smile 

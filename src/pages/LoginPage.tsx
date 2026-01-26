@@ -89,11 +89,11 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-primary-50 p-4">
-      <div className="w-full max-w-[400px] bg-white rounded-xl shadow-[0_15px_30px_rgba(8,_112,_184,_0.1)] overflow-hidden transition-all">
-        <div className="bg-primary-500 p-6 text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Smurfy</h1>
-          <p className="text-white/80 text-xs leading-relaxed">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-primary-light p-4 transition-theme">
+      <div className="w-full max-w-[400px] bg-bg-primary rounded-xl shadow-dropdown overflow-hidden transition-all">
+        <div className="bg-primary p-6 text-center">
+          <h1 className="text-2xl font-bold text-text-on-primary mb-2">Smurfy</h1>
+          <p className="text-text-on-primary/80 text-xs leading-relaxed">
             {activeTab === 'forgot' 
               ? 'Nhập email để lấy lại mật khẩu'
               : <>Kết nối cùng Smurfy Web <br/> Trò chuyện & sẻ chia mọi lúc</>
@@ -102,11 +102,11 @@ const LoginPage: React.FC = () => {
         </div>
 
         {activeTab !== 'forgot' && (
-          <div className="flex border-b border-gray-100">
+          <div className="flex border-b border-border-light">
             <button
               onClick={() => handleTabChange('login')}
               className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
-                activeTab === 'login' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'
+                activeTab === 'login' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
               Đăng nhập
@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
             <button
               onClick={() => handleTabChange('register')}
               className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
-                activeTab === 'register' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'
+                activeTab === 'register' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
               Đăng ký
@@ -126,18 +126,18 @@ const LoginPage: React.FC = () => {
           {activeTab === 'forgot' ? (
              <form onSubmit={handleResetSubmit} className="space-y-4">
                 {errors.success && (
-                  <div className="p-2 text-xs text-green-600 bg-green-50 rounded border border-green-100 mb-2">
+                  <div className="p-2 text-xs text-success bg-success-light rounded border border-success mb-2">
                     {errors.success}
                   </div>
                 )}
                 {errors.form && (
-                  <div className="p-2 text-xs text-red-600 bg-red-50 rounded border border-red-100 mb-2">
+                  <div className="p-2 text-xs text-error bg-error-light rounded border border-error mb-2">
                     {errors.form}
                   </div>
                 )}
                 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-700 ml-1">Email đã đăng ký</label>
+                  <label className="text-xs font-semibold text-text-secondary ml-1">Email đã đăng ký</label>
                   <Input
                     icon={<Mail size={16} />}
                     type="email"
@@ -145,7 +145,7 @@ const LoginPage: React.FC = () => {
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     error={errors.email}
-                    className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                    className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
                     autoComplete="email"
                   />
                 </div>
@@ -163,7 +163,7 @@ const LoginPage: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => handleTabChange('login')}
-                    className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                    className="text-xs text-text-secondary hover:text-text-primary font-medium transition-colors"
                   >
                     Quay lại đăng nhập
                   </button>
@@ -172,26 +172,26 @@ const LoginPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
               {errors.form && (
-                <div className="p-2 text-xs text-red-600 bg-red-50 rounded border border-red-100 mb-2">
+                <div className="p-2 text-xs text-error bg-error-light rounded border border-error mb-2">
                   {errors.form}
                 </div>
               )}
 
               {activeTab === 'register' && (
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-700 ml-1">Họ tên</label>
+                  <label className="text-xs font-semibold text-text-secondary ml-1">Họ tên</label>
                   <Input
                     placeholder="Nhập họ tên của bạn"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     error={errors.name}
-                    className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                    className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
                   />
                 </div>
               )}
               
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-700 ml-1">Email</label>
+                <label className="text-xs font-semibold text-text-secondary ml-1">Email</label>
                 <Input
                   icon={<Mail size={16} />}
                   type="email"
@@ -199,13 +199,13 @@ const LoginPage: React.FC = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   error={errors.email}
-                  className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                  className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
                   autoComplete="email"
                 />
               </div>
               
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-700 ml-1">Mật khẩu</label>
+                <label className="text-xs font-semibold text-text-secondary ml-1">Mật khẩu</label>
                 <Input
                   icon={<Lock size={16} />}
                   type="password"
@@ -213,7 +213,7 @@ const LoginPage: React.FC = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   error={errors.password}
-                  className="h-10 !ring-0 !border-gray-200 focus:!border-primary-500 shadow-sm"
+                  className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
                 />
               </div>
 
@@ -231,7 +231,7 @@ const LoginPage: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => handleTabChange('forgot')}
-                    className="text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                    className="text-xs text-primary hover:text-primary-hover font-medium transition-colors"
                   >
                     Quên mật khẩu?
                   </button>
@@ -241,8 +241,8 @@ const LoginPage: React.FC = () => {
           )}
         </div>
         
-        <div className="bg-gray-50 p-3 text-center text-[10px] text-gray-400 border-t border-gray-100">
-          Chấp nhận <a href="#" className="text-primary-500 hover:underline">Điều khoản & Bảo mật</a> khi sử dụng Smurfy.
+        <div className="bg-bg-secondary p-3 text-center text-[10px] text-text-tertiary border-t border-border-light transition-theme">
+          Chấp nhận <a href="#" className="text-primary hover:underline">Diều khoản & Bảo mật</a> khi sử dụng Smurfy.
         </div>
       </div>
     </div>

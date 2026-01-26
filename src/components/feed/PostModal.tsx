@@ -121,15 +121,15 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl">
+      <div className="bg-bg-primary rounded-lg w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl transition-theme">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-border-light">
+          <h2 className="text-xl font-semibold text-text-primary">
             {isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-bg-hover rounded-full transition-colors"
             disabled={isSubmitting}
           >
             <X size={20} />
@@ -141,11 +141,11 @@ export const PostModal: React.FC<PostModalProps> = ({
           <div className="flex items-center gap-3 mb-4">
             <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
             <div>
-              <h3 className="font-semibold text-gray-900">{currentUser.name}</h3>
+              <h3 className="font-semibold text-text-primary">{currentUser.name}</h3>
               <select
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value as any)}
-                className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded border-none outline-none cursor-pointer"
+                className="text-xs text-text-secondary bg-bg-secondary px-2 py-0.5 rounded border-none outline-none cursor-pointer"
                 disabled={isSubmitting}
               >
                 <option value="friends">Bạn bè</option>
@@ -159,7 +159,7 @@ export const PostModal: React.FC<PostModalProps> = ({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={isEdit ? "Bạn đang nghĩ gì thế?" : `${currentUser.name} ơi, bạn đang nghĩ gì thế?`}
-            className="w-full min-h-[120px] text-[15px] text-gray-900 placeholder-gray-400 resize-none outline-none"
+            className="w-full min-h-[150px] text-[16px] text-text-primary placeholder-text-tertiary bg-transparent resize-none outline-none py-2"
             disabled={isSubmitting}
             autoFocus
           />
@@ -194,7 +194,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           )}
 
           {isUploading && (
-            <div className="mt-4 flex items-center justify-center py-8 text-gray-500">
+            <div className="mt-4 flex items-center justify-center py-8 text-text-secondary">
               <Loader2 className="animate-spin mr-2" size={20} />
               Đang tải phương tiện...
             </div>
@@ -202,31 +202,31 @@ export const PostModal: React.FC<PostModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center justify-between mb-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
-            <span className="text-sm font-semibold text-gray-700">Thêm vào bài viết</span>
+        <div className="p-4 border-t border-border-light">
+          <div className="flex items-center justify-between mb-3 bg-bg-secondary p-3 rounded-lg border border-border-light">
+            <span className="text-sm font-semibold text-text-secondary">Thêm vào bài viết</span>
             <div className="flex gap-1">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 hover:bg-gray-200 rounded-full transition-colors group"
+                className="p-2 hover:bg-bg-hover rounded-full transition-colors group"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
               >
-                <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={24} />
+                <ImageIcon className="text-[#22c55e] group-hover:scale-110 transition-transform" size={24} />
               </button>
               <button
                 type="button"
                 onClick={() => videoInputRef.current?.click()}
-                className="p-2 hover:bg-gray-200 rounded-full transition-colors group"
+                className="p-2 hover:bg-bg-hover rounded-full transition-colors group"
                 title="Video"
                 disabled={isSubmitting || isUploading}
               >
-                <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={24} />
+                <Video className="text-info group-hover:scale-110 transition-transform" size={24} />
               </button>
               <div className="flex items-center">
                 <EmojiPicker
-                  buttonClassName="hover:bg-gray-200 rounded-full group"
+                  buttonClassName="hover:bg-bg-hover rounded-full group"
                   onEmojiSelect={(emoji) => {
                     const start = textareaRef.current?.selectionStart || 0;
                     const end = textareaRef.current?.selectionEnd || 0;

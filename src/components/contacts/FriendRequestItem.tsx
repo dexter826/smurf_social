@@ -35,15 +35,15 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-100 last:border-0">
+    <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
       <div className="flex items-center gap-3 flex-1">
         <Avatar src={user.avatar} name={user.name} size="lg" status={user.status} />
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900">{user.name}</h3>
+          <h3 className="font-semibold text-text-primary">{user.name}</h3>
           {request.message && (
-            <p className="text-sm text-gray-600 mt-1">"{request.message}"</p>
+            <p className="text-sm text-text-secondary mt-1">"{request.message}"</p>
           )}
-          <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+          <p className="text-xs text-text-tertiary mt-1 flex items-center gap-1">
             <Clock size={12} />
             {formatTime(request.createdAt)}
           </p>

@@ -150,7 +150,7 @@ const FeedPage: React.FC = () => {
   if (!currentUser) {
     return (
       <div className="h-full flex items-center justify-center">
-        <p className="text-gray-500">Vui lòng đăng nhập</p>
+        <p className="text-text-secondary">Vui lòng đăng nhập</p>
       </div>
     );
   }
@@ -158,31 +158,31 @@ const FeedPage: React.FC = () => {
   const editPost = posts.find(p => p.id === showEditModal);
 
   return (
-    <div className="flex justify-center h-full w-full overflow-y-auto bg-gray-50">
+    <div className="flex justify-center h-full w-full overflow-y-auto bg-bg-secondary transition-theme">
       <div className="w-full max-w-[640px] py-6 space-y-4 px-2 md:px-0 pb-20">
         {/* Create Post Card */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-bg-primary rounded-xl p-4 shadow-sm border border-border-light transition-theme">
           <div className="flex gap-3 mb-4">
             <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2.5 flex items-center text-gray-500 cursor-pointer transition-colors text-left font-medium"
+              className="flex-1 bg-bg-secondary hover:bg-bg-hover rounded-full px-4 py-2.5 flex items-center text-text-secondary cursor-pointer transition-colors text-left font-medium border-none outline-none"
             >
               {currentUser.name} ơi, bạn đang nghĩ gì thế?
             </button>
           </div>
           
-          <div className="flex gap-2 pt-2 border-t border-gray-100">
+          <div className="flex gap-2 pt-2 border-t border-divider">
             <button
               onClick={() => imageInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-gray-50 rounded-lg text-[15px] font-semibold text-gray-600 transition-colors group"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-bg-hover rounded-lg text-[15px] font-semibold text-text-secondary transition-colors group"
             >
               <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
-              Ảnh
+              Ảnh/Video
             </button>
             <button
               onClick={() => videoInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-gray-50 rounded-lg text-[15px] font-semibold text-gray-600 transition-colors group"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-bg-hover rounded-lg text-[15px] font-semibold text-text-secondary transition-colors group"
             >
               <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />
               Video
@@ -219,9 +219,9 @@ const FeedPage: React.FC = () => {
             <Loader2 className="animate-spin text-primary-500" size={32} />
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-100 text-center">
-            <p className="text-gray-500 text-lg font-medium">Chưa có bài viết nào</p>
-            <p className="text-gray-400 text-sm mt-2">
+          <div className="bg-bg-primary rounded-xl p-12 shadow-sm border border-border-light text-center transition-theme">
+            <p className="text-text-secondary text-lg font-medium">Chưa có bài viết nào</p>
+            <p className="text-text-tertiary text-sm mt-2">
               Hãy tạo bài viết đầu tiên của bạn!
             </p>
           </div>
@@ -261,7 +261,7 @@ const FeedPage: React.FC = () => {
             )}
 
             {!hasMore && posts.length > 0 && (
-              <p className="text-center text-gray-400 text-sm py-8 font-medium">
+              <p className="text-center text-text-tertiary text-sm py-8 font-medium">
                 Bạn đã xem hết bài viết.
               </p>
             )}

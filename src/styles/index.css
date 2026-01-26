@@ -3,43 +3,127 @@
 @tailwind utilities;
 
 :root {
+  /* === Brand Colors === */
   --color-primary: #0068ff;
-  --color-primary-dark: #0054cc;
+  --color-primary-hover: #0056d6;
+  --color-primary-active: #0047b3;
   --color-primary-light: #e6f0ff;
-  --color-primary-sidebar: #0068ff;
 
-  /* Backgrounds */
-  --bg-main: #ffffff;
-  --bg-secondary: #f4f5f7;
+  /* === Sidebar Colors === */
+  --sidebar-bg: #0068ff;
+  --sidebar-item: rgba(255, 255, 255, 0.7);
+  --sidebar-item-hover: rgba(0, 0, 0, 0.1);
+  --sidebar-item-active: rgba(0, 0, 0, 0.15);
+
+  /* === Background Colors - Đơn giản hóa: CHỈ 2 MÀU === */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f2f5;
   --bg-hover: #ebeef2;
+  --bg-message-sent: #0068ff;
+  --bg-message-received: #ebeef2;
+  --bg-overlay: rgba(0, 0, 0, 0.4);
 
-  /* Text */
-  --text-main: #0f172a;
-  --text-secondary: #64748b;
+  /* === Text Colors === */
+  --text-primary: #081c36;
+  --text-secondary: #7589a3;
+  --text-tertiary: #a0aec0;
+  --text-inverse: #ffffff;
+  --text-link: #0068ff;
+  --text-on-primary: #ffffff;
+
+  /* === Border & Divider - Đơn giản hóa === */
+  --border-light: #e4e6eb;
+  --border-medium: #d1d5db;
+  --divider: #e4e6eb;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
+  --color-info: #3b82f6;
+  --color-info-light: #dbeafe;
+
+  /* === Online Status === */
+  --status-online: #10b981;
+  --status-offline: #9ca3af;
+  --status-away: #f59e0b;
+
+  /* === Badge & Notification === */
+  --badge-bg: #ef4444;
+  --badge-text: #ffffff;
+  --notification-bg: #fef2f2;
+  --notification-border: #fecaca;
+
+  /* === Shadows === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.12);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .dark {
-  --color-primary: #3384ff;
-  --color-primary-dark: #66a3ff;
-  --color-primary-light: #1e293b;
-  --color-primary-sidebar: #1e293b;
+  /* === Brand Colors === */
+  --color-primary: #3b8fff;
+  --color-primary-hover: #579fff;
+  --color-primary-active: #73afff;
+  --color-primary-light: #1e3a5f;
 
-  --bg-main: #111827;
-  --bg-secondary: #0f172a;
-  --bg-hover: #1e293b;
+  /* === Sidebar Colors - ĐỒNG BỘ === */
+  --sidebar-bg: #111827;
+  --sidebar-item: rgba(255, 255, 255, 0.6);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-item-active: rgba(255, 255, 255, 0.12);
 
-  --text-main: #f3f4f6;
-  --text-secondary: #9ca3af;
+  /* === Background Colors - ĐỒNG BỘ: CHỈ 2 MÀU CHÍNH === */
+  --bg-primary: #1f2937;
+  --bg-secondary: #111827;
+  --bg-hover: #374151;
+  --bg-message-sent: #3b8fff;
+  --bg-message-received: #374151;
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+
+  /* === Text Colors === */
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-tertiary: #6e7681;
+  --text-inverse: #111827;
+  --text-link: #58a6ff;
+  --text-on-primary: #ffffff;
+
+  /* === Border & Divider - ĐỒNG BỘ === */
+  --border-light: #374151;
+  --border-medium: #4b5563;
+  --divider: #374151;
+  --color-warning: #d29922;
+  --color-warning-light: #3d2e1a;
+  --color-info: #58a6ff;
+  --color-info-light: #1f3551;
+
+  /* === Online Status === */
+  --status-online: #3fb950;
+  --status-offline: #6e7681;
+  --status-away: #d29922;
+
+  /* === Badge & Notification === */
+  --badge-bg: #f85149;
+  --badge-text: #ffffff;
+  --notification-bg: #3d1f1f;
+  --notification-border: #6e3030;
+
+  /* === Shadows === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.5);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .shadow-zalo {
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
 }
 
 body {
-  @apply bg-bg-secondary text-text-main antialiased overflow-hidden h-screen w-screen selection:bg-primary-100 selection:text-primary-600;
+  @apply bg-bg-secondary text-text-primary antialiased overflow-hidden h-screen w-screen;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* === Scrollbar Styles === */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -50,14 +134,30 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-medium);
   border-radius: 10px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--border-dark);
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-medium);
+}
+
+/* === Selection === */
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--text-primary);
+}
+
+/* === Animations === */
 .fade-in {
   opacity: 0;
   animation: fadeIn 0.2s ease-in-out forwards;
@@ -66,9 +166,38 @@ body {
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(4px);
   }
 
   to {
     opacity: 1;
+    transform: translateY(0);
   }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* === Utility Classes === */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transition-theme {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }

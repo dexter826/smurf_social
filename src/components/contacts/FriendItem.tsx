@@ -29,12 +29,12 @@ export const FriendItem: React.FC<FriendItemProps> = ({
   };
 
   return (
-    <div className="relative flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors group border-b border-gray-100 last:border-0">
+    <div className="relative flex items-center justify-between p-3 hover:bg-bg-hover rounded-lg transition-colors group border-b border-divider last:border-0">
       <div className="flex items-center gap-4 flex-1">
         <Avatar src={friend.avatar} name={friend.name} size="md" status={friend.status} />
         <div>
-          <h3 className="font-semibold text-gray-900">{friend.name}</h3>
-          <p className="text-xs text-gray-500">
+          <h3 className="font-semibold text-text-primary">{friend.name}</h3>
+          <p className="text-xs text-text-secondary">
             {friend.phone || 'Chưa cập nhật số điện thoại'}
           </p>
         </div>
@@ -65,9 +65,9 @@ export const FriendItem: React.FC<FriendItemProps> = ({
                 className="fixed inset-0 z-10"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[180px]">
+              <div className="absolute right-0 top-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-dropdown z-20 min-w-[180px]">
                 <button
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-text-primary transition-colors"
                   onClick={() => {
                     onUnfriend?.(friend.id);
                     setShowMenu(false);
@@ -77,7 +77,7 @@ export const FriendItem: React.FC<FriendItemProps> = ({
                   Hủy kết bạn
                 </button>
                 <button
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-error transition-colors"
                   onClick={() => {
                     onBlock?.(friend.id);
                     setShowMenu(false);

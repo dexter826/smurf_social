@@ -205,11 +205,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             {isEditing ? (
               <div className="w-full">
                 {editingImagePreview && (
-                  <div className="relative inline-block mb-2 overflow-hidden rounded-lg border border-gray-200">
+                  <div className="relative inline-block mb-2 overflow-hidden rounded-lg border border-border-light">
                     <img src={editingImagePreview} alt="Preview" className="h-20 w-20 object-cover" />
                     <button 
                       onClick={() => removeImage(true)}
-                      className="absolute -top-1 -right-1 bg-gray-800 text-white rounded-full p-0.5 hover:bg-gray-900"
+                      className="absolute -top-1 -right-1 bg-secondary text-inverse rounded-full p-0.5 hover:bg-hover transition-colors"
                     >
                       <X size={12} />
                     </button>
@@ -222,7 +222,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                         type="text"
                         value={editingContent}
                         onChange={(e) => setEditingContent(e.target.value)}
-                        className="w-full bg-gray-100 rounded-full px-4 py-2 pr-20 text-sm border-none outline-none focus:ring-1 focus:ring-primary-500"
+                        className="w-full bg-bg-secondary rounded-full px-4 py-2 pr-20 text-sm border-none outline-none focus:ring-1 focus:ring-primary-500"
                         disabled={isSubmitting}
                         autoFocus
                       />
@@ -245,7 +245,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => editFileInputRef.current?.click()}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-500"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors"
                         disabled={isSubmitting}
                       >
                         <ImageIcon size={18} />
@@ -261,34 +261,34 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   <button
                     onClick={() => handleUpdateComment(comment.id, comment)}
                     disabled={(!editingContent.trim() && !editingImagePreview) || isSubmitting}
-                    className="p-2 text-primary-500 hover:bg-primary-50 rounded-full disabled:opacity-50"
+                    className="p-2 text-primary-500 hover:bg-primary-50 rounded-full disabled:opacity-50 transition-colors"
                   >
                     <Send size={18} />
                   </button>
                   <button
                     onClick={() => setEditingCommentId(null)}
-                    className="text-xs text-gray-500 hover:underline px-1"
+                    className="text-xs text-text-secondary hover:underline px-1"
                   >
                     Hủy
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-100 rounded-2xl px-4 py-2 inline-block max-w-full w-full sm:w-auto">
-                <h4 className="font-semibold text-sm text-gray-900">
+              <div className="bg-bg-secondary rounded-2xl px-4 py-2 inline-block max-w-full w-full sm:w-auto">
+                <h4 className="font-semibold text-sm text-text-primary">
                   {author?.name || 'Unknown User'}
                 </h4>
                 {comment.content && (
-                  <p className="text-sm text-gray-800 mt-1 break-words">
+                  <p className="text-sm text-text-primary mt-1 break-words">
                     {comment.content}
                   </p>
                 )}
                 {comment.image && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-gray-200">
+                  <div className="mt-2 rounded-lg overflow-hidden border border-border-light">
                     <img 
                       src={comment.image} 
                       alt="Comment attachment" 
-                      className="max-w-full max-h-60 object-contain bg-white" 
+                      className="max-w-full max-h-60 object-contain bg-bg-primary" 
                     />
                   </div>
                 )}
@@ -296,7 +296,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             )}
             
             {!isEditing && (
-              <div className="flex items-center gap-3 mt-1 ml-2 text-xs text-gray-500">
+              <div className="flex items-center gap-3 mt-1 ml-2 text-xs text-text-tertiary">
                 <span className="font-medium">
                   {formatDistanceToNow(comment.timestamp, {
                     locale: {
@@ -355,14 +355,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const rootComments = comments.filter(c => !c.parentId);
 
   return (
-    <div className="border-t border-gray-100 bg-gray-50/30">
+    <div className="border-t border-border-light bg-bg-secondary/30">
       <div className="px-4 py-3">
         {isLoading ? (
           <div className="flex items-center justify-center py-4">
             <Loader2 className="animate-spin text-primary-500" size={24} />
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-4 text-gray-500 text-sm">
+          <div className="text-center py-4 text-text-secondary text-sm">
             Chưa có bình luận nào. Hãy là người đầu tiên!
           </div>
         ) : (
@@ -372,9 +372,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         )}
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-100">
+      <div className="p-4 bg-bg-primary border-t border-border-light transition-theme">
         {replyingTo && (
-          <div className="flex items-center justify-between mb-2 px-2 py-1 bg-gray-50 rounded text-xs text-gray-600">
+          <div className="flex items-center justify-between mb-2 px-2 py-1 bg-bg-secondary rounded text-xs text-text-secondary">
             <span>Đang trả lời <strong>{usersMap[replyingTo.userId]?.name}</strong></span>
             <button onClick={() => setReplyingTo(null)}><X size={14} /></button>
           </div>
@@ -382,10 +382,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
         {imagePreview && (
           <div className="relative inline-block mb-2 ml-10">
-            <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-gray-200" />
+            <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-border-light" />
             <button 
               onClick={removeImage}
-              className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-0.5 hover:bg-gray-900 shadow-md"
+              className="absolute -top-2 -right-2 bg-secondary text-inverse rounded-full p-0.5 hover:bg-hover shadow-md transition-colors"
             >
               <X size={14} />
             </button>
@@ -402,7 +402,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
-                className="w-full bg-gray-100 rounded-full px-4 py-2 pr-20 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full bg-bg-secondary rounded-full px-4 py-2 pr-20 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                 disabled={isSubmitting}
               />
               <div className="absolute right-10 top-1/2 -translate-y-1/2">
@@ -424,7 +424,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-500 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors"
                 disabled={isSubmitting}
               >
                 <ImageIcon size={18} />

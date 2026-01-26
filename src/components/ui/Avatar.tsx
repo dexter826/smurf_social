@@ -20,14 +20,14 @@ export const Avatar: React.FC<AvatarProps> = ({ src, name, size = 'md', status, 
   };
 
   const statusColor = {
-    online: 'bg-green-500 border-white',
-    offline: 'bg-gray-400 border-white',
-    busy: 'bg-red-500 border-white'
+    online: 'bg-status-online border-bg-primary',
+    offline: 'bg-status-offline border-bg-primary',
+    busy: 'bg-status-away border-bg-primary'
   };
 
   return (
     <div className={`relative inline-block rounded-full ${className}`}>
-      <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden border border-gray-100 bg-gray-200 flex items-center justify-center`}>
+      <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden border border-border-light bg-secondary flex items-center justify-center`}>
         {src ? (
           <img
             className="w-full h-full object-cover"

@@ -164,12 +164,9 @@ const ChatPage: React.FC = () => {
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
 
   return (
-    <div className="flex h-full w-full bg-white">
+    <div className="flex h-full w-full">
       {/* Conversation List - Sidebar */}
-      <div className={`
-        ${selectedConversationId ? 'hidden md:flex' : 'flex'}
-        md:w-[360px] flex-shrink-0
-      `}>
+      <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[360px] flex-shrink-0 w-full`}>
         <ConversationList
           conversations={conversations}
           selectedId={selectedConversationId}
@@ -184,10 +181,7 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Chat Area - Main */}
-      <div className={`
-        flex-1 flex flex-col
-        ${selectedConversationId ? 'flex' : 'hidden md:flex'}
-      `}>
+      <div className={`flex-1 flex flex-col ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
         {selectedConversation ? (
           <>
             <ChatBox
@@ -206,14 +200,14 @@ const ChatPage: React.FC = () => {
             />
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
+          <div className="flex-1 flex flex-col items-center justify-center bg-secondary">
             <div className="w-32 h-32 bg-primary-100 rounded-full flex items-center justify-center mb-6">
               <MessageSquare size={64} className="text-primary-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-primary mb-2">
               Tin nhắn của bạn
             </h2>
-            <p className="text-gray-600 text-center max-w-sm">
+            <p className="text-secondary text-center max-w-sm">
               Chọn một cuộc trò chuyện để bắt đầu nhắn tin với bạn bè
             </p>
           </div>

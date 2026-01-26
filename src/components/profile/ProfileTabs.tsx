@@ -19,7 +19,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   ];
 
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 bg-bg-main">
+    <div className="border-b border-divider bg-bg-primary transition-theme">
       <div className="max-w-5xl mx-auto px-4">
         <div className="flex gap-2">
           {tabs.map((tab) => (
@@ -29,7 +29,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
               className={`px-4 py-3 font-medium text-sm transition-colors relative ${
                 activeTab === tab.id
                   ? 'text-primary-500'
-                  : 'text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800'
+                  : 'text-text-secondary hover:bg-bg-hover'
               }`}
             >
               {tab.label}

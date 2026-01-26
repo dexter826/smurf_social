@@ -14,14 +14,14 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Thông tin liên hệ */}
-        <div className="bg-bg-main rounded-lg shadow-card p-6">
-          <h3 className="font-bold text-lg mb-4 text-text-main">Thông tin liên hệ</h3>
+        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+          <h3 className="font-bold text-lg mb-4 text-text-primary">Thông tin liên hệ</h3>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <Mail size={20} className="text-text-secondary mt-0.5" />
               <div className="flex-1">
                 <p className="text-xs text-text-secondary">Email</p>
-                <p className="text-text-main">{user.email}</p>
+                <p className="text-text-primary">{user.email}</p>
               </div>
             </div>
 
@@ -30,7 +30,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
                 <Phone size={20} className="text-text-secondary mt-0.5" />
                 <div className="flex-1">
                   <p className="text-xs text-text-secondary">Số điện thoại</p>
-                  <p className="text-text-main">{user.phone}</p>
+                  <p className="text-text-primary">{user.phone}</p>
                 </div>
               </div>
             )}
@@ -40,7 +40,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
                 <MapPin size={20} className="text-text-secondary mt-0.5" />
                 <div className="flex-1">
                   <p className="text-xs text-text-secondary">Địa chỉ</p>
-                  <p className="text-text-main">{user.location}</p>
+                  <p className="text-text-primary">{user.location}</p>
                 </div>
               </div>
             )}
@@ -48,7 +48,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
         </div>
 
         {/* Thông tin cơ bản */}
-        <div className="bg-bg-main rounded-lg shadow-card p-6">
+        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
           <h3 className="font-bold text-lg mb-4 text-text-main">Thông tin cơ bản</h3>
           <div className="space-y-4">
             <div className="flex items-start gap-3">

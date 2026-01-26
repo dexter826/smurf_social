@@ -80,14 +80,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     .join(', ');
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-bg-secondary transition-theme">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-light bg-bg-primary">
         <div className="flex items-center gap-3 flex-1">
           {onBack && (
             <button
               onClick={onBack}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="md:hidden p-2 hover:bg-bg-hover rounded-full transition-colors"
             >
               ←
             </button>
@@ -96,26 +96,26 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           <div className="relative">
             <Avatar src={avatar} size="md" />
             {isOnline && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-online border-2 border-bg-primary rounded-full" />
             )}
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{chatName}</h3>
-            <p className="text-xs text-gray-500">
+            <h3 className="font-semibold text-text-primary truncate">{chatName}</h3>
+            <p className="text-xs text-text-tertiary">
               {isOnline ? 'Đang hoạt động' : 'Không hoạt động'}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 text-primary-600 hover:bg-primary-50 rounded-full transition-colors">
+          <button className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
             <Phone size={20} />
           </button>
-          <button className="p-2 text-primary-600 hover:bg-primary-50 rounded-full transition-colors">
+          <button className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
             <Video size={20} />
           </button>
-          <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+          <button className="p-2 text-text-secondary hover:bg-bg-hover rounded-full transition-colors">
             <Info size={20} />
           </button>
         </div>
@@ -124,23 +124,23 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       {/* Messages */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50"
+        className="flex-1 overflow-y-auto p-0 bg-bg-secondary"
       >
         {groupedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+            <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
               <Avatar src={avatar} size="lg" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{chatName}</h3>
-            <p className="text-sm text-gray-500">Bắt đầu cuộc trò chuyện</p>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
+            <p className="text-sm text-text-secondary">Bắt đầu cuộc trò chuyện</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 px-4 py-4">
             {groupedMessages.map((group, groupIndex) => (
               <div key={groupIndex}>
                 {/* Date Separator */}
                 <div className="flex items-center justify-center my-4">
-                  <div className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                  <div className="bg-secondary text-text-secondary text-xs px-3 py-1 rounded-full">
                     {group.date}
                   </div>
                 </div>
@@ -170,11 +170,11 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
             {/* Typing Indicator */}
             {typingUsersNames && (
-              <div className="flex items-center gap-2 text-sm text-gray-500 ml-12">
+              <div className="flex items-center gap-2 text-sm text-text-secondary ml-12">
                 <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
                 <span>{typingUsersNames} đang nhập...</span>
               </div>

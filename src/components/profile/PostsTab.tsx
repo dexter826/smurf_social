@@ -86,7 +86,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
   if (posts.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20">
-        <div className="bg-bg-main rounded-lg shadow-card p-8 text-center">
+        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-8 text-center transition-theme">
           <p className="text-text-secondary">Chưa có bài viết nào</p>
         </div>
       </div>

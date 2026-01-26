@@ -59,16 +59,16 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       onClick={onClick}
       className={`
         relative flex items-center gap-3 p-3 cursor-pointer transition-colors
-        hover:bg-gray-50 active:bg-gray-100
-        ${isActive ? 'bg-primary-50 border-l-4 border-primary-500' : ''}
-        ${conversation.pinned ? 'bg-blue-50/30' : ''}
+        hover:bg-bg-hover
+        ${isActive ? 'bg-primary-light border-l-4 border-primary' : ''}
+        ${conversation.pinned ? 'bg-primary-light' : ''}
       `}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         <Avatar src={avatar} size="md" />
         {partner?.status === 'online' && (
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+          <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-online border-2 border-bg-primary rounded-full" />
         )}
       </div>
 
@@ -76,30 +76,30 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <h3 className={`font-semibold text-sm truncate ${unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'}`}>
+            <h3 className={`font-semibold text-sm truncate ${unreadCount > 0 ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatName}
             </h3>
             {conversation.pinned && (
-              <Pin size={14} className="text-primary-500 flex-shrink-0" />
+              <Pin size={14} className="text-primary flex-shrink-0" />
             )}
             {conversation.muted && (
-              <VolumeX size={14} className="text-gray-400 flex-shrink-0" />
+              <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className="text-xs text-gray-500 flex-shrink-0">{timeAgo}</span>
+          <span className="text-xs text-text-tertiary flex-shrink-0">{timeAgo}</span>
         </div>
 
         <div className="flex items-center justify-between">
-          <p className={`text-sm truncate ${unreadCount > 0 ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
+          <p className={`text-sm truncate ${unreadCount > 0 ? 'font-medium text-text-primary' : 'text-text-secondary'}`}>
             {isLastMessageMine && (
               <span className="mr-1">
-                <CheckCheck size={14} className="inline text-primary-500" />
+                <CheckCheck size={14} className="inline text-primary" />
               </span>
             )}
             {lastMessagePreview}
           </p>
           {unreadCount > 0 && (
-            <span className="flex-shrink-0 ml-2 bg-primary-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="flex-shrink-0 ml-2 bg-badge-bg text-badge-text text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -113,7 +113,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             e.stopPropagation();
             setShowMenu(!showMenu);
           }}
-          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-gray-200 rounded-full transition-opacity"
+          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-bg-hover rounded-full transition-opacity"
         >
           <MoreVertical size={16} />
         </button>
@@ -124,7 +124,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               className="fixed inset-0 z-10"
               onClick={() => setShowMenu(false)}
             />
-            <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40">
+            <div className="absolute right-0 top-8 z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40">
               {onPin && (
                 <button
                   onClick={(e) => {
@@ -132,7 +132,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                     onPin();
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-text-primary transition-colors"
                 >
                   <Pin size={14} />
                   {conversation.pinned ? 'Bỏ ghim' : 'Ghim'}
@@ -145,7 +145,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                     onMute();
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-text-primary transition-colors"
                 >
                   {conversation.muted ? <Volume2 size={14} /> : <VolumeX size={14} />}
                   {conversation.muted ? 'Bật thông báo' : 'Tắt thông báo'}
@@ -160,7 +160,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                     }
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error flex items-center gap-2 transition-colors"
                 >
                   <Trash2 size={14} />
                   Xóa

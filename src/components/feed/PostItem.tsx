@@ -31,16 +31,16 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   const isOwner = post.userId === currentUser.id;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+    <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-theme">
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
           <Avatar src={author?.avatar} name={author?.name} size="md" status={author?.status} />
           <div>
-            <h3 className="font-semibold text-gray-900 text-[15px]">
+            <h3 className="font-semibold text-text-primary text-[15px]">
               {author?.name || 'Unknown User'}
             </h3>
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
+            <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
               <span>
                 {formatDistanceToNow(post.timestamp, {
                   locale: {
@@ -79,7 +79,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="text-gray-500 hover:bg-gray-100 p-1.5 rounded-full transition-colors"
+              className="text-text-secondary hover:bg-bg-hover p-1.5 rounded-full transition-colors"
             >
               <MoreHorizontal size={20} />
             </button>
@@ -90,13 +90,13 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                   className="fixed inset-0 z-10"
                   onClick={() => setShowMenu(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[160px]">
+                <div className="absolute right-0 top-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-dropdown z-20 min-w-[160px]">
                   <button
                     onClick={() => {
                       onEdit?.(post.id);
                       setShowMenu(false);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-text-primary transition-colors"
                   >
                     <Edit size={16} />
                     Chỉnh sửa
@@ -106,7 +106,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                       onDelete?.(post.id);
                       setShowMenu(false);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-error transition-colors"
                   >
                     <Trash2 size={16} />
                     Xóa bài viết
@@ -120,14 +120,14 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
       {/* Content */}
       <div className="px-4 pb-3">
-        <p className="text-gray-900 whitespace-pre-line text-[15px] leading-relaxed">
+        <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
           {post.content}
         </p>
       </div>
 
       {/* Media (Images & Videos) */}
       {((post.images && post.images.length > 0) || (post.videos && post.videos.length > 0)) && (
-        <div className="bg-gray-100 relative">
+        <div className="bg-bg-secondary relative">
           {(() => {
             const allMedia = [
               ...(post.images || []).map(url => ({ url, type: 'image' })),
@@ -169,7 +169,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                   {mediaIndex > 0 && (
                     <button
                       onClick={() => setMediaIndex(mediaIndex - 1)}
-                      className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg pointer-events-auto"
+                      className="bg-bg-primary bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-dropdown pointer-events-auto transition-colors"
                     >
                       ←
                     </button>
@@ -177,7 +177,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                   {mediaIndex < totalMedia - 1 && (
                     <button
                       onClick={() => setMediaIndex(mediaIndex + 1)}
-                      className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg ml-auto pointer-events-auto"
+                      className="bg-bg-primary bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-dropdown ml-auto pointer-events-auto transition-colors"
                     >
                       →
                     </button>
@@ -190,20 +190,20 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       )}
 
       {/* Stats */}
-      <div className="px-4 py-3 flex justify-between items-center border-b border-gray-50">
+      <div className="px-4 py-3 flex justify-between items-center border-b border-border-light">
         <div className="flex items-center gap-1.5">
           {post.likes.length > 0 && (
             <>
               <div className="bg-primary-500 p-1 rounded-full">
                 <Heart size={12} className="text-white fill-white" />
               </div>
-              <span className="text-sm text-gray-600 font-medium">
+              <span className="text-sm text-text-secondary font-medium">
                 {post.likes.length}
               </span>
             </>
           )}
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
+        <div className="flex items-center gap-4 text-sm text-text-secondary">
           {post.commentCount > 0 && (
             <button
               onClick={() => setShowComments(!showComments)}
@@ -216,13 +216,13 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       </div>
 
       {/* Actions */}
-      <div className="flex px-2 py-1 border-b border-gray-50">
+      <div className="flex px-2 py-1 border-b border-border-light">
         <button
           onClick={() => onLike(post.id)}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-all active:scale-95 ${
+          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors active:scale-95 ${
             isLiked
               ? 'text-primary-500'
-              : 'text-gray-600 hover:bg-gray-50'
+              : 'text-text-secondary hover:bg-bg-hover'
           }`}
         >
           <Heart size={20} className={isLiked ? 'fill-current' : ''} />
@@ -230,8 +230,8 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-all ${
-            showComments ? 'text-primary-500 bg-primary-50/50' : 'text-gray-600 hover:bg-gray-50'
+          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors ${
+            showComments ? 'text-primary-500 bg-primary-50/50' : 'text-text-secondary hover:bg-bg-hover'
           }`}
         >
           <MessageCircle size={20} />
@@ -251,7 +251,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
 // Define and attach Skeleton
 const PostSkeleton: React.FC = () => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-theme">
     <div className="p-4 flex items-start justify-between">
       <div className="flex gap-3">
         <Skeleton variant="circle" width={40} height={40} />
@@ -265,10 +265,10 @@ const PostSkeleton: React.FC = () => (
       <Skeleton variant="line" width="100%" height={16} className="opacity-70" />
       <Skeleton variant="line" width="75%" height={16} className="opacity-70" />
     </div>
-    <div className="w-full h-64 bg-gray-50 flex items-center justify-center">
+    <div className="w-full h-64 bg-bg-secondary flex items-center justify-center">
       <Skeleton variant="rect" width={48} height={48} className="opacity-20" />
     </div>
-    <div className="flex px-2 py-3 border-t border-gray-50">
+    <div className="flex px-2 py-3 border-t border-border-light">
       <div className="flex-1 flex justify-center">
         <Skeleton variant="line" width={64} height={16} className="opacity-50" />
       </div>

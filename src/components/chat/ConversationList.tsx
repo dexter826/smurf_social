@@ -45,15 +45,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+    <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
       {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b border-gray-200">
+      <div className="flex-shrink-0 p-4 border-b border-border-light">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xl font-bold text-gray-900">Tin nhắn</h2>
+          <h2 className="text-xl font-bold text-text-primary">Tin nhắn</h2>
           {onNewChat && (
             <button
               onClick={onNewChat}
-              className="p-2 text-primary-600 hover:bg-primary-50 rounded-full transition-colors"
+              className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors"
               title="Tạo cuộc trò chuyện mới"
             >
               <Users size={20} />
@@ -66,7 +66,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           placeholder="Tìm kiếm cuộc trò chuyện..."
           value={searchTerm}
           onChange={handleSearchChange}
-          className="bg-gray-100 border-none h-9 text-sm"
+          className="bg-bg-secondary border-none h-9 text-sm"
         />
       </div>
 
@@ -78,13 +78,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </div>
         ) : sortedConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Users size={32} className="text-gray-400" />
+            <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
+              <Users size={32} className="text-text-tertiary" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">
               {searchTerm ? 'Không tìm thấy' : 'Chưa có cuộc trò chuyện'}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-text-secondary">
               {searchTerm 
                 ? 'Thử tìm kiếm với từ khóa khác' 
                 : 'Bắt đầu trò chuyện với bạn bè của bạn'}

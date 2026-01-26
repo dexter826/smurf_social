@@ -69,14 +69,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-main rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-bg-primary rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-theme">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-bold text-text-main">Chỉnh sửa trang cá nhân</h2>
+        <div className="flex items-center justify-between p-4 border-b border-border-light">
+          <h2 className="text-xl font-bold text-text-primary">Chỉnh sửa trang cá nhân</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            className="p-2 hover:bg-bg-hover rounded-full transition-colors"
           >
             <X size={20} />
           </button>
@@ -88,7 +88,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             
             {/* Thông tin cơ bản */}
             <div>
-              <h3 className="font-semibold mb-3 text-text-main">Thông tin cơ bản</h3>
+              <h3 className="font-semibold mb-3 text-text-primary">Thông tin cơ bản</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -111,7 +111,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     placeholder="Viết vài dòng giới thiệu về bản thân..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-bg-main text-text-main focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                   />
                 </div>
               </div>
@@ -119,7 +119,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
             {/* Thông tin liên hệ */}
             <div>
-              <h3 className="font-semibold mb-3 text-text-main">Thông tin liên hệ</h3>
+              <h3 className="font-semibold mb-3 text-text-primary">Thông tin liên hệ</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -128,7 +128,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   <Input
                     value={user.email}
                     disabled
-                    className="bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                    className="bg-bg-secondary cursor-not-allowed"
                   />
                   <p className="text-xs text-text-secondary mt-1">Email không thể thay đổi</p>
                 </div>
@@ -149,7 +149,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
             {/* Thông tin cá nhân */}
             <div>
-              <h3 className="font-semibold mb-3 text-text-main">Thông tin cá nhân</h3>
+              <h3 className="font-semibold mb-3 text-text-primary">Thông tin cá nhân</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -158,7 +158,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' | 'other' })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-bg-main text-text-main focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="male">Nam</option>
                     <option value="female">Nữ</option>
@@ -205,7 +205,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-end gap-3 p-4 border-t border-border-light">
           <Button variant="secondary" onClick={onClose} disabled={saving}>
             Hủy
           </Button>

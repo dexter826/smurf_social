@@ -133,7 +133,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto bg-bg-secondary">
+    <div className="h-full w-full overflow-y-auto">
       
       {/* Header */}
       <ProfileHeader

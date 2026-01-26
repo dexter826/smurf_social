@@ -49,7 +49,7 @@ export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
   if (photos.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-20">
-        <div className="bg-bg-main rounded-lg shadow-card p-8 text-center">
+        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-8 text-center transition-theme">
           <ImageIcon size={48} className="mx-auto mb-3 text-text-secondary" />
           <p className="text-text-secondary">Chưa có ảnh nào</p>
         </div>
@@ -60,8 +60,8 @@ export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
   return (
     <>
       <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="bg-bg-main rounded-lg shadow-card p-6">
-          <h3 className="font-bold text-lg mb-4 text-text-main">
+        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+          <h3 className="font-bold text-lg mb-4 text-text-primary">
             Ảnh <span className="text-text-secondary font-normal">({photos.length})</span>
           </h3>
           
@@ -69,7 +69,7 @@ export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
             {photos.map((photo, index) => (
               <div
                 key={index}
-                className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                className="aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => setSelectedPhoto(photo)}
               >
                 <img 

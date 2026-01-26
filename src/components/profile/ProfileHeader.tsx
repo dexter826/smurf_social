@@ -71,7 +71,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <button 
             onClick={handleCoverClick}
             disabled={uploading}
-            className="absolute bottom-4 right-4 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+            className="absolute bottom-4 right-4 bg-bg-primary/90 text-text-primary px-3 py-2 rounded-lg hover:bg-bg-primary transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
           >
             <Camera size={18} />
             <span>Chỉnh sửa ảnh bìa</span>
@@ -89,21 +89,21 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
       {/* Profile Info */}
       <div className="max-w-5xl mx-auto px-4">
-        <div className="relative -mt-16 md:-mt-20 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="relative -mt-16 md:-mt-20 pb-4">
           <div className="flex flex-col md:flex-row md:items-end gap-4">
             
             {/* Avatar */}
             <div className="relative group">
               <div className="relative">
-                <div className="p-1 bg-white dark:bg-gray-900 rounded-full">
-                  <Avatar src={user.avatar} size="2xl" className="border-4 border-white dark:border-gray-900" />
+                <div className="p-1 bg-bg-primary rounded-full transition-theme">
+                  <Avatar src={user.avatar} size="2xl" className="border-4 border-bg-primary" />
                 </div>
                 
                 {isOwnProfile && (
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploading}
-                    className="absolute bottom-2 right-2 bg-gray-200 dark:bg-gray-700 p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                    className="absolute bottom-2 right-2 bg-secondary p-2 rounded-full text-text-primary hover:bg-hover transition-colors disabled:opacity-50"
                   >
                     <Camera size={18} />
                   </button>

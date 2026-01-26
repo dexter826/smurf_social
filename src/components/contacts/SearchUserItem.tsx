@@ -51,12 +51,12 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-100 last:border-0">
+    <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
       <div className="flex items-center gap-3 flex-1">
         <Avatar src={user.avatar} name={user.name} size="md" status={user.status} />
         <div>
-          <h3 className="font-semibold text-gray-900">{user.name}</h3>
-          <p className="text-xs text-gray-500">
+          <h3 className="font-semibold text-text-primary">{user.name}</h3>
+          <p className="text-xs text-text-secondary">
             {user.email || user.phone || 'Người dùng Smurf Social'}
           </p>
         </div>
@@ -64,12 +64,12 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
 
       <div>
         {isFriend ? (
-          <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
+          <div className="flex items-center gap-2 text-success text-sm font-medium">
             <Check size={16} />
             Bạn bè
           </div>
         ) : isRequestSent ? (
-          <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+          <div className="flex items-center gap-2 text-text-tertiary text-sm font-medium">
             <X size={16} />
             Đã gửi lời mời
           </div>
