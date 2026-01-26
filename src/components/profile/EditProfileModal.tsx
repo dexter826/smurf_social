@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { User } from '../../types';
-import { Button, Input, Select, DatePicker } from '../ui';
+import { Button, Input, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 
 interface EditProfileModalProps {
@@ -73,120 +72,105 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-primary rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-theme">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-light">
-          <h2 className="text-xl font-bold text-text-primary">Chỉnh sửa trang cá nhân</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-bg-hover rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-5">
-            
-            {/* Thông tin chung */}
-            <div>
-              <h3 className="font-semibold mb-3 text-text-primary">Thông tin chung</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="col-span-1 sm:col-span-2">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Tên hiển thị *
-                  </label>
-                  <Input
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    error={errors.name}
-                    placeholder="Nhập tên của bạn"
-                  />
-                </div>
-
-                <div className="col-span-1 sm:col-span-2">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Giới thiệu
-                  </label>
-                  <div className="relative">
-                    <textarea
-                      value={formData.bio || ''}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
-                      placeholder="Viết vài dòng giới thiệu về bản thân..."
-                      rows={2}
-                      className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                    />
-                    <div className="absolute bottom-2 right-2 text-xs text-text-secondary">
-                      {formData.bio?.length || 0}/150
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Email
-                  </label>
-                  <Input
-                    value={user.email || ''}
-                    disabled
-                    className="bg-bg-secondary cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <Select
-                    label="Tỉnh/Thành phố"
-                    value={formData.location || ''}
-                    onChange={(val) => setFormData({ ...formData, location: val })}
-                    options={provinces}
-                    placeholder="Chọn địa điểm"
-                  />
-                </div>
-
-                <div>
-                  <Select
-                    label="Giới tính"
-                    value={formData.gender || 'male'}
-                    onChange={(val) => setFormData({ ...formData, gender: val as any })}
-                    options={[
-                      { value: 'male', label: 'Nam' },
-                      { value: 'female', label: 'Nữ' },
-                      { value: 'other', label: 'Khác' }
-                    ]}
-                  />
-                </div>
-
-                <div>
-                  <DatePicker
-                    label="Ngày sinh"
-                    value={formData.birthDate}
-                    onChange={(ts) => setFormData({ ...formData, birthDate: ts })}
-                    placeholder="Chọn ngày sinh"
-                  />
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-border-light">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Chỉnh sửa trang cá nhân"
+      maxWidth="2xl"
+      footer={
+        <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>
             Hủy
           </Button>
           <Button variant="primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </Button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        
+        {/* Thông tin chung */}
+        <div>
+          <h3 className="font-semibold mb-3 text-text-primary">Thông tin chung</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="col-span-1 sm:col-span-2">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Tên hiển thị *
+              </label>
+              <Input
+                value={formData.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                error={errors.name}
+                placeholder="Nhập tên của bạn"
+              />
+            </div>
+
+            <div className="col-span-1 sm:col-span-2">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Giới thiệu
+              </label>
+              <div className="relative">
+                <textarea
+                  value={formData.bio || ''}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
+                  placeholder="Viết vài dòng giới thiệu về bản thân..."
+                  rows={2}
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                />
+                <div className="absolute bottom-2 right-2 text-xs text-text-secondary">
+                  {formData.bio?.length || 0}/150
+                </div>
+              </div>
+            </div>
+
+            <div>
+               <label className="block text-sm font-medium text-text-secondary mb-1">
+                Email
+              </label>
+              <Input
+                value={user.email || ''}
+                disabled
+                className="bg-bg-secondary cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <Select
+                label="Tỉnh/Thành phố"
+                value={formData.location || ''}
+                onChange={(val) => setFormData({ ...formData, location: val })}
+                options={provinces}
+                placeholder="Chọn địa điểm"
+              />
+            </div>
+
+            <div>
+              <Select
+                label="Giới tính"
+                value={formData.gender || 'male'}
+                onChange={(val) => setFormData({ ...formData, gender: val as any })}
+                options={[
+                  { value: 'male', label: 'Nam' },
+                  { value: 'female', label: 'Nữ' },
+                  { value: 'other', label: 'Khác' }
+                ]}
+              />
+            </div>
+
+            <div>
+              <DatePicker
+                label="Ngày sinh"
+                value={formData.birthDate}
+                onChange={(ts) => setFormData({ ...formData, birthDate: ts })}
+                placeholder="Chọn ngày sinh"
+              />
+            </div>
+          </div>
         </div>
 
       </div>
-    </div>
+    </Modal>
   );
 };
