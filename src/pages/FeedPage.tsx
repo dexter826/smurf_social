@@ -215,8 +215,10 @@ const FeedPage: React.FC = () => {
             ))}
           </div>
         ) : loadingUsers && posts.length > 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin text-primary-500" size={32} />
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <PostItem.Skeleton key={`loading-users-${i}`} />
+            ))}
           </div>
         ) : posts.length === 0 ? (
           <div className="bg-bg-primary rounded-xl p-12 shadow-sm border border-border-light text-center transition-theme">

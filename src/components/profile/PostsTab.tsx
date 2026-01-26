@@ -3,7 +3,6 @@ import { DocumentSnapshot } from 'firebase/firestore';
 import { Post, User } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
-import { Spinner } from '../ui';
 import { PostItem } from '../feed/PostItem';
 import { FileText } from 'lucide-react';
 
@@ -129,8 +128,10 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner />
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <PostItem.Skeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -190,8 +191,10 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
           }
         })}
         {loadingMore && (
-           <div className="flex justify-center py-4">
-             <Spinner />
+           <div className="space-y-4 mt-4">
+             {[...Array(2)].map((_, i) => (
+               <PostItem.Skeleton key={`more-${i}`} />
+             ))}
            </div>
         )}
       </div>

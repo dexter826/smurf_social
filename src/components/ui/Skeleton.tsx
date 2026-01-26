@@ -1,35 +1,29 @@
 import React from 'react';
+import SkeletonLib, { SkeletonProps as SkeletonLibProps, SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
-interface SkeletonProps {
+interface SkeletonProps extends SkeletonLibProps {
   className?: string;
-  width?: string | number;
-  height?: string | number;
   variant?: 'line' | 'circle' | 'rect';
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
   className = '',
-  width,
-  height,
-  variant = 'rect'
+  variant = 'rect',
+  ...props
 }) => {
-  const baseClasses = 'animate-pulse bg-secondary';
-  
-  const variantClasses = {
-    line: 'rounded',
-    circle: 'rounded-full',
-    rect: 'rounded-lg'
-  };
-
-  const style: React.CSSProperties = {
-    width: width,
-    height: height
-  };
+  const isCircle = variant === 'circle';
 
   return (
-    <div
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-      style={style}
-    />
+    <SkeletonTheme 
+      baseColor="var(--bg-hover)" 
+      highlightColor="var(--bg-primary)"
+    >
+      <SkeletonLib
+        circle={isCircle}
+        className={className}
+        {...props}
+      />
+    </SkeletonTheme>
   );
 };
