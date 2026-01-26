@@ -17,15 +17,15 @@ export const AppLayout: React.FC = () => {
   };
 
   const navItems = [
-    { to: '/', icon: <MessageCircle size={24} />, label: 'Tin nhắn' },
-    { to: '/contacts', icon: <Users size={24} />, label: 'Danh bạ' },
-    { to: '/feed', icon: <LayoutGrid size={24} />, label: 'Nhật ký' },
+    { to: '/', icon: <MessageCircle size={28} />, label: 'Tin nhắn' },
+    { to: '/contacts', icon: <Users size={28} />, label: 'Danh bạ' },
+    { to: '/feed', icon: <LayoutGrid size={28} />, label: 'Nhật ký' },
   ];
 
   return (
     <div className="flex h-screen w-full bg-bg-secondary overflow-hidden transition-theme">
-      <aside className="hidden md:flex w-[64px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md">
-        <div className="mb-6" onClick={() => navigate('/profile')}>
+      <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md">
+        <div className="mb-8" onClick={() => navigate('/profile')}>
           <Avatar 
              src={user?.avatar} 
              size="md" 
@@ -33,13 +33,13 @@ export const AppLayout: React.FC = () => {
           />
         </div>
         
-        <nav className="flex-1 flex flex-col gap-2 w-full items-center">
+        <nav className="flex-1 flex flex-col gap-3 w-full items-center">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                `w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 ${
                   isActive 
                   ? 'bg-sidebar-item-active text-white' 
                   : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
@@ -52,23 +52,23 @@ export const AppLayout: React.FC = () => {
           ))}
         </nav>
 
-        <div className="flex flex-col gap-2 mt-auto w-full items-center mb-4">
+        <div className="flex flex-col gap-3 mt-auto w-full items-center">
            <button 
                 onClick={toggleTheme} 
-                className="w-12 h-12 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all"
+                className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all"
                 title="Chế độ tối"
            >
-               {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
+               {mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
            </button>
-           <button className="w-12 h-12 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" title="Cài đặt">
-             <Settings size={22} />
+           <button className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" title="Cài đặt">
+             <Settings size={28} />
            </button>
            <button 
                 onClick={() => setShowLogoutConfirm(true)} 
-                className="w-12 h-12 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" 
+                className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" 
                 title="Đăng xuất"
            >
-             <LogOut size={22} />
+             <LogOut size={28} />
            </button>
         </div>
       </aside>
