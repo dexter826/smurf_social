@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { User } from '../../types';
-import { Button, Input } from '../ui';
+import { Button, Input, Select } from '../ui';
 
 interface EditProfileModalProps {
   user: User;
@@ -142,18 +142,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Giới tính
-                  </label>
-                  <select
+                  <Select
+                    label="Giới tính"
                     value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' | 'other' })}
-                    className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="male">Nam</option>
-                    <option value="female">Nữ</option>
-                    <option value="other">Khác</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, gender: val as any })}
+                    options={[
+                      { value: 'male', label: 'Nam' },
+                      { value: 'female', label: 'Nữ' },
+                      { value: 'other', label: 'Khác' }
+                    ]}
+                  />
                 </div>
 
                 <div>

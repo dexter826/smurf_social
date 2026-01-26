@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MessageCircle, MoreVertical, UserMinus, Ban } from 'lucide-react';
-import { Avatar, Button } from '../ui';
+import { Avatar, Button, Dropdown, DropdownItem } from '../ui';
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,7 +18,6 @@ export const FriendItem: React.FC<FriendItemProps> = ({
   onMessage
 }) => {
   const navigate = useNavigate();
-  const [showMenu, setShowMenu] = useState(false);
 
   const handleMessage = () => {
     if (onMessage) {
@@ -50,46 +49,25 @@ export const FriendItem: React.FC<FriendItemProps> = ({
           Nhắn tin
         </Button>
         
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowMenu(!showMenu)}
-          >
-            <MoreVertical size={16} />
-          </Button>
-
-          {showMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowMenu(false)}
-              />
-              <div className="absolute right-0 top-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-dropdown z-20 min-w-[180px]">
-                <button
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-text-primary transition-colors"
-                  onClick={() => {
-                    onUnfriend?.(friend.id);
-                    setShowMenu(false);
-                  }}
-                >
-                  <UserMinus size={16} />
-                  Hủy kết bạn
-                </button>
-                <button
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-error transition-colors"
-                  onClick={() => {
-                    onBlock?.(friend.id);
-                    setShowMenu(false);
-                  }}
-                >
-                  <Ban size={16} />
-                  Chặn người dùng
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        <Dropdown
+          trigger={
+            <Button variant="ghost" size="sm">
+              <MoreVertical size={16} />
+            </Button>
+          }
+        >
+          <DropdownItem
+            icon={<UserMinus size={16} />}
+            label="Hủy kết bạn"
+            onClick={() => onUnfriend?.(friend.id)}
+          />
+          <DropdownItem
+            icon={<Ban size={16} />}
+            label="Chặn người dùng"
+            variant="danger"
+            onClick={() => onBlock?.(friend.id)}
+          />
+        </Dropdown>
       </div>
     </div>
   );

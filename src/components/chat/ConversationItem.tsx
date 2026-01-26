@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck } from 'lucide-react';
 import { Conversation, User } from '../../types';
-import { Avatar } from '../ui';
+import { Avatar, Dropdown, DropdownItem } from '../ui';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -24,8 +24,6 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   onMute,
   onDelete
 }) => {
-  const [showMenu, setShowMenu] = React.useState(false);
-
   const partner = conversation.isGroup 
     ? null 
     : conversation.participants.find(p => p.id !== currentUserId);
@@ -108,67 +106,40 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 
       {/* Menu */}
       <div className="absolute top-2 right-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowMenu(!showMenu);
-          }}
-          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-bg-hover rounded-full transition-opacity"
+        <Dropdown
+          trigger={
+            <button className="p-1 opacity-0 group-hover:opacity-100 hover:bg-bg-hover rounded-full transition-opacity">
+              <MoreVertical size={16} />
+            </button>
+          }
         >
-          <MoreVertical size={16} />
-        </button>
-
-        {showMenu && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setShowMenu(false)}
+          {onPin && (
+            <DropdownItem
+              icon={<Pin size={14} />}
+              label={conversation.pinned ? 'Bỏ ghim' : 'Ghim'}
+              onClick={onPin}
             />
-            <div className="absolute right-0 top-8 z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40">
-              {onPin && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPin();
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-text-primary transition-colors"
-                >
-                  <Pin size={14} />
-                  {conversation.pinned ? 'Bỏ ghim' : 'Ghim'}
-                </button>
-              )}
-              {onMute && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMute();
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 text-text-primary transition-colors"
-                >
-                  {conversation.muted ? <Volume2 size={14} /> : <VolumeX size={14} />}
-                  {conversation.muted ? 'Bật thông báo' : 'Tắt thông báo'}
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) {
-                      onDelete();
-                    }
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error flex items-center gap-2 transition-colors"
-                >
-                  <Trash2 size={14} />
-                  Xóa
-                </button>
-              )}
-            </div>
-          </>
-        )}
+          )}
+          {onMute && (
+            <DropdownItem
+              icon={conversation.muted ? <Volume2 size={14} /> : <VolumeX size={14} />}
+              label={conversation.muted ? 'Bật thông báo' : 'Tắt thông báo'}
+              onClick={onMute}
+            />
+          )}
+          {onDelete && (
+            <DropdownItem
+              icon={<Trash2 size={14} />}
+              label="Xóa"
+              variant="danger"
+              onClick={() => {
+                if (confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) {
+                  onDelete();
+                }
+              }}
+            />
+          )}
+        </Dropdown>
       </div>
     </div>
   );

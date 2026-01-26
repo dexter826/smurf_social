@@ -5,3 +5,5 @@ export * from './Spinner';
 export * from './Skeleton';
 export * from './EmojiPicker';
 export * from './Loading';
+export * from './Select';
+export * from './Dropdown';

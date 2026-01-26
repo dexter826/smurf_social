@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
-import { Avatar, Button, EmojiPicker, Loading } from '../ui';
+import { Avatar, Button, EmojiPicker, Loading, Select } from '../ui';
 import { User, Post } from '../../types';
 
 interface PostModalProps {
@@ -142,15 +142,16 @@ export const PostModal: React.FC<PostModalProps> = ({
             <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
             <div>
               <h3 className="font-semibold text-text-primary">{currentUser.name}</h3>
-              <select
+              <Select
                 value={visibility}
-                onChange={(e) => setVisibility(e.target.value as any)}
-                className="text-xs text-text-secondary bg-bg-secondary px-2 py-0.5 rounded border-none outline-none cursor-pointer"
+                onChange={(val) => setVisibility(val as any)}
+                options={[
+                  { value: 'friends', label: 'Bạn bè' },
+                  { value: 'private', label: 'Chỉ mình tôi' }
+                ]}
+                className="w-32"
                 disabled={isSubmitting}
-              >
-                <option value="friends">Bạn bè</option>
-                <option value="private">Chỉ mình tôi</option>
-              </select>
+              />
             </div>
           </div>
 
