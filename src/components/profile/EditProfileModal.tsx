@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { User } from '../../types';
 import { Button, Input, Select, DatePicker } from '../ui';
+import { toast } from '../../store/toastStore';
 
 interface EditProfileModalProps {
   user: User;
@@ -54,9 +55,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setSaving(true);
     try {
       await onSave(formData);
+      toast.success('Cập nhật thông tin thành công!');
       onClose();
     } catch (error) {
-      alert('Không thể cập nhật thông tin');
+      toast.error('Không thể cập nhật thông tin');
     } finally {
       setSaving(false);
     }

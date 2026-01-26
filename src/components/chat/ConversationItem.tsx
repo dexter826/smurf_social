@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck } from 'lucide-react';
 import { Conversation, User } from '../../types';
-import { Avatar, Dropdown, DropdownItem } from '../ui';
+import { Avatar, Dropdown, DropdownItem, ConfirmDialog } from '../ui';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -24,6 +24,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   onMute,
   onDelete
 }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const partner = conversation.isGroup 
     ? null 
     : conversation.participants.find(p => p.id !== currentUserId);
@@ -132,15 +133,21 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               icon={<Trash2 size={14} />}
               label="Xóa"
               variant="danger"
-              onClick={() => {
-                if (confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) {
-                  onDelete();
-                }
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
             />
           )}
         </Dropdown>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => onDelete?.()}
+        title="Xóa cuộc trò chuyện"
+        message="Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa ngay"
+        variant="danger"
+      />
     </div>
   );
 };

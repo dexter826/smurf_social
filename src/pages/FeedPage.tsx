@@ -4,7 +4,7 @@ import { PostItem, PostModal } from '../components/feed';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
-import { Avatar } from '../components/ui';
+import { Avatar, ConfirmDialog } from '../components/ui';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 
@@ -27,6 +27,7 @@ const FeedPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   
   const observerRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -136,10 +137,11 @@ const FeedPage: React.FC = () => {
     setShowEditModal(null);
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
-    const post = posts.find(p => p.id === postId);
-    await deletePost(postId, post?.images, post?.videos);
+  const handleDeletePost = async () => {
+    if (!postToDelete) return;
+    const post = posts.find(p => p.id === postToDelete);
+    await deletePost(postToDelete, post?.images, post?.videos);
+    setPostToDelete(null);
   };
 
   const handleUploadImages = async (files: File[]) => {
@@ -246,7 +248,7 @@ const FeedPage: React.FC = () => {
                   currentUser={currentUser}
                   onLike={handleLike}
                   onEdit={(postId) => setShowEditModal(postId)}
-                  onDelete={handleDeletePost}
+                  onDelete={(postId) => setPostToDelete(postId)}
                 />
               );
             })}
@@ -284,6 +286,16 @@ const FeedPage: React.FC = () => {
         initialFiles={pendingFiles}
         onSubmit={showEditModal ? handleEditPost : handleCreatePost}
         onUploadImages={handleUploadImages}
+      />
+
+      <ConfirmDialog
+        isOpen={!!postToDelete}
+        onClose={() => setPostToDelete(null)}
+        onConfirm={handleDeletePost}
+        title="Xóa bài viết"
+        message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa ngay"
+        variant="danger"
       />
     </div>
   );

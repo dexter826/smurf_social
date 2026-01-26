@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X } from 'lucide-react';
 import { EmojiPicker, Loading } from '../ui';
+import { toast } from '../../store/toastStore';
 
 interface ChatInputProps {
   onSendText: (text: string) => void;
@@ -109,7 +110,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       inputRef.current?.focus();
     } catch (error) {
       console.error("Lỗi gửi tin nhắn", error);
-      alert('Không thể gửi tin nhắn. Vui lòng thử lại.');
+      toast.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
     } finally {
       setIsSending(false);
     }

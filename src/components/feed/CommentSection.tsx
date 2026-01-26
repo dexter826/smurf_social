@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Heart, Image as ImageIcon } from 'lucide-react';
-import { Avatar, Button, EmojiPicker, Loading } from '../ui';
+import { Avatar, Button, EmojiPicker, Loading, ConfirmDialog } from '../ui';
+import { toast } from '../../store/toastStore';
 import { Comment, User } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
@@ -30,6 +31,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [editingImagePreview, setEditingImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const editFileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -73,7 +75,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('Ảnh bình luận quá lớn. Giới hạn: 5MB.');
+        toast.error('Ảnh bình luận quá lớn. Giới hạn: 5MB.');
         return;
       }
 
@@ -130,7 +132,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       setReplyingTo(null);
     } catch (error) {
       console.error('Lỗi thêm comment:', error);
-      alert('Không thể gửi bình luận. Vui lòng thử lại.');
+      toast.error('Không thể gửi bình luận. Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
     }
@@ -163,20 +165,21 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       setEditingImagePreview(null);
     } catch (error) {
       console.error('Lỗi cập nhật comment:', error);
-      alert('Không thể cập nhật bình luận.');
+      toast.error('Không thể cập nhật bình luận.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
-
+  const handleDeleteComment = async () => {
+    if (!commentToDelete) return;
     try {
-      await postService.deleteComment(commentId, postId);
+      await postService.deleteComment(commentToDelete, postId);
+      setCommentToDelete(null);
+      toast.success('Đã xóa bình luận');
     } catch (error) {
       console.error('Lỗi xóa comment:', error);
-      alert('Không thể xóa bình luận.');
+      toast.error('Không thể xóa bình luận.');
     }
   };
 
@@ -336,7 +339,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       Sửa
                     </button>
                     <button
-                      onClick={() => handleDeleteComment(comment.id)}
+                      onClick={() => setCommentToDelete(comment.id)}
                       className="hover:underline"
                     >
                       Xóa
@@ -449,6 +452,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!commentToDelete}
+        onClose={() => setCommentToDelete(null)}
+        onConfirm={handleDeleteComment}
+        title="Xóa bình luận"
+        message="Bạn có chắc chắn muốn xóa bình luận này?"
+        confirmLabel="Xóa ngay"
+        variant="danger"
+      />
     </div>
   );
 };

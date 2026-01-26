@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
 import { User } from '../types';
-import { Avatar, Button, Loading } from '../components/ui';
+import { Avatar, Button, Loading, ConfirmDialog } from '../components/ui';
 import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/contacts';
 
 type TabType = 'all' | 'requests' | 'sent';
@@ -30,6 +30,8 @@ const ContactsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [unfriendId, setUnfriendId] = useState<string | null>(null);
+  const [blockUserId, setBlockUserId] = useState<string | null>(null);
   const [userCache, setUserCache] = useState<Record<string, User>>({});
 
   useEffect(() => {
@@ -96,27 +98,23 @@ const ContactsPage: React.FC = () => {
     }
   };
 
-  const handleUnfriend = async (friendId: string) => {
-    if (!currentUser) return;
-    
-    if (confirm('Bạn có chắc chắn muốn hủy kết bạn?')) {
-      try {
-        await unfriend(currentUser.id, friendId);
-      } catch (error) {
-        console.error('Lỗi hủy kết bạn:', error);
-      }
+  const handleUnfriend = async () => {
+    if (!currentUser || !unfriendId) return;
+    try {
+      await unfriend(currentUser.id, unfriendId);
+      setUnfriendId(null);
+    } catch (error) {
+      console.error('Lỗi hủy kết bạn:', error);
     }
   };
 
-  const handleBlockUser = async (friendId: string) => {
-    if (!currentUser) return;
-    
-    if (confirm('Bạn có chắc chắn muốn chặn người dùng này?')) {
-      try {
-        await blockUser(currentUser.id, friendId);
-      } catch (error) {
-        console.error('Lỗi chặn người dùng:', error);
-      }
+  const handleBlockUser = async () => {
+    if (!currentUser || !blockUserId) return;
+    try {
+      await blockUser(currentUser.id, blockUserId);
+      setBlockUserId(null);
+    } catch (error) {
+      console.error('Lỗi chặn người dùng:', error);
     }
   };
 
@@ -304,8 +302,8 @@ const ContactsPage: React.FC = () => {
                             <FriendItem
                               key={friend.id}
                               friend={friend}
-                              onUnfriend={handleUnfriend}
-                              onBlock={handleBlockUser}
+                              onUnfriend={(id) => setUnfriendId(id)}
+                              onBlock={(id) => setBlockUserId(id)}
                               onMessage={handleMessage}
                             />
                           ))}
@@ -382,6 +380,26 @@ const ContactsPage: React.FC = () => {
       <AddFriendModal 
         isOpen={showAddModal} 
         onClose={() => setShowAddModal(false)} 
+      />
+
+      <ConfirmDialog
+        isOpen={!!unfriendId}
+        onClose={() => setUnfriendId(null)}
+        onConfirm={handleUnfriend}
+        title="Hủy kết bạn"
+        message="Bạn có chắc muốn hủy kết bạn với người này?"
+        confirmLabel="Hủy kết bạn"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={!!blockUserId}
+        onClose={() => setBlockUserId(null)}
+        onConfirm={handleBlockUser}
+        title="Chặn người dùng"
+        message="Bạn có chắc muốn chặn người dùng này? Họ sẽ không thể gửi tin nhắn cho bạn."
+        confirmLabel="Chặn người dùng"
+        variant="danger"
       />
     </div>
   );

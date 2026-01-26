@@ -4,6 +4,8 @@ import { Post, User } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
 import { PostItem } from '../feed/PostItem';
+import { ConfirmDialog } from '../ui';
+import { toast } from '../../store/toastStore';
 import { FileText } from 'lucide-react';
 
 interface PostsTabProps {
@@ -20,6 +22,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
   const observer = useRef<IntersectionObserver>();
 
   const [loading, setLoading] = useState(true);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   // Reset state khi đổi user
   useEffect(() => {
@@ -113,16 +116,18 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
     // Open edit modal
   };
 
-  const handleDelete = async (postId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
+  const handleDelete = async () => {
+    if (!postToDelete) return;
     
     try {
-      const post = posts.find(p => p.id === postId);
-      await postService.deletePost(postId, post?.images);
+      const post = posts.find(p => p.id === postToDelete);
+      await postService.deletePost(postToDelete, post?.images);
+      setPostToDelete(null);
+      toast.success('Đã xóa bài viết');
       await loadPosts(true);
     } catch (error) {
       console.error("Lỗi xóa post", error);
-      alert('Không thể xóa bài viết');
+      toast.error('Không thể xóa bài viết');
     }
   };
 
@@ -171,7 +176,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
                     onLike={handleLike}
                     onComment={handleComment}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDelete={(id) => setPostToDelete(id)}
                   />
                </div>
              );
@@ -185,7 +190,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
                 onLike={handleLike}
                 onComment={handleComment}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={(id) => setPostToDelete(id)}
               />
             );
           }
@@ -197,6 +202,16 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
              ))}
            </div>
         )}
-      </div>
+
+      <ConfirmDialog
+        isOpen={!!postToDelete}
+        onClose={() => setPostToDelete(null)}
+        onConfirm={handleDelete}
+        title="Xóa bài viết"
+        message="Bạn có chắc chắn muốn xóa bài viết này?"
+        confirmLabel="Xóa ngay"
+        variant="danger"
+      />
+    </div>
   );
 };

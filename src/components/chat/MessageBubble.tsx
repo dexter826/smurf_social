@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { FileText, Download, CheckCheck, Check, MoreVertical, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar } from '../ui';
+import { Avatar, ConfirmDialog } from '../ui';
 
 interface MessageBubbleProps {
   message: Message;
@@ -23,6 +23,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isRead = message.readBy && message.readBy.length > 1;
   
@@ -146,9 +147,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     <div className="absolute right-0 top-8 z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-32">
                       <button
                         onClick={() => {
-                          if (confirm('Xóa tin nhắn này?')) {
-                            onDelete(message.id, message.fileUrl);
-                          }
+                          setShowDeleteConfirm(true);
                           setShowMenu(false);
                         }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error flex items-center gap-2 transition-colors"
@@ -202,6 +201,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => onDelete?.(message.id, message.fileUrl)}
+        title="Xóa tin nhắn"
+        message="Bạn có chắc chắn muốn xóa tin nhắn này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa ngay"
+        variant="danger"
+      />
     </>
   );
 };

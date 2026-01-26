@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button, Input } from '../components/ui';
+import { toast } from '../store/toastStore';
 import { Mail, Lock } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -46,25 +47,32 @@ const LoginPage: React.FC = () => {
       }
       navigate('/');
     } catch (error: any) {
-      setErrors({ form: error.message || "Thao tác thất bại" });
-    }
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email) {
-      setErrors({ email: 'Vui lòng nhập email để khôi phục mật khẩu' });
-      return;
-    }
-    
-    try {
-      await resetPassword(formData.email);
-       
-      alert('Email khôi phục mật khẩu đã được gửi!');
-      setActiveTab('login');
-      setErrors({});
-    } catch (error: any) {
-      setErrors({ form: error.message || "Không thể gửi email khôi phục" });
+      const errorCode = error.code;
+      let message = "Đã có lỗi xảy ra. Vui lòng thử lại.";
+      
+      switch (errorCode) {
+        case 'auth/invalid-email':
+          message = "Email không hợp lệ.";
+          break;
+        case 'auth/user-disabled':
+          message = "Tài khoản này đã bị khóa.";
+          break;
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          message = "Email hoặc mật khẩu không chính xác.";
+          break;
+        case 'auth/email-already-in-use':
+          message = "Email này đã được sử dụng cho tài khoản khác.";
+          break;
+        case 'auth/weak-password':
+          message = "Mật khẩu quá yếu.";
+          break;
+        default:
+          message = error.message || "Thao tác thất bại.";
+      }
+      
+      toast.error(message);
     }
   };
 
@@ -78,8 +86,13 @@ const LoginPage: React.FC = () => {
     try {
       await resetPassword(formData.email);
       setErrors({ success: 'Email đặt lại mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư.' });
+      toast.success('Đã gửi email khôi phục!');
     } catch (error: any) {
-      setErrors({ form: "Không tìm thấy email hoặc có lỗi xảy ra." });
+      let message = "Không tìm thấy email hoặc có lỗi xảy ra.";
+      if (error.code === 'auth/invalid-email') message = "Email không hợp lệ.";
+      if (error.code === 'auth/user-not-found') message = "Email này chưa được đăng ký.";
+      
+      toast.error(message);
     }
   };
 
@@ -130,11 +143,6 @@ const LoginPage: React.FC = () => {
                     {errors.success}
                   </div>
                 )}
-                {errors.form && (
-                  <div className="p-2 text-xs text-error bg-error-light rounded border border-error mb-2">
-                    {errors.form}
-                  </div>
-                )}
                 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-text-secondary ml-1">Email đã đăng ký</label>
@@ -171,11 +179,7 @@ const LoginPage: React.FC = () => {
              </form>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
-              {errors.form && (
-                <div className="p-2 text-xs text-error bg-error-light rounded border border-error mb-2">
-                  {errors.form}
-                </div>
-              )}
+              {/* Bỏ hiển thị errors.form để tránh lặp với Toast */}
 
               {activeTab === 'register' && (
                 <div className="space-y-1">

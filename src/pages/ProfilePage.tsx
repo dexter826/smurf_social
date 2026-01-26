@@ -4,6 +4,7 @@ import { userService } from '../services/userService';
 import { User } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Spinner } from '../components/ui';
+import { toast } from '../store/toastStore';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
@@ -73,12 +74,12 @@ const ProfilePage: React.FC = () => {
     
     // Validate file
     if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn file ảnh');
+      toast.error('Vui lòng chọn file ảnh');
       return;
     }
     
     if (file.size > 5 * 1024 * 1024) {
-      alert('Kích thước ảnh không được vượt quá 5MB');
+      toast.error('Kích thước ảnh không được vượt quá 5MB');
       return;
     }
     
@@ -93,7 +94,7 @@ const ProfilePage: React.FC = () => {
       }
     } catch (error) {
       console.error("Lỗi upload avatar", error);
-      alert('Không thể tải lên ảnh đại diện');
+      toast.error('Không thể tải lên ảnh đại diện');
     } finally {
       setUploading(false);
     }
@@ -104,12 +105,12 @@ const ProfilePage: React.FC = () => {
     
     // Validate file
     if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn file ảnh');
+      toast.error('Vui lòng chọn file ảnh');
       return;
     }
     
     if (file.size > 10 * 1024 * 1024) {
-      alert('Kích thước ảnh không được vượt quá 10MB');
+      toast.error('Kích thước ảnh không được vượt quá 10MB');
       return;
     }
     
@@ -119,7 +120,7 @@ const ProfilePage: React.FC = () => {
       setProfile({ ...profile, coverImage: newCoverUrl });
     } catch (error) {
       console.error("Lỗi upload cover", error);
-      alert('Không thể tải lên ảnh bìa');
+      toast.error('Không thể tải lên ảnh bìa');
     } finally {
       setUploading(false);
     }

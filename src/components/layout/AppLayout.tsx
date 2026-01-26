@@ -1,20 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
-import { Avatar } from '../ui';
+import { Avatar, ConfirmDialog } from '../ui';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = () => {
-    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-      logout();
-      navigate('/login');
-    }
+  const handleConfirmLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   const navItems = [
@@ -65,7 +64,7 @@ export const AppLayout: React.FC = () => {
              <Settings size={22} />
            </button>
            <button 
-                onClick={handleLogout} 
+                onClick={() => setShowLogoutConfirm(true)} 
                 className="w-12 h-12 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" 
                 title="Đăng xuất"
            >
@@ -105,6 +104,15 @@ export const AppLayout: React.FC = () => {
             <span className="text-[10px] font-medium">Cá nhân</span>
           </NavLink>
       </nav>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleConfirmLogout}
+        title="Đăng xuất"
+        message="Bạn có chắc chắn muốn rời khỏi phiên làm việc này?"
+        confirmLabel="Đăng xuất"
+      />
     </div>
   );
 };

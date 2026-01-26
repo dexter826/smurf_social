@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { AppLayout } from './components/layout/AppLayout';
-import { Loading } from './components/ui';
+import { Loading, ToastContainer } from './components/ui';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
 import FeedPage from './pages/FeedPage';
@@ -50,6 +50,7 @@ const App: React.FC = () => {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <ToastContainer />
     </HashRouter>
   );
 };

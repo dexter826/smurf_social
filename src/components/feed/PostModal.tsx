@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
 import { Avatar, Button, EmojiPicker, Loading, Select } from '../ui';
+import { toast } from '../../store/toastStore';
 import { User, Post } from '../../types';
 
 interface PostModalProps {
@@ -63,7 +64,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       const isVideo = file.type.startsWith('video/');
       const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert(`File ${file.name} quá lớn. Giới hạn: ${isVideo ? '50MB cho video' : '5MB cho ảnh'}.`);
+        toast.error(`File ${file.name} quá lớn. Giới hạn: ${isVideo ? '50MB cho video' : '5MB cho ảnh'}.`);
         return;
       }
     }
@@ -75,7 +76,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       setVideos(prev => [...prev, ...result.videos]);
     } catch (error) {
       console.error('Lỗi upload media:', error);
-      alert('Lỗi upload media. Vui lòng thử lại.');
+      toast.error('Lỗi upload media. Vui lòng thử lại.');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -105,7 +106,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Lỗi xử lý bài viết:', error);
-      alert(`Lỗi ${isEdit ? 'cập nhật' : 'tạo'} bài viết. Vui lòng thử lại.`);
+      toast.error(`Lỗi ${isEdit ? 'cập nhật' : 'tạo'} bài viết. Vui lòng thử lại.`);
     } finally {
       setIsSubmitting(false);
     }
