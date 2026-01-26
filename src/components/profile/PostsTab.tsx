@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { DocumentSnapshot } from 'firebase/firestore';
 import { Post, User } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
 import { Spinner } from '../ui';
 import { PostItem } from '../feed/PostItem';
+import { FileText } from 'lucide-react';
 
 interface PostsTabProps {
   userId: string;
@@ -13,30 +15,80 @@ interface PostsTabProps {
 export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [users, setUsers] = useState<Record<string, User>>({});
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observer = useRef<IntersectionObserver>();
+
   const [loading, setLoading] = useState(true);
 
+  // Reset state khi đổi user
   useEffect(() => {
-    loadPosts();
+    setPosts([]);
+    setLastDoc(null);
+    setHasMore(true);
+    setLoading(true);
+    loadPosts(true);
   }, [userId]);
 
-  const loadPosts = async () => {
-    setLoading(true);
-    try {
-      const userPosts = await postService.getUserPosts(userId);
-      setPosts(userPosts);
-      
-      // Load user info cho từng post
-      const userIds = Array.from(new Set(userPosts.map(p => p.userId)));
-      const usersData: Record<string, User> = {};
-      for (const uid of userIds) {
-        const user = await userService.getUserById(uid);
-        if (user) usersData[uid] = user;
+  const lastPostElementRef = useCallback((node: HTMLDivElement) => {
+    if (loading || loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadPosts(false);
       }
-      setUsers(usersData);
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore]);
+
+
+
+  const loadPosts = async (isFirstPage: boolean = false) => {
+    if (!isFirstPage && !hasMore) return;
+    
+    if (isFirstPage) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const result = await postService.getUserPosts(
+        userId, 
+        10, 
+        isFirstPage ? undefined : (lastDoc || undefined)
+      );
+      
+      const newPosts = result.posts;
+      setLastDoc(result.lastDoc);
+      setHasMore(result.posts.length === 10); // Nếu trả về < 10 bài -> hết dữ liệu
+
+      if (isFirstPage) {
+        setPosts(newPosts);
+      } else {
+        setPosts(prev => [...prev, ...newPosts]);
+      }
+      
+      // Load user info cho posts mới
+      const userIds = Array.from(new Set(newPosts.map(p => p.userId)));
+      // Filter out users we already have
+      const missingUserIds = userIds.filter(uid => !users[uid]);
+      
+      if (missingUserIds.length > 0) {
+        const newUsersData: Record<string, User> = {};
+        await Promise.all(missingUserIds.map(async (uid) => {
+          const user = await userService.getUserById(uid);
+          if (user) newUsersData[uid] = user;
+        }));
+        setUsers(prev => ({ ...prev, ...newUsersData }));
+      }
+
     } catch (error) {
       console.error("Lỗi load posts", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -48,7 +100,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
       const isLiked = post.likes.includes(currentUser.id);
       await postService.likePost(postId, currentUser.id, isLiked);
       
-      await loadPosts();
+      await loadPosts(true);
     } catch (error) {
       console.error("Lỗi like post", error);
     }
@@ -68,7 +120,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
     try {
       const post = posts.find(p => p.id === postId);
       await postService.deletePost(postId, post?.images);
-      await loadPosts();
+      await loadPosts(true);
     } catch (error) {
       console.error("Lỗi xóa post", error);
       alert('Không thể xóa bài viết');
@@ -85,30 +137,63 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
 
   if (posts.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20">
+    <div className="space-y-4">
+      {/* Header with Title and Filter */}
+      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-theme">
+        <h3 className="font-bold text-lg text-text-primary">Bài viết</h3>
+      </div>
+      
+      {posts.length === 0 ? (
         <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-8 text-center transition-theme">
+          <FileText size={48} className="mx-auto mb-3 text-text-secondary" />
           <p className="text-text-secondary">Chưa có bài viết nào</p>
         </div>
-      </div>
+      ) : null}
+    </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <div className="space-y-4">
-        {posts.map((post) => (
-          <PostItem
-            key={post.id}
-            post={post}
-            author={users[post.userId]}
-            currentUser={currentUser}
-            onLike={handleLike}
-            onComment={handleComment}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
+    <div className="space-y-4">
+      {/* Header with Title */}
+      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-theme">
+        <h3 className="font-bold text-lg text-text-primary">Bài viết</h3>
       </div>
-    </div>
+        {posts.map((post, index) => {
+          if (posts.length === index + 1) {
+             return (
+               <div ref={lastPostElementRef} key={post.id}>
+                 <PostItem
+                    post={post}
+                    author={users[post.userId]}
+                    currentUser={currentUser}
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+               </div>
+             );
+          } else {
+            return (
+              <PostItem
+                key={post.id}
+                post={post}
+                author={users[post.userId]}
+                currentUser={currentUser}
+                onLike={handleLike}
+                onComment={handleComment}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            );
+          }
+        })}
+        {loadingMore && (
+           <div className="flex justify-center py-4">
+             <Spinner />
+           </div>
+        )}
+      </div>
   );
 };

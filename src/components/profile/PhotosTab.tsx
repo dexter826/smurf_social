@@ -48,19 +48,16 @@ export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
 
   if (photos.length === 0) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-20">
-        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-8 text-center transition-theme">
-          <ImageIcon size={48} className="mx-auto mb-3 text-text-secondary" />
-          <p className="text-text-secondary">Chưa có ảnh nào</p>
-        </div>
+      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-8 text-center transition-theme">
+        <ImageIcon size={48} className="mx-auto mb-3 text-text-secondary" />
+        <p className="text-text-secondary">Chưa có ảnh nào</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
           <h3 className="font-bold text-lg mb-4 text-text-primary">
             Ảnh <span className="text-text-secondary font-normal">({photos.length})</span>
           </h3>
@@ -81,7 +78,6 @@ export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
             ))}
           </div>
         </div>
-      </div>
 
       {/* Lightbox */}
       {selectedPhoto && (

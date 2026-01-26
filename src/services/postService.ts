@@ -112,23 +112,33 @@ export const postService = {
     });
   },
 
-  getUserPosts: async (userId: string): Promise<Post[]> => {
+  getUserPosts: async (userId: string, limitCount: number = 10, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
-      const q = query(
+      let q = query(
         collection(db, 'posts'),
         where('userId', '==', userId),
-        orderBy('timestamp', 'desc')
+        orderBy('timestamp', 'desc'),
+        limit(limitCount)
       );
+
+      if (lastDoc) {
+        q = query(q, startAfter(lastDoc));
+      }
+
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const posts = querySnapshot.docs.map(doc => ({
         ...doc.data(),
         id: doc.id,
         timestamp: doc.data().timestamp?.toDate() || new Date(),
         editedAt: doc.data().editedAt?.toDate(),
       })) as Post[];
+
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+
+      return { posts, lastDoc: lastVisible };
     } catch (error) {
       console.error("Lỗi lấy bài viết của user", error);
-      return [];
+      return { posts: [], lastDoc: null };
     }
   },
 

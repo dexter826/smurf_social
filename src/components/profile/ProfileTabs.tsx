@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-type TabType = 'about' | 'posts' | 'friends' | 'photos';
+type TabType = 'about' | 'posts' | 'friends' | 'photos' | 'videos';
 
 interface ProfileTabsProps {
   activeTab: TabType;
@@ -12,10 +12,9 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   onTabChange
 }) => {
   const tabs: { id: TabType; label: string }[] = [
-    { id: 'about', label: 'Giới thiệu' },
     { id: 'posts', label: 'Bài viết' },
-    { id: 'friends', label: 'Bạn bè' },
-    { id: 'photos', label: 'Ảnh' }
+    { id: 'photos', label: 'Ảnh' },
+    { id: 'videos', label: 'Video' }
   ];
 
   return (

@@ -97,9 +97,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploading}
-                    className="absolute bottom-2 right-2 bg-secondary p-2 rounded-full text-text-primary hover:bg-hover transition-colors disabled:opacity-50"
+                    className="absolute bottom-2 right-2 bg-bg-secondary p-2 rounded-full text-text-primary hover:bg-bg-hover transition-all disabled:opacity-50 shadow-md border-2 border-bg-primary flex items-center justify-center z-10"
                   >
-                    <Camera size={18} />
+                    <Camera size={20} />
                   </button>
                 )}
               </div>
@@ -116,16 +116,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {/* Info */}
             <div className="flex-1 md:mb-2">
               <h1 className="text-3xl font-bold text-text-main">{user.name}</h1>
-              {user.bio && (
-                <p className="text-text-secondary mt-1">{user.bio}</p>
-              )}
+
               
               {/* Stats */}
               <div className="flex items-center gap-6 mt-3 text-sm text-text-secondary">
-                <div className="flex items-center gap-1.5">
-                  <Users size={16} />
-                  <span><strong className="text-text-main">{stats.friendCount}</strong> bạn bè</span>
-                </div>
                 <div className="flex items-center gap-1.5">
                   <FileText size={16} />
                   <span><strong className="text-text-main">{stats.postCount}</strong> bài viết</span>

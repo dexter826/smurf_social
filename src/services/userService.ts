@@ -88,7 +88,11 @@ export const userService = {
         };
       }
       
-      await setDoc(userRef, updatedData, { merge: true });
+      const cleanData = Object.fromEntries(
+        Object.entries(updatedData).filter(([_, v]) => v !== undefined)
+      );
+      
+      await setDoc(userRef, cleanData, { merge: true });
       return updatedData;
     } catch (error) {
       console.error("Lỗi cập nhật profile", error);

@@ -27,10 +27,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         bio: user.bio || '',
         phone: user.phone || '',
         gender: user.gender || 'male',
-        birthDate: user.birthDate,
-        location: user.location || '',
-        workplace: user.workplace || '',
-        education: user.education || ''
+        birthDate: user.birthDate
       });
       setErrors({});
     }
@@ -87,10 +84,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <div className="space-y-5">
             
             {/* Thông tin cơ bản */}
+            {/* Thông tin cơ bản & Liên hệ */}
             <div>
-              <h3 className="font-semibold mb-3 text-text-primary">Thông tin cơ bản</h3>
-              <div className="space-y-4">
-                <div>
+              <h3 className="font-semibold mb-3 text-text-primary">Thông tin chung</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block text-sm font-medium text-text-secondary mb-1">
                     Tên hiển thị *
                   </label>
@@ -102,27 +100,26 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   />
                 </div>
 
-                <div>
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block text-sm font-medium text-text-secondary mb-1">
                     Giới thiệu
                   </label>
-                  <textarea
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    placeholder="Viết vài dòng giới thiệu về bản thân..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
+                      placeholder="Viết vài dòng giới thiệu về bản thân..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                    />
+                    <div className="absolute bottom-2 right-2 text-xs text-text-secondary">
+                      {formData.bio?.length || 0}/150
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Thông tin liên hệ */}
-            <div>
-              <h3 className="font-semibold mb-3 text-text-primary">Thông tin liên hệ</h3>
-              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                   <label className="block text-sm font-medium text-text-secondary mb-1">
                     Email
                   </label>
                   <Input
@@ -130,7 +127,6 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     disabled
                     className="bg-bg-secondary cursor-not-allowed"
                   />
-                  <p className="text-xs text-text-secondary mt-1">Email không thể thay đổi</p>
                 </div>
 
                 <div>
@@ -144,13 +140,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     placeholder="Nhập số điện thoại"
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Thông tin cá nhân */}
-            <div>
-              <h3 className="font-semibold mb-3 text-text-primary">Thông tin cá nhân</h3>
-              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
                     Giới tính
@@ -168,34 +158,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Địa chỉ
+                    Ngày sinh
                   </label>
                   <Input
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="Nhập địa chỉ"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Nơi làm việc
-                  </label>
-                  <Input
-                    value={formData.workplace}
-                    onChange={(e) => setFormData({ ...formData, workplace: e.target.value })}
-                    placeholder="Nhập nơi làm việc"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Học vấn
-                  </label>
-                  <Input
-                    value={formData.education}
-                    onChange={(e) => setFormData({ ...formData, education: e.target.value })}
-                    placeholder="Nhập trường học"
+                    type="date"
+                    value={formData.birthDate ? new Date(formData.birthDate).toISOString().split('T')[0] : ''}
+                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value ? new Date(e.target.value).getTime() : undefined })}
+                    placeholder="Chọn ngày sinh"
                   />
                 </div>
               </div>
