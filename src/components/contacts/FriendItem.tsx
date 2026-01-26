@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, MoreVertical, UserMinus, Ban } from 'lucide-react';
+import { MessageCircle, MoreVertical, UserMinus, User as UserIcon } from 'lucide-react';
 import { Avatar, Button, Dropdown, DropdownItem } from '../ui';
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
@@ -7,14 +7,12 @@ import { useNavigate } from 'react-router-dom';
 interface FriendItemProps {
   friend: User;
   onUnfriend?: (friendId: string) => void;
-  onBlock?: (friendId: string) => void;
   onMessage?: (friendId: string) => void;
 }
 
 export const FriendItem: React.FC<FriendItemProps> = ({
   friend,
   onUnfriend,
-  onBlock,
   onMessage
 }) => {
   const navigate = useNavigate();
@@ -49,15 +47,14 @@ export const FriendItem: React.FC<FriendItemProps> = ({
             }
           >
           <DropdownItem
+            icon={<UserIcon size={16} />}
+            label="Xem trang cá nhân"
+            onClick={() => navigate(`/profile/${friend.id}`)}
+          />
+          <DropdownItem
             icon={<UserMinus size={16} />}
             label="Hủy kết bạn"
             onClick={() => onUnfriend?.(friend.id)}
-          />
-          <DropdownItem
-            icon={<Ban size={16} />}
-            label="Chặn người dùng"
-            variant="danger"
-            onClick={() => onBlock?.(friend.id)}
           />
         </Dropdown>
         </div>

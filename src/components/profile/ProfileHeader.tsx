@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck } from 'lucide-react';
 import { User } from '../../types';
 import { Avatar, Button } from '../ui';
 
@@ -7,7 +7,10 @@ interface ProfileHeaderProps {
   user: User;
   stats: { friendCount: number; postCount: number };
   isOwnProfile: boolean;
+  isFriend?: boolean;
   onEditClick?: () => void;
+  onMessageClick?: () => void;
+  onFriendClick?: () => void;
   onAvatarChange?: (file: File) => void;
   onCoverChange?: (file: File) => void;
   uploading?: boolean;
@@ -17,7 +20,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user,
   stats,
   isOwnProfile,
+  isFriend = false,
   onEditClick,
+  onMessageClick,
+  onFriendClick,
   onAvatarChange,
   onCoverChange,
   uploading = false
@@ -83,14 +89,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
       {/* Profile Info */}
       <div className="max-w-5xl mx-auto px-4">
-        <div className="relative -mt-12 md:-mt-16 pb-6">
+        <div className="relative -mt-12 md:-mt-16 pb-6 border-b border-divider">
           <div className="flex flex-col md:flex-row md:items-end gap-6">
             
             {/* Avatar */}
             <div className="relative group">
               <div className="relative">
                 <div className="p-1 bg-bg-primary rounded-full transition-theme">
-                  <Avatar src={user.avatar} size="2xl" className="border-4 border-bg-primary" />
+                  <Avatar src={user.avatar} size="2xl" className="border-4 border-bg-primary shadow-lg" />
                 </div>
                 
                 {isOwnProfile && (
@@ -115,26 +121,45 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
             {/* Info */}
             <div className="flex-1 md:mb-2">
-              <h1 className="text-3xl font-bold text-text-main">{user.name}</h1>
-
+              <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
               
               {/* Stats */}
-              <div className="flex items-center gap-6 mt-3 text-sm text-text-secondary">
-                <div className="flex items-center gap-1.5">
-                  <FileText size={16} />
-                  <span><strong className="text-text-main">{stats.postCount}</strong> bài viết</span>
+              <div className="flex items-center gap-6 mt-2 text-sm text-text-secondary">
+                <div className="flex items-center gap-1.5 bg-bg-secondary px-3 py-1 rounded-full border border-divider">
+                  <FileText size={14} className="text-primary-500" />
+                  <span><strong className="text-text-primary">{stats.postCount}</strong> bài viết</span>
                 </div>
               </div>
             </div>
 
             {/* Actions */}
-            {isOwnProfile && (
-              <div className="md:mb-2">
-                <Button variant="secondary" onClick={onEditClick}>
+            <div className="flex items-center gap-2 md:mb-2">
+              {isOwnProfile ? (
+                <Button variant="secondary" onClick={onEditClick} className="rounded-xl px-6 h-11 border-primary-200 text-primary-600 hover:bg-primary-50">
                   Chỉnh sửa trang cá nhân
                 </Button>
-              </div>
-            )}
+              ) : (
+                <>
+                  {isFriend ? (
+                    <>
+                      <Button onClick={onMessageClick} className="rounded-xl px-6 h-11 flex items-center gap-2 bg-primary-600 hover:bg-primary-700 shadow-md">
+                        <MessageCircle size={18} />
+                        Nhắn tin
+                      </Button>
+                      <Button variant="secondary" onClick={onFriendClick} className="rounded-xl px-4 h-11 border-primary-100 bg-primary-50 text-primary-600 hover:bg-primary-100">
+                        <UserCheck size={18} />
+                        Bạn bè
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={onFriendClick} className="rounded-xl px-8 h-11 flex items-center gap-2 bg-primary-600 hover:bg-primary-700 shadow-md">
+                      <UserPlus size={18} />
+                      Kết bạn
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -207,30 +207,5 @@ export const friendService = {
       console.error("Lỗi kiểm tra lời mời kết bạn", error);
       return false;
     }
-  },
-
-  blockUser: async (userId: string, blockedUserId: string): Promise<void> => {
-    try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        blockedUserIds: arrayUnion(blockedUserId),
-        friendIds: arrayRemove(blockedUserId)
-      });
-    } catch (error) {
-      console.error("Lỗi chặn người dùng", error);
-      throw error;
-    }
-  },
-
-  unblockUser: async (userId: string, blockedUserId: string): Promise<void> => {
-    try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        blockedUserIds: arrayRemove(blockedUserId)
-      });
-    } catch (error) {
-      console.error("Lỗi bỏ chặn người dùng", error);
-      throw error;
-    }
   }
 };
