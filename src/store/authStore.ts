@@ -29,7 +29,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, pass) => {
     set({ isLoading: true });
     try {
-      await authService.login(email, pass);
+      const firebaseUser = await authService.login(email, pass);
+      const userData = await userService.getUserById(firebaseUser.uid);
+      if (userData) {
+        set({ user: userData });
+      }
     } finally {
       set({ isLoading: false });
     }
