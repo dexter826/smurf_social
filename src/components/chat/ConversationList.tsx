@@ -47,27 +47,26 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   return (
     <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
       {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b border-border-light">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xl font-bold text-text-primary">Tin nhắn</h2>
+      <div className="flex-shrink-0 px-4 py-3 border-b border-border-light">
+        <div className="flex items-center gap-2">
+          <Input
+            icon={<Search size={16} />}
+            placeholder="Tìm kiếm..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="bg-bg-secondary border-none h-9 text-sm"
+            containerClassName="flex-1"
+          />
           {onNewChat && (
             <button
               onClick={onNewChat}
-              className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors"
+              className="p-2 text-primary hover:bg-primary-light rounded-xl transition-all"
               title="Tạo cuộc trò chuyện mới"
             >
               <Users size={20} />
             </button>
           )}
         </div>
-        
-        <Input
-          icon={<Search size={18} />}
-          placeholder="Tìm kiếm cuộc trò chuyện..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="bg-bg-secondary border-none h-9 text-sm"
-        />
       </div>
 
       {/* Conversations List */}

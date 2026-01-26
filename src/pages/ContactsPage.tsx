@@ -181,24 +181,24 @@ const ContactsPage: React.FC = () => {
           <div className="px-4 py-2 text-sm font-semibold text-text-tertiary">Danh sách</div>
           
           <div
-            className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
               activeTab === 'all'
-                ? 'bg-primary-light text-primary border-l-4 border-primary'
+                ? 'bg-primary-light text-primary'
                 : 'hover:bg-bg-hover text-text-secondary'
             }`}
             onClick={() => setActiveTab('all')}
           >
             <Users size={20} />
             <span className="font-medium">Tất cả bạn bè</span>
-            <span className="ml-auto text-xs bg-secondary px-2 py-0.5 rounded-full">
+            <span className="ml-auto text-xs bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light">
               {friends.length}
             </span>
           </div>
 
           <div
-            className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
               activeTab === 'requests'
-                ? 'bg-primary-light text-primary border-l-4 border-primary'
+                ? 'bg-primary-light text-primary'
                 : 'hover:bg-bg-hover text-text-secondary'
             }`}
             onClick={() => setActiveTab('requests')}
@@ -213,9 +213,9 @@ const ContactsPage: React.FC = () => {
           </div>
 
           <div
-            className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
               activeTab === 'sent'
-                ? 'bg-primary-light text-primary border-l-4 border-primary'
+                ? 'bg-primary-light text-primary'
                 : 'hover:bg-bg-hover text-text-secondary'
             }`}
             onClick={() => setActiveTab('sent')}
@@ -223,7 +223,7 @@ const ContactsPage: React.FC = () => {
             <UserPlus size={20} />
             <span className="font-medium">Lời mời đã gửi</span>
             {sentRequests.length > 0 && (
-              <span className="ml-auto text-xs bg-secondary px-2 py-0.5 rounded-full">
+              <span className="ml-auto text-xs bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light">
                 {sentRequests.length}
               </span>
             )}

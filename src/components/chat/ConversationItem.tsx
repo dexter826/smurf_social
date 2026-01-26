@@ -58,10 +58,10 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     <div
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 p-3 cursor-pointer transition-colors
+        relative flex items-center gap-3 p-3 mx-2 my-0.5 cursor-pointer transition-all duration-200 rounded-xl
         hover:bg-bg-hover
-        ${isActive ? 'bg-primary-light border-l-4 border-primary' : ''}
-        ${conversation.pinned ? 'bg-primary-light' : ''}
+        ${isActive ? 'bg-primary-light' : ''}
+        ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
       `}
     >
       {/* Avatar */}

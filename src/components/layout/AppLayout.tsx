@@ -40,7 +40,7 @@ export const AppLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `w-full flex justify-center py-4 transition-all duration-200 relative ${
+                `w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 ${
                   isActive 
                   ? 'bg-sidebar-item-active text-white' 
                   : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
@@ -53,20 +53,20 @@ export const AppLayout: React.FC = () => {
           ))}
         </nav>
 
-        <div className="flex flex-col gap-2 mt-auto w-full items-center">
+        <div className="flex flex-col gap-2 mt-auto w-full items-center mb-4">
            <button 
                 onClick={toggleTheme} 
-                className="w-full flex justify-center py-4 text-sidebar-item hover:bg-sidebar-item-hover hover:text-white transition-all"
+                className="w-12 h-12 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all"
                 title="Chế độ tối"
            >
                {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
            </button>
-           <button className="w-full flex justify-center py-4 text-sidebar-item hover:bg-sidebar-item-hover hover:text-white transition-all" title="Cài đặt">
+           <button className="w-12 h-12 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" title="Cài đặt">
              <Settings size={22} />
            </button>
            <button 
                 onClick={handleLogout} 
-                className="w-full flex justify-center py-4 text-sidebar-item hover:bg-sidebar-item-hover hover:text-white transition-all" 
+                className="w-12 h-12 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" 
                 title="Đăng xuất"
            >
              <LogOut size={22} />
