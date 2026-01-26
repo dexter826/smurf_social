@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button, Input } from '../components/ui';
 import { toast } from '../store/toastStore';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const { login, register, resetPassword, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
-  const [formData, setFormData] = useState({ email: '', password: '', name: '' });
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', name: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
@@ -29,6 +31,14 @@ const LoginPage: React.FC = () => {
       newErrors.password = 'Vui lòng nhập mật khẩu';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+
+    if (activeTab === 'register') {
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+      }
     }
 
     setErrors(newErrors);
@@ -212,14 +222,47 @@ const LoginPage: React.FC = () => {
                 <label className="text-xs font-semibold text-text-secondary ml-1">Mật khẩu</label>
                 <Input
                   icon={<Lock size={16} />}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Nhập mật khẩu của bạn"
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   error={errors.password}
                   className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
+                  rightElement={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-text-tertiary hover:text-text-secondary"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
                 />
               </div>
+
+              {activeTab === 'register' && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-text-secondary ml-1">Xác nhận mật khẩu</label>
+                  <Input
+                    icon={<Lock size={16} />}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Nhập lại mật khẩu"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                    error={errors.confirmPassword}
+                    className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
+                    rightElement={
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="text-text-tertiary hover:text-text-secondary"
+                      >
+                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    }
+                  />
+                </div>
+              )}
 
               <Button
                 type="submit"

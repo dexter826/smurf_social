@@ -1,14 +1,11 @@
 import { create } from 'zustand';
 import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
-  signOut 
+  onAuthStateChanged
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import { User } from '../types';
 import { userService } from '../services/userService';
+import { authService } from '../services/authService';
 
 interface AuthState {
   user: User | null;
@@ -32,7 +29,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, pass) => {
     set({ isLoading: true });
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), pass);
+      await authService.login(email, pass);
     } finally {
       set({ isLoading: false });
     }
@@ -41,7 +38,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (email, pass, name) => {
     set({ isLoading: true });
     try {
-      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+      const firebaseUser = await authService.register(email, pass);
       const newUser = await userService.updateProfile(firebaseUser.uid, {
         id: firebaseUser.uid,
         name: name || 'Người dùng mới',
@@ -55,14 +52,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    await signOut(auth);
+    await authService.logout();
     set({ user: null });
   },
 
   resetPassword: async (email) => {
     set({ isLoading: true });
     try {
-      await sendPasswordResetEmail(auth, email);
+      await authService.resetPassword(email);
     } finally {
       set({ isLoading: false });
     }
