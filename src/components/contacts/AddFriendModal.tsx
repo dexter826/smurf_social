@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Search, Loader2 } from 'lucide-react';
-import { Button, Input } from '../ui';
+import { X, Search } from 'lucide-react';
+import { Button, Input, Loading } from '../ui';
 import { SearchUserItem } from './SearchUserItem';
 import { useContactStore } from '../../store/contactStore';
 import { useAuthStore } from '../../store/authStore';
@@ -81,9 +81,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
 
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-primary" size={32} />
-            </div>
+            <Loading variant="inline" size="lg" className="py-12" />
           ) : hasSearched && searchResults.length === 0 ? (
             <div className="text-center py-12 text-text-secondary">
               <p className="text-lg font-medium">Không tìm thấy người dùng nào</p>

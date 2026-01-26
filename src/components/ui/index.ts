@@ -4,3 +4,4 @@ export * from './Input';
 export * from './Spinner';
 export * from './Skeleton';
 export * from './EmojiPicker';
+export * from './Loading';

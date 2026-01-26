@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Image as ImageIcon, Video, Loader2, Users, Lock } from 'lucide-react';
-import { Avatar, Button, EmojiPicker } from '../ui';
+import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
+import { Avatar, Button, EmojiPicker, Loading } from '../ui';
 import { User, Post } from '../../types';
 
 interface PostModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: User;
-  initialPost?: Post; // Nếu có thì là chế độ Edit
-  initialFiles?: File[]; // Dùng cho Create khi kéo thả hoặc chọn nhanh
+  initialPost?: Post; 
+  initialFiles?: File[]; 
   onSubmit: (content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
   onUploadImages: (files: File[]) => Promise<{ images: string[], videos: string[] }>;
 }
@@ -194,10 +194,12 @@ export const PostModal: React.FC<PostModalProps> = ({
           )}
 
           {isUploading && (
-            <div className="mt-4 flex items-center justify-center py-8 text-text-secondary">
-              <Loader2 className="animate-spin mr-2" size={20} />
-              Đang tải phương tiện...
-            </div>
+            <Loading 
+              variant="inline" 
+              size="sm" 
+              text="Đang tải phương tiện..." 
+              className="py-8"
+            />
           )}
         </div>
 

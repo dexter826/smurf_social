@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Heart, Loader2, Image as ImageIcon } from 'lucide-react';
-import { Avatar, Button, EmojiPicker } from '../ui';
+import { X, Send, Heart, Image as ImageIcon } from 'lucide-react';
+import { Avatar, Button, EmojiPicker, Loading } from '../ui';
 import { Comment, User } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
@@ -358,9 +358,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     <div className="border-t border-border-light bg-bg-secondary/30">
       <div className="px-4 py-3">
         {isLoading ? (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="animate-spin text-primary-500" size={24} />
-          </div>
+          <Loading variant="inline" size="sm" className="py-4" />
         ) : comments.length === 0 ? (
           <div className="text-center py-4 text-text-secondary text-sm">
             Chưa có bình luận nào. Hãy là người đầu tiên!
@@ -443,7 +441,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               className="p-2 text-primary-500 hover:bg-primary-50 rounded-full disabled:opacity-50 transition-colors"
             >
               {isSubmitting ? (
-                <Loader2 className="animate-spin" size={20} />
+                <Loading size={20} color="text-white" />
               ) : (
                 <Send size={20} />
               )}

@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
 import { User } from '../types';
-import { Avatar, Button } from '../components/ui';
+import { Avatar, Button, Loading } from '../components/ui';
 import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/contacts';
 
 type TabType = 'all' | 'requests' | 'sent';
@@ -275,9 +275,7 @@ const ContactsPage: React.FC = () => {
 
         {/* Content */}
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
-          </div>
+          <Loading variant="inline" size="lg" className="flex-1" />
         ) : (
           <div className="flex-1 overflow-y-auto p-4">
             {activeTab === 'all' && (

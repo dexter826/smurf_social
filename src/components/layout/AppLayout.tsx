@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Video } from 'lucide-react';
+import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { Avatar } from '../ui';
@@ -21,7 +21,6 @@ export const AppLayout: React.FC = () => {
     { to: '/', icon: <MessageCircle size={24} />, label: 'Tin nhắn' },
     { to: '/contacts', icon: <Users size={24} />, label: 'Danh bạ' },
     { to: '/feed', icon: <LayoutGrid size={24} />, label: 'Nhật ký' },
-    { to: '/videos', icon: <Video size={24} />, label: 'Video' },
   ];
 
   return (

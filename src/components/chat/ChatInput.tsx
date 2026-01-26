@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X } from 'lucide-react';
-import { EmojiPicker } from '../ui';
+import { EmojiPicker, Loading } from '../ui';
 
 interface ChatInputProps {
   onSendText: (text: string) => void;
@@ -245,7 +245,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           title="Gửi"
         >
           {isSending ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <Loading size={20} color="text-white" />
           ) : (
             <Send size={20} />
           )}
