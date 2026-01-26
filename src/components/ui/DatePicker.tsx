@@ -23,8 +23,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // DatePicker cần nhiều chỗ hơn (khoảng 350px)
+      setOpenUp(spaceBelow < 350);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -166,7 +176,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         </div>
 
         {isOpen && (
-          <div className="absolute z-50 w-72 mt-2 bg-bg-primary border border-border-light rounded-2xl shadow-lg transition-all animate-in fade-in zoom-in-95 duration-200 left-0">
+          <div className={`
+            absolute z-50 w-72 bg-bg-primary border border-border-light rounded-2xl shadow-lg transition-all animate-in fade-in zoom-in-95 duration-200 left-0
+            ${openUp ? 'bottom-full mb-2' : 'top-full mt-2'}
+          `}>
             {renderHeader()}
             <div className="p-2">
               {renderDays()}

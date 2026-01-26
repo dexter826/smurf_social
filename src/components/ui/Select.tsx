@@ -28,8 +28,18 @@ export const Select: React.FC<SelectProps> = ({
   className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedOption = options.find(opt => opt.value === value);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // Nếu không gian bên dưới còn ít hơn 250px thì mở ngược lên
+      setOpenUp(spaceBelow < 250);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -82,7 +92,10 @@ export const Select: React.FC<SelectProps> = ({
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1.5 bg-bg-primary border border-border-light rounded-xl shadow-lg py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200">
+          <div className={`
+            absolute z-50 w-full bg-bg-primary border border-border-light rounded-xl shadow-lg py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200
+            ${openUp ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}
+          `}>
             <div className="max-h-60 overflow-y-auto custom-scrollbar">
               {options.map((option) => (
                 <button
