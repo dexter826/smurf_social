@@ -3,7 +3,7 @@ import { DocumentSnapshot } from 'firebase/firestore';
 import { Post, User } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
-import { PostItem } from '../feed/PostItem';
+import { PostItem, CreatePost } from '../feed';
 import { ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
 import { FileText } from 'lucide-react';
@@ -141,10 +141,13 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
     );
   }
 
-  if (posts.length === 0) {
-    return (
+  return (
     <div className="space-y-4">
-      {/* Header with Title and Filter */}
+      {userId === currentUser.id && (
+        <CreatePost currentUser={currentUser} />
+      )}
+
+      {/* Header with Title */}
       <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-theme">
         <h3 className="font-bold text-lg text-text-primary">Bài viết</h3>
       </div>
@@ -154,54 +157,47 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
           <FileText size={48} className="mx-auto mb-3 text-text-secondary" />
           <p className="text-text-secondary">Chưa có bài viết nào</p>
         </div>
-      ) : null}
-    </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Header with Title */}
-      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-theme">
-        <h3 className="font-bold text-lg text-text-primary">Bài viết</h3>
-      </div>
-        {posts.map((post, index) => {
-          if (posts.length === index + 1) {
-             return (
-               <div ref={lastPostElementRef} key={post.id}>
-                 <PostItem
-                    post={post}
-                    author={users[post.userId]}
-                    currentUser={currentUser}
-                    onLike={handleLike}
-                    onComment={handleComment}
-                    onEdit={handleEdit}
-                    onDelete={(id) => setPostToDelete(id)}
-                  />
-               </div>
-             );
-          } else {
-            return (
-              <PostItem
-                key={post.id}
-                post={post}
-                author={users[post.userId]}
-                currentUser={currentUser}
-                onLike={handleLike}
-                onComment={handleComment}
-                onEdit={handleEdit}
-                onDelete={(id) => setPostToDelete(id)}
-              />
-            );
-          }
-        })}
-        {loadingMore && (
-           <div className="space-y-4 mt-4">
-             {[...Array(2)].map((_, i) => (
-               <PostItem.Skeleton key={`more-${i}`} />
-             ))}
-           </div>
-        )}
+      ) : (
+        <>
+          {posts.map((post, index) => {
+            if (posts.length === index + 1) {
+               return (
+                 <div ref={lastPostElementRef} key={post.id}>
+                   <PostItem
+                      post={post}
+                      author={users[post.userId]}
+                      currentUser={currentUser}
+                      onLike={handleLike}
+                      onComment={handleComment}
+                      onEdit={handleEdit}
+                      onDelete={(id) => setPostToDelete(id)}
+                    />
+                 </div>
+               );
+            } else {
+              return (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  author={users[post.userId]}
+                  currentUser={currentUser}
+                  onLike={handleLike}
+                  onComment={handleComment}
+                  onEdit={handleEdit}
+                  onDelete={(id) => setPostToDelete(id)}
+                />
+              );
+            }
+          })}
+          {loadingMore && (
+             <div className="space-y-4 mt-4">
+               {[...Array(2)].map((_, i) => (
+                 <PostItem.Skeleton key={`more-${i}`} />
+               ))}
+             </div>
+          )}
+        </>
+      )}
 
       <ConfirmDialog
         isOpen={!!postToDelete}

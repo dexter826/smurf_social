@@ -24,7 +24,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
       w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 transition-all
       active:scale-[0.98]
       ${variant === 'danger' 
-        ? 'text-error hover:bg-error/10' 
+        ? 'text-error hover:bg-error-light' 
         : 'text-text-primary hover:bg-bg-hover'
       }
       ${className}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Image as ImageIcon, Video, Loader2 } from 'lucide-react';
-import { PostItem, PostModal } from '../components/feed';
+import { PostItem, PostModal, CreatePost } from '../components/feed';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
@@ -23,15 +23,11 @@ const FeedPage: React.FC = () => {
   } = usePostStore();
 
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   
   const observerRef = useRef<HTMLDivElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -106,25 +102,6 @@ const FeedPage: React.FC = () => {
     fetchPosts(currentUser.id, currentUser.friendIds || [], true);
   };
 
-  const onMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setPendingFiles(files);
-      setShowCreateModal(true);
-    }
-    e.target.value = '';
-  };
-
-  const handleCreatePost = async (
-    content: string,
-    images: string[],
-    videos: string[],
-    visibility: 'friends' | 'private'
-  ) => {
-    if (!currentUser) return;
-    await createPost(currentUser.id, content, images, videos, visibility);
-    setPendingFiles([]);
-  };
 
   const handleLike = async (postId: string) => {
     if (!currentUser) return;
@@ -163,51 +140,7 @@ const FeedPage: React.FC = () => {
     <div className="flex justify-center h-full w-full overflow-y-auto bg-bg-secondary transition-theme">
       <div className="w-full max-w-[640px] py-6 space-y-4 px-2 md:px-0 pb-20">
         {/* Create Post Card */}
-        <div className="bg-bg-primary rounded-xl p-4 shadow-sm border border-border-light transition-theme">
-          <div className="flex gap-3 mb-4">
-            <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex-1 bg-bg-secondary hover:bg-bg-hover rounded-full px-4 py-2.5 flex items-center text-text-secondary cursor-pointer transition-colors text-left font-medium border-none outline-none"
-            >
-              {currentUser.name} ơi, bạn đang nghĩ gì thế?
-            </button>
-          </div>
-          
-          <div className="flex gap-2 pt-2 border-t border-divider">
-            <button
-              onClick={() => imageInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-bg-hover rounded-lg text-[15px] font-semibold text-text-secondary transition-colors group"
-            >
-              <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
-              Ảnh/Video
-            </button>
-            <button
-              onClick={() => videoInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-bg-hover rounded-lg text-[15px] font-semibold text-text-secondary transition-colors group"
-            >
-              <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />
-              Video
-            </button>
-          </div>
-
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={onMediaSelect}
-          />
-          <input
-            ref={videoInputRef}
-            type="file"
-            accept="video/*"
-            multiple
-            className="hidden"
-            onChange={onMediaSelect}
-          />
-        </div>
+        <CreatePost currentUser={currentUser} />
 
         {/* Posts List */}
         {posts.length === 0 && isLoading ? (
@@ -273,18 +206,15 @@ const FeedPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal Edit */}
       <PostModal
-        isOpen={showCreateModal || !!showEditModal}
+        isOpen={!!showEditModal}
         onClose={() => {
-          setShowCreateModal(false);
           setShowEditModal(null);
-          setPendingFiles([]);
         }}
         currentUser={currentUser}
         initialPost={editPost}
-        initialFiles={pendingFiles}
-        onSubmit={showEditModal ? handleEditPost : handleCreatePost}
+        onSubmit={handleEditPost}
         onUploadImages={handleUploadImages}
       />
 

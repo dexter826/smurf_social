@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
-import { Avatar, Button, EmojiPicker, Loading, Select } from '../ui';
+import { Avatar, Button, EmojiPicker, Loading, Select, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 import { User, Post } from '../../types';
 
@@ -121,93 +121,14 @@ export const PostModal: React.FC<PostModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-primary rounded-lg w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl transition-theme">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-light">
-          <h2 className="text-xl font-semibold text-text-primary">
-            {isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-bg-hover rounded-full transition-colors"
-            disabled={isSubmitting}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
-            <div>
-              <h3 className="font-semibold text-text-primary">{currentUser.name}</h3>
-              <Select
-                value={visibility}
-                onChange={(val) => setVisibility(val as any)}
-                options={[
-                  { value: 'friends', label: 'Bạn bè' },
-                  { value: 'private', label: 'Chỉ mình tôi' }
-                ]}
-                className="w-32"
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
-
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={isEdit ? "Bạn đang nghĩ gì thế?" : `${currentUser.name} ơi, bạn đang nghĩ gì thế?`}
-            className="w-full min-h-[150px] text-[16px] text-text-primary placeholder-text-tertiary bg-transparent resize-none outline-none py-2"
-            disabled={isSubmitting}
-            autoFocus
-          />
-
-          {(images.length > 0 || videos.length > 0) && (
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {images.map((url, index) => (
-                <div key={`img-${index}`} className="relative group">
-                  <img src={url} alt="Upload" className="w-full h-40 object-cover rounded-lg" />
-                  <button
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    disabled={isSubmitting}
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
-              {videos.map((url, index) => (
-                <div key={`vid-${index}`} className="relative group">
-                  <video src={url} className="w-full h-40 object-cover rounded-lg" controls />
-                  <button
-                    onClick={() => handleRemoveVideo(index)}
-                    className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    disabled={isSubmitting}
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {isUploading && (
-            <Loading 
-              variant="inline" 
-              size="sm" 
-              text="Đang tải phương tiện..." 
-              className="py-8"
-            />
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-border-light">
-          <div className="flex items-center justify-between mb-3 bg-bg-secondary p-3 rounded-lg border border-border-light">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
+      maxWidth="lg"
+      footer={
+        <div className="w-full">
+          <div className="flex items-center justify-between mb-3 bg-bg-secondary p-3 rounded-xl border border-border-light">
             <span className="text-sm font-semibold text-text-secondary">Thêm vào bài viết</span>
             <div className="flex gap-1">
               <button
@@ -252,7 +173,7 @@ export const PostModal: React.FC<PostModalProps> = ({
 
           <Button
             variant="primary"
-            className="w-full"
+            className="w-full h-10 text-[15px] font-bold"
             onClick={handleSubmit}
             disabled={(!content.trim() && images.length === 0) || !isChanged || isSubmitting || isUploading}
             isLoading={isSubmitting}
@@ -260,7 +181,74 @@ export const PostModal: React.FC<PostModalProps> = ({
             {isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
           </Button>
         </div>
+      }
+    >
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
+          <div>
+            <h3 className="font-semibold text-text-primary mb-0.5">{currentUser.name}</h3>
+            <Select
+              value={visibility}
+              onChange={(val) => setVisibility(val as any)}
+              options={[
+                { value: 'friends', label: 'Bạn bè' },
+                { value: 'private', label: 'Chỉ mình tôi' }
+              ]}
+              className="w-32"
+              disabled={isSubmitting}
+            />
+          </div>
+        </div>
+
+        <textarea
+          ref={textareaRef}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={isEdit ? "Bạn đang nghĩ gì thế?" : `${currentUser.name} ơi, bạn đang nghĩ gì thế?`}
+          className="w-full min-h-[120px] text-[18px] text-text-primary placeholder-text-tertiary bg-transparent resize-none outline-none py-2"
+          disabled={isSubmitting}
+          autoFocus
+        />
+
+        {(images.length > 0 || videos.length > 0) && (
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {images.map((url, index) => (
+              <div key={`img-${index}`} className="relative group">
+                <img src={url} alt="Upload" className="w-full h-40 object-cover rounded-xl" />
+                <button
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  disabled={isSubmitting}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+            {videos.map((url, index) => (
+              <div key={`vid-${index}`} className="relative group">
+                <video src={url} className="w-full h-40 object-cover rounded-xl" controls />
+                <button
+                  onClick={() => handleRemoveVideo(index)}
+                  className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  disabled={isSubmitting}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isUploading && (
+          <Loading 
+            variant="inline" 
+            size="sm" 
+            text="Đang tải phương tiện..." 
+            className="py-4"
+          />
+        )}
       </div>
-    </div>
+    </Modal>
   );
 };

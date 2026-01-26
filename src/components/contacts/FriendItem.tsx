@@ -54,6 +54,7 @@ export const FriendItem: React.FC<FriendItemProps> = ({
           <DropdownItem
             icon={<UserMinus size={16} />}
             label="Hủy kết bạn"
+            variant="danger"
             onClick={() => onUnfriend?.(friend.id)}
           />
         </Dropdown>
