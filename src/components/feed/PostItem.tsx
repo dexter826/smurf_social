@@ -1,45 +1,37 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Edit, Trash2, Globe, Users, Lock } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Avatar } from '../ui';
+import { Avatar, Skeleton } from '../ui';
 import { Post, User } from '../../types';
+import { CommentSection } from './CommentSection';
 
 interface PostItemProps {
   post: Post;
   author: User;
   currentUser: User;
   onLike: (postId: string) => void;
-  onComment: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
 }
 
-export const PostItem: React.FC<PostItemProps> = ({
+export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   post,
   author,
   currentUser,
   onLike,
-  onComment,
   onEdit,
   onDelete
 }) => {
   const [showMenu, setShowMenu] = useState(false);
-  const [imageIndex, setImageIndex] = useState(0);
+  const [showComments, setShowComments] = useState(false);
+  const [mediaIndex, setMediaIndex] = useState(0);
 
   const isLiked = post.likes.includes(currentUser.id);
   const isOwner = post.userId === currentUser.id;
 
-  const visibilityIcons = {
-    public: { icon: Globe, label: 'Công khai' },
-    friends: { icon: Users, label: 'Bạn bè' },
-    private: { icon: Lock, label: 'Chỉ mình tôi' }
-  };
-
-  const VisibilityIcon = visibilityIcons[post.visibility].icon;
-
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
@@ -51,13 +43,34 @@ export const PostItem: React.FC<PostItemProps> = ({
             <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
               <span>
                 {formatDistanceToNow(post.timestamp, {
-                  addSuffix: true,
-                  locale: vi
+                  locale: {
+                    ...vi,
+                    formatDistance: (token, count) => {
+                      const formatRelativeLocale: { [key: string]: string } = {
+                        lessThanXSeconds: 'vừa xong',
+                        xSeconds: 'vừa xong',
+                        halfAMinute: 'vừa xong',
+                        lessThanXMinutes: '{{count}} phút',
+                        xMinutes: '{{count}} phút',
+                        aboutXHours: '{{count}} giờ',
+                        xHours: '{{count}} giờ',
+                        xDays: '{{count}} ngày',
+                        aboutXMonths: '{{count}} tháng',
+                        xMonths: '{{count}} tháng',
+                        aboutXYears: '{{count}} năm',
+                        xYears: '{{count}} năm',
+                      };
+                      return formatRelativeLocale[token].replace('{{count}}', count.toString());
+                    }
+                  }
                 })}
               </span>
-              {post.edited && <span>• Đã chỉnh sửa</span>}
               <span>•</span>
-              <VisibilityIcon size={12} />
+              {post.visibility === 'friends' ? (
+                <Users size={12} title="Bạn bè" />
+              ) : (
+                <Lock size={12} title="Chỉ mình tôi" />
+              )}
             </div>
           </div>
         </div>
@@ -112,40 +125,67 @@ export const PostItem: React.FC<PostItemProps> = ({
         </p>
       </div>
 
-      {/* Images */}
-      {post.images && post.images.length > 0 && (
+      {/* Media (Images & Videos) */}
+      {((post.images && post.images.length > 0) || (post.videos && post.videos.length > 0)) && (
         <div className="bg-gray-100 relative">
-          <img
-            src={post.images[imageIndex]}
-            alt="Post image"
-            className="w-full h-auto max-h-[600px] object-contain cursor-pointer"
-            loading="lazy"
-          />
-          {post.images.length > 1 && (
-            <div className="absolute bottom-4 right-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
-              {imageIndex + 1} / {post.images.length}
-            </div>
-          )}
-          {post.images.length > 1 && (
-            <div className="absolute inset-0 flex items-center justify-between px-4">
-              {imageIndex > 0 && (
-                <button
-                  onClick={() => setImageIndex(imageIndex - 1)}
-                  className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg"
-                >
-                  ←
-                </button>
-              )}
-              {imageIndex < post.images.length - 1 && (
-                <button
-                  onClick={() => setImageIndex(imageIndex + 1)}
-                  className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg ml-auto"
-                >
-                  →
-                </button>
-              )}
-            </div>
-          )}
+          {(() => {
+            const allMedia = [
+              ...(post.images || []).map(url => ({ url, type: 'image' })),
+              ...(post.videos || []).map(url => ({ url, type: 'video' }))
+            ];
+            const currentMedia = allMedia[mediaIndex];
+
+            if (currentMedia.type === 'video') {
+              return (
+                <video
+                  src={currentMedia.url}
+                  controls
+                  className="w-full h-auto max-h-[600px] bg-black"
+                />
+              );
+            }
+
+            return (
+              <img
+                src={currentMedia.url}
+                alt="Post content"
+                className="w-full h-auto max-h-[600px] object-contain cursor-pointer"
+                loading="lazy"
+              />
+            );
+          })()}
+
+          {/* Navigation */}
+          {(() => {
+            const totalMedia = (post.images?.length || 0) + (post.videos?.length || 0);
+            if (totalMedia <= 1) return null;
+
+            return (
+              <>
+                <div className="absolute bottom-4 right-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm z-10">
+                  {mediaIndex + 1} / {totalMedia}
+                </div>
+                <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+                  {mediaIndex > 0 && (
+                    <button
+                      onClick={() => setMediaIndex(mediaIndex - 1)}
+                      className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg pointer-events-auto"
+                    >
+                      ←
+                    </button>
+                  )}
+                  {mediaIndex < totalMedia - 1 && (
+                    <button
+                      onClick={() => setMediaIndex(mediaIndex + 1)}
+                      className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg ml-auto pointer-events-auto"
+                    >
+                      →
+                    </button>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 
@@ -166,7 +206,7 @@ export const PostItem: React.FC<PostItemProps> = ({
         <div className="flex items-center gap-4 text-sm text-gray-600">
           {post.commentCount > 0 && (
             <button
-              onClick={() => onComment(post.id)}
+              onClick={() => setShowComments(!showComments)}
               className="hover:underline"
             >
               {post.commentCount} bình luận
@@ -176,7 +216,7 @@ export const PostItem: React.FC<PostItemProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="flex px-2 py-1">
+      <div className="flex px-2 py-1 border-b border-gray-50">
         <button
           onClick={() => onLike(post.id)}
           className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-all active:scale-95 ${
@@ -189,17 +229,49 @@ export const PostItem: React.FC<PostItemProps> = ({
           <span className="text-sm font-medium">Thích</span>
         </button>
         <button
-          onClick={() => onComment(post.id)}
-          className="flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-all"
+          onClick={() => setShowComments(!showComments)}
+          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-all ${
+            showComments ? 'text-primary-500 bg-primary-50/50' : 'text-gray-600 hover:bg-gray-50'
+          }`}
         >
           <MessageCircle size={20} />
           <span className="text-sm font-medium">Bình luận</span>
         </button>
-        <button className="flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-all">
-          <Share2 size={20} />
-          <span className="text-sm font-medium">Chia sẻ</span>
-        </button>
       </div>
+
+// ... existing logic
     </div>
   );
 };
+
+// Define and attach Skeleton
+const PostSkeleton: React.FC = () => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+    <div className="p-4 flex items-start justify-between">
+      <div className="flex gap-3">
+        <Skeleton variant="circle" width={40} height={40} />
+        <div className="space-y-2">
+          <Skeleton variant="line" width={128} height={16} />
+          <Skeleton variant="line" width={80} height={12} className="opacity-50" />
+        </div>
+      </div>
+    </div>
+    <div className="px-4 pb-3 space-y-2">
+      <Skeleton variant="line" width="100%" height={16} className="opacity-70" />
+      <Skeleton variant="line" width="75%" height={16} className="opacity-70" />
+    </div>
+    <div className="w-full h-64 bg-gray-50 flex items-center justify-center">
+      <Skeleton variant="rect" width={48} height={48} className="opacity-20" />
+    </div>
+    <div className="flex px-2 py-3 border-t border-gray-50">
+      <div className="flex-1 flex justify-center">
+        <Skeleton variant="line" width={64} height={16} className="opacity-50" />
+      </div>
+      <div className="flex-1 flex justify-center">
+        <Skeleton variant="line" width={64} height={16} className="opacity-50" />
+      </div>
+    </div>
+  </div>
+);
+
+PostItem.Skeleton = PostSkeleton;

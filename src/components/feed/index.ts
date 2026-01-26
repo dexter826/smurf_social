@@ -1,4 +1,4 @@
-export { CreatePostModal } from './CreatePostModal';
-export { PostItem } from './PostItem';
-export { CommentSection } from './CommentSection';
-export { EditPostModal } from './EditPostModal';
+export * from './PostItem';
+export * from './CommentSection';
+export * from './CreatePostModal';
+export * from './EditPostModal';

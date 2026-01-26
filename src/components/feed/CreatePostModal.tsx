@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { X, Image as ImageIcon, Globe, Users, Lock, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Image as ImageIcon, Video, Globe, Users, Lock, Loader2 } from 'lucide-react';
 import { Avatar, Button } from '../ui';
 import { User } from '../../types';
 
@@ -7,8 +7,9 @@ interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: User;
-  onSubmit: (content: string, images: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
-  onUploadImages: (files: File[]) => Promise<string[]>;
+  onSubmit: (content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
+  onUploadImages: (files: File[]) => Promise<{ images: string[], videos: string[] }>;
+  initialFiles?: File[];
 }
 
 export const CreatePostModal: React.FC<CreatePostModalProps> = ({
@@ -16,46 +17,76 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   onClose,
   currentUser,
   onSubmit,
-  onUploadImages
+  onUploadImages,
+  initialFiles = []
 }) => {
   const [content, setContent] = useState('');
   const [images, setImages] = useState<string[]>([]);
-  const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('public');
+  const [videos, setVideos] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState<'friends' | 'private'>('friends');
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initialFiles.length > 0) {
+      processFiles(initialFiles);
+    }
+  }, [initialFiles]);
 
   if (!isOpen) return null;
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
+
+    // Validation
+    for (const file of files) {
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`File ${file.name} quá lớn. Giới hạn: ${isVideo ? '50MB cho video' : '5MB cho ảnh'}.`);
+        return;
+      }
+    }
 
     setIsUploading(true);
     try {
-      const urls = await onUploadImages(files);
-      setImages(prev => [...prev, ...urls]);
+      const result = await onUploadImages(files);
+      setImages(prev => [...prev, ...result.images]);
+      setVideos(prev => [...prev, ...result.videos]);
     } catch (error) {
-      console.error('Lỗi upload ảnh:', error);
-      alert('Lỗi upload ảnh. Vui lòng thử lại.');
+      console.error('Lỗi upload media:', error);
+      alert('Lỗi upload media. Vui lòng thử lại.');
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (videoInputRef.current) videoInputRef.current.value = '';
     }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []) as File[];
+    processFiles(files);
   };
 
   const handleRemoveImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleRemoveVideo = (index: number) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
-    if (!content.trim() && images.length === 0) return;
+    if (!content.trim() && images.length === 0 && videos.length === 0) return;
 
     setIsSubmitting(true);
     try {
-      await onSubmit(content, images, visibility);
+      await onSubmit(content, images, videos, visibility);
       setContent('');
       setImages([]);
-      setVisibility('public');
+      setVideos([]);
       onClose();
     } catch (error) {
       console.error('Lỗi tạo bài viết:', error);
@@ -66,7 +97,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   };
 
   const visibilityOptions = [
-    { value: 'public' as const, label: 'Công khai', icon: Globe },
     { value: 'friends' as const, label: 'Bạn bè', icon: Users },
     { value: 'private' as const, label: 'Chỉ mình tôi', icon: Lock }
   ];
@@ -93,17 +123,14 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
               <select
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value as any)}
-                className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded border-none outline-none cursor-pointer"
+                className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded border-none outline-none cursor-pointer"
                 disabled={isSubmitting}
               >
-                {visibilityOptions.map(opt => {
-                  const Icon = opt.icon;
-                  return (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  );
-                })}
+                {visibilityOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -117,10 +144,10 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             autoFocus
           />
 
-          {images.length > 0 && (
+          {(images.length > 0 || videos.length > 0) && (
             <div className="mt-4 grid grid-cols-2 gap-2">
               {images.map((url, index) => (
-                <div key={index} className="relative group">
+                <div key={`img-${index}`} className="relative group">
                   <img
                     src={url}
                     alt={`Upload ${index + 1}`}
@@ -128,7 +155,23 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                   />
                   <button
                     onClick={() => handleRemoveImage(index)}
-                    className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    disabled={isSubmitting}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+              {videos.map((url, index) => (
+                <div key={`vid-${index}`} className="relative group">
+                  <video
+                    src={url}
+                    className="w-full h-40 object-cover rounded-lg"
+                    controls
+                  />
+                  <button
+                    onClick={() => handleRemoveVideo(index)}
+                    className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                     disabled={isSubmitting}
                   >
                     <X size={16} />
@@ -141,25 +184,47 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           {isUploading && (
             <div className="mt-4 flex items-center justify-center py-8 text-gray-500">
               <Loader2 className="animate-spin mr-2" size={20} />
-              Đang tải ảnh...
+              Đang tải phương tiện...
             </div>
           )}
         </div>
 
         <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-700">Thêm vào bài viết</span>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              disabled={isSubmitting || isUploading}
-            >
-              <ImageIcon className="text-green-500" size={24} />
-            </button>
+          <div className="flex items-center justify-between mb-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <span className="text-sm font-semibold text-gray-700">Thêm vào bài viết</span>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors group"
+                title="Ảnh"
+                disabled={isSubmitting || isUploading}
+              >
+                <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={24} />
+              </button>
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors group"
+                title="Video"
+                disabled={isSubmitting || isUploading}
+              >
+                <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={24} />
+              </button>
+            </div>
+            
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
               multiple
               onChange={handleImageSelect}
               className="hidden"

@@ -25,8 +25,16 @@ import { Post, Comment } from '../types';
 export const postService = {
   getFeed: async (currentUserId: string, friendIds: string[], limitCount: number = 10, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
+      if (!currentUserId) {
+        console.warn("getFeed: currentUserId is missing");
+        return { posts: [], lastDoc: null };
+      }
+
+      const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)].slice(0, 30);
+      
       let q = query(
-        collection(db, 'posts'), 
+        collection(db, 'posts'),
+        where('userId', 'in', allowedUserIds),
         orderBy('timestamp', 'desc'),
         limit(limitCount)
       );
@@ -45,10 +53,12 @@ export const postService = {
 
       // Filter posts theo visibility
       const posts = allPosts.filter(post => {
-        if (post.visibility === 'public') return true;
-        if (post.userId === currentUserId) return true; // Luôn thấy post của mình
-        if (post.visibility === 'friends' && friendIds.includes(post.userId)) return true;
-        if (post.visibility === 'private') return false; // Chỉ owner mới thấy
+        const isOwner = post.userId === currentUserId;
+        const isFriend = friendIds.includes(post.userId);
+        
+        if (isOwner) return true;
+        if (isFriend) return post.visibility === 'friends';
+        
         return false;
       });
 
@@ -62,8 +72,17 @@ export const postService = {
   },
 
   subscribeToFeed: (currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = 20) => {
+    if (!currentUserId) {
+      console.warn("subscribeToFeed: currentUserId is missing");
+      callback([]);
+      return () => {};
+    }
+
+    const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)].slice(0, 30);
+
     const q = query(
       collection(db, 'posts'),
+      where('userId', 'in', allowedUserIds),
       orderBy('timestamp', 'desc'),
       limit(limitCount)
     );
@@ -78,10 +97,12 @@ export const postService = {
       
       // Filter posts theo visibility
       const posts = allPosts.filter(post => {
-        if (post.visibility === 'public') return true;
-        if (post.userId === currentUserId) return true;
-        if (post.visibility === 'friends' && friendIds.includes(post.userId)) return true;
-        if (post.visibility === 'private') return false;
+        const isOwner = post.userId === currentUserId;
+        const isFriend = friendIds.includes(post.userId);
+        
+        if (isOwner) return true;
+        if (isFriend) return post.visibility === 'friends';
+        
         return false;
       });
       
@@ -126,11 +147,14 @@ export const postService = {
     }
   },
 
-  updatePost: async (postId: string, content: string): Promise<void> => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private'): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
         content,
+        images,
+        videos: videos || [],
+        visibility,
         edited: true,
         editedAt: Timestamp.now()
       });
@@ -140,15 +164,16 @@ export const postService = {
     }
   },
 
-  deletePost: async (postId: string, images?: string[]): Promise<void> => {
+  deletePost: async (postId: string, images?: string[], videos?: string[]): Promise<void> => {
     try {
-      if (images && images.length > 0) {
-        for (const imageUrl of images) {
+      const allMedia = [...(images || []), ...(videos || [])];
+      if (allMedia.length > 0) {
+        for (const url of allMedia) {
           try {
-            const imageRef = ref(storage, imageUrl);
-            await deleteObject(imageRef);
+            const mediaRef = ref(storage, url);
+            await deleteObject(mediaRef);
           } catch (err) {
-            console.error("Lỗi xóa ảnh", err);
+            console.error("Lỗi xóa media trên storage", err);
           }
         }
       }
@@ -177,21 +202,32 @@ export const postService = {
     }
   },
 
-  uploadPostImages: async (files: File[], userId: string): Promise<string[]> => {
+  uploadPostMedia: async (files: File[], userId: string): Promise<{ images: string[], videos: string[] }> => {
     try {
+      const images: string[] = [];
+      const videos: string[] = [];
+
       const uploadPromises = files.map(async (file) => {
+        const isVideo = file.type.startsWith('video/');
+        const typeFolder = isVideo ? 'videos' : 'images';
         const timestamp = Date.now();
         const fileName = `${timestamp}_${file.name}`;
-        const storageRef = ref(storage, `posts/${userId}/${fileName}`);
+        const storageRef = ref(storage, `posts/${userId}/${typeFolder}/${fileName}`);
         
         await uploadBytes(storageRef, file);
         const url = await getDownloadURL(storageRef);
-        return url;
+        
+        if (isVideo) {
+          videos.push(url);
+        } else {
+          images.push(url);
+        }
       });
 
-      return await Promise.all(uploadPromises);
+      await Promise.all(uploadPromises);
+      return { images, videos };
     } catch (error) {
-      console.error("Lỗi upload ảnh", error);
+      console.error("Lỗi upload media", error);
       throw error;
     }
   },
@@ -234,12 +270,14 @@ export const postService = {
     });
   },
 
-  addComment: async (postId: string, userId: string, content: string): Promise<void> => {
+  addComment: async (postId: string, userId: string, content: string, parentId?: string, imageUrl?: string): Promise<void> => {
     try {
       await addDoc(collection(db, 'comments'), {
         postId,
         userId,
         content,
+        parentId: parentId || null,
+        image: imageUrl || null,
         timestamp: Timestamp.now(),
         likes: []
       });
@@ -250,6 +288,20 @@ export const postService = {
       });
     } catch (error) {
       console.error("Lỗi thêm comment", error);
+      throw error;
+    }
+  },
+
+  uploadCommentImage: async (file: File, userId: string): Promise<string> => {
+    try {
+      const timestamp = Date.now();
+      const fileName = `comment_${timestamp}_${file.name}`;
+      const storageRef = ref(storage, `comments/${userId}/${fileName}`);
+      
+      await uploadBytes(storageRef, file);
+      return await getDownloadURL(storageRef);
+    } catch (error) {
+      console.error("Lỗi upload ảnh bình luận", error);
       throw error;
     }
   },

@@ -77,9 +77,11 @@ export interface Comment {
   id: string;
   postId: string;
   userId: string;
+  parentId?: string;
   content: string;
   timestamp: Date;
   likes?: string[];
+  image?: string;
 }
 
 export interface Post {
@@ -87,10 +89,11 @@ export interface Post {
   userId: string;
   content: string;
   images?: string[];
+  videos?: string[];
   likes: string[];
   commentCount: number;
   timestamp: Date;
-  visibility: 'public' | 'friends' | 'private';
+  visibility: 'friends' | 'private';
   edited?: boolean;
   editedAt?: Date;
 }

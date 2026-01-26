@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Image as ImageIcon, Video, Loader2 } from 'lucide-react';
+import { PostItem, CreatePostModal, EditPostModal } from '../components/feed';
+import { Post, User } from '../types';
+import { postService } from '../services/postService';
 import { userService } from '../services/userService';
-import { User } from '../types';
-import { Avatar, Spinner } from '../components/ui';
+import { Avatar } from '../components/ui';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
-import { CreatePostModal, PostItem, CommentSection, EditPostModal } from '../components/feed';
 
 const FeedPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
@@ -13,65 +14,115 @@ const FeedPage: React.FC = () => {
     posts,
     isLoading,
     hasMore,
+    fetchPosts,
     subscribeToPosts,
     likePost,
     createPost,
     updatePost,
     deletePost,
-    uploadImages
   } = usePostStore();
 
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showCommentModal, setShowCommentModal] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  
+  const observerRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!currentUser) return;
 
     const friendIds = currentUser.friendIds || [];
+    fetchPosts(currentUser.id, friendIds);
     const unsubscribe = subscribeToPosts(currentUser.id, friendIds);
-    loadUsers();
+    
+    // Initial user load
+    const userIds = [...new Set(posts.map(p => p.userId))];
+    const initialUsers: Record<string, User> = { [currentUser.id]: currentUser };
+    Promise.all(userIds.map(id => id !== currentUser.id ? userService.getUserById(id) : null))
+      .then(results => {
+        results.forEach(u => { if (u) initialUsers[u.id] = u; });
+        setUsersMap(prev => ({ ...prev, ...initialUsers }));
+        setLoadingUsers(false);
+      });
 
     return () => {
       unsubscribe();
     };
   }, [currentUser, subscribeToPosts]);
 
+  // Infinite Scroll Observer
+  useEffect(() => {
+    if (!hasMore || isLoading || !currentUser) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, posts.length]);
+
   useEffect(() => {
     if (posts.length > 0) {
-      loadUsers();
+      loadMoreUsers();
     }
   }, [posts]);
 
-  const loadUsers = async () => {
-    if (!currentUser) return;
+  const loadMoreUsers = async () => {
+    const userIds = [...new Set(posts.map(p => p.userId))];
+    const newUsers: Record<string, User> = {};
+    let needsUpdate = false;
 
-    try {
-      const userIds = [...new Set(posts.map(p => p.userId))];
-      const users: Record<string, User> = { [currentUser.id]: currentUser };
-
-      for (const userId of userIds) {
-        if (userId !== currentUser.id && !usersMap[userId]) {
-          const user = await userService.getUserById(userId);
-          if (user) users[userId] = user;
+    for (const userId of userIds) {
+      if (!usersMap[userId]) {
+        const user = await userService.getUserById(userId);
+        if (user) {
+          newUsers[userId] = user;
+          needsUpdate = true;
         }
       }
-
-      setUsersMap(prev => ({ ...prev, ...users }));
-    } finally {
-      setLoadingUsers(false);
     }
+
+    if (needsUpdate) {
+      setUsersMap(prev => ({ ...prev, ...newUsers }));
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (!currentUser || isLoading || !hasMore) return;
+    fetchPosts(currentUser.id, currentUser.friendIds || [], true);
+  };
+
+  const onMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setPendingFiles(files);
+      setShowCreateModal(true);
+    }
+    e.target.value = '';
   };
 
   const handleCreatePost = async (
     content: string,
     images: string[],
-    visibility: 'public' | 'friends' | 'private'
+    videos: string[],
+    visibility: 'friends' | 'private'
   ) => {
     if (!currentUser) return;
-    await createPost(currentUser.id, content, images, visibility);
+    await createPost(currentUser.id, content, images, videos, visibility);
+    setPendingFiles([]);
   };
 
   const handleLike = async (postId: string) => {
@@ -79,36 +130,27 @@ const FeedPage: React.FC = () => {
     await likePost(postId, currentUser.id);
   };
 
-  const handleEditPost = async (content: string) => {
+  const handleEditPost = async (content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => {
     if (!showEditModal) return;
-    await updatePost(showEditModal, content);
+    await updatePost(showEditModal, content, images, videos, visibility);
     setShowEditModal(null);
   };
 
   const handleDeletePost = async (postId: string) => {
     if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
-
     const post = posts.find(p => p.id === postId);
-    await deletePost(postId, post?.images);
+    await deletePost(postId, post?.images, post?.videos);
   };
 
   const handleUploadImages = async (files: File[]) => {
     if (!currentUser) throw new Error('Not authenticated');
-    return await uploadImages(files, currentUser.id);
+    return await postService.uploadPostMedia(files, currentUser.id);
   };
 
   if (!currentUser) {
     return (
       <div className="h-full flex items-center justify-center">
         <p className="text-gray-500">Vui lòng đăng nhập</p>
-      </div>
-    );
-  }
-
-  if (isLoading && posts.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <Spinner />
       </div>
     );
   }
@@ -124,24 +166,55 @@ const FeedPage: React.FC = () => {
             <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2.5 flex items-center text-gray-500 cursor-pointer transition-colors text-left"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2.5 flex items-center text-gray-500 cursor-pointer transition-colors text-left font-medium"
             >
               {currentUser.name} ơi, bạn đang nghĩ gì thế?
             </button>
           </div>
+          
           <div className="flex gap-2 pt-2 border-t border-gray-100">
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-50 rounded-lg text-sm font-medium text-gray-600 transition-colors"
+              onClick={() => imageInputRef.current?.click()}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-gray-50 rounded-lg text-[15px] font-semibold text-gray-600 transition-colors group"
             >
-              <ImageIcon className="text-green-500" size={20} />
-              Ảnh/Video
+              <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
+              Ảnh
+            </button>
+            <button
+              onClick={() => videoInputRef.current?.click()}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-gray-50 rounded-lg text-[15px] font-semibold text-gray-600 transition-colors group"
+            >
+              <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />
+              Video
             </button>
           </div>
+
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={onMediaSelect}
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            multiple
+            className="hidden"
+            onChange={onMediaSelect}
+          />
         </div>
 
         {/* Posts List */}
-        {loadingUsers && posts.length > 0 ? (
+        {posts.length === 0 && isLoading ? (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <PostItem.Skeleton key={i} />
+            ))}
+          </div>
+        ) : loadingUsers && posts.length > 0 ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="animate-spin text-primary-500" size={32} />
           </div>
@@ -153,63 +226,70 @@ const FeedPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          posts.map((post) => {
-            const author = usersMap[post.userId] || {
-              id: post.userId,
-              name: 'Unknown User',
-              avatar: '',
-              email: '',
-              status: 'offline' as const
-            };
+          <>
+            {posts.map((post) => {
+              const author = usersMap[post.userId] || {
+                id: post.userId,
+                name: 'Unknown User',
+                avatar: '',
+                email: '',
+                status: 'offline' as const
+              };
 
-            return (
-              <PostItem
-                key={post.id}
-                post={post}
-                author={author}
-                currentUser={currentUser}
-                onLike={handleLike}
-                onComment={(postId) => setShowCommentModal(postId)}
-                onEdit={(postId) => setShowEditModal(postId)}
-                onDelete={handleDeletePost}
-              />
-            );
-          })
-        )}
+              return (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  author={author}
+                  currentUser={currentUser}
+                  onLike={handleLike}
+                  onEdit={(postId) => setShowEditModal(postId)}
+                  onDelete={handleDeletePost}
+                />
+              );
+            })}
 
-        {/* Load More */}
-        {hasMore && posts.length > 0 && (
-          <div className="flex justify-center py-4">
-            <button className="text-primary-500 hover:text-primary-600 font-medium text-sm">
-              Xem thêm bài viết
-            </button>
-          </div>
+            {/* Load More Trigger & Skeleton */}
+            <div ref={observerRef} className="h-4 w-full" />
+            
+            {isLoading && hasMore && (
+              <div className="space-y-4 mt-4">
+                {[...Array(2)].map((_, i) => (
+                  <PostItem.Skeleton key={`more-${i}`} />
+                ))}
+              </div>
+            )}
+
+            {!hasMore && posts.length > 0 && (
+              <p className="text-center text-gray-400 text-sm py-8 font-medium">
+                Bạn đã xem hết bài viết.
+              </p>
+            )}
+          </>
         )}
       </div>
 
       {/* Modals */}
       <CreatePostModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false);
+          setPendingFiles([]);
+        }}
         currentUser={currentUser}
         onSubmit={handleCreatePost}
         onUploadImages={handleUploadImages}
+        initialFiles={pendingFiles}
       />
-
-      {showCommentModal && (
-        <CommentSection
-          postId={showCommentModal}
-          currentUser={currentUser}
-          onClose={() => setShowCommentModal(null)}
-        />
-      )}
 
       {showEditModal && editPost && (
         <EditPostModal
           isOpen={true}
           onClose={() => setShowEditModal(null)}
-          initialContent={editPost.content}
+          post={editPost}
+          currentUser={currentUser}
           onSubmit={handleEditPost}
+          onUploadImages={handleUploadImages}
         />
       )}
     </div>

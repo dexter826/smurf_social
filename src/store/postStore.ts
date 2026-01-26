@@ -11,11 +11,11 @@ interface PostState {
 
   fetchPosts: (currentUserId: string, friendIds: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[]) => () => void;
-  createPost: (userId: string, content: string, images: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
-  updatePost: (postId: string, content: string) => Promise<void>;
-  deletePost: (postId: string, images?: string[]) => Promise<void>;
+  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
+  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
+  deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   likePost: (postId: string, userId: string) => Promise<void>;
-  uploadImages: (files: File[], userId: string) => Promise<string[]>;
+  uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[] }>;
 
   setLoading: (loading: boolean) => void;
   clearPosts: () => void;
@@ -54,12 +54,13 @@ export const usePostStore = create<PostState>((set, get) => ({
     return unsubscribe;
   },
 
-  createPost: async (userId: string, content: string, images: string[], visibility: 'public' | 'friends' | 'private') => {
+  createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private' = 'friends') => {
     try {
       await postService.createPost({
         userId,
         content,
         images,
+        videos,
         likes: [],
         visibility
       });
@@ -69,13 +70,13 @@ export const usePostStore = create<PostState>((set, get) => ({
     }
   },
 
-  updatePost: async (postId: string, content: string) => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => {
     try {
-      await postService.updatePost(postId, content);
+      await postService.updatePost(postId, content, images, videos, visibility);
       set((state) => ({
         posts: state.posts.map(p =>
           p.id === postId
-            ? { ...p, content, edited: true, editedAt: new Date() }
+            ? { ...p, content, images, videos, visibility, edited: true, editedAt: new Date() }
             : p
         )
       }));
@@ -85,9 +86,9 @@ export const usePostStore = create<PostState>((set, get) => ({
     }
   },
 
-  deletePost: async (postId: string, images?: string[]) => {
+  deletePost: async (postId: string, images?: string[], videos?: string[]) => {
     try {
-      await postService.deletePost(postId, images);
+      await postService.deletePost(postId, images, videos);
       set((state) => ({
         posts: state.posts.filter(p => p.id !== postId)
       }));
@@ -135,11 +136,11 @@ export const usePostStore = create<PostState>((set, get) => ({
     }
   },
 
-  uploadImages: async (files: File[], userId: string) => {
+  uploadMedia: async (files: File[], userId: string) => {
     try {
-      return await postService.uploadPostImages(files, userId);
+      return await postService.uploadPostMedia(files, userId);
     } catch (error) {
-      console.error("Lỗi upload images", error);
+      console.error("Lỗi upload media", error);
       throw error;
     }
   },
