@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button, Input } from '../components/ui';
@@ -6,13 +6,19 @@ import { toast } from '../store/toastStore';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const { login, register, resetPassword, isLoading } = useAuthStore();
+  const { login, register, resetPassword, isLoading, user } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', name: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
