@@ -82,7 +82,7 @@ export const Select: React.FC<SelectProps> = ({
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1.5 bg-bg-primary border border-border-light rounded-xl shadow-2xl py-1.5 transition-all animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md bg-opacity-95">
+          <div className="absolute z-50 w-full mt-1.5 bg-bg-primary border border-border-light rounded-xl shadow-lg py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200">
             <div className="max-h-60 overflow-y-auto custom-scrollbar">
               {options.map((option) => (
                 <button

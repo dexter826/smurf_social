@@ -166,7 +166,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         </div>
 
         {isOpen && (
-          <div className="absolute z-50 w-72 mt-2 bg-bg-primary/90 backdrop-blur-xl border border-border-light rounded-2xl shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200 left-0">
+          <div className="absolute z-50 w-72 mt-2 bg-bg-primary border border-border-light rounded-2xl shadow-lg transition-all animate-in fade-in zoom-in-95 duration-200 left-0">
             {renderHeader()}
             <div className="p-2">
               {renderDays()}

@@ -83,7 +83,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
           <div className="fixed inset-0 z-30 md:hidden" onClick={() => setIsOpen(false)} />
           <div 
             className={`
-              absolute z-40 mt-2 min-w-[200px] py-2 bg-bg-primary/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200
+              absolute z-40 mt-2 min-w-[200px] py-2 bg-bg-primary border border-border-light rounded-2xl shadow-lg transition-all animate-in fade-in zoom-in-95 duration-200
               ${align === 'right' ? 'right-0' : 'left-0'}
             `}
             onClick={() => setIsOpen(false)}
