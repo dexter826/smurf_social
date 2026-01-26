@@ -7,3 +7,4 @@ export * from './EmojiPicker';
 export * from './Loading';
 export * from './Select';
 export * from './Dropdown';
+export * from './DatePicker';

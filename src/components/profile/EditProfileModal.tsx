@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { User } from '../../types';
-import { Button, Input, Select } from '../ui';
+import { Button, Input, Select, DatePicker } from '../ui';
 
 interface EditProfileModalProps {
   user: User;
@@ -154,17 +154,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Ngày sinh
-                  </label>
-                  <Input
-                    type="date"
-                    value={formData.birthDate ? new Date(formData.birthDate).toISOString().split('T')[0] : ''}
-                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value ? new Date(e.target.value).getTime() : undefined })}
+                  <DatePicker
+                    label="Ngày sinh"
+                    value={formData.birthDate}
+                    onChange={(ts) => setFormData({ ...formData, birthDate: ts })}
                     placeholder="Chọn ngày sinh"
                   />
-                </div>
               </div>
             </div>
 
