@@ -28,34 +28,26 @@ export const FriendItem: React.FC<FriendItemProps> = ({
   };
 
   return (
-    <div className="relative flex items-center justify-between p-3 hover:bg-bg-hover rounded-lg transition-colors group border-b border-divider last:border-0">
+    <div 
+      className="relative flex items-center justify-between p-3 hover:bg-bg-hover rounded-lg transition-colors group border-b border-divider last:border-0 cursor-pointer"
+      onClick={handleMessage}
+    >
       <div className="flex items-center gap-4 flex-1">
         <Avatar src={friend.avatar} name={friend.name} size="md" status={friend.status} />
         <div>
           <h3 className="font-semibold text-text-primary">{friend.name}</h3>
-          <p className="text-xs text-text-secondary">
-            {friend.phone || 'Chưa cập nhật số điện thoại'}
-          </p>
         </div>
       </div>
 
-      <div className="flex gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<MessageCircle size={16} />}
-          onClick={handleMessage}
-        >
-          Nhắn tin
-        </Button>
-        
-        <Dropdown
-          trigger={
-            <Button variant="ghost" size="sm">
-              <MoreVertical size={16} />
-            </Button>
-          }
-        >
+      <div className="flex gap-2">
+        <div onClick={(e) => e.stopPropagation()}>
+          <Dropdown
+            trigger={
+              <Button variant="ghost" size="sm">
+                <MoreVertical size={16} />
+              </Button>
+            }
+          >
           <DropdownItem
             icon={<UserMinus size={16} />}
             label="Hủy kết bạn"
@@ -68,6 +60,7 @@ export const FriendItem: React.FC<FriendItemProps> = ({
             onClick={() => onBlock?.(friend.id)}
           />
         </Dropdown>
+        </div>
       </div>
     </div>
   );

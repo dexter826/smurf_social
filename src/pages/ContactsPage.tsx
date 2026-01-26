@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, Search, Bell } from 'lucide-react';
+import { UserPlus, Users, Search, Bell, ArrowUpDown } from 'lucide-react';
 import { userService } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
@@ -29,6 +29,7 @@ const ContactsPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showAddModal, setShowAddModal] = useState(false);
   const [unfriendId, setUnfriendId] = useState<string | null>(null);
   const [blockUserId, setBlockUserId] = useState<string | null>(null);
@@ -150,12 +151,19 @@ const ContactsPage: React.FC = () => {
       groups[firstLetter].push(friend);
     });
 
-    return Object.keys(groups)
-      .sort()
-      .map(letter => ({
-        letter,
-        friends: groups[letter].sort((a, b) => a.name.localeCompare(b.name))
-      }));
+    const sortedGroups = Object.keys(groups).sort();
+    if (sortOrder === 'desc') {
+      sortedGroups.reverse();
+    }
+
+    return sortedGroups.map(letter => ({
+      letter,
+      friends: groups[letter].sort((a, b) => {
+        return sortOrder === 'asc' 
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
+      })
+    }));
   };
 
   const groupedFriends = groupFriendsByLetter();
@@ -258,15 +266,26 @@ const ContactsPage: React.FC = () => {
           </div>
 
           {activeTab === 'all' && (
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-secondary" size={18} />
-              <input
-                type="text"
-                placeholder="Tìm kiếm bạn bè"
-                className="w-full pl-10 pr-4 py-2 bg-bg-secondary text-text-primary rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-2.5 text-secondary" size={18} />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm bạn bè"
+                  className="w-full pl-10 pr-4 py-2 bg-bg-secondary text-text-primary rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<ArrowUpDown size={18} />}
+                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                title={sortOrder === 'asc' ? 'Sắp xếp Z-A' : 'Sắp xếp A-Z'}
+              >
+                {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
+              </Button>
             </div>
           )}
         </div>
