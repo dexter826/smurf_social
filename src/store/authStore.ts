@@ -42,8 +42,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const firebaseUser = await authService.register(email, pass);
       const newUser = await userService.updateProfile(firebaseUser.uid, {
         id: firebaseUser.uid,
-        name: name || 'Người dùng mới',
-        avatar: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
+        name: name,
+        avatar: '',
         email: email.trim(),
       });
       set({ user: newUser });

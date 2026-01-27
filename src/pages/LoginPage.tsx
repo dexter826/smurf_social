@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button, Input } from '../components/ui';
 import { toast } from '../store/toastStore';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const { login, register, resetPassword, isLoading } = useAuthStore();
@@ -197,6 +197,7 @@ const LoginPage: React.FC = () => {
               {activeTab === 'register' && (
                 <Input
                   label="Họ tên"
+                  icon={<User size={16} />}
                   placeholder="Nhập họ tên của bạn"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}

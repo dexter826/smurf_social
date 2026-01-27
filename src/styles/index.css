@@ -133,6 +133,12 @@ body {
   padding: 0;
 }
 
+/* === Hide browser native password reveal button === */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
 /* === Scrollbar Styles === */
 ::-webkit-scrollbar {
   width: 6px;
