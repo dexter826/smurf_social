@@ -64,6 +64,8 @@ export interface Conversation {
   isGroup: boolean;
   groupName?: string;
   groupAvatar?: string;
+  creatorId?: string;
+  adminIds?: string[];
   updatedAt: Date;
   createdAt: Date;
   pinned?: boolean;

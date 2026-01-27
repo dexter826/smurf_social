@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { userService } from '../services/userService';
 import { User } from '../types';
-import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel } from '../components/chat';
+import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal } from '../components/chat';
 import { Spinner } from '../components/ui';
 
 const ChatPage: React.FC = () => {
@@ -42,11 +42,21 @@ const ChatPage: React.FC = () => {
     searchHistory,
     addToSearchHistory,
     removeFromSearchHistory,
-    clearSearchHistory
+    clearSearchHistory,
+    createGroup,
+    updateGroupInfo,
+    addMember,
+    removeMember,
+    leaveGroup,
+    promoteToAdmin,
+    demoteFromAdmin
   } = useChatStore();
 
   const [showDetails, setShowDetails] = useState(false);
   const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [showEditGroup, setShowEditGroup] = useState(false);
   const { users: usersMap, fetchUsers } = useUserCache();
 
   // Stable callbacks
@@ -232,6 +242,46 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  // ========== GROUP MANAGEMENT HANDLERS ==========
+  const handleCreateGroup = async (memberIds: string[], groupName: string, groupAvatar?: string) => {
+    if (!currentUser) return;
+    await createGroup(currentUser.id, memberIds, groupName, groupAvatar);
+    setShowCreateGroup(false);
+  };
+
+  const handleAddMembers = async (userIds: string[]) => {
+    if (!selectedConversationId) return;
+    for (const userId of userIds) {
+      await addMember(selectedConversationId, userId);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!selectedConversationId) return;
+    await removeMember(selectedConversationId, userId);
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!selectedConversationId || !currentUser) return;
+    await leaveGroup(selectedConversationId, currentUser.id);
+    setShowDetails(false);
+  };
+
+  const handlePromoteToAdmin = async (userId: string) => {
+    if (!selectedConversationId) return;
+    await promoteToAdmin(selectedConversationId, userId);
+  };
+
+  const handleDemoteFromAdmin = async (userId: string) => {
+    if (!selectedConversationId) return;
+    await demoteFromAdmin(selectedConversationId, userId);
+  };
+
+  const handleEditGroup = async (updates: { groupName?: string; groupAvatar?: string }) => {
+    if (!selectedConversationId) return;
+    await updateGroupInfo(selectedConversationId, updates);
+  };
+
   return (
     <div className="flex h-full w-full">
       {/* Conversation List - Sidebar */}
@@ -272,6 +322,7 @@ const ChatPage: React.FC = () => {
           onArchive={handleArchive}
           onMarkUnread={handleMarkUnread}
           onDelete={handleDelete}
+          onNewGroup={() => setShowCreateGroup(true)}
         />
       </div>
 
@@ -328,6 +379,39 @@ const ChatPage: React.FC = () => {
           onTogglePin={() => handlePin(selectedConversation.id, !selectedConversation.pinned)}
           onToggleBlock={handleToggleBlock}
           onDelete={() => handleDelete(selectedConversation.id)}
+          onLeaveGroup={handleLeaveGroup}
+          onEditGroup={() => setShowEditGroup(true)}
+          onAddMember={() => setShowAddMember(true)}
+          onRemoveMember={handleRemoveMember}
+          onPromoteToAdmin={handlePromoteToAdmin}
+          onDemoteFromAdmin={handleDemoteFromAdmin}
+        />
+      )}
+
+      {/* Modals */}
+      <CreateGroupModal
+        isOpen={showCreateGroup}
+        currentUserId={currentUser.id}
+        onClose={() => setShowCreateGroup(false)}
+        onCreateGroup={handleCreateGroup}
+      />
+
+      {selectedConversation && (
+        <AddMemberModal
+          isOpen={showAddMember}
+          conversation={selectedConversation}
+          currentUserId={currentUser.id}
+          onClose={() => setShowAddMember(false)}
+          onAddMembers={handleAddMembers}
+        />
+      )}
+
+      {selectedConversation && selectedConversation.isGroup && (
+        <EditGroupModal
+          isOpen={showEditGroup}
+          conversation={selectedConversation}
+          onClose={() => setShowEditGroup(false)}
+          onSave={handleEditGroup}
         />
       )}
     </div>

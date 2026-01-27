@@ -21,6 +21,13 @@ interface ChatDetailsPanelProps {
   onDelete?: () => void;
   onMemberClick?: (userId: string) => void;
   onMessageClick?: (messageId: string) => void;
+  // Group management props
+  onLeaveGroup?: () => void;
+  onEditGroup?: () => void;
+  onAddMember?: () => void;
+  onRemoveMember?: (userId: string) => void;
+  onPromoteToAdmin?: (userId: string) => void;
+  onDemoteFromAdmin?: (userId: string) => void;
 }
 
 type TabId = 'info' | 'members' | 'media' | 'search';
@@ -38,7 +45,13 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
   onToggleBlock,
   onDelete,
   onMemberClick,
-  onMessageClick
+  onMessageClick,
+  onLeaveGroup,
+  onEditGroup,
+  onAddMember,
+  onRemoveMember,
+  onPromoteToAdmin,
+  onDemoteFromAdmin
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('info');
   const [isVisible, setIsVisible] = useState(false);
@@ -48,7 +61,6 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
     ? null
     : conversation.participants.find(p => p.id !== currentUserId);
 
-  // Animation controls
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
@@ -59,7 +71,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
       setIsAnimating(false);
       const timer = setTimeout(() => {
         setIsVisible(false);
-      }, 300); // Đợi animation kết thúc
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -89,11 +101,14 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
             />
             <ChatDetailsActions
               conversation={conversation}
+              currentUserId={currentUserId}
               isBlocked={isBlocked}
               onToggleMute={onToggleMute}
               onTogglePin={onTogglePin}
               onToggleBlock={onToggleBlock}
               onDelete={onDelete}
+              onLeaveGroup={onLeaveGroup}
+              onEditGroup={onEditGroup}
             />
           </>
         );
@@ -103,6 +118,10 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
             conversation={conversation}
             currentUserId={currentUserId}
             onMemberClick={onMemberClick}
+            onAddMember={onAddMember}
+            onRemoveMember={onRemoveMember}
+            onPromoteToAdmin={onPromoteToAdmin}
+            onDemoteFromAdmin={onDemoteFromAdmin}
           />
         );
       case 'media':
@@ -122,7 +141,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
 
   return (
     <>
-      {/* Backdrop - Chỉ hiển thị trên mobile */}
+      {/* Backdrop - Mobile only */}
       <div
         onClick={onClose}
         className={`

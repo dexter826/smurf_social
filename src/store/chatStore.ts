@@ -50,6 +50,15 @@ interface ChatState {
   // Reactions
   toggleReaction: (messageId: string, userId: string, emoji: string) => Promise<void>;
 
+  // Group Management
+  createGroup: (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => Promise<string>;
+  updateGroupInfo: (conversationId: string, updates: { groupName?: string; groupAvatar?: string }) => Promise<void>;
+  addMember: (conversationId: string, userId: string) => Promise<void>;
+  removeMember: (conversationId: string, userId: string) => Promise<void>;
+  leaveGroup: (conversationId: string, userId: string) => Promise<void>;
+  promoteToAdmin: (conversationId: string, userId: string) => Promise<void>;
+  demoteFromAdmin: (conversationId: string, userId: string) => Promise<void>;
+
   // Utils
   setSearchTerm: (term: string) => void;
   clearMessages: (conversationId: string) => void;
@@ -341,6 +350,84 @@ export const useChatStore = create<ChatState>((set, get) => ({
       await chatService.toggleReaction(messageId, userId, emoji);
     } catch (error) {
       console.error("Lỗi toggle reaction", error);
+      throw error;
+    }
+  },
+
+  // ========== GROUP MANAGEMENT ==========
+
+  createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => {
+    try {
+      const conversationId = await chatService.createGroupConversation(creatorId, memberIds, groupName, groupAvatar);
+      set({ selectedConversationId: conversationId });
+      return conversationId;
+    } catch (error) {
+      console.error("Lỗi tạo group", error);
+      throw error;
+    }
+  },
+
+  updateGroupInfo: async (conversationId: string, updates: { groupName?: string; groupAvatar?: string }) => {
+    try {
+      await chatService.updateGroupInfo(conversationId, updates);
+      set((state) => ({
+        conversations: state.conversations.map(c =>
+          c.id === conversationId ? { ...c, ...updates } : c
+        )
+      }));
+    } catch (error) {
+      console.error("Lỗi cập nhật group", error);
+      throw error;
+    }
+  },
+
+  addMember: async (conversationId: string, userId: string) => {
+    try {
+      await chatService.addGroupMember(conversationId, userId);
+    } catch (error) {
+      console.error("Lỗi thêm thành viên", error);
+      throw error;
+    }
+  },
+
+  removeMember: async (conversationId: string, userId: string) => {
+    try {
+      await chatService.removeGroupMember(conversationId, userId);
+    } catch (error) {
+      console.error("Lỗi xóa thành viên", error);
+      throw error;
+    }
+  },
+
+  leaveGroup: async (conversationId: string, userId: string) => {
+    try {
+      await chatService.leaveGroup(conversationId, userId);
+      set((state) => ({
+        conversations: state.conversations.filter(c => c.id !== conversationId),
+        selectedConversationId: state.selectedConversationId === conversationId 
+          ? null 
+          : state.selectedConversationId
+      }));
+    } catch (error) {
+      console.error("Lỗi rời group", error);
+      throw error;
+    }
+  },
+
+  promoteToAdmin: async (conversationId: string, userId: string) => {
+    try {
+      await chatService.promoteToAdmin(conversationId, userId);
+    } catch (error) {
+      console.error("Lỗi thăng admin", error);
+      throw error;
+    }
+  },
+
+  demoteFromAdmin: async (conversationId: string, userId: string) => {
+    try {
+      await chatService.demoteFromAdmin(conversationId, userId);
+    } catch (error) {
+      console.error("Lỗi hạ quyền admin", error);
       throw error;
     }
   },

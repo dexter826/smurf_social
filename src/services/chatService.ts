@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
-import { Conversation, Message, MessageType } from '../types';
+import { Conversation, Message, MessageType, User } from '../types';
 import { userService } from './userService';
 import { batchGetUsers } from '../utils/batchUtils';
 
@@ -91,16 +91,25 @@ export const chatService = {
         });
       });
 
-      // Batch load tất cả users một lần
-      const usersMap = await batchGetUsers([...allParticipantIds]);
+      // Batch load tất cả users một lần (bao gồm cả currentUser cho group)
+      const usersMap = await batchGetUsers([...allParticipantIds, userId]);
 
       const conversations = snapshot.docs.map((d) => {
         const data = d.data();
-        const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
         
-        const participants = otherParticipantIds
-          .map((id: string) => usersMap[id])
-          .filter(p => !!p);
+        let participants;
+        if (data.isGroup) {
+          // Group: lấy TẤT CẢ participants bao gồm cả currentUser
+          participants = data.participantIds
+            .map((id: string) => usersMap[id])
+            .filter((p: User | undefined) => !!p);
+        } else {
+          // Chat 1-1: chỉ lấy đối phương
+          const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
+          participants = otherParticipantIds
+            .map((id: string) => usersMap[id])
+            .filter((p: User | undefined) => !!p);
+        }
 
         return {
           ...data,
@@ -138,20 +147,29 @@ export const chatService = {
       querySnapshot.docs.forEach(d => {
         const data = d.data();
         data.participantIds.forEach((id: string) => {
-          if (id !== userId) allParticipantIds.add(id);
+          allParticipantIds.add(id);
         });
       });
 
-      // Batch load tất cả users một lần
+      // Batch load tất cả users một lần (bao gồm cả currentUser cho group)
       const usersMap = await batchGetUsers([...allParticipantIds]);
 
       const conversations = querySnapshot.docs.map((d) => {
         const data = d.data();
-        const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
         
-        const participants = otherParticipantIds
-          .map((id: string) => usersMap[id])
-          .filter(p => !!p);
+        let participants;
+        if (data.isGroup) {
+          // Group: lấy TẤT CẢ participants
+          participants = data.participantIds
+            .map((id: string) => usersMap[id])
+            .filter((p: User | undefined) => !!p);
+        } else {
+          // Chat 1-1: chỉ lấy đối phương
+          const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
+          participants = otherParticipantIds
+            .map((id: string) => usersMap[id])
+            .filter((p: User | undefined) => !!p);
+        }
 
         return {
           ...data,
@@ -738,6 +756,179 @@ export const chatService = {
       }
     } catch (error) {
       console.error("Lỗi toggle reaction", error);
+      throw error;
+    }
+  },
+
+  // ========== GROUP MANAGEMENT ==========
+
+  /**
+   * Tạo group conversation mới
+   */
+  createGroupConversation: async (
+    creatorId: string,
+    memberIds: string[],
+    groupName: string,
+    groupAvatar?: string
+  ): Promise<string> => {
+    try {
+      const participantIds = [creatorId, ...memberIds.filter(id => id !== creatorId)];
+      
+      const conversationData = {
+        participantIds,
+        isGroup: true,
+        groupName,
+        groupAvatar: groupAvatar || null,
+        creatorId,
+        adminIds: [creatorId],
+        unreadCount: participantIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {}),
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        pinned: false,
+        muted: false
+      };
+      
+      const docRef = await addDoc(collection(db, 'conversations'), conversationData);
+      return docRef.id;
+    } catch (error) {
+      console.error("Lỗi tạo group", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Cập nhật thông tin group (tên, avatar)
+   */
+  updateGroupInfo: async (
+    conversationId: string,
+    updates: { groupName?: string; groupAvatar?: string }
+  ): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Lỗi cập nhật group info", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Thêm thành viên vào group
+   */
+  addGroupMember: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        participantIds: arrayUnion(userId),
+        [`unreadCount.${userId}`]: 0,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Lỗi thêm thành viên", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Xóa thành viên khỏi group
+   */
+  removeGroupMember: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationSnap = await getDoc(conversationRef);
+      
+      if (conversationSnap.exists()) {
+        const data = conversationSnap.data();
+        const newUnreadCount = { ...data.unreadCount };
+        delete newUnreadCount[userId];
+        
+        await updateDoc(conversationRef, {
+          participantIds: arrayRemove(userId),
+          adminIds: arrayRemove(userId),
+          unreadCount: newUnreadCount,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi xóa thành viên", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Rời khỏi group
+   */
+  leaveGroup: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationSnap = await getDoc(conversationRef);
+      
+      if (conversationSnap.exists()) {
+        const data = conversationSnap.data();
+        const newUnreadCount = { ...data.unreadCount };
+        delete newUnreadCount[userId];
+        
+        const newParticipantIds = data.participantIds.filter((id: string) => id !== userId);
+        const newAdminIds = (data.adminIds || []).filter((id: string) => id !== userId);
+        
+        // Nếu người rời là creator và còn admin khác -> chuyển creator
+        // Nếu không còn ai -> xóa group
+        if (newParticipantIds.length === 0) {
+          await chatService.deleteConversation(conversationId);
+        } else {
+          const updates: any = {
+            participantIds: newParticipantIds,
+            adminIds: newAdminIds,
+            unreadCount: newUnreadCount,
+            updatedAt: serverTimestamp()
+          };
+          
+          // Nếu creator rời, chuyển cho admin đầu tiên hoặc member đầu tiên
+          if (data.creatorId === userId) {
+            updates.creatorId = newAdminIds[0] || newParticipantIds[0];
+            if (newAdminIds.length === 0) {
+              updates.adminIds = [newParticipantIds[0]];
+            }
+          }
+          
+          await updateDoc(conversationRef, updates);
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi rời group", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Thăng thành viên làm admin
+   */
+  promoteToAdmin: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        adminIds: arrayUnion(userId)
+      });
+    } catch (error) {
+      console.error("Lỗi thăng admin", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Hạ quyền admin
+   */
+  demoteFromAdmin: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        adminIds: arrayRemove(userId)
+      });
+    } catch (error) {
+      console.error("Lỗi hạ quyền admin", error);
       throw error;
     }
   }

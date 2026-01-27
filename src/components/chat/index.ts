@@ -10,3 +10,6 @@ export { ChatDetailsMemberList } from './ChatDetailsMemberList';
 export { ChatDetailsMedia } from './ChatDetailsMedia';
 export { ChatDetailsSearch } from './ChatDetailsSearch';
 export { ChatDetailsActions } from './ChatDetailsActions';
+export { CreateGroupModal } from './CreateGroupModal';
+export { AddMemberModal } from './AddMemberModal';
+export { EditGroupModal } from './EditGroupModal';

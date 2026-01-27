@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Users, ArrowLeft, Archive, X } from 'lucide-react';
+import { Search, Users, ArrowLeft, Archive, X, UserPlus } from 'lucide-react';
 import { Conversation, User } from '../../types';
-import { Input, Spinner } from '../ui';
+import { Input, Spinner, Dropdown, DropdownItem } from '../ui';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
 
@@ -20,6 +20,7 @@ interface ConversationListProps {
   onArchive?: (id: string, archived: boolean) => void;
   onMarkUnread?: (id: string, markedUnread: boolean) => void;
   onNewChat?: () => void;
+  onNewGroup?: () => void;
   viewMode?: 'normal' | 'archived';
   archivedCount?: number;
   onViewModeChange?: (mode: 'normal' | 'archived') => void;
@@ -50,6 +51,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onArchive,
   onMarkUnread,
   onNewChat,
+  onNewGroup,
   viewMode = 'normal',
   archivedCount = 0,
   onViewModeChange,
@@ -115,6 +117,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               </button>
             )}
           </div>
+          {!isSearchFocused && onNewGroup && (
+            <button
+              onClick={onNewGroup}
+              className="p-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
+              title="Tạo nhóm mới"
+            >
+              <Users size={18} />
+            </button>
+          )}
           {isSearchFocused && (
             <button
               onClick={handleBack}
