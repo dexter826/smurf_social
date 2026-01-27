@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Conversation } from '../../types';
 import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck } from 'lucide-react';
-import { ConfirmDialog } from '../ui';
+import { ConfirmDialog, Button } from '../ui';
 
 interface ChatDetailsActionsProps {
   conversation: Conversation;
@@ -58,25 +58,27 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
 
       <div className="space-y-1">
         {actions.map((action, index) => (
-          <button
+          <Button
             key={index}
+            variant="ghost"
+            rounded="none"
             onClick={action.onClick}
             className={`
-              w-full flex items-center gap-3 px-4 py-3 transition-colors
+              w-full flex items-center gap-3 px-4 py-3 transition-colors h-auto
               ${action.variant === 'danger' 
                 ? 'text-error hover:bg-error/10' 
                 : 'text-text-primary hover:bg-bg-hover'
               }
             `}
-          >
-            <span className={action.variant === 'danger' ? 'text-error' : 'text-text-secondary'}>
+            icon={<span className={action.variant === 'danger' ? 'text-error' : 'text-text-secondary'}>
               {action.icon}
-            </span>
+            </span>}
+          >
             <span className="flex-1 text-left text-sm font-medium">
               {action.label}
             </span>
             <ChevronRight size={16} className="text-text-tertiary" />
-          </button>
+          </Button>
         ))}
       </div>
 

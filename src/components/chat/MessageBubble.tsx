@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { FileText, Download, CheckCheck, Check, MoreVertical, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar, UserAvatar, ConfirmDialog } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button } from '../ui';
 
 interface MessageBubbleProps {
   message: Message;
@@ -80,7 +80,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         );
         
       default:
-        return <div className="whitespace-pre-wrap break-words">{message.content}</div>;
+        return <div className="whitespace-pre-wrap break-all">{message.content}</div>;
     }
   };
 
@@ -94,7 +94,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
 
-        <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'} relative`}>
+        <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative`}>
           {/* Sender Name in Group */}
           {!isMe && showName && (
             <span className="text-[11px] text-text-secondary ml-1 mb-1 font-medium">
@@ -109,8 +109,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 relative px-3 py-1.5 text-sm shadow-sm
                 ${message.type === 'text' ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe 
-                  ? (message.type === 'text' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm' : '') 
-                  : (message.type === 'text' ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm' : '')
+                  ? (message.type === 'text' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '') 
+                  : (message.type === 'text' ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
                 }
               `}
             >
@@ -129,12 +129,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* Menu cho tin nhắn */}
             {isMe && onDelete && (
               <div className="absolute top-0 right-full mr-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
-                <button
+                <Button
+                  variant="ghost"
+                  isIconOnly
+                  rounded="full"
                   onClick={() => setShowMenu(!showMenu)}
-                  className="p-1 hover:bg-bg-hover rounded-full"
-                >
-                  <MoreVertical size={14} />
-                </button>
+                  className="p-1 hover:bg-bg-hover"
+                  icon={<MoreVertical size={14} />}
+                />
 
                 {showMenu && (
                   <>
@@ -143,16 +145,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                       onClick={() => setShowMenu(false)}
                     />
                     <div className="absolute right-0 top-8 z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-32">
-                      <button
+                      <Button
+                        variant="ghost"
+                        rounded="none"
                         onClick={() => {
                           setShowDeleteConfirm(true);
                           setShowMenu(false);
                         }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error flex items-center gap-2 transition-colors"
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error flex items-center gap-2 transition-colors h-auto"
+                        icon={<Trash2 size={14} />}
                       >
-                        <Trash2 size={14} />
                         Xóa
-                      </button>
+                      </Button>
                     </div>
                   </>
                 )}
@@ -191,12 +195,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             alt="full"
             className="max-w-full max-h-full object-contain"
           />
-          <button
-            className="absolute top-4 right-4 text-white text-2xl hover:text-text-tertiary"
+          <Button
+            variant="ghost"
+            isIconOnly
+            rounded="full"
+            className="absolute top-4 right-4 text-white text-2xl hover:text-text-tertiary p-2"
             onClick={() => setShowFullImage(false)}
-          >
-            ×
-          </button>
+            icon={<span>×</span>}
+          />
         </div>
       )}
 

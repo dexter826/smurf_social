@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal } from 'lucide-react';
-import { EmojiPicker, Loading } from '../ui';
+import { EmojiPicker, Loading, Button } from '../ui';
 import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
 import { validateFileSize } from '../../utils/fileUtils';
@@ -375,16 +375,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       <form onSubmit={handleSubmit} className="flex items-center gap-2 px-4 py-3 bg-bg-primary">
         {/* More Actions Menu */}
         <div className="relative">
-           <button
+           <Button
              type="button"
+             variant={showActions ? 'primary' : 'ghost'}
+             rounded="full"
+             isIconOnly
              onClick={(e) => {
                e.stopPropagation();
                setShowActions(!showActions);
              }}
-             className={`p-2 rounded-full transition-all ${showActions ? 'bg-primary text-white rotate-45' : 'text-primary hover:bg-primary-light'}`}
-           >
-             <Plus size={24} />
-           </button>
+             className={`p-2 transition-all ${showActions ? 'rotate-45' : 'text-primary'}`}
+             icon={<Plus size={24} />}
+           />
 
            {/* Popover Menu */}
            {showActions && (
@@ -392,30 +394,36 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                ref={actionsMenuRef}
                className="absolute bottom-full left-0 mb-2 flex items-center gap-2 p-2 bg-bg-secondary rounded-xl shadow-lg border border-border-light animate-fade-in z-50"
              >
-               <button
+               <Button
                   type="button"
+                  variant="ghost"
+                  rounded="full"
+                  isIconOnly
                   onClick={() => { imageInputRef.current?.click(); setShowActions(false); }}
-                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light rounded-full transition-all flex items-center gap-2"
+                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light"
                   title="Gửi ảnh"
-               >
-                 <ImageIcon size={20} />
-               </button>
-               <button
+                  icon={<ImageIcon size={20} />}
+               />
+               <Button
                   type="button"
+                  variant="ghost"
+                  rounded="full"
+                  isIconOnly
                   onClick={() => { videoInputRef.current?.click(); setShowActions(false); }}
-                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light rounded-full transition-all flex items-center gap-2"
+                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light"
                   title="Gửi video"
-               >
-                 <Video size={20} />
-               </button>
-               <button
+                  icon={<Video size={20} />}
+               />
+               <Button
                   type="button"
+                  variant="ghost"
+                  rounded="full"
+                  isIconOnly
                   onClick={() => { fileInputRef.current?.click(); setShowActions(false); }}
-                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light rounded-full transition-all flex items-center gap-2"
+                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light"
                   title="Gửi file"
-               >
-                 <Paperclip size={20} />
-               </button>
+                  icon={<Paperclip size={20} />}
+               />
              </div>
            )}
         </div>
@@ -457,20 +465,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                  <span>{formatTime(recordingTime)}</span>
               </div>
               <div className="flex items-center gap-2">
-                 <button 
-                    type="button"
-                    onClick={cancelRecording}
-                    className="p-1 hover:bg-bg-hover rounded-full text-text-secondary text-sm"
-                 >
-                    Hủy
-                 </button>
-                 <button
-                    type="button"
-                    onClick={stopRecording}
-                    className="p-1.5 bg-primary text-white rounded-full hover:bg-primary-hover"
-                 >
-                    <Square size={16} fill="currentColor" />
-                 </button>
+                  <Button 
+                     variant="ghost"
+                     size="sm"
+                     type="button"
+                     onClick={cancelRecording}
+                     className="p-1 hover:bg-bg-hover text-text-secondary text-sm h-auto"
+                  >
+                     Hủy
+                  </Button>
+                  <Button
+                     type="button"
+                     variant="primary"
+                     rounded="full"
+                     isIconOnly
+                     size="sm"
+                     onClick={stopRecording}
+                     className="p-1.5"
+                     icon={<Square size={16} fill="currentColor" />}
+                  />
               </div>
            </div>
         ) : (
@@ -524,23 +537,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         )}
 
         {/* Send Button */}
-        <button
+        <Button
           type="submit"
-          disabled={disabled || isSending || (!inputText.trim() && selectedFiles.length === 0)}
-          className={`
-            p-2.5 rounded-full transition-all
-            ${(inputText.trim() || selectedFiles.length > 0) && !isSending
-              ? 'bg-primary text-white shadow-md hover:bg-primary-hover active:scale-95' 
-              : 'bg-secondary text-text-tertiary opacity-50 cursor-not-allowed'}
-          `}
+          disabled={disabled || (!inputText.trim() && selectedFiles.length === 0)}
+          isLoading={isSending}
+          variant={(inputText.trim() || selectedFiles.length > 0) ? 'primary' : 'secondary'}
+          rounded="full"
+          isIconOnly
+          className={`w-10 h-10 shadow-sm active:scale-95 ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-50 cursor-not-allowed'}`}
           title="Gửi"
-        >
-          {isSending ? (
-            <Loading size={20} color="text-white" />
-          ) : (
-            <Send size={20} className={inputText.trim() || selectedFiles.length > 0 ? 'fill-current' : ''} />
-          )}
-        </button>
+          icon={<Send size={20} className={inputText.trim() || selectedFiles.length > 0 ? 'fill-current' : ''} />}
+        />
       </form>
     </div>
   );

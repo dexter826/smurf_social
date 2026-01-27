@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '../ui';
 
 type TabType = 'media' | 'posts' | 'friends';
 
@@ -21,17 +22,19 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
       <div className="max-w-5xl mx-auto px-4 border-b border-divider">
         <div className="flex gap-2">
           {tabs.map((tab) => (
-            <button
+            <Button
               key={tab.id}
+              variant="ghost"
+              rounded="none"
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-3 text-sm transition-all relative ${
+              className={`px-4 py-3 text-sm transition-all relative h-auto border-b-2 ${
                 activeTab === tab.id
-                  ? 'text-primary-600 font-bold'
-                  : 'text-text-secondary font-medium hover:bg-bg-hover'
+                  ? 'text-primary border-primary font-bold'
+                  : 'text-text-secondary border-transparent font-medium'
               }`}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

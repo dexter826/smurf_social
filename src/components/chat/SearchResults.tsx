@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, X, Clock } from 'lucide-react';
+import { Button } from '../ui';
 import { Conversation, User } from '../../types';
 
 interface SearchResultsProps {
@@ -50,12 +51,14 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           <span className="text-xs font-bold text-text-tertiary uppercase tracking-wider">
             Tìm kiếm gần đây
           </span>
-          <button 
+          <Button 
+            variant="ghost"
+            size="sm"
             onClick={onClearHistory}
-            className="text-xs font-medium text-primary hover:underline transition-all"
+            className="text-xs font-medium text-primary hover:underline h-auto p-0"
           >
             Xóa lịch sử
-          </button>
+          </Button>
         </div>
         <div className="space-y-1">
           {history.map((item) => {
@@ -83,15 +86,18 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     {displayName}
                   </div>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  isIconOnly
+                  rounded="full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemoveFromHistory(item.id);
                   }}
-                  className="p-1.5 text-text-tertiary hover:text-text-secondary opacity-0 group-hover:opacity-100 transition-all hover:bg-bg-tertiary rounded-full"
-                >
-                  <X size={14} />
-                </button>
+                  className="p-1.5 text-text-tertiary hover:opacity-100 opacity-0 group-hover:opacity-100 hover:bg-bg-tertiary"
+                  icon={<X size={14} />}
+                />
               </div>
             );
           })}

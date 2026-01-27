@@ -254,12 +254,14 @@ const ProfilePage: React.FC = () => {
                   <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4 transition-theme">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-lg text-text-primary">Ảnh/Video</h3>
-                      <button 
+                      <Button 
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setActiveTab('media')}
-                        className="text-primary hover:underline text-sm font-medium"
+                        className="text-primary hover:underline font-medium h-auto p-0"
                       >
                         Xem tất cả
-                      </button>
+                      </Button>
                     </div>
                     {latestMedia.length > 0 && (
                       <div className="grid grid-cols-3 gap-2">

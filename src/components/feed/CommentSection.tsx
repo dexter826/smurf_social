@@ -261,12 +261,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                         </div>
                       </div>
                     )}
-                    <button 
+                    <Button 
+                      variant="ghost"
+                      isIconOnly
+                      size="sm"
+                      rounded="full"
                       onClick={() => removeMedia(true)}
-                      className="absolute -top-1 -right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black/70 transition-colors z-10"
-                    >
-                      <X size={12} />
-                    </button>
+                      className="absolute -top-1 -right-1 bg-black/50 text-white p-0.5 hover:bg-black/70 z-10 w-5 h-5"
+                      icon={<X size={12} />}
+                    />
                   </div>
                 )}
                 <div className="flex items-center gap-2">
@@ -296,24 +299,28 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                             }}
                             disabled={isSubmitting}
                           />
-                          <button
+                          <Button
+                            variant="ghost"
                             type="button"
+                            size="sm"
+                            isIconOnly
                             onClick={() => editFileInputRef.current?.click()}
-                            className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                            className="p-1 px-1.5 text-text-tertiary hover:text-primary"
                             title="Thêm ảnh"
                             disabled={isSubmitting}
-                          >
-                            <ImageIcon size={20} />
-                          </button>
-                          <button
+                            icon={<ImageIcon size={20} />}
+                          />
+                          <Button
+                            variant="ghost"
                             type="button"
+                            size="sm"
+                            isIconOnly
                             onClick={() => editVideoInputRef.current?.click()}
-                            className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                            className="p-1 px-1.5 text-text-tertiary hover:text-primary"
                             title="Thêm video"
                             disabled={isSubmitting}
-                          >
-                            <Video size={20} />
-                          </button>
+                            icon={<Video size={20} />}
+                          />
                         </div>
                       }
                     />
@@ -331,19 +338,24 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       onChange={(e) => handleMediaSelect(e, 'video', true)} 
                       className="hidden" 
                     />
-                  <button
+                  <Button
+                    variant="ghost"
+                    isIconOnly
+                    size="sm"
+                    rounded="full"
                     onClick={() => handleUpdateComment(comment.id, comment)}
                     disabled={(!editingContent.trim() && !editingImagePreview && !editingVideoPreview) || isSubmitting}
-                    className="p-2 text-primary-500 hover:bg-primary-50 rounded-full disabled:opacity-50 transition-colors"
-                  >
-                    <Send size={18} />
-                  </button>
-                  <button
+                    className="p-2 text-primary-500 hover:bg-primary-50"
+                    icon={<Send size={18} />}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setEditingCommentId(null)}
                     className="text-xs text-text-secondary hover:underline px-1"
                   >
                     Hủy
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -403,26 +415,32 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     }
                   })}
                 </span>
-                <button 
+                <Button 
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setReplyingTo(comment)}
-                  className="font-bold hover:text-primary transition-colors"
+                  className="font-bold hover:text-primary p-0 h-auto"
                 >
                   Trả lời
-                </button>
+                </Button>
                 {isOwner && (
                   <>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => startEditing(comment)}
-                      className="hover:text-primary transition-colors"
+                      className="hover:text-primary p-0 h-auto font-normal"
                     >
                       Sửa
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setCommentToDelete(comment.id)}
-                      className="hover:text-error transition-colors text-red-400"
+                      className="hover:text-error text-red-400 p-0 h-auto font-normal"
                     >
                       Xóa
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -456,12 +474,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         {replyingTo && (
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-bg-secondary rounded-lg text-xs text-text-secondary animate-in slide-in-from-bottom-1 duration-200 shadow-sm border border-border-light">
             <span>Đang trả lời <strong>{usersMap[replyingTo.userId]?.name}</strong></span>
-            <button 
+            <Button 
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              rounded="full"
               onClick={() => setReplyingTo(null)}
-              className="p-1 hover:bg-bg-tertiary rounded-full transition-colors"
-            >
-              <X size={14} />
-            </button>
+              className="p-1 hover:bg-bg-tertiary"
+              icon={<X size={14} />}
+            />
           </div>
         )}
 
@@ -477,12 +498,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 </div>
               </div>
             )}
-            <button 
+            <Button 
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              rounded="full"
               onClick={() => removeMedia()}
-              className="absolute -top-2 -right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 shadow-lg transition-colors z-10"
-            >
-              <X size={14} />
-            </button>
+              className="absolute -top-2 -right-2 bg-black/60 text-white p-1 hover:bg-black/80 shadow-lg z-10 w-6 h-6"
+              icon={<X size={14} />}
+            />
           </div>
         )}
 
@@ -515,24 +539,28 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     }}
                     disabled={isSubmitting}
                   />
-                  <button
+                  <Button
+                    variant="ghost"
                     type="button"
+                    size="sm"
+                    isIconOnly
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                    className="p-1 px-1.5 text-text-tertiary hover:text-primary"
                     title="Thêm ảnh"
                     disabled={isSubmitting}
-                  >
-                    <ImageIcon size={20} />
-                  </button>
-                  <button
+                    icon={<ImageIcon size={20} />}
+                  />
+                  <Button
+                    variant="ghost"
                     type="button"
+                    size="sm"
+                    isIconOnly
                     onClick={() => videoInputRef.current?.click()}
-                    className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                    className="p-1 px-1.5 text-text-tertiary hover:text-primary"
                     title="Thêm video"
                     disabled={isSubmitting}
-                  >
-                    <Video size={20} />
-                  </button>
+                    icon={<Video size={20} />}
+                  />
                 </div>
               }
             />
@@ -550,17 +578,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               onChange={(e) => handleMediaSelect(e, 'video')} 
               className="hidden" 
             />
-            <button
+            <Button
               type="submit"
-              disabled={(!newComment.trim() && !selectedImage && !selectedVideo) || isSubmitting}
-              className="w-10 h-10 flex items-center justify-center bg-primary-500 text-white rounded-full hover:bg-primary-600 disabled:bg-bg-tertiary disabled:text-text-tertiary transition-all shadow-sm active:scale-95 flex-shrink-0"
-            >
-              {isSubmitting ? (
-                <Loading size={16} color="text-current" />
-              ) : (
-                <Send size={18} />
-              )}
-            </button>
+              disabled={(!newComment.trim() && !selectedImage && !selectedVideo)}
+              isLoading={isSubmitting}
+              variant="primary"
+              rounded="full"
+              isIconOnly
+              className="w-10 h-10 flex-shrink-0 bg-primary-500 hover:bg-primary-600 shadow-sm active:scale-95"
+              icon={<Send size={18} />}
+            />
           </div>
         </form>
       </div>

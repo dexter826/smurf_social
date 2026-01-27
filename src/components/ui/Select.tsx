@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
+import { Button } from './Button';
 
 interface SelectOption {
   value: string;
@@ -70,12 +71,14 @@ export const Select: React.FC<SelectProps> = ({
       )}
       
       <div className="relative">
-        <button
+        <Button
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
+          variant="ghost"
+          rounded="xl"
           className={`
-            w-full h-11 px-4 flex items-center justify-between rounded-xl border outline-none transition-all
-            bg-bg-primary text-sm
+            w-full h-11 px-4 flex items-center justify-between border outline-none transition-all
+            bg-bg-primary text-sm font-normal
             ${isOpen ? 'border-primary ring-4 ring-primary-light/30' : 'border-border-light hover:border-primary'}
             ${error ? 'border-error ring-4 ring-error/10' : ''}
             ${disabled ? 'opacity-50 cursor-not-allowed bg-bg-secondary' : 'cursor-pointer'}
@@ -90,7 +93,7 @@ export const Select: React.FC<SelectProps> = ({
             size={18} 
             className={`text-text-tertiary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
           />
-        </button>
+        </Button>
 
         {isOpen && (
           <div className={`
@@ -99,12 +102,14 @@ export const Select: React.FC<SelectProps> = ({
           `}>
             <div className="max-h-60 overflow-y-auto custom-scrollbar">
               {options.map((option) => (
-                <button
+                <Button
                   key={option.value}
                   type="button"
+                  variant="ghost"
+                  rounded="none"
                   onClick={() => handleSelect(option.value)}
                   className={`
-                    w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors
+                    w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors h-auto font-normal
                     ${option.value === value 
                       ? 'bg-primary-light text-primary font-medium' 
                       : 'text-text-primary hover:bg-bg-hover'
@@ -113,7 +118,7 @@ export const Select: React.FC<SelectProps> = ({
                 >
                   <span className="truncate">{option.label}</span>
                   {option.value === value && <Check size={16} />}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

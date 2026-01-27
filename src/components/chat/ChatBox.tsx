@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { db } from '../../firebase/config';
 import { Phone, Video, Info, MoreVertical } from 'lucide-react';
 import { Message, User, Conversation, UserStatus } from '../../types';
-import { Avatar, UserAvatar, UserStatusText } from '../ui';
+import { Avatar, UserAvatar, UserStatusText, Button } from '../ui';
 import { MessageBubble } from './MessageBubble';
 
 interface ChatBoxProps {
@@ -86,12 +86,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       <div className="flex-shrink-0 flex items-center justify-between px-4 h-[72px] border-b border-border-light bg-bg-primary">
         <div className="flex items-center gap-3 flex-1">
           {onBack && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              isIconOnly
               onClick={onBack}
-              className="md:hidden p-2 hover:bg-bg-hover rounded-full transition-colors"
-            >
-              ←
-            </button>
+              className="md:hidden p-2"
+              icon={<span>←</span>}
+            />
           )}
           
           {conversation.isGroup ? (
@@ -108,18 +110,25 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
 
         <div className="flex items-center gap-1">
-          <button className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
-            <Phone size={20} />
-          </button>
-          <button className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
-            <Video size={20} />
-          </button>
-          <button 
+          <Button 
+            variant="ghost"
+            isIconOnly
+            className="p-2 text-primary"
+            icon={<Phone size={20} />}
+          />
+          <Button 
+            variant="ghost"
+            isIconOnly
+            className="p-2 text-primary"
+            icon={<Video size={20} />}
+          />
+          <Button 
             onClick={onInfoClick}
-            className="p-2 text-text-secondary hover:bg-bg-hover rounded-full transition-colors"
-          >
-            <Info size={20} />
-          </button>
+            variant="ghost"
+            isIconOnly
+            className="p-2 text-text-secondary"
+            icon={<Info size={20} />}
+          />
         </div>
       </div>
 

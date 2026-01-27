@@ -68,14 +68,16 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         />
         
         {isOwnProfile && (
-          <button 
+          <Button 
             onClick={handleCoverClick}
             disabled={uploading}
-            className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white px-4 py-2 rounded-xl hover:bg-black/50 transition-all flex items-center gap-2 text-sm font-medium border border-white/20 disabled:opacity-50 z-10"
+            variant="ghost"
+            rounded="xl"
+            className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white px-4 py-2 hover:bg-black/50 transition-all flex items-center gap-2 border border-white/20 z-10 h-auto"
+            icon={<Camera size={18} />}
           >
-            <Camera size={18} />
             <span>Chỉnh sửa ảnh bìa</span>
-          </button>
+          </Button>
         )}
         
         <input
@@ -100,13 +102,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 </div>
                 
                 {isOwnProfile && (
-                  <button
+                  <Button
                     onClick={handleAvatarClick}
                     disabled={uploading}
-                    className="absolute bottom-2 right-2 bg-bg-secondary p-2 rounded-full text-text-primary hover:bg-bg-hover transition-all disabled:opacity-50 shadow-md border-2 border-bg-primary flex items-center justify-center z-10"
-                  >
-                    <Camera size={20} />
-                  </button>
+                    variant="secondary"
+                    rounded="full"
+                    isIconOnly
+                    className="absolute bottom-2 right-2 p-2 shadow-md border-2 border-bg-primary z-10"
+                    icon={<Camera size={20} />}
+                  />
                 )}
               </div>
               

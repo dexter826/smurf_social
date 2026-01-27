@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
 import { User } from '../types';
-import { UserAvatar, ConfirmDialog, Loading } from '../components/ui';
+import { UserAvatar, ConfirmDialog, Loading, Button } from '../components/ui';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -53,12 +53,14 @@ const SettingsPage: React.FC = () => {
     <div className="flex flex-col h-full bg-bg-primary">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-4 border-b border-border-light bg-bg-primary">
-        <button
+        <Button
+          variant="ghost"
+          isIconOnly
+          rounded="full"
           onClick={() => navigate(-1)}
-          className="p-2 -ml-2 hover:bg-bg-hover rounded-full transition-colors md:hidden"
-        >
-          <ChevronLeft size={24} className="text-text-primary" />
-        </button>
+          className="p-2 -ml-2 md:hidden"
+          icon={<ChevronLeft size={24} className="text-text-primary" />}
+        />
         <h1 className="text-xl font-bold text-text-primary">Cài đặt</h1>
       </header>
 
@@ -103,13 +105,16 @@ const SettingsPage: React.FC = () => {
                       @{user.username || user.email?.split('@')[0]}
                     </p>
                   </div>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    rounded="lg"
                     onClick={() => setUnblockUserId(user.id)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary bg-primary-light hover:bg-primary hover:text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-primary hover:bg-primary-hover hover:text-white"
+                    icon={<UserCheck size={16} />}
                   >
-                    <UserCheck size={16} />
                     <span className="hidden sm:inline">Bỏ chặn</span>
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>

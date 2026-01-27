@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
-import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar } from '../ui';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button } from '../ui';
 
 interface ConversationItemProps {
   conversation: Conversation;

@@ -136,24 +136,28 @@ export const PostModal: React.FC<PostModalProps> = ({
           <div className="flex items-center justify-between mb-3 bg-bg-secondary p-3 rounded-xl border border-border-light">
             <span className="text-sm font-semibold text-text-secondary">Thêm vào bài viết</span>
             <div className="flex gap-1">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                isIconOnly
+                rounded="full"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 hover:bg-bg-hover rounded-full transition-colors group"
+                className="p-2 transition-colors group"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
-              >
-                <ImageIcon className="text-[#22c55e] group-hover:scale-110 transition-transform" size={24} />
-              </button>
-              <button
+                icon={<ImageIcon className="text-[#22c55e] group-hover:scale-110 transition-transform" size={24} />}
+              />
+              <Button
                 type="button"
+                variant="ghost"
+                isIconOnly
+                rounded="full"
                 onClick={() => videoInputRef.current?.click()}
-                className="p-2 hover:bg-bg-hover rounded-full transition-colors group"
+                className="p-2 transition-colors group"
                 title="Video"
                 disabled={isSubmitting || isUploading}
-              >
-                <Video className="text-info group-hover:scale-110 transition-transform" size={24} />
-              </button>
+                icon={<Video className="text-info group-hover:scale-110 transition-transform" size={24} />}
+              />
               <div className="flex items-center">
                 <EmojiPicker
                   buttonClassName="hover:bg-bg-hover rounded-full group"
@@ -221,25 +225,29 @@ export const PostModal: React.FC<PostModalProps> = ({
             {images.map((url, index) => (
               <div key={`img-${index}`} className="relative group">
                 <img src={url} alt="Upload" className="w-full h-40 object-cover rounded-xl" />
-                <button
+                <Button
+                  variant="ghost"
+                  isIconOnly
+                  rounded="full"
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 bg-black/50 text-white p-1.5 shadow-lg opacity-0 group-hover:opacity-100 h-auto"
                   disabled={isSubmitting}
-                >
-                  <X size={16} />
-                </button>
+                  icon={<X size={16} />}
+                />
               </div>
             ))}
             {videos.map((url, index) => (
               <div key={`vid-${index}`} className="relative group">
                 <video src={url} className="w-full h-40 object-cover rounded-xl" controls />
-                <button
+                <Button
+                  variant="ghost"
+                  isIconOnly
+                  rounded="full"
                   onClick={() => handleRemoveVideo(index)}
-                  className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 bg-black/50 text-white p-1.5 shadow-lg opacity-0 group-hover:opacity-100 h-auto"
                   disabled={isSubmitting}
-                >
-                  <X size={16} />
-                </button>
+                  icon={<X size={16} />}
+                />
               </div>
             ))}
           </div>

@@ -4,7 +4,7 @@ import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, M
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
-import { Avatar, UserAvatar, ConfirmDialog } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button } from '../ui';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -78,13 +78,15 @@ export const AppLayout: React.FC = () => {
         </nav>
 
         <div className="flex flex-col gap-2 mt-auto w-full items-center">
-           <button 
+           <Button 
+                variant="ghost"
+                isIconOnly
+                rounded="xl"
                 onClick={toggleTheme} 
-                className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all"
+                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all p-0"
                 title="Chế độ tối"
-           >
-               {mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
-           </button>
+                icon={mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
+           />
            <NavLink 
               to="/settings"
               className={({ isActive }) => 
@@ -98,13 +100,15 @@ export const AppLayout: React.FC = () => {
            >
              <Settings size={28} />
            </NavLink>
-           <button 
+           <Button 
+                variant="ghost"
+                isIconOnly
+                rounded="xl"
                 onClick={() => setShowLogoutConfirm(true)} 
-                className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" 
+                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all p-0" 
                 title="Đăng xuất"
-           >
-             <LogOut size={28} />
-           </button>
+                icon={<LogOut size={28} />}
+           />
         </div>
       </aside>
 

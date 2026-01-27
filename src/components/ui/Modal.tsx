@@ -57,12 +57,15 @@ export const Modal: React.FC<ModalProps> = ({
           <h3 className="text-lg font-bold text-text-primary px-1">
             {title || ''}
           </h3>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            rounded="full"
             onClick={onClose}
-            className="p-2 hover:bg-bg-hover rounded-full transition-colors text-text-secondary"
-          >
-            <X size={20} />
-          </button>
+            className="p-2 text-text-secondary"
+            icon={<X size={20} />}
+          />
         </div>
 
         {/* Body */}
@@ -162,24 +165,22 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
         {/* Buttons */}
         <div className="flex gap-2.5">
-          <button
+          <Button
             onClick={onClose}
-            className="flex-1 py-2.5 px-4 text-sm font-medium text-text-secondary bg-bg-secondary hover:bg-bg-hover rounded-lg transition-colors"
+            variant="secondary"
+            rounded="lg"
+            className="flex-1 py-2.5 px-4 text-sm font-medium text-text-secondary h-auto"
           >
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleConfirm}
-            className={`
-              flex-1 py-2.5 px-4 text-sm font-medium text-white rounded-lg transition-colors
-              ${variant === 'danger' 
-                ? 'bg-error hover:bg-error/90' 
-                : 'bg-primary hover:bg-primary/90'
-              }
-            `}
+            variant={variant === 'danger' ? 'danger' : 'primary'}
+            rounded="lg"
+            className="flex-1 py-2.5 px-4 text-sm font-medium h-auto"
           >
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

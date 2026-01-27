@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Button } from './Button';
 
 interface DropdownItemProps {
   icon?: React.ReactNode;
@@ -15,13 +16,15 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
   variant = 'default',
   className = ''
 }) => (
-  <button
+  <Button
+    variant="ghost"
+    rounded="none"
     onClick={(e) => {
       e.stopPropagation();
       onClick();
     }}
     className={`
-      w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 transition-all
+      w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 transition-all h-auto
       active:scale-[0.98]
       ${variant === 'danger' 
         ? 'text-error hover:bg-error-light' 
@@ -29,10 +32,10 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
       }
       ${className}
     `}
+    icon={icon}
   >
-    {icon && <span className="shrink-0 opacity-70">{icon}</span>}
     <span className="truncate font-medium">{label}</span>
-  </button>
+  </Button>
 );
 
 interface DropdownProps {

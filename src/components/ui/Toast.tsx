@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { useToastStore, ToastType } from '../../store/toastStore';
+import { Button } from './Button';
 
 const toastIcons: Record<ToastType, React.ReactNode> = {
   success: <CheckCircle className="text-status-online" size={20} />,
@@ -26,12 +27,15 @@ export const ToastContainer: React.FC = () => {
           <p className="flex-1 text-sm font-medium text-text-primary">
             {toast.message}
           </p>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            rounded="lg"
             onClick={() => removeToast(toast.id)}
-            className="shrink-0 p-1 hover:bg-bg-hover rounded-lg transition-colors text-text-tertiary"
-          >
-            <X size={16} />
-          </button>
+            className="shrink-0 p-1 text-text-tertiary h-auto"
+            icon={<X size={16} />}
+          />
         </div>
       ))}
     </div>

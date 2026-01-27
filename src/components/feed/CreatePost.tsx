@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Image as ImageIcon, Video } from 'lucide-react';
 import { PostModal } from './PostModal';
 import { User } from '../../types';
-import { Avatar } from '../ui';
+import { Avatar, Button } from '../ui';
 import { usePostStore } from '../../store/postStore';
 import { postService } from '../../services/postService';
 
@@ -46,29 +46,35 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
       <div className="bg-bg-primary rounded-xl p-4 shadow-sm border border-border-light transition-theme mb-4">
         <div className="flex gap-3 mb-4">
           <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
-          <button
+          <Button
+            variant="secondary"
+            rounded="full"
             onClick={() => setShowCreateModal(true)}
-            className="flex-1 bg-bg-secondary hover:bg-bg-hover rounded-full px-4 py-2.5 flex items-center text-text-secondary cursor-pointer transition-colors text-left font-medium border-none outline-none"
+            className="flex-1 px-4 py-2.5 justify-start text-text-secondary font-medium border-none h-auto"
           >
             {currentUser.name} ơi, bạn đang nghĩ gì thế?
-          </button>
+          </Button>
         </div>
         
         <div className="flex gap-2 pt-2 border-t border-divider">
-          <button
+          <Button
+            variant="ghost"
+            rounded="lg"
             onClick={() => imageInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-bg-hover rounded-lg text-[15px] font-semibold text-text-secondary transition-colors group"
+            className="flex-1 gap-2 py-2.5 text-[15px] font-semibold text-text-secondary group h-auto"
+            icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
             Ảnh/Video
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            rounded="lg"
             onClick={() => videoInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-bg-hover rounded-lg text-[15px] font-semibold text-text-secondary transition-colors group"
+            className="flex-1 gap-2 py-2.5 text-[15px] font-semibold text-text-secondary group h-auto"
+            icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />
             Video
-          </button>
+          </Button>
         </div>
 
         <input

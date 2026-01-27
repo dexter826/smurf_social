@@ -126,22 +126,26 @@ const LoginPage: React.FC = () => {
 
         {activeTab !== 'forgot' && (
           <div className="flex border-b border-border-light">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => handleTabChange('login')}
-              className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
+              rounded="none"
+              className={`flex-1 h-auto py-3 text-sm font-semibold transition-colors ${
                 activeTab === 'login' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
               Đăng nhập
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => handleTabChange('register')}
-              className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
+              rounded="none"
+              className={`flex-1 h-auto py-3 text-sm font-semibold transition-colors ${
                 activeTab === 'register' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
               Đăng ký
-            </button>
+            </Button>
           </div>
         )}
 
@@ -175,13 +179,15 @@ const LoginPage: React.FC = () => {
                 </Button>
 
                 <div className="text-center mt-3">
-                  <button 
+                  <Button 
+                    variant="ghost"
                     type="button"
+                    size="sm"
                     onClick={() => handleTabChange('login')}
-                    className="text-xs text-text-secondary hover:text-text-primary font-medium transition-colors"
+                    className="text-xs text-text-secondary hover:text-text-primary font-medium"
                   >
                     Quay lại đăng nhập
-                  </button>
+                  </Button>
                 </div>
              </form>
           ) : (
@@ -218,13 +224,15 @@ const LoginPage: React.FC = () => {
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 error={errors.password}
                 rightElement={
-                  <button
+                  <Button
+                    variant="ghost"
                     type="button"
+                    size="sm"
+                    isIconOnly
                     onClick={() => setShowPassword(!showPassword)}
-                    className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+                    className="p-2 text-text-tertiary hover:text-text-secondary"
+                    icon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  />
                 }
               />
 
@@ -238,13 +246,15 @@ const LoginPage: React.FC = () => {
                   onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                   error={errors.confirmPassword}
                   rightElement={
-                    <button
+                    <Button
+                      variant="ghost"
                       type="button"
+                      size="sm"
+                      isIconOnly
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                      className="p-2 text-text-tertiary hover:text-text-secondary"
+                      icon={showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    />
                   }
                 />
               )}
@@ -260,13 +270,15 @@ const LoginPage: React.FC = () => {
 
               {activeTab === 'login' && (
                 <div className="text-center mt-3">
-                  <button 
+                  <Button 
+                    variant="ghost"
                     type="button"
+                    size="sm"
                     onClick={() => handleTabChange('forgot')}
-                    className="text-xs text-primary hover:text-primary-hover font-medium transition-colors"
+                    className="text-xs text-primary hover:text-primary-hover font-medium"
                   >
                     Quên mật khẩu?
-                  </button>
+                  </Button>
                 </div>
               )}
             </form>

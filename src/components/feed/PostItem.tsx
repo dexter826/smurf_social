@@ -3,7 +3,7 @@ import { db } from '../../firebase/config';
 import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem } from '../ui';
+import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, Button } from '../ui';
 import { Post, User, UserStatus } from '../../types';
 import { CommentSection } from './CommentSection';
 
@@ -78,9 +78,13 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         {isOwner && (
           <Dropdown
             trigger={
-              <button className="text-text-secondary hover:bg-bg-hover p-1.5 rounded-full transition-colors">
-                <MoreHorizontal size={20} />
-              </button>
+              <Button
+                variant="ghost"
+                isIconOnly
+                rounded="full"
+                className="text-text-secondary p-1.5"
+                icon={<MoreHorizontal size={20} />}
+              />
             }
           >
             <DropdownItem
@@ -147,20 +151,24 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                 </div>
                 <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
                   {mediaIndex > 0 && (
-                    <button
+                    <Button
+                      variant="secondary"
+                      isIconOnly
+                      rounded="full"
                       onClick={() => setMediaIndex(mediaIndex - 1)}
-                      className="bg-bg-primary bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-dropdown pointer-events-auto transition-colors"
-                    >
-                      ←
-                    </button>
+                      className="bg-bg-primary/80 hover:bg-bg-primary p-2 shadow-dropdown pointer-events-auto"
+                      icon={<span>←</span>}
+                    />
                   )}
                   {mediaIndex < totalMedia - 1 && (
-                    <button
+                    <Button
+                      variant="secondary"
+                      isIconOnly
+                      rounded="full"
                       onClick={() => setMediaIndex(mediaIndex + 1)}
-                      className="bg-bg-primary bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-dropdown ml-auto pointer-events-auto transition-colors"
-                    >
-                      →
-                    </button>
+                      className="bg-bg-primary/80 hover:bg-bg-primary p-2 shadow-dropdown ml-auto pointer-events-auto"
+                      icon={<span>→</span>}
+                    />
                   )}
                 </div>
               </>
@@ -185,38 +193,40 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         </div>
         <div className="flex items-center gap-4 text-sm text-text-secondary">
           {post.commentCount > 0 && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setShowComments(!showComments)}
-              className="hover:underline"
+              className="hover:underline text-text-secondary h-auto p-0 font-normal"
             >
               {post.commentCount} bình luận
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Actions */}
       <div className="flex px-2 py-1 border-b border-border-light">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => onLike(post.id)}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors active:scale-95 ${
-            isLiked
-              ? 'text-primary-500'
-              : 'text-text-secondary hover:bg-bg-hover'
+          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors active:scale-95 h-auto ${
+            isLiked ? 'text-primary' : 'text-text-secondary'
           }`}
+          icon={<Heart size={20} className={isLiked ? 'fill-current' : ''} />}
         >
-          <Heart size={20} className={isLiked ? 'fill-current' : ''} />
           <span className="text-sm font-medium">Thích</span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
           onClick={() => setShowComments(!showComments)}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors ${
-            showComments ? 'text-primary-500 bg-primary-50/50' : 'text-text-secondary hover:bg-bg-hover'
+          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors h-auto ${
+            showComments ? 'text-primary bg-primary-light' : 'text-text-secondary'
           }`}
+          icon={<MessageCircle size={20} />}
         >
-          <MessageCircle size={20} />
           <span className="text-sm font-medium">Bình luận</span>
-        </button>
+        </Button>
       </div>
 
       {showComments && (

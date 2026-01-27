@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Button } from './Button';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
@@ -67,20 +68,26 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           {format(currentMonth, 'MMMM yyyy', { locale: vi })}
         </span>
         <div className="flex gap-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            rounded="lg"
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="p-1.5 hover:bg-bg-hover rounded-lg transition-colors text-text-secondary"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
+            className="p-1.5 text-text-secondary"
+            icon={<ChevronLeft size={18} />}
+          />
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            rounded="lg"
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="p-1.5 hover:bg-bg-hover rounded-lg transition-colors text-text-secondary"
-          >
-            <ChevronRight size={18} />
-          </button>
+            className="p-1.5 text-text-secondary"
+            icon={<ChevronRight size={18} />}
+          />
         </div>
       </div>
     );
@@ -116,14 +123,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         const isCurrentMonth = isSameMonth(d, monthStart);
 
         days.push(
-          <button
+          <Button
             key={d.toString()}
             type="button"
+            variant={isSelected ? 'primary' : 'ghost'}
+            rounded="lg"
             onClick={() => handleDateSelect(d)}
             className={`
-              relative h-10 w-full flex items-center justify-center text-sm transition-all rounded-lg
+              relative h-10 w-full flex items-center justify-center text-sm transition-all p-0 h-auto
               ${!isCurrentMonth ? 'text-text-tertiary opacity-40' : 'text-text-primary'}
-              ${isSelected ? 'bg-primary text-white font-bold shadow-md scale-105' : 'hover:bg-bg-hover'}
+              ${isSelected ? 'font-bold shadow-md scale-105' : ''}
               ${isToday(d) && !isSelected ? 'text-primary font-bold' : ''}
             `}
           >
@@ -131,7 +140,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             {isToday(d) && !isSelected && (
               <div className="absolute bottom-1 w-1 h-1 bg-primary rounded-full" />
             )}
-          </button>
+          </Button>
         );
         day = addDays(day, 1);
       }
