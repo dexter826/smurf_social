@@ -115,22 +115,25 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
 
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost"
-            className="text-primary"
-            icon={<Phone size={20} />}
-          />
-          <Button 
-            variant="ghost"
-            className="text-primary"
-            icon={<Video size={20} />}
-          />
-          <Button 
+          <button 
+            className="p-2 rounded-full text-primary hover:bg-bg-hover active:scale-90 transition-all focus:outline-none"
+            title="Cuộc gọi âm thanh"
+          >
+            <Phone size={20} />
+          </button>
+          <button 
+            className="p-2 rounded-full text-primary hover:bg-bg-hover active:scale-90 transition-all focus:outline-none"
+            title="Cuộc gọi video"
+          >
+            <Video size={20} />
+          </button>
+          <button 
             onClick={onInfoClick}
-            variant="ghost"
-            className="text-text-secondary"
-            icon={<Info size={20} />}
-          />
+            className="p-2 rounded-full text-text-secondary hover:bg-bg-hover active:scale-90 transition-all focus:outline-none"
+            title="Thông tin hội thoại"
+          >
+            <Info size={20} />
+          </button>
         </div>
       </div>
 
@@ -142,7 +145,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         {groupedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-              <Avatar src={avatarSrc} size="lg" />
+              <Avatar 
+                src={avatarSrc} 
+                size="lg" 
+                isGroup={conversation.isGroup} 
+                members={conversation.participants} 
+              />
             </div>
             <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
             <p className="text-sm text-text-secondary">Bắt đầu cuộc trò chuyện</p>

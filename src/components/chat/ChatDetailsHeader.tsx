@@ -20,7 +20,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
   return (
     <div className="flex flex-col items-center py-6 px-4 border-b border-border-light">
       {isGroup ? (
-        <Avatar src={avatarSrc} name={displayName} size="xl" isGroup />
+        <Avatar src={avatarSrc} name={displayName} size="xl" isGroup members={conversation.participants} />
       ) : (
         <UserAvatar 
           userId={partner?.id!} 

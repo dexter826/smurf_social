@@ -57,31 +57,28 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
           </Button>
         </div>
         
-        <div className="flex gap-2 pt-2 border-t border-divider">
-          <Button
-            variant="ghost"
+        <div className="flex gap-1 pt-2 border-t border-divider">
+          <button
             onClick={() => imageInputRef.current?.click()}
-            className="flex-1 text-[15px] font-semibold text-text-secondary group"
-            icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
+            className="flex-1 py-2 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-bg-hover active:scale-95 transition-all focus:outline-none group"
           >
-            Ảnh
-          </Button>
-          <Button
-            variant="ghost"
+            <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
+            <span className="text-[15px] font-semibold">Ảnh</span>
+          </button>
+          <button
             onClick={() => cameraPhotoRef.current?.click()}
-            className="flex-1 text-[15px] font-semibold text-text-secondary group"
-            icon={<Camera className="text-red-500 group-hover:scale-110 transition-transform" size={20} />}
+            className="flex-1 py-2 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-bg-hover active:scale-95 transition-all focus:outline-none group"
           >
-            Máy ảnh
-          </Button>
-          <Button
-            variant="ghost"
+            <Camera className="text-red-500 group-hover:scale-110 transition-transform" size={20} />
+            <span className="text-[15px] font-semibold">Máy ảnh</span>
+          </button>
+          <button
             onClick={() => videoInputRef.current?.click()}
-            className="flex-1 text-[15px] font-semibold text-text-secondary group"
-            icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
+            className="flex-1 py-2 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-bg-hover active:scale-95 transition-all focus:outline-none group"
           >
-            Video
-          </Button>
+            <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />
+            <span className="text-[15px] font-semibold">Video</span>
+          </button>
         </div>
 
         <input
