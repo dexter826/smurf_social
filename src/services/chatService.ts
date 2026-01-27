@@ -404,28 +404,62 @@ export const chatService = {
   },
 
   /**
+   * Đánh dấu messages là đã nhận (Delivered)
+   */
+  markMessagesAsDelivered: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const q = query(
+        collection(db, 'messages'),
+        where('conversationId', '==', conversationId),
+        where('senderId', '!=', userId)
+      );
+      
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      let count = 0;
+
+      snapshot.docs.forEach(d => {
+        const data = d.data();
+        if (!data.deliveredAt) {
+          batch.update(d.ref, { deliveredAt: serverTimestamp() });
+          count++;
+        }
+      });
+
+      if (count > 0) await batch.commit();
+    } catch (error) {
+      console.error("Lỗi mark as delivered", error);
+    }
+  },
+
+  /**
    * Đánh dấu messages là đã đọc
    */
   markMessagesAsRead: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const batch = writeBatch(db);
 
-      // Lấy messages chưa đọc
+      // Lấy messages mà mình chưa đọc (senderId !== userId)
       const messagesQuery = query(
         collection(db, 'messages'),
-        where('conversationId', '==', conversationId)
+        where('conversationId', '==', conversationId),
+        where('senderId', '!=', userId)
       );
       
       const messagesSnapshot = await getDocs(messagesQuery);
+      let count = 0;
       
       messagesSnapshot.docs.forEach(messageDoc => {
         const data = messageDoc.data();
         const readBy = data.readBy || [];
         
-        if (!readBy.includes(userId) && data.senderId !== userId) {
+        if (!readBy.includes(userId)) {
           batch.update(messageDoc.ref, {
-            readBy: arrayUnion(userId)
+            readBy: arrayUnion(userId),
+            // Nếu xem thì chắc chắn là đã nhận
+            deliveredAt: data.deliveredAt || serverTimestamp()
           });
+          count++;
         }
       });
 

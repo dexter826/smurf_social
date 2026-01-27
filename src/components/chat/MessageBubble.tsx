@@ -26,6 +26,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isRead = message.readBy && message.readBy.length > 1;
+  const isDelivered = !!message.deliveredAt;
   
   const renderContent = () => {
     switch (message.type) {
@@ -103,7 +104,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* Bubble */}
             <div 
               className={`
-                relative px-3 py-2 text-[15px] shadow-sm
+                relative px-3 py-1.5 text-sm shadow-sm
                 ${message.type === 'text' ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe 
                   ? (message.type === 'text' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm' : '') 
@@ -121,8 +122,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   <span>{format(new Date(message.timestamp), 'HH:mm')}</span>
                   {isMe && (
                     isRead 
-                      ? <CheckCheck size={14} className="text-link" />
-                      : <Check size={14} />
+                      ? <CheckCheck size={14} className="text-blue-400" />
+                      : isDelivered 
+                        ? <CheckCheck size={14} className="opacity-70" />
+                        : <Check size={14} className="opacity-70" />
                   )}
                 </div>
               )}

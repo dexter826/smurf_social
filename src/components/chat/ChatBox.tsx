@@ -79,7 +79,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     .join(', ');
 
   return (
-    <div className="flex flex-col h-full bg-bg-secondary transition-theme">
+    <div className="flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
       {/* Header */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-light bg-bg-primary">
         <div className="flex items-center gap-3 flex-1">

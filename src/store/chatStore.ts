@@ -25,6 +25,7 @@ interface ChatState {
   sendImageMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   sendFileMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   markAsRead: (conversationId: string, userId: string) => Promise<void>;
+  markAsDelivered: (conversationId: string, userId: string) => Promise<void>;
   deleteMessage: (messageId: string, fileUrl?: string) => Promise<void>;
 
   // Typing
@@ -186,6 +187,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
       await chatService.markMessagesAsRead(conversationId, userId);
     } catch (error) {
       console.error("Lỗi mark as read", error);
+    }
+  },
+
+  markAsDelivered: async (conversationId: string, userId: string) => {
+    try {
+      await chatService.markMessagesAsDelivered(conversationId, userId);
+    } catch (error) {
+      console.error("Lỗi mark as delivered", error);
     }
   },
 

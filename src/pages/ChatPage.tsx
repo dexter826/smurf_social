@@ -22,6 +22,7 @@ const ChatPage: React.FC = () => {
     sendImageMessage,
     sendFileMessage,
     markAsRead,
+    markAsDelivered,
     setTyping,
     subscribeToTyping,
     togglePin,
@@ -54,9 +55,10 @@ const ChatPage: React.FC = () => {
     // Subscribe typing
     const unsubscribeTyping = subscribeToTyping(selectedConversationId);
 
-    // Mark as read
+    // Mark as read & delivered
     if (currentUser) {
       markAsRead(selectedConversationId, currentUser.id);
+      markAsDelivered(selectedConversationId, currentUser.id);
     }
 
     return () => {
@@ -166,7 +168,7 @@ const ChatPage: React.FC = () => {
   return (
     <div className="flex h-full w-full">
       {/* Conversation List - Sidebar */}
-      <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[360px] flex-shrink-0 w-full`}>
+      <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[320px] flex-shrink-0 w-full`}>
         <ConversationList
           conversations={conversations}
           selectedId={selectedConversationId}

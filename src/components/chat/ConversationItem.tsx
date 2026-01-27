@@ -3,7 +3,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck } from 'lucide-react';
+import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar } from '../ui';
 
@@ -41,25 +41,32 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     : partner?.avatar;
 
   const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
-  const lastMessagePreview = conversation.lastMessage
-    ? conversation.lastMessage.type === 'text'
-      ? conversation.lastMessage.content
-      : conversation.lastMessage.content
+  const lastMessage = conversation.lastMessage;
+  const lastMessagePreview = lastMessage
+    ? lastMessage.type === 'text'
+      ? lastMessage.content
+      : lastMessage.content
     : 'Chưa có tin nhắn';
 
-  const isLastMessageMine = conversation.lastMessage?.senderId === currentUserId;
+  const isLastMessageMine = lastMessage?.senderId === currentUserId;
+  const isLastMessageRead = lastMessage?.readBy && lastMessage.readBy.length > 1;
+  const isLastMessageDelivered = !!lastMessage?.deliveredAt;
 
   const timeAgo = conversation.updatedAt 
-    ? formatDistanceToNow(new Date(conversation.updatedAt), { 
-        locale: vi 
-      }).replace('khoảng ', '')
+    ? (() => {
+        const diff = Math.floor((Date.now() - new Date(conversation.updatedAt).getTime()) / 1000);
+        if (diff < 60) return 'dưới 1 phút';
+        return formatDistanceToNow(new Date(conversation.updatedAt), { 
+          locale: vi 
+        }).replace('khoảng ', '');
+      })()
     : '';
 
   return (
     <div
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 p-3 mx-2 my-1 cursor-pointer transition-all duration-200 rounded-xl group
+        relative flex items-center gap-3 p-3 mx-2 my-0.5 cursor-pointer transition-all duration-200 rounded-xl group
         hover:bg-bg-hover
         ${isActive ? 'bg-primary-light' : ''}
         ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
@@ -67,12 +74,12 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <UserAvatar userId={partner?.id} src={partner?.avatar} name={partner?.name} size="lg" initialStatus={partner?.status} />
+        <UserAvatar userId={partner?.id} src={partner?.avatar} name={partner?.name} size="md" initialStatus={partner?.status} />
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-2">
             <h3 className={`font-semibold text-sm truncate ${unreadCount > 0 ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatName}
@@ -87,18 +94,23 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           <span className="text-xs text-text-tertiary flex-shrink-0 group-hover:hidden">{timeAgo}</span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className={`text-sm truncate ${unreadCount > 0 ? 'font-medium text-text-primary' : 'text-text-secondary'}`}>
+        <div className="flex items-center justify-between gap-2">
+          <p className={`text-sm truncate flex items-center gap-1 ${unreadCount > 0 ? 'font-medium text-text-primary' : 'text-text-secondary'}`}>
             {isLastMessageMine && (
-              <span className="mr-1">
-                <CheckCheck size={14} className="inline text-primary" />
+              <span className="flex-shrink-0">
+                {isLastMessageRead 
+                  ? <CheckCheck size={14} className="text-blue-400" />
+                  : isLastMessageDelivered
+                    ? <CheckCheck size={14} className="opacity-70" />
+                    : <Check size={14} className="opacity-70" />
+                }
               </span>
             )}
-            {lastMessagePreview}
+            <span className="truncate text-text-tertiary text-[13px]">{lastMessagePreview}</span>
           </p>
           {unreadCount > 0 && (
-            <span className="flex-shrink-0 ml-2 bg-badge-bg text-badge-text text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
+            <span className="flex-shrink-0 bg-badge-bg text-badge-text text-xs font-semibold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
+              {unreadCount}
             </span>
           )}
         </div>
