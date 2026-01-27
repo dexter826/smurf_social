@@ -18,18 +18,18 @@ export const Button: React.FC<ButtonProps> = ({
     children, 
     icon,
     isIconOnly = false,
-    rounded = 'md',
+    rounded = 'xl',
     disabled,
     ...props 
 }) => {
   const baseStyle = "inline-flex items-center justify-center font-medium transition-colors focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-primary hover:bg-primary-hover text-text-on-primary focus:ring-2 focus:ring-offset-1 focus:ring-primary shadow-sm",
-    secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary focus:ring-2 focus:ring-offset-1 focus:ring-border-medium",
-    outline: "border border-border-light bg-transparent hover:bg-bg-hover text-text-primary",
+    primary: "bg-primary hover:bg-primary-hover text-text-on-primary focus:ring-4 focus:ring-primary-light/30 shadow-sm",
+    secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary focus:ring-4 focus:ring-primary-light/30",
+    outline: "border border-border-light bg-transparent hover:bg-bg-hover text-text-primary focus:ring-4 focus:ring-primary-light/30",
     ghost: "hover:bg-bg-hover text-text-secondary",
-    danger: "bg-error hover:bg-error/90 text-white focus:ring-2 focus:ring-offset-1 focus:ring-error"
+    danger: "bg-error hover:bg-error/90 text-white focus:ring-4 focus:ring-error/30"
   };
 
   const roundedStyles = {
@@ -41,8 +41,8 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const sizes = {
-    sm: isIconOnly ? "w-8 h-8 p-0" : "h-8 px-3 text-xs gap-1.5",
-    md: isIconOnly ? "w-10 h-10 p-0" : "h-10 px-4 py-2 text-sm gap-2",
+    sm: isIconOnly ? "w-9 h-9 p-0" : "h-9 px-3 text-xs gap-1.5",
+    md: isIconOnly ? "w-11 h-11 p-0" : "h-11 px-4 py-2 text-sm gap-2",
     lg: isIconOnly ? "w-12 h-12 p-0" : "h-12 px-6 text-base gap-2"
   };
 

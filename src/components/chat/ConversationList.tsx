@@ -120,10 +120,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           {!isSearchFocused && onNewGroup && (
             <button
               onClick={onNewGroup}
-              className="p-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
+              className="w-11 h-11 flex items-center justify-center bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors flex-shrink-0"
               title="Tạo nhóm mới"
             >
-              <Users size={18} />
+              <Users size={20} />
             </button>
           )}
           {isSearchFocused && (
