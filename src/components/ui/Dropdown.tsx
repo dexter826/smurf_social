@@ -16,26 +16,24 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
   variant = 'default',
   className = ''
 }) => (
-  <Button
-    variant="ghost"
-    rounded="none"
+  <button
     onClick={(e) => {
       e.stopPropagation();
       onClick();
     }}
     className={`
-      w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 transition-all h-auto
-      active:scale-[0.98]
+      w-full px-4 py-2.5 text-left text-sm flex items-center justify-start gap-3 transition-colors
+      hover:bg-bg-hover active:bg-bg-hover/80
       ${variant === 'danger' 
-        ? 'text-error hover:bg-error-light' 
-        : 'text-text-primary hover:bg-bg-hover'
+        ? 'text-error hover:text-error' 
+        : 'text-text-primary'
       }
       ${className}
     `}
-    icon={icon}
   >
-    <span className="truncate font-medium">{label}</span>
-  </Button>
+    {icon && <span className={`flex-shrink-0 ${variant === 'danger' ? 'text-error' : 'text-text-secondary'}`}>{icon}</span>}
+    <span className="truncate font-medium flex-1">{label}</span>
+  </button>
 );
 
 interface DropdownProps {
@@ -102,7 +100,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
           <div className="fixed inset-0 z-30 md:hidden" onClick={() => handleOpenChange(false)} />
           <div 
             className={`
-              absolute z-40 mt-2 min-w-[200px] py-2 bg-bg-primary border border-border-light rounded-2xl shadow-lg transition-all animate-in fade-in zoom-in-95 duration-200
+              absolute z-40 mt-1 min-w-[220px] py-1.5 bg-bg-primary border border-border-light rounded-xl shadow-dropdown transition-all animate-in fade-in zoom-in-95 duration-200
               ${align === 'right' ? 'right-0' : 'left-0'}
             `}
             onClick={() => handleOpenChange(false)}

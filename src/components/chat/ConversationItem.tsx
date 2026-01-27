@@ -162,35 +162,35 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         >
           {onPin && (
             <DropdownItem
-              icon={<Pin size={14} />}
+              icon={<Pin size={16} />}
               label={conversation.pinned ? 'Bỏ ghim' : 'Ghim'}
               onClick={onPin}
             />
           )}
           {onMute && (
             <DropdownItem
-              icon={conversation.muted ? <Volume2 size={14} /> : <VolumeX size={14} />}
+              icon={conversation.muted ? <Volume2 size={16} /> : <VolumeX size={16} />}
               label={conversation.muted ? 'Bật thông báo' : 'Tắt thông báo'}
               onClick={onMute}
             />
           )}
           {onArchive && (
             <DropdownItem
-              icon={<Archive size={14} />}
+              icon={<Archive size={16} />}
               label={conversation.archived ? 'Bỏ lưu trữ' : 'Lưu trữ'}
               onClick={onArchive}
             />
           )}
           {onMarkUnread && (
             <DropdownItem
-              icon={conversation.markedUnread ? <MailCheck size={14} /> : <Mail size={14} />}
+              icon={conversation.markedUnread ? <MailCheck size={16} /> : <Mail size={16} />}
               label={conversation.markedUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
               onClick={onMarkUnread}
             />
           )}
           {onBlock && !conversation.isGroup && (
             <DropdownItem
-              icon={<Ban size={14} />}
+              icon={<Ban size={16} />}
               label="Chặn"
               variant="danger"
               onClick={() => setShowBlockConfirm(true)}
@@ -198,7 +198,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           )}
           {onDelete && (
             <DropdownItem
-              icon={<Trash2 size={14} />}
+              icon={<Trash2 size={16} />}
               label="Xóa"
               variant="danger"
               onClick={() => setShowDeleteConfirm(true)}
