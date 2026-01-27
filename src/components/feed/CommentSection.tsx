@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Send, Heart, Image as ImageIcon, Video, Play } from 'lucide-react';
 import { Avatar, UserAvatar, Button, Input, EmojiPicker, Loading, ConfirmDialog, IconButton } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
+import { batchGetUsers } from '../../utils/batchUtils';
 import { toast } from '../../store/toastStore';
 import { Post, Comment, User, Message } from '../../types';
 import { postService } from '../../services/postService';
@@ -37,6 +38,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const videoInputRef = React.useRef<HTMLInputElement>(null);
@@ -69,16 +71,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const loadUsers = async (commentsToLoad: Comment[]) => {
     const userIds = [...new Set(commentsToLoad.map(c => c.userId))];
-    const users: Record<string, User> = {};
+    const missingUserIds = userIds.filter(id => !usersMap[id]);
+    
+    if (missingUserIds.length === 0) return;
 
-    for (const userId of userIds) {
-      if (!usersMap[userId]) {
-        const user = await userService.getUserById(userId);
-        if (user) users[userId] = user;
-      }
+    try {
+      const newUsersMap = await batchGetUsers(missingUserIds);
+      setUsersMap(prev => ({ ...prev, ...newUsersMap }));
+    } catch (error) {
+      console.error("Lỗi load users cho comments:", error);
     }
-
-    setUsersMap(prev => ({ ...prev, ...users }));
   };
 
   const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video', isEdit = false) => {
@@ -277,7 +279,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       value={editingContent}
                       onChange={(e) => setEditingContent(e.target.value)}
                       containerClassName="flex-1"
-                      className="rounded-full"
+                      className="rounded-full h-11"
                       disabled={isSubmitting}
                       autoFocus
                       rightElement={
@@ -457,7 +459,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           </div>
         ) : (
           <div className="space-y-1">
-            {rootComments.map(comment => renderComment(comment))}
+            {rootComments.slice(0, visibleCount).map(comment => renderComment(comment))}
+            
+            {rootComments.length > visibleCount && (
+              <button 
+                onClick={() => setVisibleCount(prev => prev + 5)}
+                className="text-primary hover:underline text-sm font-semibold mt-2 ml-2 transition-all"
+              >
+                Xem thêm {rootComments.length - visibleCount} bình luận...
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -508,7 +519,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               onChange={(e) => setNewComment(e.target.value)}
               placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
               containerClassName="flex-1"
-              className="rounded-full"
+              className="rounded-full h-11"
               disabled={isSubmitting}
               rightElement={
                 <div className="flex items-center mr-1">

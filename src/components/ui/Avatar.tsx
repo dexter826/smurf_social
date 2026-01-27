@@ -121,12 +121,12 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   return (
-    <div className={`relative inline-block ${!isGroup ? 'rounded-full' : ''} ${className}`}>
-      <div className={`${sizeClasses[size]} relative ${!isGroup ? 'rounded-full overflow-hidden border border-border-light bg-secondary' : ''} flex items-center justify-center`}>
+    <div className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} ${!isGroup ? 'rounded-full' : ''} ${className}`}>
+      <div className={`w-full h-full relative ${!isGroup ? 'rounded-full overflow-hidden border border-border-light bg-secondary' : ''} flex items-center justify-center`}>
         {renderContent()}
       </div>
       {status && (
-        <span className={`absolute bottom-0.5 right-0.5 block h-3 w-3 rounded-full border-2 ${statusColor[status]}`} />
+        <span className={`absolute bottom-0 right-0 block h-[30%] w-[30%] rounded-full border-2 ${statusColor[status]} z-10`} />
       )}
     </div>
   );

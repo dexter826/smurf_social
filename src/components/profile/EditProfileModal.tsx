@@ -57,6 +57,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const isChanged = () => {
+    return (
+      formData.name !== user.name ||
+      formData.bio !== (user.bio || '') ||
+      formData.location !== (user.location || '') ||
+      formData.gender !== (user.gender || 'male') ||
+      formData.birthDate !== user.birthDate
+    );
+  };
+
   const handleSave = async () => {
     if (!validate()) return;
     
@@ -83,7 +93,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <Button variant="secondary" onClick={onClose} disabled={saving}>
             Hủy
           </Button>
-          <Button variant="primary" onClick={handleSave} disabled={saving}>
+          <Button 
+            variant="primary" 
+            onClick={handleSave} 
+            disabled={saving || !isChanged()}
+          >
             {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </Button>
         </>

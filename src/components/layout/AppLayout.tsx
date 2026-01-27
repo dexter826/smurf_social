@@ -89,7 +89,7 @@ export const AppLayout: React.FC = () => {
            <Button 
                 variant="ghost"
                 onClick={toggleTheme} 
-                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all rounded-xl"
+                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all rounded-xl focus:ring-0 focus:ring-offset-0"
                 title="Chế độ tối"
                 icon={mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
            />
