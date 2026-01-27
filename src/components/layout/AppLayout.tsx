@@ -4,26 +4,33 @@ import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, M
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
+import { useContactStore } from '../../store/contactStore';
 import { Avatar, UserAvatar, ConfirmDialog, Button } from '../ui';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
   const { conversations, subscribeToConversations } = useChatStore();
+  const { receivedRequests, subscribeToRequests } = useContactStore();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    const unsubscribe = subscribeToConversations(user.id);
-    return () => unsubscribe();
-  }, [user, subscribeToConversations]);
+    const unsubscribeChat = subscribeToConversations(user.id);
+    const unsubscribeContacts = subscribeToRequests(user.id);
+    return () => {
+      unsubscribeChat();
+      unsubscribeContacts();
+    };
+  }, [user, subscribeToConversations, subscribeToRequests]);
 
   const totalUnread = user ? conversations.reduce((total, conv) => {
     const count = conv.unreadCount?.[user.id] || 0;
-    // Nếu có tin nhắn mới hoặc được đánh dấu chưa đọc thì tính là unread
     return total + (count > 0 || conv.markedUnread ? (count || 1) : 0);
   }, 0) : 0;
+
+  const hasNewRequests = receivedRequests.length > 0;
 
   const handleConfirmLogout = () => {
     logout();
@@ -68,9 +75,10 @@ export const AppLayout: React.FC = () => {
               <div className="relative">
                 {item.icon}
                 {item.to === '/' && totalUnread > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-sidebar-bg">
-                    {totalUnread > 99 ? '99+' : totalUnread}
-                  </span>
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-sidebar-bg" />
+                )}
+                {item.to === '/contacts' && hasNewRequests && (
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-sidebar-bg" />
                 )}
               </div>
             </NavLink>
@@ -130,9 +138,10 @@ export const AppLayout: React.FC = () => {
             <div className="relative">
               {item.icon}
               {item.to === '/' && totalUnread > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-1 ring-bg-primary">
-                  {totalUnread > 99 ? '99+' : totalUnread}
-                </span>
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full ring-1 ring-bg-primary" />
+              )}
+              {item.to === '/contacts' && hasNewRequests && (
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full ring-1 ring-bg-primary" />
               )}
             </div>
             <span className="text-[10px] font-medium">{item.label}</span>
