@@ -183,6 +183,32 @@ export const chatService = {
   },
 
   /**
+   * Lưu trữ/Bỏ lưu trữ conversation
+   */
+  toggleArchiveConversation: async (conversationId: string, archived: boolean): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, { archived });
+    } catch (error) {
+      console.error("Lỗi archive conversation", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Đánh dấu chưa đọc/đã đọc conversation
+   */
+  toggleMarkUnreadConversation: async (conversationId: string, markedUnread: boolean): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, { markedUnread });
+    } catch (error) {
+      console.error("Lỗi mark unread conversation", error);
+      throw error;
+    }
+  },
+
+  /**
    * Xóa conversation
    */
   deleteConversation: async (conversationId: string): Promise<void> => {

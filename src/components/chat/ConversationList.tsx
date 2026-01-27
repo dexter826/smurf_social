@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Users } from 'lucide-react';
+import { Search, Users, ArrowLeft, Archive } from 'lucide-react';
 import { Conversation } from '../../types';
 import { Input, Spinner } from '../ui';
 import { ConversationItem } from './ConversationItem';
@@ -16,7 +16,12 @@ interface ConversationListProps {
   onMute: (id: string, muted: boolean) => void;
   onDelete: (id: string) => void;
   onBlock?: (partnerId: string) => void;
+  onArchive?: (id: string, archived: boolean) => void;
+  onMarkUnread?: (id: string, markedUnread: boolean) => void;
   onNewChat?: () => void;
+  viewMode?: 'normal' | 'archived';
+  archivedCount?: number;
+  onViewModeChange?: (mode: 'normal' | 'archived') => void;
 }
 
 export const ConversationList: React.FC<ConversationListProps> = ({
@@ -31,7 +36,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onMute,
   onDelete,
   onBlock,
-  onNewChat
+  onArchive,
+  onMarkUnread,
+  onNewChat,
+  viewMode = 'normal',
+  archivedCount = 0,
+  onViewModeChange
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -79,6 +89,32 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
+        <button
+          onClick={() => onViewModeChange?.('normal')}
+          className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
+            viewMode === 'normal' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+          }`}
+        >
+          Tất cả
+          {viewMode === 'normal' && (
+            <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
+          )}
+        </button>
+        <button
+          onClick={() => onViewModeChange?.('archived')}
+          className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
+            viewMode === 'archived' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+          }`}
+        >
+          Lưu trữ
+          {viewMode === 'archived' && (
+            <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
+          )}
+        </button>
+      </div>
+
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
@@ -117,6 +153,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   onMute={() => onMute(conversation.id, !conversation.muted)}
                   onDelete={() => onDelete(conversation.id)}
                   onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
+                  onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archived) : undefined}
+                  onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
                 />
               );
             })}

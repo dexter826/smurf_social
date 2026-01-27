@@ -29,6 +29,8 @@ const ChatPage: React.FC = () => {
     subscribeToTyping,
     togglePin,
     toggleMute,
+    toggleArchive,
+    toggleMarkUnread,
     deleteConversation,
     searchConversations,
     deleteMessage
@@ -37,6 +39,7 @@ const ChatPage: React.FC = () => {
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
 
   useEffect(() => {
     if (!currentUser) return;
@@ -172,6 +175,17 @@ const ChatPage: React.FC = () => {
     await deleteConversation(id);
   };
 
+  const handleArchive = async (id: string, archived: boolean) => {
+    await toggleArchive(id, archived);
+    if (archived && selectedConversationId === id) {
+      selectConversation(null);
+    }
+  };
+
+  const handleMarkUnread = async (id: string, markedUnread: boolean) => {
+    await toggleMarkUnread(id, markedUnread);
+  };
+
   const handleDeleteMessage = async (messageId: string, fileUrl?: string) => {
     await deleteMessage(messageId, fileUrl);
   };
@@ -188,6 +202,10 @@ const ChatPage: React.FC = () => {
     );
   }
 
+  const filteredConversations = conversations.filter(c => 
+    viewMode === 'archived' ? c.archived : !c.archived
+  );
+  const archivedCount = conversations.filter(c => c.archived).length;
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
@@ -229,15 +247,20 @@ const ChatPage: React.FC = () => {
       {/* Conversation List - Sidebar */}
       <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[320px] flex-shrink-0 w-full`}>
         <ConversationList
-          conversations={conversations}
+          conversations={filteredConversations}
           selectedId={selectedConversationId}
           currentUserId={currentUser.id}
           blockedUserIds={currentUser.blockedUserIds || []}
           isLoading={isLoading}
+          viewMode={viewMode}
+          archivedCount={archivedCount}
+          onViewModeChange={setViewMode}
           onSelectConversation={handleSelectConversation}
           onSearch={handleSearch}
           onPin={handlePin}
           onMute={handleMute}
+          onArchive={handleArchive}
+          onMarkUnread={handleMarkUnread}
           onDelete={handleDelete}
           onBlock={async (partnerId) => {
             await userService.blockUser(currentUser.id, partnerId);

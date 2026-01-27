@@ -17,6 +17,8 @@ interface ChatState {
   searchConversations: (userId: string, term: string) => Promise<void>;
   togglePin: (conversationId: string, pinned: boolean) => Promise<void>;
   toggleMute: (conversationId: string, muted: boolean) => Promise<void>;
+  toggleArchive: (conversationId: string, archived: boolean) => Promise<void>;
+  toggleMarkUnread: (conversationId: string, markedUnread: boolean) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
 
   // Messages
@@ -122,6 +124,36 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
     } catch (error) {
       console.error("Lỗi toggle mute", error);
+      throw error;
+    }
+  },
+
+  toggleArchive: async (conversationId: string, archived: boolean) => {
+    try {
+      await chatService.toggleArchiveConversation(conversationId, archived);
+      
+      set((state) => ({
+        conversations: state.conversations.map(c =>
+          c.id === conversationId ? { ...c, archived } : c
+        )
+      }));
+    } catch (error) {
+      console.error("Lỗi toggle archive", error);
+      throw error;
+    }
+  },
+
+  toggleMarkUnread: async (conversationId: string, markedUnread: boolean) => {
+    try {
+      await chatService.toggleMarkUnreadConversation(conversationId, markedUnread);
+      
+      set((state) => ({
+        conversations: state.conversations.map(c =>
+          c.id === conversationId ? { ...c, markedUnread } : c
+        )
+      }));
+    } catch (error) {
+      console.error("Lỗi toggle mark unread", error);
       throw error;
     }
   },

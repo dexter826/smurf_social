@@ -3,7 +3,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban } from 'lucide-react';
+import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar } from '../ui';
 
@@ -16,6 +16,8 @@ interface ConversationItemProps {
   onMute?: () => void;
   onDelete?: () => void;
   onBlock?: () => void;
+  onArchive?: () => void;
+  onMarkUnread?: () => void;
 }
 
 export const ConversationItem: React.FC<ConversationItemProps> = ({
@@ -26,7 +28,9 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   onPin,
   onMute,
   onDelete,
-  onBlock
+  onBlock,
+  onArchive,
+  onMarkUnread
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -95,13 +99,13 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className={`text-xs flex-shrink-0 group-hover:hidden ${unreadCount > 0 ? 'font-semibold text-primary' : 'text-text-tertiary'}`}>
+          <span className={`text-xs flex-shrink-0 group-hover:hidden ${(unreadCount > 0 || conversation.markedUnread) ? 'font-semibold text-primary' : 'text-text-tertiary'}`}>
             {timeAgo.replace('khoảng ', '').replace('dưới ', '').replace('hơn ', '')}
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className={`text-sm truncate flex-1 ${unreadCount > 0 ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+          <p className={`text-sm truncate flex-1 ${(unreadCount > 0 || conversation.markedUnread) ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
             {(() => {
               const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
               
@@ -114,7 +118,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               }
 
               return (
-                <span className={`truncate text-[13px] ${unreadCount > 0 ? 'font-bold text-text-primary' : 'text-text-tertiary'}`}>
+                <span className={`truncate text-[13px] ${(unreadCount > 0 || conversation.markedUnread) ? 'font-bold text-text-primary' : 'text-text-tertiary'}`}>
                   {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
                 </span>
               );
@@ -133,11 +137,13 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               </span>
             )}
             
-            {unreadCount > 0 && (
+            {unreadCount > 0 ? (
               <span className="flex-shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
               </span>
-            )}
+            ) : conversation.markedUnread ? (
+              <span className="flex-shrink-0 bg-red-500 w-2.5 h-2.5 rounded-full" />
+            ) : null}
           </div>
         </div>
       </div>
@@ -166,6 +172,20 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               icon={conversation.muted ? <Volume2 size={14} /> : <VolumeX size={14} />}
               label={conversation.muted ? 'Bật thông báo' : 'Tắt thông báo'}
               onClick={onMute}
+            />
+          )}
+          {onArchive && (
+            <DropdownItem
+              icon={<Archive size={14} />}
+              label={conversation.archived ? 'Bỏ lưu trữ' : 'Lưu trữ'}
+              onClick={onArchive}
+            />
+          )}
+          {onMarkUnread && (
+            <DropdownItem
+              icon={conversation.markedUnread ? <MailCheck size={14} /> : <Mail size={14} />}
+              label={conversation.markedUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
+              onClick={onMarkUnread}
             />
           )}
           {onBlock && !conversation.isGroup && (

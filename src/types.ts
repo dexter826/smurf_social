@@ -68,6 +68,8 @@ export interface Conversation {
   createdAt: Date;
   pinned?: boolean;
   muted?: boolean;
+  archived?: boolean;
+  markedUnread?: boolean;
   typingUsers?: string[];
 }
 
