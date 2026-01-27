@@ -54,7 +54,7 @@ export const UserStatusText: React.FC<UserStatusTextProps> = ({
   };
 
   return (
-    <span className={className}>
+    <span className={`${className} ${user?.status === UserStatus.ONLINE ? '!text-status-online font-medium' : ''}`}>
       {getStatusText()}
     </span>
   );

@@ -81,7 +81,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-light bg-bg-primary">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 h-[72px] border-b border-border-light bg-bg-primary">
         <div className="flex items-center gap-3 flex-1">
           {onBack && (
             <button
@@ -105,7 +105,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
             <Phone size={20} />
           </button>
@@ -167,7 +167,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
             {/* Typing Indicator */}
             {typingUsersNames && (
-              <div className="flex items-center gap-2 text-sm text-text-secondary ml-12">
+              <div className="flex items-center gap-2 text-sm text-text-secondary ml-11">
                 <div className="flex gap-1">
                   <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

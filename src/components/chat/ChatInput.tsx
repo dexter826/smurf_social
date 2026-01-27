@@ -127,7 +127,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme">
       {/* File Preview */}
       {selectedFile && (
-        <div className="px-4 pt-3 pb-2 border-b border-border-light">
+        <div className="p-4 border-b border-border-light">
           <div className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg">
             {previewUrl ? (
               <img 
@@ -159,7 +159,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Input Area */}
-      <form onSubmit={handleSubmit} className="flex items-end gap-2 p-3 bg-bg-primary">
+      <form onSubmit={handleSubmit} className="flex items-end gap-3 px-4 py-3 bg-bg-primary">
         {/* Attachments */}
         <div className="flex items-center gap-1 pb-1">
           <input
@@ -205,7 +205,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
 
         {/* Text Input */}
-        <div className="flex-1 relative flex items-center bg-bg-secondary rounded-2xl border border-border-light focus-within:border-primary transition-all self-center mb-1">
+        {/* Text Input Container */}
+        <div className="flex-1 relative flex bg-bg-secondary rounded-2xl border border-border-light focus-within:border-primary transition-all self-center mb-1">
           <textarea
             ref={inputRef}
             value={inputText}
@@ -213,7 +214,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onKeyDown={handleKeyDown}
             placeholder="Aa"
             disabled={disabled || isSending}
-            className="w-full resize-none bg-transparent px-4 py-2.5 pr-10 text-[15px] leading-relaxed focus:outline-none disabled:cursor-not-allowed max-h-[120px] text-text-primary placeholder:text-text-tertiary scrollbar-none overflow-y-auto"
+            className="w-full resize-none bg-transparent px-4 py-3 pr-12 text-[15px] leading-relaxed focus:outline-none disabled:cursor-not-allowed max-h-[120px] text-text-primary placeholder:text-text-tertiary scrollbar-none overflow-y-auto"
             rows={1}
             style={{ 
               overflowY: inputText.split('\n').length > 5 ? 'auto' : 'hidden',
@@ -237,7 +238,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 }, 0);
               }}
               disabled={disabled || isSending}
-              buttonClassName="p-1.5"
+              buttonClassName="p-2"
             />
           </div>
         </div>

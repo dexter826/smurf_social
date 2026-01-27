@@ -66,7 +66,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     <div
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 p-3 mx-2 my-0.5 cursor-pointer transition-all duration-200 rounded-xl group
+        relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-200 rounded-xl group
         hover:bg-bg-hover
         ${isActive ? 'bg-primary-light' : ''}
         ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
