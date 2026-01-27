@@ -504,16 +504,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             />
             <div className="absolute right-2 bottom-1.5 flex items-center gap-1">
               {/* Voice Button inside Input */}
-              <Button
-                 type="button"
-                 variant="ghost" 
-                 isIconOnly
-                 onClick={startRecording}
-                 disabled={disabled || isSending || isRecording}
-                 className="p-1.5 text-text-secondary hover:text-primary"
-                 title="Ghi âm"
-                 icon={<Mic size={22} />}
-              />
+               <Button
+                  type="button"
+                  variant="ghost" 
+                  isIconOnly
+                  onClick={startRecording}
+                  disabled={disabled || isSending || isRecording}
+                  className="p-1.5 text-text-secondary hover:text-primary transition-colors h-auto w-auto"
+                  title="Ghi âm"
+                  icon={<Mic size={22} />}
+               />
 
               <EmojiPicker
                 onEmojiSelect={(emoji) => {
