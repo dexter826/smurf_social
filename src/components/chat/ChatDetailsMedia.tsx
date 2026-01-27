@@ -1,0 +1,171 @@
+import React, { useState, useMemo } from 'react';
+import { Message } from '../../types';
+import { Image, Film, FileText, Download, ExternalLink } from 'lucide-react';
+
+interface ChatDetailsMediaProps {
+  messages: Message[];
+}
+
+type MediaTab = 'images' | 'videos' | 'files';
+
+export const ChatDetailsMedia: React.FC<ChatDetailsMediaProps> = ({ messages }) => {
+  const [activeTab, setActiveTab] = useState<MediaTab>('images');
+
+  const mediaItems = useMemo(() => {
+    const images: Message[] = [];
+    const videos: Message[] = [];
+    const files: Message[] = [];
+
+    messages.forEach((msg) => {
+      if (msg.type === 'image' && msg.fileUrl) {
+        images.push(msg);
+      } else if (msg.type === 'video' && msg.fileUrl) {
+        videos.push(msg);
+      } else if (msg.type === 'file' && msg.fileUrl) {
+        files.push(msg);
+      }
+    });
+
+    return { images, videos, files };
+  }, [messages]);
+
+  const tabs: { id: MediaTab; label: string; icon: React.ReactNode; count: number }[] = [
+    { id: 'images', label: 'Ảnh', icon: <Image size={16} />, count: mediaItems.images.length },
+    { id: 'videos', label: 'Video', icon: <Film size={16} />, count: mediaItems.videos.length },
+    { id: 'files', label: 'File', icon: <FileText size={16} />, count: mediaItems.files.length },
+  ];
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'images':
+        if (mediaItems.images.length === 0) {
+          return <EmptyState message="Chưa có ảnh nào được chia sẻ" />;
+        }
+        return (
+          <div className="grid grid-cols-3 gap-1 p-2">
+            {mediaItems.images.map((msg) => (
+              <a
+                key={msg.id}
+                href={msg.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="aspect-square rounded-md overflow-hidden hover:opacity-80 transition-opacity"
+              >
+                <img
+                  src={msg.fileUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </a>
+            ))}
+          </div>
+        );
+
+      case 'videos':
+        if (mediaItems.videos.length === 0) {
+          return <EmptyState message="Chưa có video nào được chia sẻ" />;
+        }
+        return (
+          <div className="grid grid-cols-2 gap-2 p-2">
+            {mediaItems.videos.map((msg) => (
+              <a
+                key={msg.id}
+                href={msg.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="aspect-video rounded-md overflow-hidden bg-bg-tertiary hover:opacity-80 transition-opacity relative group"
+              >
+                <video src={msg.fileUrl} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ExternalLink size={24} className="text-white" />
+                </div>
+              </a>
+            ))}
+          </div>
+        );
+
+      case 'files':
+        if (mediaItems.files.length === 0) {
+          return <EmptyState message="Chưa có file nào được chia sẻ" />;
+        }
+        return (
+          <div className="space-y-1 p-2">
+            {mediaItems.files.map((msg) => (
+              <a
+                key={msg.id}
+                href={msg.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-bg-hover transition-colors"
+              >
+                <div className="w-10 h-10 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText size={20} className="text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-text-primary truncate">
+                    {msg.fileName || 'File'}
+                  </p>
+                  <p className="text-xs text-text-tertiary">
+                    {formatFileSize(msg.fileSize)}
+                  </p>
+                </div>
+                <Download size={18} className="text-text-tertiary flex-shrink-0" />
+              </a>
+            ))}
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="py-4">
+      <h3 className="px-4 text-sm font-semibold text-text-secondary mb-3">
+        Media & File
+      </h3>
+
+      {/* Tabs */}
+      <div className="flex border-b border-border-light mx-4">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`
+              flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors relative
+              ${activeTab === tab.id 
+                ? 'text-primary' 
+                : 'text-text-tertiary hover:text-text-secondary'
+              }
+            `}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+            {tab.count > 0 && (
+              <span className="text-xs text-text-tertiary">({tab.count})</span>
+            )}
+            {activeTab === tab.id && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="max-h-[300px] overflow-y-auto">
+        {renderContent()}
+      </div>
+    </div>
+  );
+};
+
+const EmptyState: React.FC<{ message: string }> = ({ message }) => (
+  <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
+    <p className="text-sm">{message}</p>
+  </div>
+);

@@ -4,7 +4,7 @@ import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
 import { User } from '../types';
-import { ConversationList, ChatBox, ChatInput } from '../components/chat';
+import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel } from '../components/chat';
 import { Spinner } from '../components/ui';
 
 const ChatPage: React.FC = () => {
@@ -36,6 +36,7 @@ const ChatPage: React.FC = () => {
 
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -219,6 +220,7 @@ const ChatPage: React.FC = () => {
               usersMap={usersMap}
               typingUsers={currentTypingUsers}
               onBack={handleBackToList}
+              onInfoClick={() => setShowDetails(true)}
             />
             <ChatInput
               key={selectedConversationId}
@@ -244,6 +246,21 @@ const ChatPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Chat Details Panel */}
+      {selectedConversation && (
+        <ChatDetailsPanel
+          conversation={selectedConversation}
+          messages={currentMessages}
+          currentUserId={currentUser.id}
+          usersMap={usersMap}
+          isOpen={showDetails}
+          onClose={() => setShowDetails(false)}
+          onToggleMute={() => handleMute(selectedConversation.id, !selectedConversation.muted)}
+          onTogglePin={() => handlePin(selectedConversation.id, !selectedConversation.pinned)}
+          onDelete={() => handleDelete(selectedConversation.id)}
+        />
+      )}
     </div>
   );
 };

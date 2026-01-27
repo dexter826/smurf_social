@@ -12,6 +12,7 @@ interface ChatBoxProps {
   usersMap: Record<string, User>;
   typingUsers: string[];
   onBack?: () => void;
+  onInfoClick?: () => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -20,7 +21,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   currentUserId,
   usersMap,
   typingUsers,
-  onBack
+  onBack,
+  onInfoClick
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -112,7 +114,10 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           <button className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
             <Video size={20} />
           </button>
-          <button className="p-2 text-text-secondary hover:bg-bg-hover rounded-full transition-colors">
+          <button 
+            onClick={onInfoClick}
+            className="p-2 text-text-secondary hover:bg-bg-hover rounded-full transition-colors"
+          >
             <Info size={20} />
           </button>
         </div>
