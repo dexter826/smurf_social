@@ -178,6 +178,24 @@ export const userService = {
     }
   },
 
+  deleteAvatar: async (userId: string): Promise<void> => {
+    try {
+      await userService.updateProfile(userId, { avatar: '' });
+    } catch (error) {
+      console.error("Lỗi xóa avatar", error);
+      throw error;
+    }
+  },
+
+  deleteCoverImage: async (userId: string): Promise<void> => {
+    try {
+      await userService.updateProfile(userId, { coverImage: '' });
+    } catch (error) {
+      console.error("Lỗi xóa cover image", error);
+      throw error;
+    }
+  },
+
   getUserStats: async (userId: string): Promise<{ friendCount: number, postCount: number }> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', userId));

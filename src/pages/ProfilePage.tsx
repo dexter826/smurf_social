@@ -31,6 +31,8 @@ const ProfilePage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmUnfriendOpen, setIsConfirmUnfriendOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isConfirmDeleteAvatarOpen, setIsConfirmDeleteAvatarOpen] = useState(false);
+  const [isConfirmDeleteCoverOpen, setIsConfirmDeleteCoverOpen] = useState(false);
   const [latestMedia, setLatestMedia] = useState<string[]>([]);
 
   const profileUserId = userId || currentUser?.id;
@@ -167,6 +169,39 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleAvatarDelete = async () => {
+    if (!profile || !isOwnProfile) return;
+    setUploading(true);
+    try {
+      await userService.deleteAvatar(profile.id);
+      setProfile({ ...profile, avatar: '' });
+      if (currentUser) {
+        useAuthStore.setState({ user: { ...currentUser, avatar: '' } });
+      }
+      toast.success('Đã xóa ảnh đại diện');
+    } catch (error) {
+      toast.error('Không thể xóa ảnh đại diện');
+    } finally {
+      setUploading(false);
+      setIsConfirmDeleteAvatarOpen(false);
+    }
+  };
+
+  const handleCoverDelete = async () => {
+    if (!profile || !isOwnProfile) return;
+    setUploading(true);
+    try {
+      await userService.deleteCoverImage(profile.id);
+      setProfile({ ...profile, coverImage: '' });
+      toast.success('Đã xóa ảnh bìa');
+    } catch (error) {
+      toast.error('Không thể xóa ảnh bìa');
+    } finally {
+      setUploading(false);
+      setIsConfirmDeleteCoverOpen(false);
+    }
+  };
+
   if (loading || !profile || !currentUser) {
     return (
       <div className="h-full flex items-center justify-center bg-bg-secondary">
@@ -188,6 +223,8 @@ const ProfilePage: React.FC = () => {
           onFriendClick={handleFriendAction}
           onAvatarChange={handleAvatarChange}
           onCoverChange={handleCoverChange}
+          onAvatarDelete={() => setIsConfirmDeleteAvatarOpen(true)}
+          onCoverDelete={() => setIsConfirmDeleteCoverOpen(true)}
           uploading={uploading}
         />
 
@@ -325,6 +362,26 @@ const ProfilePage: React.FC = () => {
         title="Hủy kết bạn"
         message={`Bạn có chắc chắn muốn hủy kết bạn với ${profile?.name || ''}?`}
         confirmLabel="Hủy kết bạn"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={isConfirmDeleteAvatarOpen}
+        onClose={() => setIsConfirmDeleteAvatarOpen(false)}
+        onConfirm={handleAvatarDelete}
+        title="Xóa ảnh đại diện"
+        message="Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại? Bạn sẽ quay về sử dụng ảnh mặc định."
+        confirmLabel="Xóa ngay"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={isConfirmDeleteCoverOpen}
+        onClose={() => setIsConfirmDeleteCoverOpen(false)}
+        onConfirm={handleCoverDelete}
+        title="Xóa ảnh bìa"
+        message="Bạn có chắc chắn muốn xóa ảnh bìa hiện tại?"
+        confirmLabel="Xóa ngay"
         variant="danger"
       />
     </div>

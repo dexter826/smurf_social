@@ -110,13 +110,12 @@ export const Avatar: React.FC<AvatarProps> = ({
       );
     }
 
-    // Hiển thị tên viết tắt với gradient cho cá nhân
     return (
       <div 
         className="w-full h-full flex items-center justify-center font-bold text-white uppercase"
-        style={{ background: getAvatarGradient(name || 'Unknown') }}
+        style={{ background: getAvatarGradient(name || '?') }}
       >
-        {getInitials(name || 'Unknown')}
+        {getInitials(name || '?')}
       </div>
     );
   };

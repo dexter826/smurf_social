@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil } from 'lucide-react';
 import { User, UserStatus } from '../../types';
-import { Avatar, UserAvatar, Button } from '../ui';
+import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface ProfileHeaderProps {
   user: User;
@@ -13,6 +14,8 @@ interface ProfileHeaderProps {
   onFriendClick?: () => void;
   onAvatarChange?: (file: File) => void;
   onCoverChange?: (file: File) => void;
+  onAvatarDelete?: () => void;
+  onCoverDelete?: () => void;
   uploading?: boolean;
 }
 
@@ -26,6 +29,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onFriendClick,
   onAvatarChange,
   onCoverChange,
+  onAvatarDelete,
+  onCoverDelete,
   uploading = false
 }) => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -68,15 +73,35 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         />
         
         {isOwnProfile && (
-          <Button 
-            onClick={handleCoverClick}
-            disabled={uploading}
-            variant="ghost"
-            className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-all gap-2 border border-white/20 z-10 rounded-xl"
-            icon={<Camera size={18} />}
-          >
-            <span>Chỉnh sửa ảnh bìa</span>
-          </Button>
+          <div className="absolute bottom-4 right-4 z-10">
+            <Dropdown
+              trigger={
+                <Button 
+                  disabled={uploading}
+                  variant="ghost"
+                  className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-all gap-2 border border-white/20 rounded-xl"
+                  icon={<Pencil size={18} />}
+                >
+                  <span>Chỉnh sửa ảnh bìa</span>
+                </Button>
+              }
+              align="right"
+            >
+              <DropdownItem
+                icon={<ImageIcon size={16} />}
+                label="Tải ảnh lên"
+                onClick={handleCoverClick}
+              />
+              {user.coverImage && (
+                <DropdownItem
+                  icon={<Trash2 size={16} />}
+                  label="Xóa ảnh bìa"
+                  variant="danger"
+                  onClick={onCoverDelete || (() => {})}
+                />
+              )}
+            </Dropdown>
+          </div>
         )}
         
         <input
@@ -97,17 +122,44 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <div className="relative group">
               <div className="relative">
                 <div className="p-1 bg-bg-primary rounded-full transition-theme">
-                  <UserAvatar userId={user.id} src={user.avatar} size="2xl" className="border-4 border-bg-primary shadow-lg" initialStatus={user.status} />
+                  <UserAvatar 
+                    userId={user.id} 
+                    src={user.avatar} 
+                    name={user.name}
+                    size="2xl" 
+                    className="border-4 border-bg-primary shadow-lg" 
+                    initialStatus={user.status} 
+                  />
                 </div>
                 
                 {isOwnProfile && (
-                  <Button
-                    onClick={handleAvatarClick}
-                    disabled={uploading}
-                    variant="secondary"
-                    className="absolute bottom-2 right-2 shadow-md border-2 border-bg-primary z-10 rounded-full"
-                    icon={<Camera size={20} />}
-                  />
+                  <div className="absolute bottom-2 right-2 z-10">
+                    <Dropdown
+                      trigger={
+                        <Button
+                          disabled={uploading}
+                          variant="secondary"
+                          className="shadow-md border-2 border-bg-primary rounded-full w-10 h-10 p-0 flex items-center justify-center"
+                          icon={<Pencil size={18} />}
+                        />
+                      }
+                      align="left"
+                    >
+                      <DropdownItem
+                        icon={<ImageIcon size={16} />}
+                        label="Thay đổi ảnh"
+                        onClick={handleAvatarClick}
+                      />
+                      {user.avatar && (
+                        <DropdownItem
+                          icon={<Trash2 size={16} />}
+                          label="Xóa ảnh đại diện"
+                          variant="danger"
+                          onClick={onAvatarDelete || (() => {})}
+                        />
+                      )}
+                    </Dropdown>
+                  </div>
                 )}
               </div>
               

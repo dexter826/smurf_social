@@ -28,6 +28,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   showStatus = true
 }) => {
   const [onlineStatus, setOnlineStatus] = useState<UserStatus | undefined>(initialStatus);
+  const [fetchedName, setFetchedName] = useState<string | undefined>(name);
 
   useEffect(() => {
     if (!userId || isGroup) return;
@@ -37,16 +38,19 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
       if (doc.exists()) {
         const userData = doc.data() as User;
         setOnlineStatus(userData.status);
+        if (!name) {
+          setFetchedName(userData.name);
+        }
       }
     });
 
     return () => unsubscribe();
-  }, [userId, isGroup]);
+  }, [userId, isGroup, name]);
 
   return (
     <Avatar
       src={src}
-      name={name}
+      name={name || fetchedName}
       size={size}
       status={showStatus ? onlineStatus : undefined}
       className={className}
