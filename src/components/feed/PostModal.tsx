@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
 import { Avatar, UserAvatar, Button, EmojiPicker, Loading, Select, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
+import { validateFileSize } from '../../utils/fileUtils';
 import { User, Post } from '../../types';
 
 interface PostModalProps {
@@ -60,18 +61,22 @@ export const PostModal: React.FC<PostModalProps> = ({
   const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
 
-    for (const file of files) {
-      const isVideo = file.type.startsWith('video/');
-      const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        toast.error(`File ${file.name} quá lớn. Giới hạn: ${isVideo ? '50MB cho video' : '5MB cho ảnh'}.`);
-        return;
+    const validFiles: File[] = [];
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        if (validateFileSize(file, 'IMAGE')) validFiles.push(file);
+      } else if (file.type.startsWith('video/')) {
+        if (validateFileSize(file, 'VIDEO')) validFiles.push(file);
+      } else {
+        toast.error(`Không hỗ trợ định dạng file của "${file.name}"`);
       }
-    }
+    });
+
+    if (validFiles.length === 0) return;
 
     setIsUploading(true);
     try {
-      const result = await onUploadImages(files);
+      const result = await onUploadImages(validFiles);
       setImages(prev => [...prev, ...result.images]);
       setVideos(prev => [...prev, ...result.videos]);
     } catch (error) {

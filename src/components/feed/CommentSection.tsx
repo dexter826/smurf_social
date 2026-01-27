@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Heart, Image as ImageIcon, Video, Play } from 'lucide-react';
 import { Avatar, UserAvatar, Button, Input, EmojiPicker, Loading, ConfirmDialog } from '../ui';
+import { validateFileSize } from '../../utils/fileUtils';
 import { toast } from '../../store/toastStore';
-import { Comment, User } from '../../types';
+import { Post, Comment, User, Message } from '../../types';
 import { postService } from '../../services/postService';
 import { userService } from '../../services/userService';
 import { db } from '../../firebase/config';
@@ -83,12 +84,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video', isEdit = false) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (type === 'image' && file.size > 5 * 1024 * 1024) {
-        toast.error('Ảnh bình luận quá lớn. Giới hạn: 5MB.');
-        return;
-      }
-      if (type === 'video' && file.size > 20 * 1024 * 1024) {
-        toast.error('Video bình luận quá lớn. Giới hạn: 20MB.');
+      const fileTypeEnum = type === 'image' ? 'IMAGE' : 'VIDEO';
+      if (!validateFileSize(file, fileTypeEnum)) {
         return;
       }
 

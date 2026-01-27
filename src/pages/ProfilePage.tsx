@@ -8,6 +8,7 @@ import { User } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Spinner, Button, ConfirmDialog } from '../components/ui';
 import { toast } from '../store/toastStore';
+import { validateFileSize } from '../utils/fileUtils';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
@@ -129,10 +130,7 @@ const ProfilePage: React.FC = () => {
       toast.error('Vui lòng chọn file ảnh');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Kích thước ảnh không được vượt quá 5MB');
-      return;
-    }
+    if (!validateFileSize(file, 'AVATAR')) return;
     
     setUploading(true);
     try {
@@ -155,10 +153,7 @@ const ProfilePage: React.FC = () => {
       toast.error('Vui lòng chọn file ảnh');
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Kích thước ảnh không được vượt quá 10MB');
-      return;
-    }
+    if (!validateFileSize(file, 'COVER')) return;
     
     setUploading(true);
     try {

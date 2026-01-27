@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal } from 'lucide-react';
 import { EmojiPicker, Loading } from '../ui';
 import { toast } from '../../store/toastStore';
+import { FILE_LIMITS } from '../../constants/fileConfig';
+import { validateFileSize } from '../../utils/fileUtils';
 
 interface ChatInputProps {
   onSendText: (text: string) => void;
@@ -192,8 +194,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     if (files.length === 0) return;
 
     // Validate limit
-    if (selectedFiles.length + files.length > 10) {
-      toast.error('Chỉ được gửi tối đa 10 file cùng lúc.');
+    if (selectedFiles.length + files.length > FILE_LIMITS.CHAT_MAX_FILES) {
+      toast.error(`Chỉ được gửi tối đa ${FILE_LIMITS.CHAT_MAX_FILES} file cùng lúc.`);
       return;
     }
 
@@ -201,21 +203,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
     files.forEach(file => {
       // Validate file size
-      let maxSize = 20 * 1024 * 1024;
-      let errorMsg = 'File quá lớn. Giới hạn 20MB.';
-
-      if (type === 'image') {
-        maxSize = 5 * 1024 * 1024;
-        errorMsg = 'Ảnh quá lớn. Giới hạn 5MB.';
-      } else if (type === 'video') {
-        maxSize = 50 * 1024 * 1024;
-        errorMsg = 'Video quá lớn. Giới hạn 50MB.';
-      }
-
-      if (file.size > maxSize) {
-        toast.error(`${file.name}: ${errorMsg}`);
-        return;
-      }
+      const limitType = type === 'image' ? 'IMAGE' : type === 'video' ? 'VIDEO' : 'FILE';
+      if (!validateFileSize(file, limitType)) return;
 
       let preview: string | undefined;
       if (type === 'image' || type === 'video') {
