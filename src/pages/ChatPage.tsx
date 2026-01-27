@@ -47,7 +47,7 @@ const ChatPage: React.FC = () => {
   }, [currentUser, subscribeToConversations]);
 
   useEffect(() => {
-    if (!selectedConversationId) return;
+    if (!selectedConversationId || !currentUser) return;
 
     // Subscribe messages
     const unsubscribeMessages = subscribeToMessages(selectedConversationId);
@@ -55,17 +55,31 @@ const ChatPage: React.FC = () => {
     // Subscribe typing
     const unsubscribeTyping = subscribeToTyping(selectedConversationId);
 
-    // Mark as read & delivered
-    if (currentUser) {
-      markAsRead(selectedConversationId, currentUser.id);
-      markAsDelivered(selectedConversationId, currentUser.id);
-    }
+    // Đánh dấu đã nhận (delivered) khi vào cuộc trò chuyện
+    markAsDelivered(selectedConversationId, currentUser.id);
 
     return () => {
       unsubscribeMessages();
       unsubscribeTyping();
     };
-  }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsRead]);
+  }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsDelivered]);
+
+  // Tự động đánh dấu đã đọc khi có tin nhắn mới
+  useEffect(() => {
+    if (!selectedConversationId || !currentUser) return;
+
+    const currentMessages = messages[selectedConversationId] || [];
+    if (currentMessages.length === 0) return;
+
+    // Kiểm tra có tin nhắn chưa đọc từ người khác không
+    const hasUnread = currentMessages.some(m => 
+      m.senderId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id))
+    );
+
+    if (hasUnread) {
+      markAsRead(selectedConversationId, currentUser.id);
+    }
+  }, [messages, selectedConversationId, currentUser, markAsRead]);
 
   useEffect(() => {
     // Load user info cho messages
@@ -195,6 +209,7 @@ const ChatPage: React.FC = () => {
               onBack={handleBackToList}
             />
             <ChatInput
+              key={selectedConversationId}
               onSendText={handleSendText}
               onSendImage={handleSendImage}
               onSendFile={handleSendFile}

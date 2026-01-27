@@ -37,6 +37,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }, [inputText]);
 
   useEffect(() => {
+    // Focus vào input khi component mount
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -106,13 +111,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         setInputText('');
       }
 
-      // Focus lại input
-      inputRef.current?.focus();
     } catch (error) {
       console.error("Lỗi gửi tin nhắn", error);
       toast.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
     } finally {
       setIsSending(false);
+      // Đảm bảo input đã được enable trước khi focus
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   };
 
