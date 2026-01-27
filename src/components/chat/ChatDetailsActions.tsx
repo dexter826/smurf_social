@@ -87,7 +87,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   if ((!isGroup || isCreator) && onDelete) {
     actions.push({
       icon: <Trash2 size={20} />,
-      label: isGroup ? 'Xóa nhóm' : 'Xóa cuộc trò chuyện',
+      label: isGroup ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện',
       onClick: () => setShowDeleteConfirm(true),
       variant: 'danger' as const,
     });
@@ -140,9 +140,9 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => onDelete?.()}
-        title={isGroup ? 'Xóa nhóm' : 'Xóa cuộc trò chuyện'}
+        title={isGroup ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}
         message={isGroup 
-          ? 'Bạn có chắc chắn muốn xóa nhóm này? Tất cả tin nhắn và thành viên sẽ bị xóa vĩnh viễn.'
+          ? 'Bạn có chắc chắn muốn giải tán nhóm này? Tất cả tin nhắn và thành viên sẽ bị xóa vĩnh viễn.'
           : 'Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Tất cả tin nhắn sẽ bị xóa vĩnh viễn.'
         }
         confirmLabel="Xóa ngay"

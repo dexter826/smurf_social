@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { userService } from '../services/userService';
 import { User } from '../types';
-import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal } from '../components/chat';
+import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal, TransferAdminModal } from '../components/chat';
 import { Spinner } from '../components/ui';
 
 const ChatPage: React.FC = () => {
@@ -57,6 +57,7 @@ const ChatPage: React.FC = () => {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
+  const [showAssignAdmin, setShowAssignAdmin] = useState(false);
   const { users: usersMap, fetchUsers } = useUserCache();
 
   // Stable callbacks
@@ -263,7 +264,31 @@ const ChatPage: React.FC = () => {
 
   const handleLeaveGroup = async () => {
     if (!selectedConversationId || !currentUser) return;
+    const conv = conversations.find(c => c.id === selectedConversationId);
+    
+    // Nếu là trưởng nhóm và còn thành viên khác -> yêu cầu chọn người kế nhiệm
+    if (conv?.isGroup && conv.creatorId === currentUser.id && conv.participantIds.length > 1) {
+      setShowAssignAdmin(true);
+      return;
+    }
+
     await leaveGroup(selectedConversationId, currentUser.id);
+    setShowDetails(false);
+  };
+
+  const handleAssignAdminAndLeave = async (newAdminId: string) => {
+    if (!selectedConversationId || !currentUser) return;
+    
+    // 1. Thăng admin mới
+    await promoteToAdmin(selectedConversationId, newAdminId);
+    
+    // 2. Chuyển quyền creator (Hàm leaveGroup trong service đã có logic chuyển creatorId 
+    // nếu currentUser.id === creatorId dựa trên adminIds[0])
+    // Tuy nhiên để chắc chắn, ta thực hiện thăng admin trước
+    
+    // 3. Rời nhóm
+    await leaveGroup(selectedConversationId, currentUser.id);
+    setShowAssignAdmin(false);
     setShowDetails(false);
   };
 
@@ -412,6 +437,16 @@ const ChatPage: React.FC = () => {
           conversation={selectedConversation}
           onClose={() => setShowEditGroup(false)}
           onSave={handleEditGroup}
+        />
+      )}
+
+      {selectedConversation && selectedConversation.isGroup && (
+        <TransferAdminModal
+          isOpen={showAssignAdmin}
+          conversation={selectedConversation}
+          currentUserId={currentUser.id}
+          onClose={() => setShowAssignAdmin(false)}
+          onConfirm={handleAssignAdminAndLeave}
         />
       )}
     </div>

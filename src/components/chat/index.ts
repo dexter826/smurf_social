@@ -13,3 +13,4 @@ export { ChatDetailsActions } from './ChatDetailsActions';
 export { CreateGroupModal } from './CreateGroupModal';
 export { AddMemberModal } from './AddMemberModal';
 export { EditGroupModal } from './EditGroupModal';
+export { TransferAdminModal } from './TransferAdminModal';
