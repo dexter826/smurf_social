@@ -149,6 +149,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     const isMe = msg.senderId === currentUserId;
                     const showAvatar = shouldShowAvatar(msg, msgIndex, group.messages);
                     const showName = shouldShowName(msg, msgIndex, group.messages);
+                    const isLastMessage = msg.id === messages[messages.length - 1]?.id;
 
                     return (
                       <MessageBubble
@@ -158,6 +159,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                         sender={sender}
                         showAvatar={showAvatar}
                         showName={showName}
+                        isLastMessage={isLastMessage}
                       />
                     );
                   })}

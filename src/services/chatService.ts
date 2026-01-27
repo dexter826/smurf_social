@@ -577,11 +577,28 @@ export const chatService = {
         }
       });
 
-      // Reset unread count
+      // Update conversation: Reset unread count AND update lastMessage.readBy
       const conversationRef = doc(db, 'conversations', conversationId);
-      batch.update(conversationRef, {
-        [`unreadCount.${userId}`]: 0
-      });
+      const conversationSnap = await getDoc(conversationRef);
+      
+      if (conversationSnap.exists()) {
+        const data = conversationSnap.data();
+        const updates: any = {
+          [`unreadCount.${userId}`]: 0
+        };
+
+        // Update lastMessage read status if needed
+        if (data.lastMessage && data.lastMessage.senderId !== userId) {
+          updates['lastMessage.readBy'] = arrayUnion(userId);
+          
+          // Also sync deliveredAt if present in updates (optional, but good for consistency)
+          if (!data.lastMessage.deliveredAt) {
+             updates['lastMessage.deliveredAt'] = serverTimestamp();
+          }
+        }
+
+        batch.update(conversationRef, updates);
+      }
 
       await batch.commit();
     } catch (error) {

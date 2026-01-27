@@ -10,6 +10,7 @@ interface MessageBubbleProps {
   sender?: User;
   showAvatar: boolean;
   showName: boolean;
+  isLastMessage?: boolean;
   onDelete?: (messageId: string, fileUrl?: string) => void;
 }
 
@@ -19,6 +20,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   sender, 
   showAvatar, 
   showName,
+  isLastMessage,
   onDelete
 }) => {
   const [showMenu, setShowMenu] = useState(false);
@@ -120,13 +122,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   isMe ? 'text-white/80' : 'text-text-tertiary'
                 }`}>
                   <span>{format(new Date(message.timestamp), 'HH:mm')}</span>
-                  {isMe && (
-                    isRead 
-                      ? <CheckCheck size={14} className="text-blue-400" />
-                      : isDelivered 
-                        ? <CheckCheck size={14} className="opacity-70" />
-                        : <Check size={14} className="opacity-70" />
-                  )}
                 </div>
               )}
             </div>
@@ -169,15 +164,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {message.type !== 'text' && (
             <span className="text-[10px] text-text-tertiary mt-1">
               {format(new Date(message.timestamp), 'HH:mm')}
-              {isMe && (
-                <span className="ml-1">
-                  {isRead 
-                    ? <CheckCheck size={12} className="inline text-info" />
-                    : <Check size={12} className="inline" />
-                  }
-                </span>
-              )}
+              {/* Status moved to separate line below */}
             </span>
+          )}
+          {isMe && isLastMessage && (
+            <div className="text-[11px] text-text-tertiary mt-0.5 font-medium text-right">
+              {isRead 
+                ? 'Đã xem'
+                : isDelivered 
+                  ? 'Đã nhận'
+                  : 'Đã gửi'
+              }
+            </div>
           )}
         </div>
       </div>

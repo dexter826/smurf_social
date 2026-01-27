@@ -91,28 +91,36 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className="text-xs text-text-tertiary flex-shrink-0 group-hover:hidden">{timeAgo}</span>
+          <span className={`text-xs flex-shrink-0 group-hover:hidden ${unreadCount > 0 ? 'font-semibold text-primary' : 'text-text-tertiary'}`}>
+            {timeAgo.replace('khoảng ', '').replace('dưới ', '').replace('hơn ', '')}
+          </span>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className={`text-sm truncate flex items-center gap-1 ${unreadCount > 0 ? 'font-medium text-text-primary' : 'text-text-secondary'}`}>
+          <p className={`text-sm truncate flex-1 ${unreadCount > 0 ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+            <span className={`truncate text-[13px] ${unreadCount > 0 ? 'font-bold text-text-primary' : 'text-text-tertiary'}`}>
+              {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
+            </span>
+          </p>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
             {isLastMessageMine && (
-              <span className="flex-shrink-0">
+              <span className="text-[11px] font-medium text-text-tertiary whitespace-nowrap">
                 {isLastMessageRead 
-                  ? <CheckCheck size={14} className="text-blue-400" />
+                  ? 'Đã xem'
                   : isLastMessageDelivered
-                    ? <CheckCheck size={14} className="opacity-70" />
-                    : <Check size={14} className="opacity-70" />
+                    ? 'Đã nhận'
+                    : 'Đã gửi'
                 }
               </span>
             )}
-            <span className="truncate text-text-tertiary text-[13px]">{lastMessagePreview}</span>
-          </p>
-          {unreadCount > 0 && (
-            <span className="flex-shrink-0 bg-badge-bg text-badge-text text-xs font-semibold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
-              {unreadCount}
-            </span>
-          )}
+
+            {unreadCount > 0 && (
+              <span className="flex-shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -120,7 +128,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Dropdown
           trigger={
-            <button className="p-1 hover:bg-bg-hover rounded-full transition-all">
+            <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-all">
               <MoreVertical size={16} />
             </button>
           }
