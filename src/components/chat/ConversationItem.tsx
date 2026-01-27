@@ -48,9 +48,8 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 
   const timeAgo = conversation.updatedAt 
     ? formatDistanceToNow(new Date(conversation.updatedAt), { 
-        addSuffix: true, 
         locale: vi 
-      })
+      }).replace('khoảng ', '')
     : '';
 
   return (

@@ -159,9 +159,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Input Area */}
-      <form onSubmit={handleSubmit} className="flex items-end gap-2 p-3">
+      <form onSubmit={handleSubmit} className="flex items-end gap-2 p-3 bg-bg-primary">
         {/* Attachments */}
-        <div className="flex items-center gap-1 pb-2">
+        <div className="flex items-center gap-1 pb-1">
           <input
             ref={imageInputRef}
             type="file"
@@ -177,10 +177,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             type="button"
             onClick={() => imageInputRef.current?.click()}
             disabled={disabled || isSending}
-            className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light rounded-full transition-all disabled:opacity-50"
             title="Gửi ảnh"
           >
-            <ImageIcon size={20} />
+            <ImageIcon size={22} />
           </button>
 
           <input
@@ -197,15 +197,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isSending}
-            className="p-2 text-primary hover:bg-primary-light rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light rounded-full transition-all disabled:opacity-50"
             title="Gửi file"
           >
-            <Paperclip size={20} />
+            <Paperclip size={22} />
           </button>
         </div>
 
         {/* Text Input */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative flex items-center bg-bg-secondary rounded-2xl border border-border-light focus-within:border-primary transition-all self-center mb-1">
           <textarea
             ref={inputRef}
             value={inputText}
@@ -213,10 +213,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onKeyDown={handleKeyDown}
             placeholder="Aa"
             disabled={disabled || isSending}
-            className="w-full resize-none border border-border-light rounded-2xl px-4 py-2 pr-10 text-sm focus:outline-none focus:border-primary disabled:bg-secondary disabled:cursor-not-allowed max-h-[120px] bg-bg-primary text-text-primary placeholder:text-text-tertiary transition-theme"
+            className="w-full resize-none bg-transparent px-4 py-2.5 pr-10 text-[15px] leading-relaxed focus:outline-none disabled:cursor-not-allowed max-h-[120px] text-text-primary placeholder:text-text-tertiary scrollbar-none overflow-y-auto"
             rows={1}
+            style={{ 
+              overflowY: inputText.split('\n').length > 5 ? 'auto' : 'hidden',
+              scrollbarWidth: 'none'
+            }}
           />
-          <div className="absolute right-2 bottom-1.5">
+          <div className="absolute right-1 bottom-1">
             <EmojiPicker
               onEmojiSelect={(emoji) => {
                 const start = inputRef.current?.selectionStart || 0;
@@ -224,7 +228,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 const newText = inputText.substring(0, start) + emoji + inputText.substring(end);
                 setInputText(newText);
                 
-                // Đặt lại con trỏ sau emoji
                 setTimeout(() => {
                   if (inputRef.current) {
                     const newPos = start + emoji.length;
@@ -234,6 +237,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 }, 0);
               }}
               disabled={disabled || isSending}
+              buttonClassName="p-1.5"
             />
           </div>
         </div>
@@ -242,13 +246,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <button
           type="submit"
           disabled={disabled || isSending || (!inputText.trim() && !selectedFile)}
-          className="p-2 bg-primary text-white rounded-full hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-1"
+          className={`
+            p-2.5 rounded-full transition-all self-center mb-1
+            ${(inputText.trim() || selectedFile) && !isSending
+              ? 'bg-primary text-white shadow-md hover:bg-primary-hover active:scale-95' 
+              : 'bg-secondary text-text-tertiary opacity-50 cursor-not-allowed'}
+          `}
           title="Gửi"
         >
           {isSending ? (
             <Loading size={20} color="text-white" />
           ) : (
-            <Send size={20} />
+            <Send size={20} className={inputText.trim() || selectedFile ? 'fill-current' : ''} />
           )}
         </button>
       </form>
