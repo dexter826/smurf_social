@@ -82,7 +82,15 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <UserAvatar userId={partner?.id} src={partner?.avatar} name={partner?.name} size="md" initialStatus={partner?.status} />
+        <UserAvatar 
+          userId={conversation.isGroup ? '' : partner?.id} 
+          src={avatar} 
+          name={chatName} 
+          size="md" 
+          initialStatus={partner?.status}
+          isGroup={conversation.isGroup}
+          members={conversation.participants}
+        />
       </div>
 
       {/* Info */}
