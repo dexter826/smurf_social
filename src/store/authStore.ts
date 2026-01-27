@@ -71,13 +71,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: () => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let userUnsubscribe: (() => void) | null = null;
+
+    const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Cleanup previous user subscription
+      if (userUnsubscribe) {
+        userUnsubscribe();
+        userUnsubscribe = null;
+      }
+
       if (firebaseUser) {
         try {
+          // Fetch user data đầu tiên
           const userData = await userService.getUserById(firebaseUser.uid);
           if (userData) {
             await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
             set({ user: { ...userData, status: UserStatus.ONLINE } });
+
+            // Subscribe realtime đến user document
+            userUnsubscribe = userService.subscribeToUser(firebaseUser.uid, (updatedUser) => {
+              const currentStatus = get().user?.status || UserStatus.ONLINE;
+              set({ user: { ...updatedUser, status: currentStatus } });
+            });
           }
         } catch (error) {
           console.error("Lỗi đồng bộ user", error);
@@ -87,6 +102,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       set({ isLoading: false });
     });
-    return unsubscribe;
+
+    return () => {
+      authUnsubscribe();
+      if (userUnsubscribe) userUnsubscribe();
+    };
   },
 }));

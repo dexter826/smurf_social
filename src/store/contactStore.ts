@@ -152,7 +152,7 @@ export const useContactStore = create<ContactState>((set) => ({
 
   blockUser: async (userId: string, blockedUserId: string) => {
     try {
-      await friendService.blockUser(userId, blockedUserId);
+      await userService.blockUser(userId, blockedUserId);
       set((state) => ({
         friends: state.friends.filter(f => f.id !== blockedUserId)
       }));

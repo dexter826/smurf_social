@@ -64,9 +64,19 @@ export const AppLayout: React.FC = () => {
            >
                {mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
            </button>
-           <button className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" title="Cài đặt">
+           <NavLink 
+              to="/settings"
+              className={({ isActive }) => 
+                `w-14 h-14 flex items-center justify-center rounded-xl transition-all ${
+                  isActive 
+                    ? 'bg-sidebar-item-active text-white' 
+                    : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
+                }`
+              }
+              title="Cài đặt"
+           >
              <Settings size={28} />
-           </button>
+           </NavLink>
            <button 
                 onClick={() => setShowLogoutConfirm(true)} 
                 className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all" 

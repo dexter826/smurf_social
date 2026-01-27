@@ -8,12 +8,14 @@ interface ConversationListProps {
   conversations: Conversation[];
   selectedId: string | null;
   currentUserId: string;
+  blockedUserIds?: string[];
   isLoading: boolean;
   onSelectConversation: (id: string) => void;
   onSearch: (term: string) => void;
   onPin: (id: string, pinned: boolean) => void;
   onMute: (id: string, muted: boolean) => void;
   onDelete: (id: string) => void;
+  onBlock?: (partnerId: string) => void;
   onNewChat?: () => void;
 }
 
@@ -21,12 +23,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   selectedId,
   currentUserId,
+  blockedUserIds = [],
   isLoading,
   onSelectConversation,
   onSearch,
   onPin,
   onMute,
   onDelete,
+  onBlock,
   onNewChat
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,12 +41,18 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     onSearch(value);
   };
 
-  // Sắp xếp: pinned trước, sau đó theo updatedAt
-  const sortedConversations = [...conversations].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-  });
+  // Filter bỏ cuộc trò chuyện với người bị chặn, sau đó sắp xếp
+  const sortedConversations = [...conversations]
+    .filter(conv => {
+      if (conv.isGroup) return true;
+      const partnerId = conv.participantIds.find(id => id !== currentUserId);
+      return !partnerId || !blockedUserIds.includes(partnerId);
+    })
+    .sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
 
   return (
     <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
@@ -91,18 +101,25 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </div>
         ) : (
           <div>
-            {sortedConversations.map((conversation) => (
-              <ConversationItem
-                key={conversation.id}
-                conversation={conversation}
-                isActive={conversation.id === selectedId}
-                currentUserId={currentUserId}
-                onClick={() => onSelectConversation(conversation.id)}
-                onPin={() => onPin(conversation.id, !conversation.pinned)}
-                onMute={() => onMute(conversation.id, !conversation.muted)}
-                onDelete={() => onDelete(conversation.id)}
-              />
-            ))}
+            {sortedConversations.map((conversation) => {
+              const partnerId = conversation.isGroup 
+                ? null 
+                : conversation.participantIds.find(id => id !== currentUserId);
+              
+              return (
+                <ConversationItem
+                  key={conversation.id}
+                  conversation={conversation}
+                  isActive={conversation.id === selectedId}
+                  currentUserId={currentUserId}
+                  onClick={() => onSelectConversation(conversation.id)}
+                  onPin={() => onPin(conversation.id, !conversation.pinned)}
+                  onMute={() => onMute(conversation.id, !conversation.muted)}
+                  onDelete={() => onDelete(conversation.id)}
+                  onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
+                />
+              );
+            })}
           </div>
         )}
       </div>

@@ -8,6 +8,7 @@ import ChatPage from './pages/ChatPage';
 import FeedPage from './pages/FeedPage';
 import ContactsPage from './pages/ContactsPage';
 import ProfilePage from './pages/ProfilePage';
+import SettingsPage from './pages/SettingsPage';
 import { userService } from './services/userService';
 import { UserStatus } from './types';
 
@@ -60,6 +61,7 @@ const App: React.FC = () => {
           <Route path="contacts" element={<ContactsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="profile/:userId" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

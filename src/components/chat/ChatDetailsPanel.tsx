@@ -13,9 +13,11 @@ interface ChatDetailsPanelProps {
   currentUserId: string;
   usersMap: Record<string, User>;
   isOpen: boolean;
+  isBlocked?: boolean;
   onClose: () => void;
   onToggleMute?: () => void;
   onTogglePin?: () => void;
+  onToggleBlock?: () => void;
   onDelete?: () => void;
   onMemberClick?: (userId: string) => void;
   onMessageClick?: (messageId: string) => void;
@@ -29,9 +31,11 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
   currentUserId,
   usersMap,
   isOpen,
+  isBlocked,
   onClose,
   onToggleMute,
   onTogglePin,
+  onToggleBlock,
   onDelete,
   onMemberClick,
   onMessageClick
@@ -85,8 +89,10 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
             />
             <ChatDetailsActions
               conversation={conversation}
+              isBlocked={isBlocked}
               onToggleMute={onToggleMute}
               onTogglePin={onTogglePin}
+              onToggleBlock={onToggleBlock}
               onDelete={onDelete}
             />
           </>

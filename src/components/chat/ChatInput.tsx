@@ -11,6 +11,7 @@ interface ChatInputProps {
   onSendVoice?: (file: File) => void;
   onTyping: (isTyping: boolean) => void;
   disabled?: boolean;
+  blockedMessage?: string;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -20,7 +21,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onSendVideo,
   onSendVoice,
   onTyping,
-  disabled = false
+  disabled = false,
+  blockedMessage
 }) => {
   const [inputText, setInputText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<{ file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[]>([]);
@@ -314,6 +316,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       handleSubmit(e);
     }
   };
+
+  // Hiển thị thông báo khi bị chặn
+  if (blockedMessage) {
+    return (
+      <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme">
+        <div className="flex items-center justify-center px-4 py-4 text-text-tertiary text-sm">
+          <span>{blockedMessage}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme">

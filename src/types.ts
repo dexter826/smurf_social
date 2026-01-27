@@ -16,6 +16,7 @@ export interface User {
   status: UserStatus;
   bio?: string;
   friendIds?: string[];
+  blockedUserIds?: string[];
   createdAt?: Date;
   coverImage?: string;
   lastSeen?: Date;

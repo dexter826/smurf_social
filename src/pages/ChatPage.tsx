@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
@@ -192,6 +192,38 @@ const ChatPage: React.FC = () => {
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
 
+  // Tính toán trạng thái chặn dựa trên partner
+  const partner = selectedConversation && !selectedConversation.isGroup
+    ? selectedConversation.participants.find(p => p.id !== currentUser.id)
+    : null;
+  const partnerId = partner?.id || null;
+  
+  // Kiểm tra chặn 2 chiều
+  const isBlockedByMe = partnerId ? currentUser.blockedUserIds?.includes(partnerId) : false;
+  const isBlockedByPartner = partner?.blockedUserIds?.includes(currentUser.id) ?? false;
+  const isBlocked = isBlockedByMe || isBlockedByPartner;
+  
+  // Tính toán thông báo chặn
+  const getBlockedMessage = (): string | undefined => {
+    if (!selectedConversation?.isGroup && partnerId) {
+      if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
+      if (isBlockedByPartner) return 'Bạn không thể gửi tin nhắn cho người này.';
+    }
+    return undefined;
+  };
+
+  const handleToggleBlock = async () => {
+    if (!partnerId) return;
+    
+    if (isBlockedByMe) {
+      await userService.unblockUser(currentUser.id, partnerId);
+    } else {
+      await userService.blockUser(currentUser.id, partnerId);
+      setShowDetails(false);
+      selectConversation(null);
+    }
+  };
+
   return (
     <div className="flex h-full w-full">
       {/* Conversation List - Sidebar */}
@@ -200,12 +232,16 @@ const ChatPage: React.FC = () => {
           conversations={conversations}
           selectedId={selectedConversationId}
           currentUserId={currentUser.id}
+          blockedUserIds={currentUser.blockedUserIds || []}
           isLoading={isLoading}
           onSelectConversation={handleSelectConversation}
           onSearch={handleSearch}
           onPin={handlePin}
           onMute={handleMute}
           onDelete={handleDelete}
+          onBlock={async (partnerId) => {
+            await userService.blockUser(currentUser.id, partnerId);
+          }}
         />
       </div>
 
@@ -230,6 +266,7 @@ const ChatPage: React.FC = () => {
               onSendVideo={handleSendVideo}
               onSendVoice={handleSendVoice}
               onTyping={handleTyping}
+              blockedMessage={getBlockedMessage()}
             />
           </>
         ) : (
@@ -255,9 +292,11 @@ const ChatPage: React.FC = () => {
           currentUserId={currentUser.id}
           usersMap={usersMap}
           isOpen={showDetails}
+          isBlocked={isBlocked}
           onClose={() => setShowDetails(false)}
           onToggleMute={() => handleMute(selectedConversation.id, !selectedConversation.muted)}
           onTogglePin={() => handlePin(selectedConversation.id, !selectedConversation.pinned)}
+          onToggleBlock={handleToggleBlock}
           onDelete={() => handleDelete(selectedConversation.id)}
         />
       )}

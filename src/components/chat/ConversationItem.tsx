@@ -3,7 +3,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check } from 'lucide-react';
+import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar } from '../ui';
 
@@ -15,6 +15,7 @@ interface ConversationItemProps {
   onPin?: () => void;
   onMute?: () => void;
   onDelete?: () => void;
+  onBlock?: () => void;
 }
 
 export const ConversationItem: React.FC<ConversationItemProps> = ({
@@ -24,10 +25,12 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   onClick,
   onPin,
   onMute,
-  onDelete
+  onDelete,
+  onBlock
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   
   const partner = conversation.isGroup 
     ? null 
@@ -165,6 +168,14 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               onClick={onMute}
             />
           )}
+          {onBlock && !conversation.isGroup && (
+            <DropdownItem
+              icon={<Ban size={14} />}
+              label="Chặn"
+              variant="danger"
+              onClick={() => setShowBlockConfirm(true)}
+            />
+          )}
           {onDelete && (
             <DropdownItem
               icon={<Trash2 size={14} />}
@@ -175,6 +186,16 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           )}
         </Dropdown>
       </div>
+
+      <ConfirmDialog
+        isOpen={showBlockConfirm}
+        onClose={() => setShowBlockConfirm(false)}
+        onConfirm={() => onBlock?.()}
+        title="Chặn người dùng"
+        message="Bạn có chắc chắn muốn chặn người này? Cả hai bên sẽ không thể nhắn tin cho nhau."
+        confirmLabel="Chặn ngay"
+        variant="danger"
+      />
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

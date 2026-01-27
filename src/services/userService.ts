@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { User, UserStatus } from '../types';
@@ -175,5 +175,44 @@ export const userService = {
       console.error("Lỗi lấy thống kê user", error);
       return { friendCount: 0, postCount: 0 };
     }
+  },
+
+  blockUser: async (userId: string, blockedUserId: string): Promise<void> => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        blockedUserIds: arrayUnion(blockedUserId)
+      });
+    } catch (error) {
+      console.error("Lỗi chặn người dùng", error);
+      throw error;
+    }
+  },
+
+  unblockUser: async (userId: string, blockedUserId: string): Promise<void> => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        blockedUserIds: arrayRemove(blockedUserId)
+      });
+    } catch (error) {
+      console.error("Lỗi bỏ chặn người dùng", error);
+      throw error;
+    }
+  },
+
+  subscribeToUser: (userId: string, callback: (user: User) => void): (() => void) => {
+    const userRef = doc(db, 'users', userId);
+    return onSnapshot(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        callback({
+          ...data,
+          id: snapshot.id,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+        } as User);
+      }
+    });
   }
 };
