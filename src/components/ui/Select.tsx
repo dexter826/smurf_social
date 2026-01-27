@@ -64,7 +64,7 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <div className={`flex flex-col gap-1.5 ${className}`} ref={containerRef}>
       {label && (
-        <label className="text-sm font-medium text-text-secondary ml-1">
+        <label className="text-xs font-semibold text-text-secondary ml-1 cursor-pointer">
           {label}
         </label>
       )}
@@ -74,11 +74,12 @@ export const Select: React.FC<SelectProps> = ({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           className={`
-            w-full h-10 px-4 flex items-center justify-between rounded-xl border outline-none transition-all
+            w-full h-11 px-4 flex items-center justify-between rounded-xl border outline-none transition-all
             bg-bg-primary text-sm
-            ${isOpen ? 'border-primary ring-2 ring-primary-500/20' : 'border-border-medium hover:border-primary'}
-            ${error ? 'border-error ring-1 ring-error' : ''}
+            ${isOpen ? 'border-primary ring-4 ring-primary-light/30' : 'border-border-light hover:border-primary'}
+            ${error ? 'border-error ring-4 ring-error/10' : ''}
             ${disabled ? 'opacity-50 cursor-not-allowed bg-bg-secondary' : 'cursor-pointer'}
+            ${className}
           `}
           disabled={disabled}
         >
@@ -119,7 +120,11 @@ export const Select: React.FC<SelectProps> = ({
         )}
       </div>
       
-      {error && <span className="text-xs text-error ml-1">{error}</span>}
+      {error && (
+        <p className="mt-0.5 ml-1 text-[11px] font-medium text-error animate-fade-in">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

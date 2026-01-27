@@ -270,13 +270,15 @@ const ContactsPage: React.FC = () => {
                   type="text"
                   placeholder="Tìm kiếm bạn bè"
                   icon={<Search size={18} />}
-                  className="bg-bg-secondary border-none"
+                  className="bg-bg-secondary"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  containerClassName="flex-1"
                 />
               <Button
                 variant="ghost"
                 size="sm"
+                className="flex-shrink-0 h-[42px] px-3 font-bold text-primary hover:bg-primary-light"
                 icon={<ArrowUpDown size={18} />}
                 onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                 title={sortOrder === 'asc' ? 'Sắp xếp Z-A' : 'Sắp xếp A-Z'}

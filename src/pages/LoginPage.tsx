@@ -154,19 +154,16 @@ const LoginPage: React.FC = () => {
                   </div>
                 )}
                 
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-text-secondary ml-1">Email đã đăng ký</label>
                   <Input
+                    label="Email đã đăng ký"
                     icon={<Mail size={16} />}
                     type="email"
                     placeholder="Nhập email của bạn"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     error={errors.email}
-                    className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
                     autoComplete="email"
                   />
-                </div>
 
                 <Button
                   type="submit"
@@ -192,76 +189,64 @@ const LoginPage: React.FC = () => {
               {/* Bỏ hiển thị errors.form để tránh lặp với Toast */}
 
               {activeTab === 'register' && (
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-text-secondary ml-1">Họ tên</label>
-                  <Input
-                    placeholder="Nhập họ tên của bạn"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    error={errors.name}
-                    className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
-                  />
-                </div>
+                <Input
+                  label="Họ tên"
+                  placeholder="Nhập họ tên của bạn"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  error={errors.name}
+                />
               )}
               
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-text-secondary ml-1">Email</label>
-                <Input
-                  icon={<Mail size={16} />}
-                  type="email"
-                  placeholder="Nhập email của bạn"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  error={errors.email}
-                  className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
-                  autoComplete="email"
-                />
-              </div>
+              <Input
+                label="Email"
+                icon={<Mail size={16} />}
+                type="email"
+                placeholder="Nhập email của bạn"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                error={errors.email}
+                autoComplete="email"
+              />
               
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-text-secondary ml-1">Mật khẩu</label>
+              <Input
+                label="Mật khẩu"
+                icon={<Lock size={16} />}
+                type={showPassword ? "text" : "password"}
+                placeholder="Nhập mật khẩu của bạn"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                error={errors.password}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                }
+              />
+
+              {activeTab === 'register' && (
                 <Input
+                  label="Xác nhận mật khẩu"
                   icon={<Lock size={16} />}
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Nhập mật khẩu của bạn"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  error={errors.password}
-                  className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Nhập lại mật khẩu"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                  error={errors.confirmPassword}
                   rightElement={
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-text-tertiary hover:text-text-secondary"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   }
                 />
-              </div>
-
-              {activeTab === 'register' && (
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-text-secondary ml-1">Xác nhận mật khẩu</label>
-                  <Input
-                    icon={<Lock size={16} />}
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Nhập lại mật khẩu"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                    error={errors.confirmPassword}
-                    className="h-10 !ring-0 !border-border-light focus:!border-primary shadow-sm"
-                    rightElement={
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="text-text-tertiary hover:text-text-secondary"
-                      >
-                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    }
-                  />
-                </div>
               )}
 
               <Button

@@ -74,13 +74,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             placeholder="Tìm kiếm..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="bg-bg-secondary border-none h-10 text-sm"
+            className="bg-bg-secondary text-sm"
             containerClassName="flex-1"
           />
           {onNewChat && (
             <button
               onClick={onNewChat}
-              className="p-2 text-primary hover:bg-primary-light rounded-xl transition-all"
+              className="p-2.5 text-primary hover:bg-primary-light rounded-xl transition-all shadow-sm active:scale-95 flex-shrink-0"
               title="Tạo cuộc trò chuyện mới"
             >
               <Users size={20} />

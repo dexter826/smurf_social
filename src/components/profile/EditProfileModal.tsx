@@ -96,10 +96,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <h3 className="font-semibold mb-3 text-text-primary">Thông tin chung</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-1 sm:col-span-2">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                Tên hiển thị *
-              </label>
               <Input
+                label="Tên hiển thị *"
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 error={errors.name}
@@ -117,7 +115,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
                   placeholder="Viết vài dòng giới thiệu về bản thân..."
                   rows={2}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  className="w-full px-3 py-2 border border-border-light rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-4 focus:ring-primary-light/30 transition-all resize-none"
                 />
                 <div className="absolute bottom-2 right-2 text-xs text-text-secondary">
                   {formData.bio?.length || 0}/150
@@ -126,13 +124,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             </div>
 
             <div>
-               <label className="block text-sm font-medium text-text-secondary mb-1">
-                Email
-              </label>
               <Input
+                label="Email"
                 value={user.email || ''}
                 disabled
-                className="bg-bg-secondary cursor-not-allowed"
               />
             </div>
 

@@ -499,7 +499,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               onChange={(e) => setNewComment(e.target.value)}
               placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
               containerClassName="flex-1"
-              className="rounded-full h-10"
+              className="rounded-full"
               disabled={isSubmitting}
               rightElement={
                 <div className="flex items-center mr-1">
