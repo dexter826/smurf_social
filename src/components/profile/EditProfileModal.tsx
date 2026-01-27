@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
-import { Button, Input, Select, DatePicker, Modal } from '../ui';
+import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 
 interface EditProfileModalProps {
@@ -120,21 +120,19 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             </div>
 
             <div className="col-span-1 sm:col-span-2">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                Giới thiệu
-              </label>
-              <div className="relative">
-                <textarea
-                  value={formData.bio || ''}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
-                  placeholder="Viết vài dòng giới thiệu về bản thân..."
-                  rows={2}
-                  className="w-full px-3 py-2 border border-border-light rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-4 focus:ring-primary-light/30 transition-all resize-none"
-                />
-                <div className="absolute bottom-2 right-2 text-xs text-text-secondary">
-                  {formData.bio?.length || 0}/150
-                </div>
-              </div>
+              <TextArea
+                label="Giới thiệu"
+                value={formData.bio || ''}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
+                placeholder="Viết vài dòng giới thiệu về bản thân..."
+                rows={2}
+                className="rounded-xl"
+                rightElement={
+                  <div className="text-xs text-text-secondary pr-1.5 pb-2 pointer-events-none">
+                    {formData.bio?.length || 0}/150
+                  </div>
+                }
+              />
             </div>
 
             <div>

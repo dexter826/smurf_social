@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Heart, Image as ImageIcon, Video, Play } from 'lucide-react';
-import { Avatar, UserAvatar, Button, Input, EmojiPicker, Loading, ConfirmDialog, IconButton } from '../ui';
+import { Avatar, UserAvatar, Button, TextArea, EmojiPicker, Loading, ConfirmDialog, IconButton } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
 import { batchGetUsers } from '../../utils/batchUtils';
 import { toast } from '../../store/toastStore';
@@ -273,13 +273,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                    <Input
+                    <TextArea
                       id={`edit-comment-${comment.id}`}
-                      type="text"
                       value={editingContent}
                       onChange={(e) => setEditingContent(e.target.value)}
                       containerClassName="flex-1"
-                      className="rounded-full h-11"
+                      className="rounded-xl"
+                      autoResize
+                      maxHeight={200}
                       disabled={isSubmitting}
                       autoFocus
                       rightElement={
@@ -287,7 +288,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                           <EmojiPicker
                             size={20}
                             onEmojiSelect={(emoji) => {
-                              const input = document.getElementById(`edit-comment-${comment.id}`) as HTMLInputElement;
+                              const input = document.getElementById(`edit-comment-${comment.id}`) as HTMLTextAreaElement;
                               const start = input?.selectionStart || 0;
                               const end = input?.selectionEnd || 0;
                               const newText = editingContent.substring(0, start) + emoji + editingContent.substring(end);
@@ -512,21 +513,22 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         <form onSubmit={handleSubmit} className="flex gap-3">
           <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="sm" initialStatus={currentUser.status} />
           <div className="flex-1 flex items-center gap-2">
-            <Input
+            <TextArea
               id="comment-input-main"
-              type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
               containerClassName="flex-1"
-              className="rounded-full h-11"
+              className="rounded-3xl"
+              autoResize
+              maxHeight={200}
               disabled={isSubmitting}
               rightElement={
                 <div className="flex items-center mr-1">
                   <EmojiPicker
                     size={20}
                     onEmojiSelect={(emoji) => {
-                      const input = document.getElementById('comment-input-main') as HTMLInputElement;
+                      const input = document.getElementById('comment-input-main') as HTMLTextAreaElement;
                       const start = input?.selectionStart || 0;
                       const end = input?.selectionEnd || 0;
                       const newText = newComment.substring(0, start) + emoji + newComment.substring(end);

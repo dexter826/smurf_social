@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal, Camera } from 'lucide-react';
-import { EmojiPicker, Loading, Button, IconButton } from '../ui';
+import { EmojiPicker, Loading, Button, IconButton, TextArea } from '../ui';
 import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
 import { validateFileSize } from '../../utils/fileUtils';
@@ -49,13 +49,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout>();
 
-  useEffect(() => {
-    // Auto-resize textarea
-    if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
-      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
-    }
-  }, [inputText]);
+  // Tự động giãn dòng được xử lý bởi component TextArea
 
   useEffect(() => {
     // Focus vào input khi component mount
@@ -496,53 +490,52 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               </div>
            </div>
         ) : (
-           <div className="flex-1 relative flex bg-bg-secondary rounded-2xl border border-border-light focus-within:border-primary transition-all">
-            <textarea
+           <TextArea
               ref={inputRef}
               value={inputText}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Aa"
               disabled={disabled || isSending}
-              className="w-full resize-none bg-transparent pl-4 pr-20 py-3 text-[15px] leading-relaxed focus:outline-none disabled:cursor-not-allowed max-h-[120px] text-text-primary placeholder:text-text-tertiary scrollbar-none overflow-y-auto"
-              rows={1}
+              autoResize
+              maxHeight={120}
+              containerClassName="flex-1"
+              className="rounded-2xl"
               style={{ 
                 overflowY: inputText.split('\n').length > 5 ? 'auto' : 'hidden',
-                scrollbarWidth: 'none'
               }}
+              rightElement={
+                <div className="flex items-center gap-1">
+                  <IconButton
+                    type="button"
+                    onClick={startRecording}
+                    disabled={disabled || isSending || isRecording}
+                    className="text-text-secondary hover:text-primary"
+                    title="Ghi âm"
+                    icon={<Mic size={22} />}
+                    size="sm"
+                  />
+                  <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                      const start = inputRef.current?.selectionStart || 0;
+                      const end = inputRef.current?.selectionEnd || 0;
+                      const newText = inputText.substring(0, start) + emoji + inputText.substring(end);
+                      setInputText(newText);
+                      
+                      setTimeout(() => {
+                        if (inputRef.current) {
+                          const newPos = start + emoji.length;
+                          inputRef.current.focus();
+                          inputRef.current.setSelectionRange(newPos, newPos);
+                        }
+                      }, 0);
+                    }}
+                    disabled={disabled || isSending}
+                    buttonClassName="p-1.5 text-text-secondary hover:text-primary"
+                  />
+                </div>
+              }
             />
-            <div className="absolute right-2 bottom-1.5 flex items-center gap-1">
-              {/* Voice Button inside Input */}
-               <IconButton
-                  type="button"
-                  onClick={startRecording}
-                  disabled={disabled || isSending || isRecording}
-                  className="text-text-secondary hover:text-primary"
-                  title="Ghi âm"
-                  icon={<Mic size={22} />}
-                  size="sm"
-               />
-
-              <EmojiPicker
-                onEmojiSelect={(emoji) => {
-                  const start = inputRef.current?.selectionStart || 0;
-                  const end = inputRef.current?.selectionEnd || 0;
-                  const newText = inputText.substring(0, start) + emoji + inputText.substring(end);
-                  setInputText(newText);
-                  
-                  setTimeout(() => {
-                    if (inputRef.current) {
-                      const newPos = start + emoji.length;
-                      inputRef.current.focus();
-                      inputRef.current.setSelectionRange(newPos, newPos);
-                    }
-                  }, 0);
-                }}
-                disabled={disabled || isSending}
-                buttonClassName="p-1.5 text-text-secondary hover:text-primary"
-              />
-            </div>
-          </div>
         )}
 
         {/* Send Button */}

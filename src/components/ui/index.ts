@@ -13,3 +13,4 @@ export * from './Dropdown';
 export * from './DatePicker';
 export * from './Toast';
 export * from './Modal';
+export * from './TextArea';

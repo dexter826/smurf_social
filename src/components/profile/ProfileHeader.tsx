@@ -98,7 +98,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <Button 
                   disabled={uploading}
                   variant="ghost"
-                  className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-all gap-2 border border-white/20 rounded-xl"
+                  className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 hover:!text-white transition-all gap-2 border border-white/20 rounded-xl"
                   icon={<Pencil size={18} />}
                 >
                   <span>Chỉnh sửa ảnh bìa</span>
@@ -147,11 +147,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
       {/* Profile Info */}
       <div className="px-4">
-        <div className="relative -mt-12 md:-mt-16 pb-0 transition-theme">
+        <div className="relative pb-0 transition-theme">
           <div className="flex flex-col md:flex-row md:items-end gap-6 pb-6">
             
             {/* Avatar */}
-            <div className="relative group">
+            <div className="relative group -mt-12 md:-mt-16">
               <div className="relative">
                 <div className="p-1 bg-bg-primary rounded-full transition-theme">
                   <UserAvatar 
@@ -218,8 +218,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
 
             {/* Info */}
-            <div className="flex-1 md:mb-1 mt-2 md:mt-0">
-              <h1 className="text-3xl font-bold text-text-primary pt-2 md:pt-0">{user.name}</h1>
+            <div className="flex-1 pb-1">
+              <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
               
               {/* Stats */}
               <div className="flex items-center gap-6 mt-2 text-sm text-text-secondary">

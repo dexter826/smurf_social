@@ -120,7 +120,7 @@ const FeedPage: React.FC = () => {
 
   return (
     <div className="flex justify-center h-full w-full overflow-y-auto bg-bg-secondary transition-theme">
-      <div className="w-full max-w-[640px] py-6 space-y-4 px-2 md:px-0 pb-20">
+      <div className="w-full max-w-[720px] py-6 space-y-4 px-2 md:px-0 pb-20">
         {/* Create Post Card */}
         <CreatePost currentUser={currentUser} />
 
