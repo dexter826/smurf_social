@@ -182,7 +182,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         <div className="flex items-center gap-1.5">
           {post.likes.length > 0 && (
             <>
-              <div className="bg-primary-500 p-1 rounded-full">
+              <div className="bg-error p-1 rounded-full">
                 <Heart size={12} className="text-white fill-white" />
               </div>
               <span className="text-sm text-text-secondary font-medium">
@@ -211,7 +211,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
           variant="ghost"
           onClick={() => onLike(post.id)}
           className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors active:scale-95 h-auto ${
-            isLiked ? 'text-primary' : 'text-text-secondary'
+            isLiked ? '!text-error hover:!text-error' : 'text-text-secondary hover:!text-error'
           }`}
           icon={<Heart size={20} className={isLiked ? 'fill-current' : ''} />}
         >

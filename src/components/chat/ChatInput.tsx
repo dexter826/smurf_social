@@ -374,7 +374,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       {/* Input Area */}
       <form onSubmit={handleSubmit} className="flex items-center gap-2 px-4 py-3 bg-bg-primary">
         {/* More Actions Menu */}
-        <div className="relative">
+        <div className="relative" ref={actionsMenuRef}>
+
            <Button
              type="button"
              variant={showActions ? 'primary' : 'ghost'}
@@ -391,7 +392,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
            {/* Popover Menu */}
            {showActions && (
              <div
-               ref={actionsMenuRef}
                className="absolute bottom-full left-0 mb-2 flex items-center gap-2 p-2 bg-bg-secondary rounded-xl shadow-lg border border-border-light animate-fade-in z-50"
              >
                <Button
@@ -504,15 +504,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             />
             <div className="absolute right-2 bottom-1.5 flex items-center gap-1">
               {/* Voice Button inside Input */}
-              <button
+              <Button
                  type="button"
+                 variant="ghost" 
+                 isIconOnly
                  onClick={startRecording}
                  disabled={disabled || isSending || isRecording}
-                 className="p-1.5 text-text-secondary hover:text-primary rounded-full transition-all disabled:opacity-30"
+                 className="p-1.5 text-text-secondary hover:text-primary"
                  title="Ghi âm"
-              >
-                <Mic size={22} />
-              </button>
+                 icon={<Mic size={22} />}
+              />
 
               <EmojiPicker
                 onEmojiSelect={(emoji) => {
@@ -530,7 +531,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   }, 0);
                 }}
                 disabled={disabled || isSending}
-                buttonClassName="p-1.5"
+                buttonClassName="p-1.5 !text-text-secondary hover:text-primary"
               />
             </div>
           </div>

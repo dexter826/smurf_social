@@ -50,9 +50,11 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
             variant="secondary"
             rounded="full"
             onClick={() => setShowCreateModal(true)}
-            className="flex-1 px-4 py-2.5 justify-start text-text-secondary font-medium border-none h-auto"
+            className="flex-1 px-4 py-2.5 justify-start text-text-secondary font-medium border-none h-auto group"
           >
-            {currentUser.name} ơi, bạn đang nghĩ gì thế?
+            <span className="group-hover:scale-[1.02] transition-transform origin-left inline-block">
+              {currentUser.name} ơi, bạn đang nghĩ gì thế?
+            </span>
           </Button>
         </div>
         
