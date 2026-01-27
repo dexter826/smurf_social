@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit } from 'lucide-react';
-import { User } from '../../types';
-import { Avatar, Button } from '../ui';
+import { User, UserStatus } from '../../types';
+import { Avatar, UserAvatar, Button } from '../ui';
 
 interface ProfileHeaderProps {
   user: User;
@@ -96,7 +96,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <div className="relative group">
               <div className="relative">
                 <div className="p-1 bg-bg-primary rounded-full transition-theme">
-                  <Avatar src={user.avatar} size="2xl" className="border-4 border-bg-primary shadow-lg" />
+                  <UserAvatar userId={user.id} src={user.avatar} size="2xl" className="border-4 border-bg-primary shadow-lg" initialStatus={user.status} />
                 </div>
                 
                 {isOwnProfile && (

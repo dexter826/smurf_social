@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
-import { Avatar, ConfirmDialog } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog } from '../ui';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -26,11 +26,15 @@ export const AppLayout: React.FC = () => {
     <div className="flex h-screen w-full bg-bg-secondary overflow-hidden transition-theme">
       <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md">
         <div className="mb-8" onClick={() => navigate('/profile')}>
-          <Avatar 
-             src={user?.avatar} 
-             size="md" 
-             className="cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all" 
-          />
+          {user && (
+            <UserAvatar 
+              userId={user.id}
+              src={user.avatar} 
+              size="md" 
+              className="cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all" 
+              initialStatus={user.status}
+            />
+          )}
         </div>
         
         <nav className="flex-1 flex flex-col gap-3 w-full items-center">

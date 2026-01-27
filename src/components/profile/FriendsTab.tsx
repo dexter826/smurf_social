@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User } from '../../types';
 import { userService } from '../../services/userService';
-import { Avatar, Spinner } from '../ui';
+import { Avatar, UserAvatar, Spinner } from '../ui';
 import { useNavigate } from 'react-router-dom';
 
 interface FriendsTabProps {
@@ -61,7 +61,7 @@ export const FriendsTab: React.FC<FriendsTabProps> = ({ userId }) => {
               className="bg-bg-secondary rounded-lg p-3 hover:bg-bg-hover transition-colors cursor-pointer"
               onClick={() => navigate(`/profile/${friend.id}`)}
             >
-              <Avatar src={friend.avatar} size="lg" className="mx-auto mb-2" />
+              <UserAvatar userId={friend.id} src={friend.avatar} size="lg" className="mx-auto mb-2" initialStatus={friend.status} />
               <p className="text-sm font-medium text-text-primary text-center truncate">
                 {friend.name}
               </p>

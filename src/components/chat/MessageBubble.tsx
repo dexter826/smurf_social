@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { FileText, Download, CheckCheck, Check, MoreVertical, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar, ConfirmDialog } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog } from '../ui';
 
 interface MessageBubbleProps {
   message: Message;
@@ -87,7 +87,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {/* Avatar for receiver */}
         {!isMe && (
           <div className="w-8 flex-shrink-0 flex items-end pb-1">
-            {showAvatar && <Avatar src={sender?.avatar} size="sm" />}
+            {showAvatar && <UserAvatar userId={sender?.id!} src={sender?.avatar} size="sm" initialStatus={sender?.status} />}
           </div>
         )}
 

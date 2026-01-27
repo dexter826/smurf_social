@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { db } from '../../firebase/config';
 import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Avatar, Skeleton, Dropdown, DropdownItem } from '../ui';
-import { Post, User } from '../../types';
+import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem } from '../ui';
+import { Post, User, UserStatus } from '../../types';
 import { CommentSection } from './CommentSection';
 
 interface PostItemProps {
@@ -34,7 +35,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <Avatar src={author?.avatar} name={author?.name} size="md" status={author?.status} />
+          <UserAvatar userId={author?.id} src={author?.avatar} name={author?.name} size="md" initialStatus={author?.status} />
           <div>
             <h3 className="font-semibold text-text-primary text-[15px]">
               {author?.name || 'Unknown User'}

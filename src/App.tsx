@@ -8,6 +8,8 @@ import ChatPage from './pages/ChatPage';
 import FeedPage from './pages/FeedPage';
 import ContactsPage from './pages/ContactsPage';
 import ProfilePage from './pages/ProfilePage';
+import { userService } from './services/userService';
+import { UserStatus } from './types';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuthStore();
@@ -24,12 +26,24 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const App: React.FC = () => {
+  const { user } = useAuthStore();
   const initializeAuth = useAuthStore(state => state.initialize);
 
   useEffect(() => {
     const unsubscribe = initializeAuth();
     return () => unsubscribe();
   }, [initializeAuth]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (user) {
+        userService.updateUserStatus(user.id, UserStatus.OFFLINE);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [user]);
 
   return (
     <HashRouter>

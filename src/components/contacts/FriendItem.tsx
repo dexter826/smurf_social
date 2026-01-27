@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { MessageCircle, MoreVertical, UserMinus, User as UserIcon } from 'lucide-react';
-import { Avatar, Button, Dropdown, DropdownItem } from '../ui';
-import { User } from '../../types';
+import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
+import { User, UserStatus } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
 interface FriendItemProps {
@@ -31,7 +31,7 @@ export const FriendItem: React.FC<FriendItemProps> = ({
       onClick={handleMessage}
     >
       <div className="flex items-center gap-4 flex-1">
-        <Avatar src={friend.avatar} name={friend.name} size="md" status={friend.status} />
+        <UserAvatar userId={friend.id} src={friend.avatar} name={friend.name} size="md" initialStatus={friend.status} />
         <div>
           <h3 className="font-semibold text-text-primary">{friend.name}</h3>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
-import { Avatar, Button, EmojiPicker, Loading, Select, Modal } from '../ui';
+import { Avatar, UserAvatar, Button, EmojiPicker, Loading, Select, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 import { User, Post } from '../../types';
 
@@ -185,7 +185,7 @@ export const PostModal: React.FC<PostModalProps> = ({
     >
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
+          <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="md" initialStatus={currentUser.status} />
           <div>
             <h3 className="font-semibold text-text-primary mb-0.5">{currentUser.name}</h3>
             <Select

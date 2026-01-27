@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { User, UserStatus } from '../types';
@@ -18,6 +18,15 @@ export const userService = {
     } catch (error) {
       console.error("Lỗi lấy thông tin user", error);
       return undefined;
+    }
+  },
+
+  updateUserStatus: async (userId: string, status: UserStatus): Promise<void> => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, { status });
+    } catch (error) {
+      console.error("Lỗi cập nhật trạng thái", error);
     }
   },
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, X, Clock } from 'lucide-react';
-import { Avatar, Button } from '../ui';
-import { FriendRequest, User } from '../../types';
+import { Avatar, UserAvatar, Button } from '../ui';
+import { FriendRequest, User, UserStatus } from '../../types';
 
 interface FriendRequestItemProps {
   request: FriendRequest;
@@ -37,7 +37,7 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
   return (
     <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
       <div className="flex items-center gap-3 flex-1">
-        <Avatar src={user.avatar} name={user.name} size="lg" status={user.status} />
+        <UserAvatar userId={user.id} src={user.avatar} name={user.name} size="lg" initialStatus={user.status} />
         <div className="flex-1">
           <h3 className="font-semibold text-text-primary">{user.name}</h3>
           {request.message && (

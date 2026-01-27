@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
+import { db } from '../../firebase/config';
 import { Phone, Video, Info, MoreVertical } from 'lucide-react';
-import { Message, User, Conversation } from '../../types';
-import { Avatar } from '../ui';
+import { Message, User, Conversation, UserStatus } from '../../types';
+import { Avatar, UserAvatar, UserStatusText } from '../ui';
 import { MessageBubble } from './MessageBubble';
 
 interface ChatBoxProps {
@@ -37,11 +38,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     ? conversation.groupName
     : partner?.name || 'Unknown';
 
-  const avatar = conversation.isGroup
+  const avatarSrc = conversation.isGroup
     ? conversation.groupAvatar
     : partner?.avatar;
-
-  const isOnline = partner?.status === 'online';
 
   // Group messages theo ngày
   const groupedMessages: { date: string; messages: Message[] }[] = [];
@@ -93,18 +92,16 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             </button>
           )}
           
-          <div className="relative">
-            <Avatar src={avatar} size="md" />
-            {isOnline && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-online border-2 border-bg-primary rounded-full" />
-            )}
-          </div>
-
+          {conversation.isGroup ? (
+            <Avatar src={avatarSrc} name={chatName} size="md" isGroup />
+          ) : (
+            <UserAvatar userId={partner?.id!} src={avatarSrc} name={chatName} size="md" initialStatus={partner?.status} />
+          )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-text-primary truncate">{chatName}</h3>
-            <p className="text-xs text-text-tertiary">
-              {isOnline ? 'Đang hoạt động' : 'Không hoạt động'}
-            </p>
+            <h2 className="text-sm font-bold text-text-primary truncate">{chatName}</h2>
+            {!conversation.isGroup && (
+              <UserStatusText userId={partner?.id!} className="text-xs text-text-tertiary" initialStatus={partner?.status} />
+            )}
           </div>
         </div>
 
@@ -129,7 +126,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         {groupedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-              <Avatar src={avatar} size="lg" />
+              <Avatar src={avatarSrc} size="lg" />
             </div>
             <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
             <p className="text-sm text-text-secondary">Bắt đầu cuộc trò chuyện</p>

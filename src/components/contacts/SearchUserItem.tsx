@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Check, X } from 'lucide-react';
-import { Avatar, Button } from '../ui';
-import { User } from '../../types';
+import { Avatar, UserAvatar, Button } from '../ui';
+import { User, UserStatus } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { friendService } from '../../services/friendService';
 
@@ -53,7 +53,7 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
   return (
     <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
       <div className="flex items-center gap-3 flex-1">
-        <Avatar src={user.avatar} name={user.name} size="md" status={user.status} />
+        <UserAvatar userId={user.id} src={user.avatar} name={user.name} size="md" initialStatus={user.status} />
         <div>
           <h3 className="font-semibold text-text-primary">{user.name}</h3>
           <p className="text-xs text-text-secondary">

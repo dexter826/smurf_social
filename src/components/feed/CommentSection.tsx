@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Heart, Image as ImageIcon } from 'lucide-react';
-import { Avatar, Button, EmojiPicker, Loading, ConfirmDialog } from '../ui';
+import { Avatar, UserAvatar, Button, EmojiPicker, Loading, ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
 import { Comment, User } from '../../types';
 import { postService } from '../../services/postService';
@@ -199,10 +199,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     return (
       <div key={comment.id} className={`${depth > 0 ? 'ml-10 mt-2' : 'mt-4'}`}>
         <div className="flex gap-3">
-          <Avatar
+          <UserAvatar
+            userId={comment.userId}
             src={author?.avatar}
             name={author?.name || 'User'}
             size={depth > 0 ? 'xs' : 'sm'}
+            initialStatus={author?.status}
           />
           <div className="flex-1 min-w-0">
             {isEditing ? (
@@ -394,7 +396,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <Avatar src={currentUser.avatar} name={currentUser.name} size="sm" />
+          <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="sm" initialStatus={currentUser.status} />
           <div className="flex-1 flex gap-2">
             <div className="flex-1 relative">
               <input

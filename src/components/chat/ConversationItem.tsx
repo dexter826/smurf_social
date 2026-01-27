@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck } from 'lucide-react';
-import { Conversation, User } from '../../types';
-import { Avatar, Dropdown, DropdownItem, ConfirmDialog } from '../ui';
+import { Conversation, User, UserStatus } from '../../types';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar } from '../ui';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -25,6 +27,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   onDelete
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
   const partner = conversation.isGroup 
     ? null 
     : conversation.participants.find(p => p.id !== currentUserId);
@@ -64,10 +67,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <Avatar src={avatar} size="md" />
-        {partner?.status === 'online' && (
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-online border-2 border-bg-primary rounded-full" />
-        )}
+        <UserAvatar userId={partner?.id} src={partner?.avatar} name={partner?.name} size="lg" initialStatus={partner?.status} />
       </div>
 
       {/* Info */}

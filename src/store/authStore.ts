@@ -3,7 +3,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
-import { User } from '../types';
+import { User, UserStatus } from '../types';
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
 
@@ -53,6 +53,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    const { user } = get();
+    if (user) {
+      await userService.updateUserStatus(user.id, UserStatus.OFFLINE);
+    }
     await authService.logout();
     set({ user: null });
   },
@@ -72,7 +76,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
           const userData = await userService.getUserById(firebaseUser.uid);
           if (userData) {
-            set({ user: userData });
+            await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
+            set({ user: { ...userData, status: UserStatus.ONLINE } });
           }
         } catch (error) {
           console.error("Lỗi đồng bộ user", error);
