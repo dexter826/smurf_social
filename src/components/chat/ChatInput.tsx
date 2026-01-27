@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal } from 'lucide-react';
+import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal, Camera } from 'lucide-react';
 import { EmojiPicker, Loading, Button, IconButton } from '../ui';
 import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
@@ -42,6 +42,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -189,7 +190,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }, 1000);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file') => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file' | 'camera') => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
@@ -203,15 +204,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
     files.forEach(file => {
       // Validate file size
-      const limitType = type === 'image' ? 'IMAGE' : type === 'video' ? 'VIDEO' : 'FILE';
+      const limitType = (type === 'image' || type === 'camera') ? 'IMAGE' : type === 'video' ? 'VIDEO' : 'FILE';
       if (!validateFileSize(file, limitType)) return;
 
       let preview: string | undefined;
-      if (type === 'image' || type === 'video') {
+      const fileType = (type === 'camera' && file.type.startsWith('video')) ? 'video' : (type === 'camera' ? 'image' : type);
+      
+      if (fileType === 'image' || fileType === 'video') {
         preview = URL.createObjectURL(file);
       }
 
-      newFiles.push({ file, preview, type });
+      newFiles.push({ file, preview, type: fileType as any });
     });
 
     setSelectedFiles(prev => [...prev, ...newFiles]);
@@ -392,22 +395,30 @@ export const ChatInput: React.FC<ChatInputProps> = ({
              <div
                className="absolute bottom-full left-0 mb-2 flex items-center gap-2 p-2 bg-bg-secondary rounded-xl shadow-lg border border-border-light animate-fade-in z-50"
              >
-               <IconButton
-                  type="button"
-                  onClick={() => { imageInputRef.current?.click(); setShowActions(false); }}
-                  className="text-text-secondary hover:text-primary"
-                  title="Gửi ảnh"
-                  icon={<ImageIcon size={20} />}
-                  size="sm"
-               />
-               <IconButton
-                  type="button"
-                  onClick={() => { videoInputRef.current?.click(); setShowActions(false); }}
-                  className="text-text-secondary hover:text-primary"
-                  title="Gửi video"
-                  icon={<Video size={20} />}
-                  size="sm"
-               />
+                <IconButton
+                   type="button"
+                   onClick={() => { imageInputRef.current?.click(); setShowActions(false); }}
+                   className="text-text-secondary hover:text-primary"
+                   title="Gửi ảnh"
+                   icon={<ImageIcon size={20} />}
+                   size="sm"
+                />
+                <IconButton
+                   type="button"
+                   onClick={() => { cameraInputRef.current?.click(); setShowActions(false); }}
+                   className="text-text-secondary hover:text-primary"
+                   title="Chụp ảnh/Quay phim"
+                   icon={<Camera size={20} />}
+                   size="sm"
+                />
+                <IconButton
+                   type="button"
+                   onClick={() => { videoInputRef.current?.click(); setShowActions(false); }}
+                   className="text-text-secondary hover:text-primary"
+                   title="Gửi video"
+                   icon={<Video size={20} />}
+                   size="sm"
+                />
                <IconButton
                   type="button"
                   onClick={() => { fileInputRef.current?.click(); setShowActions(false); }}
@@ -443,6 +454,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             multiple
             className="hidden"
             onChange={(e) => handleFileSelect(e, 'file')}
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*,video/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => handleFileSelect(e, 'camera')}
           />
 
 

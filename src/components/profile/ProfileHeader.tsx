@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon } from 'lucide-react';
 import { User, UserStatus } from '../../types';
 import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
@@ -35,10 +35,18 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const avatarCameraRef = useRef<HTMLInputElement>(null);
+  const coverCameraRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarClick = () => {
     if (isOwnProfile && !uploading) {
       avatarInputRef.current?.click();
+    }
+  };
+
+  const handleAvatarCameraClick = () => {
+    if (isOwnProfile && !uploading) {
+      avatarCameraRef.current?.click();
     }
   };
 
@@ -48,11 +56,18 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
   };
 
+  const handleCoverCameraClick = () => {
+    if (isOwnProfile && !uploading) {
+      coverCameraRef.current?.click();
+    }
+  };
+
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && onAvatarChange) {
       onAvatarChange(file);
     }
+    e.target.value = '';
   };
 
   const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,17 +75,21 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     if (file && onCoverChange) {
       onCoverChange(file);
     }
+    e.target.value = '';
   };
 
   return (
     <div className="max-w-5xl mx-auto">
       {/* Cover */}
-      <div className="relative h-[200px] md:h-[320px] w-full bg-gradient-to-br from-primary-400 to-primary-600 md:rounded-b-2xl overflow-hidden shadow-sm">
-        <img 
-          src={user.coverImage || '/cover-image.jpg'} 
-          className="w-full h-full object-cover" 
-          alt="Cover"
-        />
+      <div className="relative h-[200px] md:h-[320px] w-full md:rounded-b-2xl shadow-sm">
+        {/* Background Image Layer */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-primary-600 md:rounded-b-2xl overflow-hidden">
+          <img 
+            src={user.coverImage || '/cover-image.jpg'} 
+            className="w-full h-full object-cover" 
+            alt="Cover"
+          />
+        </div>
         
         {isOwnProfile && (
           <div className="absolute bottom-4 right-4 z-10">
@@ -92,6 +111,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 label="Tải ảnh lên"
                 onClick={handleCoverClick}
               />
+              <DropdownItem
+                icon={<CameraIcon size={16} />}
+                label="Chụp ảnh ngay"
+                onClick={handleCoverCameraClick}
+              />
               {user.coverImage && (
                 <DropdownItem
                   icon={<Trash2 size={16} />}
@@ -108,6 +132,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           ref={coverInputRef}
           type="file"
           accept="image/*"
+          onChange={handleCoverFileChange}
+          className="hidden"
+        />
+        <input
+          ref={coverCameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
           onChange={handleCoverFileChange}
           className="hidden"
         />
@@ -147,8 +179,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     >
                       <DropdownItem
                         icon={<ImageIcon size={16} />}
-                        label="Thay đổi ảnh"
+                        label="Tải ảnh lên"
                         onClick={handleAvatarClick}
+                      />
+                      <DropdownItem
+                        icon={<CameraIcon size={16} />}
+                        label="Chụp ảnh ngay"
+                        onClick={handleAvatarCameraClick}
                       />
                       {user.avatar && (
                         <DropdownItem
@@ -167,6 +204,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 ref={avatarInputRef}
                 type="file"
                 accept="image/*"
+                onChange={handleAvatarFileChange}
+                className="hidden"
+              />
+              <input
+                ref={avatarCameraRef}
+                type="file"
+                accept="image/*"
+                capture="user"
                 onChange={handleAvatarFileChange}
                 className="hidden"
               />

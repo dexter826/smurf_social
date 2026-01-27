@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Image as ImageIcon, Video } from 'lucide-react';
+import { Image as ImageIcon, Video, Camera } from 'lucide-react';
 import { PostModal } from './PostModal';
 import { User } from '../../types';
 import { Avatar, Button } from '../ui';
@@ -17,6 +17,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const cameraPhotoRef = useRef<HTMLInputElement>(null);
+  const cameraVideoRef = useRef<HTMLInputElement>(null);
 
   const onMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -62,7 +64,15 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
             className="flex-1 text-[15px] font-semibold text-text-secondary group"
             icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            Ảnh/Video
+            Ảnh
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => cameraPhotoRef.current?.click()}
+            className="flex-1 text-[15px] font-semibold text-text-secondary group"
+            icon={<Camera className="text-red-500 group-hover:scale-110 transition-transform" size={20} />}
+          >
+            Máy ảnh
           </Button>
           <Button
             variant="ghost"
@@ -87,6 +97,22 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
           type="file"
           accept="video/*"
           multiple
+          className="hidden"
+          onChange={onMediaSelect}
+        />
+        <input
+          ref={cameraPhotoRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={onMediaSelect}
+        />
+        <input
+          ref={cameraVideoRef}
+          type="file"
+          accept="video/*"
+          capture="environment"
           className="hidden"
           onChange={onMediaSelect}
         />
