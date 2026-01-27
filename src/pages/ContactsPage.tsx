@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
 import { User } from '../types';
-import { Avatar, Button, Loading, ConfirmDialog } from '../components/ui';
+import { Avatar, Button, Input, Loading, ConfirmDialog } from '../components/ui';
 import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/contacts';
 
 type TabType = 'all' | 'requests' | 'sent';
@@ -266,16 +266,14 @@ const ContactsPage: React.FC = () => {
 
           {activeTab === 'all' && (
             <div className="relative flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 text-secondary" size={18} />
-                <input
+                <Input
                   type="text"
                   placeholder="Tìm kiếm bạn bè"
-                  className="w-full pl-10 pr-4 py-2 bg-bg-secondary text-text-primary rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  icon={<Search size={18} />}
+                  className="bg-bg-secondary border-none"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-              </div>
               <Button
                 variant="ghost"
                 size="sm"

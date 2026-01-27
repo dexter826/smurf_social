@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Heart, Image as ImageIcon } from 'lucide-react';
-import { Avatar, UserAvatar, Button, EmojiPicker, Loading, ConfirmDialog } from '../ui';
+import { X, Send, Heart, Image as ImageIcon, Video, Play } from 'lucide-react';
+import { Avatar, UserAvatar, Button, Input, EmojiPicker, Loading, ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
 import { Comment, User } from '../../types';
 import { postService } from '../../services/postService';
@@ -24,16 +24,23 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [newComment, setNewComment] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [editingImage, setEditingImage] = useState<File | null>(null);
   const [editingImagePreview, setEditingImagePreview] = useState<string | null>(null);
+  const [editingVideo, setEditingVideo] = useState<File | null>(null);
+  const [editingVideoPreview, setEditingVideoPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const videoInputRef = React.useRef<HTMLInputElement>(null);
   const editFileInputRef = React.useRef<HTMLInputElement>(null);
+  const editVideoInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadComments();
@@ -52,6 +59,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       const fetchedComments = await postService.getComments(postId);
       setComments(fetchedComments);
       await loadUsers(fetchedComments);
+    } catch (error) {
+      console.error("Lỗi load comments", error);
     } finally {
       setIsLoading(false);
     }
@@ -71,53 +80,80 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setUsersMap(prev => ({ ...prev, ...users }));
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video', isEdit = false) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      if (type === 'image' && file.size > 5 * 1024 * 1024) {
         toast.error('Ảnh bình luận quá lớn. Giới hạn: 5MB.');
         return;
       }
-
-      if (isEdit) {
-        setEditingImage(file);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setEditingImagePreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setSelectedImage(file);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+      if (type === 'video' && file.size > 20 * 1024 * 1024) {
+        toast.error('Video bình luận quá lớn. Giới hạn: 20MB.');
+        return;
       }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (isEdit) {
+          if (type === 'image') {
+            setEditingImage(file);
+            setEditingImagePreview(reader.result as string);
+            setEditingVideo(null);
+            setEditingVideoPreview(null);
+          } else {
+            setEditingVideo(file);
+            setEditingVideoPreview(reader.result as string);
+            setEditingImage(null);
+            setEditingImagePreview(null);
+          }
+        } else {
+          if (type === 'image') {
+            setSelectedImage(file);
+            setImagePreview(reader.result as string);
+            setSelectedVideo(null);
+            setVideoPreview(null);
+          } else {
+            setSelectedVideo(file);
+            setVideoPreview(reader.result as string);
+            setSelectedImage(null);
+            setImagePreview(null);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const removeImage = (isEdit = false) => {
+  const removeMedia = (isEdit = false) => {
     if (isEdit) {
       setEditingImage(null);
       setEditingImagePreview(null);
+      setEditingVideo(null);
+      setEditingVideoPreview(null);
       if (editFileInputRef.current) editFileInputRef.current.value = '';
+      if (editVideoInputRef.current) editVideoInputRef.current.value = '';
     } else {
       setSelectedImage(null);
       setImagePreview(null);
+      setSelectedVideo(null);
+      setVideoPreview(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      if (videoInputRef.current) videoInputRef.current.value = '';
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newComment.trim() && !selectedImage) || isSubmitting) return;
+    if ((!newComment.trim() && !selectedImage && !selectedVideo) || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       let imageUrl = '';
+      let videoUrl = '';
       if (selectedImage) {
         imageUrl = await postService.uploadCommentImage(selectedImage, currentUser.id);
+      } else if (selectedVideo) {
+        videoUrl = await postService.uploadCommentVideo(selectedVideo, currentUser.id);
       }
 
       await postService.addComment(
@@ -125,10 +161,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         currentUser.id, 
         newComment, 
         replyingTo?.id,
-        imageUrl
+        imageUrl,
+        videoUrl
       );
       setNewComment('');
-      removeImage();
+      removeMedia();
       setReplyingTo(null);
     } catch (error) {
       console.error('Lỗi thêm comment:', error);
@@ -139,30 +176,34 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleUpdateComment = async (commentId: string, currentComment: Comment) => {
-    if ((!editingContent.trim() && !editingImagePreview) || isSubmitting) return;
+    if ((!editingContent.trim() && !editingImagePreview && !editingVideoPreview) || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       let imageUrl = currentComment.image || '';
+      let videoUrl = currentComment.video || '';
       
-      // Nếu có ảnh mới được chọn
       if (editingImage) {
         imageUrl = await postService.uploadCommentImage(editingImage, currentUser.id);
-      } else if (!editingImagePreview) {
-        // Nếu ảnh cũ bị xóa
+        videoUrl = '';
+      } else if (editingVideo) {
+        videoUrl = await postService.uploadCommentVideo(editingVideo, currentUser.id);
         imageUrl = '';
+      } else {
+        if (!editingImagePreview) imageUrl = '';
+        if (!editingVideoPreview) videoUrl = '';
       }
 
       const commentRef = doc(db, 'comments', commentId);
       await updateDoc(commentRef, { 
         content: editingContent,
-        image: imageUrl || null
+        image: imageUrl || null,
+        video: videoUrl || null
       });
       
       setEditingCommentId(null);
       setEditingContent('');
-      setEditingImage(null);
-      setEditingImagePreview(null);
+      removeMedia(true);
     } catch (error) {
       console.error('Lỗi cập nhật comment:', error);
       toast.error('Không thể cập nhật bình luận.');
@@ -187,7 +228,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setEditingCommentId(comment.id);
     setEditingContent(comment.content);
     setEditingImagePreview(comment.image || null);
+    setEditingVideoPreview(comment.video || null);
     setEditingImage(null);
+    setEditingVideo(null);
   };
 
   const renderComment = (comment: Comment, depth = 0) => {
@@ -209,63 +252,91 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           <div className="flex-1 min-w-0">
             {isEditing ? (
               <div className="w-full">
-                {editingImagePreview && (
-                  <div className="relative inline-block mb-2 overflow-hidden rounded-lg border border-border-light">
-                    <img src={editingImagePreview} alt="Preview" className="h-20 w-20 object-cover" />
+                {(editingImagePreview || editingVideoPreview) && (
+                  <div className="relative inline-block mb-2 overflow-hidden rounded-lg border border-border-light shadow-sm bg-bg-primary">
+                    {editingImagePreview ? (
+                      <img src={editingImagePreview} alt="Preview" className="h-20 w-20 object-cover" />
+                    ) : (
+                      <div className="h-20 w-32 relative group">
+                        <video src={editingVideoPreview!} className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                           <Play size={20} className="text-white fill-white" />
+                        </div>
+                      </div>
+                    )}
                     <button 
-                      onClick={() => removeImage(true)}
-                      className="absolute -top-1 -right-1 bg-secondary text-inverse rounded-full p-0.5 hover:bg-hover transition-colors"
+                      onClick={() => removeMedia(true)}
+                      className="absolute -top-1 -right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black/70 transition-colors z-10"
                     >
                       <X size={12} />
                     </button>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                    <div className="flex-1 relative">
-                      <input
-                        id={`edit-comment-${comment.id}`}
-                        type="text"
-                        value={editingContent}
-                        onChange={(e) => setEditingContent(e.target.value)}
-                        className="w-full bg-bg-secondary rounded-full px-4 py-2 pr-20 text-sm border-none outline-none focus:ring-1 focus:ring-primary-500"
-                        disabled={isSubmitting}
-                        autoFocus
-                      />
-                      <div className="absolute right-10 top-1/2 -translate-y-1/2">
-                        <EmojiPicker
-                          onEmojiSelect={(emoji) => {
-                            const input = document.getElementById(`edit-comment-${comment.id}`) as HTMLInputElement;
-                            const start = input?.selectionStart || 0;
-                            const end = input?.selectionEnd || 0;
-                            const newText = editingContent.substring(0, start) + emoji + editingContent.substring(end);
-                            setEditingContent(newText);
-                            setTimeout(() => {
-                              input?.focus();
-                              input?.setSelectionRange(start + emoji.length, start + emoji.length);
-                            }, 0);
-                          }}
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => editFileInputRef.current?.click()}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors"
-                        disabled={isSubmitting}
-                      >
-                        <ImageIcon size={18} />
-                      </button>
+                    <Input
+                      id={`edit-comment-${comment.id}`}
+                      type="text"
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      containerClassName="flex-1"
+                      className="rounded-full"
+                      disabled={isSubmitting}
+                      autoFocus
+                      rightElement={
+                        <div className="flex items-center mr-1">
+                          <EmojiPicker
+                            size={20}
+                            onEmojiSelect={(emoji) => {
+                              const input = document.getElementById(`edit-comment-${comment.id}`) as HTMLInputElement;
+                              const start = input?.selectionStart || 0;
+                              const end = input?.selectionEnd || 0;
+                              const newText = editingContent.substring(0, start) + emoji + editingContent.substring(end);
+                              setEditingContent(newText);
+                              setTimeout(() => {
+                                input?.focus();
+                                input?.setSelectionRange(start + emoji.length, start + emoji.length);
+                              }, 0);
+                            }}
+                            disabled={isSubmitting}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => editFileInputRef.current?.click()}
+                            className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                            title="Thêm ảnh"
+                            disabled={isSubmitting}
+                          >
+                            <ImageIcon size={20} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editVideoInputRef.current?.click()}
+                            className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                            title="Thêm video"
+                            disabled={isSubmitting}
+                          >
+                            <Video size={20} />
+                          </button>
+                        </div>
+                      }
+                    />
                     <input 
                       ref={editFileInputRef}
                       type="file" 
                       accept="image/*" 
-                      onChange={(e) => handleImageSelect(e, true)} 
+                      onChange={(e) => handleMediaSelect(e, 'image', true)} 
                       className="hidden" 
                     />
-                  </div>
+                    <input 
+                      ref={editVideoInputRef}
+                      type="file" 
+                      accept="video/*" 
+                      onChange={(e) => handleMediaSelect(e, 'video', true)} 
+                      className="hidden" 
+                    />
                   <button
                     onClick={() => handleUpdateComment(comment.id, comment)}
-                    disabled={(!editingContent.trim() && !editingImagePreview) || isSubmitting}
+                    disabled={(!editingContent.trim() && !editingImagePreview && !editingVideoPreview) || isSubmitting}
                     className="p-2 text-primary-500 hover:bg-primary-50 rounded-full disabled:opacity-50 transition-colors"
                   >
                     <Send size={18} />
@@ -279,7 +350,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="bg-bg-secondary rounded-2xl px-4 py-2 inline-block max-w-full w-full sm:w-auto">
+              <div className="bg-bg-secondary rounded-2xl px-4 py-2 inline-block max-w-full w-full sm:w-auto shadow-sm">
                 <h4 className="font-semibold text-sm text-text-primary">
                   {author?.name || 'Unknown User'}
                 </h4>
@@ -289,11 +360,20 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   </p>
                 )}
                 {comment.image && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-border-light">
+                  <div className="mt-2 rounded-lg overflow-hidden border border-border-light shadow-sm bg-bg-primary max-w-sm">
                     <img 
                       src={comment.image} 
                       alt="Comment attachment" 
-                      className="max-w-full max-h-60 object-contain bg-bg-primary" 
+                      className="max-w-full max-h-80 object-contain mx-auto" 
+                    />
+                  </div>
+                )}
+                {comment.video && (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-border-light shadow-sm bg-bg-primary max-w-sm relative group">
+                    <video 
+                      src={comment.video} 
+                      controls
+                      className="max-w-full max-h-80 mx-auto" 
                     />
                   </div>
                 )}
@@ -328,7 +408,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 </span>
                 <button 
                   onClick={() => setReplyingTo(comment)}
-                  className="font-bold hover:underline"
+                  className="font-bold hover:text-primary transition-colors"
                 >
                   Trả lời
                 </button>
@@ -336,13 +416,13 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   <>
                     <button
                       onClick={() => startEditing(comment)}
-                      className="hover:underline"
+                      className="hover:text-primary transition-colors"
                     >
                       Sửa
                     </button>
                     <button
                       onClick={() => setCommentToDelete(comment.id)}
-                      className="hover:underline"
+                      className="hover:text-error transition-colors text-red-400"
                     >
                       Xóa
                     </button>
@@ -377,78 +457,111 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
       <div className="p-4 bg-bg-primary border-t border-border-light transition-theme">
         {replyingTo && (
-          <div className="flex items-center justify-between mb-2 px-2 py-1 bg-bg-secondary rounded text-xs text-text-secondary">
+          <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-bg-secondary rounded-lg text-xs text-text-secondary animate-in slide-in-from-bottom-1 duration-200 shadow-sm border border-border-light">
             <span>Đang trả lời <strong>{usersMap[replyingTo.userId]?.name}</strong></span>
-            <button onClick={() => setReplyingTo(null)}><X size={14} /></button>
-          </div>
-        )}
-
-        {imagePreview && (
-          <div className="relative inline-block mb-2 ml-10">
-            <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-border-light" />
             <button 
-              onClick={removeImage}
-              className="absolute -top-2 -right-2 bg-secondary text-inverse rounded-full p-0.5 hover:bg-hover shadow-md transition-colors"
+              onClick={() => setReplyingTo(null)}
+              className="p-1 hover:bg-bg-tertiary rounded-full transition-colors"
             >
               <X size={14} />
             </button>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="sm" initialStatus={currentUser.status} />
-          <div className="flex-1 flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                id="comment-input-main"
-                type="text"
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
-                className="w-full bg-bg-secondary rounded-full px-4 py-2 pr-20 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-                disabled={isSubmitting}
-              />
-              <div className="absolute right-10 top-1/2 -translate-y-1/2">
-                <EmojiPicker
-                  onEmojiSelect={(emoji) => {
-                    const input = document.getElementById('comment-input-main') as HTMLInputElement;
-                    const start = input?.selectionStart || 0;
-                    const end = input?.selectionEnd || 0;
-                    const newText = newComment.substring(0, start) + emoji + newComment.substring(end);
-                    setNewComment(newText);
-                    setTimeout(() => {
-                      input?.focus();
-                      input?.setSelectionRange(start + emoji.length, start + emoji.length);
-                    }, 0);
-                  }}
-                  disabled={isSubmitting}
-                />
+        {(imagePreview || videoPreview) && (
+          <div className="relative inline-block mb-3 ml-12 animate-in zoom-in-95 duration-200">
+            {imagePreview ? (
+              <img src={imagePreview} alt="Preview" className="h-24 w-24 object-cover rounded-xl border-2 border-primary-100 shadow-md translate-y-0" />
+            ) : (
+              <div className="relative group rounded-xl overflow-hidden border-2 border-primary-100 shadow-md h-24 w-40">
+                <video src={videoPreview!} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all">
+                   <Play size={24} className="text-white fill-white drop-shadow-lg" />
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors"
-                disabled={isSubmitting}
-              >
-                <ImageIcon size={18} />
-              </button>
-              <input 
-                ref={fileInputRef}
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageSelect} 
-                className="hidden" 
-              />
-            </div>
+            )}
+            <button 
+              onClick={() => removeMedia()}
+              className="absolute -top-2 -right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 shadow-lg transition-colors z-10"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex gap-3">
+          <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="sm" initialStatus={currentUser.status} />
+          <div className="flex-1 flex items-center gap-2">
+            <Input
+              id="comment-input-main"
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
+              containerClassName="flex-1"
+              className="rounded-full h-10"
+              disabled={isSubmitting}
+              rightElement={
+                <div className="flex items-center mr-1">
+                  <EmojiPicker
+                    size={20}
+                    onEmojiSelect={(emoji) => {
+                      const input = document.getElementById('comment-input-main') as HTMLInputElement;
+                      const start = input?.selectionStart || 0;
+                      const end = input?.selectionEnd || 0;
+                      const newText = newComment.substring(0, start) + emoji + newComment.substring(end);
+                      setNewComment(newText);
+                      setTimeout(() => {
+                        input?.focus();
+                        input?.setSelectionRange(start + emoji.length, start + emoji.length);
+                      }, 0);
+                    }}
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                    title="Thêm ảnh"
+                    disabled={isSubmitting}
+                  >
+                    <ImageIcon size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => videoInputRef.current?.click()}
+                    className="p-1 px-1.5 text-text-tertiary hover:text-primary transition-colors"
+                    title="Thêm video"
+                    disabled={isSubmitting}
+                  >
+                    <Video size={20} />
+                  </button>
+                </div>
+              }
+            />
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => handleMediaSelect(e, 'image')} 
+              className="hidden" 
+            />
+            <input 
+              ref={videoInputRef}
+              type="file" 
+              accept="video/*" 
+              onChange={(e) => handleMediaSelect(e, 'video')} 
+              className="hidden" 
+            />
             <button
               type="submit"
-              disabled={(!newComment.trim() && !selectedImage) || isSubmitting}
-              className="p-2 text-primary-500 hover:bg-primary-50 rounded-full disabled:opacity-50 transition-colors"
+              disabled={(!newComment.trim() && !selectedImage && !selectedVideo) || isSubmitting}
+              className="w-10 h-10 flex items-center justify-center bg-primary-500 text-white rounded-full hover:bg-primary-600 disabled:bg-bg-tertiary disabled:text-text-tertiary transition-all shadow-sm active:scale-95 flex-shrink-0"
             >
               {isSubmitting ? (
-                <Loading size={20} color="text-white" />
+                <Loading size={16} color="text-current" />
               ) : (
-                <Send size={20} />
+                <Send size={18} />
               )}
             </button>
           </div>

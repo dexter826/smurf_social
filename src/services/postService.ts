@@ -280,7 +280,7 @@ export const postService = {
     });
   },
 
-  addComment: async (postId: string, userId: string, content: string, parentId?: string, imageUrl?: string): Promise<void> => {
+  addComment: async (postId: string, userId: string, content: string, parentId?: string, imageUrl?: string, videoUrl?: string): Promise<void> => {
     try {
       await addDoc(collection(db, 'comments'), {
         postId,
@@ -288,6 +288,7 @@ export const postService = {
         content,
         parentId: parentId || null,
         image: imageUrl || null,
+        video: videoUrl || null,
         timestamp: Timestamp.now(),
         likes: []
       });
@@ -305,13 +306,27 @@ export const postService = {
   uploadCommentImage: async (file: File, userId: string): Promise<string> => {
     try {
       const timestamp = Date.now();
-      const fileName = `comment_${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `comments/${userId}/${fileName}`);
+      const fileName = `comment_img_${timestamp}_${file.name}`;
+      const storageRef = ref(storage, `comments/${userId}/images/${fileName}`);
       
       await uploadBytes(storageRef, file);
       return await getDownloadURL(storageRef);
     } catch (error) {
       console.error("Lỗi upload ảnh bình luận", error);
+      throw error;
+    }
+  },
+
+  uploadCommentVideo: async (file: File, userId: string): Promise<string> => {
+    try {
+      const timestamp = Date.now();
+      const fileName = `comment_vid_${timestamp}_${file.name}`;
+      const storageRef = ref(storage, `comments/${userId}/videos/${fileName}`);
+      
+      await uploadBytes(storageRef, file);
+      return await getDownloadURL(storageRef);
+    } catch (error) {
+      console.error("Lỗi upload video bình luận", error);
       throw error;
     }
   },

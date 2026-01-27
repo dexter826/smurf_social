@@ -82,6 +82,7 @@ export interface Comment {
   timestamp: Date;
   likes?: string[];
   image?: string;
+  video?: string;
 }
 
 export interface Post {

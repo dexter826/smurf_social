@@ -3,6 +3,7 @@ import { Message, User } from '../../types';
 import { Search, X, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { Input } from '../ui';
 
 interface ChatDetailsSearchProps {
   messages: Message[];
@@ -49,25 +50,22 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
 
       {/* Search Input */}
       <div className="px-4 mb-3">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onFocus={() => setIsSearching(true)}
-            placeholder="Tìm trong cuộc trò chuyện..."
-            className="w-full pl-9 pr-9 py-2 bg-bg-secondary border border-border-light rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-primary transition-colors"
-          />
-          {searchTerm && (
+        <Input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => setIsSearching(true)}
+          placeholder="Tìm trong cuộc trò chuyện..."
+          icon={<Search size={16} />}
+          rightElement={searchTerm ? (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
+              className="text-text-tertiary hover:text-text-secondary pr-1"
             >
               <X size={16} />
             </button>
-          )}
-        </div>
+          ) : undefined}
+        />
       </div>
 
       {/* Search Results */}

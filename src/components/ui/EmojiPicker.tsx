@@ -7,13 +7,15 @@ interface EmojiPickerProps {
   className?: string;
   buttonClassName?: string;
   disabled?: boolean;
+  size?: number;
 }
 
 export const EmojiPicker: React.FC<EmojiPickerProps> = ({ 
   onEmojiSelect, 
   className = '',
   buttonClassName = '',
-  disabled = false
+  disabled = false,
+  size = 22
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -45,11 +47,11 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`p-2 text-text-secondary hover:text-primary transition-colors disabled:opacity-50 ${buttonClassName}`}
+        className={`p-1.5 text-text-tertiary hover:text-primary transition-colors disabled:opacity-50 ${buttonClassName}`}
         title="Emoji"
       >
         <Smile 
-          size={22} 
+          size={size} 
         />
       </button>
 

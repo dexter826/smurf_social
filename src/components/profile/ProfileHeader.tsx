@@ -71,7 +71,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <button 
             onClick={handleCoverClick}
             disabled={uploading}
-            className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white px-4 py-2 rounded-xl hover:bg-black/50 transition-all flex items-center gap-2 text-sm font-medium border border-white/20 disabled:opacity-50"
+            className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white px-4 py-2 rounded-xl hover:bg-black/50 transition-all flex items-center gap-2 text-sm font-medium border border-white/20 disabled:opacity-50 z-10"
           >
             <Camera size={18} />
             <span>Chỉnh sửa ảnh bìa</span>
