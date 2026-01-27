@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Users, Search, Bell, ArrowUpDown } from 'lucide-react';
 import { userService } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
+import { useUserCache } from '../store/userCacheStore';
 import { User } from '../types';
 import { Avatar, Button, Input, Loading, ConfirmDialog } from '../components/ui';
 import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/contacts';
+import { debounce } from '../utils/batchUtils';
 
 type TabType = 'all' | 'requests' | 'sent';
 
@@ -33,44 +35,41 @@ const ContactsPage: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [unfriendId, setUnfriendId] = useState<string | null>(null);
   const [blockUserId, setBlockUserId] = useState<string | null>(null);
-  const [userCache, setUserCache] = useState<Record<string, User>>({});
+  const { users: userCache, fetchUsers } = useUserCache();
+
+  // Stable callback cho fetch friends
+  const handleFetchFriends = useCallback(() => {
+    if (!currentUser) return;
+    fetchFriends(currentUser.id);
+  }, [currentUser, fetchFriends]);
+
+  // Stable callback cho subscribe
+  const handleSubscribeToRequests = useCallback(() => {
+    if (!currentUser) return () => {};
+    return subscribeToRequests(currentUser.id);
+  }, [currentUser, subscribeToRequests]);
 
   useEffect(() => {
-    if (!currentUser) return;
-    
-    fetchFriends(currentUser.id);
-    
-    const unsubscribe = subscribeToRequests(currentUser.id);
+    handleFetchFriends();
+    const unsubscribe = handleSubscribeToRequests();
     
     return () => {
       unsubscribe();
     };
-  }, [currentUser, fetchFriends, subscribeToRequests]);
+  }, [handleFetchFriends, handleSubscribeToRequests]);
 
+  // Tự động load users cho requests
   useEffect(() => {
-    const loadUsers = async () => {
-      const userIds = [
-        ...receivedRequests.map(r => r.senderId),
-        ...sentRequests.map(r => r.receiverId)
-      ];
+    const userIds = [
+      ...receivedRequests.map(r => r.senderId),
+      ...sentRequests.map(r => r.receiverId)
+    ];
 
-      const uniqueIds = [...new Set(userIds)];
-      const cache: Record<string, User> = {};
-
-      for (const id of uniqueIds) {
-        if (!userCache[id]) {
-          const user = await userService.getUserById(id);
-          if (user) cache[id] = user;
-        }
-      }
-
-      setUserCache(prev => ({ ...prev, ...cache }));
-    };
-
-    if (receivedRequests.length > 0 || sentRequests.length > 0) {
-      loadUsers();
+    const uniqueIds = [...new Set(userIds)];
+    if (uniqueIds.length > 0) {
+      fetchUsers(uniqueIds);
     }
-  }, [receivedRequests, sentRequests]);
+  }, [receivedRequests, sentRequests, fetchUsers]);
 
   const handleAcceptRequest = async (requestId: string, friendId: string) => {
     if (!currentUser) return;
@@ -291,7 +290,11 @@ const ContactsPage: React.FC = () => {
 
         {/* Content */}
         {isLoading ? (
-          <Loading variant="inline" size="lg" className="flex-1" />
+          <div className="flex-1 overflow-y-auto p-4">
+            {[...Array(5)].map((_, i) => (
+              <FriendItem.Skeleton key={i} />
+            ))}
+          </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4">
             {activeTab === 'all' && (

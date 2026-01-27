@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
+import { useUserCache } from '../store/userCacheStore';
 import { userService } from '../services/userService';
 import { User } from '../types';
 import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel } from '../components/chat';
@@ -44,10 +45,21 @@ const ChatPage: React.FC = () => {
     clearSearchHistory
   } = useChatStore();
 
-  const [usersMap, setUsersMap] = useState<Record<string, User>>({});
-  const [loadingUsers, setLoadingUsers] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
+  const { users: usersMap, fetchUsers } = useUserCache();
+
+  // Stable callbacks
+  const handleSubscribeToConversations = useCallback(() => {
+    if (!currentUser) return () => {};
+    return subscribeToConversations(currentUser.id);
+  }, [currentUser, subscribeToConversations]);
+
+  // Subscribe to conversations
+  useEffect(() => {
+    const unsubscribe = handleSubscribeToConversations();
+    return () => unsubscribe();
+  }, [handleSubscribeToConversations]);
 
   // Subscribe messages & typing is handled here
   useEffect(() => {
@@ -85,42 +97,22 @@ const ChatPage: React.FC = () => {
     }
   }, [messages, selectedConversationId, currentUser, markAsRead]);
 
+  // Tự động load users cho messages
   useEffect(() => {
-    // Load user info cho messages
-    loadUsersForMessages();
-  }, [messages, selectedConversationId]);
-
-  const loadUsersForMessages = async () => {
     if (!selectedConversationId || !currentUser) return;
 
     const currentMessages = messages[selectedConversationId] || [];
     if (currentMessages.length === 0) return;
 
-    setLoadingUsers(true);
-    try {
-      const userIds = [...new Set(currentMessages.map(m => m.senderId))];
-      const users: Record<string, User> = { ...usersMap };
-
-      for (const userId of userIds) {
-        if (!users[userId]) {
-          const user = await userService.getUserById(userId);
-          if (user) users[userId] = user;
-        }
-      }
-
-      // Load participants
-      const conv = conversations.find(c => c.id === selectedConversationId);
-      if (conv) {
-        conv.participants.forEach(p => {
-          users[p.id] = p;
-        });
-      }
-
-      setUsersMap(users);
-    } finally {
-      setLoadingUsers(false);
+    const userIds = [...new Set(currentMessages.map(m => m.senderId))];
+    const conv = conversations.find(c => c.id === selectedConversationId);
+    
+    if (conv) {
+      conv.participants.forEach(p => userIds.push(p.id));
     }
-  };
+
+    fetchUsers(userIds);
+  }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
 
   const handleSelectConversation = (id: string) => {
     selectConversation(id);

@@ -1,10 +1,11 @@
 /**
  * Các hằng số giới hạn kích thước file (tính bằng byte)
+ * Đã sync với Firebase Storage Rules
  */
 export const FILE_LIMITS = {
-  IMAGE: 5 * 1024 * 1024,      // 5MB
-  VIDEO: 50 * 1024 * 1024,     // 50MB
-  FILE: 20 * 1024 * 1024,      // 20MB
+  IMAGE: 5 * 1024 * 1024,      // 5MB (posts/images, avatars)
+  VIDEO: 50 * 1024 * 1024,     // 50MB (posts/videos)
+  FILE: 10 * 1024 * 1024,      // 10MB (chat files - giảm từ 20MB)
   AVATAR: 5 * 1024 * 1024,     // 5MB
   COVER: 10 * 1024 * 1024,     // 10MB
   CHAT_MAX_FILES: 10,

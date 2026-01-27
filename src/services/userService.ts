@@ -2,6 +2,7 @@ import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serv
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { User, UserStatus } from '../types';
+import { batchGetUsers } from '../utils/batchUtils';
 
 export const userService = {
   getCurrentUser: async (uid: string): Promise<User | undefined> => {
@@ -49,15 +50,9 @@ export const userService = {
       
       if (friendIds.length === 0) return [];
 
-      const friends: User[] = [];
-      for (const friendId of friendIds) {
-        const friendDoc = await getDoc(doc(db, 'users', friendId));
-        if (friendDoc.exists()) {
-          friends.push(friendDoc.data() as User);
-        }
-      }
-      
-      return friends;
+      // Sử dụng batch get thay vì vòng lặp
+      const friendsMap = await batchGetUsers(friendIds);
+      return Object.values(friendsMap);
     } catch (error) {
       console.error("Lỗi lấy danh sách bạn bè", error);
       return [];
@@ -91,19 +86,15 @@ export const userService = {
       const friendIds = (userDoc.data() as User).friendIds || [];
       if (friendIds.length === 0) return [];
 
-      // Vì Firestore query 'in' giới hạn 10 items, ta nên lấy toàn bộ hoặc filter phía client nếu số lượng bạn nhỏ
-      // Ở đây ta dùng giải pháp lấy thông tin và filter client cho đơn giản và chính xác
-      const friends: User[] = [];
-      for (const friendId of friendIds) {
-        const friend = await userService.getUserById(friendId);
-        if (friend && (
-          friend.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
-        )) {
-          friends.push(friend);
-        }
-      }
-      return friends;
+      // Sử dụng batch get
+      const friendsMap = await batchGetUsers(friendIds);
+      const friends = Object.values(friendsMap);
+      
+      // Filter theo search term
+      return friends.filter(friend => 
+        friend.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     } catch (error) {
       console.error("Lỗi tìm kiếm bạn bè", error);
       return [];

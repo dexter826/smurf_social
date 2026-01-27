@@ -64,3 +64,16 @@ export const FriendItem: React.FC<FriendItemProps> = ({
     </div>
   );
 };
+
+FriendItem.Skeleton = () => (
+  <div className="flex items-center justify-between p-3 animate-pulse border-b border-divider">
+    <div className="flex items-center gap-4 flex-1">
+      <div className="w-10 h-10 rounded-full bg-bg-tertiary" />
+      <div>
+        <div className="h-4 bg-bg-tertiary rounded w-32 mb-1" />
+        <div className="h-3 bg-bg-tertiary rounded w-20" />
+      </div>
+    </div>
+    <div className="w-8 h-8 bg-bg-tertiary rounded" />
+  </div>
+);

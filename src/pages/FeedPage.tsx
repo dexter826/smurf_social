@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Image as ImageIcon, Video, Loader2 } from 'lucide-react';
 import { PostItem, PostModal, CreatePost } from '../components/feed';
 import { Post, User } from '../types';
@@ -7,6 +7,7 @@ import { userService } from '../services/userService';
 import { Avatar, ConfirmDialog } from '../components/ui';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
+import { useUserCache } from '../store/userCacheStore';
 
 const FeedPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
@@ -21,35 +22,34 @@ const FeedPage: React.FC = () => {
     updatePost,
     deletePost,
   } = usePostStore();
+  const { users: usersMap, fetchUsers } = useUserCache();
 
-  const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
-  const [loadingUsers, setLoadingUsers] = useState(true);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   
   const observerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // Sử dụng useCallback để stable dependencies
+  const handleFetchPosts = useCallback(() => {
     if (!currentUser) return;
-
     const friendIds = currentUser.friendIds || [];
     fetchPosts(currentUser.id, friendIds);
-    const unsubscribe = subscribeToPosts(currentUser.id, friendIds);
-    
-    // Initial user load
-    const userIds = [...new Set(posts.map(p => p.userId))];
-    const initialUsers: Record<string, User> = { [currentUser.id]: currentUser };
-    Promise.all(userIds.map(id => id !== currentUser.id ? userService.getUserById(id) : null))
-      .then(results => {
-        results.forEach(u => { if (u) initialUsers[u.id] = u; });
-        setUsersMap(prev => ({ ...prev, ...initialUsers }));
-        setLoadingUsers(false);
-      });
+  }, [currentUser, fetchPosts]);
 
-    return () => {
-      unsubscribe();
-    };
+  const handleSubscribeToPosts = useCallback(() => {
+    if (!currentUser) return;
+    const friendIds = currentUser.friendIds || [];
+    return subscribeToPosts(currentUser.id, friendIds);
   }, [currentUser, subscribeToPosts]);
+
+  useEffect(() => {
+    handleFetchPosts();
+    const unsubscribe = handleSubscribeToPosts();
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [handleFetchPosts, handleSubscribeToPosts]);
 
   // Infinite Scroll Observer
   useEffect(() => {
@@ -71,31 +71,13 @@ const FeedPage: React.FC = () => {
     return () => observer.disconnect();
   }, [hasMore, isLoading, posts.length]);
 
+  // Tự động load users khi posts thay đổi
   useEffect(() => {
     if (posts.length > 0) {
-      loadMoreUsers();
+      const userIds = [...new Set(posts.map(p => p.userId))];
+      fetchUsers(userIds);
     }
-  }, [posts]);
-
-  const loadMoreUsers = async () => {
-    const userIds = [...new Set(posts.map(p => p.userId))];
-    const newUsers: Record<string, User> = {};
-    let needsUpdate = false;
-
-    for (const userId of userIds) {
-      if (!usersMap[userId]) {
-        const user = await userService.getUserById(userId);
-        if (user) {
-          newUsers[userId] = user;
-          needsUpdate = true;
-        }
-      }
-    }
-
-    if (needsUpdate) {
-      setUsersMap(prev => ({ ...prev, ...newUsers }));
-    }
-  };
+  }, [posts, fetchUsers]);
 
   const handleLoadMore = () => {
     if (!currentUser || isLoading || !hasMore) return;
@@ -147,12 +129,6 @@ const FeedPage: React.FC = () => {
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
               <PostItem.Skeleton key={i} />
-            ))}
-          </div>
-        ) : loadingUsers && posts.length > 0 ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <PostItem.Skeleton key={`loading-users-${i}`} />
             ))}
           </div>
         ) : posts.length === 0 ? (

@@ -8,6 +8,7 @@ interface PostState {
   isLoading: boolean;
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
+  abortController: AbortController | null;
 
   fetchPosts: (currentUserId: string, friendIds: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[]) => () => void;
@@ -26,23 +27,37 @@ export const usePostStore = create<PostState>((set, get) => ({
   isLoading: false,
   hasMore: true,
   lastDoc: null,
+  abortController: null,
 
   fetchPosts: async (currentUserId: string, friendIds: string[], loadMore = false) => {
+    // Cancel request cũ nếu đang chạy
+    const { abortController: currentController } = get();
+    if (currentController) {
+      currentController.abort();
+    }
+
+    const newController = new AbortController();
+    set({ abortController: newController, isLoading: true });
+
     const { lastDoc, posts } = get();
-    set({ isLoading: true });
 
     try {
       const result = await postService.getFeed(currentUserId, friendIds, 10, loadMore ? lastDoc || undefined : undefined);
       
+      // Kiểm tra xem request có bị cancel không
+      if (newController.signal.aborted) return;
+
       set({
         posts: loadMore ? [...posts, ...result.posts] : result.posts,
         lastDoc: result.lastDoc,
         hasMore: result.posts.length === 10,
-        isLoading: false
+        isLoading: false,
+        abortController: null
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') return;
       console.error("Lỗi fetch posts", error);
-      set({ isLoading: false });
+      set({ isLoading: false, abortController: null });
     }
   },
 

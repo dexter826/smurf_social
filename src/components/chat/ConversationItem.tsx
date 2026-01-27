@@ -229,3 +229,14 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     </div>
   );
 };
+
+ConversationItem.Skeleton = () => (
+  <div className="flex items-center gap-3 px-4 py-3 animate-pulse">
+    <div className="w-12 h-12 rounded-full bg-bg-tertiary" />
+    <div className="flex-1">
+      <div className="h-4 bg-bg-tertiary rounded w-32 mb-2" />
+      <div className="h-3 bg-bg-tertiary rounded w-48" />
+    </div>
+    <div className="h-3 bg-bg-tertiary rounded w-12" />
+  </div>
+);

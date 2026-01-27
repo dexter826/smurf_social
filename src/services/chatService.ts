@@ -24,6 +24,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { db, storage } from '../firebase/config';
 import { Conversation, Message, MessageType } from '../types';
 import { userService } from './userService';
+import { batchGetUsers } from '../utils/batchUtils';
 
 export const chatService = {
   // ========== CONVERSATIONS ==========
@@ -81,28 +82,38 @@ export const chatService = {
     );
 
     return onSnapshot(q, async (snapshot) => {
-      const conversations = await Promise.all(
-        snapshot.docs.map(async (d) => {
-          const data = d.data();
-          const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
-          
-          const participants = await Promise.all(
-            otherParticipantIds.map((id: string) => userService.getUserById(id))
-          );
+      // Thu thập tất cả participant IDs
+      const allParticipantIds = new Set<string>();
+      snapshot.docs.forEach(d => {
+        const data = d.data();
+        data.participantIds.forEach((id: string) => {
+          if (id !== userId) allParticipantIds.add(id);
+        });
+      });
 
-          return {
-            ...data,
-            id: d.id,
-            participants: participants.filter(p => !!p),
-            updatedAt: data.updatedAt?.toDate() || new Date(),
-            createdAt: data.createdAt?.toDate() || new Date(),
-            lastMessage: data.lastMessage ? {
-              ...data.lastMessage,
-              timestamp: data.lastMessage.timestamp?.toDate() || new Date()
-            } : undefined
-          } as Conversation;
-        })
-      );
+      // Batch load tất cả users một lần
+      const usersMap = await batchGetUsers([...allParticipantIds]);
+
+      const conversations = snapshot.docs.map((d) => {
+        const data = d.data();
+        const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
+        
+        const participants = otherParticipantIds
+          .map((id: string) => usersMap[id])
+          .filter(p => !!p);
+
+        return {
+          ...data,
+          id: d.id,
+          participants,
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          createdAt: data.createdAt?.toDate() || new Date(),
+          lastMessage: data.lastMessage ? {
+            ...data.lastMessage,
+            timestamp: data.lastMessage.timestamp?.toDate() || new Date()
+          } : undefined
+        } as Conversation;
+      });
 
       callback(conversations);
     }, (error) => {
@@ -121,24 +132,35 @@ export const chatService = {
       );
       
       const querySnapshot = await getDocs(q);
-      const conversations = await Promise.all(
-        querySnapshot.docs.map(async (d) => {
-          const data = d.data();
-          const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
-          
-          const participants = await Promise.all(
-            otherParticipantIds.map((id: string) => userService.getUserById(id))
-          );
+      
+      // Thu thập tất cả participant IDs
+      const allParticipantIds = new Set<string>();
+      querySnapshot.docs.forEach(d => {
+        const data = d.data();
+        data.participantIds.forEach((id: string) => {
+          if (id !== userId) allParticipantIds.add(id);
+        });
+      });
 
-          return {
-            ...data,
-            id: d.id,
-            participants: participants.filter(p => !!p),
-            updatedAt: data.updatedAt?.toDate() || new Date(),
-            createdAt: data.createdAt?.toDate() || new Date(),
-          } as Conversation;
-        })
-      );
+      // Batch load tất cả users một lần
+      const usersMap = await batchGetUsers([...allParticipantIds]);
+
+      const conversations = querySnapshot.docs.map((d) => {
+        const data = d.data();
+        const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
+        
+        const participants = otherParticipantIds
+          .map((id: string) => usersMap[id])
+          .filter(p => !!p);
+
+        return {
+          ...data,
+          id: d.id,
+          participants,
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          createdAt: data.createdAt?.toDate() || new Date(),
+        } as Conversation;
+      });
 
       // Filter theo tên
       return conversations.filter(conv => {

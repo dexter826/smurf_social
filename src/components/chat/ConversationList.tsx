@@ -165,9 +165,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
       {/* Conversations List / Search Results */}
       <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-32">
-            <Spinner size="md" />
+        {isLoading && conversations.length === 0 ? (
+          <div className="p-2">
+            {[...Array(5)].map((_, i) => (
+              <ConversationItem.Skeleton key={i} />
+            ))}
           </div>
         ) : isSearchFocused ? (
           <SearchResults
