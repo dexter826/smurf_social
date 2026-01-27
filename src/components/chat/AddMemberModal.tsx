@@ -106,7 +106,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
           placeholder="Tìm bạn bè..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-bg-secondary"
+          className="bg-bg-secondary h-11"
         />
       </div>
 

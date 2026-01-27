@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Heart, Image as ImageIcon, Video, Play } from 'lucide-react';
-import { Avatar, UserAvatar, Button, Input, EmojiPicker, Loading, ConfirmDialog } from '../ui';
+import { Avatar, UserAvatar, Button, Input, EmojiPicker, Loading, ConfirmDialog, IconButton } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
 import { toast } from '../../store/toastStore';
 import { Post, Comment, User, Message } from '../../types';
@@ -263,11 +263,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     )}
                     <Button 
                       variant="ghost"
-                      isIconOnly
                       size="sm"
-                      rounded="full"
                       onClick={() => removeMedia(true)}
-                      className="absolute -top-1 -right-1 bg-black/50 text-white p-0.5 hover:bg-black/70 z-10 w-5 h-5"
+                      className="absolute -top-1 -right-1 bg-black/50 text-white hover:bg-black/70 z-10 w-5 h-5 rounded-full"
                       icon={<X size={12} />}
                     />
                   </div>
@@ -299,27 +297,23 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                             }}
                             disabled={isSubmitting}
                           />
-                          <Button
-                            variant="ghost"
+                          <IconButton
                             type="button"
-                            size="sm"
-                            isIconOnly
                             onClick={() => editFileInputRef.current?.click()}
-                            className="p-1 px-1.5 text-text-tertiary hover:text-primary"
+                            className="text-text-secondary hover:text-primary"
                             title="Thêm ảnh"
                             disabled={isSubmitting}
                             icon={<ImageIcon size={20} />}
-                          />
-                          <Button
-                            variant="ghost"
-                            type="button"
                             size="sm"
-                            isIconOnly
+                          />
+                          <IconButton
+                            type="button"
                             onClick={() => editVideoInputRef.current?.click()}
-                            className="p-1 px-1.5 text-text-tertiary hover:text-primary"
+                            className="text-text-secondary hover:text-primary"
                             title="Thêm video"
                             disabled={isSubmitting}
                             icon={<Video size={20} />}
+                            size="sm"
                           />
                         </div>
                       }
@@ -340,12 +334,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     />
                   <Button
                     variant="ghost"
-                    isIconOnly
                     size="sm"
-                    rounded="full"
                     onClick={() => handleUpdateComment(comment.id, comment)}
                     disabled={(!editingContent.trim() && !editingImagePreview && !editingVideoPreview) || isSubmitting}
-                    className="p-2 text-primary-500 hover:bg-primary-50"
+                    className="text-primary-500 hover:bg-primary-50 rounded-full"
                     icon={<Send size={18} />}
                   />
                   <Button
@@ -477,10 +469,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <Button 
               variant="ghost"
               size="sm"
-              isIconOnly
-              rounded="full"
               onClick={() => setReplyingTo(null)}
-              className="p-1 hover:bg-bg-tertiary"
+              className="hover:bg-bg-tertiary rounded-full"
               icon={<X size={14} />}
             />
           </div>
@@ -501,10 +491,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <Button 
               variant="ghost"
               size="sm"
-              isIconOnly
-              rounded="full"
               onClick={() => removeMedia()}
-              className="absolute -top-2 -right-2 bg-black/60 text-white p-1 hover:bg-black/80 shadow-lg z-10 w-6 h-6"
+              className="absolute -top-2 -right-2 bg-black/60 text-white hover:bg-black/80 shadow-lg z-10 w-6 h-6 rounded-full"
               icon={<X size={14} />}
             />
           </div>
@@ -539,27 +527,23 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     }}
                     disabled={isSubmitting}
                   />
-                  <Button
-                    variant="ghost"
+                  <IconButton
                     type="button"
-                    size="sm"
-                    isIconOnly
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-1 px-1.5 text-text-tertiary hover:text-primary"
+                    className="text-text-secondary hover:text-primary"
                     title="Thêm ảnh"
                     disabled={isSubmitting}
                     icon={<ImageIcon size={20} />}
-                  />
-                  <Button
-                    variant="ghost"
-                    type="button"
                     size="sm"
-                    isIconOnly
+                  />
+                  <IconButton
+                    type="button"
                     onClick={() => videoInputRef.current?.click()}
-                    className="p-1 px-1.5 text-text-tertiary hover:text-primary"
+                    className="text-text-secondary hover:text-primary"
                     title="Thêm video"
                     disabled={isSubmitting}
                     icon={<Video size={20} />}
+                    size="sm"
                   />
                 </div>
               }
@@ -583,9 +567,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               disabled={(!newComment.trim() && !selectedImage && !selectedVideo)}
               isLoading={isSubmitting}
               variant="primary"
-              rounded="full"
-              isIconOnly
-              className="w-10 h-10 flex-shrink-0 bg-primary-500 hover:bg-primary-600 shadow-sm active:scale-95"
+              className="w-10 h-10 flex-shrink-0 bg-primary-500 hover:bg-primary-600 shadow-sm active:scale-95 rounded-full"
               icon={<Send size={18} />}
             />
           </div>

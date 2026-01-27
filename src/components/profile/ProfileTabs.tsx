@@ -25,9 +25,8 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
             <Button
               key={tab.id}
               variant="ghost"
-              rounded="none"
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-3 text-sm transition-all relative h-auto border-b-2 ${
+              className={`px-4 py-3 text-sm transition-all relative border-b-2 rounded-none ${
                 activeTab === tab.id
                   ? 'text-primary border-primary font-bold'
                   : 'text-text-secondary border-transparent font-medium'

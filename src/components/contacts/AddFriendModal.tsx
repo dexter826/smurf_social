@@ -59,6 +59,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
               placeholder="Tìm theo tên, email hoặc số điện thoại..."
               icon={<Search size={18} />}
               containerClassName="flex-1"
+              className="h-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && handleSearch()}

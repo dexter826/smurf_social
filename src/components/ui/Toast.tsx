@@ -30,10 +30,8 @@ export const ToastContainer: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            isIconOnly
-            rounded="lg"
             onClick={() => removeToast(toast.id)}
-            className="shrink-0 p-1 text-text-tertiary h-auto"
+            className="shrink-0 text-text-tertiary"
             icon={<X size={16} />}
           />
         </div>

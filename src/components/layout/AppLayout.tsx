@@ -88,10 +88,8 @@ export const AppLayout: React.FC = () => {
         <div className="flex flex-col gap-2 mt-auto w-full items-center">
            <Button 
                 variant="ghost"
-                isIconOnly
-                rounded="xl"
                 onClick={toggleTheme} 
-                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all p-0"
+                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all rounded-xl"
                 title="Chế độ tối"
                 icon={mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
            />
@@ -110,10 +108,8 @@ export const AppLayout: React.FC = () => {
            </NavLink>
            <Button 
                 variant="ghost"
-                isIconOnly
-                rounded="xl"
                 onClick={() => setShowLogoutConfirm(true)} 
-                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all p-0" 
+                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all rounded-xl" 
                 title="Đăng xuất"
                 icon={<LogOut size={28} />}
            />

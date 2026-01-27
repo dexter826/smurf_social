@@ -60,10 +60,8 @@ export const Modal: React.FC<ModalProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            isIconOnly
-            rounded="full"
             onClick={onClose}
-            className="p-2 text-text-secondary"
+            className="text-text-secondary"
             icon={<X size={20} />}
           />
         </div>
@@ -168,16 +166,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <Button
             onClick={onClose}
             variant="secondary"
-            rounded="lg"
-            className="flex-1 py-2.5 px-4 text-sm font-medium text-text-secondary h-auto"
+            className="flex-1"
           >
             {cancelLabel}
           </Button>
           <Button
             onClick={handleConfirm}
             variant={variant === 'danger' ? 'danger' : 'primary'}
-            rounded="lg"
-            className="flex-1 py-2.5 px-4 text-sm font-medium h-auto"
+            className="flex-1"
           >
             {confirmLabel}
           </Button>

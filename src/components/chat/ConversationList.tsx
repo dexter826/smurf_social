@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Users, ArrowLeft, Archive, X, UserPlus } from 'lucide-react';
 import { Conversation, User } from '../../types';
-import { Input, Spinner, Dropdown, DropdownItem } from '../ui';
+import { Input, Spinner, Dropdown, DropdownItem, Button, IconButton } from '../ui';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
 
@@ -102,46 +102,50 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               value={searchTerm}
               onChange={handleSearchChange}
               onFocus={() => onSearchFocus?.(true)}
-              className="bg-bg-secondary text-sm pr-10"
+              className="bg-bg-secondary text-sm pr-10 h-11"
               containerClassName="flex-1"
             />
             {searchTerm && (
-              <button
+              <IconButton
                 onClick={() => {
                   setSearchTerm('');
                   onSearch('');
                 }}
-                className="absolute right-3 p-1 text-text-tertiary hover:text-text-secondary bg-bg-tertiary rounded-full transition-all"
-              >
-                <X size={12} />
-              </button>
+                className="absolute right-3 bg-bg-tertiary rounded-full"
+                icon={<X size={12} />}
+                size="sm"
+              />
             )}
           </div>
           {!isSearchFocused && onNewGroup && (
-            <button
+            <Button
               onClick={onNewGroup}
-              className="w-11 h-11 flex items-center justify-center bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors flex-shrink-0"
+              variant="primary"
+              size="md"
+              icon={<Users size={20} />}
               title="Tạo nhóm mới"
-            >
-              <Users size={20} />
-            </button>
+              className="flex-shrink-0"
+            />
           )}
           {isSearchFocused && (
-            <button
+            <Button
               onClick={handleBack}
-              className="px-2 py-1 text-sm font-medium text-primary hover:bg-primary-light rounded-lg transition-all flex-shrink-0"
+              variant="ghost"
+              size="md"
+              className="text-primary flex-shrink-0"
             >
               Hủy
-            </button>
+            </Button>
           )}
           {!isSearchFocused && onNewChat && (
-            <button
+            <Button
               onClick={onNewChat}
-              className="p-2.5 text-primary hover:bg-primary-light rounded-xl transition-all shadow-sm active:scale-95 flex-shrink-0"
+              variant="ghost"
+              size="md"
+              icon={<UserPlus size={20} />}
               title="Tạo cuộc trò chuyện mới"
-            >
-              <Users size={20} />
-            </button>
+              className="text-primary hover:bg-primary-light flex-shrink-0"
+            />
           )}
         </div>
       </div>

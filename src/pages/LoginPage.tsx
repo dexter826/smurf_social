@@ -129,8 +129,7 @@ const LoginPage: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => handleTabChange('login')}
-              rounded="none"
-              className={`flex-1 h-auto py-3 text-sm font-semibold transition-colors ${
+              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none ${
                 activeTab === 'login' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
@@ -139,8 +138,7 @@ const LoginPage: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => handleTabChange('register')}
-              rounded="none"
-              className={`flex-1 h-auto py-3 text-sm font-semibold transition-colors ${
+              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none ${
                 activeTab === 'register' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
@@ -229,9 +227,8 @@ const LoginPage: React.FC = () => {
                     variant="ghost"
                     type="button"
                     size="sm"
-                    isIconOnly
                     onClick={() => setShowPassword(!showPassword)}
-                    className="p-2 text-text-tertiary hover:text-text-secondary"
+                    className="text-text-tertiary hover:text-text-secondary"
                     icon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   />
                 }
@@ -251,9 +248,8 @@ const LoginPage: React.FC = () => {
                       variant="ghost"
                       type="button"
                       size="sm"
-                      isIconOnly
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="p-2 text-text-tertiary hover:text-text-secondary"
+                      className="text-text-tertiary hover:text-text-secondary"
                       icon={showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     />
                   }

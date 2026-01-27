@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import EmojiPickerReact, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
-import { Button } from './Button';
+import { IconButton } from './IconButton';
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
@@ -44,15 +44,14 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
-      <Button
+      <IconButton
         type="button"
-        variant="ghost"
-        isIconOnly
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`p-1.5 text-text-tertiary hover:text-primary transition-colors disabled:opacity-50 h-auto w-auto ${buttonClassName}`}
+        className={`text-text-secondary hover:text-primary ${buttonClassName}`}
         title="Emoji"
         icon={<Smile size={size} />}
+        size="sm"
       />
 
       {isOpen && (

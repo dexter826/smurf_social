@@ -36,13 +36,13 @@ export const Input: React.FC<InputProps> = ({
         <input
           id={inputId}
           className={`
-            block w-full h-11 rounded-xl transition-all outline-none sm:text-sm
+            block w-full rounded-xl transition-all outline-none sm:text-sm
             bg-bg-primary border border-border-light text-text-primary placeholder:text-text-tertiary
             focus:border-primary focus:ring-4 focus:ring-primary-light/30
             ${icon ? 'pl-11' : 'pl-4'} 
             ${rightElement ? 'pr-11' : 'pr-4'} 
             ${error ? 'border-error ring-4 ring-error/10' : ''} 
-            ${className}
+            ${className || 'h-11'}
           `}
           {...props}
         />

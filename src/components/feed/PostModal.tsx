@@ -139,10 +139,8 @@ export const PostModal: React.FC<PostModalProps> = ({
               <Button
                 type="button"
                 variant="ghost"
-                isIconOnly
-                rounded="full"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 transition-colors group"
+                className="transition-colors group rounded-full"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
                 icon={<ImageIcon className="text-[#22c55e] group-hover:scale-110 transition-transform" size={24} />}
@@ -150,10 +148,8 @@ export const PostModal: React.FC<PostModalProps> = ({
               <Button
                 type="button"
                 variant="ghost"
-                isIconOnly
-                rounded="full"
                 onClick={() => videoInputRef.current?.click()}
-                className="p-2 transition-colors group"
+                className="transition-colors group rounded-full"
                 title="Video"
                 disabled={isSubmitting || isUploading}
                 icon={<Video className="text-info group-hover:scale-110 transition-transform" size={24} />}
@@ -227,10 +223,8 @@ export const PostModal: React.FC<PostModalProps> = ({
                 <img src={url} alt="Upload" className="w-full h-40 object-cover rounded-xl" />
                 <Button
                   variant="ghost"
-                  isIconOnly
-                  rounded="full"
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-black/50 text-white p-1.5 shadow-lg opacity-0 group-hover:opacity-100 h-auto"
+                  className="absolute top-2 right-2 bg-black/50 text-white shadow-lg opacity-0 group-hover:opacity-100 rounded-full"
                   disabled={isSubmitting}
                   icon={<X size={16} />}
                 />
@@ -241,10 +235,8 @@ export const PostModal: React.FC<PostModalProps> = ({
                 <video src={url} className="w-full h-40 object-cover rounded-xl" controls />
                 <Button
                   variant="ghost"
-                  isIconOnly
-                  rounded="full"
                   onClick={() => handleRemoveVideo(index)}
-                  className="absolute top-2 right-2 bg-black/50 text-white p-1.5 shadow-lg opacity-0 group-hover:opacity-100 h-auto"
+                  className="absolute top-2 right-2 bg-black/50 text-white shadow-lg opacity-0 group-hover:opacity-100 rounded-full"
                   disabled={isSubmitting}
                   icon={<X size={16} />}
                 />

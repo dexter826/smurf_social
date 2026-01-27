@@ -89,13 +89,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  isIconOnly
-                  rounded="full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemoveFromHistory(item.id);
                   }}
-                  className="p-1.5 text-text-tertiary hover:opacity-100 opacity-0 group-hover:opacity-100 hover:bg-bg-tertiary"
+                  className="text-text-tertiary hover:opacity-100 opacity-0 group-hover:opacity-100 hover:bg-bg-tertiary rounded-full"
                   icon={<X size={14} />}
                 />
               </div>

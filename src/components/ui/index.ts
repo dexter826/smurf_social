@@ -2,6 +2,7 @@ export * from './Avatar';
 export * from './UserAvatar';
 export * from './UserStatusText';
 export * from './Button';
+export * from './IconButton';
 export * from './Input';
 export * from './Spinner';
 export * from './Skeleton';

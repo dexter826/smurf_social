@@ -48,31 +48,26 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
           <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
           <Button
             variant="secondary"
-            rounded="full"
             onClick={() => setShowCreateModal(true)}
-            className="flex-1 px-4 py-2.5 justify-start text-text-secondary font-medium border-none h-auto group"
+            className="flex-1 justify-start text-text-secondary font-medium border-none rounded-full"
           >
-            <span className="group-hover:scale-[1.02] transition-transform origin-left inline-block">
-              {currentUser.name} ơi, bạn đang nghĩ gì thế?
-            </span>
+            <span>{currentUser.name} ơi, bạn đang nghĩ gì thế?</span>
           </Button>
         </div>
         
         <div className="flex gap-2 pt-2 border-t border-divider">
           <Button
             variant="ghost"
-            rounded="lg"
             onClick={() => imageInputRef.current?.click()}
-            className="flex-1 gap-2 py-2.5 text-[15px] font-semibold text-text-secondary group h-auto"
+            className="flex-1 text-[15px] font-semibold text-text-secondary group"
             icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
           >
             Ảnh/Video
           </Button>
           <Button
             variant="ghost"
-            rounded="lg"
             onClick={() => videoInputRef.current?.click()}
-            className="flex-1 gap-2 py-2.5 text-[15px] font-semibold text-text-secondary group h-auto"
+            className="flex-1 text-[15px] font-semibold text-text-secondary group"
             icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
           >
             Video

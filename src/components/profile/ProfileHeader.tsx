@@ -72,8 +72,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             onClick={handleCoverClick}
             disabled={uploading}
             variant="ghost"
-            rounded="xl"
-            className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white px-4 py-2 hover:bg-black/50 transition-all flex items-center gap-2 border border-white/20 z-10 h-auto"
+            className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-all gap-2 border border-white/20 z-10 rounded-xl"
             icon={<Camera size={18} />}
           >
             <span>Chỉnh sửa ảnh bìa</span>
@@ -106,9 +105,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     onClick={handleAvatarClick}
                     disabled={uploading}
                     variant="secondary"
-                    rounded="full"
-                    isIconOnly
-                    className="absolute bottom-2 right-2 p-2 shadow-md border-2 border-bg-primary z-10"
+                    className="absolute bottom-2 right-2 shadow-md border-2 border-bg-primary z-10 rounded-full"
                     icon={<Camera size={20} />}
                   />
                 )}
@@ -136,29 +133,42 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-2 md:mb-2">
               {isOwnProfile ? (
-                <Button variant="secondary" onClick={onEditClick} className="rounded-xl px-4 h-11 border-border-medium text-text-primary hover:bg-bg-hover flex items-center gap-2">
-                  <Edit size={18} />
-                  <span>Chỉnh sửa thông tin</span>
+                <Button 
+                  variant="secondary" 
+                  onClick={onEditClick} 
+                  icon={<Edit size={18} />}
+                  className="border-border-medium text-text-primary hover:bg-bg-hover"
+                >
+                  Chỉnh sửa thông tin
                 </Button>
               ) : (
                 <>
                   {isFriend ? (
                     <>
-                      <Button onClick={onMessageClick} className="rounded-xl px-6 h-11 flex items-center gap-2 bg-primary-600 hover:bg-primary-700 shadow-md">
-                        <MessageCircle size={18} />
+                      <Button 
+                        onClick={onMessageClick} 
+                        icon={<MessageCircle size={18} />}
+                        className="bg-primary-600 hover:bg-primary-700 shadow-md"
+                      >
                         Nhắn tin
                       </Button>
-                      <Button variant="secondary" onClick={onFriendClick} className="rounded-xl px-4 h-11 border-primary-100 bg-primary-50 text-primary-600 hover:bg-primary-100">
-                        <UserCheck size={18} />
+                      <Button 
+                        variant="secondary" 
+                        onClick={onFriendClick} 
+                        icon={<UserCheck size={18} />}
+                        className="border-primary-100 bg-primary-50 text-primary-600 hover:bg-primary-100"
+                      >
                         Bạn bè
                       </Button>
                     </>
                   ) : (
-                    <Button onClick={onFriendClick} className="rounded-xl px-8 h-11 flex items-center gap-2 bg-primary-600 hover:bg-primary-700 shadow-md">
-                      <UserPlus size={18} />
+                    <Button 
+                      onClick={onFriendClick} 
+                      icon={<UserPlus size={18} />}
+                      className="bg-primary-600 hover:bg-primary-700 shadow-md"
+                    >
                       Kết bạn
                     </Button>
                   )}

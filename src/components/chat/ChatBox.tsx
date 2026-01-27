@@ -89,9 +89,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              isIconOnly
               onClick={onBack}
-              className="md:hidden p-2"
+              className="md:hidden"
               icon={<span>←</span>}
             />
           )}
@@ -112,21 +111,18 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         <div className="flex items-center gap-1">
           <Button 
             variant="ghost"
-            isIconOnly
-            className="p-2 text-primary"
+            className="text-primary"
             icon={<Phone size={20} />}
           />
           <Button 
             variant="ghost"
-            isIconOnly
-            className="p-2 text-primary"
+            className="text-primary"
             icon={<Video size={20} />}
           />
           <Button 
             onClick={onInfoClick}
             variant="ghost"
-            isIconOnly
-            className="p-2 text-text-secondary"
+            className="text-text-secondary"
             icon={<Info size={20} />}
           />
         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal } from 'lucide-react';
-import { EmojiPicker, Loading, Button } from '../ui';
+import { EmojiPicker, Loading, Button, IconButton } from '../ui';
 import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
 import { validateFileSize } from '../../utils/fileUtils';
@@ -376,17 +376,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         {/* More Actions Menu */}
         <div className="relative" ref={actionsMenuRef}>
 
-           <Button
+           <IconButton
              type="button"
-             variant={showActions ? 'primary' : 'ghost'}
-             rounded="full"
-             isIconOnly
              onClick={(e) => {
                e.stopPropagation();
                setShowActions(!showActions);
              }}
-             className={`p-2 transition-all ${showActions ? 'rotate-45' : 'text-primary'}`}
+             className={`transition-all ${showActions ? 'rotate-45 text-primary' : 'text-text-secondary hover:text-primary'}`}
              icon={<Plus size={24} />}
+             size="md"
            />
 
            {/* Popover Menu */}
@@ -394,35 +392,29 @@ export const ChatInput: React.FC<ChatInputProps> = ({
              <div
                className="absolute bottom-full left-0 mb-2 flex items-center gap-2 p-2 bg-bg-secondary rounded-xl shadow-lg border border-border-light animate-fade-in z-50"
              >
-               <Button
+               <IconButton
                   type="button"
-                  variant="ghost"
-                  rounded="full"
-                  isIconOnly
                   onClick={() => { imageInputRef.current?.click(); setShowActions(false); }}
-                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light"
+                  className="text-text-secondary hover:text-primary"
                   title="Gửi ảnh"
                   icon={<ImageIcon size={20} />}
+                  size="sm"
                />
-               <Button
+               <IconButton
                   type="button"
-                  variant="ghost"
-                  rounded="full"
-                  isIconOnly
                   onClick={() => { videoInputRef.current?.click(); setShowActions(false); }}
-                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light"
+                  className="text-text-secondary hover:text-primary"
                   title="Gửi video"
                   icon={<Video size={20} />}
+                  size="sm"
                />
-               <Button
+               <IconButton
                   type="button"
-                  variant="ghost"
-                  rounded="full"
-                  isIconOnly
                   onClick={() => { fileInputRef.current?.click(); setShowActions(false); }}
-                  className="p-2 text-text-secondary hover:text-primary hover:bg-primary-light"
+                  className="text-text-secondary hover:text-primary"
                   title="Gửi file"
                   icon={<Paperclip size={20} />}
+                  size="sm"
                />
              </div>
            )}
@@ -477,11 +469,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   <Button
                      type="button"
                      variant="primary"
-                     rounded="full"
-                     isIconOnly
                      size="sm"
                      onClick={stopRecording}
-                     className="p-1.5"
+                     className="rounded-full"
                      icon={<Square size={16} fill="currentColor" />}
                   />
               </div>
@@ -504,15 +494,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             />
             <div className="absolute right-2 bottom-1.5 flex items-center gap-1">
               {/* Voice Button inside Input */}
-               <Button
+               <IconButton
                   type="button"
-                  variant="ghost" 
-                  isIconOnly
                   onClick={startRecording}
                   disabled={disabled || isSending || isRecording}
-                  className="p-1.5 text-text-secondary hover:text-primary transition-colors h-auto w-auto"
+                  className="text-text-secondary hover:text-primary"
                   title="Ghi âm"
                   icon={<Mic size={22} />}
+                  size="sm"
                />
 
               <EmojiPicker
@@ -543,9 +532,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           disabled={disabled || (!inputText.trim() && selectedFiles.length === 0)}
           isLoading={isSending}
           variant={(inputText.trim() || selectedFiles.length > 0) ? 'primary' : 'secondary'}
-          rounded="full"
-          isIconOnly
-          className={`w-10 h-10 shadow-sm active:scale-95 ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-50 cursor-not-allowed'}`}
+          className={`w-10 h-10 shadow-sm active:scale-95 rounded-full ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-50 cursor-not-allowed'}`}
           title="Gửi"
           icon={<Send size={20} className={inputText.trim() || selectedFiles.length > 0 ? 'fill-current' : ''} />}
         />

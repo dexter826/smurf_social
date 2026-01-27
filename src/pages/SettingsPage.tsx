@@ -55,10 +55,8 @@ const SettingsPage: React.FC = () => {
       <header className="flex items-center gap-3 px-4 py-4 border-b border-border-light bg-bg-primary">
         <Button
           variant="ghost"
-          isIconOnly
-          rounded="full"
           onClick={() => navigate(-1)}
-          className="p-2 -ml-2 md:hidden"
+          className="-ml-2 md:hidden rounded-full"
           icon={<ChevronLeft size={24} className="text-text-primary" />}
         />
         <h1 className="text-xl font-bold text-text-primary">Cài đặt</h1>
@@ -108,9 +106,8 @@ const SettingsPage: React.FC = () => {
                   <Button
                     variant="secondary"
                     size="sm"
-                    rounded="lg"
                     onClick={() => setUnblockUserId(user.id)}
-                    className="flex items-center gap-2 px-3 py-2 text-primary hover:bg-primary-hover hover:text-white"
+                    className="gap-2 px-3 py-2 text-primary hover:bg-primary-hover hover:text-white"
                     icon={<UserCheck size={16} />}
                   >
                     <span className="hidden sm:inline">Bỏ chặn</span>

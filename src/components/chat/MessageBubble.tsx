@@ -131,10 +131,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               <div className="absolute top-0 right-full mr-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
-                  isIconOnly
-                  rounded="full"
                   onClick={() => setShowMenu(!showMenu)}
-                  className="p-1 hover:bg-bg-hover"
+                  className="hover:bg-bg-hover rounded-full"
                   icon={<MoreVertical size={14} />}
                 />
 
@@ -147,12 +145,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     <div className="absolute right-0 top-8 z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-32">
                       <Button
                         variant="ghost"
-                        rounded="none"
                         onClick={() => {
                           setShowDeleteConfirm(true);
                           setShowMenu(false);
                         }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error flex items-center gap-2 transition-colors h-auto"
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error gap-2 transition-colors rounded-none"
                         icon={<Trash2 size={14} />}
                       >
                         Xóa
@@ -197,9 +194,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           />
           <Button
             variant="ghost"
-            isIconOnly
-            rounded="full"
-            className="absolute top-4 right-4 text-white text-2xl hover:text-text-tertiary p-2"
+            className="absolute top-4 right-4 text-white text-2xl hover:text-text-tertiary rounded-full"
             onClick={() => setShowFullImage(false)}
             icon={<span>×</span>}
           />
