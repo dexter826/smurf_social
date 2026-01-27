@@ -24,6 +24,8 @@ interface ChatState {
   sendTextMessage: (conversationId: string, senderId: string, content: string) => Promise<void>;
   sendImageMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   sendFileMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
+  sendVideoMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
+  sendVoiceMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   markAsRead: (conversationId: string, userId: string) => Promise<void>;
   markAsDelivered: (conversationId: string, userId: string) => Promise<void>;
   deleteMessage: (messageId: string, fileUrl?: string) => Promise<void>;
@@ -178,6 +180,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
       await chatService.sendFileMessage(conversationId, senderId, file);
     } catch (error) {
       console.error("Lỗi gửi file", error);
+      throw error;
+    }
+  },
+
+  sendVideoMessage: async (conversationId: string, senderId: string, file: File) => {
+    try {
+      await chatService.sendVideoMessage(conversationId, senderId, file);
+    } catch (error) {
+      console.error("Lỗi gửi video", error);
+      throw error;
+    }
+  },
+
+  sendVoiceMessage: async (conversationId: string, senderId: string, file: File) => {
+    try {
+      await chatService.sendVoiceMessage(conversationId, senderId, file);
+    } catch (error) {
+      console.error("Lỗi gửi voice", error);
       throw error;
     }
   },

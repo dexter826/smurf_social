@@ -404,6 +404,120 @@ export const chatService = {
   },
 
   /**
+   * Upload và gửi video message
+   */
+  sendVideoMessage: async (
+    conversationId: string,
+    senderId: string,
+    file: File
+  ): Promise<void> => {
+    try {
+      const timestamp = Date.now();
+      const fileRef = ref(storage, `chats/${conversationId}/${timestamp}_${file.name}`);
+      await uploadBytes(fileRef, file);
+      const videoUrl = await getDownloadURL(fileRef);
+
+      const messageData = {
+        conversationId,
+        senderId,
+        content: videoUrl,
+        type: 'video' as MessageType,
+        fileUrl: videoUrl,
+        timestamp: serverTimestamp(),
+        readBy: [senderId],
+        deliveredAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, 'messages'), messageData);
+
+      // Cập nhật conversation
+      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationSnap = await getDoc(conversationRef);
+      
+      if (conversationSnap.exists()) {
+        const participantIds = conversationSnap.data().participantIds || [];
+        const unreadCount = conversationSnap.data().unreadCount || {};
+        
+        participantIds.forEach((pid: string) => {
+          if (pid !== senderId) {
+            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
+          }
+        });
+
+        await updateDoc(conversationRef, {
+          lastMessage: {
+            ...messageData,
+            timestamp: new Date(),
+            content: '🎥 Video'
+          },
+          unreadCount,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi gửi video", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Upload và gửi voice message
+   */
+  sendVoiceMessage: async (
+    conversationId: string,
+    senderId: string,
+    file: File
+  ): Promise<void> => {
+    try {
+      const timestamp = Date.now();
+      const fileRef = ref(storage, `chats/${conversationId}/${timestamp}_${file.name}`);
+      await uploadBytes(fileRef, file);
+      const voiceUrl = await getDownloadURL(fileRef);
+
+      const messageData = {
+        conversationId,
+        senderId,
+        content: voiceUrl,
+        type: 'voice' as MessageType,
+        fileUrl: voiceUrl,
+        timestamp: serverTimestamp(),
+        readBy: [senderId],
+        deliveredAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, 'messages'), messageData);
+
+      // Cập nhật conversation
+      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationSnap = await getDoc(conversationRef);
+      
+      if (conversationSnap.exists()) {
+        const participantIds = conversationSnap.data().participantIds || [];
+        const unreadCount = conversationSnap.data().unreadCount || {};
+        
+        participantIds.forEach((pid: string) => {
+          if (pid !== senderId) {
+            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
+          }
+        });
+
+        await updateDoc(conversationRef, {
+          lastMessage: {
+            ...messageData,
+            timestamp: new Date(),
+            content: '🎤 Tin nhắn thoại'
+          },
+          unreadCount,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi gửi voice", error);
+      throw error;
+    }
+  },
+
+  /**
    * Đánh dấu messages là đã nhận (Delivered)
    */
   markMessagesAsDelivered: async (conversationId: string, userId: string): Promise<void> => {

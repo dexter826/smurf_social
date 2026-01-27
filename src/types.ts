@@ -37,7 +37,7 @@ export interface FriendRequest {
   updatedAt: Date;
 }
 
-export type MessageType = 'text' | 'image' | 'video' | 'file' | 'sticker';
+export type MessageType = 'text' | 'image' | 'video' | 'file' | 'voice';
 
 export interface Message {
   id: string;

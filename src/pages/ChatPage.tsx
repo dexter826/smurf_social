@@ -21,6 +21,8 @@ const ChatPage: React.FC = () => {
     sendTextMessage,
     sendImageMessage,
     sendFileMessage,
+    sendVideoMessage,
+    sendVoiceMessage,
     markAsRead,
     markAsDelivered,
     setTyping,
@@ -137,6 +139,16 @@ const ChatPage: React.FC = () => {
     await sendFileMessage(selectedConversationId, currentUser.id, file);
   };
 
+  const handleSendVideo = async (file: File) => {
+    if (!selectedConversationId || !currentUser) return;
+    await sendVideoMessage(selectedConversationId, currentUser.id, file);
+  };
+
+  const handleSendVoice = async (file: File) => {
+    if (!selectedConversationId || !currentUser) return;
+    await sendVoiceMessage(selectedConversationId, currentUser.id, file);
+  };
+
   const handleTyping = async (isTyping: boolean) => {
     if (!selectedConversationId || !currentUser) return;
     await setTyping(selectedConversationId, currentUser.id, isTyping);
@@ -213,6 +225,8 @@ const ChatPage: React.FC = () => {
               onSendText={handleSendText}
               onSendImage={handleSendImage}
               onSendFile={handleSendFile}
+              onSendVideo={handleSendVideo}
+              onSendVoice={handleSendVoice}
               onTyping={handleTyping}
             />
           </>
