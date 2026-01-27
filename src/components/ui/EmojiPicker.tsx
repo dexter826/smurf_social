@@ -50,7 +50,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         isIconOnly
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`p-1.5 text-text-tertiary hover:text-primary transition-colors disabled:opacity-50 ${buttonClassName} h-auto w-auto`}
+        className={`p-1.5 text-text-tertiary hover:text-primary transition-colors disabled:opacity-50 h-auto w-auto ${buttonClassName}`}
         title="Emoji"
         icon={<Smile size={size} />}
       />

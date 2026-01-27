@@ -531,7 +531,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   }, 0);
                 }}
                 disabled={disabled || isSending}
-                buttonClassName="p-1.5 !text-text-secondary hover:text-primary"
+                buttonClassName="p-1.5 text-text-secondary hover:text-primary"
               />
             </div>
           </div>

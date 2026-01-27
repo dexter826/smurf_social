@@ -16,6 +16,7 @@ interface SelectProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  openUp?: boolean;
 }
 
 export const Select: React.FC<SelectProps> = ({
@@ -26,7 +27,8 @@ export const Select: React.FC<SelectProps> = ({
   error,
   placeholder = 'Chọn một tùy chọn',
   disabled = false,
-  className = ''
+  className = '',
+  openUp: forceOpenUp
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
@@ -34,13 +36,14 @@ export const Select: React.FC<SelectProps> = ({
   const selectedOption = options.find(opt => opt.value === value);
 
   useEffect(() => {
-    if (isOpen && containerRef.current) {
+    if (isOpen && containerRef.current && forceOpenUp === undefined) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      // Nếu không gian bên dưới còn ít hơn 250px thì mở ngược lên
       setOpenUp(spaceBelow < 250);
+    } else if (forceOpenUp !== undefined) {
+      setOpenUp(forceOpenUp);
     }
-  }, [isOpen]);
+  }, [isOpen, forceOpenUp]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

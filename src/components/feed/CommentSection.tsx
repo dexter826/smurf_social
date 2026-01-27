@@ -437,7 +437,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => setCommentToDelete(comment.id)}
-                      className="hover:text-error text-red-400 p-0 h-auto font-normal"
+                      className="text-error hover:text-error p-0 h-auto font-normal"
                     >
                       Xóa
                     </Button>

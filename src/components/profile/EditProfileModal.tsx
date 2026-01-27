@@ -138,6 +138,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 onChange={(val) => setFormData({ ...formData, location: val })}
                 options={provinces}
                 placeholder="Chọn địa điểm"
+                openUp
               />
             </div>
 
