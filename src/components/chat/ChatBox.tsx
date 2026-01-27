@@ -79,7 +79,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     .join(', ');
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
+    <div className="relative flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
       {/* Header */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 h-[72px] border-b border-border-light bg-bg-primary">
         <div className="flex items-center gap-3 flex-1">
@@ -167,22 +167,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               </div>
             ))}
 
-            {/* Typing Indicator */}
-            {typingUsersNames && (
-              <div className="flex items-center gap-2 text-sm text-text-secondary ml-11">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-                <span>{typingUsersNames} đang nhập...</span>
-              </div>
-            )}
-
             <div ref={messagesEndRef} />
           </div>
         )}
       </div>
+
+      {/* Typing Indicator - Simple Text Bottom Left */}
+      {typingUsers.filter(uid => uid !== currentUserId).length > 0 && (
+        <div className="absolute bottom-2 left-4 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <span className="text-xs text-text-tertiary italic">Đang soạn tin...</span>
+        </div>
+      )}
     </div>
   );
 };

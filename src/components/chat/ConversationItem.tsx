@@ -98,13 +98,27 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 
         <div className="flex items-center justify-between gap-2">
           <p className={`text-sm truncate flex-1 ${unreadCount > 0 ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
-            <span className={`truncate text-[13px] ${unreadCount > 0 ? 'font-bold text-text-primary' : 'text-text-tertiary'}`}>
-              {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
-            </span>
+            {(() => {
+              const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
+              
+              if (typingUserIds.length > 0) {
+                return (
+                  <span className="text-primary italic text-[13px]">
+                    Đang soạn tin...
+                  </span>
+                );
+              }
+
+              return (
+                <span className={`truncate text-[13px] ${unreadCount > 0 ? 'font-bold text-text-primary' : 'text-text-tertiary'}`}>
+                  {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
+                </span>
+              );
+            })()}
           </p>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {isLastMessageMine && (
+            {isLastMessageMine && (conversation.typingUsers || []).filter(id => id !== currentUserId).length === 0 && (
               <span className="text-[11px] font-medium text-text-tertiary whitespace-nowrap">
                 {isLastMessageRead 
                   ? 'Đã xem'
@@ -114,7 +128,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                 }
               </span>
             )}
-
+            
             {unreadCount > 0 && (
               <span className="flex-shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
