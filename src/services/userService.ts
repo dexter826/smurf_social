@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { User, UserStatus } from '../types';
@@ -12,7 +12,13 @@ export const userService = {
     try {
       const userDoc = await getDoc(doc(db, 'users', id));
       if (userDoc.exists()) {
-        return userDoc.data() as User;
+        const data = userDoc.data();
+        return {
+          ...data,
+          id: userDoc.id,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+        } as User;
       }
       return undefined;
     } catch (error) {
@@ -24,7 +30,10 @@ export const userService = {
   updateUserStatus: async (userId: string, status: UserStatus): Promise<void> => {
     try {
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { status });
+      await updateDoc(userRef, { 
+        status,
+        lastSeen: serverTimestamp()
+      });
     } catch (error) {
       console.error("Lỗi cập nhật trạng thái", error);
     }

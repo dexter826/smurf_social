@@ -12,6 +12,7 @@ interface UserAvatarProps {
   initialStatus?: UserStatus;
   className?: string;
   isGroup?: boolean;
+  showStatus?: boolean;
 }
 
 export const UserAvatar: React.FC<UserAvatarProps> = ({
@@ -21,7 +22,8 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   size,
   initialStatus,
   className,
-  isGroup
+  isGroup,
+  showStatus = true
 }) => {
   const [onlineStatus, setOnlineStatus] = useState<UserStatus | undefined>(initialStatus);
 
@@ -44,7 +46,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
       src={src}
       name={name}
       size={size}
-      status={onlineStatus}
+      status={showStatus ? onlineStatus : undefined}
       className={className}
       isGroup={isGroup}
     />

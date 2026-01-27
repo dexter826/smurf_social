@@ -95,7 +95,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           {conversation.isGroup ? (
             <Avatar src={avatarSrc} name={chatName} size="md" isGroup />
           ) : (
-            <UserAvatar userId={partner?.id!} src={avatarSrc} name={chatName} size="md" initialStatus={partner?.status} />
+            <UserAvatar userId={partner?.id!} src={avatarSrc} name={chatName} size="md" initialStatus={partner?.status} showStatus={false} />
           )}
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-bold text-text-primary truncate">{chatName}</h2>

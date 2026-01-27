@@ -18,6 +18,7 @@ export interface User {
   friendIds?: string[];
   createdAt?: Date;
   coverImage?: string;
+  lastSeen?: Date;
 }
 
 export enum FriendRequestStatus {

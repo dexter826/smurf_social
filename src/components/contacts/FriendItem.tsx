@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageCircle, MoreVertical, UserMinus, User as UserIcon } from 'lucide-react';
-import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
+import { Avatar, UserAvatar, UserStatusText, Button, Dropdown, DropdownItem } from '../ui';
 import { User, UserStatus } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,6 +34,7 @@ export const FriendItem: React.FC<FriendItemProps> = ({
         <UserAvatar userId={friend.id} src={friend.avatar} name={friend.name} size="md" initialStatus={friend.status} />
         <div>
           <h3 className="font-semibold text-text-primary">{friend.name}</h3>
+          <UserStatusText userId={friend.id} className="text-xs text-text-tertiary" initialStatus={friend.status} />
         </div>
       </div>
 
