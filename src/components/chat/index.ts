@@ -4,6 +4,7 @@ export { ConversationList } from './ConversationList';
 export { ChatBox } from './ChatBox';
 export { ChatInput } from './ChatInput';
 export { ChatDetailsPanel } from './ChatDetailsPanel';
+export { SearchResults } from './SearchResults';
 export { ChatDetailsHeader } from './ChatDetailsHeader';
 export { ChatDetailsMemberList } from './ChatDetailsMemberList';
 export { ChatDetailsMedia } from './ChatDetailsMedia';

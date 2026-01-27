@@ -83,6 +83,33 @@ export const userService = {
     }
   },
 
+  searchFriends: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', currentUserId));
+      if (!userDoc.exists()) return [];
+      
+      const friendIds = (userDoc.data() as User).friendIds || [];
+      if (friendIds.length === 0) return [];
+
+      // Vì Firestore query 'in' giới hạn 10 items, ta nên lấy toàn bộ hoặc filter phía client nếu số lượng bạn nhỏ
+      // Ở đây ta dùng giải pháp lấy thông tin và filter client cho đơn giản và chính xác
+      const friends: User[] = [];
+      for (const friendId of friendIds) {
+        const friend = await userService.getUserById(friendId);
+        if (friend && (
+          friend.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        )) {
+          friends.push(friend);
+        }
+      }
+      return friends;
+    } catch (error) {
+      console.error("Lỗi tìm kiếm bạn bè", error);
+      return [];
+    }
+  },
+
   updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
     try {
       const userRef = doc(db, 'users', userId);

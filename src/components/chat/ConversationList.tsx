@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Search, Users, ArrowLeft, Archive } from 'lucide-react';
-import { Conversation } from '../../types';
+import { Search, Users, ArrowLeft, Archive, X } from 'lucide-react';
+import { Conversation, User } from '../../types';
 import { Input, Spinner } from '../ui';
 import { ConversationItem } from './ConversationItem';
+import { SearchResults } from './SearchResults';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -22,6 +23,16 @@ interface ConversationListProps {
   viewMode?: 'normal' | 'archived';
   archivedCount?: number;
   onViewModeChange?: (mode: 'normal' | 'archived') => void;
+  isSearchFocused?: boolean;
+  onSearchFocus?: (focused: boolean) => void;
+  onSelectUser?: (user: User) => void;
+  searchResults?: {
+    conversations: Conversation[];
+    users: User[];
+  };
+  searchHistory?: (Conversation | User)[];
+  onRemoveFromHistory?: (id: string) => void;
+  onClearHistory?: () => void;
 }
 
 export const ConversationList: React.FC<ConversationListProps> = ({
@@ -41,7 +52,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onNewChat,
   viewMode = 'normal',
   archivedCount = 0,
-  onViewModeChange
+  onViewModeChange,
+  isSearchFocused = false,
+  onSearchFocus,
+  onSelectUser,
+  searchResults = { conversations: [], users: [] },
+  searchHistory = [],
+  onRemoveFromHistory,
+  onClearHistory
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -51,7 +69,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     onSearch(value);
   };
 
-  // Filter bỏ cuộc trò chuyện với người bị chặn, sau đó sắp xếp
+  const handleBack = () => {
+    setSearchTerm('');
+    onSearch('');
+    onSearchFocus?.(false);
+  };
+
+  // Sắp xếp và lọc người dùng bị chặn
   const sortedConversations = [...conversations]
     .filter(conv => {
       if (conv.isGroup) return true;
@@ -69,15 +93,37 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       {/* Header */}
       <div className="flex-shrink-0 px-4 h-[72px] flex items-center border-b border-border-light">
         <div className="flex items-center gap-3 flex-1">
-          <Input
-            icon={<Search size={16} />}
-            placeholder="Tìm kiếm..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="bg-bg-secondary text-sm"
-            containerClassName="flex-1"
-          />
-          {onNewChat && (
+          <div className="relative flex-1 flex items-center">
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Tìm kiếm..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onFocus={() => onSearchFocus?.(true)}
+              className="bg-bg-secondary text-sm pr-10"
+              containerClassName="flex-1"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  onSearch('');
+                }}
+                className="absolute right-3 p-1 text-text-tertiary hover:text-text-secondary bg-bg-tertiary rounded-full transition-all"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+          {isSearchFocused && (
+            <button
+              onClick={handleBack}
+              className="px-2 py-1 text-sm font-medium text-primary hover:bg-primary-light rounded-lg transition-all flex-shrink-0"
+            >
+              Hủy
+            </button>
+          )}
+          {!isSearchFocused && onNewChat && (
             <button
               onClick={onNewChat}
               className="p-2.5 text-primary hover:bg-primary-light rounded-xl transition-all shadow-sm active:scale-95 flex-shrink-0"
@@ -89,38 +135,58 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
-        <button
-          onClick={() => onViewModeChange?.('normal')}
-          className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
-            viewMode === 'normal' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-          }`}
-        >
-          Tất cả
-          {viewMode === 'normal' && (
-            <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
-          )}
-        </button>
-        <button
-          onClick={() => onViewModeChange?.('archived')}
-          className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
-            viewMode === 'archived' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-          }`}
-        >
-          Lưu trữ
-          {viewMode === 'archived' && (
-            <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
-          )}
-        </button>
-      </div>
+      {/* Navigation Tabs - Hidden when searching or has search term */}
+      {!isSearchFocused && !searchTerm && (
+        <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
+          <button
+            onClick={() => onViewModeChange?.('normal')}
+            className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
+              viewMode === 'normal' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Tất cả
+            {viewMode === 'normal' && (
+              <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
+            )}
+          </button>
+          <button
+            onClick={() => onViewModeChange?.('archived')}
+            className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
+              viewMode === 'archived' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Lưu trữ
+            {viewMode === 'archived' && (
+              <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
+            )}
+          </button>
+        </div>
+      )}
 
-      {/* Conversations List */}
+      {/* Conversations List / Search Results */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <Spinner size="md" />
           </div>
+        ) : isSearchFocused ? (
+          <SearchResults
+            searchTerm={searchTerm}
+            results={searchResults}
+            currentUserId={currentUserId}
+            selectedId={selectedId}
+            history={searchHistory}
+            onSelectConversation={(id) => {
+              onSelectConversation(id);
+              onSearchFocus?.(false);
+            }}
+            onSelectUser={(user) => {
+              onSelectUser?.(user);
+              onSearchFocus?.(false);
+            }}
+            onRemoveFromHistory={onRemoveFromHistory || (() => {})}
+            onClearHistory={onClearHistory || (() => {})}
+          />
         ) : sortedConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">

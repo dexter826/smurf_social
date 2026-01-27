@@ -1,0 +1,140 @@
+import React from 'react';
+import { Search, X, Clock } from 'lucide-react';
+import { Conversation, User } from '../../types';
+
+interface SearchResultsProps {
+  searchTerm: string;
+  results: {
+    conversations: Conversation[];
+    users: User[];
+  };
+  currentUserId: string;
+  selectedId: string | null;
+  history: (Conversation | User)[];
+  onSelectConversation: (id: string) => void;
+  onSelectUser: (user: User) => void;
+  onRemoveFromHistory: (id: string) => void;
+  onClearHistory: () => void;
+}
+
+export const SearchResults: React.FC<SearchResultsProps> = ({
+  searchTerm,
+  results,
+  currentUserId,
+  selectedId,
+  history,
+  onSelectConversation,
+  onSelectUser,
+  onRemoveFromHistory,
+  onClearHistory
+}) => {
+  const isHistoryEmpty = history.length === 0;
+
+  if (!searchTerm) {
+    if (isHistoryEmpty) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-10">
+          <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4">
+            <Search size={24} className="text-text-tertiary" />
+          </div>
+          <p className="text-sm text-text-secondary">
+            Tìm kiếm cuộc trò chuyện hoặc bạn bè
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col p-2">
+        <div className="flex items-center justify-between px-2 py-2 mb-1">
+          <span className="text-xs font-bold text-text-tertiary uppercase tracking-wider">
+            Tìm kiếm gần đây
+          </span>
+          <button 
+            onClick={onClearHistory}
+            className="text-xs font-medium text-primary hover:underline transition-all"
+          >
+            Xóa lịch sử
+          </button>
+        </div>
+        <div className="space-y-1">
+          {history.map((item) => {
+            const isConversation = 'participantIds' in item;
+            const displayName = isConversation 
+              ? (item.isGroup ? item.groupName : item.participants.find(p => p.id !== currentUserId)?.name)
+              : item.name;
+            const avatar = isConversation
+              ? (item.isGroup ? item.groupIcon : item.participants.find(p => p.id !== currentUserId)?.avatar)
+              : item.avatar;
+
+            return (
+              <div
+                key={item.id}
+                className="group flex items-center gap-3 px-3 py-2 hover:bg-bg-secondary cursor-pointer transition-all rounded-xl relative"
+                onClick={() => isConversation ? onSelectConversation(item.id) : onSelectUser(item as User)}
+              >
+                <img
+                  src={avatar || `https://i.pravatar.cc/150?u=${item.id}`}
+                  alt={displayName || ''}
+                  className="w-10 h-10 rounded-full object-cover ring-1 ring-border-light flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-text-primary truncate">
+                    {displayName}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveFromHistory(item.id);
+                  }}
+                  className="p-1.5 text-text-tertiary hover:text-text-secondary opacity-0 group-hover:opacity-100 transition-all hover:bg-bg-tertiary rounded-full"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (results.users.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-10">
+        <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4">
+          <Search size={24} className="text-text-tertiary" />
+        </div>
+        <p className="text-sm text-text-secondary">
+          {searchTerm ? 'Không tìm thấy bạn bè phù hợp' : 'Nhập tên hoặc email bạn bè'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col pb-4">
+      <div className="mt-2">
+        {results.users.map((user) => (
+          <div
+            key={user.id}
+            onClick={() => onSelectUser(user)}
+            className="flex items-center gap-3 px-4 py-3 hover:bg-bg-secondary cursor-pointer transition-all active:bg-bg-tertiary rounded-lg mx-2"
+          >
+            <img
+              src={user.avatar || `https://i.pravatar.cc/150?u=${user.id}`}
+              alt={user.name}
+              className="w-10 h-10 rounded-full object-cover ring-1 ring-border-light"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-text-primary truncate">
+                {user.name}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

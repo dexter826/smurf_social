@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { Conversation, Message } from '../types';
+import { Conversation, Message, User } from '../types';
 import { chatService } from '../services/chatService';
+import { userService } from '../services/userService';
 
 interface ChatState {
   conversations: Conversation[];
@@ -9,6 +10,12 @@ interface ChatState {
   typingUsers: Record<string, string[]>;
   isLoading: boolean;
   searchTerm: string;
+  isSearchFocused: boolean;
+  searchResults: {
+    conversations: Conversation[];
+    users: User[];
+  };
+  searchHistory: (Conversation | User)[];
 
   // Conversations
   subscribeToConversations: (userId: string) => () => void;
@@ -20,6 +27,10 @@ interface ChatState {
   toggleArchive: (conversationId: string, archived: boolean) => Promise<void>;
   toggleMarkUnread: (conversationId: string, markedUnread: boolean) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
+  setSearchFocused: (focused: boolean) => void;
+  addToSearchHistory: (item: Conversation | User) => void;
+  removeFromSearchHistory: (itemId: string) => void;
+  clearSearchHistory: () => void;
 
   // Messages
   subscribeToMessages: (conversationId: string) => () => void;
@@ -52,6 +63,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   typingUsers: {},
   isLoading: false,
   searchTerm: '',
+  isSearchFocused: false,
+  searchResults: {
+    conversations: [],
+    users: []
+  },
+  searchHistory: [],
 
   // ========== CONVERSATIONS ==========
 
@@ -85,13 +102,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
     
     try {
       if (!term.trim()) {
-        // Nếu search rỗng, không làm gì (dùng subscribe)
-        set({ isLoading: false });
+        set({ searchResults: { conversations: [], users: [] }, isLoading: false });
         return;
       }
 
-      const results = await chatService.searchConversations(userId, term);
-      set({ conversations: results, isLoading: false });
+      const friendResults = await userService.searchFriends(term, userId);
+
+      set({ 
+        searchResults: { 
+          conversations: [], 
+          users: friendResults 
+        }, 
+        isLoading: false 
+      });
     } catch (error) {
       console.error("Lỗi search", error);
       set({ isLoading: false });
@@ -164,6 +187,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       set((state) => ({
         conversations: state.conversations.filter(c => c.id !== conversationId),
+        searchResults: {
+          ...state.searchResults,
+          conversations: state.searchResults.conversations.filter(c => c.id !== conversationId)
+        },
         selectedConversationId: state.selectedConversationId === conversationId 
           ? null 
           : state.selectedConversationId
@@ -172,6 +199,31 @@ export const useChatStore = create<ChatState>((set, get) => ({
       console.error("Lỗi xóa conversation", error);
       throw error;
     }
+  },
+
+  setSearchFocused: (focused: boolean) => {
+    set({ isSearchFocused: focused });
+    if (!focused) {
+      set({ searchTerm: '', searchResults: { conversations: [], users: [] } });
+    }
+  },
+
+  addToSearchHistory: (item: Conversation | User) => {
+    set((state) => {
+      const filtered = state.searchHistory.filter(h => h.id !== item.id);
+      const newHistory = [item, ...filtered].slice(0, 10); // Giới hạn 10 mục tìm kiếm gần nhất
+      return { searchHistory: newHistory };
+    });
+  },
+
+  removeFromSearchHistory: (itemId: string) => {
+    set((state) => ({
+      searchHistory: state.searchHistory.filter(h => h.id !== itemId)
+    }));
+  },
+
+  clearSearchHistory: () => {
+    set({ searchHistory: [] });
   },
 
   // ========== MESSAGES ==========

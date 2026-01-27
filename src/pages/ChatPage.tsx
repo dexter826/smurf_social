@@ -33,7 +33,15 @@ const ChatPage: React.FC = () => {
     toggleMarkUnread,
     deleteConversation,
     searchConversations,
-    deleteMessage
+    deleteMessage,
+    isSearchFocused,
+    searchResults,
+    setSearchFocused,
+    getOrCreateConversation,
+    searchHistory,
+    addToSearchHistory,
+    removeFromSearchHistory,
+    clearSearchHistory
   } = useChatStore();
 
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
@@ -245,16 +253,33 @@ const ChatPage: React.FC = () => {
           viewMode={viewMode}
           archivedCount={archivedCount}
           onViewModeChange={setViewMode}
-          onSelectConversation={handleSelectConversation}
+          onBlock={async (partnerId) => {
+            await userService.blockUser(currentUser.id, partnerId);
+          }}
+          isSearchFocused={isSearchFocused}
+          onSearchFocus={setSearchFocused}
+          searchResults={searchResults}
+          searchHistory={searchHistory}
+          onRemoveFromHistory={removeFromSearchHistory}
+          onClearHistory={clearSearchHistory}
+          onSelectUser={async (user) => {
+            addToSearchHistory(user);
+            const convId = await getOrCreateConversation(currentUser.id, user.id);
+            handleSelectConversation(convId);
+            setSearchFocused(false);
+          }}
+          onSelectConversation={(id) => {
+            const conv = conversations.find(c => c.id === id);
+            if (conv) addToSearchHistory(conv);
+            handleSelectConversation(id);
+            setSearchFocused(false);
+          }}
           onSearch={handleSearch}
           onPin={handlePin}
           onMute={handleMute}
           onArchive={handleArchive}
           onMarkUnread={handleMarkUnread}
           onDelete={handleDelete}
-          onBlock={async (partnerId) => {
-            await userService.blockUser(currentUser.id, partnerId);
-          }}
         />
       </div>
 
