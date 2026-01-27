@@ -90,7 +90,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             </p>
           </div>
         ) : (
-          <div className="group">
+          <div>
             {sortedConversations.map((conversation) => (
               <ConversationItem
                 key={conversation.id}

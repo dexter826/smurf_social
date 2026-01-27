@@ -83,7 +83,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <>
-      <div className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start'}`}>
+      <div className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start gap-3'}`}>
         {/* Avatar for receiver */}
         {!isMe && (
           <div className="w-8 flex-shrink-0 flex items-end pb-1">
@@ -91,7 +91,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
 
-        <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : 'items-start'} relative`}>
+        <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'} relative`}>
           {/* Sender Name in Group */}
           {!isMe && showName && (
             <span className="text-[11px] text-text-secondary ml-1 mb-1 font-medium">
@@ -177,9 +177,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </span>
           )}
         </div>
-
-        {/* Avatar placeholder for sender */}
-        {isMe && <div className="w-8" />}
       </div>
 
       {/* Full Image Modal */}

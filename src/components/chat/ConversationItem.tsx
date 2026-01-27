@@ -57,7 +57,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     <div
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 p-3 mx-2 my-0.5 cursor-pointer transition-all duration-200 rounded-xl
+        relative flex items-center gap-3 p-3 mx-2 my-1 cursor-pointer transition-all duration-200 rounded-xl group
         hover:bg-bg-hover
         ${isActive ? 'bg-primary-light' : ''}
         ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
@@ -85,7 +85,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className="text-xs text-text-tertiary flex-shrink-0">{timeAgo}</span>
+          <span className="text-xs text-text-tertiary flex-shrink-0 group-hover:hidden">{timeAgo}</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -106,10 +106,10 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       </div>
 
       {/* Menu */}
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Dropdown
           trigger={
-            <button className="p-1 opacity-0 group-hover:opacity-100 hover:bg-bg-hover rounded-full transition-opacity">
+            <button className="p-1 hover:bg-bg-hover rounded-full transition-all">
               <MoreVertical size={16} />
             </button>
           }
