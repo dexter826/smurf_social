@@ -26,6 +26,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   onMute,
   onDelete
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const partner = conversation.isGroup 
@@ -139,10 +140,13 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       </div>
 
       {/* Menu */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className={`absolute top-2 right-2 transition-opacity ${isMenuOpen ? 'opacity-100 z-10' : 'opacity-0 group-hover:opacity-100'}`}>
         <Dropdown
+          isOpen={isMenuOpen}
+          onOpenChange={setIsMenuOpen}
+          disableTriggerScale
           trigger={
-            <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-all">
+            <button className={`p-1.5 rounded-md transition-all opacity-0 group-hover:opacity-100 ${isMenuOpen ? 'bg-gray-300 dark:bg-gray-600' : 'hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
               <MoreVertical size={16} />
             </button>
           }

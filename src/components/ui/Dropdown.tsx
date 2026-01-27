@@ -40,21 +40,37 @@ interface DropdownProps {
   children: React.ReactNode;
   align?: 'left' | 'right';
   className?: string;
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
+  disableTriggerScale?: boolean;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
   trigger,
   children,
   align = 'right',
-  className = ''
+  className = '',
+  isOpen: controlledIsOpen,
+  onOpenChange,
+  disableTriggerScale = false
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const isControlled = controlledIsOpen !== undefined;
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isControlled) {
+      setInternalIsOpen(newOpen);
+    }
+    onOpenChange?.(newOpen);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        handleOpenChange(false);
       }
     };
 
@@ -64,29 +80,29 @@ export const Dropdown: React.FC<DropdownProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, isControlled, onOpenChange]); // Added dependencies
 
   return (
     <div className={`relative inline-block ${className}`} ref={dropdownRef}>
       <div 
         onClick={(e) => {
           e.stopPropagation();
-          setIsOpen(!isOpen);
+          handleOpenChange(!isOpen);
         }}
-        className="cursor-pointer active:scale-95 transition-transform"
+        className={`cursor-pointer transition-transform ${disableTriggerScale ? '' : 'active:scale-95'}`}
       >
         {trigger}
       </div>
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-30 md:hidden" onClick={() => setIsOpen(false)} />
+          <div className="fixed inset-0 z-30 md:hidden" onClick={() => handleOpenChange(false)} />
           <div 
             className={`
               absolute z-40 mt-2 min-w-[200px] py-2 bg-bg-primary border border-border-light rounded-2xl shadow-lg transition-all animate-in fade-in zoom-in-95 duration-200
               ${align === 'right' ? 'right-0' : 'left-0'}
             `}
-            onClick={() => setIsOpen(false)}
+            onClick={() => handleOpenChange(false)}
           >
             {children}
           </div>
