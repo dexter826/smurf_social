@@ -41,17 +41,7 @@ const ChatPage: React.FC = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
 
-  useEffect(() => {
-    if (!currentUser) return;
-
-    // Subscribe conversations
-    const unsubscribe = subscribeToConversations(currentUser.id);
-
-    return () => {
-      unsubscribe();
-    };
-  }, [currentUser, subscribeToConversations]);
-
+  // Subscribe messages & typing is handled here
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 

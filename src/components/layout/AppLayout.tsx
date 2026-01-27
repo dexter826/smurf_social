@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
+import { useChatStore } from '../../store/chatStore';
 import { Avatar, UserAvatar, ConfirmDialog } from '../ui';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
+  const { conversations, subscribeToConversations } = useChatStore();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = subscribeToConversations(user.id);
+    return () => unsubscribe();
+  }, [user, subscribeToConversations]);
+
+  const totalUnread = user ? conversations.reduce((total, conv) => {
+    const count = conv.unreadCount?.[user.id] || 0;
+    // Nếu có tin nhắn mới hoặc được đánh dấu chưa đọc thì tính là unread
+    return total + (count > 0 || conv.markedUnread ? (count || 1) : 0);
+  }, 0) : 0;
 
   const handleConfirmLogout = () => {
     logout();
@@ -37,7 +51,7 @@ export const AppLayout: React.FC = () => {
           )}
         </div>
         
-        <nav className="flex-1 flex flex-col gap-3 w-full items-center">
+        <nav className="flex-1 flex flex-col gap-2 w-full items-center">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -51,12 +65,19 @@ export const AppLayout: React.FC = () => {
               }
               title={item.label}
             >
-              {item.icon}
+              <div className="relative">
+                {item.icon}
+                {item.to === '/' && totalUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-sidebar-bg">
+                    {totalUnread > 99 ? '99+' : totalUnread}
+                  </span>
+                )}
+              </div>
             </NavLink>
           ))}
         </nav>
 
-        <div className="flex flex-col gap-3 mt-auto w-full items-center">
+        <div className="flex flex-col gap-2 mt-auto w-full items-center">
            <button 
                 onClick={toggleTheme} 
                 className="w-14 h-14 flex items-center justify-center text-sidebar-item hover:bg-sidebar-item-hover hover:text-white rounded-xl transition-all"
@@ -102,7 +123,14 @@ export const AppLayout: React.FC = () => {
               }`
             }
           >
-            {item.icon}
+            <div className="relative">
+              {item.icon}
+              {item.to === '/' && totalUnread > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-1 ring-bg-primary">
+                  {totalUnread > 99 ? '99+' : totalUnread}
+                </span>
+              )}
+            </div>
             <span className="text-[10px] font-medium">{item.label}</span>
           </NavLink>
         ))}
