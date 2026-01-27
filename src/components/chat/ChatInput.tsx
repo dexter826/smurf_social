@@ -32,6 +32,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [playingPreview, setPlayingPreview] = useState<number | null>(null); // Index of playing audio
   const [showActions, setShowActions] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
   
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +56,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     // Focus vào input khi component mount
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
+        setShowActions(false);
+      }
+    };
+
+    if (showActions) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showActions]);
 
   useEffect(() => {
     return () => {
@@ -356,9 +373,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       <form onSubmit={handleSubmit} className="flex items-center gap-2 px-4 py-3 bg-bg-primary">
         {/* More Actions Menu */}
         <div className="relative">
-           <button 
+           <button
              type="button"
-             onClick={() => setShowActions(!showActions)}
+             onClick={(e) => {
+               e.stopPropagation();
+               setShowActions(!showActions);
+             }}
              className={`p-2 rounded-full transition-all ${showActions ? 'bg-primary text-white rotate-45' : 'text-primary hover:bg-primary-light'}`}
            >
              <Plus size={24} />
@@ -366,7 +386,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
            {/* Popover Menu */}
            {showActions && (
-             <div className="absolute bottom-full left-0 mb-2 flex items-center gap-2 p-2 bg-bg-secondary rounded-xl shadow-lg border border-border-light animate-fade-in z-50">
+             <div
+               ref={actionsMenuRef}
+               className="absolute bottom-full left-0 mb-2 flex items-center gap-2 p-2 bg-bg-secondary rounded-xl shadow-lg border border-border-light animate-fade-in z-50"
+             >
                <button
                   type="button"
                   onClick={() => { imageInputRef.current?.click(); setShowActions(false); }}
