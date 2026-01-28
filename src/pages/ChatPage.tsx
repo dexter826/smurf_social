@@ -4,9 +4,10 @@ import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { userService } from '../services/userService';
-import { User } from '../types';
-import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal, TransferAdminModal } from '../components/chat';
+import { Conversation, User, Message } from '../types';
+import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal, TransferAdminModal, ForwardModal } from '../components/chat';
 import { Spinner } from '../components/ui';
+import { toast } from '../store/toastStore';
 
 const ChatPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
@@ -34,7 +35,7 @@ const ChatPage: React.FC = () => {
     toggleMarkUnread,
     deleteConversation,
     searchConversations,
-    deleteMessage,
+
     isSearchFocused,
     searchResults,
     setSearchFocused,
@@ -49,10 +50,18 @@ const ChatPage: React.FC = () => {
     removeMember,
     leaveGroup,
     promoteToAdmin,
-    demoteFromAdmin
+    demoteFromAdmin,
+    recallMessage,
+    deleteMessageForMe,
+    forwardMessage,
+    replyToMessage,
+    editMessage
   } = useChatStore();
 
   const [showDetails, setShowDetails] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
   const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -131,7 +140,33 @@ const ChatPage: React.FC = () => {
 
   const handleSendText = async (text: string) => {
     if (!selectedConversationId || !currentUser) return;
-    await sendTextMessage(selectedConversationId, currentUser.id, text);
+    
+    if (replyingTo) {
+      await replyToMessage(selectedConversationId, currentUser.id, text, replyingTo.id);
+      setReplyingTo(null);
+    } else {
+      await sendTextMessage(selectedConversationId, currentUser.id, text);
+    }
+  };
+
+  const handleEditMessage = async (text: string) => {
+    if (!editingMessage) return;
+    await editMessage(editingMessage.id, text);
+    setEditingMessage(null);
+  };
+
+  const handleRecallMessage = async (messageId: string) => {
+    if (!selectedConversationId) return;
+    await recallMessage(messageId, selectedConversationId);
+  };
+
+  const handleDeleteForMe = async (messageId: string) => {
+    if (!currentUser) return;
+    await deleteMessageForMe(messageId, currentUser.id);
+  };
+
+  const handleForwardMessage = async (message: Message) => {
+    setForwardingMessage(message);
   };
 
   const handleSendImage = async (file: File) => {
@@ -187,9 +222,7 @@ const ChatPage: React.FC = () => {
     await toggleMarkUnread(id, markedUnread);
   };
 
-  const handleDeleteMessage = async (messageId: string, fileUrl?: string) => {
-    await deleteMessage(messageId, fileUrl);
-  };
+
 
   const handleBackToList = () => {
     selectConversation(null);
@@ -363,9 +396,21 @@ const ChatPage: React.FC = () => {
               typingUsers={currentTypingUsers}
               onBack={handleBackToList}
               onInfoClick={() => setShowDetails(true)}
+              onRecall={handleRecallMessage}
+              onDeleteForMe={handleDeleteForMe}
+              onForward={handleForwardMessage}
+              onReply={(msg) => {
+                setReplyingTo(msg);
+                setEditingMessage(null);
+              }}
+              onEdit={(msg) => {
+                setEditingMessage(msg);
+                setReplyingTo(null);
+              }}
+
             />
             <ChatInput
-              key={selectedConversationId}
+              key={`${selectedConversationId}-${editingMessage?.id || 'new'}`}
               onSendText={handleSendText}
               onSendImage={handleSendImage}
               onSendFile={handleSendFile}
@@ -373,6 +418,15 @@ const ChatPage: React.FC = () => {
               onSendVoice={handleSendVoice}
               onTyping={handleTyping}
               blockedMessage={getBlockedMessage()}
+              replyingTo={replyingTo}
+              editingMessage={editingMessage}
+              currentUserId={currentUser.id}
+              usersMap={usersMap}
+              onCancelAction={() => {
+                setReplyingTo(null);
+                setEditingMessage(null);
+              }}
+              onEditMessage={handleEditMessage}
             />
           </>
         ) : (
@@ -449,6 +503,15 @@ const ChatPage: React.FC = () => {
           onConfirm={handleAssignAdminAndLeave}
         />
       )}
+
+      <ForwardModal
+        isOpen={!!forwardingMessage}
+        onClose={() => setForwardingMessage(null)}
+        message={forwardingMessage}
+        currentUserId={currentUser.id}
+        conversations={conversations}
+        usersMap={usersMap}
+      />
     </div>
   );
 };

@@ -13,6 +13,11 @@ interface ChatBoxProps {
   typingUsers: string[];
   onBack?: () => void;
   onInfoClick?: () => void;
+  onRecall?: (messageId: string) => void;
+  onDeleteForMe?: (messageId: string) => void;
+  onForward?: (message: Message) => void;
+  onReply?: (message: Message) => void;
+  onEdit?: (message: Message) => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -22,7 +27,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   usersMap,
   typingUsers,
   onBack,
-  onInfoClick
+  onInfoClick,
+  onRecall,
+  onDeleteForMe,
+  onForward,
+  onReply,
+  onEdit
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +58,18 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   const groupedMessages: { date: string; messages: Message[] }[] = [];
   let currentDate = '';
 
-  messages.forEach((msg) => {
+  // Lọc và map tin nhắn trả lời
+  const processedMessages = messages
+    .filter(msg => !msg.deletedBy?.includes(currentUserId))
+    .map(msg => {
+      if (msg.replyToId) {
+        const replyToMessage = messages.find(m => m.id === msg.replyToId);
+        return { ...msg, replyToMessage };
+      }
+      return msg;
+    });
+
+  processedMessages.forEach((msg) => {
     const msgDate = new Date(msg.timestamp).toLocaleDateString('vi-VN');
     
     if (msgDate !== currentDate) {
@@ -185,6 +206,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                         showAvatar={showAvatar}
                         showName={showName}
                         isLastMessage={isLastMessage}
+                        onRecall={onRecall}
+                        onDeleteForMe={onDeleteForMe}
+                        onForward={onForward}
+                        onReply={onReply}
+                        onEdit={onEdit}
+                        currentUserId={currentUserId}
+                        usersMap={usersMap}
                       />
                     );
                   })}

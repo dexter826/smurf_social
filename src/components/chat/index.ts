@@ -14,3 +14,4 @@ export { CreateGroupModal } from './CreateGroupModal';
 export { AddMemberModal } from './AddMemberModal';
 export { EditGroupModal } from './EditGroupModal';
 export { TransferAdminModal } from './TransferAdminModal';
+export { ForwardModal } from './ForwardModal';

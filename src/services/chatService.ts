@@ -130,71 +130,7 @@ export const chatService = {
     });
   },
 
-  /**
-   * Tìm kiếm conversations
-   */
-  searchConversations: async (userId: string, searchTerm: string): Promise<Conversation[]> => {
-    try {
-      const q = query(
-        collection(db, 'conversations'),
-        where('participantIds', 'array-contains', userId)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      
-      // Thu thập tất cả participant IDs
-      const allParticipantIds = new Set<string>();
-      querySnapshot.docs.forEach(d => {
-        const data = d.data();
-        data.participantIds.forEach((id: string) => {
-          allParticipantIds.add(id);
-        });
-      });
 
-      // Batch load tất cả users một lần (bao gồm cả currentUser cho group)
-      const usersMap = await batchGetUsers([...allParticipantIds]);
-
-      const conversations = querySnapshot.docs.map((d) => {
-        const data = d.data();
-        
-        let participants;
-        if (data.isGroup) {
-          // Group: lấy TẤT CẢ participants
-          participants = data.participantIds
-            .map((id: string) => usersMap[id])
-            .filter((p: User | undefined) => !!p);
-        } else {
-          // Chat 1-1: chỉ lấy đối phương
-          const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
-          participants = otherParticipantIds
-            .map((id: string) => usersMap[id])
-            .filter((p: User | undefined) => !!p);
-        }
-
-        return {
-          ...data,
-          id: d.id,
-          participants,
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-          createdAt: data.createdAt?.toDate() || new Date(),
-        } as Conversation;
-      });
-
-      // Filter theo tên
-      return conversations.filter(conv => {
-        if (conv.isGroup) {
-          return conv.groupName?.toLowerCase().includes(searchTerm.toLowerCase());
-        } else {
-          return conv.participants.some(p => 
-            p.name.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-        }
-      });
-    } catch (error) {
-      console.error("Lỗi search conversations", error);
-      return [];
-    }
-  },
 
   /**
    * Pin/Unpin conversation
@@ -307,10 +243,12 @@ export const chatService = {
   sendTextMessage: async (
     conversationId: string, 
     senderId: string, 
-    content: string
+    content: string,
+    replyToId?: string,
+    isForwarded?: boolean
   ): Promise<void> => {
     try {
-      const messageData = {
+      const messageData: any = {
         conversationId,
         senderId,
         content,
@@ -320,7 +258,10 @@ export const chatService = {
         deliveredAt: serverTimestamp()
       };
 
-      await addDoc(collection(db, 'messages'), messageData);
+      if (replyToId) messageData.replyToId = replyToId;
+      if (isForwarded) messageData.isForwarded = isForwarded;
+
+      const docRef = await addDoc(collection(db, 'messages'), messageData);
 
       // Cập nhật conversation
       const conversationRef = doc(db, 'conversations', conversationId);
@@ -358,7 +299,8 @@ export const chatService = {
   sendImageMessage: async (
     conversationId: string,
     senderId: string,
-    file: File
+    file: File,
+    replyToId?: string
   ): Promise<void> => {
     try {
       // Upload image
@@ -367,7 +309,7 @@ export const chatService = {
       await uploadBytes(fileRef, file);
       const imageUrl = await getDownloadURL(fileRef);
 
-      const messageData = {
+      const messageData: any = {
         conversationId,
         senderId,
         content: imageUrl,
@@ -377,6 +319,8 @@ export const chatService = {
         readBy: [senderId],
         deliveredAt: serverTimestamp()
       };
+
+      if (replyToId) messageData.replyToId = replyToId;
 
       await addDoc(collection(db, 'messages'), messageData);
 
@@ -416,7 +360,8 @@ export const chatService = {
   sendFileMessage: async (
     conversationId: string,
     senderId: string,
-    file: File
+    file: File,
+    replyToId?: string
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
@@ -424,7 +369,7 @@ export const chatService = {
       await uploadBytes(fileRef, file);
       const fileUrl = await getDownloadURL(fileRef);
 
-      const messageData = {
+      const messageData: any = {
         conversationId,
         senderId,
         content: file.name,
@@ -436,6 +381,8 @@ export const chatService = {
         readBy: [senderId],
         deliveredAt: serverTimestamp()
       };
+
+      if (replyToId) messageData.replyToId = replyToId;
 
       await addDoc(collection(db, 'messages'), messageData);
 
@@ -475,7 +422,8 @@ export const chatService = {
   sendVideoMessage: async (
     conversationId: string,
     senderId: string,
-    file: File
+    file: File,
+    replyToId?: string
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
@@ -483,7 +431,7 @@ export const chatService = {
       await uploadBytes(fileRef, file);
       const videoUrl = await getDownloadURL(fileRef);
 
-      const messageData = {
+      const messageData: any = {
         conversationId,
         senderId,
         content: videoUrl,
@@ -493,6 +441,8 @@ export const chatService = {
         readBy: [senderId],
         deliveredAt: serverTimestamp()
       };
+
+      if (replyToId) messageData.replyToId = replyToId;
 
       await addDoc(collection(db, 'messages'), messageData);
 
@@ -532,7 +482,8 @@ export const chatService = {
   sendVoiceMessage: async (
     conversationId: string,
     senderId: string,
-    file: File
+    file: File,
+    replyToId?: string
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
@@ -540,7 +491,7 @@ export const chatService = {
       await uploadBytes(fileRef, file);
       const voiceUrl = await getDownloadURL(fileRef);
 
-      const messageData = {
+      const messageData: any = {
         conversationId,
         senderId,
         content: voiceUrl,
@@ -550,6 +501,8 @@ export const chatService = {
         readBy: [senderId],
         deliveredAt: serverTimestamp()
       };
+
+      if (replyToId) messageData.replyToId = replyToId;
 
       await addDoc(collection(db, 'messages'), messageData);
 
@@ -674,24 +627,167 @@ export const chatService = {
   },
 
   /**
-   * Xóa message
+   * Thu hồi tin nhắn cho tất cả mọi người
    */
-  deleteMessage: async (messageId: string, fileUrl?: string): Promise<void> => {
+  recallMessage: async (messageId: string, conversationId: string): Promise<void> => {
     try {
-      // Xóa file nếu có
-      if (fileUrl) {
-        try {
-          const fileRef = ref(storage, fileUrl);
-          await deleteObject(fileRef);
-        } catch (error) {
-          console.warn("File không tồn tại hoặc đã bị xóa");
+      const messageRef = doc(db, 'messages', messageId);
+      await updateDoc(messageRef, {
+        isRecalled: true,
+        recalledAt: serverTimestamp(),
+        content: 'Tin nhắn đã được thu hồi'
+      });
+      
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        lastMessageContent: 'Tin nhắn đã được thu hồi',
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Lỗi thu hồi tin nhắn", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Xóa message cho bản thân (chỉ ẩn ở phía người xóa)
+   */
+  deleteMessageForMe: async (messageId: string, userId: string): Promise<void> => {
+    try {
+      const messageRef = doc(db, 'messages', messageId);
+      await updateDoc(messageRef, {
+        deletedBy: arrayUnion(userId)
+      });
+    } catch (error) {
+      console.error("Lỗi xóa tin nhắn cho tôi", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Chỉnh sửa tin nhắn (giới hạn trong 10 phút)
+   */
+  editMessage: async (messageId: string, newContent: string): Promise<void> => {
+    try {
+      const messageRef = doc(db, 'messages', messageId);
+      const messageSnap = await getDoc(messageRef);
+      
+      if (!messageSnap.exists()) throw new Error("Tin nhắn không tồn tại");
+      
+      const data = messageSnap.data();
+      const timestamp = data.timestamp?.toDate();
+      
+      if (timestamp) {
+        const now = new Date();
+        const diffInMinutes = (now.getTime() - timestamp.getTime()) / (1000 * 60);
+        
+        if (diffInMinutes > 10) {
+          throw new Error("Đã hết thời gian chỉnh sửa (tối đa 10 phút)");
         }
       }
 
-      // Xóa message
-      await deleteDoc(doc(db, 'messages', messageId));
+      await updateDoc(messageRef, {
+        content: newContent,
+        isEdited: true,
+        editedAt: serverTimestamp()
+      });
     } catch (error) {
-      console.error("Lỗi xóa message", error);
+      console.error("Lỗi chỉnh sửa tin nhắn", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Chuyển tiếp tin nhắn
+   */
+  forwardMessage: async (
+    targetConversationId: string,
+    senderId: string,
+    originalMessage: Message
+  ): Promise<void> => {
+    try {
+      const messageData: any = {
+        conversationId: targetConversationId,
+        senderId,
+        content: originalMessage.content,
+        type: originalMessage.type,
+        timestamp: serverTimestamp(),
+        readBy: [senderId],
+        deliveredAt: serverTimestamp(),
+        isForwarded: true
+      };
+
+      if (originalMessage.fileUrl) messageData.fileUrl = originalMessage.fileUrl;
+      if (originalMessage.fileName) messageData.fileName = originalMessage.fileName;
+      if (originalMessage.fileSize) messageData.fileSize = originalMessage.fileSize;
+
+      await addDoc(collection(db, 'messages'), messageData);
+
+      // Cập nhật conversation đích
+      const conversationRef = doc(db, 'conversations', targetConversationId);
+      const conversationSnap = await getDoc(conversationRef);
+      
+      if (conversationSnap.exists()) {
+        const conversationData = conversationSnap.data();
+        const participantIds = conversationData.participantIds || [];
+        const unreadCount = conversationData.unreadCount || {};
+        
+        participantIds.forEach((pid: string) => {
+          if (pid !== senderId) {
+            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
+          }
+        });
+
+        let lastMessageContent = originalMessage.content;
+        if (originalMessage.type === 'image') lastMessageContent = '📷 Hình ảnh';
+        else if (originalMessage.type === 'file') lastMessageContent = `📎 ${originalMessage.fileName}`;
+        else if (originalMessage.type === 'video') lastMessageContent = '🎥 Video';
+        else if (originalMessage.type === 'voice') lastMessageContent = '🎤 Tin nhắn thoại';
+
+        await updateDoc(conversationRef, {
+          lastMessage: {
+            ...messageData,
+            timestamp: new Date(),
+            content: lastMessageContent
+          },
+          unreadCount,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi chuyển tiếp tin nhắn", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Trả lời tin nhắn
+   */
+  replyToMessage: async (conversationId: string, senderId: string, content: string, replyToId: string): Promise<void> => {
+    try {
+      const messageData = {
+        conversationId,
+        senderId,
+        content,
+        type: 'text',
+        timestamp: serverTimestamp(),
+        replyToId,
+        readBy: [senderId],
+        deliveredAt: null
+      };
+
+      const docRef = await addDoc(collection(db, 'messages'), messageData);
+      
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        lastMessageId: docRef.id,
+        lastMessageContent: content,
+        lastMessageSenderId: senderId,
+        lastMessageTimestamp: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Lỗi trả lời tin nhắn", error);
       throw error;
     }
   },
@@ -931,5 +1027,5 @@ export const chatService = {
       console.error("Lỗi hạ quyền admin", error);
       throw error;
     }
-  }
+  },
 };

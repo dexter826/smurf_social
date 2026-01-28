@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal, Camera } from 'lucide-react';
+import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal, Camera, Reply, Edit2 } from 'lucide-react';
 import { EmojiPicker, Loading, Button, IconButton, TextArea } from '../ui';
 import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
 import { validateFileSize } from '../../utils/fileUtils';
+import { Message, User } from '../../types';
 
 interface ChatInputProps {
   onSendText: (text: string) => void;
@@ -14,6 +15,12 @@ interface ChatInputProps {
   onTyping: (isTyping: boolean) => void;
   disabled?: boolean;
   blockedMessage?: string;
+  replyingTo?: any;
+  editingMessage: Message | null;
+  onCancelAction: () => void;
+  onEditMessage?: (text: string) => Promise<void>;
+  currentUserId: string;
+  usersMap: Record<string, User>;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -24,7 +31,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onSendVoice,
   onTyping,
   disabled = false,
-  blockedMessage
+  blockedMessage,
+  replyingTo,
+  editingMessage,
+  onCancelAction,
+  onEditMessage,
+  currentUserId,
+  usersMap
 }) => {
   const [inputText, setInputText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<{ file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[]>([]);
@@ -52,9 +65,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   // Tự động giãn dòng được xử lý bởi component TextArea
 
   useEffect(() => {
-    // Focus vào input khi component mount
+    // Focus vào input khi component mount hoặc khi có hành động mới
     inputRef.current?.focus();
-  }, []);
+    
+    if (editingMessage) {
+      setInputText(editingMessage.content);
+    } else if (!replyingTo) {
+      // Don't clear if it's just a reply transition, but maybe we should?
+      // Actually if user was typing and then clicks reply, we should keep the text.
+    }
+  }, [editingMessage]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -280,9 +300,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       // Gửi text nếu có
       if (inputText.trim()) {
-        await onSendText(inputText.trim());
+        if (editingMessage) {
+          await onEditMessage?.(inputText.trim());
+        } else {
+          await onSendText(inputText.trim());
+        }
         setInputText('');
       }
+
+      if (onCancelAction) onCancelAction();
 
     } catch (error) {
       console.error("Lỗi gửi tin nhắn", error);
@@ -365,6 +391,33 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Action Preview (Reply/Edit) */}
+      {(replyingTo || editingMessage) && (
+        <div className="px-4 py-2 border-b border-border-light bg-bg-secondary flex items-center justify-between animate-in slide-in-from-bottom-1 duration-200">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="text-primary flex-shrink-0 bg-primary/10 p-2 rounded-lg">
+              {editingMessage ? <Edit2 size={16} /> : <Reply size={16} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-bold text-primary mb-0.5">
+                {editingMessage 
+                  ? 'Đang chỉnh sửa' 
+                  : `Trả lời ${replyingTo.senderId === currentUserId ? 'chính bạn' : (usersMap[replyingTo.senderId]?.name || 'người khác')}`}
+              </div>
+              <div className="text-[13px] text-text-secondary truncate">
+                {editingMessage ? editingMessage.content : (replyingTo.type === 'text' ? replyingTo.content : `[${replyingTo.type}]`)}
+              </div>
+            </div>
+          </div>
+          <IconButton
+            onClick={onCancelAction}
+            icon={<X size={14} />}
+            size="sm"
+            variant="ghost"
+          />
         </div>
       )}
 

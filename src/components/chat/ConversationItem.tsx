@@ -107,7 +107,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'hidden' : 'group-hover:hidden'} ${(unreadCount > 0 || conversation.markedUnread) ? 'font-semibold text-primary' : 'text-text-tertiary'}`}>
+          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'hidden' : 'group-hover:hidden'} ${(unreadCount > 0 || conversation.markedUnread) ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
             {timeAgo.replace('khoảng ', '').replace('dưới ', '').replace('hơn ', '')}
           </span>
         </div>
@@ -126,7 +126,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               }
 
               return (
-                <span className={`truncate text-[13px] ${(unreadCount > 0 || conversation.markedUnread) ? 'font-bold text-text-primary' : 'text-text-tertiary'}`}>
+                <span className={`truncate text-[13px] ${(unreadCount > 0 || conversation.markedUnread) ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
                   {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
                 </span>
               );
@@ -135,7 +135,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 
           <div className="flex items-center gap-2 flex-shrink-0">
             {isLastMessageMine && (conversation.typingUsers || []).filter(id => id !== currentUserId).length === 0 && (
-              <span className="text-[11px] font-medium text-text-tertiary whitespace-nowrap">
+              <span className="text-[11px] font-medium text-text-secondary whitespace-nowrap">
                 {isLastMessageRead 
                   ? 'Đã xem'
                   : isLastMessageDelivered

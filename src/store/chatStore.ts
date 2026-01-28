@@ -41,7 +41,12 @@ interface ChatState {
   sendVoiceMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   markAsRead: (conversationId: string, userId: string) => Promise<void>;
   markAsDelivered: (conversationId: string, userId: string) => Promise<void>;
-  deleteMessage: (messageId: string, fileUrl?: string) => Promise<void>;
+
+  recallMessage: (messageId: string, conversationId: string) => Promise<void>;
+  deleteMessageForMe: (messageId: string, userId: string) => Promise<void>;
+  forwardMessage: (conversationId: string, senderId: string, message: Message) => Promise<void>;
+  replyToMessage: (conversationId: string, senderId: string, content: string, replyToId: string) => Promise<void>;
+  editMessage: (messageId: string, content: string) => Promise<void>;
 
   // Typing
   setTyping: (conversationId: string, userId: string, isTyping: boolean) => Promise<void>;
@@ -311,11 +316,49 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  deleteMessage: async (messageId: string, fileUrl?: string) => {
+
+
+  recallMessage: async (messageId: string, conversationId: string) => {
     try {
-      await chatService.deleteMessage(messageId, fileUrl);
+      await chatService.recallMessage(messageId, conversationId);
     } catch (error) {
-      console.error("Lỗi xóa message", error);
+      console.error("Lỗi thu hồi tin nhắn", error);
+      throw error;
+    }
+  },
+
+  deleteMessageForMe: async (messageId: string, userId: string) => {
+    try {
+      await chatService.deleteMessageForMe(messageId, userId);
+    } catch (error) {
+      console.error("Lỗi xóa tin nhắn cho tôi", error);
+      throw error;
+    }
+  },
+
+  forwardMessage: async (conversationId: string, senderId: string, message: Message) => {
+    try {
+      await chatService.forwardMessage(conversationId, senderId, message);
+    } catch (error) {
+      console.error("Lỗi chuyển tiếp tin nhắn", error);
+      throw error;
+    }
+  },
+
+  replyToMessage: async (conversationId: string, senderId: string, content: string, replyToId: string) => {
+    try {
+      await chatService.replyToMessage(conversationId, senderId, content, replyToId);
+    } catch (error) {
+      console.error("Lỗi trả lời tin nhắn", error);
+      throw error;
+    }
+  },
+
+  editMessage: async (messageId: string, content: string) => {
+    try {
+      await chatService.editMessage(messageId, content);
+    } catch (error) {
+      console.error("Lỗi chỉnh sửa tin nhắn", error);
       throw error;
     }
   },

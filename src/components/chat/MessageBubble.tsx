@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { format } from 'date-fns';
-import { FileText, Download, CheckCheck, Check, MoreVertical, Trash2, Image as ImageIcon, X } from 'lucide-react';
+import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight } from 'lucide-react';
 import { Message, User } from '../../types';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
+import { chatService } from '../../services/chatService';
 
 interface MessageBubbleProps {
   message: Message;
@@ -11,7 +12,13 @@ interface MessageBubbleProps {
   showAvatar: boolean;
   showName: boolean;
   isLastMessage?: boolean;
-  onDelete?: (messageId: string, fileUrl?: string) => void;
+  onRecall?: (messageId: string) => void;
+  onDeleteForMe?: (messageId: string) => void;
+  onForward?: (message: Message) => void;
+  onReply?: (message: Message) => void;
+  onEdit?: (message: Message) => void;
+  currentUserId: string;
+  usersMap: Record<string, User>;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
@@ -21,16 +28,46 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   showAvatar, 
   showName,
   isLastMessage,
-  onDelete
+  onRecall,
+  onDeleteForMe,
+  onForward,
+  onReply,
+  onEdit,
+  currentUserId,
+  usersMap
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRecallConfirm, setShowRecallConfirm] = useState(false);
+  const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  const toggleMenu = () => {
+    if (!showMenu && menuButtonRef.current) {
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
+    }
+    setShowMenu(!showMenu);
+  };
 
   const isRead = message.readBy && message.readBy.length > 1;
   const isDelivered = !!message.deliveredAt;
+
+  // Kiểm tra thời hạn chỉnh sửa (10 phút)
+  const canEdit = isMe && !message.isRecalled && (
+    (new Date().getTime() - new Date(message.timestamp).getTime()) / (1000 * 60) <= 10
+  );
   
   const renderContent = () => {
+    if (message.isRecalled) {
+      return (
+        <div className={`italic text-sm ${isMe ? 'text-white/80' : 'text-text-tertiary'}`}>
+          Tin nhắn đã được thu hồi
+        </div>
+      );
+    }
+
     switch (message.type) {
       case 'image':
         return (
@@ -80,7 +117,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         );
         
       default:
-        return <div className="whitespace-pre-wrap break-all">{message.content}</div>;
+        return (
+          <div className="flex flex-col">
+
+            <div className="whitespace-pre-wrap break-all">{message.content}</div>
+            {message.isEdited && !message.isRecalled && (
+              <span className="text-[10px] opacity-70 mt-0.5">(đã chỉnh sửa)</span>
+            )}
+          </div>
+        );
     }
   };
 
@@ -114,6 +159,31 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 }
               `}
             >
+                {message.replyToId && message.replyToMessage && (
+                <div className={`mb-2 p-2 rounded border-l-4 text-xs ${
+                  isMe 
+                    ? 'bg-white/10 border-white/50 text-white/90' 
+                    : 'bg-bg-secondary border-primary text-text-secondary'
+                } max-w-full overflow-hidden truncate opacity-90 cursor-pointer`}
+                onClick={() => {
+                  const element = document.getElementById(`msg-${message.replyToId}`);
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  element?.classList.add('animate-highlight');
+                  setTimeout(() => element?.classList.remove('animate-highlight'), 2000);
+                }}
+                >
+                  <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
+                    {message.replyToMessage.senderId === currentUserId 
+                      ? 'Bạn' 
+                      : usersMap[message.replyToMessage.senderId]?.name || 'Người dùng'}
+                  </div>
+                  <div className="truncate">
+                    {message.replyToMessage.type === 'text' 
+                      ? message.replyToMessage.content 
+                      : `[${message.replyToMessage.type}]`}
+                  </div>
+                </div>
+              )}
               {renderContent()}
               
               {/* Timestamp & Status for text messages */}
@@ -126,11 +196,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               )}
             </div>
 
-            {/* Menu cho tin nhắn */}
-            {isMe && onDelete && (
-              <div className="absolute top-0 right-full mr-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
+             {/* Menu cho tin nhắn */}
+            {!message.isRecalled && (
+              <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
                 <IconButton
-                  onClick={() => setShowMenu(!showMenu)}
+                  ref={menuButtonRef}
+                  onClick={toggleMenu}
                   icon={<MoreVertical size={14} />}
                   size="sm"
                 />
@@ -141,18 +212,58 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                       className="fixed inset-0 z-10"
                       onClick={() => setShowMenu(false)}
                     />
-                    <div className="absolute right-0 top-8 z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-32">
-                      <Button
-                        variant="ghost"
+                    <div className={`absolute z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40 ${isMe ? 'right-0' : 'left-0'} ${
+                      menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-8'
+                    }`}>
+                      <button
                         onClick={() => {
-                          setShowDeleteConfirm(true);
+                          onReply?.(message);
                           setShowMenu(false);
                         }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover text-error gap-2 transition-colors rounded-none"
-                        icon={<Trash2 size={14} />}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
                       >
-                        Xóa
-                      </Button>
+                        <Reply size={14} /> Trả lời
+                      </button>
+                      <button
+                        onClick={() => {
+                          onForward?.(message);
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
+                      >
+                        <Forward size={14} /> Chuyển tiếp
+                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => {
+                            onEdit?.(message);
+                            setShowMenu(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
+                        >
+                          <Edit2 size={14} /> Chỉnh sửa
+                        </button>
+                      )}
+                      {isMe && (
+                        <button
+                          onClick={() => {
+                            setShowRecallConfirm(true);
+                            setShowMenu(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-warning"
+                        >
+                          <RotateCcw size={14} /> Thu hồi
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          onDeleteForMe?.(message.id);
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-error"
+                      >
+                        <Trash2 size={14} /> Xóa phía tôi
+                      </button>
                     </div>
                   </>
                 )}
@@ -200,14 +311,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       )}
 
+
+
       <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => onDelete?.(message.id, message.fileUrl)}
-        title="Xóa tin nhắn"
-        message="Bạn có chắc chắn muốn xóa tin nhắn này? Hành động này không thể hoàn tác."
-        confirmLabel="Xóa ngay"
-        variant="danger"
+        isOpen={showRecallConfirm}
+        onClose={() => setShowRecallConfirm(false)}
+        onConfirm={() => onRecall?.(message.id)}
+        title="Thu hồi tin nhắn"
+        message="Tin nhắn này sẽ bị thu hồi đối với tất cả mọi người trong cuộc trò chuyện."
+        confirmLabel="Thu hồi"
+        variant="warning"
       />
     </>
   );

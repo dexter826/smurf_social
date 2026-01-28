@@ -49,7 +49,12 @@ service cloud.firestore {
       allow create: if request.auth != null && 
         request.resource.data.senderId == request.auth.uid &&
         request.auth.uid in get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data.participantIds;
-      allow update, delete: if request.auth != null && resource.data.senderId == request.auth.uid;
+      allow update: if request.auth != null && (
+        resource.data.senderId == request.auth.uid || 
+        (request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participantIds && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy', 'deliveredAt', 'deletedBy']))
+      );
+      allow delete: if request.auth != null && resource.data.senderId == request.auth.uid;
     }
   }
 }

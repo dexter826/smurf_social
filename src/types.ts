@@ -53,6 +53,14 @@ export interface Message {
   readBy?: string[];
   deliveredAt?: Date;
   reactions?: Record<string, string>;
+  isRecalled?: boolean;
+  recalledAt?: Date;
+  deletedBy?: string[];
+  isForwarded?: boolean;
+  replyToId?: string;
+  replyToMessage?: Message;
+  isEdited?: boolean;
+  editedAt?: Date;
 }
 
 export interface Conversation {
