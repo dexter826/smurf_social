@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationList } from './NotificationList';
 import { useAuthStore } from '../../store/authStore';
@@ -9,6 +10,7 @@ export const NotificationDropdown: React.FC = () => {
   const { unreadCount, markAllAsRead } = useNotificationStore();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -28,19 +30,22 @@ export const NotificationDropdown: React.FC = () => {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative group" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 rounded-full transition-colors ${
-          isOpen ? 'bg-bg-hover text-primary' : 'text-text-secondary hover:bg-bg-hover'
+        className={`w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 ${
+          isOpen 
+          ? 'bg-sidebar-item-active text-white' 
+          : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
         }`}
+        title="Thông báo"
       >
-        <Bell size={24} />
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-bg-primary">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
+        <div className="relative">
+          <Bell size={28} />
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-sidebar-bg" />
+          )}
+        </div>
       </button>
 
       {isOpen && (
@@ -66,7 +71,7 @@ export const NotificationDropdown: React.FC = () => {
             <button 
               className="text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
               onClick={() => {
-                // Có thể điều hướng đến trang thông báo đầy đủ nếu có
+                navigate('/notifications');
                 setIsOpen(false);
               }}
             >
