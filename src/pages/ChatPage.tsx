@@ -62,8 +62,14 @@ const ChatPage: React.FC = () => {
     addToSearchHistory,
     removeFromSearchHistory,
     clearSearchHistory,
-    getOrCreateConversation
+    getOrCreateConversation,
+    setIsChatVisible
   } = useChat();
+
+  React.useEffect(() => {
+    setIsChatVisible(true);
+    return () => setIsChatVisible(false);
+  }, [setIsChatVisible]);
 
   const [showDetails, setShowDetails] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);

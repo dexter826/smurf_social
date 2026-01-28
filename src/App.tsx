@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
+import { useChatStore } from './store/chatStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { Loading, ToastContainer } from './components/ui';
 import LoginPage from './pages/LoginPage';
@@ -30,11 +31,19 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const App: React.FC = () => {
   const { user } = useAuthStore();
   const initializeAuth = useAuthStore(state => state.initialize);
+  const subscribeToConversations = useChatStore(state => state.subscribeToConversations);
 
   useEffect(() => {
     const unsubscribe = initializeAuth();
     return () => unsubscribe();
   }, [initializeAuth]);
+
+  // Lắng nghe tin nhắn toàn cục sau khi đăng nhập
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = subscribeToConversations(user.id);
+    return () => unsubscribe();
+  }, [user, subscribeToConversations]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
