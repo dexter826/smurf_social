@@ -70,7 +70,7 @@
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
   --color-primary-active: #1d4ed8;
-  --color-primary-light: rgba(59, 130, 246, 0.15);
+  --color-primary-light: rgba(59, 130, 246, 0.25);
 
   /* === Sidebar Colors === */
   --sidebar-bg: #080a0f;
@@ -175,8 +175,13 @@ input::-ms-clear {
 
 /* === Selection === */
 ::selection {
-  background-color: var(--color-primary-light);
-  color: var(--text-primary);
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.dark ::selection {
+  background-color: rgba(59, 130, 246, 0.4);
+  color: #ffffff;
 }
 
 /* === Animations === */
