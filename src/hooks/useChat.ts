@@ -77,6 +77,7 @@ interface UseChatReturn {
   replyToMessage: (text: string, replyToId: string) => Promise<void>;
 
   getBlockedMessage: () => string | undefined;
+  setIsChatVisible: (visible: boolean) => void;
 }
 
 export const useChat = (): UseChatReturn => {
@@ -124,7 +125,8 @@ export const useChat = (): UseChatReturn => {
     deleteMessageForMe,
     forwardMessage: storeForwardMessage,
     replyToMessage: storeReplyToMessage,
-    editMessage
+    editMessage,
+    setIsChatVisible
   } = useChatStore();
 
   const { users: usersMap, fetchUsers } = useUserCache();
@@ -132,17 +134,6 @@ export const useChat = (): UseChatReturn => {
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
-
-  // Đăng ký nhận cập nhật danh sách hội thoại
-  const handleSubscribeToConversations = useCallback(() => {
-    if (!currentUser) return () => {};
-    return subscribeToConversations(currentUser.id);
-  }, [currentUser, subscribeToConversations]);
-
-  useEffect(() => {
-    const unsubscribe = handleSubscribeToConversations();
-    return () => unsubscribe();
-  }, [handleSubscribeToConversations]);
 
   // Theo dõi tin nhắn và trạng thái đang nhập
   useEffect(() => {
@@ -441,5 +432,6 @@ export const useChat = (): UseChatReturn => {
     setReplyingTo,
     editingMessage,
     setEditingMessage,
+    setIsChatVisible
   };
 };

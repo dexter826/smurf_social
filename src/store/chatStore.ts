@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { Conversation, Message, User } from '../types';
 import { chatService } from '../services/chatService';
 import { userService } from '../services/userService';
+import { useAuthStore } from './authStore';
+import NotificationSound from '../assets/sounds/message-notification.mp3';
+
+let lastPlayedId = ''; // Chặn phát âm thanh lặp cho một tin nhắn
 
 interface ChatState {
   conversations: Conversation[];
@@ -16,6 +20,7 @@ interface ChatState {
     users: User[];
   };
   searchHistory: (Conversation | User)[];
+  isChatVisible: boolean;
 
   subscribeToConversations: (userId: string) => () => void;
   selectConversation: (conversationId: string | null) => void;
@@ -62,6 +67,7 @@ interface ChatState {
   setSearchTerm: (term: string) => void;
   clearMessages: (conversationId: string) => void;
   setLoading: (loading: boolean) => void;
+  setIsChatVisible: (visible: boolean) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -77,12 +83,31 @@ export const useChatStore = create<ChatState>((set, get) => ({
     users: []
   },
   searchHistory: [],
+  isChatVisible: false,
 
   // Đăng ký cập nhật danh sách hội thoại
   subscribeToConversations: (userId: string) => {
     set({ isLoading: true });
     
     const unsubscribe = chatService.subscribeToConversations(userId, (conversations) => {
+      const prevConversations = get().conversations;
+      
+      // Âm báo khi có tin nhắn thực sự mới và chưa đọc
+      if (prevConversations.length > 0) {
+        conversations.forEach(conv => {
+          const lastMsg = conv.lastMessage;
+          const isUnread = conv.unreadCount?.[userId] > 0;
+          const isViewingThisConv = get().isChatVisible && conv.id === get().selectedConversationId;
+          
+          if (lastMsg && lastMsg.id !== lastPlayedId && isUnread &&
+              lastMsg.senderId !== userId && !conv.muted && !isViewingThisConv) {
+            lastPlayedId = lastMsg.id || '';
+            const audio = new Audio(NotificationSound);
+            audio.play().catch(err => console.debug("Autoplay blocked:", err));
+          }
+        });
+      }
+
       set({ conversations, isLoading: false });
     });
 
@@ -478,5 +503,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setLoading: (loading: boolean) => {
     set({ isLoading: loading });
+  },
+
+  setIsChatVisible: (visible: boolean) => {
+    set({ isChatVisible: visible });
   }
 }));
