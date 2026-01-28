@@ -1,24 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Ban, UserCheck, Trash2, Bell } from 'lucide-react';
+import { 
+  Ban, 
+  UserCheck, 
+  Shield, 
+  Key, 
+  Moon, 
+  Sun, 
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import { userService } from '../services/userService';
 import { User } from '../types';
-import { UserAvatar, ConfirmDialog, Loading, Button, Skeleton, IconButton } from '../components/ui';
-import { notificationService } from '../services/notificationService';
-import { useNotificationStore } from '../store/notificationStore';
-import { Shield, Key } from 'lucide-react';
+import { UserAvatar, ConfirmDialog, Button, Skeleton } from '../components/ui';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
+
+type SettingSection = 'appearance' | 'security' | 'blocked';
+
+const MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNode }[] = [
+  { id: 'appearance', label: 'Giao diện', icon: <Moon size={20} /> },
+  { id: 'security', label: 'Bảo mật', icon: <Shield size={20} /> },
+  { id: 'blocked', label: 'Người dùng đã chặn', icon: <Ban size={20} /> },
+];
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, setUser } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
+  
+  const [activeSection, setActiveSection] = useState<SettingSection>('appearance');
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
-    typeof Notification !== 'undefined' ? Notification.permission : 'default'
-  );
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
@@ -56,171 +69,206 @@ const SettingsPage: React.FC = () => {
       setUnblockUserId(null);
     }
   };
+  // Toggle component
+  const Toggle = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
+    <div 
+      onClick={onToggle}
+      className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+        enabled ? 'bg-primary' : 'bg-gray-400'
+      }`}
+    >
+      <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${
+        enabled ? 'translate-x-6' : 'translate-x-0'
+      }`} />
+    </div>
+  );
 
-  const handleToggleNotifications = async () => {
-    if (!currentUser) return;
-    
-    if (notificationPermission === 'granted') {
-      // Trình duyệt không cho phép "un-request" quyền, 
-      // chỉ có thể hướng dẫn người dùng tắt trong cài đặt trình duyệt
-      alert("Để tắt thông báo, vui lòng vào cài đặt trình duyệt của bạn.");
-      return;
-    }
+  // Setting Item component
+  const SettingItem = ({ 
+    icon, 
+    title, 
+    description, 
+    action,
+    onClick 
+  }: { 
+    icon: React.ReactNode; 
+    title: string; 
+    description: string; 
+    action?: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <div 
+      onClick={onClick}
+      className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border border-border-light ${
+        onClick ? 'cursor-pointer hover:bg-bg-hover transition-colors' : ''
+      }`}
+    >
+      <div className="flex items-center gap-4">
+        <div className="p-2 bg-primary-light rounded-lg text-primary">
+          {icon}
+        </div>
+        <div>
+          <h3 className="font-medium text-text-primary">{title}</h3>
+          <p className="text-sm text-text-tertiary">{description}</p>
+        </div>
+      </div>
+      {action}
+    </div>
+  );
 
-    const token = await notificationService.requestPushPermission(currentUser.id);
-    if (token) {
-      setNotificationPermission('granted');
-    } else {
-      setNotificationPermission(Notification.permission);
+  // Render section content
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'appearance':
+        return (
+          <div className="space-y-4">
+            <SettingItem
+              icon={mode === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+              title="Chế độ tối"
+              description={mode === 'dark' ? 'Đang bật' : 'Đang tắt'}
+              action={<Toggle enabled={mode === 'dark'} onToggle={toggleTheme} />}
+            />
+          </div>
+        );
+      case 'security':
+        return (
+          <div className="space-y-4">
+            <SettingItem
+              icon={<Key size={20} />}
+              title="Đổi mật khẩu"
+              description="Cập nhật mật khẩu để bảo vệ tài khoản"
+              onClick={() => setIsChangePasswordOpen(true)}
+            />
+          </div>
+        );
+
+      case 'blocked':
+        return (
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-bg-primary rounded-xl border border-border-light">
+                    <Skeleton variant="circle" width={40} height={40} />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton width={120} height={16} />
+                      <Skeleton width={80} height={12} />
+                    </div>
+                    <Skeleton width={80} height={32} />
+                  </div>
+                ))}
+              </div>
+            ) : blockedUsers.length === 0 ? (
+              <div className="text-center py-12 text-text-tertiary bg-bg-primary rounded-xl border border-border-light">
+                <Ban size={48} className="mx-auto mb-3 opacity-30" />
+                <p>Chưa có người dùng nào bị chặn</p>
+              </div>
+            ) : (
+              <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
+                {blockedUsers.map(user => (
+                  <div
+                    key={user.id}
+                    className="flex items-center gap-3 p-3 border-b border-border-light last:border-b-0"
+                  >
+                    <UserAvatar 
+                      userId={user.id}
+                      src={user.avatar} 
+                      name={user.name} 
+                      size="md" 
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-text-primary truncate">{user.name}</h3>
+                      <p className="text-sm text-text-tertiary truncate">
+                        @{user.email?.split('@')[0]}
+                      </p>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setUnblockUserId(user.id)}
+                      icon={<UserCheck size={16} />}
+                    >
+                      Bỏ chặn
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-bg-primary">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-4 border-b border-border-light bg-bg-primary">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="-ml-2 md:hidden rounded-full"
-          icon={<ChevronLeft size={24} className="text-text-primary" />}
-        />
-        <h1 className="text-xl font-bold text-text-primary">Cài đặt</h1>
-      </header>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Notifications Section */}
-        <section className="p-4 border-b border-border-light">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell size={20} className="text-text-secondary" />
-            <h2 className="text-lg font-semibold text-text-primary">
-              Thông báo
-            </h2>
+    <div className="flex h-full w-full bg-bg-secondary">
+      {/* Sidebar - Desktop */}
+      <div className="hidden md:flex flex-col w-[300px] border-r border-border-light bg-bg-primary pt-4">
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 py-2 text-sm font-semibold text-text-tertiary uppercase tracking-wider">
+            Cài đặt
           </div>
           
-          <div className="flex items-center justify-between p-4 bg-bg-secondary rounded-xl">
-            <div>
-              <h3 className="font-medium text-text-primary text-base">Thông báo trình duyệt</h3>
-              <p className="text-sm text-text-tertiary">
-                Nhận thông báo đẩy về tin nhắn và tương tác mới
-              </p>
-            </div>
-            <div 
-              onClick={handleToggleNotifications}
-              className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${
-                notificationPermission === 'granted' ? 'bg-primary' : 'bg-gray-400'
+          {MENU_ITEMS.map(item => (
+            <div
+              key={item.id}
+              className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
+                activeSection === item.id 
+                  ? 'bg-primary-light text-primary' 
+                  : 'hover:bg-bg-hover text-text-secondary'
               }`}
+              onClick={() => setActiveSection(item.id)}
             >
-              <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${
-                notificationPermission === 'granted' ? 'translate-x-6' : 'translate-x-0'
-              }`} />
+              {item.icon}
+              <span className="font-medium">{item.label}</span>
+              {item.id === 'blocked' && blockedUsers.length > 0 && (
+                <span className="ml-auto text-xs bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light">
+                  {blockedUsers.length}
+                </span>
+              )}
             </div>
-          </div>
-          
-          {notificationPermission === 'denied' && (
-            <p className="mt-2 text-xs text-red-500 italic px-2">
-              * Quyền thông báo đang bị chặn. Vui lòng mở lại trong cài đặt trình duyệt.
-            </p>
-          )}
-        </section>
-
-        {/* Security Section */}
-        <section className="p-4 border-b border-border-light">
-          <div className="flex items-center gap-2 mb-4">
-            <Shield size={20} className="text-text-secondary" />
-            <h2 className="text-lg font-semibold text-text-primary">
-              Bảo mật
-            </h2>
-          </div>
-          
-          <div 
-            onClick={() => setIsChangePasswordOpen(true)}
-            className="flex items-center justify-between p-4 bg-bg-secondary rounded-xl cursor-pointer hover:bg-bg-hover transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                <Key size={20} />
-              </div>
-              <div>
-                <h3 className="font-medium text-text-primary text-base">Đổi mật khẩu</h3>
-                <p className="text-sm text-text-tertiary">
-                  Cập nhật mật khẩu mới để bảo vệ tài khoản
-                </p>
-              </div>
-            </div>
-            <IconButton 
-              icon={<ChevronLeft size={20} className="rotate-180 text-text-tertiary" />} 
-              onClick={() => {}} 
-            />
-          </div>
-        </section>
-
-        {/* Blocked Users Section */}
-        <section className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Ban size={20} className="text-text-secondary" />
-            <h2 className="text-lg font-semibold text-text-primary">
-              Người dùng đã chặn
-            </h2>
-          </div>
-
-          {isLoading ? (
-            <div className="space-y-2">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-bg-secondary rounded-xl">
-                  <Skeleton variant="circle" width={40} height={40} />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton width={120} height={16} />
-                    <Skeleton width={80} height={12} className="opacity-50" />
-                  </div>
-                  <Skeleton width={80} height={32} className="rounded-lg" />
-                </div>
-              ))}
-            </div>
-          ) : blockedUsers.length === 0 ? (
-            <div className="text-center py-8 text-text-tertiary">
-              <Ban size={48} className="mx-auto mb-3 opacity-30" />
-              <p>Chưa có người dùng nào bị chặn</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {blockedUsers.map(user => (
-                <div
-                  key={user.id}
-                  className="flex items-center gap-3 p-3 bg-bg-secondary rounded-xl hover:bg-bg-hover transition-colors"
-                >
-                  <UserAvatar 
-                    userId={user.id}
-                    src={user.avatar} 
-                    name={user.name} 
-                    size="md" 
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-text-primary truncate">
-                      {user.name}
-                    </h3>
-                    <p className="text-sm text-text-tertiary truncate">
-                      @{user.username || user.email?.split('@')[0]}
-                    </p>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setUnblockUserId(user.id)}
-                    className="gap-2 px-3 py-2 text-primary hover:bg-primary-hover hover:text-white"
-                    icon={<UserCheck size={16} />}
-                  >
-                    <span className="hidden sm:inline">Bỏ chặn</span>
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+          ))}
+        </div>
       </div>
 
-      {/* Unblock Confirm Dialog */}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-full bg-bg-primary md:bg-bg-secondary">
+        {/* Header */}
+        <div className="p-4 border-b border-border-light bg-bg-primary">
+          <h2 className="text-lg font-bold text-text-primary">
+            {MENU_ITEMS.find(m => m.id === activeSection)?.label}
+          </h2>
+        </div>
+
+        {/* Mobile Tabs */}
+        <div className="md:hidden flex overflow-x-auto border-b border-border-light bg-bg-primary px-2 py-2 gap-1">
+          {MENU_ITEMS.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+                activeSection === item.id 
+                  ? 'bg-primary-light text-primary font-medium' 
+                  : 'text-text-secondary hover:bg-bg-hover'
+              }`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-2 md:p-4">
+          <div className="max-w-2xl mx-auto">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+
+      {/* Dialogs */}
       <ConfirmDialog
         isOpen={!!unblockUserId}
         onClose={() => setUnblockUserId(null)}
@@ -229,8 +277,6 @@ const SettingsPage: React.FC = () => {
         message="Bạn có chắc chắn muốn bỏ chặn người này? Họ sẽ có thể gửi tin nhắn cho bạn."
         confirmLabel="Bỏ chặn"
       />
-
-      {/* Change Password Modal */}
       <ChangePasswordModal 
         isOpen={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
