@@ -138,14 +138,14 @@ const ChatPage: React.FC = () => {
     selectConversation(id);
   };
 
-  const handleSendText = async (text: string) => {
+  const handleSendText = async (text: string, mentions?: string[]) => {
     if (!selectedConversationId || !currentUser) return;
     
     if (replyingTo) {
       await replyToMessage(selectedConversationId, currentUser.id, text, replyingTo.id);
       setReplyingTo(null);
     } else {
-      await sendTextMessage(selectedConversationId, currentUser.id, text);
+      await sendTextMessage(selectedConversationId, currentUser.id, text, mentions);
     }
   };
 
@@ -422,6 +422,7 @@ const ChatPage: React.FC = () => {
               editingMessage={editingMessage}
               currentUserId={currentUser.id}
               usersMap={usersMap}
+              participants={selectedConversation.participants}
               onCancelAction={() => {
                 setReplyingTo(null);
                 setEditingMessage(null);

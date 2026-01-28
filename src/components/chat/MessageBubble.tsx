@@ -117,10 +117,27 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         );
         
       default:
+        // Parse mentions: @[Name]
+        const renderTextWithMentions = (text: string) => {
+          const parts = text.split(/(@\[[^\]]+\])/g);
+          return parts.map((part, index) => {
+            if (part.startsWith('@[') && part.endsWith(']')) {
+              const name = part.slice(2, -1);
+              return (
+                <span key={index} className={`font-bold ${isMe ? 'text-white' : 'text-primary'}`}>
+                  @{name}
+                </span>
+              );
+            }
+            return <span key={index}>{part}</span>;
+          });
+        };
+
         return (
           <div className="flex flex-col">
-
-            <div className="whitespace-pre-wrap break-all">{message.content}</div>
+            <div className="whitespace-pre-wrap break-all">
+              {renderTextWithMentions(message.content)}
+            </div>
             {message.isEdited && !message.isRecalled && (
               <span className="text-[10px] opacity-70 mt-0.5">(đã chỉnh sửa)</span>
             )}
@@ -179,7 +196,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   </div>
                   <div className="truncate">
                     {message.replyToMessage.type === 'text' 
-                      ? message.replyToMessage.content 
+                      ? message.replyToMessage.content.replace(/@\[([^\]]+)\]/g, '@$1')
                       : `[${message.replyToMessage.type}]`}
                   </div>
                 </div>

@@ -34,7 +34,7 @@ interface ChatState {
 
   // Messages
   subscribeToMessages: (conversationId: string) => () => void;
-  sendTextMessage: (conversationId: string, senderId: string, content: string) => Promise<void>;
+  sendTextMessage: (conversationId: string, senderId: string, content: string, mentions?: string[]) => Promise<void>;
   sendImageMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   sendFileMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   sendVideoMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
@@ -255,9 +255,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return unsubscribe;
   },
 
-  sendTextMessage: async (conversationId: string, senderId: string, content: string) => {
+  sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[]) => {
     try {
-      await chatService.sendTextMessage(conversationId, senderId, content);
+      await chatService.sendTextMessage(conversationId, senderId, content, undefined, false, mentions);
     } catch (error) {
       console.error("Lỗi gửi text", error);
       throw error;

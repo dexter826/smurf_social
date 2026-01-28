@@ -51,7 +51,9 @@ export interface Message {
   fileName?: string;
   fileSize?: number;
   readBy?: string[];
-  deliveredAt?: Date;
+  deliveredTo?: string[]; // Thay thế cho deliveredAt trong group
+  deliveredAt?: Date; // Giữ lại cho backward compat hoặc hiển thị time
+  mentions?: string[]; // Danh sách user ID được tag
   reactions?: Record<string, string>;
   isRecalled?: boolean;
   recalledAt?: Date;

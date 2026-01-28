@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal, Camera, Reply, Edit2 } from 'lucide-react';
 import { EmojiPicker, Loading, Button, IconButton, TextArea } from '../ui';
+import { MentionList } from './MentionList';
 import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
 import { validateFileSize } from '../../utils/fileUtils';
 import { Message, User } from '../../types';
 
 interface ChatInputProps {
-  onSendText: (text: string) => void;
+  onSendText: (text: string, mentions?: string[]) => void;
   onSendImage: (file: File) => void;
   onSendFile: (file: File) => void;
   onSendVideo?: (file: File) => void;
@@ -21,6 +22,7 @@ interface ChatInputProps {
   onEditMessage?: (text: string) => Promise<void>;
   currentUserId: string;
   usersMap: Record<string, User>;
+  participants?: User[];
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -37,11 +39,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onCancelAction,
   onEditMessage,
   currentUserId,
-  usersMap
+  usersMap,
+  participants = []
 }) => {
   const [inputText, setInputText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<{ file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[]>([]);
   const [isSending, setIsSending] = useState(false);
+  
+  // Mention State
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const [mentionStartPos, setMentionStartPos] = useState(-1);
   
   // Audio Recording State
   const [isRecording, setIsRecording] = useState(false);
@@ -190,7 +199,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   // =====================================
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value);
+    const text = e.target.value;
+    setInputText(text);
     
     // Typing indicator
     onTyping(true);
@@ -202,6 +212,54 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     typingTimeoutRef.current = setTimeout(() => {
       onTyping(false);
     }, 1000);
+
+    // Mention detection
+    const selectionStart = e.target.selectionStart;
+    const textBeforeCursor = text.slice(0, selectionStart);
+    const lastAtPos = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtPos !== -1) {
+      const query = textBeforeCursor.slice(lastAtPos + 1);
+      // Check if query contains spaces (allow logic: stop at space? or allow Multi Name?)
+      // Let's allow spaces for user names, but maybe limit length or check newlines
+      // Usually mentions stop at space, but names have spaces.
+      // Strict: Stop if newline.
+      if (!query.includes('\n')) {
+        setMentionStartPos(lastAtPos);
+        setMentionQuery(query);
+        setShowMentions(true);
+        setMentionIndex(0);
+        return;
+      }
+    }
+    setShowMentions(false);
+  };
+
+  const filteredParticipants = participants
+    .filter(p => p.id !== currentUserId)
+    .filter(p => p.name.toLowerCase().includes(mentionQuery.toLowerCase()));
+
+  const handleSelectMention = (user: User) => {
+    if (mentionStartPos === -1) return;
+    
+    const before = inputText.slice(0, mentionStartPos);
+    const after = inputText.slice(inputRef.current?.selectionStart || mentionStartPos + 1);
+    
+    // Insert format: @[Name]
+    const mentionText = `@[${user.name}] `;
+    const newText = before + mentionText + after;
+    
+    setInputText(newText);
+    setShowMentions(false);
+    
+    // Reset cursor
+    setTimeout(() => {
+      if (inputRef.current) {
+        const newPos = mentionStartPos + mentionText.length;
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 0);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file' | 'camera') => {
@@ -303,7 +361,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         if (editingMessage) {
           await onEditMessage?.(inputText.trim());
         } else {
-          await onSendText(inputText.trim());
+          // Parse mentions
+          const mentionRegex = /@\[([^\]]+)\]/g;
+          const mentions: string[] = [];
+          let match;
+          while ((match = mentionRegex.exec(inputText.trim())) !== null) {
+             const name = match[1];
+             const user = participants.find(p => p.name === name);
+             if (user) mentions.push(user.id);
+          }
+          const uniqueMentions = [...new Set(mentions)];
+          
+          await onSendText(inputText.trim(), uniqueMentions.length > 0 ? uniqueMentions : undefined);
         }
         setInputText('');
       }
@@ -323,6 +392,60 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showMentions && filteredParticipants.length > 0) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev > 0 ? prev - 1 : filteredParticipants.length - 1));
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev < filteredParticipants.length - 1 ? prev + 1 : 0));
+        return;
+      }
+    }
+
+    if (e.key === 'Backspace') {
+      const cursor = e.currentTarget.selectionStart;
+      const text = e.currentTarget.value;
+      const beforeCursor = text.slice(0, cursor);
+
+      // Check for mention pattern at the end of text before cursor: @[Name] or @[Name] + space
+      // Regex: @\[([^\]]+)\](\s)?$
+      const mentionMatch = beforeCursor.match(/@\[[^\]]+\]\s?$/);
+
+      if (mentionMatch) {
+        e.preventDefault(); // Prevent default single char deletion
+        
+        const deleteLength = mentionMatch[0].length;
+        const newText = text.slice(0, cursor - deleteLength) + text.slice(cursor);
+        
+        setInputText(newText);
+        
+        // Reset cursor position
+        setTimeout(() => {
+          if (inputRef.current) {
+            const newCursorPos = cursor - deleteLength;
+            inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+          }
+        }, 0);
+        return;
+      }
+    }
+
+    if (showMentions && filteredParticipants.length > 0) {
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        handleSelectMention(filteredParticipants[mentionIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowMentions(false);
+        return;
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -422,7 +545,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Input Area */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 px-4 py-3 bg-bg-primary">
+      <form onSubmit={handleSubmit} className="relative flex items-center gap-2 px-4 py-3 bg-bg-primary">
+        {showMentions && filteredParticipants.length > 0 && (
+          <MentionList
+            users={filteredParticipants}
+            selectedIndex={mentionIndex}
+            onSelect={handleSelectMention}
+          />
+        )}
+        
         {/* More Actions Menu */}
         <div className="relative" ref={actionsMenuRef}>
 
@@ -553,6 +684,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               className="rounded-2xl"
               style={{ 
                 overflowY: inputText.split('\n').length > 5 ? 'auto' : 'hidden',
+              }}
+              renderOverlay={(value) => {
+                const parts = value.split(/(@\[[^\]]+\])/g);
+                return (
+                  <>
+                    {parts.map((part, index) => {
+                      if (part.startsWith('@[') && part.endsWith(']')) {
+                        return (
+                          <span key={index} className="text-primary font-bold bg-primary/10 rounded px-0.5 mx-px box-decoration-clone">
+                            {part}
+                          </span>
+                        );
+                      }
+                      return <span key={index}>{part}</span>;
+                    })}
+                    {/* Render a trailing newline char if text ends with newline to fix alignment */}
+                    {value.endsWith('\n') && <br />}
+                  </>
+                );
               }}
               rightElement={
                 <div className="flex items-center gap-1">

@@ -15,3 +15,4 @@ export { AddMemberModal } from './AddMemberModal';
 export { EditGroupModal } from './EditGroupModal';
 export { TransferAdminModal } from './TransferAdminModal';
 export { ForwardModal } from './ForwardModal';
+export { MentionList } from './MentionList';
