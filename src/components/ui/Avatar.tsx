@@ -51,12 +51,11 @@ export const Avatar: React.FC<AvatarProps> = ({
       );
     }
 
-    // Hiển thị Avatar nhóm kiểu Zalo (vòng tròn lồng nhau)
+    // Hiển thị Avatar nhóm (stacked avatars)
     if (isGroup && members.length > 0) {
       const displayMembers = members.slice(0, 4);
       const count = displayMembers.length;
 
-      // Cấu hình vị trí và kích thước cho từng số lượng thành viên
       const getPositionClasses = (index: number, total: number) => {
         if (total === 1) return 'w-full h-full';
         
@@ -87,17 +86,17 @@ export const Avatar: React.FC<AvatarProps> = ({
             return (
               <div 
                 key={member.id || idx} 
-                className={`absolute rounded-full overflow-hidden border-2 border-bg-primary bg-secondary flex items-center justify-center ${getPositionClasses(idx, count)}`}
+                className={`absolute rounded-full overflow-hidden border-2 border-bg-primary bg-bg-secondary flex items-center justify-center ${getPositionClasses(idx, count)}`}
               >
                 {isLastOfMany ? (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-600 text-[8px] font-bold text-white">
-                    99+
+                  <div className="w-full h-full flex items-center justify-center bg-bg-hover text-[8px] font-bold text-text-primary">
+                    ...
                   </div>
                 ) : member.avatar ? (
                   <img src={member.avatar} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div 
-                    className="w-full h-full flex items-center justify-center text-[8px] font-bold text-white uppercase"
+                    className="w-full h-full flex items-center justify-center text-[8px] font-bold text-text-on-primary uppercase"
                     style={{ background: getAvatarGradient(member.name || member.id) }}
                   >
                     {getInitials(member.name).substring(0, 1)}
@@ -112,7 +111,7 @@ export const Avatar: React.FC<AvatarProps> = ({
 
     return (
       <div 
-        className="w-full h-full flex items-center justify-center font-bold text-white uppercase"
+        className="w-full h-full flex items-center justify-center font-bold text-text-on-primary uppercase"
         style={{ background: getAvatarGradient(name || '?') }}
       >
         {getInitials(name || '?')}
@@ -122,7 +121,7 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   return (
     <div className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} ${!isGroup ? 'rounded-full' : ''} ${className}`}>
-      <div className={`w-full h-full relative ${!isGroup ? 'rounded-full overflow-hidden border border-border-light bg-secondary' : ''} flex items-center justify-center`}>
+      <div className={`w-full h-full relative ${!isGroup ? 'rounded-full overflow-hidden border border-border-light bg-bg-secondary' : ''} flex items-center justify-center`}>
         {renderContent()}
       </div>
       {status && (

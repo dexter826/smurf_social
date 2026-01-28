@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
           }
         } catch (error) {
-          console.error("Lỗi đồng bộ user", error);
+          console.error("Error syncing user data:", error);
         }
       } else {
         set({ user: null });

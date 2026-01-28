@@ -26,7 +26,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
   const variants = {
     default: "text-text-secondary hover:text-text-primary",
     primary: "text-primary hover:text-primary-hover",
-    danger: "text-error hover:text-error/80",
+    danger: "text-error hover:text-error",
   };
 
   const sizes = {

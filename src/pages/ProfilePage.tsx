@@ -212,7 +212,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="h-full w-full overflow-y-auto bg-bg-secondary">
-      <div className="bg-bg-primary transition-theme shadow-sm mb-4">
+      <div className="bg-bg-primary shadow-sm mb-4">
         <ProfileHeader
           user={profile}
           stats={stats}
@@ -239,7 +239,7 @@ const ProfilePage: React.FC = () => {
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="w-full md:w-[360px] flex-shrink-0 space-y-4">
                   {/* Khối Giới thiệu */}
-                  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4 transition-theme">
+                  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4">
                     <h3 className="font-bold text-lg mb-4 text-text-primary">Giới thiệu</h3>
                     {profile.bio && (
                       <p className="text-text-primary text-sm mb-4 text-center italic">
@@ -288,7 +288,7 @@ const ProfilePage: React.FC = () => {
                   </div>
 
                   {/* Khối Ảnh/Video Preview */}
-                  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4 transition-theme">
+                  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-lg text-text-primary">Ảnh/Video</h3>
                       <Button 
@@ -332,7 +332,7 @@ const ProfilePage: React.FC = () => {
           </div>
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-          <div className="bg-bg-primary rounded-2xl shadow-sm border border-border-light p-10 transition-theme">
+          <div className="bg-bg-primary rounded-2xl shadow-sm border border-border-light p-10">
             <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
               <Lock size={40} className="text-text-secondary" />
             </div>

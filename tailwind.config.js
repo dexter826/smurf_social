@@ -42,6 +42,7 @@ export default {
         border: {
           light: 'var(--border-light)',
           medium: 'var(--border-medium)',
+          sidebar: 'var(--sidebar-border)',
         },
         divider: 'var(--divider)',
         success: {
@@ -69,17 +70,12 @@ export default {
           bg: 'var(--badge-bg)',
           text: 'var(--badge-text)',
         },
-        notification: {
-          bg: 'var(--notification-bg)',
-          border: 'var(--notification-border)',
-        },
       },
       boxShadow: {
         'sm': 'var(--shadow-sm)',
         'md': 'var(--shadow-md)',
         'lg': 'var(--shadow-lg)',
         'dropdown': 'var(--shadow-dropdown)',
-        'zalo': 'var(--shadow-md)',
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out forwards',

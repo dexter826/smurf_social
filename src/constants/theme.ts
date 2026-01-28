@@ -65,57 +65,57 @@ export const THEME_COLORS = {
   },
   
   dark: {
-    primary: '#3b8fff',
-    primaryHover: '#579fff',
-    primaryActive: '#73afff',
+    primary: '#3b82f6',
+    primaryHover: '#2563eb',
+    primaryActive: '#1d4ed8',
     
     sidebar: {
-      bg: '#1c2738',
-      item: 'rgba(255, 255, 255, 0.6)',
-      itemHover: 'rgba(255, 255, 255, 0.08)',
-      itemActive: 'rgba(255, 255, 255, 0.12)',
+      bg: '#080a0f',
+      item: 'rgba(248, 250, 252, 0.65)',
+      itemHover: 'rgba(248, 250, 252, 0.08)',
+      itemActive: 'rgba(248, 250, 252, 0.12)',
     },
     
     background: {
-      primary: '#0d1117',
-      secondary: '#161b22',
-      tertiary: '#21262d',
-      hover: '#1c2128',
-      active: '#262c36',
-      chat: '#0d1117',
-      messageSent: '#3b8fff',
-      messageReceived: '#262c36',
-      overlay: 'rgba(0, 0, 0, 0.6)',
+      primary: '#0b0e14',
+      secondary: '#14181f',
+      tertiary: '#1e242d',
+      hover: '#1e2530',
+      active: '#28303d',
+      chat: '#0b0e14',
+      messageSent: '#3b82f6',
+      messageReceived: '#1e242d',
+      overlay: 'rgba(0, 0, 0, 0.75)',
     },
     
     text: {
-      primary: '#e6edf3',
-      secondary: '#8b949e',
-      tertiary: '#6e7681',
-      inverse: '#0d1117',
-      link: '#58a6ff',
+      primary: '#f8fafc',
+      secondary: '#94a3b8',
+      tertiary: '#64748b',
+      inverse: '#0b0e14',
+      link: '#60a5fa',
       onPrimary: '#ffffff',
     },
     
     border: {
-      light: '#30363d',
-      medium: '#484f58',
-      dark: '#6e7681',
-      divider: '#21262d',
+      light: '#1e2530',
+      medium: '#2d333b',
+      dark: '#484f58',
+      divider: '#1e2530',
     },
     
     status: {
-      success: '#3fb950',
-      successLight: '#1b3a25',
-      error: '#f85149',
-      errorLight: '#3d1f1f',
-      warning: '#d29922',
-      warningLight: '#3d2e1a',
-      info: '#58a6ff',
-      infoLight: '#1f3551',
-      online: '#3fb950',
-      offline: '#6e7681',
-      away: '#d29922',
+      success: '#10b981',
+      successLight: 'rgba(16, 185, 129, 0.1)',
+      error: '#ef4444',
+      errorLight: 'rgba(239, 68, 68, 0.1)',
+      warning: '#f59e0b',
+      warningLight: 'rgba(245, 158, 11, 0.1)',
+      info: '#3b82f6',
+      infoLight: 'rgba(59, 130, 246, 0.1)',
+      online: '#10b981',
+      offline: '#484f58',
+      away: '#f59e0b',
     },
     
     badge: {
@@ -130,7 +130,7 @@ export const THEME_SHADOWS = {
   md: '0 2px 8px 0 rgba(0, 0, 0, 0.08)',
   lg: '0 4px 16px 0 rgba(0, 0, 0, 0.12)',
   dropdown: '0 8px 24px rgba(0, 0, 0, 0.15)',
-  zalo: '0 2px 8px 0 rgba(0, 0, 0, 0.08)',
+  custom: '0 2px 8px 0 rgba(0, 0, 0, 0.08)',
 } as const;
 
 export const THEME_TRANSITIONS = {
@@ -160,3 +160,15 @@ export const THEME_SPACING = {
     height: '60px',
   },
 } as const;
+
+export const THEME_GRADIENTS = [
+  ['#FF6B6B', '#FF8E53'],
+  ['#4E54C8', '#8F94FB'],
+  ['#11998E', '#38EF7D'],
+  ['#FC466B', '#3F5EFB'],
+  ['#F2994A', '#F2C94C'],
+  ['#56CCF2', '#2F80ED'],
+  ['#B122E5', '#FF63DE'],
+  ['#00B09B', '#96C93D'],
+  ['#642B73', '#C6426E']
+] as const;

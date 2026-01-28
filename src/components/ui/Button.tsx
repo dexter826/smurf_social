@@ -27,7 +27,7 @@ export const Button: React.FC<ButtonProps> = ({
     secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary border border-border-light active:scale-[0.98]",
     outline: "border border-border-medium bg-transparent hover:bg-bg-hover text-text-primary active:scale-[0.98]",
     ghost: "hover:bg-bg-hover text-text-secondary hover:text-text-primary active:scale-[0.95]",
-    danger: "bg-error hover:bg-error/90 text-white shadow-sm active:scale-[0.98]"
+    danger: "bg-error hover:bg-error text-white shadow-sm active:scale-[0.98]"
   };
 
   const sizes = {

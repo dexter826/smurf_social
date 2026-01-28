@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
+import { API_ENDPOINTS } from '../../constants/api';
+import { UI_MESSAGES } from '../../constants/uiMessages';
 
 interface EditProfileModalProps {
   user: User;
@@ -38,7 +40,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   const fetchProvinces = async () => {
     try {
-      const response = await fetch('https://provinces.open-api.vn/api/p/');
+      const response = await fetch(API_ENDPOINTS.PROVINCES);
       const data = await response.json();
       setProvinces(data.map((p: any) => ({ value: p.name, label: p.name })));
     } catch (error) {
@@ -73,10 +75,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setSaving(true);
     try {
       await onSave(formData);
-      toast.success('Cập nhật thông tin thành công!');
+      toast.success(UI_MESSAGES.PROFILE.UPDATE_SUCCESS);
       onClose();
     } catch (error) {
-      toast.error('Không thể cập nhật thông tin');
+      toast.error(UI_MESSAGES.PROFILE.UPDATE_ERROR);
     } finally {
       setSaving(false);
     }
@@ -86,19 +88,19 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Chỉnh sửa trang cá nhân"
+      title={UI_MESSAGES.PROFILE.EDIT_TITLE}
       maxWidth="2xl"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>
-            Hủy
+            {UI_MESSAGES.COMMON.CANCEL}
           </Button>
           <Button 
             variant="primary" 
             onClick={handleSave} 
             disabled={saving || !isChanged()}
           >
-            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+            {saving ? UI_MESSAGES.COMMON.SAVING : UI_MESSAGES.COMMON.SAVE}
           </Button>
         </>
       }

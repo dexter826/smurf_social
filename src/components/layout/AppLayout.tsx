@@ -44,8 +44,8 @@ export const AppLayout: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-bg-secondary overflow-hidden transition-theme">
-      <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md">
+    <div className="flex h-screen w-full bg-bg-secondary overflow-hidden">
+      <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md border-r border-border-sidebar">
         <div className="mb-8" onClick={() => navigate('/profile')}>
           {user && (
             <UserAvatar 

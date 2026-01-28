@@ -15,12 +15,15 @@
   --sidebar-item-hover: rgba(0, 0, 0, 0.1);
   --sidebar-item-active: rgba(0, 0, 0, 0.15);
 
-  /* === Background Colors - Đơn giản hóa: CHỈ 2 MÀU === */
+  /* === Background Colors === */
   --bg-primary: #ffffff;
-  --bg-secondary: #f0f2f5;
-  --bg-hover: #ebeef2;
+  --bg-secondary: #f4f6f8;
+  --bg-tertiary: #e9ebef;
+  --bg-hover: #f0f2f5;
+  --bg-active: #e4e6eb;
+  --bg-chat: #ffffff;
   --bg-message-sent: #0068ff;
-  --bg-message-received: #ebeef2;
+  --bg-message-received: #e9ebef;
   --bg-overlay: rgba(0, 0, 0, 0.4);
 
   /* === Text Colors === */
@@ -31,29 +34,29 @@
   --text-link: #0068ff;
   --text-on-primary: #ffffff;
 
-  /* === Border & Divider - Đơn giản hóa === */
+  /* === Border & Status === */
   --border-light: #e4e6eb;
   --border-medium: #d1d5db;
-  --divider: #e4e6eb;
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --border-dark: #9ca3af;
+  --divider: #e9ebef;
+
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-error: #ef4444;
+  --color-error-light: #fee2e2;
   --color-warning: #f59e0b;
   --color-warning-light: #fef3c7;
   --color-info: #3b82f6;
   --color-info-light: #dbeafe;
-  --color-error: #ef4444;
-  --color-error-light: #fee2e2;
-  --color-success: #10b981;
-  --color-success-light: #d1fae5;
 
-  /* === Online Status === */
   --status-online: #10b981;
   --status-offline: #9ca3af;
   --status-away: #f59e0b;
 
-  /* === Badge & Notification === */
+  /* === Badge === */
   --badge-bg: #ef4444;
   --badge-text: #ffffff;
-  --notification-bg: #fef2f2;
-  --notification-border: #fecaca;
 
   /* === Shadows === */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -64,65 +67,68 @@
 
 .dark {
   /* === Brand Colors === */
-  --color-primary: #3b8fff;
-  --color-primary-hover: #579fff;
-  --color-primary-active: #73afff;
-  --color-primary-light: #1e3a5f;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-active: #1d4ed8;
+  --color-primary-light: rgba(59, 130, 246, 0.15);
 
-  /* === Sidebar Colors - ĐỒNG BỘ === */
-  --sidebar-bg: #111827;
-  --sidebar-item: rgba(255, 255, 255, 0.6);
-  --sidebar-item-hover: rgba(255, 255, 255, 0.08);
-  --sidebar-item-active: rgba(255, 255, 255, 0.12);
+  /* === Sidebar Colors === */
+  --sidebar-bg: #080a0f;
+  --sidebar-item: rgba(248, 250, 252, 0.65);
+  --sidebar-item-hover: rgba(248, 250, 252, 0.08);
+  --sidebar-item-active: rgba(248, 250, 252, 0.12);
 
-  /* === Background Colors - ĐỒNG BỘ: CHỈ 2 MÀU CHÍNH === */
-  --bg-primary: #1f2937;
-  --bg-secondary: #111827;
-  --bg-hover: #374151;
-  --bg-message-sent: #0068ff;
-  --bg-message-received: #374151;
-  --bg-overlay: rgba(0, 0, 0, 0.6);
+  /* === Background Colors === */
+  --bg-primary: #0b0e14;
+  --bg-secondary: #14181f;
+  --bg-tertiary: #1e242d;
+  --bg-hover: #1e2530;
+  --bg-active: #28303d;
+  --bg-chat: #0b0e14;
+  --bg-message-sent: #3b82f6;
+  --bg-message-received: #1e242d;
+  --bg-overlay: rgba(0, 0, 0, 0.75);
 
   /* === Text Colors === */
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-tertiary: #6e7681;
-  --text-inverse: #111827;
-  --text-link: #58a6ff;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-inverse: #0b0e14;
+  --text-link: #60a5fa;
   --text-on-primary: #ffffff;
 
-  /* === Border & Divider - ĐỒNG BỘ === */
-  --border-light: #374151;
-  --border-medium: #4b5563;
-  --divider: #374151;
-  --color-warning: #d29922;
-  --color-warning-light: #3d2e1a;
-  --color-info: #58a6ff;
-  --color-info-light: #1f3551;
-  --color-error: #f85149;
-  --color-error-light: #3d1f1f;
-  --color-success: #3fb950;
-  --color-success-light: #1b3a25;
+  /* === Border & Status === */
+  --border-light: #1e2530;
+  --border-medium: #2d333b;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --border-dark: #484f58;
+  --divider: #1e2530;
 
-  /* === Online Status === */
-  --status-online: #3fb950;
-  --status-offline: #6e7681;
-  --status-away: #d29922;
+  --color-success: #10b981;
+  --color-success-light: rgba(16, 185, 129, 0.1);
+  --color-error: #ef4444;
+  --color-error-light: rgba(239, 68, 68, 0.1);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.1);
+  --color-info: #3b82f6;
+  --color-info-light: rgba(59, 130, 246, 0.1);
 
-  /* === Badge & Notification === */
+  --status-online: #10b981;
+  --status-offline: #484f58;
+  --status-away: #f59e0b;
+
+  /* === Badge === */
   --badge-bg: #f85149;
   --badge-text: #ffffff;
-  --notification-bg: #3d1f1f;
-  --notification-border: #6e3030;
 
-  /* === Shadows === */
+  /* === Shadows (Tùy chỉnh cho dark mode) === */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.5);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-.shadow-zalo {
+.shadow-soft-md {
   box-shadow: var(--shadow-md);
 }
 
@@ -216,4 +222,17 @@ input::-ms-clear {
 
 .transition-theme {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.scroll-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.center-flex {
+  @apply flex items-center justify-center;
 }

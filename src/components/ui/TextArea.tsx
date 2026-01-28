@@ -113,7 +113,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           onChange={(e) => {
             onChange?.(e);
           }}
-          style={{ caretColor: 'var(--color-primary, #3b82f6)' }}
+          style={{ caretColor: 'var(--color-primary)' }}
           {...props}
         />
         {rightElement && (

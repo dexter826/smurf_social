@@ -106,7 +106,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ selectedConversationId: conversationId });
       return conversationId;
     } catch (error) {
-      console.error("Lỗi get/create conversation", error);
+      console.error("Error getting or creating conversation:", error);
       throw error;
     }
   },
@@ -130,7 +130,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         isLoading: false 
       });
     } catch (error) {
-      console.error("Lỗi search", error);
+      console.error("Error searching conversations:", error);
       set({ isLoading: false });
     }
   },
@@ -145,7 +145,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         )
       }));
     } catch (error) {
-      console.error("Lỗi toggle pin", error);
+      console.error("Error toggling pin:", error);
       throw error;
     }
   },
@@ -160,7 +160,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         )
       }));
     } catch (error) {
-      console.error("Lỗi toggle mute", error);
+      console.error("Error toggling mute:", error);
       throw error;
     }
   },
@@ -175,7 +175,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         )
       }));
     } catch (error) {
-      console.error("Lỗi toggle archive", error);
+      console.error("Error toggling archive:", error);
       throw error;
     }
   },
@@ -190,7 +190,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         )
       }));
     } catch (error) {
-      console.error("Lỗi toggle mark unread", error);
+      console.error("Error toggling mark unread:", error);
       throw error;
     }
   },
@@ -210,7 +210,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           : state.selectedConversationId
       }));
     } catch (error) {
-      console.error("Lỗi xóa conversation", error);
+      console.error("Error deleting conversation:", error);
       throw error;
     }
   },
@@ -259,7 +259,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.sendTextMessage(conversationId, senderId, content, undefined, false, mentions);
     } catch (error) {
-      console.error("Lỗi gửi text", error);
+      console.error("Error sending text message:", error);
       throw error;
     }
   },
@@ -268,7 +268,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.sendImageMessage(conversationId, senderId, file);
     } catch (error) {
-      console.error("Lỗi gửi ảnh", error);
+      console.error("Error sending image message:", error);
       throw error;
     }
   },
@@ -277,7 +277,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.sendFileMessage(conversationId, senderId, file);
     } catch (error) {
-      console.error("Lỗi gửi file", error);
+      console.error("Error sending file message:", error);
       throw error;
     }
   },
@@ -286,7 +286,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.sendVideoMessage(conversationId, senderId, file);
     } catch (error) {
-      console.error("Lỗi gửi video", error);
+      console.error("Error sending video message:", error);
       throw error;
     }
   },
@@ -295,7 +295,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.sendVoiceMessage(conversationId, senderId, file);
     } catch (error) {
-      console.error("Lỗi gửi voice", error);
+      console.error("Error sending voice message:", error);
       throw error;
     }
   },
@@ -304,7 +304,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.markMessagesAsRead(conversationId, userId);
     } catch (error) {
-      console.error("Lỗi mark as read", error);
+      console.error("Error marking messages as read:", error);
     }
   },
 
@@ -312,7 +312,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.markMessagesAsDelivered(conversationId, userId);
     } catch (error) {
-      console.error("Lỗi mark as delivered", error);
+      console.error("Error marking messages as delivered:", error);
     }
   },
 
@@ -322,7 +322,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.recallMessage(messageId, conversationId);
     } catch (error) {
-      console.error("Lỗi thu hồi tin nhắn", error);
+      console.error("Error recalling message:", error);
       throw error;
     }
   },
@@ -331,7 +331,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.deleteMessageForMe(messageId, userId);
     } catch (error) {
-      console.error("Lỗi xóa tin nhắn cho tôi", error);
+      console.error("Error deleting message for me:", error);
       throw error;
     }
   },
@@ -340,7 +340,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.forwardMessage(conversationId, senderId, message);
     } catch (error) {
-      console.error("Lỗi chuyển tiếp tin nhắn", error);
+      console.error("Error forwarding message:", error);
       throw error;
     }
   },
@@ -349,7 +349,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.replyToMessage(conversationId, senderId, content, replyToId);
     } catch (error) {
-      console.error("Lỗi trả lời tin nhắn", error);
+      console.error("Error replying to message:", error);
       throw error;
     }
   },
@@ -358,7 +358,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.editMessage(messageId, content);
     } catch (error) {
-      console.error("Lỗi chỉnh sửa tin nhắn", error);
+      console.error("Error editing message:", error);
       throw error;
     }
   },
@@ -369,7 +369,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.setTypingStatus(conversationId, userId, isTyping);
     } catch (error) {
-      console.error("Lỗi set typing", error);
+      console.error("Error setting typing status:", error);
     }
   },
 
@@ -392,7 +392,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.toggleReaction(messageId, userId, emoji);
     } catch (error) {
-      console.error("Lỗi toggle reaction", error);
+      console.error("Error toggling reaction:", error);
       throw error;
     }
   },
@@ -405,7 +405,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ selectedConversationId: conversationId });
       return conversationId;
     } catch (error) {
-      console.error("Lỗi tạo group", error);
+      console.error("Error creating group:", error);
       throw error;
     }
   },
@@ -419,7 +419,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         )
       }));
     } catch (error) {
-      console.error("Lỗi cập nhật group", error);
+      console.error("Error updating group info:", error);
       throw error;
     }
   },
@@ -428,7 +428,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.addGroupMember(conversationId, userId);
     } catch (error) {
-      console.error("Lỗi thêm thành viên", error);
+      console.error("Error adding member:", error);
       throw error;
     }
   },
@@ -437,7 +437,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.removeGroupMember(conversationId, userId);
     } catch (error) {
-      console.error("Lỗi xóa thành viên", error);
+      console.error("Error removing member:", error);
       throw error;
     }
   },
@@ -452,7 +452,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           : state.selectedConversationId
       }));
     } catch (error) {
-      console.error("Lỗi rời group", error);
+      console.error("Error leaving group:", error);
       throw error;
     }
   },
@@ -461,7 +461,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.promoteToAdmin(conversationId, userId);
     } catch (error) {
-      console.error("Lỗi thăng admin", error);
+      console.error("Error promoting to admin:", error);
       throw error;
     }
   },
@@ -470,7 +470,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await chatService.demoteFromAdmin(conversationId, userId);
     } catch (error) {
-      console.error("Lỗi hạ quyền admin", error);
+      console.error("Error demoting from admin:", error);
       throw error;
     }
   },

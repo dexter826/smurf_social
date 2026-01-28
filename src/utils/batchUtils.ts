@@ -38,7 +38,7 @@ export const batchGetUsers = async (userIds: string[]): Promise<Record<string, U
       return acc;
     }, {} as Record<string, User>);
   } catch (error) {
-    console.error('Lỗi batch get users:', error);
+    console.error('Error batchGetUsers:', error);
     return {};
   }
 };

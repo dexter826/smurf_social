@@ -56,7 +56,7 @@ export const usePostStore = create<PostState>((set, get) => ({
       });
     } catch (error: any) {
       if (error.name === 'AbortError') return;
-      console.error("Lỗi fetch posts", error);
+      console.error("Error fetching posts:", error);
       set({ isLoading: false, abortController: null });
     }
   },
@@ -80,7 +80,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         visibility
       });
     } catch (error) {
-      console.error("Lỗi tạo post", error);
+      console.error("Error creating post:", error);
       throw error;
     }
   },
@@ -96,7 +96,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         )
       }));
     } catch (error) {
-      console.error("Lỗi update post", error);
+      console.error("Error updating post:", error);
       throw error;
     }
   },
@@ -108,7 +108,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         posts: state.posts.filter(p => p.id !== postId)
       }));
     } catch (error) {
-      console.error("Lỗi delete post", error);
+      console.error("Error deleting post:", error);
       throw error;
     }
   },
@@ -135,7 +135,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     try {
       await postService.likePost(postId, userId, isLiked);
     } catch (error) {
-      console.error("Lỗi like post", error);
+      console.error("Error liking post:", error);
       set((state) => ({
         posts: state.posts.map(p =>
           p.id === postId
@@ -155,7 +155,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     try {
       return await postService.uploadPostMedia(files, userId);
     } catch (error) {
-      console.error("Lỗi upload media", error);
+      console.error("Error uploading media:", error);
       throw error;
     }
   },

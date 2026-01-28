@@ -169,7 +169,7 @@ const ContactsPage: React.FC = () => {
   return (
     <div className="flex h-full w-full">
       {/* Sidebar */}
-      <div className="hidden md:flex flex-col w-[300px] border-r border-border-light bg-bg-primary pt-4 transition-theme">
+      <div className="hidden md:flex flex-col w-[300px] border-r border-border-light bg-bg-primary pt-4">
         <div className="px-4 mb-4">
           <Button
             variant="primary"

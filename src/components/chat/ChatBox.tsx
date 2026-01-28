@@ -4,6 +4,7 @@ import { Phone, Video, Info, MoreVertical } from 'lucide-react';
 import { Message, User, Conversation, UserStatus } from '../../types';
 import { Avatar, UserAvatar, UserStatusText, Button, IconButton } from '../ui';
 import { MessageBubble } from './MessageBubble';
+import { UI_MESSAGES } from '../../constants/uiMessages';
 
 interface ChatBoxProps {
   conversation: Conversation;
@@ -48,7 +49,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
   const chatName = conversation.isGroup
     ? conversation.groupName
-    : partner?.name || 'Unknown';
+    : partner?.name || UI_MESSAGES.COMMON.UNKNOWN;
 
   const avatarSrc = conversation.isGroup
     ? conversation.groupAvatar
@@ -98,7 +99,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
   const typingUsersNames = typingUsers
     .filter(uid => uid !== currentUserId)
-    .map(uid => usersMap[uid]?.name || 'Ai đó')
+    .map(uid => usersMap[uid]?.name || UI_MESSAGES.COMMON.SOMEONE)
     .join(', ');
 
   return (
@@ -138,21 +139,21 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         <div className="flex items-center gap-1">
           <IconButton
             onClick={() => {}}
-            title="Cuộc gọi âm thanh"
+            title={UI_MESSAGES.CHAT.AUDIO_CALL}
             variant="primary"
             icon={<Phone size={20} />}
             size="lg"
           />
           <IconButton
             onClick={() => {}}
-            title="Cuộc gọi video"
+            title={UI_MESSAGES.CHAT.VIDEO_CALL}
             variant="primary"
             icon={<Video size={20} />}
             size="lg"
           />
           <IconButton
             onClick={onInfoClick}
-            title="Thông tin hội thoại"
+            title={UI_MESSAGES.CHAT.CONVERSATION_INFO}
             icon={<Info size={20} />}
             size="lg"
           />
@@ -175,7 +176,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               />
             </div>
             <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
-            <p className="text-sm text-text-secondary">Bắt đầu cuộc trò chuyện</p>
+            <p className="text-sm text-text-secondary">{UI_MESSAGES.CHAT.START_CONVERSATION}</p>
           </div>
         ) : (
           <div className="space-y-4 px-4 py-4">
@@ -228,7 +229,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       {/* Typing Indicator - Simple Text Bottom Left */}
       {typingUsers.filter(uid => uid !== currentUserId).length > 0 && (
         <div className="absolute bottom-2 left-4 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <span className="text-xs text-text-tertiary italic">Đang soạn tin...</span>
+          <span className="text-xs text-text-tertiary italic">{UI_MESSAGES.COMMON.TYPING}</span>
         </div>
       )}
     </div>

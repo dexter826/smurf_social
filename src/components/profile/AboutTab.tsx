@@ -13,7 +13,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Thông tin liên hệ */}
-        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6">
           <h3 className="font-bold text-lg mb-4 text-text-primary">Thông tin liên hệ</h3>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
@@ -39,7 +39,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
         </div>
 
         {/* Thông tin cơ bản */}
-        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+        <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6">
           <h3 className="font-bold text-lg mb-4 text-text-primary">Thông tin cơ bản</h3>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
@@ -68,7 +68,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
 
         {/* Giới thiệu */}
         {user.bio && (
-          <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 md:col-span-2 transition-theme">
+          <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 md:col-span-2">
             <h3 className="font-bold text-lg mb-4 text-text-primary">Giới thiệu</h3>
             <p className="text-text-primary whitespace-pre-wrap">{user.bio}</p>
           </div>

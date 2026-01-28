@@ -142,7 +142,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 className="group rounded-full"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
-                icon={<ImageIcon className="text-[#22c55e] group-hover:scale-110 transition-transform" size={24} />}
+                icon={<ImageIcon className="text-success group-hover:scale-110 transition-transform" size={24} />}
                 size="lg"
               />
               <IconButton
@@ -211,7 +211,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={isEdit ? "Bạn đang nghĩ gì thế?" : `${currentUser.name} ơi, bạn đang nghĩ gì thế?`}
-          className="w-full min-h-[120px] p-4 text-[18px] text-text-primary placeholder-text-tertiary bg-bg-primary border border-border-light rounded-xl resize-none outline-none focus:border-primary focus:ring-4 focus:ring-primary-light/30 transition-all"
+          className="w-full min-h-[120px] p-4 text-[18px] text-text-primary placeholder-text-tertiary bg-bg-primary border border-border-light rounded-xl resize-none outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
           disabled={isSubmitting}
           autoFocus
         />

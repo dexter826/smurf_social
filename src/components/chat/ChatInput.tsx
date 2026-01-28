@@ -6,6 +6,7 @@ import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
 import { validateFileSize } from '../../utils/fileUtils';
 import { Message, User } from '../../types';
+import { UI_MESSAGES } from '../../constants/uiMessages';
 
 interface ChatInputProps {
   onSendText: (text: string, mentions?: string[]) => void;
@@ -157,8 +158,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       }, 1000);
 
     } catch (error) {
-      console.error("Lỗi truy cập micro", error);
-      toast.error('Không thể truy cập Microphone. Vui lòng kiểm tra quyền truy cập.');
+      console.error("Error accessing microphone:", error);
+      toast.error(UI_MESSAGES.CHAT.MIC_ERROR);
     }
   };
 
@@ -266,7 +267,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
     // Giới hạn số lượng file
     if (selectedFiles.length + files.length > FILE_LIMITS.CHAT_MAX_FILES) {
-      toast.error(`Chỉ được gửi tối đa ${FILE_LIMITS.CHAT_MAX_FILES} file cùng lúc.`);
+      toast.error(UI_MESSAGES.CHAT.MAX_FILES_ERROR(FILE_LIMITS.CHAT_MAX_FILES));
       return;
     }
 
@@ -307,7 +308,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       // Phát file mới
       const audio = new Audio(url);
       audio.onended = () => setPlayingPreview(null);
-      audio.play().catch(e => toast.error('Không thể phát file âm thanh này'));
+      audio.play().catch(e => toast.error(UI_MESSAGES.CHAT.AUDIO_PLAY_ERROR));
       audioRef.current = audio;
       setPlayingPreview(index);
     }
@@ -526,8 +527,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             <div className="flex-1 min-w-0">
               <div className="text-[12px] font-bold text-primary mb-0.5">
                 {editingMessage 
-                  ? 'Đang chỉnh sửa' 
-                  : `Trả lời ${replyingTo.senderId === currentUserId ? 'chính bạn' : (usersMap[replyingTo.senderId]?.name || 'người khác')}`}
+                  ? UI_MESSAGES.CHAT.EDITING 
+                  : (replyingTo.senderId === currentUserId 
+                    ? UI_MESSAGES.CHAT.REPLYING_SELF 
+                    : UI_MESSAGES.CHAT.REPLYING_OTHER(usersMap[replyingTo.senderId]?.name || ''))}
               </div>
               <div className="text-[13px] text-text-secondary truncate">
                 {editingMessage ? editingMessage.content : (replyingTo.type === 'text' ? replyingTo.content : `[${replyingTo.type}]`)}
@@ -583,7 +586,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 <IconButton
                    type="button"
                    onClick={() => { cameraInputRef.current?.click(); setShowActions(false); }}
-                   title="Chụp ảnh/Quay phim"
+                   title={UI_MESSAGES.CHAT.TAKE_PHOTO_VIDEO}
                    icon={<Camera size={16} />}
                    size="sm"
                 />
@@ -672,7 +675,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               value={inputText}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Aa"
+              placeholder={UI_MESSAGES.CHAT.PLACEHOLDER}
               disabled={disabled || isSending}
               autoResize
               maxHeight={120}
@@ -739,10 +742,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           isLoading={isSending}
           variant={(inputText.trim() || selectedFiles.length > 0) ? 'primary' : 'secondary'}
           className={`w-10 h-10 shadow-sm active:scale-95 rounded-full ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-50 cursor-not-allowed'}`}
-          title="Gửi"
+          title={UI_MESSAGES.COMMON.SEND}
           icon={<Send size={20} className={inputText.trim() || selectedFiles.length > 0 ? 'fill-current' : ''} />}
         />
       </form>
     </div>
   );
 };
+
+

@@ -128,7 +128,7 @@ export const messageService = {
       await uploadBytes(fileRef, file);
       const imageUrl = await getDownloadURL(fileRef);
 
-      const messageData: any = {
+      const messageData: Record<string, any> = {
         conversationId,
         senderId,
         content: imageUrl,
@@ -189,7 +189,7 @@ export const messageService = {
       await uploadBytes(fileRef, file);
       const fileUrl = await getDownloadURL(fileRef);
 
-      const messageData: any = {
+      const messageData: Record<string, any> = {
         conversationId,
         senderId,
         content: file.name,
@@ -252,7 +252,7 @@ export const messageService = {
       await uploadBytes(fileRef, file);
       const videoUrl = await getDownloadURL(fileRef);
 
-      const messageData: any = {
+      const messageData: Record<string, any> = {
         conversationId,
         senderId,
         content: videoUrl,
@@ -313,7 +313,7 @@ export const messageService = {
       await uploadBytes(fileRef, file);
       const voiceUrl = await getDownloadURL(fileRef);
 
-      const messageData: any = {
+      const messageData: Record<string, any> = {
         conversationId,
         senderId,
         content: voiceUrl,
@@ -381,7 +381,7 @@ export const messageService = {
         
         // Nếu user chưa có trong deliveredTo
         if (!deliveredTo.includes(userId)) {
-          const updates: any = {
+          const updates: Record<string, any> = {
             deliveredTo: arrayUnion(userId)
           };
 
@@ -439,7 +439,7 @@ export const messageService = {
       
       if (conversationSnap.exists()) {
         const data = conversationSnap.data();
-        const updates: any = {
+        const updates: Record<string, any> = {
           [`unreadCount.${userId}`]: 0
         };
 
@@ -543,7 +543,7 @@ export const messageService = {
     originalMessage: Message
   ): Promise<void> => {
     try {
-      const messageData: any = {
+      const messageData: Record<string, any> = {
         conversationId: targetConversationId,
         senderId,
         content: originalMessage.content,
