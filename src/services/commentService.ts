@@ -1,6 +1,7 @@
 import { 
   collection, 
   addDoc, 
+  getDoc,
   getDocs, 
   query, 
   orderBy, 
@@ -17,8 +18,9 @@ import {
   increment
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Comment } from '../types';
+import { Comment, NotificationType } from '../types';
 import { PAGINATION } from '../constants';
+import { notificationService } from './notificationService';
 
 export const commentService = {
   // Lấy danh sách bình luận gốc của bài viết
@@ -124,6 +126,30 @@ export const commentService = {
         commentCount: increment(1)
       });
 
+      // Gửi thông báo cho chủ bài viết hoặc người được phản hồi
+      const postSnap = await getDoc(postRef);
+      const postData = postSnap.data();
+      
+      if (parentId && replyToUserId) {
+        // Thông báo phản hồi bình luận
+        if (replyToUserId !== userId) {
+          await notificationService.createNotification({
+            receiverId: replyToUserId,
+            senderId: userId,
+            type: NotificationType.REPLY_COMMENT,
+            data: { postId, commentId: docRef.id, contentSnippet: content.substring(0, 50) }
+          });
+        }
+      } else if (postData && postData.userId !== userId) {
+        // Thông báo bình luận bài viết
+        await notificationService.createNotification({
+          receiverId: postData.userId,
+          senderId: userId,
+          type: NotificationType.COMMENT_POST,
+          data: { postId, commentId: docRef.id, contentSnippet: content.substring(0, 50) }
+        });
+      }
+
       return docRef.id;
     } catch (error) {
       console.error("Lỗi thêm comment:", error);
@@ -182,6 +208,20 @@ export const commentService = {
       await updateDoc(commentRef, {
         likes: isLiked ? arrayRemove(userId) : arrayUnion(userId)
       });
+
+      // Gửi thông báo nếu là like mới
+      if (!isLiked) {
+        const commentSnap = await getDoc(commentRef);
+        const commentData = commentSnap.data();
+        if (commentData && commentData.userId !== userId) {
+          await notificationService.createNotification({
+            receiverId: commentData.userId,
+            senderId: userId,
+            type: NotificationType.LIKE_COMMENT,
+            data: { postId: commentData.postId, commentId }
+          });
+        }
+      }
     } catch (error) {
       console.error("Lỗi like comment:", error);
       throw error;

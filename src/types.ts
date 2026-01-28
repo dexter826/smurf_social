@@ -20,6 +20,7 @@ export interface User {
   createdAt?: Date;
   coverImage?: string;
   lastSeen?: Date;
+  fcmTokens?: string[];
 }
 
 export enum FriendRequestStatus {
@@ -111,4 +112,28 @@ export interface Post {
   visibility: 'friends' | 'private';
   edited?: boolean;
   editedAt?: Date;
+}
+
+export enum NotificationType {
+  LIKE_POST = 'like_post',
+  COMMENT_POST = 'comment_post',
+  REPLY_COMMENT = 'reply_comment',
+  LIKE_COMMENT = 'like_comment',
+  FRIEND_REQUEST = 'friend_request',
+  FRIEND_ACCEPT = 'friend_accept'
+}
+
+export interface AppNotification {
+  id: string;
+  receiverId: string;
+  senderId: string;
+  type: NotificationType;
+  data: {
+    postId?: string;
+    commentId?: string;
+    friendRequestId?: string;
+    contentSnippet?: string;
+  };
+  isRead: boolean;
+  createdAt: Date;
 }

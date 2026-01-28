@@ -56,5 +56,13 @@ service cloud.firestore {
       );
       allow delete: if request.auth != null && resource.data.senderId == request.auth.uid;
     }
+
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && resource.data.receiverId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && resource.data.receiverId == request.auth.uid && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if false;
+    }
   }
 }

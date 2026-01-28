@@ -13,6 +13,18 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, './src'),
         }
+      },
+      build: {
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage', 'firebase/messaging'],
+              'vendor-ui': ['lucide-react', 'date-fns'],
+              'vendor-react': ['react', 'react-dom', 'react-router-dom', 'zustand'],
+            }
+          }
+        }
       }
     };
 });

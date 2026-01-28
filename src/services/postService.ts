@@ -20,9 +20,10 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
-import { Post, Comment } from '../types';
+import { Post, Comment, NotificationType } from '../types';
 import { chunkArray } from '../utils/batchUtils';
 import { PAGINATION, FIREBASE_LIMITS } from '../constants';
+import { notificationService } from './notificationService';
 
 export const postService = {
   getFeed: async (currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
@@ -264,6 +265,20 @@ export const postService = {
       await updateDoc(postRef, {
         likes: isLiked ? arrayRemove(userId) : arrayUnion(userId)
       });
+
+      // Gửi thông báo nếu là like mới (không phải bỏ like)
+      if (!isLiked) {
+        const postSnap = await getDoc(postRef);
+        const postData = postSnap.data();
+        if (postData && postData.userId !== userId) {
+          await notificationService.createNotification({
+            receiverId: postData.userId,
+            senderId: userId,
+            type: NotificationType.LIKE_POST,
+            data: { postId }
+          });
+        }
+      }
     } catch (error) {
       console.error("Lỗi like bài viết", error);
       throw error;
