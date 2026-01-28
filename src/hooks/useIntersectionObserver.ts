@@ -6,10 +6,7 @@ interface UseIntersectionObserverOptions {
   enabled?: boolean;
 }
 
-/**
- * Hook để theo dõi element có visible trong viewport không
- * Thường dùng cho infinite scroll
- */
+// Theo dõi element hiển thị trong viewport
 export const useIntersectionObserver = (
   callback: () => void,
   options: UseIntersectionObserverOptions = {}

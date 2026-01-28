@@ -33,7 +33,6 @@ const ChatPage: React.FC = () => {
     editingMessage,
     setEditingMessage,
     
-    // Handlers
     handleSelectConversation,
     handleSendText,
     handleEditMessage,
@@ -72,6 +71,7 @@ const ChatPage: React.FC = () => {
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
 
+  // Hiển thị skeleton khi chưa tải xong user
   if (!currentUser) {
     return <MessengerSkeleton />;
   }
@@ -86,7 +86,7 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="flex h-full w-full">
-      {/* Sidebar danh sách chat */}
+      {/* Sidebar danh sách hội thoại */}
       <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[320px] flex-shrink-0 w-full`}>
         <ConversationList
           conversations={filteredConversations}
@@ -126,7 +126,7 @@ const ChatPage: React.FC = () => {
         />
       </div>
 
-      {/* Khu vực chat chính */}
+      {/* Nội dung khung chat */}
       <div className={`flex-1 flex flex-col ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
         {selectedConversation ? (
           <>
@@ -188,7 +188,7 @@ const ChatPage: React.FC = () => {
         )}
       </div>
 
-      {/* Panel thông tin chat */}
+      {/* Thông tin chi tiết hội thoại */}
       {selectedConversation && (
         <ChatDetailsPanel
           conversation={selectedConversation}
@@ -220,7 +220,7 @@ const ChatPage: React.FC = () => {
         />
       )}
 
-      {/* Modals */}
+      {/* Quản lý nhóm và chuyển tiếp tin nhắn */}
       <CreateGroupModal
         isOpen={showCreateGroup}
         currentUserId={currentUser.id}

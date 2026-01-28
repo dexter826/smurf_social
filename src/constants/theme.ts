@@ -1,7 +1,5 @@
-/**
- * Theme Constants
- * Hằng số màu sắc và theme cho toàn bộ ứng dụng
- */
+// Hằng số theme
+
 
 export const THEME_COLORS = {
   light: {

@@ -2,15 +2,10 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingProps {
-  /** Kiểu hiển thị của loading */
   variant?: 'spinner' | 'page' | 'overlay' | 'inline';
-  /** Kích thước của spinner */
   size?: 'sm' | 'md' | 'lg' | number;
-  /** Văn bản hiển thị đi kèm */
   text?: string;
-  /** Class CSS bổ sung */
   className?: string;
-  /** Màu sắc của spinner */
   color?: string;
 }
 
@@ -21,7 +16,7 @@ export const Loading: React.FC<LoadingProps> = ({
   className = '',
   color = 'text-primary'
 }) => {
-  // Xác định kích thước cụ thể
+  // Xác định kích thước
   const getIconSize = () => {
     if (typeof size === 'number') return size;
     switch (size) {
@@ -40,7 +35,7 @@ export const Loading: React.FC<LoadingProps> = ({
     />
   );
 
-  // Loading đơn thuần (chỉ icon)
+  // Loading icon
   if (variant === 'spinner') {
     return (
       <div className={`flex items-center justify-center ${className}`}>
@@ -50,7 +45,7 @@ export const Loading: React.FC<LoadingProps> = ({
     );
   }
 
-  // Loading toàn trang
+  // Toàn trang
   if (variant === 'page') {
     return (
       <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-bg-primary transition-theme ${className}`}>
@@ -60,7 +55,7 @@ export const Loading: React.FC<LoadingProps> = ({
     );
   }
 
-  // Loading lớp phủ (cho các container có position relative)
+  // Lớp phủ
   if (variant === 'overlay') {
     return (
       <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-bg-primary/60 backdrop-blur-[2px] rounded-inherit transition-theme ${className}`}>
@@ -70,7 +65,7 @@ export const Loading: React.FC<LoadingProps> = ({
     );
   }
 
-  // Loading có padding (mặc định dùng cho nội dung danh sách)
+  // Loading đệm
   return (
     <div className={`flex flex-col items-center justify-center p-8 w-full ${className}`}>
       {spinner}

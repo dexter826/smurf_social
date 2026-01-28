@@ -13,7 +13,6 @@ interface FriendGroup {
 }
 
 interface UseContactsReturn {
-  // Data
   currentUser: User | null;
   friends: User[];
   receivedRequests: FriendRequest[];
@@ -23,7 +22,6 @@ interface UseContactsReturn {
   userCache: Record<string, User>;
   isLoading: boolean;
   
-  // UI State
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   searchTerm: string;
@@ -31,7 +29,6 @@ interface UseContactsReturn {
   sortOrder: 'asc' | 'desc';
   toggleSortOrder: () => void;
   
-  // Actions
   handleAcceptRequest: (requestId: string, friendId: string) => Promise<void>;
   handleRejectRequest: (requestId: string) => Promise<void>;
   handleCancelRequest: (requestId: string) => Promise<void>;
@@ -63,7 +60,7 @@ export const useContacts = (): UseContactsReturn => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Fetch friends và subscribe requests
+  // Lấy danh sách bạn bè và theo dõi yêu cầu
   const handleFetchFriends = useCallback(() => {
     if (!currentUser) return;
     fetchFriends(currentUser.id);
@@ -80,7 +77,7 @@ export const useContacts = (): UseContactsReturn => {
     return () => unsubscribe();
   }, [handleFetchFriends, handleSubscribeToRequests]);
 
-  // Fetch user info cho requests
+  // Lấy thông tin user cho requests
   useEffect(() => {
     const userIds = [
       ...receivedRequests.map(r => r.senderId),
@@ -92,13 +89,12 @@ export const useContacts = (): UseContactsReturn => {
     }
   }, [receivedRequests, sentRequests, fetchUsers]);
 
-  // Computed - filtered friends
   const filteredFriends = friends.filter(friend =>
     friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Computed - grouped friends
+  // Nhóm bạn bè theo chữ cái đầu
   const groupedFriends = (() => {
     const groups: Record<string, User[]> = {};
     filteredFriends.forEach(friend => {
@@ -120,12 +116,9 @@ export const useContacts = (): UseContactsReturn => {
     }));
   })();
 
-  // Toggle sort
   const toggleSortOrder = useCallback(() => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   }, []);
-
-  // Actions
   const handleAcceptRequest = useCallback(async (requestId: string, friendId: string) => {
     if (!currentUser) return;
     await acceptFriendRequest(requestId, currentUser.id, friendId);

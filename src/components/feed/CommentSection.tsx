@@ -38,14 +38,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const { users, fetchUsers } = useUserCache();
 
-  // Loading states cục bộ
+  // Loading state
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
   
-  // State quản lý Input Inline
+  // State input
   const [activeInputId, setActiveInputId] = useState<string | 'root'>('root');
   const [inputMode, setInputMode] = useState<'comment' | 'reply' | 'edit'>('comment');
   
-  // Form states
+  // State form
   const [newComment, setNewComment] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     return () => clearComments(postId);
   }, [postId]);
 
-  // Fetch user data khi có comments mới
+  // Lấy thông tin user khi có comment mới
   useEffect(() => {
     if (currentRootComments.length > 0) {
       const userIds = [...new Set(currentRootComments.map(c => c.userId))];

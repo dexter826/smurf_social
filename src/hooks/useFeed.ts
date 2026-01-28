@@ -44,7 +44,7 @@ export const useFeed = (): UseFeedReturn => {
     return subscribeToPosts(currentUser.id, friendIds);
   }, [currentUser, subscribeToPosts]);
 
-  // Initial fetch và subscribe
+  // Lấy dữ liệu ban đầu và theo dõi
   useEffect(() => {
     handleFetchPosts();
     const unsubscribe = handleSubscribeToPosts();
@@ -54,7 +54,7 @@ export const useFeed = (): UseFeedReturn => {
     };
   }, [handleFetchPosts, handleSubscribeToPosts]);
 
-  // Infinite scroll observer
+  // Cuộn vô tận
   useEffect(() => {
     if (!hasMore || isLoading || !currentUser) return;
 
@@ -74,7 +74,7 @@ export const useFeed = (): UseFeedReturn => {
     return () => observer.disconnect();
   }, [hasMore, isLoading, posts.length]);
 
-  // Fetch user data khi có posts mới
+  // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {
     if (posts.length > 0) {
       const userIds = [...new Set(posts.map(p => p.userId))];

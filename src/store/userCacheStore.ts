@@ -21,21 +21,21 @@ export const useUserCache = create<UserCacheState>((set, get) => ({
   users: {},
   loadingIds: new Set(),
 
+  // Tải thông tin nhiều người dùng theo lô (batch)
   fetchUsers: async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
 
     const { users, loadingIds } = get();
     
-    // Lọc các IDs chưa có trong cache và chưa đang load
+    // Bỏ qua các ID đã có hoặc đang tải
     const missingIds = ids.filter(id => !users[id] && !loadingIds.has(id));
     
     if (missingIds.length === 0) return;
 
-    // Đánh dấu đang load
     set({ loadingIds: new Set([...loadingIds, ...missingIds]) });
 
     try {
-      // Firestore 'in' query giới hạn items, cần chia thành chunks
+      // Chia nhỏ IDs để tránh giới hạn của Firestore 'in' query
       const chunks = chunkArray(missingIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
       
       const results = await Promise.all(
@@ -71,6 +71,7 @@ export const useUserCache = create<UserCacheState>((set, get) => ({
     }
   },
 
+  // Tải thông tin một người dùng
   fetchUser: async (id: string) => {
     const { users } = get();
     

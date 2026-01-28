@@ -69,6 +69,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       return msg;
     });
 
+  // Nhóm tin nhắn theo ngày
   processedMessages.forEach((msg) => {
     const msgDate = new Date(msg.timestamp).toLocaleDateString('vi-VN');
     if (msgDate !== currentDate) {
@@ -96,7 +97,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
   return (
     <div className="relative flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
-      {/* Header */}
+      {/* Header chat */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 h-[72px] border-b border-border-light bg-bg-primary">
         <div className="flex items-center gap-3 flex-1">
           {onBack && (
@@ -136,7 +137,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Khu vực tin nhắn */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-0 bg-bg-secondary"

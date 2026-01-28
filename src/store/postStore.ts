@@ -30,7 +30,7 @@ export const usePostStore = create<PostState>((set, get) => ({
   abortController: null,
 
   fetchPosts: async (currentUserId: string, friendIds: string[], loadMore = false) => {
-    // Cancel request cũ nếu đang chạy
+    // Hủy request cũ nếu đang chạy
     const { abortController: currentController } = get();
     if (currentController) {
       currentController.abort();
@@ -44,7 +44,6 @@ export const usePostStore = create<PostState>((set, get) => ({
     try {
       const result = await postService.getFeed(currentUserId, friendIds, 10, loadMore ? lastDoc || undefined : undefined);
       
-      // Kiểm tra xem request có bị cancel không
       if (newController.signal.aborted) return;
 
       set({
@@ -56,7 +55,7 @@ export const usePostStore = create<PostState>((set, get) => ({
       });
     } catch (error: any) {
       if (error.name === 'AbortError') return;
-      console.error("Error fetching posts:", error);
+      console.error("Lỗi tải bài viết:", error);
       set({ isLoading: false, abortController: null });
     }
   },
@@ -80,7 +79,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         visibility
       });
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("Lỗi tạo bài viết:", error);
       throw error;
     }
   },
@@ -96,7 +95,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         )
       }));
     } catch (error) {
-      console.error("Error updating post:", error);
+      console.error("Lỗi cập nhật bài viết:", error);
       throw error;
     }
   },
@@ -108,7 +107,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         posts: state.posts.filter(p => p.id !== postId)
       }));
     } catch (error) {
-      console.error("Error deleting post:", error);
+      console.error("Lỗi xóa bài viết:", error);
       throw error;
     }
   },
@@ -135,7 +134,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     try {
       await postService.likePost(postId, userId, isLiked);
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error("Lỗi thích bài viết:", error);
       set((state) => ({
         posts: state.posts.map(p =>
           p.id === postId
@@ -155,7 +154,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     try {
       return await postService.uploadPostMedia(files, userId);
     } catch (error) {
-      console.error("Error uploading media:", error);
+      console.error("Lỗi tải lên media:", error);
       throw error;
     }
   },

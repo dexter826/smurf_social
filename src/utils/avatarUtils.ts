@@ -1,8 +1,6 @@
 import { THEME_GRADIENTS } from '../constants/theme';
 
-/**
- * Lấy chữ cái đầu từ tên (tối đa 2 chữ)
- */
+// Lấy chữ cái đầu (tối đa 2 ký tự)
 export const getInitials = (name: string): string => {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
@@ -10,9 +8,7 @@ export const getInitials = (name: string): string => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-/**
- * Trả về chuỗi CSS linear-gradient dựa trên seed
- */
+// Tạo màu gradient từ seed
 export const getAvatarGradient = (seed: string): string => {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {

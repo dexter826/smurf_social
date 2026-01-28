@@ -5,6 +5,7 @@ import { User, UserStatus } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 
 export const userService = {
+  // Lấy thông tin người dùng theo ID
   getUserById: async (id: string): Promise<User | undefined> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', id));
@@ -24,6 +25,7 @@ export const userService = {
     }
   },
 
+  // Cập nhật trạng thái trực tuyến và thời gian truy cập
   updateUserStatus: async (userId: string, status: UserStatus): Promise<void> => {
     try {
       const userRef = doc(db, 'users', userId);
@@ -36,6 +38,7 @@ export const userService = {
     }
   },
 
+  // Lấy danh sách toàn bộ bạn bè
   getAllFriends: async (currentUserId: string): Promise<User[]> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', currentUserId));
@@ -46,7 +49,6 @@ export const userService = {
       
       if (friendIds.length === 0) return [];
 
-      // Sử dụng batch get thay vì vòng lặp
       const friendsMap = await batchGetUsers(friendIds);
       return Object.values(friendsMap);
     } catch (error) {
@@ -55,6 +57,7 @@ export const userService = {
     }
   },
 
+  // Tìm kiếm người dùng theo email
   searchUsers: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
       const usersRef = collection(db, 'users');
@@ -74,6 +77,7 @@ export const userService = {
     }
   },
 
+  // Tìm kiếm trong danh sách bạn bè
   searchFriends: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', currentUserId));
@@ -82,11 +86,9 @@ export const userService = {
       const friendIds = (userDoc.data() as User).friendIds || [];
       if (friendIds.length === 0) return [];
 
-      // Sử dụng batch get
       const friendsMap = await batchGetUsers(friendIds);
       const friends = Object.values(friendsMap);
       
-      // Filter theo search term
       return friends.filter(friend => 
         friend.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -97,6 +99,7 @@ export const userService = {
     }
   },
 
+  // Tạo mới hoặc cập nhật thông tin cá nhân
   updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
     try {
       const userRef = doc(db, 'users', userId);
@@ -130,19 +133,15 @@ export const userService = {
     }
   },
 
+  // Tải lên ảnh đại diện
   uploadAvatar: async (userId: string, file: File): Promise<string> => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
       const storageRef = ref(storage, `avatars/${userId}/${fileName}`);
 
-      // Upload file
       await uploadBytes(storageRef, file);
-      
-      // Get download URL
       const downloadURL = await getDownloadURL(storageRef);
-      
-      // Update user profile
       await userService.updateProfile(userId, { avatar: downloadURL });
       
       return downloadURL;
@@ -152,19 +151,15 @@ export const userService = {
     }
   },
 
+  // Tải lên ảnh bìa
   uploadCoverImage: async (userId: string, file: File): Promise<string> => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `cover_${userId}_${Date.now()}.${fileExt}`;
       const storageRef = ref(storage, `covers/${userId}/${fileName}`);
 
-      // Upload file
       await uploadBytes(storageRef, file);
-      
-      // Get download URL
       const downloadURL = await getDownloadURL(storageRef);
-      
-      // Update user profile
       await userService.updateProfile(userId, { coverImage: downloadURL });
       
       return downloadURL;
@@ -192,23 +187,24 @@ export const userService = {
     }
   },
 
+  // Lấy thống kê số lượng bạn bè và bài viết
   getUserStats: async (userId: string): Promise<{ friendCount: number, postCount: number }> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', userId));
       const friendCount = (userDoc.data()?.friendIds || []).length;
       
-      // Count posts
       const postsQuery = query(collection(db, 'posts'), where('userId', '==', userId));
       const postsSnapshot = await getDocs(postsQuery);
       const postCount = postsSnapshot.size;
       
       return { friendCount, postCount };
     } catch (error) {
-      console.error("Lỗi lấy thống kê user", error);
+      console.error("Lỗi lấy thông kê user", error);
       return { friendCount: 0, postCount: 0 };
     }
   },
 
+  // Thêm người dùng vào danh sách chặn
   blockUser: async (userId: string, blockedUserId: string): Promise<void> => {
     try {
       const userRef = doc(db, 'users', userId);
@@ -221,6 +217,7 @@ export const userService = {
     }
   },
 
+  // Xóa người dùng khỏi danh sách chặn
   unblockUser: async (userId: string, blockedUserId: string): Promise<void> => {
     try {
       const userRef = doc(db, 'users', userId);
@@ -233,6 +230,7 @@ export const userService = {
     }
   },
 
+  // Đăng ký nhận cập nhật thông tin người dùng theo thời gian thực
   subscribeToUser: (userId: string, callback: (user: User) => void): (() => void) => {
     const userRef = doc(db, 'users', userId);
     return onSnapshot(userRef, (snapshot) => {

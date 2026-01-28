@@ -74,7 +74,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
       
       // Load user info cho posts mới
       const userIds = Array.from(new Set(newPosts.map(p => p.userId)));
-      // Filter out users we already have
+      // Lọc user đã có cache
       const missingUserIds = userIds.filter(uid => !users[uid]);
       
       if (missingUserIds.length > 0) {
@@ -109,11 +109,11 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
   };
 
   const handleComment = (postId: string) => {
-    // Scroll to comment section
+    // Cuộn đến bình luận
   };
 
   const handleEdit = (postId: string) => {
-    // Open edit modal
+    // Mở modal sửa
   };
 
   const handleDelete = async () => {

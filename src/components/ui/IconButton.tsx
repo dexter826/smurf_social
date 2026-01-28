@@ -1,6 +1,6 @@
 import React from "react";
 
-// Kích thước icon chuẩn cho mỗi size variant
+// Size icon chuẩn
 export const iconSizes = {
   sm: 16,
   md: 18,

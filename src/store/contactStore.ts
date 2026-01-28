@@ -50,7 +50,7 @@ export const useContactStore = create<ContactState>((set) => ({
       const data = await friendService.getReceivedRequests(userId);
       set({ receivedRequests: data });
     } catch (error) {
-      console.error("Error fetching received requests:", error);
+      console.error("Lỗi tải lời mời kết bạn:", error);
     }
   },
 
@@ -59,7 +59,7 @@ export const useContactStore = create<ContactState>((set) => ({
       const data = await friendService.getSentRequests(userId);
       set({ sentRequests: data });
     } catch (error) {
-      console.error("Error fetching sent requests:", error);
+      console.error("Lỗi tải lời mời đã gửi:", error);
     }
   },
 
@@ -97,7 +97,7 @@ export const useContactStore = create<ContactState>((set) => ({
     try {
       await friendService.sendFriendRequest(senderId, receiverId, message);
     } catch (error) {
-      console.error("Error sending friend request:", error);
+      console.error("Lỗi gửi lời mời:", error);
       throw error;
     }
   },
@@ -109,7 +109,7 @@ export const useContactStore = create<ContactState>((set) => ({
         receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
       }));
     } catch (error) {
-      console.error("Error accepting friend request:", error);
+      console.error("Lỗi chấp nhận kết bạn:", error);
       throw error;
     }
   },
@@ -121,7 +121,7 @@ export const useContactStore = create<ContactState>((set) => ({
         receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
       }));
     } catch (error) {
-      console.error("Error rejecting friend request:", error);
+      console.error("Lỗi từ chối kết bạn:", error);
       throw error;
     }
   },
@@ -133,7 +133,7 @@ export const useContactStore = create<ContactState>((set) => ({
         sentRequests: state.sentRequests.filter(r => r.id !== requestId)
       }));
     } catch (error) {
-      console.error("Error cancelling friend request:", error);
+      console.error("Lỗi hủy lời mời:", error);
       throw error;
     }
   },
@@ -145,7 +145,7 @@ export const useContactStore = create<ContactState>((set) => ({
         friends: state.friends.filter(f => f.id !== friendId)
       }));
     } catch (error) {
-      console.error("Error unfriending:", error);
+      console.error("Lỗi hủy kết bạn:", error);
       throw error;
     }
   },
@@ -157,7 +157,7 @@ export const useContactStore = create<ContactState>((set) => ({
         friends: state.friends.filter(f => f.id !== blockedUserId)
       }));
     } catch (error) {
-      console.error("Error blocking user:", error);
+      console.error("Lỗi chặn người dùng:", error);
       throw error;
     }
   },

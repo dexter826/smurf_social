@@ -33,7 +33,7 @@ const LoginPage: React.FC = () => {
     } else if (formData.password.length < 6) {
       newErrors.password = UI_MESSAGES.AUTH.PASSWORD_MIN_LENGTH;
     }
-// ...
+
 
     if (activeTab === 'register') {
       if (!formData.confirmPassword) {

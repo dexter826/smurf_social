@@ -21,7 +21,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Đóng khi click ra ngoài
+  // Đóng khi click ngoài
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {

@@ -15,7 +15,6 @@ interface CommentState {
   
   isLoading: boolean;
 
-  // Service Actions
   fetchRootComments: (postId: string, loadMore?: boolean) => Promise<void>;
   fetchReplies: (postId: string, parentId: string, loadMore?: boolean) => Promise<void>;
   addComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string, videoUrl?: string) => Promise<string>;
@@ -23,7 +22,6 @@ interface CommentState {
   deleteComment: (postId: string, commentId: string, parentId?: string | null) => Promise<void>;
   likeComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
 
-  // State Setters
   setRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   addRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   setReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
@@ -41,8 +39,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   hasMoreReply: {},
   isLoading: false,
 
-  // ========== SERVICE ACTIONS ==========
-
   fetchRootComments: async (postId: string, loadMore = false) => {
     const { lastRootDoc, rootComments, isLoading } = get();
     if (isLoading) return;
@@ -58,7 +54,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         get().setRootComments(postId, result.comments, result.lastDoc, result.hasMore);
       }
     } catch (error) {
-      console.error('Lỗi fetch root comments:', error);
+      console.error('Lỗi tải bình luận gốc:', error);
     } finally {
       set({ isLoading: false });
     }
@@ -79,7 +75,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         get().setReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
       }
     } catch (error) {
-      console.error('Lỗi fetch replies:', error);
+      console.error('Lỗi tải phản hồi:', error);
     } finally {
       set({ isLoading: false });
     }
@@ -89,7 +85,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const commentId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, videoUrl);
       
-      // Refresh comments sau khi thêm
+      // Làm mới danh sách sau khi thêm
       if (parentId) {
         await get().fetchReplies(postId, parentId);
       } else {
@@ -98,7 +94,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       
       return commentId;
     } catch (error) {
-      console.error('Lỗi thêm comment:', error);
+      console.error('Lỗi thêm bình luận:', error);
       throw error;
     }
   },
@@ -108,7 +104,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       await commentService.updateComment(commentId, content, imageUrl, videoUrl);
       get().updateCommentInStore(postId, commentId, content, parentId, imageUrl, videoUrl);
     } catch (error) {
-      console.error('Lỗi cập nhật comment:', error);
+      console.error('Lỗi cập nhật bình luận:', error);
       throw error;
     }
   },
@@ -117,14 +113,14 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       await commentService.deleteComment(commentId, postId, parentId);
       
-      // Refresh comments sau khi xóa
+      // Làm mới danh sách sau khi xóa
       if (parentId) {
         await get().fetchReplies(postId, parentId);
       } else {
         await get().fetchRootComments(postId);
       }
     } catch (error) {
-      console.error('Lỗi xóa comment:', error);
+      console.error('Lỗi xóa bình luận:', error);
       throw error;
     }
   },
@@ -132,7 +128,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   likeComment: async (postId, commentId, userId, parentId) => {
     const { rootComments, replies } = get();
     
-    // Tìm comment hiện tại để check isLiked
+    // Kiểm tra trạng thái like hiện tại
     let isLiked = false;
     if (parentId) {
       const comment = replies[postId]?.[parentId]?.find(c => c.id === commentId);
@@ -142,7 +138,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       isLiked = comment?.likes?.includes(userId) || false;
     }
 
-    // Optimistic update
+    // Cập nhật giao diện ngay lập tức
     set((state) => {
       if (parentId) {
         const postReplies = state.replies[postId] || {};
@@ -185,8 +181,8 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       await commentService.likeComment(commentId, userId, isLiked);
     } catch (error) {
-      console.error('Lỗi like comment:', error);
-      // Rollback nếu lỗi
+      console.error('Lỗi thích bình luận:', error);
+      // Khôi phục dữ liệu nếu lỗi
       if (parentId) {
         await get().fetchReplies(postId, parentId);
       } else {
@@ -194,8 +190,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       }
     }
   },
-
-  // ========== STATE SETTERS ==========
 
   setRootComments: (postId, comments, lastDoc, hasMore) => set((state) => ({
     rootComments: { ...state.rootComments, [postId]: comments },

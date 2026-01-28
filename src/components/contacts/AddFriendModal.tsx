@@ -40,7 +40,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
     onClose();
   };
 
-  // Wrapper onClose to clean up when modal is closed
+  // Dọn dẹp khi đóng modal
   const onCloseWrapper = () => {
     handleClose();
   };

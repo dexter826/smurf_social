@@ -6,7 +6,6 @@ import { useUserCache } from '../store/userCacheStore';
 import { userService } from '../services/userService';
 
 interface UseChatReturn {
-  // Data
   currentUser: User | null;
   conversations: Conversation[];
   filteredConversations: Conversation[];
@@ -19,12 +18,10 @@ interface UseChatReturn {
   isLoading: boolean;
   blockedMessage: string | undefined;
   
-  // Search state
   isSearchFocused: boolean;
   searchResults: any;
   searchHistory: any[];
   
-  // Message state
   forwardingMessage: Message | null;
   setForwardingMessage: (msg: Message | null) => void;
   replyingTo: Message | null;
@@ -32,16 +29,13 @@ interface UseChatReturn {
   editingMessage: Message | null;
   setEditingMessage: (msg: Message | null) => void;
   
-  // Block state
   isBlocked: boolean;
   isBlockedByMe: boolean;
   partnerId: string | null;
   
-  // View state
   viewMode: 'normal' | 'archived';
   setViewMode: (mode: 'normal' | 'archived') => void;
 
-  // Actions - Conversation
   handleSelectConversation: (id: string) => void;
   handleBackToList: () => void;
   handlePin: (id: string, pinned: boolean) => Promise<void>;
@@ -50,7 +44,6 @@ interface UseChatReturn {
   handleArchive: (id: string, archived: boolean) => Promise<void>;
   handleMarkUnread: (id: string, markedUnread: boolean) => Promise<void>;
   
-  // Actions - Message
   handleSendText: (text: string, mentions?: string[], replyToId?: string) => Promise<void>;
   handleForwardMessage: (message: Message) => void;
   handleSendImage: (file: File) => Promise<void>;
@@ -62,7 +55,6 @@ interface UseChatReturn {
   handleDeleteForMe: (messageId: string) => Promise<void>;
   handleTyping: (isTyping: boolean) => Promise<void>;
   
-  // Actions - Search
   handleSearch: (term: string) => Promise<void>;
   setSearchFocused: (focused: boolean) => void;
   addToSearchHistory: (item: any) => void;
@@ -70,10 +62,8 @@ interface UseChatReturn {
   clearSearchHistory: () => void;
   getOrCreateConversation: (userId1: string, userId2: string) => Promise<string>;
   
-  // Actions - Block
   handleToggleBlock: () => Promise<void>;
   
-  // Actions - Group
   handleCreateGroup: (memberIds: string[], groupName: string, groupAvatar?: string) => Promise<void>;
   handleAddMembers: (userIds: string[]) => Promise<void>;
   handleRemoveMember: (userId: string) => Promise<void>;
@@ -83,11 +73,9 @@ interface UseChatReturn {
   handleDemoteFromAdmin: (userId: string) => Promise<void>;
   handleEditGroup: (updates: { groupName?: string; groupAvatar?: string }) => Promise<void>;
   
-  // Forward/Reply
   forwardMessage: (conversationId: string, message: Message) => Promise<void>;
   replyToMessage: (text: string, replyToId: string) => Promise<void>;
 
-  // Utils
   getBlockedMessage: () => string | undefined;
 }
 
@@ -145,7 +133,7 @@ export const useChat = (): UseChatReturn => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
 
-  // Subscribe conversations
+  // Đăng ký nhận cập nhật danh sách hội thoại
   const handleSubscribeToConversations = useCallback(() => {
     if (!currentUser) return () => {};
     return subscribeToConversations(currentUser.id);
@@ -156,7 +144,7 @@ export const useChat = (): UseChatReturn => {
     return () => unsubscribe();
   }, [handleSubscribeToConversations]);
 
-  // Subscribe messages & typing
+  // Theo dõi tin nhắn và trạng thái đang nhập
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 
@@ -170,7 +158,7 @@ export const useChat = (): UseChatReturn => {
     };
   }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsDelivered]);
 
-  // Auto mark as read
+  // Tự động đánh dấu đã đọc khi xem tin nhắn mới
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 
@@ -186,7 +174,7 @@ export const useChat = (): UseChatReturn => {
     }
   }, [messages, selectedConversationId, currentUser, markAsRead]);
 
-  // Auto fetch users
+  // Tự động tải thông tin người dùng trong hội thoại
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 
@@ -203,7 +191,7 @@ export const useChat = (): UseChatReturn => {
     fetchUsers(userIds);
   }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
 
-  // Computed values
+  // Tính toán các giá trị phụ trợ cho giao diện
   const filteredConversations = conversations.filter(c => 
     viewMode === 'archived' ? c.archived : !c.archived
   );
@@ -212,7 +200,7 @@ export const useChat = (): UseChatReturn => {
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
 
-  // Block state
+  // Kiểm tra trạng thái chặn giữa hai người dùng
   const partner = selectedConversation && !selectedConversation.isGroup
     ? selectedConversation.participants.find(p => p.id !== currentUser?.id)
     : null;
@@ -229,7 +217,6 @@ export const useChat = (): UseChatReturn => {
     return undefined;
   };
 
-  // Actions
   const handleSelectConversation = useCallback((id: string) => {
     selectConversation(id);
   }, [selectConversation]);
@@ -330,7 +317,6 @@ export const useChat = (): UseChatReturn => {
     }
   }, [partnerId, currentUser, isBlockedByMe, selectConversation]);
 
-  // Group actions
   const handleCreateGroup = useCallback(async (memberIds: string[], groupName: string, groupAvatar?: string) => {
     if (!currentUser) return;
     await createGroup(currentUser.id, memberIds, groupName, groupAvatar);
@@ -353,7 +339,7 @@ export const useChat = (): UseChatReturn => {
     
     const conv = conversations.find(c => c.id === selectedConversationId);
     
-    // Trưởng nhóm rời đi -> yêu cầu chọn người mới
+    // Yêu cầu chỉ định admin mới khi chủ nhóm rời đi
     if (conv?.isGroup && conv.creatorId === currentUser.id && conv.participantIds.length > 1) {
       return { needAssignAdmin: true };
     }

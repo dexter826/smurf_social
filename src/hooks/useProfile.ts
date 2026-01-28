@@ -17,7 +17,6 @@ interface ProfileStats {
 }
 
 interface UseProfileReturn {
-  // Data
   currentUser: User | null;
   profile: User | null;
   stats: ProfileStats;
@@ -25,17 +24,14 @@ interface UseProfileReturn {
   loading: boolean;
   uploading: boolean;
   
-  // Computed
   profileUserId: string | undefined;
   isOwnProfile: boolean;
   isFriend: boolean;
   canViewContent: boolean;
   
-  // UI State
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   
-  // Actions
   loadProfile: () => Promise<void>;
   handleMessage: () => Promise<void>;
   handleFriendAction: () => Promise<{ needConfirm: boolean }>;
@@ -78,7 +74,7 @@ export const useProfile = (): UseProfileReturn => {
       setProfile(userData || null);
       setStats(userStats);
 
-      // Trích xuất 6 media mới nhất
+      // Lấy 6 media mới nhất
       const media: string[] = [];
       userPosts.posts.forEach(post => {
         if (post.images) media.push(...post.images);

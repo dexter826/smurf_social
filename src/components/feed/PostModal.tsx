@@ -37,7 +37,7 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   const isEdit = !!initialPost;
 
-  // Khởi tạo dữ liệu khi mở Modal
+  // Khởi tạo dữ liệu
   useEffect(() => {
     if (isOpen) {
       if (isEdit && initialPost) {
@@ -50,7 +50,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         setImages([]);
         setVideos([]);
         setVisibility('friends');
-        // Xử lý files ban đầu nếu có (chỉ cho Create)
+        // Xử lý file ban đầu
         if (initialFiles?.length > 0) {
           processFiles(initialFiles);
         }

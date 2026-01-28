@@ -18,16 +18,11 @@ import { Conversation, User } from '../../types';
 import { batchGetUsers } from '../../utils/batchUtils';
 
 export const conversationService = {
-  // ========== CONVERSATIONS ==========
-  
-  /**
-   * Lấy hoặc tạo conversation 1-1 giữa 2 users
-   */
+  // Lấy hoặc tạo hội thoại 1-1 giữa hai người dùng
   getOrCreateConversation: async (user1Id: string, user2Id: string): Promise<string> => {
     try {
       const participantIds = [user1Id, user2Id].sort();
       
-      // Tìm conversation có sẵn
       const q = query(
         collection(db, 'conversations'),
         where('participantIds', '==', participantIds),
@@ -40,7 +35,6 @@ export const conversationService = {
         return querySnapshot.docs[0].id;
       }
       
-      // Tạo conversation mới
       const conversationData = {
         participantIds,
         isGroup: false,
@@ -57,14 +51,12 @@ export const conversationService = {
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
       return docRef.id;
     } catch (error) {
-      console.error("Lỗi tạo conversation", error);
+      console.error("Lỗi tạo hội thoại:", error);
       throw error;
     }
   },
 
-  /**
-   * Subscribe realtime conversations của user
-   */
+  // Đăng ký nhận cập nhật danh sách hội thoại theo thời gian thực
   subscribeToConversations: (userId: string, callback: (conversations: Conversation[]) => void) => {
     const q = query(
       collection(db, 'conversations'), 
@@ -73,7 +65,6 @@ export const conversationService = {
     );
 
     return onSnapshot(q, async (snapshot) => {
-      // Thu thập tất cả participant IDs
       const allParticipantIds = new Set<string>();
       snapshot.docs.forEach(d => {
         const data = d.data();
@@ -82,7 +73,7 @@ export const conversationService = {
         });
       });
 
-      // Batch load tất cả users một lần (bao gồm cả currentUser cho group)
+      // Lấy thông tin cache cho tất cả người tham gia
       const usersMap = await batchGetUsers([...allParticipantIds, userId]);
 
       const conversations = snapshot.docs.map((d) => {
@@ -90,12 +81,12 @@ export const conversationService = {
         
         let participants;
         if (data.isGroup) {
-          // Group: lấy TẤT CẢ participants bao gồm cả currentUser
+          // Lấy tất cả thành viên bao gồm cả người dùng hiện tại
           participants = data.participantIds
             .map((id: string) => usersMap[id])
             .filter((p: User | undefined) => !!p);
         } else {
-          // Chat 1-1: chỉ lấy đối phương
+          // Chỉ lấy thông tin đối phương trong chat 1-1
           const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
           participants = otherParticipantIds
             .map((id: string) => usersMap[id])
@@ -117,70 +108,59 @@ export const conversationService = {
 
       callback(conversations);
     }, (error) => {
-      console.error("Lỗi subscribe conversations", error);
+      console.error("Lỗi đăng ký danh sách hội thoại:", error);
     });
   },
 
-  /**
-   * Pin/Unpin conversation
-   */
+  // Ghim hoặc bỏ ghim hội thoại
   togglePinConversation: async (conversationId: string, pinned: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { pinned });
     } catch (error) {
-      console.error("Lỗi pin conversation", error);
+      console.error("Lỗi ghim hội thoại:", error);
       throw error;
     }
   },
 
-  /**
-   * Mute/Unmute conversation
-   */
+  // Bật hoặc tắt thông báo hội thoại
   toggleMuteConversation: async (conversationId: string, muted: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { muted });
     } catch (error) {
-      console.error("Lỗi mute conversation", error);
+      console.error("Lỗi tắt thông báo hội thoại:", error);
       throw error;
     }
   },
 
-  /**
-   * Lưu trữ/Bỏ lưu trữ conversation
-   */
+  // Lưu trữ hoặc bỏ lưu trữ hội thoại
   toggleArchiveConversation: async (conversationId: string, archived: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { archived });
     } catch (error) {
-      console.error("Lỗi archive conversation", error);
+      console.error("Lỗi lưu trữ hội thoại:", error);
       throw error;
     }
   },
 
-  /**
-   * Đánh dấu chưa đọc/đã đọc conversation
-   */
+  // Đánh dấu hội thoại là chưa đọc hoặc đã đọc
   toggleMarkUnreadConversation: async (conversationId: string, markedUnread: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { markedUnread });
     } catch (error) {
-      console.error("Lỗi mark unread conversation", error);
+      console.error("Lỗi đánh dấu chưa đọc:", error);
       throw error;
     }
   },
 
-  /**
-   * Xóa conversation
-   */
+  // Xóa hội thoại và tất cả tin nhắn liên quan
   deleteConversation: async (conversationId: string): Promise<void> => {
     try {
       const batch = writeBatch(db);
       
-      // Xóa tất cả messages
       const messagesQuery = query(
         collection(db, 'messages'),
         where('conversationId', '==', conversationId)
@@ -190,12 +170,11 @@ export const conversationService = {
         batch.delete(doc.ref);
       });
       
-      // Xóa conversation
       batch.delete(doc(db, 'conversations', conversationId));
       
       await batch.commit();
     } catch (error) {
-      console.error("Lỗi xóa conversation", error);
+      console.error("Lỗi xóa hội thoại:", error);
       throw error;
     }
   }

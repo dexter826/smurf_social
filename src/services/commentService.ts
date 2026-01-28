@@ -21,6 +21,7 @@ import { Comment } from '../types';
 import { PAGINATION } from '../constants';
 
 export const commentService = {
+  // Lấy danh sách bình luận gốc của bài viết
   getRootComments: async (postId: string, limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -53,6 +54,7 @@ export const commentService = {
     }
   },
 
+  // Lấy các phản hồi của một bình luận
   getReplies: async (commentId: string, limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -84,6 +86,7 @@ export const commentService = {
     }
   },
 
+  // Tạo bình luận mới và cập nhật số lượng
   addComment: async (
     postId: string, 
     userId: string, 
@@ -128,6 +131,7 @@ export const commentService = {
     }
   },
 
+  // Xóa bình luận và toàn bộ phản hồi con
   deleteComment: async (commentId: string, postId: string, parentId?: string | null) => {
     try {
       const repliesQuery = query(collection(db, 'comments'), where('parentId', '==', commentId));
@@ -157,6 +161,7 @@ export const commentService = {
     }
   },
 
+  // Chỉnh sửa nội dung hoặc đính kèm của bình luận
   updateComment: async (commentId: string, content: string, imageUrl?: string | null, videoUrl?: string | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -170,7 +175,7 @@ export const commentService = {
     }
   },
 
-
+  // Cập nhật trạng thái yêu thích bình luận
   likeComment: async (commentId: string, userId: string, isLiked: boolean) => {
     try {
       const commentRef = doc(db, 'comments', commentId);

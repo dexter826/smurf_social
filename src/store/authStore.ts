@@ -74,7 +74,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     let userUnsubscribe: (() => void) | null = null;
 
     const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // Cleanup previous user subscription
       if (userUnsubscribe) {
         userUnsubscribe();
         userUnsubscribe = null;
@@ -82,20 +81,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (firebaseUser) {
         try {
-          // Fetch user data đầu tiên
+          // Lấy thông tin người dùng từ server
           const userData = await userService.getUserById(firebaseUser.uid);
           if (userData) {
             await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
             set({ user: { ...userData, status: UserStatus.ONLINE } });
 
-            // Subscribe realtime đến user document
+            // Đăng ký nhận cập nhật dữ liệu người dùng
             userUnsubscribe = userService.subscribeToUser(firebaseUser.uid, (updatedUser) => {
               const currentStatus = get().user?.status || UserStatus.ONLINE;
               set({ user: { ...updatedUser, status: currentStatus } });
             });
           }
         } catch (error) {
-          console.error("Error syncing user data:", error);
+          console.error("Lỗi đồng bộ dữ liệu người dùng:", error);
         }
       } else {
         set({ user: null });

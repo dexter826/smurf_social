@@ -32,7 +32,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      // DatePicker cần nhiều chỗ hơn (khoảng 350px)
+      // Cần khoảng 350px
       setOpenUp(spaceBelow < 350);
     }
   }, [isOpen]);

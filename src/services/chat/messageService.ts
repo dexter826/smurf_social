@@ -20,11 +20,7 @@ import { Message, MessageType } from '../../types';
 import { TIME_LIMITS } from '../../constants';
 
 export const messageService = {
-  // ========== MESSAGES ==========
-
-  /**
-   * Subscribe realtime messages
-   */
+  // Đăng ký nhận tin nhắn thời gian thực
   subscribeToMessages: (conversationId: string, callback: (messages: Message[]) => void) => {
     const q = query(
       collection(db, 'messages'),
@@ -40,7 +36,7 @@ export const messageService = {
           id: doc.id,
           timestamp: data.timestamp?.toDate() || new Date(),
           deliveredAt: data.deliveredAt?.toDate(),
-          // Ensure arrays exist
+          // Đảm bảo các mảng dữ liệu luôn tồn tại
           readBy: data.readBy || [],
           deliveredTo: data.deliveredTo || [],
           mentions: data.mentions || []
@@ -53,16 +49,14 @@ export const messageService = {
     });
   },
 
-  /**
-   * Gửi text message với hỗ trợ @tag
-   */
+  // Gửi tin nhắn văn bản kèm tag người dùng
   sendTextMessage: async (
     conversationId: string, 
     senderId: string, 
     content: string,
     replyToId?: string,
     isForwarded?: boolean,
-    mentions?: string[] // Danh sách user ID được tag
+    mentions?: string[]
   ): Promise<void> => {
     try {
       const messageData: any = {
@@ -72,7 +66,7 @@ export const messageService = {
         type: 'text' as MessageType,
         timestamp: serverTimestamp(),
         readBy: [senderId],
-        deliveredTo: [senderId], // Sender luôn đã "nhận" tin
+        deliveredTo: [senderId],
         deliveredAt: serverTimestamp(),
         mentions: mentions || []
       };
@@ -82,7 +76,6 @@ export const messageService = {
 
       const docRef = await addDoc(collection(db, 'messages'), messageData);
 
-      // Cập nhật conversation
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
       
@@ -90,7 +83,7 @@ export const messageService = {
         const participantIds = conversationSnap.data().participantIds || [];
         const unreadCount = conversationSnap.data().unreadCount || {};
         
-        // Tăng unread count cho người nhận
+        // Cập nhật số tin chưa đọc cho các thành viên khác
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
             unreadCount[pid] = (unreadCount[pid] || 0) + 1;
@@ -101,7 +94,7 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            id: docRef.id // Include ID in lastMessage for reference
+            id: docRef.id
           },
           unreadCount,
           updatedAt: serverTimestamp()
@@ -113,9 +106,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Upload và gửi image message
-   */
+  // Tải lên và gửi tin nhắn hình ảnh
   sendImageMessage: async (
     conversationId: string,
     senderId: string,
@@ -123,7 +114,6 @@ export const messageService = {
     replyToId?: string
   ): Promise<void> => {
     try {
-      // Upload image
       const timestamp = Date.now();
       const fileRef = ref(storage, `chats/${conversationId}/${timestamp}_${file.name}`);
       await uploadBytes(fileRef, file);
@@ -145,7 +135,6 @@ export const messageService = {
 
       await addDoc(collection(db, 'messages'), messageData);
 
-      // Cập nhật conversation
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
       
@@ -175,9 +164,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Upload và gửi file message
-   */
+  // Tải lên và gửi tin nhắn tệp đính kèm
   sendFileMessage: async (
     conversationId: string,
     senderId: string,
@@ -208,7 +195,6 @@ export const messageService = {
 
       await addDoc(collection(db, 'messages'), messageData);
 
-      // Cập nhật conversation
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
       
@@ -238,9 +224,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Upload và gửi video message
-   */
+  // Tải lên và gửi tin nhắn video
   sendVideoMessage: async (
     conversationId: string,
     senderId: string,
@@ -269,7 +253,6 @@ export const messageService = {
 
       await addDoc(collection(db, 'messages'), messageData);
 
-      // Cập nhật conversation
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
       
@@ -299,9 +282,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Upload và gửi voice message
-   */
+  // Tải lên và gửi tin nhắn thoại
   sendVoiceMessage: async (
     conversationId: string,
     senderId: string,
@@ -330,7 +311,6 @@ export const messageService = {
 
       await addDoc(collection(db, 'messages'), messageData);
 
-      // Cập nhật conversation
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
       
@@ -360,10 +340,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Đánh dấu messages là đã nhận (Delivered)
-   * UPDATE: Sử dụng deliveredTo array để track từng user
-   */
+  // Đánh dấu người dùng đã nhận tin nhắn
   markMessagesAsDelivered: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const q = query(
@@ -380,13 +357,11 @@ export const messageService = {
         const data = d.data();
         const deliveredTo = data.deliveredTo || [];
         
-        // Nếu user chưa có trong deliveredTo
         if (!deliveredTo.includes(userId)) {
           const updates: Record<string, any> = {
             deliveredTo: arrayUnion(userId)
           };
 
-          // Backward compatibility: Set deliveredAt if null
           if (!data.deliveredAt) {
             updates.deliveredAt = serverTimestamp();
           }
@@ -402,14 +377,11 @@ export const messageService = {
     }
   },
 
-  /**
-   * Đánh dấu messages là đã đọc
-   */
+  // Đánh dấu người dùng đã xem tin nhắn
   markMessagesAsRead: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const batch = writeBatch(db);
 
-      // Lấy messages mà mình chưa đọc (senderId !== userId)
       const messagesQuery = query(
         collection(db, 'messages'),
         where('conversationId', '==', conversationId),
@@ -426,7 +398,6 @@ export const messageService = {
         if (!readBy.includes(userId)) {
           batch.update(messageDoc.ref, {
             readBy: arrayUnion(userId),
-            // Nếu xem thì chắc chắn là đã nhận
             deliveredTo: arrayUnion(userId),
             deliveredAt: data.deliveredAt || serverTimestamp()
           });
@@ -434,7 +405,6 @@ export const messageService = {
         }
       });
 
-      // Update conversation: Reset unread count AND update lastMessage.readBy
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
       
@@ -444,7 +414,6 @@ export const messageService = {
           [`unreadCount.${userId}`]: 0
         };
 
-        // Update lastMessage read status if needed
         if (data.lastMessage && data.lastMessage.senderId !== userId) {
           updates['lastMessage.readBy'] = arrayUnion(userId);
           updates['lastMessage.deliveredTo'] = arrayUnion(userId);
@@ -464,9 +433,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Thu hồi tin nhắn cho tất cả mọi người
-   */
+  // Thu hồi tin nhắn đối với tất cả người dùng
   recallMessage: async (messageId: string, conversationId: string): Promise<void> => {
     try {
       const messageRef = doc(db, 'messages', messageId);
@@ -487,9 +454,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Xóa message cho bản thân (chỉ ẩn ở phía người xóa)
-   */
+  // Ẩn tin nhắn đối với người xóa
   deleteMessageForMe: async (messageId: string, userId: string): Promise<void> => {
     try {
       const messageRef = doc(db, 'messages', messageId);
@@ -502,9 +467,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Chỉnh sửa tin nhắn (giới hạn trong 10 phút)
-   */
+  // Chỉnh sửa tin nhắn trong thời gian cho phép
   editMessage: async (messageId: string, newContent: string): Promise<void> => {
     try {
       const messageRef = doc(db, 'messages', messageId);
@@ -535,9 +498,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Chuyển tiếp tin nhắn
-   */
+  // Chuyển tiếp tin nhắn sang hội thoại khác
   forwardMessage: async (
     targetConversationId: string,
     senderId: string,
@@ -562,7 +523,6 @@ export const messageService = {
 
       await addDoc(collection(db, 'messages'), messageData);
 
-      // Cập nhật conversation đích
       const conversationRef = doc(db, 'conversations', targetConversationId);
       const conversationSnap = await getDoc(conversationRef);
       
@@ -599,9 +559,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Trả lời tin nhắn
-   */
+  // Gửi tin nhắn phản hồi tin nhắn khác
   replyToMessage: async (conversationId: string, senderId: string, content: string, replyToId: string): Promise<void> => {
     try {
       const messageData = {
@@ -632,11 +590,7 @@ export const messageService = {
     }
   },
 
-  // ========== TYPING INDICATOR ==========
-
-  /**
-   * Cập nhật typing status
-   */
+  // Cập nhật trạng thái đang soạn tin nhắn
   setTypingStatus: async (conversationId: string, userId: string, isTyping: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
@@ -655,9 +609,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Subscribe typing users
-   */
+  // Theo dõi danh sách người dùng đang soạn tin nhắn
   subscribeToTypingStatus: (conversationId: string, callback: (typingUsers: string[]) => void) => {
     const conversationRef = doc(db, 'conversations', conversationId);
     
@@ -669,11 +621,7 @@ export const messageService = {
     });
   },
 
-  // ========== REACTIONS ==========
-
-  /**
-   * Thêm/Xóa reaction cho message
-   */
+  // Thêm hoặc xóa cảm xúc (reaction) cho tin nhắn
   toggleReaction: async (messageId: string, userId: string, emoji: string): Promise<void> => {
     try {
       const messageRef = doc(db, 'messages', messageId);

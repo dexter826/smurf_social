@@ -131,7 +131,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
             );
           })()}
 
-          {/* Navigation */}
+          {/* Điều hướng media */}
           {(() => {
             const totalMedia = (post.images?.length || 0) + (post.videos?.length || 0);
             if (totalMedia <= 1) return null;
@@ -227,7 +227,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   );
 };
 
-// Define and attach Skeleton
+// Skeleton loading
 const PostSkeleton: React.FC = () => (
   <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-theme">
     <div className="p-4 flex items-start justify-between">

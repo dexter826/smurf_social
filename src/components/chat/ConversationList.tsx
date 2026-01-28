@@ -92,7 +92,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
-      {/* Header */}
+      {/* Header danh sách */}
       <div className="flex-shrink-0 px-4 h-[72px] flex items-center border-b border-border-light">
         <div className="flex items-center gap-3 flex-1">
           <div className="relative flex-1 flex items-center">
@@ -150,7 +150,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </div>
 
-      {/* Navigation Tabs - Hidden when searching or has search term */}
+      {/* Tabs điều hướng */}
       {!isSearchFocused && !searchTerm && (
         <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
           <Button
@@ -180,7 +180,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       )}
 
-      {/* Conversations List / Search Results */}
+      {/* Danh sách hội thoại / Kết quả tìm kiếm */}
       <div className="flex-1 overflow-y-auto">
         {isLoading && conversations.length === 0 ? (
           <div className="p-2">

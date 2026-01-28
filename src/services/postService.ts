@@ -34,10 +34,11 @@ export const postService = {
 
       const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)];
       
-      // Firestore 'in' giới hạn items, chia thành chunks
+
+      
+      // Chia nhỏ query do giới hạn 'in' của Firestore
       const chunks = chunkArray(allowedUserIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
       
-      // Lấy posts từ tất cả chunks
       const allResults = await Promise.all(
         chunks.map(async (chunk) => {
           let q = query(
@@ -64,14 +65,14 @@ export const postService = {
         })
       );
 
-      // Gộp tất cả posts và sắp xếp theo timestamp
+      // Gộp và sắp xếp theo thời gian
       const allPosts = allResults.flatMap(r => r.posts);
       allPosts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
       
-      // Lấy limitCount posts mới nhất
+      // Giới hạn số lượng
       const posts = allPosts.slice(0, limitCount);
 
-      // Filter posts theo visibility
+      // Lọc theo quyền riêng tư
       const filteredPosts = posts.filter(post => {
         const isOwner = post.userId === currentUserId;
         const isFriend = friendIds.includes(post.userId);
@@ -82,7 +83,7 @@ export const postService = {
         return false;
       });
 
-      // Lấy lastDoc từ kết quả cuối cùng
+      // Lấy cursor cho lần load tiếp theo
       const allDocs = allResults.flatMap(r => r.docs);
       const lastVisible = allDocs.length > 0 ? allDocs[allDocs.length - 1] : null;
 
@@ -95,7 +96,7 @@ export const postService = {
 
   subscribeToFeed: (currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.FEED_POSTS) => {
     if (!currentUserId) {
-      console.warn("subscribeToFeed: currentUserId is missing");
+      console.warn("subscribeToFeed: thiếu currentUserId");
       callback([]);
       return () => {};
     }
@@ -103,7 +104,7 @@ export const postService = {
     const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)];
     const chunks = chunkArray(allowedUserIds, 10);
 
-    // Subscribe tới tất cả chunks
+    // Lắng nghe thay đổi trên từng chunk
     const unsubscribers = chunks.map(chunk => {
       const q = query(
         collection(db, 'posts'),
@@ -113,15 +114,13 @@ export const postService = {
       );
 
       return onSnapshot(q, () => {
-        // Khi có thay đổi, gọi callback để trigger reload
-        // Điều này sẽ trigger tất cả subscribers, nhưng đơn giản hơn
+        // Reload lại toàn bộ feed khi có thay đổi
         refreshFeed();
       }, (error) => {
-        console.error("Lỗi subscribe posts", error);
+        console.error("Lỗi subscribe bài viết", error);
       });
     });
 
-    // Function để refresh toàn bộ feed
     const refreshFeed = async () => {
       try {
         const allResults = await Promise.all(
@@ -145,7 +144,7 @@ export const postService = {
         const allPosts = allResults.flat();
         allPosts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
         
-        // Filter posts theo visibility
+        // Lọc theo quyền riêng tư
         const posts = allPosts.filter(post => {
           const isOwner = post.userId === currentUserId;
           const isFriend = friendIds.includes(post.userId);

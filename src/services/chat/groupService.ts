@@ -13,11 +13,7 @@ import { db } from '../../firebase/config';
 import { conversationService } from './conversationService';
 
 export const groupService = {
-  // ========== GROUP MANAGEMENT ==========
-
-  /**
-   * Tạo group conversation mới
-   */
+  // Tạo hội thoại nhóm mới
   createGroupConversation: async (
     creatorId: string,
     memberIds: string[],
@@ -44,14 +40,12 @@ export const groupService = {
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
       return docRef.id;
     } catch (error) {
-      console.error("Lỗi tạo group", error);
+      console.error("Lỗi tạo nhóm:", error);
       throw error;
     }
   },
 
-  /**
-   * Cập nhật thông tin group (tên, avatar)
-   */
+  // Cập nhật tên hoặc ảnh đại diện nhóm
   updateGroupInfo: async (
     conversationId: string,
     updates: { groupName?: string; groupAvatar?: string }
@@ -63,14 +57,12 @@ export const groupService = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error("Lỗi cập nhật group info", error);
+      console.error("Lỗi cập nhật thông tin nhóm:", error);
       throw error;
     }
   },
 
-  /**
-   * Thêm thành viên vào group
-   */
+  // Thêm thành viên mới vào nhóm
   addGroupMember: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
@@ -80,14 +72,12 @@ export const groupService = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error("Lỗi thêm thành viên", error);
+      console.error("Lỗi thêm thành viên:", error);
       throw error;
     }
   },
 
-  /**
-   * Xóa thành viên khỏi group
-   */
+  // Xóa thành viên khỏi nhóm
   removeGroupMember: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
@@ -106,14 +96,12 @@ export const groupService = {
         });
       }
     } catch (error) {
-      console.error("Lỗi xóa thành viên", error);
+      console.error("Lỗi xóa thành viên:", error);
       throw error;
     }
   },
 
-  /**
-   * Rời khỏi group
-   */
+  // Rời khỏi nhóm và xử lý quyền trưởng nhóm
   leaveGroup: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
@@ -127,8 +115,7 @@ export const groupService = {
         const newParticipantIds = data.participantIds.filter((id: string) => id !== userId);
         const newAdminIds = (data.adminIds || []).filter((id: string) => id !== userId);
         
-        // Nếu người rời là creator và còn admin khác -> chuyển creator
-        // Nếu không còn ai -> xóa group
+        // Xóa nhóm nếu không còn thành viên
         if (newParticipantIds.length === 0) {
           await conversationService.deleteConversation(conversationId);
         } else {
@@ -139,7 +126,7 @@ export const groupService = {
             updatedAt: serverTimestamp()
           };
           
-          // Nếu creator rời, chuyển cho admin đầu tiên hoặc member đầu tiên
+          // Chỉ định admin mới nếu trưởng nhóm cũ rời đi
           if (data.creatorId === userId) {
             updates.creatorId = newAdminIds[0] || newParticipantIds[0];
             if (newAdminIds.length === 0) {
@@ -151,14 +138,12 @@ export const groupService = {
         }
       }
     } catch (error) {
-      console.error("Lỗi rời group", error);
+      console.error("Lỗi rời nhóm:", error);
       throw error;
     }
   },
 
-  /**
-   * Thăng thành viên làm admin
-   */
+  // Chỉ định thành viên làm quản trị viên
   promoteToAdmin: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
@@ -166,14 +151,12 @@ export const groupService = {
         adminIds: arrayUnion(userId)
       });
     } catch (error) {
-      console.error("Lỗi thăng admin", error);
+      console.error("Lỗi thăng quản trị viên:", error);
       throw error;
     }
   },
 
-  /**
-   * Hạ quyền admin
-   */
+  // Gỡ quyền quản trị viên của thành viên
   demoteFromAdmin: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
@@ -181,7 +164,7 @@ export const groupService = {
         adminIds: arrayRemove(userId)
       });
     } catch (error) {
-      console.error("Lỗi hạ quyền admin", error);
+      console.error("Lỗi hạ quyền quản trị viên:", error);
       throw error;
     }
   },
