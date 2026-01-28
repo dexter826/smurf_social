@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import EmojiPickerReact, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
 import { IconButton } from './IconButton';
+import { useThemeStore } from '../../store/themeStore';
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
@@ -20,6 +21,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { mode } = useThemeStore();
 
   // Đóng khi click ngoài
   useEffect(() => {
@@ -39,7 +41,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     onEmojiSelect(emojiData.emoji);
-    setIsOpen(false);
+    // Không đóng sau khi chọn để có thể chọn nhiều
   };
 
   return (
@@ -59,7 +61,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           <EmojiPickerReact
             onEmojiClick={handleEmojiClick}
             autoFocusSearch={false}
-            theme={Theme.LIGHT}
+            theme={mode === 'dark' ? Theme.DARK : Theme.LIGHT}
             lazyLoadEmojis={true}
             searchPlaceholder="Tìm kiếm emoji..."
           />

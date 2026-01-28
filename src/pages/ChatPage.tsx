@@ -158,7 +158,7 @@ const ChatPage: React.FC = () => {
               isLoading={isLoading}
             />
             <ChatInput
-              key={`${selectedConversationId}-${editingMessage?.id || 'new'}`}
+              key={selectedConversationId}
               onSendText={handleSendText}
               onSendImage={handleSendImage}
               onSendFile={handleSendFile}
