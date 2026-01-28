@@ -49,6 +49,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     : partner?.avatar;
 
   const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
+  const isUnread = (unreadCount > 0 || conversation.markedUnread) && !isActive;
   const lastMessage = conversation.lastMessage;
   const lastMessagePreview = lastMessage
     ? lastMessage.type === 'text'
@@ -97,7 +98,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-2">
-            <h3 className={`font-semibold text-sm truncate ${unreadCount > 0 ? 'text-text-primary' : 'text-text-secondary'}`}>
+            <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatName}
             </h3>
             {conversation.pinned && (
@@ -107,13 +108,13 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'hidden' : 'group-hover:hidden'} ${(unreadCount > 0 || conversation.markedUnread) ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
+          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'hidden' : 'group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
             {timeAgo.replace('khoảng ', '').replace('dưới ', '').replace('hơn ', '')}
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className={`text-sm truncate flex-1 ${(unreadCount > 0 || conversation.markedUnread) ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+          <p className={`text-sm truncate flex-1 ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
             {(() => {
               const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
               
@@ -126,7 +127,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               }
 
               return (
-                <span className={`truncate text-[13px] ${(unreadCount > 0 || conversation.markedUnread) ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+                <span className={`truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
                   {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
                 </span>
               );
@@ -145,11 +146,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               </span>
             )}
             
-            {unreadCount > 0 ? (
+            {isUnread && unreadCount > 0 ? (
               <span className="flex-shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
               </span>
-            ) : conversation.markedUnread ? (
+            ) : isUnread && conversation.markedUnread ? (
               <span className="flex-shrink-0 bg-red-500 w-2.5 h-2.5 rounded-full" />
             ) : null}
           </div>

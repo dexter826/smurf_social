@@ -75,13 +75,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const timerIntervalRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    // Focus input khi mở hoặc có thao tác
-    inputRef.current?.focus();
+    if (!isSending && !disabled) {
+      inputRef.current?.focus();
+    }
     
     if (editingMessage) {
       setInputText(editingMessage.content);
     }
-  }, [editingMessage]);
+  }, [editingMessage, isSending, disabled]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -383,10 +384,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       toast.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
     } finally {
       setIsSending(false);
-      // Focus lại input sau khi gửi
-      setTimeout(() => {
+      // Focus lại input ngay lập tức sau khi gửi
+      requestAnimationFrame(() => {
         inputRef.current?.focus();
-      }, 0);
+      });
     }
   };
 

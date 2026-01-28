@@ -108,7 +108,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         });
       }
 
-      set({ conversations, isLoading: false });
+      set({ 
+        conversations: conversations.map(c => 
+          (c.id === get().selectedConversationId && get().isChatVisible)
+            ? { ...c, unreadCount: { ...c.unreadCount, [userId]: 0 }, markedUnread: false }
+            : c
+        ), 
+        isLoading: false 
+      });
     });
 
     return unsubscribe;
@@ -116,6 +123,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   selectConversation: (conversationId: string | null) => {
     set({ selectedConversationId: conversationId });
+    
+    // Xóa unreadCount local ngay lập tức khi chọn hội thoại
+    if (conversationId) {
+      const { user } = useAuthStore.getState();
+      if (user) {
+        set((state) => ({
+          conversations: state.conversations.map(c =>
+            c.id === conversationId 
+              ? { ...c, unreadCount: { ...c.unreadCount, [user.id]: 0 }, markedUnread: false } 
+              : c
+          )
+        }));
+      }
+    }
   },
 
   // Lấy hoặc tạo mới hội thoại giữa hai người dùng
