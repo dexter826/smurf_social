@@ -76,7 +76,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       className={`
         relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-200 rounded-xl group
         hover:bg-bg-hover
-        ${isActive ? 'bg-primary-light' : ''}
+        ${isActive ? 'bg-primary-light dark:bg-primary/20' : ''}
         ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
       `}
     >
