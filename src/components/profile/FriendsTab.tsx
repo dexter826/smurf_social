@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { User } from '../../types';
 import { userService } from '../../services/userService';
-import { Avatar, UserAvatar, Spinner } from '../ui';
+import { Avatar, UserAvatar, Spinner, Skeleton } from '../ui';
 import { useNavigate } from 'react-router-dom';
 
 interface FriendsTabProps {
   userId: string;
 }
 
-export const FriendsTab: React.FC<FriendsTabProps> = ({ userId }) => {
+export const FriendsTab: React.FC<FriendsTabProps> & { Skeleton: React.FC } = ({ userId }) => {
   const [friends, setFriends] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -30,11 +30,7 @@ export const FriendsTab: React.FC<FriendsTabProps> = ({ userId }) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner />
-      </div>
-    );
+    return <FriendsTab.Skeleton />;
   }
 
   if (friends.length === 0) {
@@ -72,3 +68,21 @@ export const FriendsTab: React.FC<FriendsTabProps> = ({ userId }) => {
     </div>
   );
 };
+
+FriendsTab.Skeleton = () => (
+  <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+      <h3 className="font-bold text-lg mb-4 text-text-primary">
+        Bạn bè <Skeleton width={40} height={20} className="inline-block" />
+      </h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="bg-bg-secondary rounded-lg p-3 space-y-2">
+            <Skeleton variant="circle" width={80} height={80} className="mx-auto" />
+            <Skeleton width="100%" height={16} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);

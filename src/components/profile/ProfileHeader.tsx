@@ -96,7 +96,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <Dropdown
               trigger={
                 <Button 
-                  disabled={uploading}
+                  isLoading={uploading}
                   variant="ghost"
                   className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 hover:!text-white transition-all gap-2 border border-white/20 rounded-xl"
                   icon={<Pencil size={18} />}
@@ -169,7 +169,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     <Dropdown
                       trigger={
                         <Button
-                          disabled={uploading}
+                          isLoading={uploading}
                           variant="secondary"
                           className="shadow-md border-2 border-bg-primary rounded-full w-10 h-10 p-0 flex items-center justify-center"
                           icon={<Pencil size={18} />}

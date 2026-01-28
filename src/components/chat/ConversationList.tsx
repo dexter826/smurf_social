@@ -205,6 +205,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             }}
             onRemoveFromHistory={onRemoveFromHistory || (() => {})}
             onClearHistory={onClearHistory || (() => {})}
+            isLoading={isLoading && searchTerm !== ''}
           />
         ) : sortedConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Post } from '../../types';
 import { postService } from '../../services/postService';
-import { Spinner } from '../ui';
+import { Spinner, Skeleton } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 
 interface PhotosTabProps {
   userId: string;
 }
 
-export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
+export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ userId }) => {
   const [media, setMedia] = useState<{ url: string, type: 'image' | 'video' }[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState<{ url: string, type: 'image' | 'video' } | null>(null);
@@ -41,11 +41,7 @@ export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner />
-      </div>
-    );
+    return <PhotosTab.Skeleton />;
   }
 
   if (media.length === 0) {
@@ -120,3 +116,16 @@ export const PhotosTab: React.FC<PhotosTabProps> = ({ userId }) => {
     </>
   );
 };
+
+PhotosTab.Skeleton = () => (
+  <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+    <h3 className="font-bold text-lg mb-4 text-text-primary">
+      Ảnh/Video <Skeleton width={40} height={20} className="inline-block" />
+    </h3>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+      {[...Array(10)].map((_, i) => (
+        <Skeleton key={i} variant="rect" className="aspect-square rounded-lg" />
+      ))}
+    </div>
+  </div>
+);

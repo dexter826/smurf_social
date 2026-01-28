@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { userService } from '../services/userService';
 import { Conversation, User, Message } from '../types';
-import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal, TransferAdminModal, ForwardModal } from '../components/chat';
+import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal, TransferAdminModal, ForwardModal, MessengerSkeleton } from '../components/chat';
 import { Spinner } from '../components/ui';
 import { toast } from '../store/toastStore';
 
@@ -229,11 +229,7 @@ const ChatPage: React.FC = () => {
   };
 
   if (!currentUser) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <MessengerSkeleton />;
   }
 
   const filteredConversations = conversations.filter(c => 
@@ -402,7 +398,7 @@ const ChatPage: React.FC = () => {
                 setEditingMessage(msg);
                 setReplyingTo(null);
               }}
-
+              isLoading={isLoading}
             />
             <ChatInput
               key={`${selectedConversationId}-${editingMessage?.id || 'new'}`}

@@ -16,6 +16,7 @@ import { AboutTab } from '../components/profile/AboutTab';
 import { PostsTab } from '../components/profile/PostsTab';
 import { FriendsTab } from '../components/profile/FriendsTab';
 import { PhotosTab } from '../components/profile/PhotosTab';
+import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
 import { Video, User as UserIcon, MessageCircle, Lock } from 'lucide-react';
 
 type TabType = 'media' | 'posts' | 'friends' | 'photos' | 'videos';
@@ -203,11 +204,7 @@ const ProfilePage: React.FC = () => {
   };
 
   if (loading || !profile || !currentUser) {
-    return (
-      <div className="h-full flex items-center justify-center bg-bg-secondary">
-        <Spinner />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (

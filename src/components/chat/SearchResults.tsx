@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X, Clock } from 'lucide-react';
-import { Button } from '../ui';
+import { Button, Skeleton } from '../ui';
 import { Conversation, User } from '../../types';
 
 interface SearchResultsProps {
@@ -16,9 +16,10 @@ interface SearchResultsProps {
   onSelectUser: (user: User) => void;
   onRemoveFromHistory: (id: string) => void;
   onClearHistory: () => void;
+  isLoading?: boolean;
 }
 
-export const SearchResults: React.FC<SearchResultsProps> = ({
+export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC } = ({
   searchTerm,
   results,
   currentUserId,
@@ -27,9 +28,14 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onSelectConversation,
   onSelectUser,
   onRemoveFromHistory,
-  onClearHistory
+  onClearHistory,
+  isLoading
 }) => {
   const isHistoryEmpty = history.length === 0;
+  
+  if (isLoading) {
+    return <SearchResults.Skeleton />;
+  }
 
   if (!searchTerm) {
     if (isHistoryEmpty) {
@@ -142,3 +148,17 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     </div>
   );
 };
+
+SearchResults.Skeleton = () => (
+  <div className="flex flex-col p-2 space-y-2">
+    <div className="px-2 py-2">
+      <Skeleton width={100} height={12} />
+    </div>
+    {[...Array(5)].map((_, i) => (
+      <div key={i} className="flex items-center gap-3 px-3 py-2">
+        <Skeleton variant="circle" width={40} height={40} />
+        <Skeleton width="60%" height={16} />
+      </div>
+    ))}
+  </div>
+);

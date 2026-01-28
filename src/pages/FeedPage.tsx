@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Image as ImageIcon, Video, Loader2 } from 'lucide-react';
-import { PostItem, PostModal, CreatePost } from '../components/feed';
+import { PostItem, PostModal, CreatePost, FeedSkeleton } from '../components/feed';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
-import { userService } from '../services/userService';
-import { Avatar, ConfirmDialog } from '../components/ui';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
+import { ConfirmDialog } from '../components/ui';
 
 const FeedPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
@@ -18,7 +16,6 @@ const FeedPage: React.FC = () => {
     fetchPosts,
     subscribeToPosts,
     likePost,
-    createPost,
     updatePost,
     deletePost,
   } = usePostStore();
@@ -29,7 +26,6 @@ const FeedPage: React.FC = () => {
   
   const observerRef = useRef<HTMLDivElement>(null);
 
-  // Sử dụng useCallback để stable dependencies
   const handleFetchPosts = useCallback(() => {
     if (!currentUser) return;
     const friendIds = currentUser.friendIds || [];
@@ -51,7 +47,6 @@ const FeedPage: React.FC = () => {
     };
   }, [handleFetchPosts, handleSubscribeToPosts]);
 
-  // Infinite Scroll Observer
   useEffect(() => {
     if (!hasMore || isLoading || !currentUser) return;
 
@@ -71,7 +66,6 @@ const FeedPage: React.FC = () => {
     return () => observer.disconnect();
   }, [hasMore, isLoading, posts.length]);
 
-  // Tự động load users khi posts thay đổi
   useEffect(() => {
     if (posts.length > 0) {
       const userIds = [...new Set(posts.map(p => p.userId))];
@@ -118,20 +112,16 @@ const FeedPage: React.FC = () => {
 
   const editPost = posts.find(p => p.id === showEditModal);
 
+  if (isLoading && posts.length === 0) {
+    return <FeedSkeleton />;
+  }
+
   return (
-    <div className="flex justify-center h-full w-full overflow-y-auto bg-bg-secondary">
+    <div className="flex justify-center h-full w-full overflow-y-auto bg-bg-secondary transition-theme">
       <div className="w-full max-w-[720px] py-6 space-y-4 px-2 md:px-0 pb-20">
-        {/* Create Post Card */}
         <CreatePost currentUser={currentUser} />
 
-        {/* Posts List */}
-        {posts.length === 0 && isLoading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <PostItem.Skeleton key={i} />
-            ))}
-          </div>
-        ) : posts.length === 0 ? (
+        {posts.length === 0 ? (
           <div className="bg-bg-primary rounded-xl p-12 shadow-sm border border-border-light text-center transition-theme">
             <p className="text-text-secondary text-lg font-medium">Chưa có bài viết nào</p>
             <p className="text-text-tertiary text-sm mt-2">
@@ -162,7 +152,6 @@ const FeedPage: React.FC = () => {
               );
             })}
 
-            {/* Load More Trigger & Skeleton */}
             <div ref={observerRef} className="h-4 w-full" />
             
             {isLoading && hasMore && (
@@ -182,12 +171,9 @@ const FeedPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal Edit */}
       <PostModal
         isOpen={!!showEditModal}
-        onClose={() => {
-          setShowEditModal(null);
-        }}
+        onClose={() => setShowEditModal(null)}
         currentUser={currentUser}
         initialPost={editPost}
         onSubmit={handleEditPost}

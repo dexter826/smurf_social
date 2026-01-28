@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
 import { User } from '../types';
-import { UserAvatar, ConfirmDialog, Loading, Button } from '../components/ui';
+import { UserAvatar, ConfirmDialog, Loading, Button, Skeleton } from '../components/ui';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -74,8 +74,17 @@ const SettingsPage: React.FC = () => {
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loading size={32} />
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-bg-secondary rounded-xl">
+                  <Skeleton variant="circle" width={40} height={40} />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton width={120} height={16} />
+                    <Skeleton width={80} height={12} className="opacity-50" />
+                  </div>
+                  <Skeleton width={80} height={32} className="rounded-lg" />
+                </div>
+              ))}
             </div>
           ) : blockedUsers.length === 0 ? (
             <div className="text-center py-8 text-text-tertiary">

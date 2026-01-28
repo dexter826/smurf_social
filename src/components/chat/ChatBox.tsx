@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
-import { db } from '../../firebase/config';
-import { Phone, Video, Info, MoreVertical } from 'lucide-react';
-import { Message, User, Conversation, UserStatus } from '../../types';
-import { Avatar, UserAvatar, UserStatusText, Button, IconButton } from '../ui';
+import { Phone, Video, Info } from 'lucide-react';
+import { Message, User, Conversation } from '../../types';
+import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button } from '../ui';
+import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageBubble } from './MessageBubble';
 import { UI_MESSAGES } from '../../constants/uiMessages';
 
@@ -19,6 +19,7 @@ interface ChatBoxProps {
   onForward?: (message: Message) => void;
   onReply?: (message: Message) => void;
   onEdit?: (message: Message) => void;
+  isLoading?: boolean;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -33,13 +34,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onDeleteForMe,
   onForward,
   onReply,
-  onEdit
+  onEdit,
+  isLoading
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Auto scroll xuống khi có tin nhắn mới
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -55,11 +56,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     ? conversation.groupAvatar
     : partner?.avatar;
 
-  // Group messages theo ngày
   const groupedMessages: { date: string; messages: Message[] }[] = [];
   let currentDate = '';
 
-  // Lọc và map tin nhắn trả lời
   const processedMessages = messages
     .filter(msg => !msg.deletedBy?.includes(currentUserId))
     .map(msg => {
@@ -72,7 +71,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
   processedMessages.forEach((msg) => {
     const msgDate = new Date(msg.timestamp).toLocaleDateString('vi-VN');
-    
     if (msgDate !== currentDate) {
       currentDate = msgDate;
       groupedMessages.push({ date: msgDate, messages: [msg] });
@@ -81,7 +79,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     }
   });
 
-  // Kiểm tra xem có nên hiển thị avatar và tên
   const shouldShowAvatar = (msg: Message, index: number, dayMessages: Message[]): boolean => {
     if (msg.senderId === currentUserId) return false;
     if (index === dayMessages.length - 1) return true;
@@ -97,11 +94,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     return prevMsg.senderId !== msg.senderId;
   };
 
-  const typingUsersNames = typingUsers
-    .filter(uid => uid !== currentUserId)
-    .map(uid => usersMap[uid]?.name || UI_MESSAGES.COMMON.SOMEONE)
-    .join(', ');
-
   return (
     <div className="relative flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
       {/* Header */}
@@ -113,8 +105,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               size="sm"
               onClick={onBack}
               className="md:hidden"
-              icon={<span>←</span>}
-            />
+            >
+                ←
+            </Button>
           )}
           
           {conversation.isGroup ? (
@@ -137,26 +130,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
 
         <div className="flex items-center gap-1">
-          <IconButton
-            onClick={() => {}}
-            title={UI_MESSAGES.CHAT.AUDIO_CALL}
-            variant="primary"
-            icon={<Phone size={20} />}
-            size="lg"
-          />
-          <IconButton
-            onClick={() => {}}
-            title={UI_MESSAGES.CHAT.VIDEO_CALL}
-            variant="primary"
-            icon={<Video size={20} />}
-            size="lg"
-          />
-          <IconButton
-            onClick={onInfoClick}
-            title={UI_MESSAGES.CHAT.CONVERSATION_INFO}
-            icon={<Info size={20} />}
-            size="lg"
-          />
+          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.AUDIO_CALL} variant="primary" icon={<Phone size={20} />} size="lg" />
+          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.VIDEO_CALL} variant="primary" icon={<Video size={20} />} size="lg" />
+          <IconButton onClick={onInfoClick} title={UI_MESSAGES.CHAT.CONVERSATION_INFO} icon={<Info size={20} />} size="lg" />
         </div>
       </div>
 
@@ -165,7 +141,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-0 bg-bg-secondary"
       >
-        {groupedMessages.length === 0 ? (
+        {isLoading ? (
+          <ChatBoxSkeleton />
+        ) : groupedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
               <Avatar 
@@ -182,14 +160,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           <div className="space-y-4 px-4 py-4">
             {groupedMessages.map((group, groupIndex) => (
               <div key={groupIndex}>
-                {/* Date Separator */}
                 <div className="flex items-center justify-center my-4">
                   <div className="bg-secondary text-text-secondary text-xs px-3 py-1 rounded-full">
                     {group.date}
                   </div>
                 </div>
 
-                {/* Messages */}
                 <div className="space-y-1">
                   {group.messages.map((msg, msgIndex) => {
                     const sender = usersMap[msg.senderId];
@@ -220,13 +196,11 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                 </div>
               </div>
             ))}
-
             <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
-      {/* Typing Indicator - Simple Text Bottom Left */}
       {typingUsers.filter(uid => uid !== currentUserId).length > 0 && (
         <div className="absolute bottom-2 left-4 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <span className="text-xs text-text-tertiary italic">{UI_MESSAGES.COMMON.TYPING}</span>

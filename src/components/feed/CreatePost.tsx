@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Image as ImageIcon, Video, Camera } from 'lucide-react';
 import { PostModal } from './PostModal';
 import { User } from '../../types';
-import { Avatar, Button } from '../ui';
+import { Avatar, Button, Skeleton } from '../ui';
 import { usePostStore } from '../../store/postStore';
 import { postService } from '../../services/postService';
 
@@ -10,7 +10,7 @@ interface CreatePostProps {
   currentUser: User;
 }
 
-export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
+export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({ currentUser }) => {
   const { createPost } = usePostStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -132,3 +132,19 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
     </>
   );
 };
+
+CreatePost.Skeleton = () => (
+  <div className="bg-bg-primary rounded-xl p-4 shadow-sm border border-border-light transition-theme mb-4">
+    <div className="flex gap-3 mb-4">
+      <Skeleton variant="circle" width={40} height={40} />
+      <div className="flex-1 bg-bg-secondary h-10 rounded-full" />
+    </div>
+    <div className="flex gap-1 pt-2 border-t border-divider">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="flex-1 flex justify-center py-2">
+          <Skeleton width={60} height={16} />
+        </div>
+      ))}
+    </div>
+  </div>
+);
