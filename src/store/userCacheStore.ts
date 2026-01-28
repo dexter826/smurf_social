@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { User } from '../types';
 import { getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { chunkArray } from '../utils/batchUtils';
+import { FIREBASE_LIMITS } from '../constants';
 
 interface UserCacheState {
   users: Record<string, User>;
@@ -14,14 +16,6 @@ interface UserCacheState {
   invalidateUser: (id: string) => void;
   clear: () => void;
 }
-
-const chunkArray = <T,>(array: T[], size: number): T[][] => {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
-  }
-  return chunks;
-};
 
 export const useUserCache = create<UserCacheState>((set, get) => ({
   users: {},
@@ -41,8 +35,8 @@ export const useUserCache = create<UserCacheState>((set, get) => ({
     set({ loadingIds: new Set([...loadingIds, ...missingIds]) });
 
     try {
-      // Firestore 'in' query giới hạn 10 items, cần chia thành chunks
-      const chunks = chunkArray(missingIds, 10);
+      // Firestore 'in' query giới hạn items, cần chia thành chunks
+      const chunks = chunkArray(missingIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
       
       const results = await Promise.all(
         chunks.map(async (chunk) => {

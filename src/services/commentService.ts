@@ -18,9 +18,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Comment } from '../types';
+import { PAGINATION } from '../constants';
 
 export const commentService = {
-  getRootComments: async (postId: string, limitCount: number = 5, lastDoc?: DocumentSnapshot) => {
+  getRootComments: async (postId: string, limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
         collection(db, 'comments'),
@@ -52,7 +53,7 @@ export const commentService = {
     }
   },
 
-  getReplies: async (commentId: string, limitCount: number = 3, lastDoc?: DocumentSnapshot) => {
+  getReplies: async (commentId: string, limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
         collection(db, 'comments'),

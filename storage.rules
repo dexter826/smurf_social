@@ -20,24 +20,18 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
     
-    // Post images
+    // Post images - Visibility được kiểm soát ở Firestore level
     match /posts/{userId}/images/{imageId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId || 
-        request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.friendIds
-      );
+      allow read: if request.auth != null;
       allow write: if request.auth != null 
         && request.auth.uid == userId
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
     
-    // Post videos
+    // Post videos - Visibility được kiểm soát ở Firestore level
     match /posts/{userId}/videos/{videoId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId || 
-        request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.friendIds
-      );
+      allow read: if request.auth != null;
       allow write: if request.auth != null 
         && request.auth.uid == userId
         && request.resource.size < 50 * 1024 * 1024

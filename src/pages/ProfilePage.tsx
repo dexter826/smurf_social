@@ -1,206 +1,66 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { userService } from '../services/userService';
-import { chatService } from '../services/chatService';
-import { friendService } from '../services/friendService';
-import { postService } from '../services/postService';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Spinner, Button, ConfirmDialog } from '../components/ui';
-import { toast } from '../store/toastStore';
-import { validateFileSize } from '../utils/fileUtils';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
-import { AboutTab } from '../components/profile/AboutTab';
 import { PostsTab } from '../components/profile/PostsTab';
-import { FriendsTab } from '../components/profile/FriendsTab';
 import { PhotosTab } from '../components/profile/PhotosTab';
 import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
-import { Video, User as UserIcon, MessageCircle, Lock } from 'lucide-react';
-
-type TabType = 'media' | 'posts' | 'friends' | 'photos' | 'videos';
+import { Video, User as UserIcon, Lock } from 'lucide-react';
+import { useProfile } from '../hooks';
 
 const ProfilePage: React.FC = () => {
-  const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-  const [profile, setProfile] = useState<User | null>(null);
-  const [stats, setStats] = useState({ friendCount: 0, postCount: 0 });
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>('posts');
+  const {
+    profile,
+    stats,
+    latestMedia,
+    loading,
+    uploading,
+    isOwnProfile,
+    isFriend,
+    canViewContent,
+    activeTab,
+    setActiveTab,
+    handleMessage,
+    handleFriendAction,
+    confirmUnfriend,
+    handleSaveProfile,
+    handleAvatarChange,
+    handleCoverChange,
+    handleAvatarDelete,
+    handleCoverDelete,
+  } = useProfile();
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmUnfriendOpen, setIsConfirmUnfriendOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [isConfirmDeleteAvatarOpen, setIsConfirmDeleteAvatarOpen] = useState(false);
   const [isConfirmDeleteCoverOpen, setIsConfirmDeleteCoverOpen] = useState(false);
-  const [latestMedia, setLatestMedia] = useState<string[]>([]);
 
-  const profileUserId = userId || currentUser?.id;
-  const isOwnProfile = currentUser?.id === profileUserId;
-  const isFriend = currentUser?.friendIds?.includes(profileUserId || '') || false;
-  const canViewContent = isOwnProfile || isFriend;
-
-  useEffect(() => {
-    loadProfile();
-  }, [profileUserId]);
-
-  const loadProfile = async () => {
-    if (!profileUserId) return;
-    
-    setLoading(true);
-    try {
-      const [userData, userStats, userPosts] = await Promise.all([
-        userService.getUserById(profileUserId),
-        userService.getUserStats(profileUserId),
-        postService.getUserPosts(profileUserId, 20)
-      ]);
-      
-      setProfile(userData || null);
-      setStats(userStats);
-
-      // Trích xuất 6 media mới nhất
-      const media: string[] = [];
-      userPosts.posts.forEach(post => {
-        if (post.images) media.push(...post.images);
-        if (post.videos) media.push(...post.videos);
-      });
-      setLatestMedia(media.slice(0, 6));
-
-    } catch (error) {
-      console.error("Lỗi load profile", error);
-    } finally {
-      setLoading(false);
+  const onFriendActionClick = async () => {
+    const { needConfirm } = await handleFriendAction();
+    if (needConfirm) {
+      setIsConfirmUnfriendOpen(true);
     }
   };
 
-  const handleMessage = async () => {
-    if (!currentUser || !profile) return;
-    try {
-      const conversationId = await chatService.getOrCreateConversation(currentUser.id, profile.id);
-      navigate(`/?conv=${conversationId}`);
-    } catch (error) {
-      toast.error('Không thể mở cuộc hội thoại');
-    }
+  const onUnfriendConfirm = async () => {
+    await confirmUnfriend();
+    setIsConfirmUnfriendOpen(false);
   };
 
-  const handleFriendAction = async () => {
-    if (!currentUser || !profile) return;
-    try {
-      if (isFriend) {
-        setIsConfirmUnfriendOpen(true);
-      } else {
-        await friendService.sendFriendRequest(currentUser.id, profile.id);
-        toast.success('Đã gửi lời mời kết bạn');
-      }
-    } catch (error) {
-      toast.error('Thực hiện hành động thất bại');
-    }
+  const onAvatarDeleteClick = async () => {
+    await handleAvatarDelete();
+    setIsConfirmDeleteAvatarOpen(false);
   };
 
-  const confirmUnfriend = async () => {
-    if (!currentUser || !profile) return;
-    try {
-      await friendService.unfriend(currentUser.id, profile.id);
-      toast.success('Đã hủy kết bạn');
-      loadProfile();
-    } catch (error) {
-      toast.error('Không thể hủy kết bạn');
-    } finally {
-      setIsConfirmUnfriendOpen(false);
-    }
-  };
-
-  const handleSaveProfile = async (data: Partial<User>) => {
-    if (!profile) return;
-    
-    try {
-      const updated = await userService.updateProfile(profile.id, data);
-      setProfile(updated);
-      
-      if (isOwnProfile && currentUser) {
-        useAuthStore.setState({ user: updated });
-      }
-    } catch (error) {
-      console.error("Lỗi cập nhật profile", error);
-      throw error;
-    }
-  };
-
-  const handleAvatarChange = async (file: File) => {
-    if (!profile || !isOwnProfile) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn file ảnh');
-      return;
-    }
-    if (!validateFileSize(file, 'AVATAR')) return;
-    
-    setUploading(true);
-    try {
-      const newAvatarUrl = await userService.uploadAvatar(profile.id, file);
-      setProfile({ ...profile, avatar: newAvatarUrl });
-      if (currentUser) {
-        useAuthStore.setState({ user: { ...currentUser, avatar: newAvatarUrl } });
-      }
-    } catch (error) {
-      console.error("Lỗi upload avatar", error);
-      toast.error('Không thể tải lên ảnh đại diện');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleCoverChange = async (file: File) => {
-    if (!profile || !isOwnProfile) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn file ảnh');
-      return;
-    }
-    if (!validateFileSize(file, 'COVER')) return;
-    
-    setUploading(true);
-    try {
-      const newCoverUrl = await userService.uploadCoverImage(profile.id, file);
-      setProfile({ ...profile, coverImage: newCoverUrl });
-    } catch (error) {
-      console.error("Lỗi upload cover", error);
-      toast.error('Không thể tải lên ảnh bìa');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleAvatarDelete = async () => {
-    if (!profile || !isOwnProfile) return;
-    setUploading(true);
-    try {
-      await userService.deleteAvatar(profile.id);
-      setProfile({ ...profile, avatar: '' });
-      if (currentUser) {
-        useAuthStore.setState({ user: { ...currentUser, avatar: '' } });
-      }
-      toast.success('Đã xóa ảnh đại diện');
-    } catch (error) {
-      toast.error('Không thể xóa ảnh đại diện');
-    } finally {
-      setUploading(false);
-      setIsConfirmDeleteAvatarOpen(false);
-    }
-  };
-
-  const handleCoverDelete = async () => {
-    if (!profile || !isOwnProfile) return;
-    setUploading(true);
-    try {
-      await userService.deleteCoverImage(profile.id);
-      setProfile({ ...profile, coverImage: '' });
-      toast.success('Đã xóa ảnh bìa');
-    } catch (error) {
-      toast.error('Không thể xóa ảnh bìa');
-    } finally {
-      setUploading(false);
-      setIsConfirmDeleteCoverOpen(false);
-    }
+  const onCoverDeleteClick = async () => {
+    await handleCoverDelete();
+    setIsConfirmDeleteCoverOpen(false);
   };
 
   if (loading || !profile || !currentUser) {
@@ -217,7 +77,7 @@ const ProfilePage: React.FC = () => {
           isFriend={isFriend}
           onEditClick={() => setIsEditModalOpen(true)}
           onMessageClick={handleMessage}
-          onFriendClick={handleFriendAction}
+          onFriendClick={onFriendActionClick}
           onAvatarChange={handleAvatarChange}
           onCoverChange={handleCoverChange}
           onAvatarDelete={() => setIsConfirmDeleteAvatarOpen(true)}
@@ -336,7 +196,6 @@ const ProfilePage: React.FC = () => {
             <h2 className="text-2xl font-bold text-text-primary mb-3">Trang cá nhân của {profile.name}</h2>
             <p className="text-text-secondary mb-8">Kết bạn để xem bài viết và thông tin của người này.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {/* Nút kết bạn đã có trong ProfileHeader nếu cần, hoặc thêm ở đây */}
               <Button onClick={() => navigate('/contacts')} variant="primary" className="px-8">
                 Tìm kiếm bạn bè
               </Button>
@@ -355,7 +214,7 @@ const ProfilePage: React.FC = () => {
       <ConfirmDialog
         isOpen={isConfirmUnfriendOpen}
         onClose={() => setIsConfirmUnfriendOpen(false)}
-        onConfirm={confirmUnfriend}
+        onConfirm={onUnfriendConfirm}
         title="Hủy kết bạn"
         message={`Bạn có chắc chắn muốn hủy kết bạn với ${profile?.name || ''}?`}
         confirmLabel="Hủy kết bạn"
@@ -365,7 +224,7 @@ const ProfilePage: React.FC = () => {
       <ConfirmDialog
         isOpen={isConfirmDeleteAvatarOpen}
         onClose={() => setIsConfirmDeleteAvatarOpen(false)}
-        onConfirm={handleAvatarDelete}
+        onConfirm={onAvatarDeleteClick}
         title="Xóa ảnh đại diện"
         message="Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại? Bạn sẽ quay về sử dụng ảnh mặc định."
         confirmLabel="Xóa ngay"
@@ -375,7 +234,7 @@ const ProfilePage: React.FC = () => {
       <ConfirmDialog
         isOpen={isConfirmDeleteCoverOpen}
         onClose={() => setIsConfirmDeleteCoverOpen(false)}
-        onConfirm={handleCoverDelete}
+        onConfirm={onCoverDeleteClick}
         title="Xóa ảnh bìa"
         message="Bạn có chắc chắn muốn xóa ảnh bìa hiện tại?"
         confirmLabel="Xóa ngay"

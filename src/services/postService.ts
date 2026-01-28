@@ -22,9 +22,10 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { db, storage } from '../firebase/config';
 import { Post, Comment } from '../types';
 import { chunkArray } from '../utils/batchUtils';
+import { PAGINATION, FIREBASE_LIMITS } from '../constants';
 
 export const postService = {
-  getFeed: async (currentUserId: string, friendIds: string[], limitCount: number = 10, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
+  getFeed: async (currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
       if (!currentUserId) {
         console.warn("getFeed: currentUserId is missing");
@@ -33,8 +34,8 @@ export const postService = {
 
       const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)];
       
-      // Firestore 'in' giới hạn 10 items, chia thành chunks
-      const chunks = chunkArray(allowedUserIds, 10);
+      // Firestore 'in' giới hạn items, chia thành chunks
+      const chunks = chunkArray(allowedUserIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
       
       // Lấy posts từ tất cả chunks
       const allResults = await Promise.all(
@@ -92,7 +93,7 @@ export const postService = {
     }
   },
 
-  subscribeToFeed: (currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = 20) => {
+  subscribeToFeed: (currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.FEED_POSTS) => {
     if (!currentUserId) {
       console.warn("subscribeToFeed: currentUserId is missing");
       callback([]);
@@ -170,7 +171,7 @@ export const postService = {
     };
   },
 
-  getUserPosts: async (userId: string, limitCount: number = 10, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
+  getUserPosts: async (userId: string, limitCount: number = PAGINATION.USER_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
       let q = query(
         collection(db, 'posts'),

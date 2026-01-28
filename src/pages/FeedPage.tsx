@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { PostItem, PostModal, CreatePost, FeedSkeleton } from '../components/feed';
-import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
-import { usePostStore } from '../store/postStore';
-import { useUserCache } from '../store/userCacheStore';
+import { useFeed } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
 
 const FeedPage: React.FC = () => {
@@ -13,87 +11,26 @@ const FeedPage: React.FC = () => {
     posts,
     isLoading,
     hasMore,
-    fetchPosts,
-    subscribeToPosts,
-    likePost,
-    updatePost,
-    deletePost,
-  } = usePostStore();
-  const { users: usersMap, fetchUsers } = useUserCache();
+    usersMap,
+    handleLike,
+    handleUpdate,
+    handleDelete,
+    observerRef,
+  } = useFeed();
 
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  
-  const observerRef = useRef<HTMLDivElement>(null);
-
-  const handleFetchPosts = useCallback(() => {
-    if (!currentUser) return;
-    const friendIds = currentUser.friendIds || [];
-    fetchPosts(currentUser.id, friendIds);
-  }, [currentUser, fetchPosts]);
-
-  const handleSubscribeToPosts = useCallback(() => {
-    if (!currentUser) return;
-    const friendIds = currentUser.friendIds || [];
-    return subscribeToPosts(currentUser.id, friendIds);
-  }, [currentUser, subscribeToPosts]);
-
-  useEffect(() => {
-    handleFetchPosts();
-    const unsubscribe = handleSubscribeToPosts();
-    
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [handleFetchPosts, handleSubscribeToPosts]);
-
-  useEffect(() => {
-    if (!hasMore || isLoading || !currentUser) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          handleLoadMore();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    if (observerRef.current) {
-      observer.observe(observerRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, isLoading, posts.length]);
-
-  useEffect(() => {
-    if (posts.length > 0) {
-      const userIds = [...new Set(posts.map(p => p.userId))];
-      fetchUsers(userIds);
-    }
-  }, [posts, fetchUsers]);
-
-  const handleLoadMore = () => {
-    if (!currentUser || isLoading || !hasMore) return;
-    fetchPosts(currentUser.id, currentUser.friendIds || [], true);
-  };
-
-
-  const handleLike = async (postId: string) => {
-    if (!currentUser) return;
-    await likePost(postId, currentUser.id);
-  };
 
   const handleEditPost = async (content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => {
     if (!showEditModal) return;
-    await updatePost(showEditModal, content, images, videos, visibility);
+    await handleUpdate(showEditModal, content, images, videos, visibility);
     setShowEditModal(null);
   };
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
     const post = posts.find(p => p.id === postToDelete);
-    await deletePost(postToDelete, post?.images, post?.videos);
+    await handleDelete(postToDelete, post?.images, post?.videos);
     setPostToDelete(null);
   };
 

@@ -1,158 +1,55 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Users, Search, Bell, ArrowUpDown } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { useContactStore } from '../store/contactStore';
-import { useUserCache } from '../store/userCacheStore';
-import { User } from '../types';
+import { useContacts } from '../hooks';
 import { Button, Input, ConfirmDialog } from '../components/ui';
 import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/contacts';
 
-type TabType = 'all' | 'requests' | 'sent';
-
 const ContactsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuthStore();
-  const { 
-    friends, 
-    receivedRequests, 
+  const {
+    friends,
+    receivedRequests,
     sentRequests,
-    isLoading, 
-    fetchFriends,
-    subscribeToRequests,
-    acceptFriendRequest,
-    rejectFriendRequest,
-    cancelFriendRequest,
-    unfriend,
-    blockUser
-  } = useContactStore();
+    groupedFriends,
+    userCache,
+    isLoading,
+    activeTab,
+    setActiveTab,
+    searchTerm,
+    setSearchTerm,
+    sortOrder,
+    toggleSortOrder,
+    handleAcceptRequest,
+    handleRejectRequest,
+    handleCancelRequest,
+    handleUnfriend,
+    handleBlockUser,
+    handleMessage,
+  } = useContacts();
 
-  const [activeTab, setActiveTab] = useState<TabType>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showAddModal, setShowAddModal] = useState(false);
   const [unfriendId, setUnfriendId] = useState<string | null>(null);
   const [blockUserId, setBlockUserId] = useState<string | null>(null);
-  const { users: userCache, fetchUsers } = useUserCache();
 
-  const handleFetchFriends = useCallback(() => {
-    if (!currentUser) return;
-    fetchFriends(currentUser.id);
-  }, [currentUser, fetchFriends]);
-
-  const handleSubscribeToRequests = useCallback(() => {
-    if (!currentUser) return () => {};
-    return subscribeToRequests(currentUser.id);
-  }, [currentUser, subscribeToRequests]);
-
-  useEffect(() => {
-    handleFetchFriends();
-    const unsubscribe = handleSubscribeToRequests();
-    
-    return () => {
-      unsubscribe();
-    };
-  }, [handleFetchFriends, handleSubscribeToRequests]);
-
-  useEffect(() => {
-    const userIds = [
-      ...receivedRequests.map(r => r.senderId),
-      ...sentRequests.map(r => r.receiverId)
-    ];
-
-    const uniqueIds = [...new Set(userIds)];
-    if (uniqueIds.length > 0) {
-      fetchUsers(uniqueIds);
-    }
-  }, [receivedRequests, sentRequests, fetchUsers]);
-
-  const handleAcceptRequest = async (requestId: string, friendId: string) => {
-    if (!currentUser) return;
-    try {
-      await acceptFriendRequest(requestId, currentUser.id, friendId);
-      await fetchFriends(currentUser.id);
-    } catch (error) {
-      console.error('Lỗi chấp nhận kết bạn:', error);
-    }
+  const onUnfriendConfirm = async () => {
+    if (!unfriendId) return;
+    await handleUnfriend(unfriendId);
+    setUnfriendId(null);
   };
 
-  const handleRejectRequest = async (requestId: string) => {
-    try {
-      await rejectFriendRequest(requestId);
-    } catch (error) {
-      console.error('Lỗi từ chối kết bạn:', error);
+  const onBlockConfirm = async () => {
+    if (!blockUserId) return;
+    await handleBlockUser(blockUserId);
+    setBlockUserId(null);
+  };
+
+  const onMessageClick = async (friendId: string) => {
+    const convId = await handleMessage(friendId);
+    if (convId) {
+      navigate(`/?conv=${convId}`);
     }
   };
-
-  const handleCancelRequest = async (requestId: string) => {
-    try {
-      await cancelFriendRequest(requestId);
-    } catch (error) {
-      console.error('Lỗi hủy lời mời:', error);
-    }
-  };
-
-  const handleUnfriend = async () => {
-    if (!currentUser || !unfriendId) return;
-    try {
-      await unfriend(currentUser.id, unfriendId);
-      setUnfriendId(null);
-    } catch (error) {
-      console.error('Lỗi hủy kết bạn:', error);
-    }
-  };
-
-  const handleBlockUser = async () => {
-    if (!currentUser || !blockUserId) return;
-    try {
-      await blockUser(currentUser.id, blockUserId);
-      setBlockUserId(null);
-    } catch (error) {
-      console.error('Lỗi chặn người dùng:', error);
-    }
-  };
-
-  const handleMessage = async (friendId: string) => {
-    if (!currentUser) return;
-    try {
-      const { useChatStore } = await import('../store/chatStore');
-      const conversationId = await useChatStore.getState().getOrCreateConversation(
-        currentUser.id,
-        friendId
-      );
-      navigate('/');
-    } catch (error) {
-      console.error('Lỗi mở chat:', error);
-    }
-  };
-
-  const filteredFriends = friends.filter(friend =>
-    friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const groupFriendsByLetter = () => {
-    const groups: Record<string, User[]> = {};
-    filteredFriends.forEach(friend => {
-      const firstLetter = friend.name.charAt(0).toUpperCase();
-      if (!groups[firstLetter]) groups[firstLetter] = [];
-      groups[firstLetter].push(friend);
-    });
-
-    const sortedGroups = Object.keys(groups).sort();
-    if (sortOrder === 'desc') sortedGroups.reverse();
-
-    return sortedGroups.map(letter => ({
-      letter,
-      friends: groups[letter].sort((a, b) => {
-        return sortOrder === 'asc' 
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
-      })
-    }));
-  };
-
-  const groupedFriends = groupFriendsByLetter();
 
   return (
     <div className="flex h-full w-full bg-bg-secondary">
@@ -250,7 +147,7 @@ const ContactsPage: React.FC = () => {
                 size="md"
                 className="px-3"
                 icon={<ArrowUpDown size={18} />}
-                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                onClick={toggleSortOrder}
               >
                 {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
               </Button>
@@ -270,7 +167,7 @@ const ContactsPage: React.FC = () => {
             <>
               {activeTab === 'all' && (
                 <>
-                  {filteredFriends.length === 0 ? (
+                  {groupedFriends.length === 0 ? (
                     <div className="text-center py-20 text-text-tertiary">
                       <Users size={48} className="mx-auto mb-4 opacity-20" />
                       <p className="text-lg font-medium">Không tìm thấy bạn bè nào</p>
@@ -288,7 +185,7 @@ const ContactsPage: React.FC = () => {
                                 key={friend.id}
                                 friend={friend}
                                 onUnfriend={(id) => setUnfriendId(id)}
-                                onMessage={handleMessage}
+                                onMessage={onMessageClick}
                               />
                             ))}
                           </div>
@@ -357,7 +254,7 @@ const ContactsPage: React.FC = () => {
       <ConfirmDialog
         isOpen={!!unfriendId}
         onClose={() => setUnfriendId(null)}
-        onConfirm={handleUnfriend}
+        onConfirm={onUnfriendConfirm}
         title="Hủy kết bạn"
         message="Bạn có chắc muốn hủy kết bạn với người này?"
         confirmLabel="Hủy kết bạn"
@@ -367,7 +264,7 @@ const ContactsPage: React.FC = () => {
       <ConfirmDialog
         isOpen={!!blockUserId}
         onClose={() => setBlockUserId(null)}
-        onConfirm={handleBlockUser}
+        onConfirm={onBlockConfirm}
         title="Chặn người dùng"
         message="Bạn có chắc muốn chặn người dùng này?"
         confirmLabel="Chặn ngay"

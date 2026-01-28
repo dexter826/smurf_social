@@ -1,232 +1,76 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
-import { useChatStore } from '../store/chatStore';
-import { useAuthStore } from '../store/authStore';
-import { useUserCache } from '../store/userCacheStore';
-import { userService } from '../services/userService';
-import { Conversation, User, Message } from '../types';
-import { ConversationList, ChatBox, ChatInput, ChatDetailsPanel, CreateGroupModal, AddMemberModal, EditGroupModal, TransferAdminModal, ForwardModal, MessengerSkeleton } from '../components/chat';
-import { Spinner } from '../components/ui';
-import { toast } from '../store/toastStore';
+import { useChat, useProfile } from '../hooks';
+import { 
+  ConversationList, ChatBox, ChatInput, ChatDetailsPanel, 
+  CreateGroupModal, AddMemberModal, EditGroupModal, 
+  TransferAdminModal, ForwardModal, MessengerSkeleton 
+} from '../components/chat';
 
 const ChatPage: React.FC = () => {
-  const { user: currentUser } = useAuthStore();
   const {
+    currentUser,
     conversations,
     selectedConversationId,
-    messages,
-    typingUsers,
+    selectedConversation,
+    currentMessages,
+    currentTypingUsers,
     isLoading,
-    subscribeToConversations,
-    selectConversation,
-    subscribeToMessages,
-    sendTextMessage,
-    sendImageMessage,
-    sendFileMessage,
-    sendVideoMessage,
-    sendVoiceMessage,
-    markAsRead,
-    markAsDelivered,
-    setTyping,
-    subscribeToTyping,
-    togglePin,
-    toggleMute,
-    toggleArchive,
-    toggleMarkUnread,
-    deleteConversation,
-    searchConversations,
-
+    viewMode,
+    setViewMode,
     isSearchFocused,
-    searchResults,
     setSearchFocused,
-    getOrCreateConversation,
+    searchResults,
     searchHistory,
+    archivedCount,
+    usersMap,
+    isBlocked,
+    blockedMessage,
+    forwardingMessage,
+    setForwardingMessage,
+    replyingTo,
+    setReplyingTo,
+    editingMessage,
+    setEditingMessage,
+    
+    // Handlers
+    handleSelectConversation,
+    handleSendText,
+    handleEditMessage,
+    handleRecallMessage,
+    handleDeleteForMe,
+    handleForwardMessage,
+    handleSendImage,
+    handleSendFile,
+    handleSendVideo,
+    handleSendVoice,
+    handleTyping,
+    handleSearch,
+    handlePin,
+    handleMute,
+    handleArchive,
+    handleMarkUnread,
+    handleDelete,
+    handleToggleBlock,
+    handleCreateGroup,
+    handleAddMembers,
+    handleRemoveMember,
+    handleLeaveGroup,
+    handleAssignAdminAndLeave,
+    handlePromoteToAdmin,
+    handleDemoteFromAdmin,
+    handleEditGroup,
     addToSearchHistory,
     removeFromSearchHistory,
     clearSearchHistory,
-    createGroup,
-    updateGroupInfo,
-    addMember,
-    removeMember,
-    leaveGroup,
-    promoteToAdmin,
-    demoteFromAdmin,
-    recallMessage,
-    deleteMessageForMe,
-    forwardMessage,
-    replyToMessage,
-    editMessage
-  } = useChatStore();
+    getOrCreateConversation
+  } = useChat();
 
   const [showDetails, setShowDetails] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
-  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
-  const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
-  const { users: usersMap, fetchUsers } = useUserCache();
-
-  // Stable callbacks
-  const handleSubscribeToConversations = useCallback(() => {
-    if (!currentUser) return () => {};
-    return subscribeToConversations(currentUser.id);
-  }, [currentUser, subscribeToConversations]);
-
-  // Subscribe danh sách chat
-  useEffect(() => {
-    const unsubscribe = handleSubscribeToConversations();
-    return () => unsubscribe();
-  }, [handleSubscribeToConversations]);
-
-  // Subscribe tin nhắn & trạng thái gõ
-  useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
-
-    // Subscribe tin nhắn
-    const unsubscribeMessages = subscribeToMessages(selectedConversationId);
-    
-    // Subscribe typing
-    const unsubscribeTyping = subscribeToTyping(selectedConversationId);
-
-    // Đánh dấu đã nhận
-    markAsDelivered(selectedConversationId, currentUser.id);
-
-    return () => {
-      unsubscribeMessages();
-      unsubscribeTyping();
-    };
-  }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsDelivered]);
-
-  // Tự động đánh dấu đã đọc khi có tin nhắn mới
-  useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
-
-    const currentMessages = messages[selectedConversationId] || [];
-    if (currentMessages.length === 0) return;
-
-    // Kiểm tra có tin nhắn chưa đọc từ người khác không
-    const hasUnread = currentMessages.some(m => 
-      m.senderId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id))
-    );
-
-    if (hasUnread) {
-      markAsRead(selectedConversationId, currentUser.id);
-    }
-  }, [messages, selectedConversationId, currentUser, markAsRead]);
-
-  // Tự động load users cho messages
-  useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
-
-    const currentMessages = messages[selectedConversationId] || [];
-    if (currentMessages.length === 0) return;
-
-    const userIds = [...new Set(currentMessages.map(m => m.senderId))];
-    const conv = conversations.find(c => c.id === selectedConversationId);
-    
-    if (conv) {
-      conv.participants.forEach(p => userIds.push(p.id));
-    }
-
-    fetchUsers(userIds);
-  }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
-
-  const handleSelectConversation = (id: string) => {
-    selectConversation(id);
-  };
-
-  const handleSendText = async (text: string, mentions?: string[]) => {
-    if (!selectedConversationId || !currentUser) return;
-    
-    if (replyingTo) {
-      await replyToMessage(selectedConversationId, currentUser.id, text, replyingTo.id);
-      setReplyingTo(null);
-    } else {
-      await sendTextMessage(selectedConversationId, currentUser.id, text, mentions);
-    }
-  };
-
-  const handleEditMessage = async (text: string) => {
-    if (!editingMessage) return;
-    await editMessage(editingMessage.id, text);
-    setEditingMessage(null);
-  };
-
-  const handleRecallMessage = async (messageId: string) => {
-    if (!selectedConversationId) return;
-    await recallMessage(messageId, selectedConversationId);
-  };
-
-  const handleDeleteForMe = async (messageId: string) => {
-    if (!currentUser) return;
-    await deleteMessageForMe(messageId, currentUser.id);
-  };
-
-  const handleForwardMessage = async (message: Message) => {
-    setForwardingMessage(message);
-  };
-
-  const handleSendImage = async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendImageMessage(selectedConversationId, currentUser.id, file);
-  };
-
-  const handleSendFile = async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendFileMessage(selectedConversationId, currentUser.id, file);
-  };
-
-  const handleSendVideo = async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendVideoMessage(selectedConversationId, currentUser.id, file);
-  };
-
-  const handleSendVoice = async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendVoiceMessage(selectedConversationId, currentUser.id, file);
-  };
-
-  const handleTyping = async (isTyping: boolean) => {
-    if (!selectedConversationId || !currentUser) return;
-    await setTyping(selectedConversationId, currentUser.id, isTyping);
-  };
-
-  const handleSearch = async (term: string) => {
-    if (!currentUser) return;
-    await searchConversations(currentUser.id, term);
-  };
-
-  const handlePin = async (id: string, pinned: boolean) => {
-    await togglePin(id, pinned);
-  };
-
-  const handleMute = async (id: string, muted: boolean) => {
-    await toggleMute(id, muted);
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteConversation(id);
-  };
-
-  const handleArchive = async (id: string, archived: boolean) => {
-    await toggleArchive(id, archived);
-    if (archived && selectedConversationId === id) {
-      selectConversation(null);
-    }
-  };
-
-  const handleMarkUnread = async (id: string, markedUnread: boolean) => {
-    await toggleMarkUnread(id, markedUnread);
-  };
-
-
-
-  const handleBackToList = () => {
-    selectConversation(null);
-  };
 
   if (!currentUser) {
     return <MessengerSkeleton />;
@@ -235,100 +79,9 @@ const ChatPage: React.FC = () => {
   const filteredConversations = conversations.filter(c => 
     viewMode === 'archived' ? c.archived : !c.archived
   );
-  const archivedCount = conversations.filter(c => c.archived).length;
-  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
-  const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
-  const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
 
-  // Tính block 2 chiều
-  const partner = selectedConversation && !selectedConversation.isGroup
-    ? selectedConversation.participants.find(p => p.id !== currentUser.id)
-    : null;
-  const partnerId = partner?.id || null;
-  
-  const isBlockedByMe = partnerId ? currentUser.blockedUserIds?.includes(partnerId) : false;
-  const isBlockedByPartner = partner?.blockedUserIds?.includes(currentUser.id) ?? false;
-  const isBlocked = isBlockedByMe || isBlockedByPartner;
-  
-  // Thông báo chặn
-  const getBlockedMessage = (): string | undefined => {
-    if (!selectedConversation?.isGroup && partnerId) {
-      if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
-      if (isBlockedByPartner) return 'Bạn không thể gửi tin nhắn cho người này.';
-    }
-    return undefined;
-  };
-
-  const handleToggleBlock = async () => {
-    if (!partnerId) return;
-    
-    if (isBlockedByMe) {
-      await userService.unblockUser(currentUser.id, partnerId);
-    } else {
-      await userService.blockUser(currentUser.id, partnerId);
-      setShowDetails(false);
-      selectConversation(null);
-    }
-  };
-
-  // ========== QUẢN LÝ NHÓM ==========
-  const handleCreateGroup = async (memberIds: string[], groupName: string, groupAvatar?: string) => {
-    if (!currentUser) return;
-    await createGroup(currentUser.id, memberIds, groupName, groupAvatar);
-    setShowCreateGroup(false);
-  };
-
-  const handleAddMembers = async (userIds: string[]) => {
-    if (!selectedConversationId) return;
-    for (const userId of userIds) {
-      await addMember(selectedConversationId, userId);
-    }
-  };
-
-  const handleRemoveMember = async (userId: string) => {
-    if (!selectedConversationId) return;
-    await removeMember(selectedConversationId, userId);
-  };
-
-  const handleLeaveGroup = async () => {
-    if (!selectedConversationId || !currentUser) return;
-    const conv = conversations.find(c => c.id === selectedConversationId);
-    
-    // Trưởng nhóm rời đi -> yêu cầu chọn người mới
-    if (conv?.isGroup && conv.creatorId === currentUser.id && conv.participantIds.length > 1) {
-      setShowAssignAdmin(true);
-      return;
-    }
-
-    await leaveGroup(selectedConversationId, currentUser.id);
-    setShowDetails(false);
-  };
-
-  const handleAssignAdminAndLeave = async (newAdminId: string) => {
-    if (!selectedConversationId || !currentUser) return;
-    
-    // 1. Thăng admin mới
-    await promoteToAdmin(selectedConversationId, newAdminId);
-    
-    // 2. Chuyển quyền creator và rời nhóm
-    await leaveGroup(selectedConversationId, currentUser.id);
-    setShowAssignAdmin(false);
-    setShowDetails(false);
-  };
-
-  const handlePromoteToAdmin = async (userId: string) => {
-    if (!selectedConversationId) return;
-    await promoteToAdmin(selectedConversationId, userId);
-  };
-
-  const handleDemoteFromAdmin = async (userId: string) => {
-    if (!selectedConversationId) return;
-    await demoteFromAdmin(selectedConversationId, userId);
-  };
-
-  const handleEditGroup = async (updates: { groupName?: string; groupAvatar?: string }) => {
-    if (!selectedConversationId) return;
-    await updateGroupInfo(selectedConversationId, updates);
+  const handleBackToList = () => {
+    handleSelectConversation(null);
   };
 
   return (
@@ -344,9 +97,7 @@ const ChatPage: React.FC = () => {
           viewMode={viewMode}
           archivedCount={archivedCount}
           onViewModeChange={setViewMode}
-          onBlock={async (partnerId) => {
-            await userService.blockUser(currentUser.id, partnerId);
-          }}
+          onBlock={handleToggleBlock}
           isSearchFocused={isSearchFocused}
           onSearchFocus={setSearchFocused}
           searchResults={searchResults}
@@ -408,7 +159,7 @@ const ChatPage: React.FC = () => {
               onSendVideo={handleSendVideo}
               onSendVoice={handleSendVoice}
               onTyping={handleTyping}
-              blockedMessage={getBlockedMessage()}
+              blockedMessage={blockedMessage}
               replyingTo={replyingTo}
               editingMessage={editingMessage}
               currentUserId={currentUser.id}
@@ -451,7 +202,16 @@ const ChatPage: React.FC = () => {
           onTogglePin={() => handlePin(selectedConversation.id, !selectedConversation.pinned)}
           onToggleBlock={handleToggleBlock}
           onDelete={() => handleDelete(selectedConversation.id)}
-          onLeaveGroup={handleLeaveGroup}
+          onLeaveGroup={() => {
+            const result = handleLeaveGroup();
+            if (result && 'then' in result) {
+               result.then((res: any) => {
+                 if (res?.needsAssignAdmin) setShowAssignAdmin(true);
+               });
+            } else if ((result as any)?.needsAssignAdmin) {
+               setShowAssignAdmin(true);
+            }
+          }}
           onEditGroup={() => setShowEditGroup(true)}
           onAddMember={() => setShowAddMember(true)}
           onRemoveMember={handleRemoveMember}

@@ -5,10 +5,6 @@ import { User, UserStatus } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 
 export const userService = {
-  getCurrentUser: async (uid: string): Promise<User | undefined> => {
-    return userService.getUserById(uid);
-  },
-
   getUserById: async (id: string): Promise<User | undefined> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', id));

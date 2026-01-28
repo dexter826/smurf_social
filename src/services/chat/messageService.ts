@@ -17,6 +17,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase/config';
 import { Message, MessageType } from '../../types';
+import { TIME_LIMITS } from '../../constants';
 
 export const messageService = {
   // ========== MESSAGES ==========
@@ -516,10 +517,10 @@ export const messageService = {
       
       if (timestamp) {
         const now = new Date();
-        const diffInMinutes = (now.getTime() - timestamp.getTime()) / (1000 * 60);
+        const diffInMinutes = (now.getTime() - timestamp.getTime());
         
-        if (diffInMinutes > 10) {
-          throw new Error("Đã hết thời gian chỉnh sửa (tối đa 10 phút)");
+        if (diffInMinutes > TIME_LIMITS.MESSAGE_EDIT_WINDOW) {
+          throw new Error(`Đã hết thời gian chỉnh sửa (tối đa ${TIME_LIMITS.MESSAGE_EDIT_WINDOW / (1000 * 60)} phút)`);
         }
       }
 

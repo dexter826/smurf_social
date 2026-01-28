@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Image as ImageIcon, Video, ChevronDown, Play } from 'lucide-react';
+import { X, Send, Image as ImageIcon, Video, ChevronDown } from 'lucide-react';
 import { UserAvatar, Button, TextArea, EmojiPicker, IconButton, ConfirmDialog } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
 import { toast } from '../../store/toastStore';
 import { Comment, User } from '../../types';
-import { commentService } from '../../services/commentService';
 import { postService } from '../../services/postService';
 import { useCommentStore } from '../../store/commentStore';
 import { useUserCache } from '../../store/userCacheStore';
@@ -23,15 +22,23 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   currentUser
 }) => {
   const { 
-    rootComments, replies, lastRootDoc, hasMoreRoot, lastReplyDoc, hasMoreReply,
-    addRootComments, setReplies, addReplies, clearComments, updateCommentInStore, setRootComments
+    rootComments, 
+    replies, 
+    hasMoreRoot, 
+    hasMoreReply,
+    isLoading,
+    fetchRootComments,
+    fetchReplies,
+    addComment,
+    updateComment,
+    deleteComment,
+    likeComment,
+    clearComments
   } = useCommentStore();
 
   const { users, fetchUsers } = useUserCache();
 
-  // Loading states
-  const [isLoadingRoot, setIsLoadingRoot] = useState(false);
-  const [isFetchingMoreRoot, setIsFetchingMoreRoot] = useState(false);
+  // Loading states cục bộ
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
   
   // State quản lý Input Inline
@@ -55,7 +62,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const currentRootComments = rootComments[postId] || [];
   const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
-  const currentLastRootDoc = lastRootDoc[postId];
 
   useEffect(() => {
     if (currentRootComments.length === 0) {
@@ -64,47 +70,38 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     return () => clearComments(postId);
   }, [postId]);
 
-  const loadInitialRootComments = async () => {
-    setIsLoadingRoot(true);
-    try {
-      const { comments, lastDoc, hasMore } = await commentService.getRootComments(postId, 5);
-      setRootComments(postId, comments, lastDoc, hasMore);
-      await fetchUsers([...new Set(comments.map(c => c.userId))] as string[]);
-    } catch (error) {
-      toast.error(UI_MESSAGES.FEED.LOAD_COMMENTS_ERROR);
-    } finally {
-      setIsLoadingRoot(false);
+  // Fetch user data khi có comments mới
+  useEffect(() => {
+    if (currentRootComments.length > 0) {
+      const userIds = [...new Set(currentRootComments.map(c => c.userId))];
+      fetchUsers(userIds);
     }
+  }, [currentRootComments, fetchUsers]);
+
+  const loadInitialRootComments = async () => {
+    await fetchRootComments(postId);
   };
 
   const loadMoreRootComments = async () => {
-    if (isFetchingMoreRoot || !currentLastRootDoc) return;
-    setIsFetchingMoreRoot(true);
-    try {
-      const { comments, lastDoc, hasMore } = await commentService.getRootComments(postId, 5, currentLastRootDoc);
-      addRootComments(postId, comments, lastDoc, hasMore);
-      await fetchUsers([...new Set(comments.map(c => c.userId))] as string[]);
-    } catch (error) {
-      toast.error(UI_MESSAGES.FEED.LOAD_MORE_COMMENTS_ERROR);
-    } finally {
-      setIsFetchingMoreRoot(false);
-    }
+    await fetchRootComments(postId, true);
   };
 
   const loadReplies = async (parentId: string, isInitial = true) => {
     if (isLoadingReplyMap[parentId]) return;
     setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
     try {
-      const lastDoc = isInitial ? undefined : lastReplyDoc[postId]?.[parentId];
-      const { replies: newReplies, lastDoc: newLastDoc, hasMore } = await commentService.getReplies(parentId, 3, lastDoc);
-      if (isInitial) setReplies(postId, parentId, newReplies, newLastDoc, hasMore);
-      else addReplies(postId, parentId, newReplies, newLastDoc, hasMore);
-      await fetchUsers([...new Set(newReplies.map(r => r.userId))] as string[]);
-      if (newReplies.some(r => r.replyToUserId)) {
-        await fetchUsers([...new Set(newReplies.map(r => r.replyToUserId!).filter(id => !!id))] as string[]);
+      await fetchReplies(postId, parentId, !isInitial);
+      // Fetch user data cho replies
+      const parentReplies = replies[postId]?.[parentId] || [];
+      const userIds = [...new Set(parentReplies.map(r => r.userId))];
+      if (userIds.length > 0) {
+        await fetchUsers(userIds);
       }
-    } catch (error) {
-      toast.error(UI_MESSAGES.FEED.LOAD_REPLIES_ERROR);
+      // Fetch replyToUser nếu có
+      const replyToUserIds = parentReplies.map(r => r.replyToUserId).filter(id => !!id) as string[];
+      if (replyToUserIds.length > 0) {
+        await fetchUsers([...new Set(replyToUserIds)]);
+      }
     } finally {
       setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: false }));
     }
@@ -115,7 +112,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setEditingComment(null);
     setActiveInputId(comment.id);
     setInputMode('reply');
-    setNewComment(''); // Reset input theo yêu cầu
+    setNewComment('');
     setTimeout(() => commentInputRef.current?.focus(), 100);
   };
 
@@ -155,8 +152,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         if (selectedImage) finalImageUrl = await postService.uploadCommentImage(selectedImage, currentUser.id);
         if (selectedVideo) finalVideoUrl = await postService.uploadCommentVideo(selectedVideo, currentUser.id);
 
-        await commentService.updateComment(editingComment.id, newComment, finalImageUrl, finalVideoUrl);
-        updateCommentInStore(postId, editingComment.id, newComment, editingComment.parentId, finalImageUrl, finalVideoUrl);
+        await updateComment(postId, editingComment.id, newComment, editingComment.parentId, finalImageUrl, finalVideoUrl);
         resetInput();
         toast.success(UI_MESSAGES.FEED.UPDATE_SUCCESS);
       } else {
@@ -166,7 +162,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         if (selectedVideo) videoUrl = await postService.uploadCommentVideo(selectedVideo, currentUser.id);
 
         const parentId = replyingTo ? (replyingTo.parentId || replyingTo.id) : null;
-        await commentService.addComment(
+        await addComment(
           postId,
           currentUser.id,
           newComment,
@@ -177,8 +173,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         );
 
         resetInput();
-        if (!parentId) await loadInitialRootComments();
-        else await loadReplies(parentId, true);
         toast.success(UI_MESSAGES.FEED.ADD_SUCCESS);
       }
     } catch (error) {
@@ -192,6 +186,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!commentToDelete) return;
+    try {
+      await deleteComment(postId, commentToDelete.id, commentToDelete.parentId);
+      setCommentToDelete(null);
+      toast.success(UI_MESSAGES.FEED.DELETE_SUCCESS);
+    } catch (error) {
+      toast.error("Lỗi xóa bình luận");
     }
   };
 
@@ -210,12 +215,34 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     );
   };
 
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!validateFileSize(file, type === 'image' ? 'IMAGE' : 'VIDEO')) return;
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (type === 'image') {
+          setSelectedImage(file);
+          setImagePreview(reader.result as string);
+          setSelectedVideo(null);
+          setVideoPreview(null);
+        } else {
+          setSelectedVideo(file);
+          setVideoPreview(reader.result as string);
+          setSelectedImage(null);
+          setImagePreview(null);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const renderInputForm = (isInline = false) => {
     const isReplyingNow = isInline && inputMode === 'reply';
     const isEditingNow = isInline && inputMode === 'edit';
     const isRootInput = !isInline && activeInputId === 'root';
 
-    if (isInline && activeInputId !== activeInputId) return null; // Logic check placeholder
+    if (isInline && activeInputId !== activeInputId) return null;
 
     return (
       <div className={`
@@ -290,33 +317,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           </div>
         )}
 
-
         <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => handleMediaSelect(e, 'image')} className="hidden" />
         <input ref={videoInputRef} type="file" accept="video/*" onChange={(e) => handleMediaSelect(e, 'video')} className="hidden" />
       </div>
     );
-  };
-
-  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!validateFileSize(file, type === 'image' ? 'IMAGE' : 'VIDEO')) return;
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'image') {
-          setSelectedImage(file);
-          setImagePreview(reader.result as string);
-          setSelectedVideo(null);
-          setVideoPreview(null);
-        } else {
-          setSelectedVideo(file);
-          setVideoPreview(reader.result as string);
-          setSelectedImage(null);
-          setImagePreview(null);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const renderCommentItem = (comment: Comment, isReply = false) => {
@@ -383,7 +387,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   return (
     <div className="border-t border-border-light bg-bg-secondary/20 transition-all duration-300">
       <div className="pb-4">
-        {isLoadingRoot && currentRootComments.length === 0 ? (
+        {isLoading && currentRootComments.length === 0 ? (
           <div className="px-4 py-4"><CommentSkeleton count={3} /></div>
         ) : currentRootComments.length === 0 ? (
           <div className="text-center py-10 text-text-secondary text-sm italic">{UI_MESSAGES.FEED.NO_COMMENTS}</div>
@@ -392,7 +396,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             {currentRootComments.map(comment => renderCommentItem(comment))}
             {currentHasMoreRoot && (
               <div className="px-6 py-4">
-                <Button variant="ghost" size="sm" onClick={loadMoreRootComments} isLoading={isFetchingMoreRoot} className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary">
+                <Button variant="ghost" size="sm" onClick={loadMoreRootComments} isLoading={isLoading} className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary">
                   Xem thêm bình luận cũ...
                 </Button>
               </div>
@@ -406,14 +410,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       <ConfirmDialog
         isOpen={!!commentToDelete}
         onClose={() => setCommentToDelete(null)}
-        onConfirm={async () => {
-          if (!commentToDelete) return;
-          await commentService.deleteComment(commentToDelete.id, postId, commentToDelete.parentId);
-          if (!commentToDelete.parentId) await loadInitialRootComments();
-          else await loadReplies(commentToDelete.parentId, true);
-          setCommentToDelete(null);
-          toast.success(UI_MESSAGES.FEED.DELETE_SUCCESS);
-        }}
+        onConfirm={handleDeleteConfirm}
         title={UI_MESSAGES.FEED.DELETE_TITLE}
         message={commentToDelete?.parentId ? "Xóa câu trả lời này?" : "Xóa sẽ mất hết các câu trả lời liên quan?"}
         confirmLabel={UI_MESSAGES.COMMON.DELETE}
