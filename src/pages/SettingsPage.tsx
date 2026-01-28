@@ -7,6 +7,8 @@ import { User } from '../types';
 import { UserAvatar, ConfirmDialog, Loading, Button, Skeleton, IconButton } from '../components/ui';
 import { notificationService } from '../services/notificationService';
 import { useNotificationStore } from '../store/notificationStore';
+import { Shield, Key } from 'lucide-react';
+import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ const SettingsPage: React.FC = () => {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     const fetchBlockedUsers = async () => {
@@ -122,6 +125,37 @@ const SettingsPage: React.FC = () => {
           )}
         </section>
 
+        {/* Security Section */}
+        <section className="p-4 border-b border-border-light">
+          <div className="flex items-center gap-2 mb-4">
+            <Shield size={20} className="text-text-secondary" />
+            <h2 className="text-lg font-semibold text-text-primary">
+              Bảo mật
+            </h2>
+          </div>
+          
+          <div 
+            onClick={() => setIsChangePasswordOpen(true)}
+            className="flex items-center justify-between p-4 bg-bg-secondary rounded-xl cursor-pointer hover:bg-bg-hover transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <Key size={20} />
+              </div>
+              <div>
+                <h3 className="font-medium text-text-primary text-base">Đổi mật khẩu</h3>
+                <p className="text-sm text-text-tertiary">
+                  Cập nhật mật khẩu mới để bảo vệ tài khoản
+                </p>
+              </div>
+            </div>
+            <IconButton 
+              icon={<ChevronLeft size={20} className="rotate-180 text-text-tertiary" />} 
+              onClick={() => {}} 
+            />
+          </div>
+        </section>
+
         {/* Blocked Users Section */}
         <section className="p-4">
           <div className="flex items-center gap-2 mb-4">
@@ -194,6 +228,12 @@ const SettingsPage: React.FC = () => {
         title="Bỏ chặn người dùng"
         message="Bạn có chắc chắn muốn bỏ chặn người này? Họ sẽ có thể gửi tin nhắn cho bạn."
         confirmLabel="Bỏ chặn"
+      />
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal 
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
       />
     </div>
   );
