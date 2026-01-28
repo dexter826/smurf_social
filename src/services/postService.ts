@@ -300,67 +300,6 @@ export const postService = {
     }
   },
 
-  getComments: async (postId: string): Promise<Comment[]> => {
-    try {
-      const q = query(
-        collection(db, 'comments'),
-        where('postId', '==', postId),
-        orderBy('timestamp', 'asc')
-      );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
-      })) as Comment[];
-    } catch (error) {
-      console.error("Lỗi lấy comments", error);
-      return [];
-    }
-  },
-
-  subscribeToComments: (postId: string, callback: (comments: Comment[]) => void) => {
-    const q = query(
-      collection(db, 'comments'),
-      where('postId', '==', postId),
-      orderBy('timestamp', 'asc')
-    );
-
-    return onSnapshot(q, (snapshot) => {
-      const comments = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
-      })) as Comment[];
-      callback(comments);
-    }, (error) => {
-      console.error("Lỗi subscribe comments", error);
-    });
-  },
-
-  addComment: async (postId: string, userId: string, content: string, parentId?: string, imageUrl?: string, videoUrl?: string): Promise<void> => {
-    try {
-      await addDoc(collection(db, 'comments'), {
-        postId,
-        userId,
-        content,
-        parentId: parentId || null,
-        image: imageUrl || null,
-        video: videoUrl || null,
-        timestamp: Timestamp.now(),
-        likes: []
-      });
-
-      const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        commentCount: increment(1)
-      });
-    } catch (error) {
-      console.error("Lỗi thêm comment", error);
-      throw error;
-    }
-  },
-
   uploadCommentImage: async (file: File, userId: string): Promise<string> => {
     try {
       const timestamp = Date.now();
@@ -385,42 +324,6 @@ export const postService = {
       return await getDownloadURL(storageRef);
     } catch (error) {
       console.error("Lỗi upload video bình luận", error);
-      throw error;
-    }
-  },
-
-  updateComment: async (commentId: string, content: string): Promise<void> => {
-    try {
-      const commentRef = doc(db, 'comments', commentId);
-      await updateDoc(commentRef, { content });
-    } catch (error) {
-      console.error("Lỗi cập nhật comment", error);
-      throw error;
-    }
-  },
-
-  deleteComment: async (commentId: string, postId: string): Promise<void> => {
-    try {
-      await deleteDoc(doc(db, 'comments', commentId));
-
-      const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        commentCount: increment(-1)
-      });
-    } catch (error) {
-      console.error("Lỗi xóa comment", error);
-      throw error;
-    }
-  },
-
-  likeComment: async (commentId: string, userId: string, isLiked: boolean): Promise<void> => {
-    try {
-      const commentRef = doc(db, 'comments', commentId);
-      await updateDoc(commentRef, {
-        likes: isLiked ? arrayRemove(userId) : arrayUnion(userId)
-      });
-    } catch (error) {
-      console.error("Lỗi like comment", error);
       throw error;
     }
   }

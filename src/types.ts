@@ -85,6 +85,8 @@ export interface Comment {
   likes?: string[];
   image?: string;
   video?: string;
+  replyCount?: number;
+  replyToUserId?: string;
 }
 
 export interface Post {

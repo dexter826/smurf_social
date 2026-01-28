@@ -20,7 +20,7 @@ export const Button: React.FC<ButtonProps> = ({
     disabled,
     ...props 
 }) => {
-  const baseStyle = "inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-0 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
+  const baseStyle = "inline-flex items-center justify-center font-semibold transition-all duration-200 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
   
   const variants = {
     primary: "bg-primary hover:bg-primary-hover text-white shadow-sm hover:shadow-md active:scale-[0.98]",
