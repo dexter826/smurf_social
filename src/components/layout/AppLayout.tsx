@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
+import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Bell } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
@@ -151,6 +151,24 @@ export const AppLayout: React.FC = () => {
             <span className="text-[10px] font-medium">{item.label}</span>
           </NavLink>
         ))}
+        
+        {/* Mobile Notification Icon */}
+        <NavLink
+            to="/notifications"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
+                isActive ? 'text-primary' : 'text-text-tertiary'
+              }`
+            }
+          >
+            <div className="relative">
+              <Bell size={24} />
+              {useNotificationStore.getState().unreadCount > 0 && (
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full ring-1 ring-bg-primary" />
+              )}
+            </div>
+            <span className="text-[10px] font-medium">Thông báo</span>
+          </NavLink>
          <NavLink
             to="/profile"
             className={({ isActive }) =>
