@@ -66,6 +66,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       set({ isLoading: false });
     });
 
+    // Yêu cầu quyền thông báo đẩy
+    notificationService.requestPushPermission(userId).catch(err => {
+      console.warn("Lỗi yêu cầu quyền Push tự động:", err);
+    });
+
+    return unsubscribe;
+
     return unsubscribe;
   }
 }));
