@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { db } from '../../firebase/config';
-import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
+import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button } from '../ui';
 import { Post, User, UserStatus } from '../../types';
 import { CommentSection } from './CommentSection';
 
@@ -77,7 +77,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
         {isOwner && (
           <Dropdown
-            trigger={<IconButton icon={<MoreHorizontal size={20} />} />}
+            trigger={<IconButton icon={<MoreHorizontal size={18} />} size="md" />}
           >
             <DropdownItem
               icon={<Edit size={16} />}
@@ -143,20 +143,20 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                 </div>
                 <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
                   {mediaIndex > 0 && (
-                    <button
+                    <IconButton
                       onClick={() => setMediaIndex(mediaIndex - 1)}
-                      className="w-9 h-9 bg-bg-primary/80 hover:bg-bg-primary shadow-dropdown pointer-events-auto rounded-full inline-flex items-center justify-center active:scale-95 transition-all"
-                    >
-                      <span>←</span>
-                    </button>
+                      className="bg-bg-primary/80 hover:bg-bg-primary shadow-dropdown pointer-events-auto"
+                      icon={<ChevronLeft size={20} />}
+                      size="md"
+                    />
                   )}
                   {mediaIndex < totalMedia - 1 && (
-                    <button
+                    <IconButton
                       onClick={() => setMediaIndex(mediaIndex + 1)}
-                      className="w-9 h-9 bg-bg-primary/80 hover:bg-bg-primary shadow-dropdown ml-auto pointer-events-auto rounded-full inline-flex items-center justify-center active:scale-95 transition-all"
-                    >
-                      <span>→</span>
-                    </button>
+                      className="bg-bg-primary/80 hover:bg-bg-primary shadow-dropdown ml-auto pointer-events-auto"
+                      icon={<ChevronRight size={20} />}
+                      size="md"
+                    />
                   )}
                 </div>
               </>
@@ -181,36 +181,40 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         </div>
         <div className="flex items-center gap-4 text-sm text-text-secondary">
           {post.commentCount > 0 && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setShowComments(!showComments)}
-              className="hover:underline text-text-secondary focus:outline-none"
+              className="hover:underline text-text-secondary"
             >
               {post.commentCount} bình luận
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Actions */}
       <div className="flex px-2 py-1 border-b border-border-light">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => onLike(post.id)}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors active:scale-95 focus:outline-none ${
-            isLiked ? 'text-error' : 'text-text-secondary hover:text-error'
+          className={`flex-1 ${
+            isLiked ? '!text-error' : 'text-text-secondary hover:text-error'
           }`}
+          icon={<Heart size={20} className={isLiked ? 'fill-error text-error' : ''} />}
         >
-          <Heart size={20} className={isLiked ? 'fill-current' : ''} />
-          <span className="text-sm font-medium">Thích</span>
-        </button>
-        <button
+          <span className={`text-sm font-medium ${isLiked ? 'text-error' : ''}`}>Thích</span>
+        </Button>
+        <Button
+          variant="ghost"
           onClick={() => setShowComments(!showComments)}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-colors focus:outline-none ${
-            showComments ? 'text-primary bg-primary-light' : 'text-text-secondary hover:bg-bg-hover'
+          className={`flex-1 ${
+            showComments ? 'text-primary bg-primary-light' : 'text-text-secondary'
           }`}
+          icon={<MessageCircle size={20} />}
         >
-          <MessageCircle size={20} />
           <span className="text-sm font-medium">Bình luận</span>
-        </button>
+        </Button>
       </div>
 
       {showComments && (

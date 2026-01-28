@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
+import { IconButton } from './IconButton';
 
 interface ModalProps {
   isOpen: boolean;
@@ -57,12 +58,10 @@ export const Modal: React.FC<ModalProps> = ({
           <h3 className="text-lg font-bold text-text-primary px-1">
             {title || ''}
           </h3>
-          <Button
-            variant="ghost"
-            size="sm"
+          <IconButton
             onClick={onClose}
-            className="text-text-secondary"
             icon={<X size={20} />}
+            size="lg"
           />
         </div>
 

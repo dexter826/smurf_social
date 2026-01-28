@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
-import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button } from '../ui';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton } from '../ui';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -163,9 +163,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           onOpenChange={setIsMenuOpen}
           disableTriggerScale
           trigger={
-            <button className={`p-1.5 rounded-md transition-all opacity-0 group-hover:opacity-100 ${isMenuOpen ? 'bg-gray-300 dark:bg-gray-600' : 'hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
-              <MoreVertical size={16} />
-            </button>
+            <IconButton
+              className={`opacity-0 group-hover:opacity-100 ${isMenuOpen ? 'opacity-100' : ''} bg-bg-primary/80 backdrop-blur-sm hover:bg-bg-hover`}
+              icon={<MoreVertical size={16} />}
+              size="sm"
+            />
           }
         >
           {onPin && (

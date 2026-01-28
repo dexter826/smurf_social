@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { FileText, Download, CheckCheck, Check, MoreVertical, Trash2, Image as ImageIcon } from 'lucide-react';
+import { FileText, Download, CheckCheck, Check, MoreVertical, Trash2, Image as ImageIcon, X } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar, UserAvatar, ConfirmDialog, Button } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
 
 interface MessageBubbleProps {
   message: Message;
@@ -129,11 +129,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* Menu cho tin nhắn */}
             {isMe && onDelete && (
               <div className="absolute top-0 right-full mr-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
-                <Button
-                  variant="ghost"
+                <IconButton
                   onClick={() => setShowMenu(!showMenu)}
-                  className="hover:bg-bg-hover rounded-full"
                   icon={<MoreVertical size={14} />}
+                  size="sm"
                 />
 
                 {showMenu && (
@@ -192,11 +191,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             alt="full"
             className="max-w-full max-h-full object-contain"
           />
-          <Button
-            variant="ghost"
-            className="absolute top-4 right-4 text-white text-2xl hover:text-text-tertiary rounded-full"
+          <IconButton
+            className="absolute top-4 right-4 text-white hover:text-text-tertiary"
             onClick={() => setShowFullImage(false)}
-            icon={<span>×</span>}
+            icon={<X size={24} />}
+            size="lg"
           />
         </div>
       )}

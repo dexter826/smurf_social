@@ -3,7 +3,7 @@ import { X, Search, Users, Camera, Check, Loader2, Crown } from 'lucide-react';
 import { User } from '../../types';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
-import { Modal, Input, Button, Avatar, UserAvatar } from '../ui';
+import { Modal, Input, Button, Avatar, UserAvatar, IconButton } from '../ui';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -112,12 +112,12 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                 className="flex items-center gap-2 bg-primary-light text-primary px-3 py-1.5 rounded-full text-sm"
               >
                 <span>{friend.name.split(' ')[0]}</span>
-                <button 
+                <IconButton 
                   onClick={() => toggleSelect(id)}
-                  className="hover:bg-primary/20 rounded-full p-0.5"
-                >
-                  <X size={14} />
-                </button>
+                  className="hover:bg-primary/20"
+                  icon={<X size={14} />}
+                  size="sm"
+                />
               </div>
             );
           })}

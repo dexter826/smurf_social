@@ -102,7 +102,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               value={searchTerm}
               onChange={handleSearchChange}
               onFocus={() => onSearchFocus?.(true)}
-              className="bg-bg-secondary text-sm pr-10 h-11"
+              className="bg-bg-secondary text-sm pr-10 h-10"
               containerClassName="flex-1"
             />
             {searchTerm && (
@@ -111,8 +111,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   setSearchTerm('');
                   onSearch('');
                 }}
-                className="absolute right-3 bg-bg-tertiary rounded-full"
-                icon={<X size={12} />}
+                className="absolute right-3"
+                icon={<X size={16} />}
                 size="sm"
               />
             )}
@@ -153,9 +153,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       {/* Navigation Tabs - Hidden when searching or has search term */}
       {!isSearchFocused && !searchTerm && (
         <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onViewModeChange?.('normal')}
-            className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
+            className={`flex-1 h-full relative ${
               viewMode === 'normal' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
             }`}
           >
@@ -163,10 +164,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             {viewMode === 'normal' && (
               <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => onViewModeChange?.('archived')}
-            className={`flex-1 flex items-center justify-center h-full text-sm font-medium transition-all relative ${
+            className={`flex-1 h-full relative ${
               viewMode === 'archived' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
             }`}
           >
@@ -174,7 +176,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             {viewMode === 'archived' && (
               <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
             )}
-          </button>
+          </Button>
         </div>
       )}
 

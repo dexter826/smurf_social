@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
-import { Avatar, UserAvatar, Button, EmojiPicker, Loading, Select, Modal } from '../ui';
+import { Avatar, UserAvatar, Button, EmojiPicker, Loading, Select, Modal, IconButton } from '../ui';
 import { toast } from '../../store/toastStore';
 import { validateFileSize } from '../../utils/fileUtils';
 import { User, Post } from '../../types';
@@ -136,23 +136,23 @@ export const PostModal: React.FC<PostModalProps> = ({
           <div className="flex items-center justify-between mb-3 bg-bg-secondary p-3 rounded-xl border border-border-light">
             <span className="text-sm font-semibold text-text-secondary">Thêm vào bài viết</span>
             <div className="flex gap-1">
-              <Button
+              <IconButton
                 type="button"
-                variant="ghost"
                 onClick={() => fileInputRef.current?.click()}
-                className="transition-colors group rounded-full"
+                className="group rounded-full"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
                 icon={<ImageIcon className="text-[#22c55e] group-hover:scale-110 transition-transform" size={24} />}
+                size="lg"
               />
-              <Button
+              <IconButton
                 type="button"
-                variant="ghost"
                 onClick={() => videoInputRef.current?.click()}
-                className="transition-colors group rounded-full"
+                className="group rounded-full"
                 title="Video"
                 disabled={isSubmitting || isUploading}
                 icon={<Video className="text-info group-hover:scale-110 transition-transform" size={24} />}
+                size="lg"
               />
               <div className="flex items-center">
                 <EmojiPicker
@@ -221,24 +221,24 @@ export const PostModal: React.FC<PostModalProps> = ({
             {images.map((url, index) => (
               <div key={`img-${index}`} className="relative group">
                 <img src={url} alt="Upload" className="w-full h-40 object-cover rounded-xl" />
-                <Button
-                  variant="ghost"
+                <IconButton
                   onClick={() => handleRemoveImage(index)}
                   className="absolute top-2 right-2 bg-black/50 text-white shadow-lg opacity-0 group-hover:opacity-100 rounded-full"
                   disabled={isSubmitting}
                   icon={<X size={16} />}
+                  size="sm"
                 />
               </div>
             ))}
             {videos.map((url, index) => (
               <div key={`vid-${index}`} className="relative group">
                 <video src={url} className="w-full h-40 object-cover rounded-xl" controls />
-                <Button
-                  variant="ghost"
+                <IconButton
                   onClick={() => handleRemoveVideo(index)}
                   className="absolute top-2 right-2 bg-black/50 text-white shadow-lg opacity-0 group-hover:opacity-100 rounded-full"
                   disabled={isSubmitting}
                   icon={<X size={16} />}
+                  size="sm"
                 />
               </div>
             ))}

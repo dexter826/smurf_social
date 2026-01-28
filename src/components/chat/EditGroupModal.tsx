@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, Loader2, Users } from 'lucide-react';
 import { Conversation } from '../../types';
-import { Modal, Input, Button, Avatar } from '../ui';
+import { Modal, Input, Button, Avatar, IconButton } from '../ui';
 
 interface EditGroupModalProps {
   isOpen: boolean;
@@ -102,12 +102,12 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
                 <Users size={40} className="text-primary" />
               )}
             </div>
-            <button
+            <IconButton
               onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full hover:bg-primary-dark transition-colors shadow-lg"
-            >
-              <Camera size={16} />
-            </button>
+              className="absolute bottom-0 right-0 bg-primary text-white hover:bg-primary-dark shadow-lg"
+              icon={<Camera size={16} />}
+              size="sm"
+            />
             <input
               ref={fileInputRef}
               type="file"

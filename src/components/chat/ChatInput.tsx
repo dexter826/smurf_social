@@ -356,12 +356,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   </div>
                 )}
                 
-                <button
+                <IconButton
                   onClick={() => removeFile(index)}
-                  className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X size={14} />
-                </button>
+                  className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100"
+                  icon={<X size={14} />}
+                  size="sm"
+                />
               </div>
             ))}
           </div>
@@ -379,8 +379,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                e.stopPropagation();
                setShowActions(!showActions);
              }}
-             className={`transition-all ${showActions ? 'rotate-45 text-primary' : 'text-text-secondary hover:text-primary'}`}
-             icon={<Plus size={24} />}
+             className={`transition-all ${showActions ? 'rotate-45' : ''}`}
+             variant={showActions ? 'primary' : 'default'}
+             icon={<Plus size={18} />}
              size="md"
            />
 
@@ -392,33 +393,29 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 <IconButton
                    type="button"
                    onClick={() => { imageInputRef.current?.click(); setShowActions(false); }}
-                   className="text-text-secondary hover:text-primary"
                    title="Gửi ảnh"
-                   icon={<ImageIcon size={20} />}
+                   icon={<ImageIcon size={16} />}
                    size="sm"
                 />
                 <IconButton
                    type="button"
                    onClick={() => { cameraInputRef.current?.click(); setShowActions(false); }}
-                   className="text-text-secondary hover:text-primary"
                    title="Chụp ảnh/Quay phim"
-                   icon={<Camera size={20} />}
+                   icon={<Camera size={16} />}
                    size="sm"
                 />
                 <IconButton
                    type="button"
                    onClick={() => { videoInputRef.current?.click(); setShowActions(false); }}
-                   className="text-text-secondary hover:text-primary"
                    title="Gửi video"
-                   icon={<Video size={20} />}
+                   icon={<Video size={16} />}
                    size="sm"
                 />
                <IconButton
                   type="button"
                   onClick={() => { fileInputRef.current?.click(); setShowActions(false); }}
-                  className="text-text-secondary hover:text-primary"
                   title="Gửi file"
-                  icon={<Paperclip size={20} />}
+                  icon={<Paperclip size={16} />}
                   size="sm"
                />
              </div>
@@ -510,9 +507,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     type="button"
                     onClick={startRecording}
                     disabled={disabled || isSending || isRecording}
-                    className="text-text-secondary hover:text-primary"
                     title="Ghi âm"
-                    icon={<Mic size={22} />}
+                    icon={<Mic size={16} />}
                     size="sm"
                   />
                   <EmojiPicker

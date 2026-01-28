@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageCircle, MoreVertical, UserMinus, User as UserIcon } from 'lucide-react';
-import { Avatar, UserAvatar, UserStatusText, Button, Dropdown, DropdownItem } from '../ui';
+import { Avatar, UserAvatar, UserStatusText, IconButton, Dropdown, DropdownItem } from '../ui';
 import { User, UserStatus } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,9 +42,7 @@ export const FriendItem: React.FC<FriendItemProps> = ({
         <div onClick={(e) => e.stopPropagation()}>
           <Dropdown
             trigger={
-              <Button variant="ghost" size="sm">
-                <MoreVertical size={16} />
-              </Button>
+              <IconButton icon={<MoreVertical size={16} />} size="sm" />
             }
           >
           <DropdownItem

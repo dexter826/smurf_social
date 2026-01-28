@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Conversation } from '../../types';
-import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button } from '../ui';
+import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button, IconButton } from '../ui';
 import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMinus, LogOut } from 'lucide-react';
 
 interface ChatDetailsMemberListProps {
@@ -125,9 +125,11 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                   onOpenChange={(open) => setMenuOpenId(open ? member.id : null)}
                   disableTriggerScale
                   trigger={
-                    <button className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-bg-tertiary transition-all">
-                      <MoreVertical size={16} className="text-text-tertiary" />
-                    </button>
+                    <IconButton
+                      className="opacity-0 group-hover:opacity-100"
+                      icon={<MoreVertical size={16} />}
+                      size="sm"
+                    />
                   }
                 >
                   {role === 'member' && onPromoteToAdmin && (

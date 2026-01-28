@@ -20,22 +20,20 @@ export const Button: React.FC<ButtonProps> = ({
     disabled,
     ...props 
 }) => {
-  const isIconOnly = !children && icon && !isLoading;
-  
-  const baseStyle = "inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
+  const baseStyle = "inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-0 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
   
   const variants = {
-    primary: "bg-primary hover:bg-primary-hover text-white focus:ring-primary shadow-sm hover:shadow-md active:scale-[0.98]",
-    secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary border border-border-light focus:ring-primary/30 active:scale-[0.98]",
-    outline: "border border-border-medium bg-transparent hover:bg-bg-hover text-text-primary focus:ring-primary/30 active:scale-[0.98]",
+    primary: "bg-primary hover:bg-primary-hover text-white shadow-sm hover:shadow-md active:scale-[0.98]",
+    secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary border border-border-light active:scale-[0.98]",
+    outline: "border border-border-medium bg-transparent hover:bg-bg-hover text-text-primary active:scale-[0.98]",
     ghost: "hover:bg-bg-hover text-text-secondary hover:text-text-primary active:scale-[0.95]",
-    danger: "bg-error hover:bg-error/90 text-white focus:ring-error shadow-sm active:scale-[0.98]"
+    danger: "bg-error hover:bg-error/90 text-white shadow-sm active:scale-[0.98]"
   };
 
   const sizes = {
-    sm: isIconOnly ? "w-8 h-8 p-0 rounded-lg" : "h-9 px-3 text-sm gap-2 rounded-lg",
-    md: isIconOnly ? "w-10 h-10 p-0 rounded-xl" : "h-10 px-4 text-sm gap-2 rounded-xl",
-    lg: isIconOnly ? "w-11 h-11 p-0 rounded-xl" : "h-11 px-5 text-base gap-2.5 rounded-xl"
+    sm: "h-9 px-3 text-sm gap-2 rounded-lg",
+    md: "h-10 px-4 text-sm gap-2 rounded-xl",
+    lg: "h-11 px-5 text-base gap-2.5 rounded-xl"
   };
 
   const iconSize = size === 'sm' ? 16 : size === 'lg' ? 20 : 18;
@@ -52,3 +50,4 @@ export const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
+

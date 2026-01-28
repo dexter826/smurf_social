@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Info, Users, Image, Search } from 'lucide-react';
 import { Conversation, Message, User } from '../../types';
+import { IconButton } from '../ui';
 import { ChatDetailsHeader } from './ChatDetailsHeader';
 import { ChatDetailsMemberList } from './ChatDetailsMemberList';
 import { ChatDetailsMedia } from './ChatDetailsMedia';
@@ -164,12 +165,11 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-4 h-[72px] border-b border-border-light flex-shrink-0">
           <h2 className="text-base font-bold text-text-primary">Chi tiết</h2>
-          <button
+          <IconButton
             onClick={onClose}
-            className="p-2 hover:bg-bg-hover rounded-full transition-colors text-text-secondary"
-          >
-            <X size={20} />
-          </button>
+            icon={<X size={20} />}
+            size="lg"
+          />
         </div>
 
         {/* Tabs */}

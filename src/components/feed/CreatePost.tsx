@@ -58,27 +58,30 @@ export const CreatePost: React.FC<CreatePostProps> = ({ currentUser }) => {
         </div>
         
         <div className="flex gap-1 pt-2 border-t border-divider">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => imageInputRef.current?.click()}
-            className="flex-1 py-2 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-bg-hover active:scale-95 transition-all focus:outline-none group"
+            className="flex-1 group"
+            icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
             <span className="text-[15px] font-semibold">Ảnh</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => cameraPhotoRef.current?.click()}
-            className="flex-1 py-2 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-bg-hover active:scale-95 transition-all focus:outline-none group"
+            className="flex-1 group"
+            icon={<Camera className="text-red-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <Camera className="text-red-500 group-hover:scale-110 transition-transform" size={20} />
             <span className="text-[15px] font-semibold">Máy ảnh</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => videoInputRef.current?.click()}
-            className="flex-1 py-2 flex items-center justify-center gap-2 rounded-lg text-text-secondary hover:bg-bg-hover active:scale-95 transition-all focus:outline-none group"
+            className="flex-1 group"
+            icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />
             <span className="text-[15px] font-semibold">Video</span>
-          </button>
+          </Button>
         </div>
 
         <input

@@ -3,7 +3,7 @@ import { Message, User } from '../../types';
 import { Search, X, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Input } from '../ui';
+import { Input, IconButton } from '../ui';
 
 interface ChatDetailsSearchProps {
   messages: Message[];
@@ -58,12 +58,11 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
           placeholder="Tìm trong cuộc trò chuyện..."
           icon={<Search size={16} />}
           rightElement={searchTerm ? (
-            <button
+            <IconButton
               onClick={() => setSearchTerm('')}
-              className="text-text-tertiary hover:text-text-secondary pr-1"
-            >
-              <X size={16} />
-            </button>
+              icon={<X size={16} />}
+              size="sm"
+            />
           ) : undefined}
         />
       </div>

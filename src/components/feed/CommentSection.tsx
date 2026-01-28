@@ -263,12 +263,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                         </div>
                       </div>
                     )}
-                    <Button 
-                      variant="ghost"
-                      size="sm"
+                    <IconButton 
                       onClick={() => removeMedia(true)}
                       className="absolute -top-1 -right-1 bg-black/50 text-white hover:bg-black/70 z-10 w-5 h-5 rounded-full"
                       icon={<X size={12} />}
+                      size="sm"
                     />
                   </div>
                 )}
@@ -303,19 +302,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                           <IconButton
                             type="button"
                             onClick={() => editFileInputRef.current?.click()}
-                            className="text-text-secondary hover:text-primary"
                             title="Thêm ảnh"
                             disabled={isSubmitting}
-                            icon={<ImageIcon size={20} />}
+                            icon={<ImageIcon size={16} />}
                             size="sm"
                           />
                           <IconButton
                             type="button"
                             onClick={() => editVideoInputRef.current?.click()}
-                            className="text-text-secondary hover:text-primary"
                             title="Thêm video"
                             disabled={isSubmitting}
-                            icon={<Video size={20} />}
+                            icon={<Video size={16} />}
                             size="sm"
                           />
                         </div>
@@ -463,12 +460,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             {rootComments.slice(0, visibleCount).map(comment => renderComment(comment))}
             
             {rootComments.length > visibleCount && (
-              <button 
+              <Button 
+                variant="ghost"
+                size="sm"
                 onClick={() => setVisibleCount(prev => prev + 5)}
-                className="text-primary hover:underline text-sm font-semibold mt-2 ml-2 transition-all"
+                className="text-primary mt-2 ml-2"
               >
                 Xem thêm {rootComments.length - visibleCount} bình luận...
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -478,12 +477,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         {replyingTo && (
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-bg-secondary rounded-lg text-xs text-text-secondary animate-in slide-in-from-bottom-1 duration-200 shadow-sm border border-border-light">
             <span>Đang trả lời <strong>{usersMap[replyingTo.userId]?.name}</strong></span>
-            <Button 
-              variant="ghost"
-              size="sm"
+            <IconButton 
               onClick={() => setReplyingTo(null)}
               className="hover:bg-bg-tertiary rounded-full"
               icon={<X size={14} />}
+              size="sm"
             />
           </div>
         )}
@@ -500,12 +498,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 </div>
               </div>
             )}
-            <Button 
-              variant="ghost"
-              size="sm"
+            <IconButton 
               onClick={() => removeMedia()}
               className="absolute -top-2 -right-2 bg-black/60 text-white hover:bg-black/80 shadow-lg z-10 w-6 h-6 rounded-full"
               icon={<X size={14} />}
+              size="sm"
             />
           </div>
         )}
@@ -543,19 +540,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   <IconButton
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-text-secondary hover:text-primary"
                     title="Thêm ảnh"
                     disabled={isSubmitting}
-                    icon={<ImageIcon size={20} />}
+                    icon={<ImageIcon size={16} />}
                     size="sm"
                   />
                   <IconButton
                     type="button"
                     onClick={() => videoInputRef.current?.click()}
-                    className="text-text-secondary hover:text-primary"
                     title="Thêm video"
                     disabled={isSubmitting}
-                    icon={<Video size={20} />}
+                    icon={<Video size={16} />}
                     size="sm"
                   />
                 </div>

@@ -5,7 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
 import { useContactStore } from '../../store/contactStore';
-import { Avatar, UserAvatar, ConfirmDialog, Button } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -86,10 +86,9 @@ export const AppLayout: React.FC = () => {
         </nav>
 
         <div className="flex flex-col gap-2 mt-auto w-full items-center">
-           <Button 
-                variant="ghost"
+           <IconButton
                 onClick={toggleTheme} 
-                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all rounded-xl focus:ring-0 focus:ring-offset-0"
+                className="w-14 h-14 !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white"
                 title="Chế độ tối"
                 icon={mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
            />
@@ -106,10 +105,9 @@ export const AppLayout: React.FC = () => {
            >
              <Settings size={28} />
            </NavLink>
-           <Button 
-                variant="ghost"
+           <IconButton
                 onClick={() => setShowLogoutConfirm(true)} 
-                className="w-14 h-14 flex items-center justify-center !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white transition-all rounded-xl" 
+                className="w-14 h-14 !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white" 
                 title="Đăng xuất"
                 icon={<LogOut size={28} />}
            />

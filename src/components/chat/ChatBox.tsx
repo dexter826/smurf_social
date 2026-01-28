@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { db } from '../../firebase/config';
 import { Phone, Video, Info, MoreVertical } from 'lucide-react';
 import { Message, User, Conversation, UserStatus } from '../../types';
-import { Avatar, UserAvatar, UserStatusText, Button } from '../ui';
+import { Avatar, UserAvatar, UserStatusText, Button, IconButton } from '../ui';
 import { MessageBubble } from './MessageBubble';
 
 interface ChatBoxProps {
@@ -115,25 +115,26 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
 
         <div className="flex items-center gap-1">
-          <button 
-            className="p-2 rounded-full text-primary hover:bg-bg-hover active:scale-90 transition-all focus:outline-none"
+          <IconButton
+            onClick={() => {}}
             title="Cuộc gọi âm thanh"
-          >
-            <Phone size={20} />
-          </button>
-          <button 
-            className="p-2 rounded-full text-primary hover:bg-bg-hover active:scale-90 transition-all focus:outline-none"
+            variant="primary"
+            icon={<Phone size={20} />}
+            size="lg"
+          />
+          <IconButton
+            onClick={() => {}}
             title="Cuộc gọi video"
-          >
-            <Video size={20} />
-          </button>
-          <button 
+            variant="primary"
+            icon={<Video size={20} />}
+            size="lg"
+          />
+          <IconButton
             onClick={onInfoClick}
-            className="p-2 rounded-full text-text-secondary hover:bg-bg-hover active:scale-90 transition-all focus:outline-none"
             title="Thông tin hội thoại"
-          >
-            <Info size={20} />
-          </button>
+            icon={<Info size={20} />}
+            size="lg"
+          />
         </div>
       </div>
 

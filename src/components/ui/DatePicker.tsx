@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { IconButton } from './IconButton';
 
 interface DatePickerProps {
   label?: string;
@@ -67,20 +68,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           {format(currentMonth, 'MMMM yyyy', { locale: vi })}
         </span>
         <div className="flex gap-1">
-          <button
+          <IconButton
             type="button"
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="w-8 h-8 flex items-center justify-center text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
+            icon={<ChevronLeft size={18} />}
+            size="sm"
+          />
+          <IconButton
             type="button"
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="w-8 h-8 flex items-center justify-center text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
-          >
-            <ChevronRight size={18} />
-          </button>
+            icon={<ChevronRight size={18} />}
+            size="sm"
+          />
         </div>
       </div>
     );

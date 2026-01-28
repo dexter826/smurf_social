@@ -148,7 +148,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       {/* Profile Info */}
       <div className="px-4">
         <div className="relative pb-0 transition-theme">
-          <div className="flex flex-col md:flex-row md:items-end gap-6 pb-6">
+          <div className="flex flex-col md:flex-row md:items-end gap-6 pb-6 mt-2">
             
             {/* Avatar */}
             <div className="relative group -mt-12 md:-mt-16">

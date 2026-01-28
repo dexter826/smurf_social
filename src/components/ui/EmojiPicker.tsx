@@ -16,7 +16,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   className = '',
   buttonClassName = '',
   disabled = false,
-  size = 22
+  size = 16
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`text-text-secondary hover:text-primary ${buttonClassName}`}
+        className={buttonClassName}
         title="Emoji"
         icon={<Smile size={size} />}
         size="sm"

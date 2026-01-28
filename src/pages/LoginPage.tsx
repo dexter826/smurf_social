@@ -129,18 +129,20 @@ const LoginPage: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => handleTabChange('login')}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none ${
-                activeTab === 'login' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
+              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none ${
+                activeTab === 'login' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary border-b-2 border-transparent'
               }`}
+              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
             >
               Đăng nhập
             </Button>
             <Button
               variant="ghost"
               onClick={() => handleTabChange('register')}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none ${
-                activeTab === 'register' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary'
+              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none ${
+                activeTab === 'register' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary hover:text-text-secondary border-b-2 border-transparent'
               }`}
+              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
             >
               Đăng ký
             </Button>
