@@ -54,7 +54,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const isRead = message.readBy && message.readBy.length > 1;
   const isDelivered = !!message.deliveredAt;
 
-  // Kiểm tra thời hạn chỉnh sửa (10 phút)
+  // Giới hạn sửa tin nhắn (10 phút)
   const canEdit = isMe && !message.isRecalled && (
     (new Date().getTime() - new Date(message.timestamp).getTime()) / (1000 * 60) <= 10
   );
@@ -117,7 +117,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         );
         
       default:
-        // Parse mentions: @[Name]
+        // Format thẻ tag: @[Name]
         const renderTextWithMentions = (text: string) => {
           const parts = text.split(/(@\[[^\]]+\])/g);
           return parts.map((part, index) => {
@@ -149,7 +149,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <>
       <div className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start gap-3'}`}>
-        {/* Avatar for receiver */}
+        {/* Avatar người nhận */}
         {!isMe && (
           <div className="w-8 flex-shrink-0 flex items-end">
             {showAvatar && <UserAvatar userId={sender?.id!} src={sender?.avatar} size="sm" initialStatus={sender?.status} showStatus={false} />}
@@ -157,7 +157,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
 
         <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative`}>
-          {/* Sender Name in Group */}
+          {/* Tên người gửi trong nhóm */}
           {!isMe && showName && (
             <span className="text-[11px] text-text-secondary ml-1 mb-1 font-medium">
               {sender?.name}
@@ -165,7 +165,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           )}
 
           <div className="relative group/message">
-            {/* Bubble */}
+            {/* Nội dung tin nhắn */}
             <div 
               className={`
                 relative px-3 py-1.5 text-sm shadow-sm
@@ -203,7 +203,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               )}
               {renderContent()}
               
-              {/* Timestamp & Status for text messages */}
+              {/* Thời gian & Trạng thái */}
               {message.type === 'text' && (
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
                   isMe ? 'text-white/80' : 'text-text-tertiary'
@@ -213,7 +213,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               )}
             </div>
 
-             {/* Menu cho tin nhắn */}
+             {/* Menu thao tác */}
             {!message.isRecalled && (
               <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
                 <IconButton
@@ -288,7 +288,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
           </div>
 
-          {/* Timestamp for images/files */}
+          {/* Thời gian cho file media */}
           {message.type !== 'text' && (
             <span className="text-[10px] text-text-tertiary mt-1">
               {format(new Date(message.timestamp), 'HH:mm')}
@@ -308,7 +308,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       </div>
 
-      {/* Full Image Modal */}
+      {/* Modal xem ảnh full */}
       {showFullImage && message.type === 'image' && (
         <div
           className="fixed inset-0 z-50 bg-bg-overlay flex items-center justify-center p-4"

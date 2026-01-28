@@ -75,23 +75,23 @@ const ChatPage: React.FC = () => {
     return subscribeToConversations(currentUser.id);
   }, [currentUser, subscribeToConversations]);
 
-  // Subscribe to conversations
+  // Subscribe danh sách chat
   useEffect(() => {
     const unsubscribe = handleSubscribeToConversations();
     return () => unsubscribe();
   }, [handleSubscribeToConversations]);
 
-  // Subscribe messages & typing is handled here
+  // Subscribe tin nhắn & trạng thái gõ
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 
-    // Subscribe messages
+    // Subscribe tin nhắn
     const unsubscribeMessages = subscribeToMessages(selectedConversationId);
     
     // Subscribe typing
     const unsubscribeTyping = subscribeToTyping(selectedConversationId);
 
-    // Đánh dấu đã nhận (delivered) khi vào cuộc trò chuyện
+    // Đánh dấu đã nhận
     markAsDelivered(selectedConversationId, currentUser.id);
 
     return () => {
@@ -244,18 +244,17 @@ const ChatPage: React.FC = () => {
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
 
-  // Tính toán trạng thái chặn dựa trên partner
+  // Tính block 2 chiều
   const partner = selectedConversation && !selectedConversation.isGroup
     ? selectedConversation.participants.find(p => p.id !== currentUser.id)
     : null;
   const partnerId = partner?.id || null;
   
-  // Kiểm tra chặn 2 chiều
   const isBlockedByMe = partnerId ? currentUser.blockedUserIds?.includes(partnerId) : false;
   const isBlockedByPartner = partner?.blockedUserIds?.includes(currentUser.id) ?? false;
   const isBlocked = isBlockedByMe || isBlockedByPartner;
   
-  // Tính toán thông báo chặn
+  // Thông báo chặn
   const getBlockedMessage = (): string | undefined => {
     if (!selectedConversation?.isGroup && partnerId) {
       if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
@@ -276,7 +275,7 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  // ========== GROUP MANAGEMENT HANDLERS ==========
+  // ========== QUẢN LÝ NHÓM ==========
   const handleCreateGroup = async (memberIds: string[], groupName: string, groupAvatar?: string) => {
     if (!currentUser) return;
     await createGroup(currentUser.id, memberIds, groupName, groupAvatar);
@@ -299,7 +298,7 @@ const ChatPage: React.FC = () => {
     if (!selectedConversationId || !currentUser) return;
     const conv = conversations.find(c => c.id === selectedConversationId);
     
-    // Nếu là trưởng nhóm và còn thành viên khác -> yêu cầu chọn người kế nhiệm
+    // Trưởng nhóm rời đi -> yêu cầu chọn người mới
     if (conv?.isGroup && conv.creatorId === currentUser.id && conv.participantIds.length > 1) {
       setShowAssignAdmin(true);
       return;
@@ -315,11 +314,7 @@ const ChatPage: React.FC = () => {
     // 1. Thăng admin mới
     await promoteToAdmin(selectedConversationId, newAdminId);
     
-    // 2. Chuyển quyền creator (Hàm leaveGroup trong service đã có logic chuyển creatorId 
-    // nếu currentUser.id === creatorId dựa trên adminIds[0])
-    // Tuy nhiên để chắc chắn, ta thực hiện thăng admin trước
-    
-    // 3. Rời nhóm
+    // 2. Chuyển quyền creator và rời nhóm
     await leaveGroup(selectedConversationId, currentUser.id);
     setShowAssignAdmin(false);
     setShowDetails(false);
@@ -342,7 +337,7 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="flex h-full w-full">
-      {/* Conversation List - Sidebar */}
+      {/* Sidebar danh sách chat */}
       <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[320px] flex-shrink-0 w-full`}>
         <ConversationList
           conversations={filteredConversations}
@@ -384,7 +379,7 @@ const ChatPage: React.FC = () => {
         />
       </div>
 
-      {/* Chat Area - Main */}
+      {/* Khu vực chat chính */}
       <div className={`flex-1 flex flex-col ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
         {selectedConversation ? (
           <>
@@ -423,6 +418,7 @@ const ChatPage: React.FC = () => {
               currentUserId={currentUser.id}
               usersMap={usersMap}
               participants={selectedConversation.participants}
+              isGroup={selectedConversation.isGroup}
               onCancelAction={() => {
                 setReplyingTo(null);
                 setEditingMessage(null);
@@ -445,7 +441,7 @@ const ChatPage: React.FC = () => {
         )}
       </div>
 
-      {/* Chat Details Panel */}
+      {/* Panel thông tin chat */}
       {selectedConversation && (
         <ChatDetailsPanel
           conversation={selectedConversation}

@@ -60,11 +60,12 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
               absolute inset-0 w-full h-full pointer-events-none
               bg-transparent outline-none text-[15px] leading-relaxed resize-none
               whitespace-pre-wrap break-words
-              text-transparent
+              text-text-primary
               ${icon ? 'pl-11' : 'pl-4'} 
               ${rightElement ? 'pr-32' : 'pr-4'} 
               ${!className.includes('py-') ? 'py-2' : ''}
               overflow-hidden
+              z-20
             `}
             style={{
               paddingTop: innerRef.current ? getComputedStyle(innerRef.current).paddingTop : '8px',
@@ -102,7 +103,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           rows={1}
           value={value}
           onScroll={(e) => {
-             // Sync scroll with overlay if needed (via separate ref logic if we attached one)
+             // Đồng bộ scroll với overlay
              const target = e.target as HTMLTextAreaElement;
              const overlay = target.previousSibling?.previousSibling as HTMLDivElement;
              if (overlay && overlay.scrollTop !== undefined) {
@@ -112,6 +113,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           onChange={(e) => {
             onChange?.(e);
           }}
+          style={{ caretColor: 'var(--color-primary, #3b82f6)' }}
           {...props}
         />
         {rightElement && (

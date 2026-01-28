@@ -24,7 +24,7 @@ export const MentionList: React.FC<MentionListProps> = ({
             onClick={() => onSelect(user)}
             className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
               index === selectedIndex
-                ? 'bg-bg-hover' // Use standard hover background for active item
+                ? 'bg-bg-hover' // Highlight item đang chọn
                 : 'hover:bg-bg-hover'
             }`}
           >

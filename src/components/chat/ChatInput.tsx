@@ -23,6 +23,7 @@ interface ChatInputProps {
   currentUserId: string;
   usersMap: Record<string, User>;
   participants?: User[];
+  isGroup?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -40,19 +41,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onEditMessage,
   currentUserId,
   usersMap,
-  participants = []
+  participants = [],
+  isGroup = false
 }) => {
   const [inputText, setInputText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<{ file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[]>([]);
   const [isSending, setIsSending] = useState(false);
   
-  // Mention State
+  // State xử lý tag
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionIndex, setMentionIndex] = useState(0);
   const [mentionStartPos, setMentionStartPos] = useState(-1);
   
-  // Audio Recording State
+  // State ghi âm
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [playingPreview, setPlayingPreview] = useState<number | null>(null); // Index of playing audio
@@ -71,17 +73,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout>();
 
-  // Tự động giãn dòng được xử lý bởi component TextArea
-
   useEffect(() => {
-    // Focus vào input khi component mount hoặc khi có hành động mới
+    // Focus input khi mở hoặc có thao tác
     inputRef.current?.focus();
     
     if (editingMessage) {
       setInputText(editingMessage.content);
-    } else if (!replyingTo) {
-      // Don't clear if it's just a reply transition, but maybe we should?
-      // Actually if user was typing and then clicks reply, we should keep the text.
     }
   }, [editingMessage]);
 
@@ -213,17 +210,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       onTyping(false);
     }, 1000);
 
-    // Mention detection
+    // Chỉ bật tính năng tag trong nhóm
+    if (!isGroup) return;
+
     const selectionStart = e.target.selectionStart;
     const textBeforeCursor = text.slice(0, selectionStart);
     const lastAtPos = textBeforeCursor.lastIndexOf('@');
 
     if (lastAtPos !== -1) {
       const query = textBeforeCursor.slice(lastAtPos + 1);
-      // Check if query contains spaces (allow logic: stop at space? or allow Multi Name?)
-      // Let's allow spaces for user names, but maybe limit length or check newlines
-      // Usually mentions stop at space, but names have spaces.
-      // Strict: Stop if newline.
+      // Chặn nếu query chứa xuống dòng
       if (!query.includes('\n')) {
         setMentionStartPos(lastAtPos);
         setMentionQuery(query);
@@ -243,30 +239,32 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     if (mentionStartPos === -1) return;
     
     const before = inputText.slice(0, mentionStartPos);
-    const after = inputText.slice(inputRef.current?.selectionStart || mentionStartPos + 1);
+    // Xóa phần query vừa nhập sau @
+    const afterCursor = inputRef.current?.selectionStart || mentionStartPos + 1;
+    const after = inputText.slice(afterCursor);
     
-    // Insert format: @[Name]
+    // Chèn format @[User]
     const mentionText = `@[${user.name}] `;
     const newText = before + mentionText + after;
     
     setInputText(newText);
     setShowMentions(false);
     
-    // Reset cursor
-    setTimeout(() => {
+    // Đợi render xong để set con trỏ
+    requestAnimationFrame(() => {
       if (inputRef.current) {
-        const newPos = mentionStartPos + mentionText.length;
+        const newPos = before.length + mentionText.length;
         inputRef.current.focus();
         inputRef.current.setSelectionRange(newPos, newPos);
       }
-    }, 0);
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file' | 'camera') => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
-    // Validate limit
+    // Giới hạn số lượng file
     if (selectedFiles.length + files.length > FILE_LIMITS.CHAT_MAX_FILES) {
       toast.error(`Chỉ được gửi tối đa ${FILE_LIMITS.CHAT_MAX_FILES} file cùng lúc.`);
       return;
@@ -275,7 +273,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const newFiles: { file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[] = [];
 
     files.forEach(file => {
-      // Validate file size
+      // Validate theo loại file
       const limitType = (type === 'image' || type === 'camera') ? 'IMAGE' : type === 'video' ? 'VIDEO' : 'FILE';
       if (!validateFileSize(file, limitType)) return;
 
@@ -295,18 +293,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const handlePlayPreview = (url: string, index: number) => {
     if (playingPreview === index) {
-      // Pause
+      // Tạm dừng
       if (audioRef.current) {
         audioRef.current.pause();
         setPlayingPreview(null);
       }
     } else {
-      // Stop current if any
+      // Dừng file đang phát
       if (audioRef.current) {
         audioRef.current.pause();
       }
 
-      // Play new
+      // Phát file mới
       const audio = new Audio(url);
       audio.onended = () => setPlayingPreview(null);
       audio.play().catch(e => toast.error('Không thể phát file âm thanh này'));
@@ -342,7 +340,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onTyping(false);
 
     try {
-      // Gửi files
+      // Gửi danh sách file
       for (const item of selectedFiles) {
         if (item.type === 'image') {
           await onSendImage(item.file);
@@ -356,12 +354,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       }
       clearAllFiles();
 
-      // Gửi text nếu có
+      // Xử lý gửi text
       if (inputText.trim()) {
         if (editingMessage) {
           await onEditMessage?.(inputText.trim());
         } else {
-          // Parse mentions
+          // Lọc danh sách user được tag
           const mentionRegex = /@\[([^\]]+)\]/g;
           const mentions: string[] = [];
           let match;
@@ -384,7 +382,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       toast.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
     } finally {
       setIsSending(false);
-      // Đảm bảo input đã được enable trước khi focus
+      // Focus lại input sau khi gửi
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
@@ -410,25 +408,26 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       const text = e.currentTarget.value;
       const beforeCursor = text.slice(0, cursor);
 
-      // Check for mention pattern at the end of text before cursor: @[Name] or @[Name] + space
-      // Regex: @\[([^\]]+)\](\s)?$
-      const mentionMatch = beforeCursor.match(/@\[[^\]]+\]\s?$/);
+      // Kiểm tra nếu đang xóa thẻ tag
+      const mentionMatch = beforeCursor.match(/@\[[^\]]+\] ?$/);
 
       if (mentionMatch) {
-        e.preventDefault(); // Prevent default single char deletion
+        e.preventDefault(); // Chặn xóa ký tự đơn
         
         const deleteLength = mentionMatch[0].length;
-        const newText = text.slice(0, cursor - deleteLength) + text.slice(cursor);
+        // Cắt bỏ cả block tag
+        const newText = text.substring(0, cursor - deleteLength) + text.substring(cursor);
         
+        // Cập nhật state
         setInputText(newText);
         
-        // Reset cursor position
-        setTimeout(() => {
+        // Set lại vị trí con trỏ
+        requestAnimationFrame(() => {
           if (inputRef.current) {
             const newCursorPos = cursor - deleteLength;
             inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
           }
-        }, 0);
+        });
         return;
       }
     }
@@ -452,7 +451,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
-  // Hiển thị thông báo khi bị chặn
+  // Thông báo nếu bị chặn chat
   if (blockedMessage) {
     return (
       <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme">
@@ -465,7 +464,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme">
-      {/* File Preview List */}
+      {/* Danh sách file chờ gửi */}
       {selectedFiles.length > 0 && (
         <div className="p-3 border-b border-border-light bg-bg-primary overflow-x-auto">
           <div className="flex gap-3">
@@ -517,7 +516,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      {/* Action Preview (Reply/Edit) */}
+      {/* Giao diện đang trả lời/sửa */}
       {(replyingTo || editingMessage) && (
         <div className="px-4 py-2 border-b border-border-light bg-bg-secondary flex items-center justify-between animate-in slide-in-from-bottom-1 duration-200">
           <div className="flex items-center gap-3 overflow-hidden">
@@ -544,7 +543,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      {/* Input Area */}
+      {/* Khu vực nhập liệu */}
       <form onSubmit={handleSubmit} className="relative flex items-center gap-2 px-4 py-3 bg-bg-primary">
         {showMentions && filteredParticipants.length > 0 && (
           <MentionList
@@ -554,7 +553,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           />
         )}
         
-        {/* More Actions Menu */}
+        {/* Menu chức năng mở rộng */}
         <div className="relative" ref={actionsMenuRef}>
 
            <IconButton
@@ -606,7 +605,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
            )}
         </div>
 
-        {/* Hidden Inputs */}
+        {/* Input ẩn dể chọn file */}
           <input
             ref={imageInputRef}
             type="file"
@@ -640,10 +639,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           />
 
 
-        {/* Text Input */}
-        {/* Text Input Container */}
-
-        {/* Recording UI overlay or Text Input */}
+        {/* Nhập text hoặc ghi âm */}
         {isRecording ? (
            <div className="flex-1 flex items-center justify-between bg-bg-secondary rounded-2xl px-4 py-3 border border-primary animate-pulse-soft">
               <div className="flex items-center gap-2 text-primary font-medium">
@@ -692,14 +688,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     {parts.map((part, index) => {
                       if (part.startsWith('@[') && part.endsWith(']')) {
                         return (
-                          <span key={index} className="text-primary font-bold bg-primary/10 rounded px-0.5 mx-px box-decoration-clone">
+                          <span key={index} className="text-primary bg-primary/10 rounded box-decoration-clone">
                             {part}
                           </span>
                         );
                       }
                       return <span key={index}>{part}</span>;
                     })}
-                    {/* Render a trailing newline char if text ends with newline to fix alignment */}
                     {value.endsWith('\n') && <br />}
                   </>
                 );

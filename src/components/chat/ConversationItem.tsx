@@ -52,7 +52,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   const lastMessage = conversation.lastMessage;
   const lastMessagePreview = lastMessage
     ? lastMessage.type === 'text'
-      ? lastMessage.content
+      ? lastMessage.content.replace(/@\[([^\]]+)\]/g, '@$1')
       : lastMessage.content
     : 'Chưa có tin nhắn';
 
