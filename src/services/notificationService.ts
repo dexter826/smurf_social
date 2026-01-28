@@ -10,7 +10,8 @@ import {
   updateDoc, 
   onSnapshot, 
   writeBatch,
-  limit
+  limit,
+  arrayUnion
 } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
@@ -113,11 +114,9 @@ export const notificationService = {
         });
         
         if (token) {
-          // Lưu token vào User document (tránh trùng lặp)
           const userRef = doc(db, 'users', userId);
-          // Cần update fcmTokens mảng trong thực tế, ở đây tối giản
           await updateDoc(userRef, {
-            fcmTokens: [token] // Trong thực tế nên dùng arrayUnion
+            fcmTokens: arrayUnion(token)
           });
           return token;
         }
