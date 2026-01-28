@@ -185,7 +185,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
               variant="ghost"
               size="sm"
               onClick={() => setShowComments(!showComments)}
-              className="hover:underline text-text-secondary"
+              className="hover:underline hover:!bg-transparent text-text-secondary"
             >
               {post.commentCount} bình luận
             </Button>

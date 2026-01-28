@@ -156,8 +156,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           <Button
             variant="ghost"
             onClick={() => onViewModeChange?.('normal')}
-            className={`flex-1 h-full relative ${
-              viewMode === 'normal' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+            className={`flex-1 h-full relative hover:!bg-transparent hover:!text-current ${
+              viewMode === 'normal' ? 'text-primary' : 'text-text-tertiary'
             }`}
           >
             Tất cả
@@ -168,8 +168,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           <Button
             variant="ghost"
             onClick={() => onViewModeChange?.('archived')}
-            className={`flex-1 h-full relative ${
-              viewMode === 'archived' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+            className={`flex-1 h-full relative hover:!bg-transparent hover:!text-current ${
+              viewMode === 'archived' ? 'text-primary' : 'text-text-tertiary'
             }`}
           >
             Lưu trữ

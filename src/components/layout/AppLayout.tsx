@@ -86,16 +86,17 @@ export const AppLayout: React.FC = () => {
         </nav>
 
         <div className="flex flex-col gap-2 mt-auto w-full items-center">
-           <IconButton
+           <button
                 onClick={toggleTheme} 
-                className="w-14 h-14 !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white"
+                className="w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 text-sidebar-item hover:bg-sidebar-item-hover hover:text-white"
                 title="Chế độ tối"
-                icon={mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
-           />
+           >
+             {mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
+           </button>
            <NavLink 
               to="/settings"
               className={({ isActive }) => 
-                `w-14 h-14 flex items-center justify-center rounded-xl transition-all ${
+                `w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 ${
                   isActive 
                     ? 'bg-sidebar-item-active text-white' 
                     : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
@@ -105,12 +106,13 @@ export const AppLayout: React.FC = () => {
            >
              <Settings size={28} />
            </NavLink>
-           <IconButton
+           <button
                 onClick={() => setShowLogoutConfirm(true)} 
-                className="w-14 h-14 !text-sidebar-item hover:!bg-sidebar-item-hover hover:!text-white" 
+                className="w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 text-sidebar-item hover:bg-sidebar-item-hover hover:text-white" 
                 title="Đăng xuất"
-                icon={<LogOut size={28} />}
-           />
+           >
+             <LogOut size={28} />
+           </button>
         </div>
       </aside>
 
