@@ -107,7 +107,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className={`text-xs flex-shrink-0 group-hover:hidden ${(unreadCount > 0 || conversation.markedUnread) ? 'font-semibold text-primary' : 'text-text-tertiary'}`}>
+          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'hidden' : 'group-hover:hidden'} ${(unreadCount > 0 || conversation.markedUnread) ? 'font-semibold text-primary' : 'text-text-tertiary'}`}>
             {timeAgo.replace('khoảng ', '').replace('dưới ', '').replace('hơn ', '')}
           </span>
         </div>
@@ -164,7 +164,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           disableTriggerScale
           trigger={
             <IconButton
-              className={`opacity-0 group-hover:opacity-100 ${isMenuOpen ? 'opacity-100' : ''} bg-bg-primary/80 backdrop-blur-sm hover:bg-bg-hover`}
+              className={`opacity-0 group-hover:opacity-100 ${isMenuOpen ? 'opacity-100' : ''}`}
               icon={<MoreVertical size={16} />}
               size="sm"
             />
