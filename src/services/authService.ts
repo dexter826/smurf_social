@@ -3,6 +3,9 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
@@ -24,5 +27,18 @@ export const authService = {
 
   logout: async (): Promise<void> => {
     await signOut(auth);
+  },
+
+  reauthenticate: async (password: string): Promise<void> => {
+    const user = auth.currentUser;
+    if (!user || !user.email) throw new Error("Chưa đăng nhập");
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+  },
+
+  changePassword: async (newPassword: string): Promise<void> => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Chưa đăng nhập");
+    await updatePassword(user, newPassword);
   }
 };
