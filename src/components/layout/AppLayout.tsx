@@ -6,12 +6,15 @@ import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
 import { useContactStore } from '../../store/contactStore';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
+import { useNotificationStore } from '../../store/notificationStore';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
   const { conversations, subscribeToConversations } = useChatStore();
   const { receivedRequests, subscribeToRequests } = useContactStore();
+  const { initialize: initNotifications } = useNotificationStore();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -19,11 +22,13 @@ export const AppLayout: React.FC = () => {
     if (!user) return;
     const unsubscribeChat = subscribeToConversations(user.id);
     const unsubscribeContacts = subscribeToRequests(user.id);
+    const unsubscribeNotifications = initNotifications(user.id);
     return () => {
       unsubscribeChat();
       unsubscribeContacts();
+      unsubscribeNotifications();
     };
-  }, [user, subscribeToConversations, subscribeToRequests]);
+  }, [user, subscribeToConversations, subscribeToRequests, initNotifications]);
 
   const totalUnread = user ? conversations.reduce((total, conv) => {
     const count = conv.unreadCount?.[user.id] || 0;
@@ -83,6 +88,9 @@ export const AppLayout: React.FC = () => {
               </div>
             </NavLink>
           ))}
+          <div className="mt-2">
+            <NotificationDropdown />
+          </div>
         </nav>
 
         <div className="flex flex-col gap-2 mt-auto w-full items-center">

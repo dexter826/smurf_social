@@ -16,7 +16,8 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { FriendRequest, FriendRequestStatus, User } from '../types';
+import { FriendRequest, FriendRequestStatus, User, NotificationType } from '../types';
+import { notificationService } from './notificationService';
 
 export const friendService = {
   sendFriendRequest: async (senderId: string, receiverId: string, message?: string): Promise<FriendRequest> => {
@@ -32,6 +33,14 @@ export const friendService = {
 
       const docRef = await addDoc(collection(db, 'friendRequests'), requestData);
       
+      // Gửi thông báo lời mời kết bạn
+      await notificationService.createNotification({
+        receiverId,
+        senderId,
+        type: NotificationType.FRIEND_REQUEST,
+        data: { friendRequestId: docRef.id }
+      });
+
       return {
         id: docRef.id,
         ...requestData,
@@ -146,6 +155,14 @@ export const friendService = {
       const friendRef = doc(db, 'users', friendId);
       await updateDoc(friendRef, {
         friendIds: arrayUnion(userId)
+      });
+
+      // Gửi thông báo chấp nhận kết bạn
+      await notificationService.createNotification({
+        receiverId: friendId,
+        senderId: userId,
+        type: NotificationType.FRIEND_ACCEPT,
+        data: {}
       });
     } catch (error) {
       console.error("Lỗi chấp nhận kết bạn", error);
