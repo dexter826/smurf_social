@@ -30,10 +30,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   isLoading
 }) => {
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Reset index khi doi post
   React.useEffect(() => {
-    if (isOpen) setMediaIndex(0);
+    if (isOpen) {
+      setMediaIndex(0);
+      setIsExpanded(false);
+    }
   }, [isOpen, post?.id]);
 
   if (!isOpen) return null;
@@ -215,7 +219,27 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 {/* Noi dung van ban */}
                 <div className="px-4 py-3 pb-2">
                   <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
-                    {post.content}
+                    {(() => {
+                      const threshold = 300;
+                      const shouldTruncate = post.content.length > threshold;
+                      const displayContent = !shouldTruncate || isExpanded 
+                        ? post.content 
+                        : post.content.slice(0, threshold) + '...';
+                      
+                      return (
+                        <>
+                          {displayContent}
+                          {shouldTruncate && (
+                            <span 
+                              onClick={() => setIsExpanded(!isExpanded)}
+                              className="text-text-secondary font-medium cursor-pointer hover:underline ml-1"
+                            >
+                              {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
                   </p>
                 </div>
 

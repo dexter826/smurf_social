@@ -27,9 +27,17 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   onViewDetail
 }) => {
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const isLiked = post.likes.includes(currentUser.id);
   const isOwner = post.userId === currentUser.id;
+
+  const threshold = 300;
+  const shouldTruncate = post.content.length > threshold;
+  
+  const displayContent = !shouldTruncate || isExpanded 
+    ? post.content 
+    : post.content.slice(0, threshold) + '...';
 
   return (
     <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-theme">
@@ -100,7 +108,15 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         className="px-4 pb-3"
       >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
-          {post.content}
+          {displayContent}
+          {shouldTruncate && (
+            <span 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-text-secondary font-medium cursor-pointer hover:underline ml-1"
+            >
+              {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+            </span>
+          )}
         </p>
       </div>
 
