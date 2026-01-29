@@ -72,11 +72,16 @@ export const AppLayout: React.FC = () => {
       {/* Desktop Navbar */}
       <header className="hidden md:flex h-16 w-full items-center justify-between bg-bg-primary px-6 z-50 shadow-sm border-b border-border-light transition-theme">
         {/* Left: Logo */}
-        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/feed')}>
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
-            <span className="text-white font-bold text-lg">S</span>
-          </div>
-          <span className="text-lg font-bold text-text-primary hidden lg:block tracking-tight">
+        <div 
+          className="flex items-center gap-3 cursor-pointer group hover:scale-[0.98] active:scale-95 transition-transform duration-200" 
+          onClick={() => navigate('/feed')}
+        >
+          <img 
+            src="/logo.svg" 
+            alt="Smurfy Logo" 
+            className="w-10 h-10 object-contain" 
+          />
+          <span className="text-lg font-bold text-text-primary tracking-tight">
             Smurf Social
           </span>
         </div>
