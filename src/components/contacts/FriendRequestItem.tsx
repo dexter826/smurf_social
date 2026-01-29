@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, X, Clock } from 'lucide-react';
 import { Avatar, UserAvatar, Button } from '../ui';
 import { FriendRequest, User, UserStatus } from '../../types';
@@ -22,6 +23,14 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
   onCancel,
   isLoading = false
 }) => {
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    if (user?.id) {
+      navigate(`/profile/${user.id}`);
+    }
+  };
+
   const formatTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -37,9 +46,21 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
   return (
     <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
       <div className="flex items-center gap-3 flex-1">
-        <UserAvatar userId={user.id} src={user.avatar} name={user.name} size="lg" initialStatus={user.status} />
+        <UserAvatar 
+          userId={user.id} 
+          src={user.avatar} 
+          name={user.name} 
+          size="lg" 
+          initialStatus={user.status} 
+          onClick={handleProfileClick}
+        />
         <div className="flex-1">
-          <h3 className="font-semibold text-text-primary">{user.name}</h3>
+          <h3 
+            className="font-semibold text-text-primary cursor-pointer hover:underline"
+            onClick={handleProfileClick}
+          >
+            {user.name}
+          </h3>
           {request.message && (
             <p className="text-sm text-text-secondary mt-1">"{request.message}"</p>
           )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { db } from '../../firebase/config';
 import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button } from '../ui';
 import { Post, User, UserStatus } from '../../types';
@@ -14,6 +15,7 @@ interface PostItemProps {
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onViewDetail?: (post: Post) => void;
+  onProfileClick?: () => void;
 }
 
 export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
@@ -23,13 +25,22 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   onLike,
   onEdit,
   onDelete,
-  onViewDetail
+  onViewDetail,
+  onProfileClick
 }) => {
+  const navigate = useNavigate();
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const isLiked = post.likes.includes(currentUser.id);
   const isOwner = post.userId === currentUser.id;
+
+  const handleProfileClick = () => {
+    if (author?.id) {
+      onProfileClick?.();
+      navigate(`/profile/${author.id}`);
+    }
+  };
 
   const threshold = 300;
   const shouldTruncate = post.content.length > threshold;
@@ -43,9 +54,19 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <UserAvatar userId={author?.id} src={author?.avatar} name={author?.name} size="md" initialStatus={author?.status} />
+          <UserAvatar 
+            userId={author?.id} 
+            src={author?.avatar} 
+            name={author?.name} 
+            size="md" 
+            initialStatus={author?.status} 
+            onClick={handleProfileClick}
+          />
           <div>
-            <h3 className="font-semibold text-text-primary text-[15px]">
+            <h3 
+              className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
+              onClick={handleProfileClick}
+            >
               {author?.name || 'Unknown User'}
             </h3>
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">

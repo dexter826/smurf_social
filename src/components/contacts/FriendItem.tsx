@@ -31,9 +31,17 @@ export const FriendItem: React.FC<FriendItemProps> = ({
       onClick={handleMessage}
     >
       <div className="flex items-center gap-4 flex-1">
-        <UserAvatar userId={friend.id} src={friend.avatar} name={friend.name} size="md" initialStatus={friend.status} />
+        <UserAvatar 
+          userId={friend.id} 
+          src={friend.avatar} 
+          name={friend.name} 
+          size="md" 
+          initialStatus={friend.status} 
+        />
         <div>
-          <h3 className="font-semibold text-text-primary">{friend.name}</h3>
+          <h3 className="font-semibold text-text-primary">
+            {friend.name}
+          </h3>
           <UserStatusText userId={friend.id} className="text-xs text-text-tertiary" initialStatus={friend.status} />
         </div>
       </div>

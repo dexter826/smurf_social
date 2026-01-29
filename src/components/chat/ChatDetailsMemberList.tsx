@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Conversation } from '../../types';
 import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button, IconButton } from '../ui';
 import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMinus, LogOut } from 'lucide-react';
@@ -22,6 +23,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
   onPromoteToAdmin,
   onDemoteFromAdmin
 }) => {
+  const navigate = useNavigate();
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
@@ -32,6 +34,12 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
   const adminIds = conversation.adminIds || [];
   const isCurrentUserAdmin = adminIds.includes(currentUserId);
   const isCurrentUserCreator = creatorId === currentUserId;
+
+  const handleMemberProfileClick = (memberId: string) => {
+    if (memberId !== currentUserId) {
+      navigate(`/profile/${memberId}`);
+    }
+  };
 
   const getMemberRole = (memberId: string) => {
     if (memberId === creatorId) return 'creator';
@@ -89,11 +97,15 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                   size="sm"
                   initialStatus={member.status}
                   showStatus
+                  onClick={() => handleMemberProfileClick(member.id)}
                 />
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-text-primary truncate">
+                    <span 
+                      className={`text-sm font-medium text-text-primary truncate ${!isCurrentUser ? 'cursor-pointer hover:underline' : ''}`}
+                      onClick={() => handleMemberProfileClick(member.id)}
+                    >
                       {member.name}
                       {isCurrentUser && <span className="text-text-tertiary"> (Bạn)</span>}
                     </span>

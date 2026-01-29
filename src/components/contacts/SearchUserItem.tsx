@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserPlus, Check, X } from 'lucide-react';
 import { Avatar, UserAvatar, Button } from '../ui';
 import { User, UserStatus } from '../../types';
@@ -16,7 +17,15 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
   onSendRequest,
   isRequestSent: initialRequestSent = false
 }) => {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
+
+  const handleProfileClick = () => {
+    if (user?.id) {
+      navigate(`/profile/${user.id}`);
+    }
+  };
+
   const [isRequestSent, setIsRequestSent] = useState(initialRequestSent);
   const [isFriend, setIsFriend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,9 +62,21 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
   return (
     <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0 group">
       <div className="flex items-center gap-3 flex-1 min-w-0 pr-4">
-        <UserAvatar userId={user.id} src={user.avatar} name={user.name} size="md" initialStatus={user.status} />
+        <UserAvatar 
+          userId={user.id} 
+          src={user.avatar} 
+          name={user.name} 
+          size="md" 
+          initialStatus={user.status} 
+          onClick={handleProfileClick}
+        />
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-text-primary truncate">{user.name}</h3>
+          <h3 
+            className="font-semibold text-text-primary truncate cursor-pointer hover:underline"
+            onClick={handleProfileClick}
+          >
+            {user.name}
+          </h3>
           <p className="text-xs text-text-secondary truncate">
             {user.email || 'Người dùng Smurf Social'}
           </p>

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatTimeOnly } from '../../utils/dateUtils';
 import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight } from 'lucide-react';
 import { Message, User } from '../../types';
@@ -41,12 +42,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   isGroup = false,
   lastReadByUsers = []
 }) => {
+  const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const [showRecallConfirm, setShowRecallConfirm] = useState(false);
   const [showReaders, setShowReaders] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleProfileClick = () => {
+    if (sender?.id) {
+      navigate(`/profile/${sender.id}`);
+    }
+  };
 
   const toggleMenu = () => {
     if (!showMenu && menuButtonRef.current) {
@@ -159,14 +167,26 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {/* Avatar người nhận */}
         {!isMe && (
           <div className="w-8 flex-shrink-0 flex items-end">
-            {showAvatar && <UserAvatar userId={sender?.id!} src={sender?.avatar} size="sm" initialStatus={sender?.status} showStatus={false} />}
+            {showAvatar && (
+              <UserAvatar 
+                userId={sender?.id!} 
+                src={sender?.avatar} 
+                size="sm" 
+                initialStatus={sender?.status} 
+                showStatus={false} 
+                onClick={handleProfileClick}
+              />
+            )}
           </div>
         )}
 
         <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative`}>
           {/* Tên người gửi trong nhóm */}
           {!isMe && showName && (
-            <span className="text-[11px] text-text-secondary ml-1 mb-1 font-medium">
+            <span 
+              className="text-[11px] text-text-secondary ml-1 mb-1 font-medium cursor-pointer hover:underline"
+              onClick={handleProfileClick}
+            >
               {sender?.name}
             </span>
           )}
