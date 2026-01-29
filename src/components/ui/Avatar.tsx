@@ -10,6 +10,7 @@ interface AvatarProps {
   className?: string;
   isGroup?: boolean;
   members?: User[];
+  onClick?: () => void;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({ 
@@ -19,7 +20,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   status, 
   className = '', 
   isGroup,
-  members = []
+  members = [],
+  onClick
 }) => {
   const sizeClasses = {
     xs: 'w-6 h-6 text-[10px]',
@@ -120,7 +122,10 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   return (
-    <div className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} ${!isGroup ? 'rounded-full' : ''} ${className}`}>
+    <div 
+      className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} ${!isGroup ? 'rounded-full' : ''} ${className} ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
       <div className={`w-full h-full relative ${!isGroup ? 'rounded-full overflow-hidden border border-border-light bg-bg-secondary' : ''} flex items-center justify-center`}>
         {renderContent()}
       </div>

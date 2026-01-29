@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Users, Lock, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton } from '../ui';
 import { Post, User } from '../../types';
@@ -28,8 +29,17 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   onDelete,
   isLoading
 }) => {
+  const navigate = useNavigate();
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleProfileClick = () => {
+    if (author?.id) {
+      onClose();
+      navigate(`/profile/${author.id}`);
+    }
+  };
+
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -213,9 +223,13 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 name={author?.name} 
                 size="md" 
                 initialStatus={author?.status} 
+                onClick={handleProfileClick}
               />
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-text-primary text-[15px] truncate max-w-full">
+                <h3 
+                  className="font-semibold text-text-primary text-[15px] truncate max-w-full cursor-pointer hover:underline"
+                  onClick={handleProfileClick}
+                >
                   {author?.name || 'Unknown User'}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
@@ -252,6 +266,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             variant="cinema"
             autoFocus={true}
             className="flex-1 overflow-y-auto scroll-hide"
+            onProfileClick={onClose}
             header={
               <div className="flex flex-col">
                 {/* Media Component cho Mobile (Nằm giữa Header và Content) */}

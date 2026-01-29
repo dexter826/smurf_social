@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Send, Image as ImageIcon, Video, ChevronDown, ChevronRight } from 'lucide-react';
 import { UserAvatar, Button, TextArea, EmojiPicker, IconButton, ConfirmDialog } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
@@ -18,6 +19,7 @@ interface CommentSectionProps {
   className?: string;
   variant?: 'default' | 'cinema';
   autoFocus?: boolean;
+  onProfileClick?: () => void;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
@@ -26,7 +28,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   header,
   className = '',
   variant = 'default',
-  autoFocus = false
+  autoFocus = false,
+  onProfileClick
 }) => {
   const { 
     rootComments, 
@@ -63,6 +66,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null);
 
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
@@ -276,7 +280,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                <div className="w-1 h-1 rounded-full bg-text-tertiary" />
                {UI_MESSAGES.FEED.EDITING}
             </span>
-            <IconButton onClick={resetInput} icon={<X size={12} />} size="xs" transparent />
+            <IconButton onClick={resetInput} icon={<X size={12} />} size="xs" />
           </div>
         )}
 
@@ -298,8 +302,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   <div className="flex items-center justify-center w-8 h-8 hover:text-primary transition-all">
                     <EmojiPicker onEmojiSelect={(e) => setNewComment(prev => prev + e)} size={20} showOverlay={false} buttonClassName="opacity-70 hover:opacity-100" />
                   </div>
-                  <IconButton type="button" onClick={() => fileInputRef.current?.click()} icon={<ImageIcon size={18} />} size="sm" transparent className="opacity-70 hover:opacity-100" />
-                  <IconButton type="button" onClick={() => videoInputRef.current?.click()} icon={<Video size={18} />} size="sm" transparent className="opacity-70 hover:opacity-100" />
+                  <IconButton type="button" onClick={() => fileInputRef.current?.click()} icon={<ImageIcon size={18} />} size="sm" className="opacity-70 hover:opacity-100" />
+                  <IconButton type="button" onClick={() => videoInputRef.current?.click()} icon={<Video size={18} />} size="sm" className="opacity-70 hover:opacity-100" />
                 </div>
               }
             />
@@ -344,21 +348,41 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     const isEditing = activeInputId === comment.id && inputMode === 'edit';
     const isReplying = activeInputId === comment.id && inputMode === 'reply';
 
+    const handleProfileClick = () => {
+      if (comment.userId) {
+        onProfileClick?.();
+        navigate(`/profile/${comment.userId}`);
+      }
+    };
+
     return (
       <div key={comment.id} className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
         <div className="flex gap-3">
-          <UserAvatar userId={comment.userId} src={author?.avatar} name={author?.name} size={isReply ? 'xs' : 'sm'} />
+          <UserAvatar userId={comment.userId} src={author?.avatar} name={author?.name} size={isReply ? 'xs' : 'sm'} onClick={handleProfileClick} />
           <div className="flex-1 min-w-0">
             <div className={`
               rounded-2xl px-4 py-2 inline-block max-w-full shadow-sm transition-all group
               ${variant === 'cinema' ? 'bg-bg-secondary py-2.5' : 'bg-bg-secondary'}
             `}>
               <div className="flex items-center gap-1 mb-0.5 flex-nowrap overflow-hidden">
-                <h4 className="font-bold text-[13px] text-text-primary whitespace-nowrap">{author?.name || 'Người dùng'}</h4>
+                <h4 
+                  className="font-bold text-[13px] text-text-primary whitespace-nowrap cursor-pointer hover:underline"
+                  onClick={handleProfileClick}
+                >
+                  {author?.name || 'Người dùng'}
+                </h4>
                 {isReply && comment.replyToUserId && users[comment.replyToUserId] && (
                   <>
                     <ChevronRight size={12} className="text-text-tertiary flex-shrink-0 mx-0.5" />
-                    <h4 className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate">{users[comment.replyToUserId].name}</h4>
+                    <h4 
+                      className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline"
+                      onClick={() => {
+                        onProfileClick?.();
+                        navigate(`/profile/${comment.replyToUserId}`);
+                      }}
+                    >
+                      {users[comment.replyToUserId].name}
+                    </h4>
                   </>
                 )}
               </div>
