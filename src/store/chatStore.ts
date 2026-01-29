@@ -1,11 +1,12 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Conversation, Message, User } from '../types';
 import { chatService } from '../services/chatService';
 import { userService } from '../services/userService';
 import { useAuthStore } from './authStore';
 import NotificationSound from '../assets/sounds/message-notification.mp3';
 
-let lastPlayedId = ''; // Chặn phát âm thanh lặp cho một tin nhắn
+let lastPlayedId = ''; // Tránh phát âm thanh lặp
 
 interface ChatState {
   conversations: Conversation[];
@@ -15,6 +16,7 @@ interface ChatState {
   hasMoreMessages: Record<string, boolean>;
   typingUsers: Record<string, string[]>;
   isLoading: boolean;
+  isRevalidating: boolean;
   isLoadingMore: Record<string, boolean>;
   searchTerm: string;
   isSearchFocused: boolean;
@@ -74,32 +76,41 @@ interface ChatState {
   setIsChatVisible: (visible: boolean) => void;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
-  conversations: [],
-  selectedConversationId: null,
-  messages: {},
-  lastMessageDocs: {},
-  hasMoreMessages: {},
-  typingUsers: {},
-  isLoading: false,
-  isLoadingMore: {},
-  searchTerm: '',
-  isSearchFocused: false,
-  searchResults: {
-    conversations: [],
-    users: []
-  },
-  searchHistory: [],
-  isChatVisible: false,
+export const useChatStore = create<ChatState>()(
+  persist(
+    (set, get) => ({
+      conversations: [],
+      selectedConversationId: null,
+      messages: {},
+      lastMessageDocs: {},
+      hasMoreMessages: {},
+      typingUsers: {},
+      isLoading: false,
+      isRevalidating: false,
+      isLoadingMore: {},
+      searchTerm: '',
+      isSearchFocused: false,
+      searchResults: {
+        conversations: [],
+        users: []
+      },
+      searchHistory: [],
+      isChatVisible: false,
 
-  // Đăng ký cập nhật danh sách hội thoại
-  subscribeToConversations: (userId: string) => {
-    set({ isLoading: true });
-    
-    const unsubscribe = chatService.subscribeToConversations(userId, (conversations) => {
-      const prevConversations = get().conversations;
+      // Đồng bộ danh sách hội thoại
+      subscribeToConversations: (userId: string) => {
+        const { conversations } = get();
+        const hasCache = conversations.length > 0;
+        
+        set({ 
+          isLoading: !hasCache,
+          isRevalidating: hasCache 
+        });
+        
+        const unsubscribe = chatService.subscribeToConversations(userId, (conversations) => {
+          const prevConversations = get().conversations;
       
-      // Âm báo khi có tin nhắn thực sự mới và chưa đọc
+      // Báo tin nhắn mới
       if (prevConversations.length > 0) {
         conversations.forEach(conv => {
           const lastMsg = conv.lastMessage;
@@ -115,14 +126,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
         });
       }
 
-      set({ 
-        conversations: conversations.map(c => 
-          (c.id === get().selectedConversationId && get().isChatVisible)
-            ? { ...c, unreadCount: { ...c.unreadCount, [userId]: 0 }, markedUnread: false }
-            : c
-        ), 
-        isLoading: false 
-      });
+        set({ 
+          conversations: conversations.map(c => 
+            (c.id === get().selectedConversationId && get().isChatVisible)
+              ? { ...c, unreadCount: { ...c.unreadCount, [userId]: 0 }, markedUnread: false }
+              : c
+          ), 
+          isLoading: false,
+          isRevalidating: false
+        });
     });
 
     return unsubscribe;
@@ -131,7 +143,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   selectConversation: (conversationId: string | null) => {
     set({ selectedConversationId: conversationId });
     
-    // Xóa unreadCount local ngay lập tức khi chọn hội thoại
+    // Cập nhật trạng thái đã đọc local
     if (conversationId) {
       const { user } = useAuthStore.getState();
       if (user) {
@@ -146,7 +158,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  // Lấy hoặc tạo mới hội thoại giữa hai người dùng
   getOrCreateConversation: async (user1Id: string, user2Id: string) => {
     try {
       const conversationId = await chatService.getOrCreateConversation(user1Id, user2Id);
@@ -158,7 +169,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  // Tìm kiếm bạn bè để chat
   searchConversations: async (userId: string, term: string) => {
     set({ searchTerm: term, isLoading: true });
     
@@ -270,7 +280,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  // Giới hạn 10 mục tìm kiếm gần nhất
+  // Lưu 10 mục tìm kiếm gần nhất
   addToSearchHistory: (item: Conversation | User) => {
     set((state) => {
       const filtered = state.searchHistory.filter(h => h.id !== item.id);
@@ -289,7 +299,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ searchHistory: [] });
   },
 
-  // Đăng ký nhận tin nhắn thời gian thực trong hội thoại
+  // Đồng bộ tin nhắn thời gian thực
   subscribeToMessages: (conversationId: string) => {
     const LIMIT_PER_PAGE = 20;
     
@@ -313,7 +323,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return unsubscribe;
   },
 
-  // Tải thêm tin nhắn cũ
   loadMoreMessages: async (conversationId: string) => {
     const { lastMessageDocs, messages, isLoadingMore, hasMoreMessages } = get();
     const lastDoc = lastMessageDocs[conversationId];
@@ -465,7 +474,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  // Đăng ký cập nhật trạng thái soạn tin
+  // Đồng bộ trạng thái soạn tin
   subscribeToTyping: (conversationId: string) => {
     const unsubscribe = chatService.subscribeToTypingStatus(conversationId, (typingUsers) => {
       set((state) => ({
@@ -488,7 +497,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  // Tạo hội thoại nhóm mới
   createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => {
     try {
       const conversationId = await chatService.createGroupConversation(creatorId, memberIds, groupName, groupAvatar);
@@ -581,7 +589,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isLoading: loading });
   },
 
-  setIsChatVisible: (visible: boolean) => {
-    set({ isChatVisible: visible });
-  }
-}));
+      setIsChatVisible: (visible: boolean) => {
+        set({ isChatVisible: visible });
+      }
+    }),
+    {
+      name: 'smurf_chat_cache',
+      storage: createJSONStorage(() => localStorage),
+      // Tránh cache tin nhắn để bảo mật và nhẹ app
+      partialize: (state) => ({ 
+        conversations: state.conversations,
+        searchHistory: state.searchHistory 
+      }),
+    }
+  )
+);

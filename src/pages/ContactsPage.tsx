@@ -14,6 +14,7 @@ const ContactsPage: React.FC = () => {
     groupedFriends,
     userCache,
     isLoading,
+    isRevalidating,
     activeTab,
     setActiveTab,
     searchTerm,
@@ -151,6 +152,16 @@ const ContactsPage: React.FC = () => {
               >
                 {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
               </Button>
+            </div>
+          )}
+          
+          {/* Nhãn đồng bộ danh sách */}
+          {isRevalidating && (
+            <div className="px-4 py-1 bg-primary/5 border-t border-primary/10 flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="text-[10px] text-primary font-bold uppercase tracking-widest italic">
+                Đang đồng bộ danh sách...
+              </span>
             </div>
           )}
         </div>

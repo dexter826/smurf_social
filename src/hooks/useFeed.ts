@@ -7,6 +7,7 @@ import { useUserCache } from '../store/userCacheStore';
 interface UseFeedReturn {
   posts: Post[];
   isLoading: boolean;
+  isRevalidating: boolean;
   hasMore: boolean;
   usersMap: Record<string, User>;
   handleLoadMore: () => void;
@@ -21,6 +22,7 @@ export const useFeed = (): UseFeedReturn => {
   const {
     posts,
     isLoading,
+    isRevalidating,
     hasMore,
     fetchPosts,
     subscribeToPosts,
@@ -113,6 +115,7 @@ export const useFeed = (): UseFeedReturn => {
   return {
     posts,
     isLoading,
+    isRevalidating,
     hasMore,
     usersMap,
     handleLoadMore,
