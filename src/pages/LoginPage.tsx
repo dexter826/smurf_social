@@ -114,44 +114,54 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-primary-light p-4 transition-theme">
-      <div className="w-full max-w-[400px] bg-bg-primary rounded-xl shadow-dropdown overflow-hidden transition-all">
-        <div className="bg-primary p-6 text-center">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-primary-light p-4 transition-theme selection:bg-primary-light selection:text-primary">
+      <div className="w-full max-w-[400px] bg-bg-primary rounded-2xl shadow-dropdown overflow-hidden transition-all ring-1 ring-black/5">
+        <div className="bg-primary p-8 text-center pattern-bg">
+          <div className="mx-auto w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-3 backdrop-blur-sm">
+             <User className="text-white" size={24} />
+          </div>
           <h1 className="text-2xl font-bold text-text-on-primary mb-2">Smurfy</h1>
-          <p className="text-text-on-primary/80 text-xs leading-relaxed">
+          <p className="text-text-on-primary/90 text-sm font-medium leading-relaxed">
             {activeTab === 'forgot' 
               ? 'Nhập email để lấy lại mật khẩu'
-              : <>Kết nối cùng Smurfy Web <br/> Trò chuyện & sẻ chia mọi lúc</>
+              : 'Kết nối và chia sẻ mọi khoảnh khắc'
             }
           </p>
         </div>
 
         {activeTab !== 'forgot' && (
-          <div className="flex border-b border-border-light">
+          <div className="flex border-b border-border-light relative">
             <Button
               variant="ghost"
               onClick={() => handleTabChange('login')}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none hover:!bg-transparent hover:!text-current ${
-                activeTab === 'login' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary border-b-2 border-transparent'
+              className={`flex-1 py-3.5 text-sm font-semibold transition-all rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none hover:!bg-transparent ${
+                activeTab === 'login' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
-              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
             >
               {UI_MESSAGES.AUTH.LOGIN}
             </Button>
             <Button
               variant="ghost"
               onClick={() => handleTabChange('register')}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none hover:!bg-transparent hover:!text-current ${
-                activeTab === 'register' ? 'text-primary border-b-2 border-primary' : 'text-text-tertiary border-b-2 border-transparent'
+              className={`flex-1 py-3.5 text-sm font-semibold transition-all rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none hover:!bg-transparent ${
+                activeTab === 'register' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
-              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
             >
               {UI_MESSAGES.AUTH.REGISTER}
             </Button>
+            
+            {/* Animated Indicator */}
+            <div 
+                className="absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-spring"
+                style={{ 
+                    left: activeTab === 'login' ? '0%' : '50%', 
+                    width: '50%' 
+                }}
+            />
           </div>
         )}
 
-        <div className="p-6">
+        <div className="p-6 md:p-8">
           {activeTab === 'forgot' ? (
              <form onSubmit={handleResetSubmit} className="space-y-4">
                 {errors.success && (
@@ -286,8 +296,10 @@ const LoginPage: React.FC = () => {
           )}
         </div>
         
-        <div className="bg-bg-secondary p-3 text-center text-[10px] text-text-tertiary border-t border-border-light transition-theme">
-          Chấp nhận <a href="#" className="text-primary hover:underline">Diều khoản & Bảo mật</a> khi sử dụng Smurfy.
+        <div className="bg-bg-secondary/50 p-4 text-center border-t border-border-light transition-theme">
+          <p className="text-[11px] text-text-tertiary">
+            Bằng việc tiếp tục, bạn đồng ý với <a href="#" className="font-medium text-primary hover:underline transition-all">Điều khoản</a> & <a href="#" className="font-medium text-primary hover:underline transition-all">Chính sách bảo mật</a> của Smurfy.
+          </p>
         </div>
       </div>
     </div>

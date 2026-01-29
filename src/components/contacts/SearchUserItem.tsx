@@ -51,27 +51,27 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
-      <div className="flex items-center gap-3 flex-1">
+    <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0 group">
+      <div className="flex items-center gap-3 flex-1 min-w-0 pr-4">
         <UserAvatar userId={user.id} src={user.avatar} name={user.name} size="md" initialStatus={user.status} />
-        <div>
-          <h3 className="font-semibold text-text-primary">{user.name}</h3>
-          <p className="text-xs text-text-secondary">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-text-primary truncate">{user.name}</h3>
+          <p className="text-xs text-text-secondary truncate">
             {user.email || 'Người dùng Smurf Social'}
           </p>
         </div>
       </div>
 
-      <div>
+      <div className="flex-shrink-0">
         {isFriend ? (
-          <div className="flex items-center gap-2 text-success text-sm font-medium">
-            <Check size={16} />
-            Bạn bè
+          <div className="flex items-center gap-2 text-success text-sm font-medium bg-success/10 px-3 py-1.5 rounded-full">
+            <Check size={14} />
+            <span className="hidden sm:inline">Bạn bè</span>
           </div>
         ) : isRequestSent ? (
-          <div className="flex items-center gap-2 text-text-tertiary text-sm font-medium">
-            <X size={16} />
-            Đã gửi lời mời
+          <div className="flex items-center gap-2 text-text-tertiary text-sm font-medium bg-bg-secondary px-3 py-1.5 rounded-full">
+            <Check size={14} />
+            <span className="hidden sm:inline">Đã gửi</span>
           </div>
         ) : (
           <Button
@@ -81,8 +81,9 @@ export const SearchUserItem: React.FC<SearchUserItemProps> = ({
             onClick={handleSendRequest}
             disabled={isLoading}
             isLoading={isLoading}
+            className="shadow-sm active:scale-95"
           >
-            Kết bạn
+            <span className="hidden sm:inline">Kết bạn</span>
           </Button>
         )}
       </div>

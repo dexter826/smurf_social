@@ -97,10 +97,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-30 md:hidden" onClick={() => handleOpenChange(false)} />
+          <div className="fixed inset-0 z-30 md:hidden bg-black/20 backdrop-blur-[1px]" onClick={() => handleOpenChange(false)} />
           <div 
             className={`
-              absolute z-40 mt-1 min-w-[220px] py-1.5 bg-bg-primary border border-border-light rounded-xl shadow-dropdown transition-all animate-in fade-in zoom-in-95 duration-200
+              absolute z-40 mt-1 min-w-[220px] max-w-[calc(100vw-32px)] py-1.5 bg-bg-primary border border-border-light rounded-xl shadow-dropdown transition-all animate-in fade-in zoom-in-95 duration-200
               ${align === 'right' ? 'right-0' : 'left-0'}
             `}
             onClick={() => handleOpenChange(false)}

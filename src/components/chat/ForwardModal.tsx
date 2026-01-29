@@ -65,20 +65,20 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-col h-full min-h-0">
         {/* Search */}
-        <div className="relative">
+        <div className="flex-none relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
           <Input
             placeholder="Tìm kiếm người dùng hoặc nhóm..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-11"
+            className="pl-10 h-11 bg-bg-secondary"
           />
         </div>
 
         {/* Message Preview */}
-        <div className="p-3 bg-bg-secondary rounded-lg border border-border-light">
+        <div className="flex-none p-3 bg-bg-secondary rounded-lg border border-border-light mb-4">
           <p className="text-xs text-text-tertiary mb-1 font-medium">Nội dung chuyển tiếp:</p>
           <p className="text-sm text-text-primary line-clamp-2 italic">
             {message.type === 'text' ? message.content : `[${message.type}]`}
@@ -86,7 +86,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         </div>
 
         {/* List */}
-        <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto space-y-1 pr-2 -mr-2 custom-scrollbar min-h-0">
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv) => {
               const partner = conv.participants.find(p => p.id !== currentUserId);

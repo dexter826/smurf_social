@@ -61,15 +61,27 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
       />
 
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-2 z-50">
-          <EmojiPickerReact
-            onEmojiClick={handleEmojiClick}
-            autoFocusSearch={false}
-            theme={mode === 'dark' ? Theme.DARK : Theme.LIGHT}
-            lazyLoadEmojis={true}
-            searchPlaceholder="Tìm kiếm emoji..."
+        <>
+          {/* Mobile Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-[49] md:hidden" 
+            onClick={() => setIsOpen(false)}
           />
-        </div>
+          
+          <div className="fixed bottom-0 left-0 right-0 z-[50] flex justify-center p-4 md:p-0 md:absolute md:bottom-full md:right-0 md:mb-2 md:left-auto md:w-auto">
+            <div className="w-full max-w-[350px] md:w-auto shadow-2xl rounded-t-2xl md:rounded-lg overflow-hidden pb-safe md:pb-0 bg-bg-primary">
+              <EmojiPickerReact
+                onEmojiClick={handleEmojiClick}
+                autoFocusSearch={false}
+                theme={mode === 'dark' ? Theme.DARK : Theme.LIGHT}
+                lazyLoadEmojis={true}
+                searchPlaceholder="Tìm kiếm emoji..."
+                width="100%"
+                height={350}
+              />
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

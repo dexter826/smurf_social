@@ -131,32 +131,34 @@ export const PostModal: React.FC<PostModalProps> = ({
       onClose={onClose}
       title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
       maxWidth="2xl"
+      className="md:max-h-[85vh]"
       footer={
         <div className="w-full">
-          <div className="flex items-center justify-between mb-3 bg-bg-secondary p-3 rounded-xl border border-border-light">
-            <span className="text-sm font-semibold text-text-secondary">Thêm vào bài viết</span>
-            <div className="flex gap-1">
+          {/* Media Actions */}
+          <div className="flex items-center justify-between mb-3 bg-bg-secondary p-2.5 md:p-3 rounded-xl border border-border-light">
+            <span className="text-[13px] md:text-sm font-semibold text-text-secondary leading-none">Thêm vào bài viết</span>
+            <div className="flex gap-0.5 md:gap-1">
               <IconButton
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="group rounded-full"
+                className="group rounded-full w-9 h-9 md:w-10 md:h-10"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
-                icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={24} />}
-                size="lg"
+                icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
+                size="md"
               />
               <IconButton
                 type="button"
                 onClick={() => videoInputRef.current?.click()}
-                className="group rounded-full"
+                className="group rounded-full w-9 h-9 md:w-10 md:h-10"
                 title="Video"
                 disabled={isSubmitting || isUploading}
-                icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={24} />}
-                size="lg"
+                icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
+                size="md"
               />
               <div className="flex items-center">
                 <EmojiPicker
-                  buttonClassName="hover:bg-bg-hover rounded-full group"
+                  buttonClassName="hover:bg-bg-hover rounded-full group w-9 h-9 md:w-10 md:h-10 flex items-center justify-center"
                   onEmojiSelect={(emoji) => {
                     const start = textareaRef.current?.selectionStart || 0;
                     const end = textareaRef.current?.selectionEnd || 0;
@@ -168,8 +170,8 @@ export const PostModal: React.FC<PostModalProps> = ({
                     }, 0);
                   }}
                   disabled={isSubmitting || isUploading}
-                  size={24}
-                  buttonSize="lg"
+                  size={20}
+                  buttonSize="md"
                   iconClassName="text-yellow-500 group-hover:scale-110 transition-transform"
                 />
               </div>
@@ -181,9 +183,9 @@ export const PostModal: React.FC<PostModalProps> = ({
 
           <Button
             variant="primary"
-            className="w-full h-10 text-[15px] font-bold"
+            className="w-full h-10 md:h-11 text-[15px] font-bold shadow-sm"
             onClick={handleSubmit}
-            disabled={(!content.trim() && images.length === 0) || !isChanged || isSubmitting || isUploading}
+            disabled={(!content.trim() && images.length === 0 && videos.length === 0) || !isChanged || isSubmitting || isUploading}
             isLoading={isSubmitting}
           >
             {isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
@@ -191,74 +193,70 @@ export const PostModal: React.FC<PostModalProps> = ({
         </div>
       }
     >
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col h-full min-h-[150px] md:min-h-0">
+        <div className="flex items-center gap-3 mb-4 flex-none">
           <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="md" initialStatus={currentUser.status} />
           <div>
-            <h3 className="font-semibold text-text-primary mb-0.5">{currentUser.name}</h3>
+            <h3 className="font-semibold text-text-primary mb-0.5 text-sm md:text-base">{currentUser.name}</h3>
             <Select
               value={visibility}
-              onChange={(val) => setVisibility(val as any)}
+              onChange={(v) => setVisibility(v as any)}
               options={[
-                { value: 'friends', label: 'Bạn bè' },
-                { value: 'private', label: 'Chỉ mình tôi' }
+                { value: 'friends', label: 'Bạn bè', icon: <Users size={14} /> },
+                { value: 'private', label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
               ]}
-              className="w-28 h-8 text-xs"
-              disabled={isSubmitting}
+              variant="ghost"
+              size="sm"
+              className="px-0 py-0 h-auto font-medium text-text-secondary hover:bg-transparent"
             />
           </div>
         </div>
 
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder={isEdit ? "Bạn đang nghĩ gì thế?" : `${currentUser.name} ơi, bạn đang nghĩ gì thế?`}
-          className={`w-full min-h-[300px] p-4 text-text-primary placeholder-text-tertiary bg-bg-primary rounded-xl resize-none outline-none transition-all ${
-            content.length < 100 ? 'text-2xl font-medium' : 
-            content.length < 200 ? 'text-xl' : 
-            'text-[15px]'
-          }`}
-          disabled={isSubmitting}
-          autoFocus
-        />
+        <div className="flex-1 min-h-[120px] md:min-h-0 relative group">
+          <textarea
+            ref={textareaRef}
+            placeholder={`Bạn đang nghĩ gì, ${currentUser.name.split(' ').pop()}?`}
+            className="w-full h-full resize-none outline-none text-base md:text-lg bg-transparent text-text-primary placeholder:text-text-tertiary"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            disabled={isSubmitting}
+            autoFocus
+          />
+        </div>
 
         {(images.length > 0 || videos.length > 0) && (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {images.map((url, index) => (
-              <div key={`img-${index}`} className="relative group">
-                <img src={url} alt="Upload" className="w-full h-40 object-cover rounded-xl" />
-                <IconButton
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-black/50 text-white shadow-lg opacity-0 group-hover:opacity-100 rounded-full"
-                  disabled={isSubmitting}
-                  icon={<X size={16} />}
-                  size="sm"
-                />
+          <div className="grid grid-cols-2 gap-2 mt-4 flex-none">
+            {images.map((img, idx) => (
+              <div key={`img-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
+                <img src={img} alt="" className="w-full h-full object-cover" />
+                <button
+                  onClick={() => handleRemoveImage(idx)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                >
+                  <X size={16} />
+                </button>
               </div>
             ))}
-            {videos.map((url, index) => (
-              <div key={`vid-${index}`} className="relative group">
-                <video src={url} className="w-full h-40 object-cover rounded-xl" controls />
-                <IconButton
-                  onClick={() => handleRemoveVideo(index)}
-                  className="absolute top-2 right-2 bg-black/50 text-white shadow-lg opacity-0 group-hover:opacity-100 rounded-full"
-                  disabled={isSubmitting}
-                  icon={<X size={16} />}
-                  size="sm"
-                />
+            {videos.map((video, idx) => (
+              <div key={`vid-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
+                <video src={video} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                   <Video className="text-white/80" size={32} />
+                </div>
+                <button
+                  onClick={() => handleRemoveVideo(idx)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                >
+                  <X size={16} />
+                </button>
               </div>
             ))}
+            {isUploading && (
+              <div className="flex items-center justify-center aspect-square md:aspect-video bg-bg-secondary rounded-xl border border-border-light">
+                 <Loading size="md" />
+              </div>
+            )}
           </div>
-        )}
-
-        {isUploading && (
-          <Loading 
-            variant="inline" 
-            size="sm" 
-            text="Đang tải phương tiện..." 
-            className="py-4"
-          />
         )}
       </div>
     </Modal>

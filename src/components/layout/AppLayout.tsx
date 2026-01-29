@@ -62,13 +62,14 @@ export const AppLayout: React.FC = () => {
   };
 
   const navItems = [
-    { to: '/', icon: <MessageCircle size={28} />, label: 'Tin nhắn' },
-    { to: '/contacts', icon: <Users size={28} />, label: 'Danh bạ' },
-    { to: '/feed', icon: <LayoutGrid size={28} />, label: 'Nhật ký' },
+    { to: '/', Icon: MessageCircle, label: 'Tin nhắn' },
+    { to: '/contacts', Icon: Users, label: 'Danh bạ' },
+    { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
   ];
 
   return (
-    <div className="flex h-screen w-full bg-bg-secondary overflow-hidden transition-theme">
+    <div className="flex h-[100dvh] w-full bg-bg-secondary overflow-hidden transition-theme">
+      {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md border-r border-border-sidebar transition-theme">
         <div className="mb-8" onClick={() => navigate('/profile')}>
           {user && (
@@ -97,7 +98,7 @@ export const AppLayout: React.FC = () => {
               title={item.label}
             >
               <div className="relative">
-                {item.icon}
+                <item.Icon size={28} />
                 {item.to === '/' && totalUnread > 0 && (
                   <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-sidebar-bg" />
                 )}
@@ -107,7 +108,7 @@ export const AppLayout: React.FC = () => {
               </div>
             </NavLink>
           ))}
-          <div className="mt-2">
+          <div className="mt-2 text-sidebar-item hover:text-white transition-colors">
             <NotificationDropdown />
           </div>
         </nav>
@@ -143,28 +144,30 @@ export const AppLayout: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 relative flex flex-col h-full overflow-hidden transition-theme">
+      {/* Main Content */}
+      <main className="flex-1 relative flex flex-col h-full overflow-hidden transition-theme pb-[60px] md:pb-0">
         <Outlet />
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-sm">
+      {/* Mobile Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? 'text-primary' : 'text-text-tertiary'
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
+                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`
             }
           >
             <div className="relative">
-              {item.icon}
+              <item.Icon size={24} />
               {item.to === '/' && totalUnread > 0 && (
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full ring-1 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
               )}
               {item.to === '/contacts' && hasNewRequests && (
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full ring-1 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
               )}
             </div>
             <span className="text-[10px] font-medium">{item.label}</span>
@@ -175,24 +178,25 @@ export const AppLayout: React.FC = () => {
         <NavLink
             to="/notifications"
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? 'text-primary' : 'text-text-tertiary'
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
+                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`
             }
           >
             <div className="relative">
               <Bell size={24} />
               {useNotificationStore.getState().unreadCount > 0 && (
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full ring-1 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
               )}
             </div>
             <span className="text-[10px] font-medium">Thông báo</span>
           </NavLink>
+          
          <NavLink
             to="/profile"
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? 'text-primary' : 'text-text-tertiary'
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
+                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`
             }
           >

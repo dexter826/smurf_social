@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { User, UserStatus } from '../../types';
 import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
@@ -33,6 +34,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onCoverDelete,
   uploading = false
 }) => {
+  const navigate = useNavigate();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarCameraRef = useRef<HTMLInputElement>(null);
@@ -222,24 +224,38 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
               
               {/* Stats */}
-              <div className="flex items-center gap-6 mt-2 text-sm text-text-secondary">
-                <div className="flex items-center gap-1.5 bg-bg-secondary px-3 py-1 rounded-full border border-divider">
-                  <FileText size={14} className="text-primary-500" />
+              <div className="flex items-center flex-wrap gap-2 md:gap-4 mt-3 text-sm text-text-secondary">
+                <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-1.5 rounded-lg border border-border-light">
+                  <FileText size={16} className="text-primary" />
                   <span><strong className="text-text-primary">{stats.postCount}</strong> bài viết</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-1.5 rounded-lg border border-border-light">
+                  <Users size={16} className="text-primary" />
+                  <span><strong className="text-text-primary">{stats.friendCount}</strong> bạn bè</span>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2 md:mb-2">
               {isOwnProfile ? (
-                <Button 
-                  variant="secondary" 
-                  onClick={onEditClick} 
-                  icon={<Edit size={18} />}
-                  className="border-border-medium text-text-primary hover:bg-bg-hover"
-                >
-                  Chỉnh sửa thông tin
-                </Button>
+                <>
+                  <Button 
+                    variant="secondary" 
+                    onClick={onEditClick} 
+                    icon={<Edit size={18} />}
+                    className="flex-1 md:flex-none border-border-medium text-text-primary hover:bg-bg-hover"
+                  >
+                    Chỉnh sửa
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate('/settings')}
+                    icon={<Settings size={18} />}
+                    className="md:hidden border-border-medium text-text-primary hover:bg-bg-hover"
+                  >
+                    Cài đặt
+                  </Button>
+                </>
               ) : (
                 <>
                   {isFriend ? (

@@ -242,3 +242,18 @@ input::-ms-clear {
 .center-flex {
   @apply flex items-center justify-center;
 }
+
+/* === Mobile Safe Area === */
+.pb-safe {
+  padding-bottom: constant(safe-area-inset-bottom);
+  /* iOS 11.0 */
+  padding-bottom: env(safe-area-inset-bottom);
+  /* iOS 11.2+ */
+}
+
+/* === Dynamic Viewport Height === */
+@supports (height: 100dvh) {
+  body {
+    height: 100dvh;
+  }
+}

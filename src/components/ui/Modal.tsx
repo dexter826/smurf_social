@@ -62,14 +62,15 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 overflow-hidden">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-4 overflow-hidden">
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
         onClick={onClose}
       />
       
       <div className={`
-        relative bg-bg-primary w-full rounded-2xl shadow-2xl transition-theme overflow-hidden flex flex-col animate-in zoom-in-95 duration-200
+        relative bg-bg-primary w-full md:rounded-2xl shadow-2xl transition-theme overflow-hidden flex flex-col justify-between md:justify-start 
+        h-full md:h-auto md:max-h-[90vh] rounded-none animate-in slide-in-from-bottom md:zoom-in-95 duration-200
         ${maxWidthClasses[maxWidth]} ${className}
       `}>
         {/* Header */}
@@ -89,13 +90,13 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Body */}
-        <div className={`overflow-y-auto max-h-[90vh] ${paddingClasses[padding]}`}>
+        <div className={`overflow-y-auto flex-1 md:flex-none ${paddingClasses[padding]}`}>
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="p-4 border-t border-border-light bg-bg-secondary/30 flex justify-end gap-3">
+          <div className="p-4 border-t border-border-light bg-bg-secondary/30 flex justify-end gap-3 pb-safe md:pb-4">
             {footer}
           </div>
         )}
