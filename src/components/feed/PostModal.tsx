@@ -130,7 +130,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
-      maxWidth="lg"
+      maxWidth="2xl"
       footer={
         <div className="w-full">
           <div className="flex items-center justify-between mb-3 bg-bg-secondary p-3 rounded-xl border border-border-light">
@@ -142,7 +142,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 className="group rounded-full"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
-                icon={<ImageIcon className="text-success group-hover:scale-110 transition-transform" size={24} />}
+                icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={24} />}
                 size="lg"
               />
               <IconButton
@@ -151,7 +151,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 className="group rounded-full"
                 title="Video"
                 disabled={isSubmitting || isUploading}
-                icon={<Video className="text-info group-hover:scale-110 transition-transform" size={24} />}
+                icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={24} />}
                 size="lg"
               />
               <div className="flex items-center">
@@ -168,6 +168,9 @@ export const PostModal: React.FC<PostModalProps> = ({
                     }, 0);
                   }}
                   disabled={isSubmitting || isUploading}
+                  size={24}
+                  buttonSize="lg"
+                  iconClassName="text-yellow-500 group-hover:scale-110 transition-transform"
                 />
               </div>
             </div>
@@ -200,7 +203,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 { value: 'friends', label: 'Bạn bè' },
                 { value: 'private', label: 'Chỉ mình tôi' }
               ]}
-              className="w-32"
+              className="w-28 h-8 text-xs"
               disabled={isSubmitting}
             />
           </div>
@@ -211,7 +214,11 @@ export const PostModal: React.FC<PostModalProps> = ({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={isEdit ? "Bạn đang nghĩ gì thế?" : `${currentUser.name} ơi, bạn đang nghĩ gì thế?`}
-          className="w-full min-h-[120px] p-4 text-[18px] text-text-primary placeholder-text-tertiary bg-bg-primary border border-border-light rounded-xl resize-none outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+          className={`w-full min-h-[300px] p-4 text-text-primary placeholder-text-tertiary bg-bg-primary rounded-xl resize-none outline-none transition-all ${
+            content.length < 100 ? 'text-2xl font-medium' : 
+            content.length < 200 ? 'text-xl' : 
+            'text-[15px]'
+          }`}
           disabled={isSubmitting}
           autoFocus
         />

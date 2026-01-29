@@ -10,6 +10,8 @@ interface EmojiPickerProps {
   buttonClassName?: string;
   disabled?: boolean;
   size?: number;
+  buttonSize?: 'sm' | 'md' | 'lg';
+  iconClassName?: string;
 }
 
 export const EmojiPicker: React.FC<EmojiPickerProps> = ({ 
@@ -17,7 +19,9 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   className = '',
   buttonClassName = '',
   disabled = false,
-  size = 16
+  size = 16,
+  buttonSize = 'sm',
+  iconClassName = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,8 +56,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         disabled={disabled}
         className={buttonClassName}
         title="Emoji"
-        icon={<Smile size={size} />}
-        size="sm"
+        icon={<Smile size={size} className={iconClassName} />}
+        size={buttonSize}
       />
 
       {isOpen && (
