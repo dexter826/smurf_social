@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button } from '../ui';
 import { Post, User, UserStatus } from '../../types';
-import { CommentSection } from './CommentSection';
+
 
 interface PostItemProps {
   post: Post;
@@ -26,7 +26,6 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   onDelete,
   onViewDetail
 }) => {
-  const [showComments, setShowComments] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
 
   const isLiked = post.likes.includes(currentUser.id);
@@ -98,8 +97,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
       {/* Content */}
       <div 
-        className="px-4 pb-3 cursor-pointer hover:bg-bg-secondary/50 transition-colors"
-        onClick={() => onViewDetail?.(post)}
+        className="px-4 pb-3"
       >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
           {post.content}
@@ -130,9 +128,8 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
               <img
                 src={currentMedia.url}
                 alt="Post content"
-                className="w-full h-auto max-h-[600px] object-contain cursor-pointer"
+                className="w-full h-auto max-h-[600px] object-contain"
                 loading="lazy"
-                onClick={() => onViewDetail?.(post)}
               />
             );
           })()}
@@ -190,7 +187,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowComments(!showComments)}
+              onClick={() => onViewDetail?.(post)}
               className="hover:underline hover:!bg-transparent text-text-secondary"
             >
               {post.commentCount} bình luận
@@ -213,22 +210,15 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         </Button>
         <Button
           variant="ghost"
-          onClick={() => setShowComments(!showComments)}
-          className={`flex-1 ${
-            showComments ? 'text-primary bg-primary-light' : 'text-text-secondary'
-          }`}
+          onClick={() => onViewDetail?.(post)}
+          className="flex-1 text-text-secondary hover:text-primary hover:bg-bg-secondary"
           icon={<MessageCircle size={20} />}
         >
           <span className="text-sm font-medium">Bình luận</span>
         </Button>
       </div>
 
-      {showComments && (
-        <CommentSection
-          postId={post.id}
-          currentUser={currentUser}
-        />
-      )}
+
     </div>
   );
 };
