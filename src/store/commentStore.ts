@@ -85,8 +85,16 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const commentId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, videoUrl);
       
-      // Làm mới danh sách sau khi thêm
       if (parentId) {
+        const updatedRoot = (get().rootComments[postId] || []).map(c => 
+          c.id === parentId 
+            ? { ...c, replyCount: (c.replyCount || 0) + 1 } 
+            : c
+        );
+        set(state => ({
+          rootComments: { ...state.rootComments, [postId]: updatedRoot }
+        }));
+
         await get().fetchReplies(postId, parentId);
       } else {
         await get().fetchRootComments(postId);

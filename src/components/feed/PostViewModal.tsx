@@ -208,6 +208,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             postId={post.id}
             currentUser={currentUser}
             variant="cinema"
+            autoFocus={true}
             className="flex-1 overflow-y-auto scroll-hide"
             header={
               <div className="flex flex-col">
