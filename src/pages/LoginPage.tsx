@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { Button, Input } from '../components/ui';
 import { toast } from '../store/toastStore';
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
-import { UI_MESSAGES } from '../constants/uiMessages';
+
 
 const LoginPage: React.FC = () => {
   const { login, register, resetPassword, isLoading } = useAuthStore();
@@ -23,15 +23,15 @@ const LoginPage: React.FC = () => {
     }
 
     if (!formData.email) {
-      newErrors.email = UI_MESSAGES.AUTH.EMAIL_REQUIRED;
+      newErrors.email = 'Vui lòng nhập email';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = UI_MESSAGES.AUTH.EMAIL_INVALID;
+      newErrors.email = 'Email không hợp lệ';
     }
 
     if (!formData.password) {
-      newErrors.password = UI_MESSAGES.AUTH.PASSWORD_REQUIRED;
+      newErrors.password = 'Vui lòng nhập mật khẩu';
     } else if (formData.password.length < 6) {
-      newErrors.password = UI_MESSAGES.AUTH.PASSWORD_MIN_LENGTH;
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
 
 
@@ -101,7 +101,7 @@ const LoginPage: React.FC = () => {
       toast.success('Đã gửi email khôi phục!');
     } catch (error: any) {
       let message = "Không tìm thấy email hoặc có lỗi xảy ra.";
-      if (error.code === 'auth/invalid-email') message = UI_MESSAGES.AUTH.EMAIL_INVALID;
+      if (error.code === 'auth/invalid-email') message = 'Email không hợp lệ';
       if (error.code === 'auth/user-not-found') message = "Email này chưa được đăng ký.";
       
       toast.error(message);
@@ -138,7 +138,7 @@ const LoginPage: React.FC = () => {
                 activeTab === 'login' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
-              {UI_MESSAGES.AUTH.LOGIN}
+              'Đăng nhập'
             </Button>
             <Button
               variant="ghost"
@@ -147,7 +147,7 @@ const LoginPage: React.FC = () => {
                 activeTab === 'register' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
-              {UI_MESSAGES.AUTH.REGISTER}
+              'Đăng ký'
             </Button>
             
             {/* Animated Indicator */}
@@ -276,7 +276,7 @@ const LoginPage: React.FC = () => {
                 className="w-full h-10 text-sm font-bold shadow-md hover:shadow-lg transition-all mt-2"
                 disabled={isLoading}
               >
-                {isLoading ? UI_MESSAGES.COMMON.PROCESSING : (activeTab === 'login' ? UI_MESSAGES.AUTH.LOGIN : UI_MESSAGES.AUTH.REGISTER)}
+                {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký')}
               </Button>
 
               {activeTab === 'login' && (

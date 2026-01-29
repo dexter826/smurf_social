@@ -3,7 +3,7 @@ import { User } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 import { API_ENDPOINTS } from '../../constants/api';
-import { UI_MESSAGES } from '../../constants/uiMessages';
+
 
 interface EditProfileModalProps {
   user: User;
@@ -75,10 +75,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setSaving(true);
     try {
       await onSave(formData);
-      toast.success(UI_MESSAGES.PROFILE.UPDATE_SUCCESS);
+      toast.success('Cập nhật thông tin thành công!');
       onClose();
     } catch (error) {
-      toast.error(UI_MESSAGES.PROFILE.UPDATE_ERROR);
+      toast.error('Không thể cập nhật thông tin');
     } finally {
       setSaving(false);
     }
@@ -88,19 +88,19 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={UI_MESSAGES.PROFILE.EDIT_TITLE}
+      title="Chỉnh sửa trang cá nhân"
       maxWidth="2xl"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>
-            {UI_MESSAGES.COMMON.CANCEL}
+            Hủy
           </Button>
           <Button 
             variant="primary" 
             onClick={handleSave} 
             disabled={saving || !isChanged()}
           >
-            {saving ? UI_MESSAGES.COMMON.SAVING : UI_MESSAGES.COMMON.SAVE}
+            {saving ? 'Đang lưu...' : 'Lưu'}
           </Button>
         </>
       }
