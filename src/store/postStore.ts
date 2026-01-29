@@ -136,8 +136,8 @@ export const usePostStore = create<PostState>()(
 
     const isLiked = post.likes.includes(userId);
 
-    set((state) => ({
-      posts: state.posts.map(p =>
+    set((state) => {
+      const updatedPosts = state.posts.map(p =>
         p.id === postId
           ? {
               ...p,
@@ -146,15 +146,29 @@ export const usePostStore = create<PostState>()(
                 : [...p.likes, userId]
             }
           : p
-      )
-    }));
+      );
+      
+      const updatedSelectedPost = state.selectedPost?.id === postId
+        ? {
+            ...state.selectedPost,
+            likes: isLiked
+              ? state.selectedPost.likes.filter(id => id !== userId)
+              : [...state.selectedPost.likes, userId]
+          }
+        : state.selectedPost;
+
+      return {
+        posts: updatedPosts,
+        selectedPost: updatedSelectedPost
+      };
+    });
 
     try {
       await postService.likePost(postId, userId, isLiked);
     } catch (error) {
       console.error("Lỗi thích bài viết:", error);
-      set((state) => ({
-        posts: state.posts.map(p =>
+      set((state) => {
+        const rolledBackPosts = state.posts.map(p =>
           p.id === postId
             ? {
                 ...p,
@@ -163,8 +177,22 @@ export const usePostStore = create<PostState>()(
                   : p.likes.filter(id => id !== userId)
               }
             : p
-        )
-      }));
+        );
+
+        const rolledBackSelectedPost = state.selectedPost?.id === postId
+          ? {
+              ...state.selectedPost,
+              likes: isLiked
+                ? [...state.selectedPost.likes, userId]
+                : state.selectedPost.likes.filter(id => id !== userId)
+            }
+          : state.selectedPost;
+
+        return {
+          posts: rolledBackPosts,
+          selectedPost: rolledBackSelectedPost
+        };
+      });
     }
   },
 
