@@ -114,19 +114,20 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-primary-light p-4 transition-theme selection:bg-primary-light selection:text-primary">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-slate-50 p-4 transition-theme selection:bg-primary-light selection:text-primary">
       <div className="w-full max-w-[400px] bg-bg-primary rounded-2xl shadow-dropdown overflow-hidden transition-all ring-1 ring-black/5">
-        <div className="bg-primary p-8 text-center pattern-bg">
-          <div className="mx-auto w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-3 backdrop-blur-sm">
-             <User className="text-white" size={24} />
-          </div>
-          <h1 className="text-2xl font-bold text-text-on-primary mb-2">Smurfy</h1>
-          <p className="text-text-on-primary/90 text-sm font-medium leading-relaxed">
-            {activeTab === 'forgot' 
-              ? 'Nhập email để lấy lại mật khẩu'
-              : 'Kết nối và chia sẻ mọi khoảnh khắc'
-            }
-          </p>
+        <div className="bg-bg-primary p-10 text-center relative">
+          <img 
+             src="/logo.svg" 
+             alt="Smurfy Logo" 
+             className="mx-auto w-20 h-20 drop-shadow-sm mb-4" 
+          />
+          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Smurfy</h1>
+          {activeTab === 'forgot' && (
+            <p className="text-text-tertiary text-sm font-medium mt-2">
+              Nhập email để lấy lại mật khẩu
+            </p>
+          )}
         </div>
 
         {activeTab !== 'forgot' && (
@@ -138,7 +139,7 @@ const LoginPage: React.FC = () => {
                 activeTab === 'login' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
-              'Đăng nhập'
+              Đăng nhập
             </Button>
             <Button
               variant="ghost"
@@ -147,7 +148,7 @@ const LoginPage: React.FC = () => {
                 activeTab === 'register' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
-              'Đăng ký'
+              Đăng ký
             </Button>
             
             {/* Animated Indicator */}
