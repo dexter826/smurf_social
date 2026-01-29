@@ -256,9 +256,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     return (
       <div className={`
         transition-all duration-300 animate-in slide-in-from-top-2 z-20
-        ${!isInline ? 'pb-[calc(12px+env(safe-area-inset-bottom))]' : ''}
-        ${variant === 'cinema' && !isInline ? 'p-3 md:p-4 bg-bg-primary/95 backdrop-blur-md border-t border-border-light sticky bottom-0 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 
-          !isInline ? 'p-3 md:p-4 bg-bg-primary border-t border-border-light' : 'mt-3 pl-2'}
+        ${!isInline ? 'pb-[calc(16px+env(safe-area-inset-bottom))]' : ''}
+        ${variant === 'cinema' && !isInline ? 'p-4 md:p-5 pb-6 md:pb-6 bg-bg-primary/95 backdrop-blur-md border-t border-border-light sticky bottom-0 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 
+          !isInline ? 'p-4 md:p-5 bg-bg-primary border-t border-border-light' : 'mt-3 pl-2'}
       `}>
         {(isReplyingNow || (isRootInput && replyingTo)) && (
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-primary/5 rounded-xl text-[11px] text-primary border border-primary/10 backdrop-blur-sm">

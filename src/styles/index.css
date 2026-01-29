@@ -24,7 +24,8 @@
   --bg-chat: #ffffff;
   --bg-message-sent: #0068ff;
   --bg-message-received: #e9ebef;
-  --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-overlay: rgba(15, 23, 42, 0.45);
+  /* Màu Slate đậm hơn nhưng trong suốt hơn */
 
   /* === Text Colors === */
   --text-primary: #081c36;
@@ -79,15 +80,18 @@
   --sidebar-item-active: rgba(248, 250, 252, 0.12);
 
   /* === Background Colors === */
-  --bg-primary: #0b0e14;
-  --bg-secondary: #14181f;
+  --bg-primary: #12161f;
+  /* Làm sáng hơn một chút từ #0b0e14 */
+  --bg-secondary: #1a1f29;
+  /* Làm sáng hơn một chút từ #14181f */
   --bg-tertiary: #1e242d;
   --bg-hover: #1e2530;
   --bg-active: #28303d;
   --bg-chat: #0b0e14;
   --bg-message-sent: #3b82f6;
   --bg-message-received: #1e242d;
-  --bg-overlay: rgba(0, 0, 0, 0.75);
+  --bg-overlay: rgba(0, 0, 0, 0.85);
+  /* Tăng độ mờ một chút ở dark mode */
 
   /* === Text Colors === */
   --text-primary: #f8fafc;

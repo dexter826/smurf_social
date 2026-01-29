@@ -100,63 +100,78 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
       {/* Media (Images & Videos) */}
       {((post.images && post.images.length > 0) || (post.videos && post.videos.length > 0)) && (
-        <div className="bg-bg-secondary relative">
+        <div className="bg-bg-secondary relative select-none overflow-hidden">
           {(() => {
             const allMedia = [
               ...(post.images || []).map(url => ({ url, type: 'image' })),
               ...(post.videos || []).map(url => ({ url, type: 'video' }))
             ];
-            const currentMedia = allMedia[mediaIndex];
-
-            if (currentMedia.type === 'video') {
+            
+            const count = allMedia.length;
+            
+            // Layout đặc biệt cho nhiều ảnh giống Facebook/Instagram
+            if (count === 1) {
+              const item = allMedia[0];
               return (
-                <video
-                  src={currentMedia.url}
-                  controls
-                  className="w-full h-auto max-h-[500px] md:max-h-[600px] bg-black aspect-video object-contain"
-                />
+                <div 
+                  className="relative group cursor-pointer bg-black/5 flex items-center justify-center overflow-hidden max-h-[600px]"
+                  onClick={() => onViewDetail?.(post)}
+                >
+                  {/* Blurred Background for Premium Feel */}
+                  <div 
+                    className="absolute inset-0 scale-110 blur-2xl opacity-30 grayscale pointer-events-none"
+                    style={{ backgroundImage: `url(${item.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                  />
+                  {item.type === 'video' ? (
+                    <video src={item.url} controls className="relative z-10 w-full h-auto max-h-[600px] object-contain" />
+                  ) : (
+                    <img src={item.url} alt="" className="relative z-10 w-full h-auto max-h-[600px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
+                  )}
+                </div>
               );
             }
 
+            // Grid Layout cho 2 ảnh trở lên
             return (
-              <img
-                src={currentMedia.url}
-                alt="Post content"
-                className="w-full h-auto max-h-[500px] md:max-h-[600px] object-contain bg-bg-secondary"
-                loading="lazy"
-              />
-            );
-          })()}
-
-          {/* Điều hướng media */}
-          {(() => {
-            const totalMedia = (post.images?.length || 0) + (post.videos?.length || 0);
-            if (totalMedia <= 1) return null;
-
-            return (
-              <>
-                <div className="absolute bottom-4 right-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm z-10">
-                  {mediaIndex + 1} / {totalMedia}
-                </div>
-                <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-                  {mediaIndex > 0 && (
-                    <IconButton
-                      onClick={() => setMediaIndex(mediaIndex - 1)}
-                      className="bg-bg-primary/80 hover:bg-bg-primary shadow-dropdown pointer-events-auto"
-                      icon={<ChevronLeft size={20} />}
-                      size="md"
-                    />
-                  )}
-                  {mediaIndex < totalMedia - 1 && (
-                    <IconButton
-                      onClick={() => setMediaIndex(mediaIndex + 1)}
-                      className="bg-bg-primary/80 hover:bg-bg-primary shadow-dropdown ml-auto pointer-events-auto"
-                      icon={<ChevronRight size={20} />}
-                      size="md"
-                    />
-                  )}
-                </div>
-              </>
+              <div 
+                className={`grid gap-0.5 aspect-[4/3] sm:aspect-video cursor-pointer ${
+                  count === 2 ? 'grid-cols-2' : 
+                  count === 3 ? 'grid-cols-2 grid-rows-2' : 
+                  'grid-cols-2 grid-rows-2'
+                }`}
+                onClick={() => onViewDetail?.(post)}
+              >
+                {allMedia.slice(0, 4).map((item, idx) => {
+                  // Logic span cho layout 3 ảnh
+                  const isLarge = count === 3 && idx === 0;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`relative overflow-hidden bg-bg-tertiary ${isLarge ? 'row-span-2' : ''}`}
+                    >
+                      {item.type === 'video' ? (
+                        <video src={item.url} className="w-full h-full object-cover" />
+                      ) : (
+                        <img src={item.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      )}
+                      
+                      {/* Overlay cho ảnh cuối nếu còn ảnh nữa */}
+                      {idx === 3 && count > 4 && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white text-2xl font-bold">+{count - 4}</span>
+                        </div>
+                      )}
+                      
+                      {/* Video Icon Indicator */}
+                      {item.type === 'video' && (
+                        <div className="absolute top-2 right-2 p-1 bg-black/20 backdrop-blur-md rounded-full text-white">
+                          <IconButton icon={<ChevronRight size={16} fill="white" />} size="sm" className="!bg-transparent" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             );
           })()}
         </div>
