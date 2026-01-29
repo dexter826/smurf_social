@@ -13,7 +13,8 @@ import {
   arrayRemove,
   Timestamp,
   addDoc,
-  onSnapshot
+  onSnapshot,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { FriendRequest, FriendRequestStatus, User, NotificationType } from '../types';
@@ -141,21 +142,25 @@ export const friendService = {
 
   acceptFriendRequest: async (requestId: string, userId: string, friendId: string): Promise<void> => {
     try {
+      const batch = writeBatch(db);
+      
       const requestRef = doc(db, 'friendRequests', requestId);
-      await updateDoc(requestRef, {
+      batch.update(requestRef, {
         status: FriendRequestStatus.ACCEPTED,
         updatedAt: Timestamp.now()
       });
 
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
+      batch.update(userRef, {
         friendIds: arrayUnion(friendId)
       });
 
       const friendRef = doc(db, 'users', friendId);
-      await updateDoc(friendRef, {
+      batch.update(friendRef, {
         friendIds: arrayUnion(userId)
       });
+
+      await batch.commit();
 
       // Gửi thông báo chấp nhận kết bạn
       await notificationService.createNotification({
@@ -194,15 +199,19 @@ export const friendService = {
 
   unfriend: async (userId: string, friendId: string): Promise<void> => {
     try {
+      const batch = writeBatch(db);
+      
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
+      batch.update(userRef, {
         friendIds: arrayRemove(friendId)
       });
 
       const friendRef = doc(db, 'users', friendId);
-      await updateDoc(friendRef, {
+      batch.update(friendRef, {
         friendIds: arrayRemove(userId)
       });
+
+      await batch.commit();
     } catch (error) {
       console.error("Lỗi hủy kết bạn", error);
       throw error;
