@@ -11,8 +11,11 @@ interface ChatState {
   conversations: Conversation[];
   selectedConversationId: string | null;
   messages: Record<string, Message[]>;
+  lastMessageDocs: Record<string, any>;
+  hasMoreMessages: Record<string, boolean>;
   typingUsers: Record<string, string[]>;
   isLoading: boolean;
+  isLoadingMore: Record<string, boolean>;
   searchTerm: string;
   isSearchFocused: boolean;
   searchResults: {
@@ -37,6 +40,7 @@ interface ChatState {
   clearSearchHistory: () => void;
 
   subscribeToMessages: (conversationId: string) => () => void;
+  loadMoreMessages: (conversationId: string) => Promise<void>;
   sendTextMessage: (conversationId: string, senderId: string, content: string, mentions?: string[]) => Promise<void>;
   sendImageMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
   sendFileMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
@@ -74,8 +78,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   selectedConversationId: null,
   messages: {},
+  lastMessageDocs: {},
+  hasMoreMessages: {},
   typingUsers: {},
   isLoading: false,
+  isLoadingMore: {},
   searchTerm: '',
   isSearchFocused: false,
   searchResults: {
@@ -282,18 +289,66 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ searchHistory: [] });
   },
 
-  // Đăng ký cập nhật tin nhắn trong hội thoại
+  // Đăng ký nhận tin nhắn thời gian thực trong hội thoại
   subscribeToMessages: (conversationId: string) => {
-    const unsubscribe = chatService.subscribeToMessages(conversationId, (messages) => {
+    const LIMIT_PER_PAGE = 20;
+    
+    const unsubscribe = chatService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
       set((state) => ({
         messages: {
           ...state.messages,
           [conversationId]: messages
+        },
+        lastMessageDocs: {
+          ...state.lastMessageDocs,
+          [conversationId]: lastDoc
+        },
+        hasMoreMessages: {
+          ...state.hasMoreMessages,
+          [conversationId]: messages.length >= LIMIT_PER_PAGE
         }
       }));
     });
 
     return unsubscribe;
+  },
+
+  // Tải thêm tin nhắn cũ
+  loadMoreMessages: async (conversationId: string) => {
+    const { lastMessageDocs, messages, isLoadingMore, hasMoreMessages } = get();
+    const lastDoc = lastMessageDocs[conversationId];
+    
+    if (!lastDoc || isLoadingMore[conversationId] || hasMoreMessages[conversationId] === false) return;
+
+    set((state) => ({
+      isLoadingMore: { ...state.isLoadingMore, [conversationId]: true }
+    }));
+
+    try {
+      const LIMIT_PER_PAGE = 20;
+      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE);
+      
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [conversationId]: [...result.messages, ...(state.messages[conversationId] || [])]
+        },
+        lastMessageDocs: {
+          ...state.lastMessageDocs,
+          [conversationId]: result.lastDoc
+        },
+        hasMoreMessages: {
+          ...state.hasMoreMessages,
+          [conversationId]: result.messages.length >= LIMIT_PER_PAGE
+        },
+        isLoadingMore: { ...state.isLoadingMore, [conversationId]: false }
+      }));
+    } catch (error) {
+      console.error("Lỗi tải thêm tin nhắn:", error);
+      set((state) => ({
+        isLoadingMore: { ...state.isLoadingMore, [conversationId]: false }
+      }));
+    }
   },
 
   sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[]) => {

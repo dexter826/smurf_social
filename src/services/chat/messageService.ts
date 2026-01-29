@@ -1,88 +1,140 @@
-import { 
-  collection, 
-  addDoc, 
+import {
+  collection,
+  addDoc,
   getDocs,
-  getDoc, 
-  query, 
-  where, 
-  orderBy, 
-  doc, 
-  updateDoc, 
+  getDoc,
+  query,
+  where,
+  orderBy,
+  doc,
+  updateDoc,
   serverTimestamp,
   onSnapshot,
   writeBatch,
   arrayUnion,
-  arrayRemove
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../firebase/config';
-import { Message, MessageType } from '../../types';
-import { TIME_LIMITS } from '../../constants';
+  arrayRemove,
+  limit,
+  startAfter
+} from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../../firebase/config";
+import { Message, MessageType } from "../../types";
+import { TIME_LIMITS } from "../../constants";
 
 export const messageService = {
-  // Đăng ký nhận tin nhắn thời gian thực
-  subscribeToMessages: (conversationId: string, callback: (messages: Message[]) => void) => {
+  // Đăng ký nhận tin nhắn thời gian thực với giới hạn số lượng
+  subscribeToMessages: (
+    conversationId: string,
+    limitCount: number,
+    callback: (messages: Message[], lastDoc: any) => void,
+  ) => {
     const q = query(
-      collection(db, 'messages'),
-      where('conversationId', '==', conversationId),
-      orderBy('timestamp', 'asc')
+      collection(db, "messages"),
+      where("conversationId", "==", conversationId),
+      orderBy("timestamp", "desc"),
+      limit(limitCount),
     );
 
-    return onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          timestamp: data.timestamp?.toDate() || new Date(),
-          deliveredAt: data.deliveredAt?.toDate(),
-          // Đảm bảo các mảng dữ liệu luôn tồn tại
-          readBy: data.readBy || [],
-          deliveredTo: data.deliveredTo || [],
-          mentions: data.mentions || []
-        };
-      }) as Message[];
-      
-      callback(messages);
-    }, (error) => {
-      console.error("Lỗi subscribe messages", error);
-    });
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const messages = snapshot.docs
+          .map((doc) => {
+            const data = doc.data();
+            return {
+              ...data,
+              id: doc.id,
+              timestamp: data.timestamp?.toDate() || new Date(),
+              deliveredAt: data.deliveredAt?.toDate(),
+              readBy: data.readBy || [],
+              deliveredTo: data.deliveredTo || [],
+              mentions: data.mentions || [],
+            };
+          })
+          .reverse() as Message[]; // Reverse để hiển thị đúng thứ tự thời gian
+
+        const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+        callback(messages, lastDoc);
+      },
+      (error) => {
+        console.error("Lỗi subscribe messages", error);
+      },
+    );
+  },
+
+  // Lấy thêm tin nhắn cũ (Phân trang)
+  getMoreMessages: async (
+    conversationId: string,
+    lastVisibleDoc: any,
+    limitCount: number,
+  ): Promise<{ messages: Message[]; lastDoc: any }> => {
+    try {
+      const q = query(
+        collection(db, "messages"),
+        where("conversationId", "==", conversationId),
+        orderBy("timestamp", "desc"),
+        startAfter(lastVisibleDoc),
+        limit(limitCount),
+      );
+
+      const snapshot = await getDocs(q);
+      const messages = snapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            timestamp: data.timestamp?.toDate() || new Date(),
+            deliveredAt: data.deliveredAt?.toDate(),
+            readBy: data.readBy || [],
+            deliveredTo: data.deliveredTo || [],
+            mentions: data.mentions || [],
+          };
+        })
+        .reverse() as Message[];
+
+      const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      return { messages, lastDoc };
+    } catch (error) {
+      console.error("Lỗi lấy thêm tin nhắn", error);
+      throw error;
+    }
   },
 
   // Gửi tin nhắn văn bản kèm tag người dùng
   sendTextMessage: async (
-    conversationId: string, 
-    senderId: string, 
+    conversationId: string,
+    senderId: string,
     content: string,
     replyToId?: string,
     isForwarded?: boolean,
-    mentions?: string[]
+    mentions?: string[],
   ): Promise<void> => {
     try {
       const messageData: any = {
         conversationId,
         senderId,
         content,
-        type: 'text' as MessageType,
+        type: "text" as MessageType,
         timestamp: serverTimestamp(),
         readBy: [senderId],
         deliveredTo: [senderId],
         deliveredAt: serverTimestamp(),
-        mentions: mentions || []
+        mentions: mentions || [],
       };
 
       if (replyToId) messageData.replyToId = replyToId;
       if (isForwarded) messageData.isForwarded = isForwarded;
 
-      const docRef = await addDoc(collection(db, 'messages'), messageData);
+      const docRef = await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationRef = doc(db, "conversations", conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const participantIds = conversationSnap.data().participantIds || [];
         const unreadCount = conversationSnap.data().unreadCount || {};
-        
+
         // Cập nhật số tin chưa đọc cho các thành viên khác
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
@@ -94,10 +146,10 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            id: docRef.id
+            id: docRef.id,
           },
           unreadCount,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
       }
     } catch (error) {
@@ -111,11 +163,14 @@ export const messageService = {
     conversationId: string,
     senderId: string,
     file: File,
-    replyToId?: string
+    replyToId?: string,
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
-      const fileRef = ref(storage, `chats/${conversationId}/${timestamp}_${file.name}`);
+      const fileRef = ref(
+        storage,
+        `chats/${conversationId}/${timestamp}_${file.name}`,
+      );
       await uploadBytes(fileRef, file);
       const imageUrl = await getDownloadURL(fileRef);
 
@@ -123,25 +178,25 @@ export const messageService = {
         conversationId,
         senderId,
         content: imageUrl,
-        type: 'image' as MessageType,
+        type: "image" as MessageType,
         fileUrl: imageUrl,
         timestamp: serverTimestamp(),
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp()
+        deliveredAt: serverTimestamp(),
       };
 
       if (replyToId) messageData.replyToId = replyToId;
 
-      await addDoc(collection(db, 'messages'), messageData);
+      await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationRef = doc(db, "conversations", conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const participantIds = conversationSnap.data().participantIds || [];
         const unreadCount = conversationSnap.data().unreadCount || {};
-        
+
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
             unreadCount[pid] = (unreadCount[pid] || 0) + 1;
@@ -152,10 +207,10 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: '📷 Hình ảnh'
+            content: "📷 Hình ảnh",
           },
           unreadCount,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
       }
     } catch (error) {
@@ -169,11 +224,14 @@ export const messageService = {
     conversationId: string,
     senderId: string,
     file: File,
-    replyToId?: string
+    replyToId?: string,
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
-      const fileRef = ref(storage, `chats/${conversationId}/${timestamp}_${file.name}`);
+      const fileRef = ref(
+        storage,
+        `chats/${conversationId}/${timestamp}_${file.name}`,
+      );
       await uploadBytes(fileRef, file);
       const fileUrl = await getDownloadURL(fileRef);
 
@@ -181,27 +239,27 @@ export const messageService = {
         conversationId,
         senderId,
         content: file.name,
-        type: 'file' as MessageType,
+        type: "file" as MessageType,
         fileUrl,
         fileName: file.name,
         fileSize: file.size,
         timestamp: serverTimestamp(),
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp()
+        deliveredAt: serverTimestamp(),
       };
 
       if (replyToId) messageData.replyToId = replyToId;
 
-      await addDoc(collection(db, 'messages'), messageData);
+      await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationRef = doc(db, "conversations", conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const participantIds = conversationSnap.data().participantIds || [];
         const unreadCount = conversationSnap.data().unreadCount || {};
-        
+
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
             unreadCount[pid] = (unreadCount[pid] || 0) + 1;
@@ -212,10 +270,10 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: `📎 ${file.name}`
+            content: `📎 ${file.name}`,
           },
           unreadCount,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
       }
     } catch (error) {
@@ -229,11 +287,14 @@ export const messageService = {
     conversationId: string,
     senderId: string,
     file: File,
-    replyToId?: string
+    replyToId?: string,
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
-      const fileRef = ref(storage, `chats/${conversationId}/${timestamp}_${file.name}`);
+      const fileRef = ref(
+        storage,
+        `chats/${conversationId}/${timestamp}_${file.name}`,
+      );
       await uploadBytes(fileRef, file);
       const videoUrl = await getDownloadURL(fileRef);
 
@@ -241,25 +302,25 @@ export const messageService = {
         conversationId,
         senderId,
         content: videoUrl,
-        type: 'video' as MessageType,
+        type: "video" as MessageType,
         fileUrl: videoUrl,
         timestamp: serverTimestamp(),
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp()
+        deliveredAt: serverTimestamp(),
       };
 
       if (replyToId) messageData.replyToId = replyToId;
 
-      await addDoc(collection(db, 'messages'), messageData);
+      await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationRef = doc(db, "conversations", conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const participantIds = conversationSnap.data().participantIds || [];
         const unreadCount = conversationSnap.data().unreadCount || {};
-        
+
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
             unreadCount[pid] = (unreadCount[pid] || 0) + 1;
@@ -270,10 +331,10 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: '🎥 Video'
+            content: "🎥 Video",
           },
           unreadCount,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
       }
     } catch (error) {
@@ -287,11 +348,14 @@ export const messageService = {
     conversationId: string,
     senderId: string,
     file: File,
-    replyToId?: string
+    replyToId?: string,
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
-      const fileRef = ref(storage, `chats/${conversationId}/${timestamp}_${file.name}`);
+      const fileRef = ref(
+        storage,
+        `chats/${conversationId}/${timestamp}_${file.name}`,
+      );
       await uploadBytes(fileRef, file);
       const voiceUrl = await getDownloadURL(fileRef);
 
@@ -299,25 +363,25 @@ export const messageService = {
         conversationId,
         senderId,
         content: voiceUrl,
-        type: 'voice' as MessageType,
+        type: "voice" as MessageType,
         fileUrl: voiceUrl,
         timestamp: serverTimestamp(),
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp()
+        deliveredAt: serverTimestamp(),
       };
 
       if (replyToId) messageData.replyToId = replyToId;
 
-      await addDoc(collection(db, 'messages'), messageData);
+      await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationRef = doc(db, "conversations", conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const participantIds = conversationSnap.data().participantIds || [];
         const unreadCount = conversationSnap.data().unreadCount || {};
-        
+
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
             unreadCount[pid] = (unreadCount[pid] || 0) + 1;
@@ -328,10 +392,10 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: '🎤 Tin nhắn thoại'
+            content: "🎤 Tin nhắn thoại",
           },
           unreadCount,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
       }
     } catch (error) {
@@ -341,25 +405,28 @@ export const messageService = {
   },
 
   // Đánh dấu người dùng đã nhận tin nhắn
-  markMessagesAsDelivered: async (conversationId: string, userId: string): Promise<void> => {
+  markMessagesAsDelivered: async (
+    conversationId: string,
+    userId: string,
+  ): Promise<void> => {
     try {
       const q = query(
-        collection(db, 'messages'),
-        where('conversationId', '==', conversationId),
-        where('senderId', '!=', userId)
+        collection(db, "messages"),
+        where("conversationId", "==", conversationId),
+        where("senderId", "!=", userId),
       );
-      
+
       const snapshot = await getDocs(q);
       const batch = writeBatch(db);
       let count = 0;
 
-      snapshot.docs.forEach(d => {
+      snapshot.docs.forEach((d) => {
         const data = d.data();
         const deliveredTo = data.deliveredTo || [];
-        
+
         if (!deliveredTo.includes(userId)) {
           const updates: Record<string, any> = {
-            deliveredTo: arrayUnion(userId)
+            deliveredTo: arrayUnion(userId),
           };
 
           if (!data.deliveredAt) {
@@ -378,48 +445,51 @@ export const messageService = {
   },
 
   // Đánh dấu người dùng đã xem tin nhắn
-  markMessagesAsRead: async (conversationId: string, userId: string): Promise<void> => {
+  markMessagesAsRead: async (
+    conversationId: string,
+    userId: string,
+  ): Promise<void> => {
     try {
       const batch = writeBatch(db);
 
       const messagesQuery = query(
-        collection(db, 'messages'),
-        where('conversationId', '==', conversationId),
-        where('senderId', '!=', userId)
+        collection(db, "messages"),
+        where("conversationId", "==", conversationId),
+        where("senderId", "!=", userId),
       );
-      
+
       const messagesSnapshot = await getDocs(messagesQuery);
       let count = 0;
-      
-      messagesSnapshot.docs.forEach(messageDoc => {
+
+      messagesSnapshot.docs.forEach((messageDoc) => {
         const data = messageDoc.data();
         const readBy = data.readBy || [];
-        
+
         if (!readBy.includes(userId)) {
           batch.update(messageDoc.ref, {
             readBy: arrayUnion(userId),
             deliveredTo: arrayUnion(userId),
-            deliveredAt: data.deliveredAt || serverTimestamp()
+            deliveredAt: data.deliveredAt || serverTimestamp(),
           });
           count++;
         }
       });
 
-      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationRef = doc(db, "conversations", conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const data = conversationSnap.data();
         const updates: Record<string, any> = {
-          [`unreadCount.${userId}`]: 0
+          [`unreadCount.${userId}`]: 0,
         };
 
         if (data.lastMessage && data.lastMessage.senderId !== userId) {
-          updates['lastMessage.readBy'] = arrayUnion(userId);
-          updates['lastMessage.deliveredTo'] = arrayUnion(userId);
-          
+          updates["lastMessage.readBy"] = arrayUnion(userId);
+          updates["lastMessage.deliveredTo"] = arrayUnion(userId);
+
           if (!data.lastMessage.deliveredAt) {
-             updates['lastMessage.deliveredAt'] = serverTimestamp();
+            updates["lastMessage.deliveredAt"] = serverTimestamp();
           }
         }
 
@@ -434,19 +504,22 @@ export const messageService = {
   },
 
   // Thu hồi tin nhắn đối với tất cả người dùng
-  recallMessage: async (messageId: string, conversationId: string): Promise<void> => {
+  recallMessage: async (
+    messageId: string,
+    conversationId: string,
+  ): Promise<void> => {
     try {
-      const messageRef = doc(db, 'messages', messageId);
+      const messageRef = doc(db, "messages", messageId);
       await updateDoc(messageRef, {
         isRecalled: true,
         recalledAt: serverTimestamp(),
-        content: 'Tin nhắn đã được thu hồi'
+        content: "Tin nhắn đã được thu hồi",
       });
-      
-      const conversationRef = doc(db, 'conversations', conversationId);
+
+      const conversationRef = doc(db, "conversations", conversationId);
       await updateDoc(conversationRef, {
-        lastMessageContent: 'Tin nhắn đã được thu hồi',
-        updatedAt: serverTimestamp()
+        lastMessageContent: "Tin nhắn đã được thu hồi",
+        updatedAt: serverTimestamp(),
       });
     } catch (error) {
       console.error("Lỗi thu hồi tin nhắn", error);
@@ -455,11 +528,14 @@ export const messageService = {
   },
 
   // Ẩn tin nhắn đối với người xóa
-  deleteMessageForMe: async (messageId: string, userId: string): Promise<void> => {
+  deleteMessageForMe: async (
+    messageId: string,
+    userId: string,
+  ): Promise<void> => {
     try {
-      const messageRef = doc(db, 'messages', messageId);
+      const messageRef = doc(db, "messages", messageId);
       await updateDoc(messageRef, {
-        deletedBy: arrayUnion(userId)
+        deletedBy: arrayUnion(userId),
       });
     } catch (error) {
       console.error("Lỗi xóa tin nhắn cho tôi", error);
@@ -470,27 +546,29 @@ export const messageService = {
   // Chỉnh sửa tin nhắn trong thời gian cho phép
   editMessage: async (messageId: string, newContent: string): Promise<void> => {
     try {
-      const messageRef = doc(db, 'messages', messageId);
+      const messageRef = doc(db, "messages", messageId);
       const messageSnap = await getDoc(messageRef);
-      
+
       if (!messageSnap.exists()) throw new Error("Tin nhắn không tồn tại");
-      
+
       const data = messageSnap.data();
       const timestamp = data.timestamp?.toDate();
-      
+
       if (timestamp) {
         const now = new Date();
-        const diffInMinutes = (now.getTime() - timestamp.getTime());
-        
+        const diffInMinutes = now.getTime() - timestamp.getTime();
+
         if (diffInMinutes > TIME_LIMITS.MESSAGE_EDIT_WINDOW) {
-          throw new Error(`Đã hết thời gian chỉnh sửa (tối đa ${TIME_LIMITS.MESSAGE_EDIT_WINDOW / (1000 * 60)} phút)`);
+          throw new Error(
+            `Đã hết thời gian chỉnh sửa (tối đa ${TIME_LIMITS.MESSAGE_EDIT_WINDOW / (1000 * 60)} phút)`,
+          );
         }
       }
 
       await updateDoc(messageRef, {
         content: newContent,
         isEdited: true,
-        editedAt: serverTimestamp()
+        editedAt: serverTimestamp(),
       });
     } catch (error) {
       console.error("Lỗi chỉnh sửa tin nhắn", error);
@@ -502,7 +580,7 @@ export const messageService = {
   forwardMessage: async (
     targetConversationId: string,
     senderId: string,
-    originalMessage: Message
+    originalMessage: Message,
   ): Promise<void> => {
     try {
       const messageData: Record<string, any> = {
@@ -514,23 +592,26 @@ export const messageService = {
         readBy: [senderId],
         deliveredTo: [senderId],
         deliveredAt: serverTimestamp(),
-        isForwarded: true
+        isForwarded: true,
       };
 
-      if (originalMessage.fileUrl) messageData.fileUrl = originalMessage.fileUrl;
-      if (originalMessage.fileName) messageData.fileName = originalMessage.fileName;
-      if (originalMessage.fileSize) messageData.fileSize = originalMessage.fileSize;
+      if (originalMessage.fileUrl)
+        messageData.fileUrl = originalMessage.fileUrl;
+      if (originalMessage.fileName)
+        messageData.fileName = originalMessage.fileName;
+      if (originalMessage.fileSize)
+        messageData.fileSize = originalMessage.fileSize;
 
-      await addDoc(collection(db, 'messages'), messageData);
+      await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, 'conversations', targetConversationId);
+      const conversationRef = doc(db, "conversations", targetConversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const conversationData = conversationSnap.data();
         const participantIds = conversationData.participantIds || [];
         const unreadCount = conversationData.unreadCount || {};
-        
+
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
             unreadCount[pid] = (unreadCount[pid] || 0) + 1;
@@ -538,19 +619,23 @@ export const messageService = {
         });
 
         let lastMessageContent = originalMessage.content;
-        if (originalMessage.type === 'image') lastMessageContent = '📷 Hình ảnh';
-        else if (originalMessage.type === 'file') lastMessageContent = `📎 ${originalMessage.fileName}`;
-        else if (originalMessage.type === 'video') lastMessageContent = '🎥 Video';
-        else if (originalMessage.type === 'voice') lastMessageContent = '🎤 Tin nhắn thoại';
+        if (originalMessage.type === "image")
+          lastMessageContent = "📷 Hình ảnh";
+        else if (originalMessage.type === "file")
+          lastMessageContent = `📎 ${originalMessage.fileName}`;
+        else if (originalMessage.type === "video")
+          lastMessageContent = "🎥 Video";
+        else if (originalMessage.type === "voice")
+          lastMessageContent = "🎤 Tin nhắn thoại";
 
         await updateDoc(conversationRef, {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: lastMessageContent
+            content: lastMessageContent,
           },
           unreadCount,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
       }
     } catch (error) {
@@ -560,29 +645,34 @@ export const messageService = {
   },
 
   // Gửi tin nhắn phản hồi tin nhắn khác
-  replyToMessage: async (conversationId: string, senderId: string, content: string, replyToId: string): Promise<void> => {
+  replyToMessage: async (
+    conversationId: string,
+    senderId: string,
+    content: string,
+    replyToId: string,
+  ): Promise<void> => {
     try {
       const messageData = {
         conversationId,
         senderId,
         content,
-        type: 'text',
+        type: "text",
         timestamp: serverTimestamp(),
         replyToId,
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: null
+        deliveredAt: null,
       };
 
-      const docRef = await addDoc(collection(db, 'messages'), messageData);
-      
-      const conversationRef = doc(db, 'conversations', conversationId);
+      const docRef = await addDoc(collection(db, "messages"), messageData);
+
+      const conversationRef = doc(db, "conversations", conversationId);
       await updateDoc(conversationRef, {
         lastMessageId: docRef.id,
         lastMessageContent: content,
         lastMessageSenderId: senderId,
         lastMessageTimestamp: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
     } catch (error) {
       console.error("Lỗi trả lời tin nhắn", error);
@@ -591,17 +681,21 @@ export const messageService = {
   },
 
   // Cập nhật trạng thái đang soạn tin nhắn
-  setTypingStatus: async (conversationId: string, userId: string, isTyping: boolean): Promise<void> => {
+  setTypingStatus: async (
+    conversationId: string,
+    userId: string,
+    isTyping: boolean,
+  ): Promise<void> => {
     try {
-      const conversationRef = doc(db, 'conversations', conversationId);
-      
+      const conversationRef = doc(db, "conversations", conversationId);
+
       if (isTyping) {
         await updateDoc(conversationRef, {
-          typingUsers: arrayUnion(userId)
+          typingUsers: arrayUnion(userId),
         });
       } else {
         await updateDoc(conversationRef, {
-          typingUsers: arrayRemove(userId)
+          typingUsers: arrayRemove(userId),
         });
       }
     } catch (error) {
@@ -610,9 +704,12 @@ export const messageService = {
   },
 
   // Theo dõi danh sách người dùng đang soạn tin nhắn
-  subscribeToTypingStatus: (conversationId: string, callback: (typingUsers: string[]) => void) => {
-    const conversationRef = doc(db, 'conversations', conversationId);
-    
+  subscribeToTypingStatus: (
+    conversationId: string,
+    callback: (typingUsers: string[]) => void,
+  ) => {
+    const conversationRef = doc(db, "conversations", conversationId);
+
     return onSnapshot(conversationRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
@@ -622,14 +719,18 @@ export const messageService = {
   },
 
   // Thêm hoặc xóa cảm xúc (reaction) cho tin nhắn
-  toggleReaction: async (messageId: string, userId: string, emoji: string): Promise<void> => {
+  toggleReaction: async (
+    messageId: string,
+    userId: string,
+    emoji: string,
+  ): Promise<void> => {
     try {
-      const messageRef = doc(db, 'messages', messageId);
+      const messageRef = doc(db, "messages", messageId);
       const messageSnap = await getDoc(messageRef);
-      
+
       if (messageSnap.exists()) {
         const reactions = messageSnap.data().reactions || {};
-        
+
         if (reactions[userId] === emoji) {
           delete reactions[userId];
         } else {

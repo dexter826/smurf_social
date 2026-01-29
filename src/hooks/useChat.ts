@@ -16,6 +16,8 @@ interface UseChatReturn {
   usersMap: Record<string, User>;
   archivedCount: number;
   isLoading: boolean;
+  isLoadingMore: boolean;
+  hasMoreMessages: boolean;
   blockedMessage: string | undefined;
   
   isSearchFocused: boolean;
@@ -38,6 +40,7 @@ interface UseChatReturn {
 
   handleSelectConversation: (id: string) => void;
   handleBackToList: () => void;
+  handleLoadMoreMessages: () => Promise<void>;
   handlePin: (id: string, pinned: boolean) => Promise<void>;
   handleMute: (id: string, muted: boolean) => Promise<void>;
   handleDelete: (id: string) => Promise<void>;
@@ -126,7 +129,10 @@ export const useChat = (): UseChatReturn => {
     forwardMessage: storeForwardMessage,
     replyToMessage: storeReplyToMessage,
     editMessage,
-    setIsChatVisible
+    setIsChatVisible,
+    isLoadingMore: storeIsLoadingMore,
+    hasMoreMessages: storeHasMoreMessages,
+    loadMoreMessages
   } = useChatStore();
 
   const { users: usersMap, fetchUsers } = useUserCache();
@@ -190,6 +196,8 @@ export const useChat = (): UseChatReturn => {
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
+  const isLoadingMore = selectedConversationId ? (storeIsLoadingMore[selectedConversationId] || false) : false;
+  const hasMoreMessages = selectedConversationId ? (storeHasMoreMessages[selectedConversationId] || false) : false;
 
   // Kiểm tra trạng thái chặn giữa hai người dùng
   const partner = selectedConversation && !selectedConversation.isGroup
@@ -215,6 +223,12 @@ export const useChat = (): UseChatReturn => {
   const handleBackToList = useCallback(() => {
     selectConversation(null);
   }, [selectConversation]);
+
+  const handleLoadMoreMessages = useCallback(async () => {
+    if (selectedConversationId) {
+      await loadMoreMessages(selectedConversationId);
+    }
+  }, [selectedConversationId, loadMoreMessages]);
 
   const handleSendText = useCallback(async (text: string, mentions?: string[], replyToId?: string) => {
     if (!selectedConversationId || !currentUser) return;
@@ -392,6 +406,7 @@ export const useChat = (): UseChatReturn => {
     selectedConversationId,
     handleSelectConversation,
     handleBackToList,
+    handleLoadMoreMessages,
     handlePin,
     handleMute,
     handleDelete,
@@ -432,6 +447,8 @@ export const useChat = (): UseChatReturn => {
     setReplyingTo,
     editingMessage,
     setEditingMessage,
-    setIsChatVisible
+    setIsChatVisible,
+    isLoadingMore,
+    hasMoreMessages
   };
 };

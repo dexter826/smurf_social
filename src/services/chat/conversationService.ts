@@ -11,7 +11,8 @@ import {
   serverTimestamp,
   onSnapshot,
   writeBatch,
-  Timestamp
+  Timestamp,
+  limit
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { Conversation, User } from '../../types';
@@ -61,7 +62,8 @@ export const conversationService = {
     const q = query(
       collection(db, 'conversations'), 
       where('participantIds', 'array-contains', userId),
-      orderBy('updatedAt', 'desc')
+      orderBy('updatedAt', 'desc'),
+      limit(50) // Giới hạn 50 hội thoại gần nhất
     );
 
     return onSnapshot(q, async (snapshot) => {
