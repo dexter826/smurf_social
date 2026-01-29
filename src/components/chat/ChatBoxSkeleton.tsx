@@ -3,7 +3,7 @@ import { Skeleton } from '../ui/Skeleton';
 
 export const ChatBoxSkeleton: React.FC = () => {
   return (
-    <div className="space-y-6 px-4 py-8 bg-bg-secondary h-full overflow-hidden">
+    <div className="space-y-6 p-4 bg-bg-secondary h-full overflow-hidden">
       <div className="flex flex-col items-start gap-2 max-w-[70%]">
         <Skeleton height={40} width="60%" className="rounded-2xl rounded-tl-none" />
         <Skeleton variant="circle" width={32} height={32} />

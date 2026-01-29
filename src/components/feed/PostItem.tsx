@@ -219,8 +219,8 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
 // Skeleton loading
 const PostSkeleton: React.FC = () => (
-  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-theme">
-    <div className="p-4 flex items-start justify-between">
+  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light mb-4 transition-theme">
+    <div className="p-3 sm:p-4 flex items-start justify-between">
       <div className="flex gap-3">
         <Skeleton variant="circle" width={40} height={40} />
         <div className="space-y-2">
@@ -229,19 +229,19 @@ const PostSkeleton: React.FC = () => (
         </div>
       </div>
     </div>
-    <div className="px-4 pb-3 space-y-2">
-      <Skeleton variant="line" width="100%" height={16} className="opacity-70" />
-      <Skeleton variant="line" width="75%" height={16} className="opacity-70" />
+    <div className="px-3 sm:px-4 pb-3 space-y-2">
+      <Skeleton variant="line" width="90%" height={16} className="opacity-70" />
+      <Skeleton variant="line" width="60%" height={16} className="opacity-70" />
     </div>
     <div className="w-full h-64 bg-bg-secondary flex items-center justify-center">
       <Skeleton variant="rect" width={48} height={48} className="opacity-20" />
     </div>
-    <div className="flex px-2 py-3 border-t border-border-light">
-      <div className="flex-1 flex justify-center">
-        <Skeleton variant="line" width={64} height={16} className="opacity-50" />
+    <div className="flex px-2 py-1 border-t border-border-light">
+      <div className="flex-1 flex justify-center py-2">
+        <Skeleton variant="line" width={64} height={20} className="opacity-50" />
       </div>
-      <div className="flex-1 flex justify-center">
-        <Skeleton variant="line" width={64} height={16} className="opacity-50" />
+      <div className="flex-1 flex justify-center py-2">
+        <Skeleton variant="line" width={64} height={20} className="opacity-50" />
       </div>
     </div>
   </div>
