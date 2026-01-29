@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Image as ImageIcon, Video, ChevronDown } from 'lucide-react';
+import { X, Send, Image as ImageIcon, Video, ChevronDown, ChevronRight } from 'lucide-react';
 import { UserAvatar, Button, TextArea, EmojiPicker, IconButton, ConfirmDialog } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
 import { toast } from '../../store/toastStore';
@@ -18,6 +18,7 @@ interface CommentSectionProps {
   header?: React.ReactNode;
   className?: string;
   variant?: 'default' | 'cinema';
+  autoFocus?: boolean;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
@@ -25,7 +26,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   currentUser,
   header,
   className = '',
-  variant = 'default'
+  variant = 'default',
+  autoFocus = false
 }) => {
   const { 
     rootComments, 
@@ -70,9 +72,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
 
   useEffect(() => {
+    if (autoFocus && activeInputId === 'root') {
+       setTimeout(() => {
+          commentInputRef.current?.focus();
+       }, 300);
+    }
+  }, [autoFocus, activeInputId]);
+
+  useEffect(() => {
     loadInitialRootComments();
-    // Do not clear comments on unmount to prevent data loss in Feed PostItem
-    // return () => clearComments(postId);
   }, [postId]);
 
   // Lấy thông tin user khi có comment mới
@@ -144,8 +152,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setInputMode('comment');
   };
 
-  const isReply = false; // Luôn là false ở cấp độ root của component
-
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if ((!newComment.trim() && !selectedImage && !selectedVideo) || isSubmitting) return;
@@ -213,10 +219,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const renderCommentContent = (comment: Comment) => {
-    const replyToName = comment.replyToUserId ? users[comment.replyToUserId]?.name : null;
     return (
       <div className="text-sm text-text-primary mt-1 break-words leading-relaxed flex flex-wrap items-center gap-1">
-        {replyToName && <i className="text-primary font-semibold not-italic decoration-primary/30">@{replyToName}</i>}
         <span>{comment.content}</span>
       </div>
     );
@@ -301,12 +305,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               }
             />
           </div>
-          <IconButton
+          <Button
             type="submit"
             disabled={(!newComment.trim() && !selectedImage && !selectedVideo)}
-            loading={isSubmitting}
-            icon={<Send size={20} />}
-            className="rounded-2xl bg-primary text-white shadow-md shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all w-11 h-11 flex items-center justify-center p-0 flex-shrink-0"
+            isLoading={isSubmitting}
+            variant={(newComment.trim() || selectedImage || selectedVideo) ? 'primary' : 'secondary'}
+            className={`w-10 h-10 shadow-sm active:scale-95 rounded-full p-0 flex items-center justify-center ${(newComment.trim() || selectedImage || selectedVideo) ? '' : 'opacity-50 cursor-not-allowed'}`}
+            title={UI_MESSAGES.COMMON.SEND}
+            icon={<Send size={20} className={(newComment.trim() || selectedImage || selectedVideo) ? 'fill-current' : ''} />}
           />
         </form>
 
@@ -340,7 +346,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     const isReplying = activeInputId === comment.id && inputMode === 'reply';
 
     return (
-      <div key={comment.id} className={`${isReply ? 'ml-10 mt-3' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
+      <div key={comment.id} className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
         <div className="flex gap-3">
           <UserAvatar userId={comment.userId} src={author?.avatar} name={author?.name} size={isReply ? 'xs' : 'sm'} />
           <div className="flex-1 min-w-0">
@@ -348,7 +354,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               rounded-2xl px-4 py-2 inline-block max-w-full shadow-sm transition-all group
               ${variant === 'cinema' ? 'bg-bg-secondary py-2.5' : 'bg-bg-secondary'}
             `}>
-              <h4 className="font-bold text-[13px] text-text-primary mb-0.5">{author?.name || 'Người dùng'}</h4>
+              <div className="flex items-center gap-1 mb-0.5 flex-nowrap overflow-hidden">
+                <h4 className="font-bold text-[13px] text-text-primary whitespace-nowrap">{author?.name || 'Người dùng'}</h4>
+                {isReply && comment.replyToUserId && users[comment.replyToUserId] && (
+                  <>
+                    <ChevronRight size={12} className="text-text-tertiary flex-shrink-0 mx-0.5" />
+                    <h4 className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate">{users[comment.replyToUserId].name}</h4>
+                  </>
+                )}
+              </div>
               {renderCommentContent(comment)}
               {(comment.image || comment.video) && (
                 <div className="mt-3 rounded-xl overflow-hidden border border-border-light/50 bg-bg-primary/50">
@@ -371,12 +385,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
             {(isReplying || isEditing) && renderInputForm(true)}
 
-            {!isReply && (comment.replyCount || 0) > 0 && (
+            {!isReply && ((comment.replyCount || 0) > 0 || commentReplies.length > 0) && (
               <div className="mt-2 pl-2 border-l-2 border-border-light ml-2">
                 {commentReplies.length === 0 ? (
-                  <button onClick={() => loadReplies(comment.id)} className="flex items-center gap-1.5 text-text-secondary hover:text-primary text-[12px] font-bold py-1 px-2">
-                    <ChevronDown size={14} className="stroke-[3px]" /> Xem {comment.replyCount} trả lời
-                  </button>
+                  (comment.replyCount || 0) > 0 && (
+                    <button onClick={() => loadReplies(comment.id)} className="flex items-center gap-1.5 text-text-secondary hover:text-primary text-[12px] font-bold py-1 px-2">
+                      <ChevronDown size={14} className="stroke-[3px]" /> Xem {comment.replyCount} trả lời
+                    </button>
+                  )
                 ) : (
                   <>
                     <div className="space-y-1">{commentReplies.map(reply => renderCommentItem(reply, true))}</div>
