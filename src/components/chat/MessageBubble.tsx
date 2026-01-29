@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { format } from 'date-fns';
+import { formatTimeOnly } from '../../utils/dateUtils';
 import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight } from 'lucide-react';
 import { Message, User } from '../../types';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText } from '../ui';
@@ -215,7 +215,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
                   isMe ? 'text-white/80' : 'text-text-tertiary'
                 }`}>
-                  <span>{format(new Date(message.timestamp), 'HH:mm')}</span>
+                  <span>{formatTimeOnly(message.timestamp)}</span>
                 </div>
               )}
             </div>
@@ -298,7 +298,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* Thời gian cho file media */}
           {message.type !== 'text' && (
             <span className="text-[10px] text-text-tertiary mt-1">
-              {format(new Date(message.timestamp), 'HH:mm')}
+              {formatTimeOnly(message.timestamp)}
               {/* Status moved to separate line below */}
             </span>
           )}

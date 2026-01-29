@@ -3,8 +3,7 @@ import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Users, Lock, MoreHo
 import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem } from '../ui';
 import { Post, User } from '../../types';
 import { CommentSection } from './CommentSection';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface PostViewModalProps {
   post: Post | null;
@@ -145,28 +144,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
                   <span>
-                    {formatDistanceToNow(post.timestamp, {
-                      locale: {
-                        ...vi,
-                        formatDistance: (token, count) => {
-                          const formatRelativeLocale: { [key: string]: string } = {
-                            lessThanXSeconds: 'vừa xong',
-                            xSeconds: 'vừa xong',
-                            halfAMinute: 'vừa xong',
-                            lessThanXMinutes: '{{count}} phút',
-                            xMinutes: '{{count}} phút',
-                            aboutXHours: '{{count}} giờ',
-                            xHours: '{{count}} giờ',
-                            xDays: '{{count}} ngày',
-                            aboutXMonths: '{{count}} tháng',
-                            xMonths: '{{count}} tháng',
-                            aboutXYears: '{{count}} năm',
-                            xYears: '{{count}} năm',
-                          };
-                          return formatRelativeLocale[token].replace('{{count}}', count.toString());
-                        }
-                      }
-                    })}
+                    {formatRelativeTime(post.timestamp)}
                   </span>
                   <span>•</span>
                   {post.visibility === 'friends' ? (

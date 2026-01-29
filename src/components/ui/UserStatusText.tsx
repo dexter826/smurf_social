@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatStatusTime } from '../../utils/dateUtils';
 import { db } from '../../firebase/config';
 import { User, UserStatus } from '../../types';
 
@@ -46,8 +45,7 @@ export const UserStatusText: React.FC<UserStatusTextProps> = ({
     
     if (user?.lastSeen) {
       const date = user.lastSeen instanceof Date ? user.lastSeen : new Date(user.lastSeen);
-      const timeAgo = formatDistanceToNow(date, { addSuffix: true, locale: vi });
-      return `Truy cập ${timeAgo}`;
+      return formatStatusTime(date);
     }
     
     return offlineText;

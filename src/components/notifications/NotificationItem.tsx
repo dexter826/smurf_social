@@ -1,6 +1,5 @@
 import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatRelativeTime } from '../../utils/dateUtils';
 import { AppNotification, NotificationType } from '../../types';
 import { UserAvatar } from '../ui';
 import { notificationService } from '../../services/notificationService';
@@ -67,7 +66,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           {notificationService.getNotificationText(notification, '')}
         </p>
         <span className="text-xs text-text-tertiary mt-1 block">
-          {formatDistanceToNow(notification.createdAt, { addSuffix: true, locale: vi })}
+          {formatRelativeTime(notification.createdAt)}
         </span>
       </div>
       {!notification.isRead && (

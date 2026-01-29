@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatChatTime } from '../../utils/dateUtils';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton, Avatar } from '../ui';
@@ -68,15 +67,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   const isLastMessageRead = readers.length > 0;
   const isLastMessageDelivered = !!lastMessage?.deliveredAt;
 
-  const timeAgo = conversation.updatedAt 
-    ? (() => {
-        const diff = Math.floor((Date.now() - new Date(conversation.updatedAt).getTime()) / 1000);
-        if (diff < 60) return 'dưới 1 phút';
-        return formatDistanceToNow(new Date(conversation.updatedAt), { 
-          locale: vi 
-        }).replace('khoảng ', '');
-      })()
-    : '';
+  const timeAgo = conversation.updatedAt ? formatChatTime(conversation.updatedAt) : '';
 
   return (
     <div
@@ -116,7 +107,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             )}
           </div>
           <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'hidden' : 'group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
-            {timeAgo.replace('khoảng ', '').replace('dưới ', '').replace('hơn ', '')}
+            {timeAgo}
           </span>
         </div>
 
