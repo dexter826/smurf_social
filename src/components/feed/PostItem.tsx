@@ -83,7 +83,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
       {/* Content */}
       <div 
-        className="px-4 pb-3"
+        className="px-4"
       >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
           {displayContent}
@@ -179,7 +179,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
       {/* Stats */}
       {post.likes.length > 0 || post.commentCount > 0 ? (
-        <div className="px-4 py-3 flex justify-between items-center border-b border-border-light">
+        <div className="px-4 py-1 flex justify-between items-center border-b border-border-light">
           <div className="flex items-center gap-1.5">
             {post.likes.length > 0 && (
               <>

@@ -189,7 +189,7 @@ const ChatPage: React.FC = () => {
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center bg-bg-secondary p-4 text-center">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-primary/10 rounded-full flex items-center justify-center mb-6 animate-fade-in">
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-primary/10 rounded-full flex items-center justify-center animate-fade-in">
               <MessageSquare className="w-12 h-12 md:w-16 md:h-16 text-primary" />
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-2">
