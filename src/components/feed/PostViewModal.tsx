@@ -30,6 +30,32 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 }) => {
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Min swipe distance (pixels)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && post && mediaIndex < (post.images?.length || 0) + (post.videos?.length || 0) - 1) {
+      setMediaIndex(prev => prev + 1);
+    }
+    if (isRightSwipe && mediaIndex > 0) {
+      setMediaIndex(prev => prev - 1);
+    }
+  };
 
   // Reset index khi doi post
   React.useEffect(() => {
@@ -109,25 +135,13 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       className={modalClassName}
     >
       <div className={containerClassName}>
-        
-        {/* Nut dong modal (Cinema Mode only) - REMOVED to avoid overlap */}
 
-        {/* Khong gian Cinema cho Media */}
+        {/* Khong gian Cinema cho Media (Chỉ hiển thị trên Desktop ở vị trí này) */}
         {hasMedia && (
-          <div className="flex-[1.6] bg-bg-secondary flex items-center justify-center relative group min-h-[40vh] max-h-[50vh] lg:min-h-0 lg:max-h-full select-none overflow-hidden touch-none grow lg:grow-[1.6] shrink-0">
-            
-            {/* Nut dong tren mobile khi co media */}
-            <button 
-              onClick={onClose} 
-              className="absolute top-4 right-4 z-50 text-white/50 hover:text-white lg:hidden p-2 bg-black/20 backdrop-blur-md rounded-full"
-            >
-              <X size={24} />
-            </button>
-
+          <div className="hidden lg:flex flex-[1.6] bg-bg-secondary items-center justify-center relative group select-none overflow-hidden touch-none grow shrink-0 border-r border-border-light">
             <div className="w-full h-full relative z-10">
-              
-              {/* Media Content (Full Space) */}
-              <div className="w-full h-full flex items-center justify-center bg-bg-secondary">
+              {/* Media Content */}
+              <div className="w-full h-full flex items-center justify-center">
                 {allMedia[mediaIndex].type === 'video' ? (
                   <video 
                     src={allMedia[mediaIndex].url} 
@@ -143,30 +157,42 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 )}
               </div>
 
-              {/* Overlay Navigation */}
+              {/* Overlay Navigation (Desktop) */}
               {allMedia.length > 1 && (
                 <>
-                  <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-center pl-2 pointer-events-none group/nav">
-                    <div className={`${mediaIndex === 0 ? 'invisible' : 'visible'} pointer-events-auto`}>
-                      <IconButton
-                        onClick={() => setMediaIndex(mediaIndex - 1)}
-                        className="bg-black/20 hover:bg-black/40 text-white border-none rounded-full w-12 h-12 flex items-center justify-center backdrop-blur-sm transition-all transform active:scale-90"
-                        icon={<ChevronLeft size={28} strokeWidth={2} />}
-                      />
-                    </div>
-                  </div>
-                  <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center pr-2 pointer-events-none group/nav">
-                    <div className={`${mediaIndex === allMedia.length - 1 ? 'invisible' : 'visible'} pointer-events-auto`}>
-                      <IconButton
-                        onClick={() => setMediaIndex(mediaIndex + 1)}
-                        className="bg-black/20 hover:bg-black/40 text-white border-none rounded-full w-12 h-12 flex items-center justify-center backdrop-blur-sm transition-all transform active:scale-90"
-                        icon={<ChevronRight size={28} strokeWidth={2} />}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Bo dem trang tinh te */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/40 text-white px-3 py-1 rounded-full text-[12px] font-medium backdrop-blur-md border border-white/10 tracking-wider">
+                  <button
+                    onClick={() => setMediaIndex(mediaIndex - 1)}
+                    className={`
+                      absolute left-4 top-1/2 -translate-y-1/2 z-20
+                      w-12 h-12 flex items-center justify-center 
+                      bg-bg-primary/30 backdrop-blur-lg text-text-primary 
+                      rounded-full border-none outline-none shadow-sm
+                      transition-all duration-300 ease-in-out
+                      opacity-0 group-hover:opacity-100 will-change-transform
+                      active:scale-90
+                      ${mediaIndex === 0 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
+                    `}
+                  >
+                    <ChevronLeft size={32} strokeWidth={2.5} />
+                  </button>
+
+                  <button
+                    onClick={() => setMediaIndex(mediaIndex + 1)}
+                    className={`
+                      absolute right-4 top-1/2 -translate-y-1/2 z-20
+                      w-12 h-12 flex items-center justify-center 
+                      bg-bg-primary/30 backdrop-blur-lg text-text-primary 
+                      rounded-full border-none outline-none shadow-sm
+                      transition-all duration-300 ease-in-out
+                      opacity-0 group-hover:opacity-100 will-change-transform
+                      active:scale-90
+                      ${mediaIndex === allMedia.length - 1 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
+                    `}
+                  >
+                    <ChevronRight size={32} strokeWidth={2.5} />
+                  </button>
+
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-bg-tertiary/60 backdrop-blur-md text-text-primary px-3 py-1 rounded-full text-[12px] font-bold border border-border-light tracking-wider shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                     {mediaIndex + 1} / {allMedia.length}
                   </div>
                 </>
@@ -176,20 +202,10 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         )}
 
         {/* Panel noi dung va tuong tac */}
-        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 ${hasMedia ? 'w-full lg:w-[440px] border-t lg:border-t-0 lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
+        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 ${hasMedia ? 'w-full lg:w-[440px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
           
-          {/* Header thong tin tac gia */}
-          <div className="p-3 md:p-4 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary sticky top-0 z-30">
-            {/* Nut Back Mobile khi khong co media */}
-            {!hasMedia && (
-                <button 
-                  onClick={onClose} 
-                  className="mr-2 md:hidden text-text-secondary hover:text-text-primary"
-                >
-                   <ChevronLeft size={24} />
-                </button>
-            )}
-
+          {/* Header thong tin tac gia (Sticky cho cả mobile và desktop) */}
+          <div className="p-3 md:p-4 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary sticky top-0 z-30 shadow-sm md:shadow-none">
             <div className="flex gap-2.5 items-center flex-1 min-w-0">
               <UserAvatar 
                 userId={author?.id} 
@@ -216,36 +232,20 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               </div>
             </div>
 
-            {/* Actions & Nut dong modal */}
             <div className="flex items-center gap-2">
               {isOwner && (
                 <Dropdown
                   trigger={<IconButton icon={<MoreHorizontal size={20} />} size="sm" className="text-text-secondary hover:text-text-primary" />}
                   menuClassName="w-48"
                 >
-                  <DropdownItem
-                    icon={<Edit size={16} />}
-                    label="Chỉnh sửa"
-                    onClick={() => onEdit?.(post.id)}
-                  />
-                  <DropdownItem
-                    icon={<Trash2 size={16} />}
-                    label="Xóa bài viết"
-                    variant="danger"
-                    onClick={() => onDelete?.(post.id)}
-                  />
+                  <DropdownItem icon={<Edit size={16} />} label="Chỉnh sửa" onClick={() => onEdit?.(post.id)} />
+                  <DropdownItem icon={<Trash2 size={16} />} label="Xóa bài viết" variant="danger" onClick={() => onDelete?.(post.id)} />
                 </Dropdown>
               )}
-              
-              <IconButton 
-                icon={<X size={20} />} 
-                onClick={onClose} 
-                className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary rounded-full"
-              />
+              <IconButton icon={<X size={20} />} onClick={onClose} className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary rounded-full" />
             </div>
           </div>
 
-          {/* Noi dung post va bieu mau binh luan */}
           <CommentSection
             postId={post.id}
             currentUser={currentUser}
@@ -254,6 +254,41 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             className="flex-1 overflow-y-auto scroll-hide"
             header={
               <div className="flex flex-col">
+                {/* Media Component cho Mobile (Nằm giữa Header và Content) */}
+                {hasMedia && (
+                  <div 
+                    className="lg:hidden w-full bg-bg-secondary aspect-square max-h-[60vh] flex items-center justify-center relative select-none overflow-hidden touch-none -mt-0.5 mb-2 border-b border-border-light"
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                  >
+                    <div className="w-full h-full flex items-center justify-center pointer-events-none">
+                       {allMedia[mediaIndex].type === 'video' ? (
+                         <video src={allMedia[mediaIndex].url} controls className="max-w-full max-h-full pointer-events-auto" />
+                       ) : (
+                         <img src={allMedia[mediaIndex].url} alt="" className="max-w-full max-h-full object-contain" />
+                       )}
+                    </div>
+                    {allMedia.length > 1 && (
+                      <>
+                        <div className="absolute inset-y-0 left-0 flex items-center px-1">
+                           <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-bg-primary/25 backdrop-blur-md text-text-primary rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === 0 ? 'invisible' : ''}`}>
+                              <ChevronLeft size={28} strokeWidth={2.5} />
+                           </button>
+                        </div>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-1">
+                           <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-bg-primary/25 backdrop-blur-md text-text-primary rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
+                              <ChevronRight size={28} strokeWidth={2.5} />
+                           </button>
+                        </div>
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-bg-tertiary text-text-primary px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-border-light shadow-sm">
+                           {mediaIndex + 1} / {allMedia.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 {/* Noi dung van ban */}
                 <div className="px-4 py-3 pb-2">
                   <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
