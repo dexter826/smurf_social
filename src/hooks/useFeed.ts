@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, RefObject } from 'react';
+import React, { useEffect, useCallback, RefObject } from 'react';
 import { Post, User } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
+import { useIntersectionObserver } from './useIntersectionObserver';
 
 interface UseFeedReturn {
   posts: Post[];
@@ -32,7 +33,14 @@ export const useFeed = (): UseFeedReturn => {
   } = usePostStore();
   const { users: usersMap, fetchUsers } = useUserCache();
   
-  const observerRef = useRef<HTMLDivElement>(null);
+  const handleLoadMore = useCallback(() => {
+    if (!currentUser || isLoading || !hasMore) return;
+    fetchPosts(currentUser.id, currentUser.friendIds || [], true);
+  }, [currentUser, isLoading, hasMore, fetchPosts]);
+
+  const observerRef = useIntersectionObserver(handleLoadMore, {
+    enabled: hasMore && !isLoading && !!currentUser
+  });
 
   const handleFetchPosts = useCallback(() => {
     if (!currentUser) return;
@@ -56,26 +64,6 @@ export const useFeed = (): UseFeedReturn => {
     };
   }, [handleFetchPosts, handleSubscribeToPosts]);
 
-  // Cuộn vô tận
-  useEffect(() => {
-    if (!hasMore || isLoading || !currentUser) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          handleLoadMore();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    if (observerRef.current) {
-      observer.observe(observerRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, isLoading, posts.length]);
-
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {
     if (posts.length > 0) {
@@ -83,11 +71,6 @@ export const useFeed = (): UseFeedReturn => {
       fetchUsers(userIds);
     }
   }, [posts, fetchUsers]);
-
-  const handleLoadMore = useCallback(() => {
-    if (!currentUser || isLoading || !hasMore) return;
-    fetchPosts(currentUser.id, currentUser.friendIds || [], true);
-  }, [currentUser, isLoading, hasMore, fetchPosts]);
 
   const handleLike = useCallback(async (postId: string) => {
     if (!currentUser) return;
