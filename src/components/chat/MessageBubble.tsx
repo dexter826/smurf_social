@@ -365,7 +365,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       {/* Modal xem ảnh full */}
       {showFullImage && message.type === 'image' && (
         <div
-          className="fixed inset-0 z-50 bg-bg-overlay flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-bg-overlay backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setShowFullImage(false)}
         >
           <img

@@ -49,7 +49,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         onClose={onClose} 
         showHeader={false} 
         maxWidth="4xl"
-        className="!p-0 bg-transparent h-full md:h-auto overflow-hidden"
+        className="!p-0 shadow-none h-full md:h-auto overflow-hidden"
       >
         <div className="flex flex-col md:flex-row h-full md:h-[600px] bg-bg-primary md:rounded-2xl overflow-hidden">
            {/* Fake Media Section */}
@@ -92,6 +92,12 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const isLiked = post.likes.includes(currentUser.id);
   const isOwner = post.userId === currentUser.id;
   const hasMedia = allMedia.length > 0;
+  const modalClassName = hasMedia
+    ? "m-0 md:m-4 md:rounded-3xl shadow-none"
+    : "md:max-h-[90vh] shadow-none";
+  const containerClassName = hasMedia
+    ? "flex flex-col lg:flex-row h-[100dvh] lg:h-[85vh] bg-bg-primary overflow-hidden lg:rounded-3xl relative transition-all duration-300 w-full"
+    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary overflow-hidden md:rounded-2xl relative transition-all duration-300 w-full";
 
   return (
     <Modal 
@@ -100,17 +106,15 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       showHeader={false} 
       maxWidth={hasMedia ? "5xl" : "lg"} 
       padding="none"
-      className="!bg-black/98 sm:!bg-transparent m-0 md:m-4 md:rounded-3xl"
+      className={modalClassName}
     >
-      <div className={`flex flex-col lg:flex-row h-[100dvh] lg:h-[85vh] bg-bg-primary overflow-hidden lg:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] relative transition-all duration-300 w-full`}>
+      <div className={containerClassName}>
         
         {/* Nut dong modal (Cinema Mode only) - REMOVED to avoid overlap */}
 
         {/* Khong gian Cinema cho Media */}
         {hasMedia && (
-          <div className="flex-[1.6] bg-[#050505] flex items-center justify-center relative group min-h-[40vh] max-h-[50vh] lg:min-h-0 lg:max-h-full select-none overflow-hidden touch-none grow lg:grow-[1.6] shrink-0">
-            {/* Background gradient hieu ung anh sang */}
-            <div className={`absolute inset-0 opacity-40 transition-opacity duration-700 ${allMedia[mediaIndex].type === 'image' ? 'bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_70%)]' : ''}`} />
+          <div className="flex-[1.6] bg-bg-secondary flex items-center justify-center relative group min-h-[40vh] max-h-[50vh] lg:min-h-0 lg:max-h-full select-none overflow-hidden touch-none grow lg:grow-[1.6] shrink-0">
             
             {/* Nut dong tren mobile khi co media */}
             <button 
@@ -131,7 +135,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 <img 
                   src={allMedia[mediaIndex].url} 
                   alt="" 
-                  className="max-w-full max-h-full object-contain rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.6)] animate-in fade-in zoom-in-95 duration-500"
+                  className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-500"
                 />
               )}
 
@@ -142,21 +146,21 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     <div className={`${mediaIndex === 0 ? 'invisible' : 'visible'}`}>
                       <IconButton
                         onClick={() => setMediaIndex(mediaIndex - 1)}
-                        className="bg-white/10 hover:bg-white/20 text-white pointer-events-auto rounded-xl backdrop-blur-xl border border-white/10 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
+                        className="bg-bg-primary/80 hover:bg-bg-primary text-text-primary pointer-events-auto rounded-xl backdrop-blur-xl border border-border-light opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
                         icon={<ChevronLeft size={24} strokeWidth={1.5} />}
                       />
                     </div>
                     <div className={`${mediaIndex === allMedia.length - 1 ? 'invisible' : 'visible'}`}>
                       <IconButton
                         onClick={() => setMediaIndex(mediaIndex + 1)}
-                        className="bg-white/10 hover:bg-white/20 text-white pointer-events-auto rounded-xl backdrop-blur-xl border border-white/10 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
+                        className="bg-bg-primary/80 hover:bg-bg-primary text-text-primary pointer-events-auto rounded-xl backdrop-blur-xl border border-border-light opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
                         icon={<ChevronRight size={24} strokeWidth={1.5} />}
                       />
                     </div>
                   </div>
                   
                   {/* Bo dem trang */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/10 text-white px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-black backdrop-blur-2xl border border-white/10 tracking-[0.15em] leading-none shadow-xl transform opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-bg-primary/80 text-text-primary px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-black backdrop-blur-2xl border border-border-light tracking-[0.15em] leading-none shadow-none transform opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
                     {mediaIndex + 1} / {allMedia.length}
                   </div>
                 </>

@@ -98,7 +98,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         <>
           {/* Backdrop cho mobile */}
           <div 
-            className="fixed inset-0 z-30 bg-black/20 backdrop-blur-[1px] md:hidden" 
+            className="fixed inset-0 z-30 bg-bg-overlay backdrop-blur-sm md:hidden" 
             onClick={() => handleOpenChange(false)} 
           />
           
