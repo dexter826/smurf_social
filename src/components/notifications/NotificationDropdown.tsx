@@ -51,7 +51,7 @@ export const NotificationDropdown: React.FC = () => {
       {isOpen && (
         <div className="absolute left-0 md:left-full md:top-0 md:ml-4 mt-2 w-80 md:w-96 bg-bg-primary rounded-xl shadow-2xl border border-border-light z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
           <div className="flex items-center justify-between p-4 border-b border-border-light bg-bg-primary/50 backdrop-blur-md">
-            <h3 className="font-bold text-lg">Thông báo</h3>
+            <h3 className="font-bold text-lg text-text-primary">Thông báo</h3>
             {unreadCount > 0 && (
               <button 
                 onClick={handleMarkAllRead}
