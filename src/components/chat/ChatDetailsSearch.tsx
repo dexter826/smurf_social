@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Message, User } from '../../types';
 import { Search, X, MessageCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatTimeOnly } from '../../utils/dateUtils';
 import { Input, IconButton } from '../ui';
 
 interface ChatDetailsSearchProps {
@@ -93,7 +92,7 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
                         {sender?.name || 'Unknown'}
                       </span>
                       <span className="text-xs text-text-tertiary">
-                        {format(new Date(msg.timestamp), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                        {formatTimeOnly(msg.timestamp)}
                       </span>
                     </div>
                     <p className="text-sm text-text-primary line-clamp-2">

@@ -8,8 +8,7 @@ import { postService } from '../../services/postService';
 import { useCommentStore } from '../../store/commentStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { CommentSkeleton } from './CommentSkeleton';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatRelativeTime } from '../../utils/dateUtils';
 import { UI_MESSAGES } from '../../constants/uiMessages';
 
 interface CommentSectionProps {
@@ -214,8 +213,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const formatSimplifiedTime = (date: Date) => {
-    return formatDistanceToNow(date, { locale: vi })
-      .replace('khoảng ', '').replace('dưới ', '').replace('trước', '').trim();
+    return formatRelativeTime(date);
   };
 
   const renderCommentContent = (comment: Comment) => {
@@ -372,8 +370,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               )}
             </div>
             
-            <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold uppercase tracking-tight">
-              <span>{formatSimplifiedTime(comment.timestamp)}</span>
+            <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
+              <span>{formatRelativeTime(comment.timestamp)}</span>
               <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">{UI_MESSAGES.COMMON.REPLY}</button>
               {comment.userId === currentUser.id && (
                 <>
