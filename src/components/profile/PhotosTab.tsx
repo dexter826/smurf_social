@@ -3,6 +3,7 @@ import { Post } from '../../types';
 import { postService } from '../../services/postService';
 import { Spinner, Skeleton } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 interface PhotosTabProps {
   userId: string;
@@ -12,15 +13,22 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
   const [media, setMedia] = useState<{ url: string, type: 'image' | 'video' }[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState<{ url: string, type: 'image' | 'video' } | null>(null);
+  const { user: currentUser } = useAuthStore();
 
   useEffect(() => {
     loadMedia();
   }, [userId]);
 
   const loadMedia = async () => {
+    if (!currentUser) return;
     setLoading(true);
     try {
-      const { posts } = await postService.getUserPosts(userId, 50);
+      const { posts } = await postService.getUserPosts(
+        userId, 
+        currentUser.id, 
+        currentUser.friendIds || [], 
+        50
+      );
       
       const allMedia: { url: string, type: 'image' | 'video' }[] = [];
       posts.forEach(post => {

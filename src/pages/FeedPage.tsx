@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { PostItem, PostModal, CreatePost, FeedSkeleton } from '../components/feed';
+import { PostItem, PostModal, PostViewModal, CreatePost, FeedSkeleton } from '../components/feed';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
+import { usePostStore } from '../store/postStore';
 import { useFeed } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
 
@@ -18,6 +19,8 @@ const FeedPage: React.FC = () => {
     handleDelete,
     observerRef,
   } = useFeed();
+
+  const { selectedPost, setSelectedPost } = usePostStore();
 
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -95,6 +98,7 @@ const FeedPage: React.FC = () => {
                   onLike={handleLike}
                   onEdit={(postId) => setShowEditModal(postId)}
                   onDelete={(postId) => setPostToDelete(postId)}
+                  onViewDetail={(post) => setSelectedPost(post)}
                 />
               );
             })}
@@ -125,6 +129,15 @@ const FeedPage: React.FC = () => {
         initialPost={editPost}
         onSubmit={handleEditPost}
         onUploadImages={handleUploadImages}
+      />
+
+      <PostViewModal
+        isOpen={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        post={selectedPost}
+        author={selectedPost ? usersMap[selectedPost.userId] : null}
+        currentUser={currentUser}
+        onLike={handleLike}
       />
 
       <ConfirmDialog

@@ -15,11 +15,17 @@ import { UI_MESSAGES } from '../../constants/uiMessages';
 interface CommentSectionProps {
   postId: string;
   currentUser: User;
+  header?: React.ReactNode;
+  className?: string;
+  variant?: 'default' | 'cinema';
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
   postId,
-  currentUser
+  currentUser,
+  header,
+  className = '',
+  variant = 'default'
 }) => {
   const { 
     rootComments, 
@@ -64,10 +70,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
 
   useEffect(() => {
-    if (currentRootComments.length === 0) {
-      loadInitialRootComments();
-    }
-    return () => clearComments(postId);
+    loadInitialRootComments();
+    // Do not clear comments on unmount to prevent data loss in Feed PostItem
+    // return () => clearComments(postId);
   }, [postId]);
 
   // Lấy thông tin user khi có comment mới
@@ -138,6 +143,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setActiveInputId('root');
     setInputMode('comment');
   };
+
+  const isReply = false; // Luôn là false ở cấp độ root của component
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -247,7 +254,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     return (
       <div className={`
         transition-all duration-300 animate-in slide-in-from-top-2
-        ${!isInline ? 'p-4 bg-bg-primary border-t border-border-light sticky bottom-0 z-20 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]' : 'mt-3 pl-2'}
+        ${variant === 'cinema' && !isInline ? 'p-4 bg-bg-primary/95 backdrop-blur-md border-t border-border-light sticky bottom-0 z-20 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 
+          !isInline ? 'p-4 bg-bg-primary border-t border-border-light' : 'mt-3 pl-2'}
       `}>
         {(isReplyingNow || (isRootInput && replyingTo)) && (
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-primary/5 rounded-xl text-[11px] text-primary border border-primary/10 backdrop-blur-sm">
@@ -336,11 +344,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         <div className="flex gap-3">
           <UserAvatar userId={comment.userId} src={author?.avatar} name={author?.name} size={isReply ? 'xs' : 'sm'} />
           <div className="flex-1 min-w-0">
-            <div className="bg-bg-secondary rounded-2xl px-4 py-2 inline-block max-w-full shadow-sm hover:shadow-md transition-shadow group">
-              <h4 className="font-bold text-[13px] text-text-primary">{author?.name || 'Người dùng'}</h4>
+            <div className={`
+              rounded-2xl px-4 py-2 inline-block max-w-full shadow-sm transition-all group
+              ${variant === 'cinema' ? 'bg-bg-secondary py-2.5' : 'bg-bg-secondary'}
+            `}>
+              <h4 className="font-bold text-[13px] text-text-primary mb-0.5">{author?.name || 'Người dùng'}</h4>
               {renderCommentContent(comment)}
               {(comment.image || comment.video) && (
-                <div className="mt-2 rounded-xl overflow-hidden border border-border-light bg-bg-primary">
+                <div className="mt-3 rounded-xl overflow-hidden border border-border-light/50 bg-bg-primary/50">
                   {comment.image && <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />}
                   {comment.video && <video src={comment.video} controls className="max-h-60 w-full" />}
                 </div>
@@ -385,24 +396,28 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   return (
-    <div className="border-t border-border-light bg-bg-secondary/20 transition-all duration-300">
-      <div className="pb-4">
-        {isLoading && currentRootComments.length === 0 ? (
-          <div className="px-4 py-4"><CommentSkeleton count={3} /></div>
-        ) : currentRootComments.length === 0 ? (
-          <div className="text-center py-10 text-text-secondary text-sm italic">{UI_MESSAGES.FEED.NO_COMMENTS}</div>
-        ) : (
-          <div className="flex flex-col">
-            {currentRootComments.map(comment => renderCommentItem(comment))}
-            {currentHasMoreRoot && (
-              <div className="px-6 py-4">
-                <Button variant="ghost" size="sm" onClick={loadMoreRootComments} isLoading={isLoading} className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary">
-                  Xem thêm bình luận cũ...
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+    <div className={`flex flex-col transition-all duration-300 ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {header && <div className="bg-bg-primary">{header}</div>}
+        
+        <div className="pb-4">
+          {isLoading && currentRootComments.length === 0 ? (
+            <div className="px-4 py-4"><CommentSkeleton count={3} /></div>
+          ) : currentRootComments.length === 0 ? (
+            <div className="text-center py-10 text-text-secondary text-sm italic">{UI_MESSAGES.FEED.NO_COMMENTS}</div>
+          ) : (
+            <div className="flex flex-col">
+              {currentRootComments.map(comment => renderCommentItem(comment))}
+              {currentHasMoreRoot && (
+                <div className="px-6 py-4">
+                  <Button variant="ghost" size="sm" onClick={loadMoreRootComments} isLoading={isLoading} className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary">
+                    Xem thêm bình luận cũ...
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {activeInputId === 'root' && renderInputForm()}

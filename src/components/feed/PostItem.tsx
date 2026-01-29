@@ -14,6 +14,7 @@ interface PostItemProps {
   onLike: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
+  onViewDetail?: (post: Post) => void;
 }
 
 export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
@@ -22,7 +23,8 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   currentUser,
   onLike,
   onEdit,
-  onDelete
+  onDelete,
+  onViewDetail
 }) => {
   const [showComments, setShowComments] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -95,7 +97,10 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-3">
+      <div 
+        className="px-4 pb-3 cursor-pointer hover:bg-bg-secondary/50 transition-colors"
+        onClick={() => onViewDetail?.(post)}
+      >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
           {post.content}
         </p>
@@ -127,6 +132,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                 alt="Post content"
                 className="w-full h-auto max-h-[600px] object-contain cursor-pointer"
                 loading="lazy"
+                onClick={() => onViewDetail?.(post)}
               />
             );
           })()}

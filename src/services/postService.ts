@@ -76,7 +76,7 @@ export const postService = {
       // Lọc theo quyền riêng tư
       const filteredPosts = posts.filter(post => {
         const isOwner = post.userId === currentUserId;
-        const isFriend = friendIds.includes(post.userId);
+        const isFriend = friendIds?.includes(post.userId) || false;
         
         if (isOwner) return true;
         if (isFriend) return post.visibility === 'friends';
@@ -148,7 +148,7 @@ export const postService = {
         // Lọc theo quyền riêng tư
         const posts = allPosts.filter(post => {
           const isOwner = post.userId === currentUserId;
-          const isFriend = friendIds.includes(post.userId);
+          const isFriend = friendIds?.includes(post.userId) || false;
           
           if (isOwner) return true;
           if (isFriend) return post.visibility === 'friends';
@@ -171,7 +171,7 @@ export const postService = {
     };
   },
 
-  getUserPosts: async (userId: string, limitCount: number = PAGINATION.USER_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
+  getUserPosts: async (userId: string, currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.USER_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
       let q = query(
         collection(db, 'posts'),
@@ -192,9 +192,20 @@ export const postService = {
         editedAt: doc.data().editedAt?.toDate(),
       })) as Post[];
 
+      // Lọc theo quyền riêng tư
+      const filteredPosts = posts.filter(post => {
+        const isOwner = userId === currentUserId;
+        const isFriend = friendIds?.includes(userId) || false;
+        
+        if (isOwner) return true;
+        if (isFriend) return post.visibility === 'friends';
+        
+        return false;
+      });
+
       const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
 
-      return { posts, lastDoc: lastVisible };
+      return { posts: filteredPosts, lastDoc: lastVisible };
     } catch (error) {
       console.error("Lỗi lấy bài viết của user", error);
       return { posts: [], lastDoc: null };
@@ -282,6 +293,34 @@ export const postService = {
     } catch (error) {
       console.error("Lỗi like bài viết", error);
       throw error;
+    }
+  },
+
+  getPostById: async (postId: string, currentUserId: string, friendIds: string[]): Promise<Post | null> => {
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      
+      if (!postSnap.exists()) return null;
+      
+      const data = postSnap.data();
+      const isOwner = data.userId === currentUserId;
+      const isFriend = friendIds?.includes(data.userId) || false;
+
+      // Chỉ cho phép xem nếu là chủ hoặc (là bạn bè và bài viết ở chế độ friends)
+      if (!isOwner && !(isFriend && data.visibility === 'friends')) {
+        return null;
+      }
+
+      return {
+        ...data,
+        id: postSnap.id,
+        timestamp: data.timestamp?.toDate() || new Date(),
+        editedAt: data.editedAt?.toDate(),
+      } as Post;
+    } catch (error) {
+      console.error("Lỗi lấy chi tiết bài viết", error);
+      return null;
     }
   },
 
