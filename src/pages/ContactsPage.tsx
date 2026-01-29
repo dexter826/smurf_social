@@ -184,9 +184,16 @@ const ContactsPage: React.FC = () => {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-2 md:p-4">
           {isLoading ? (
-            <div className="space-y-1">
-              {[...Array(8)].map((_, i) => (
-                <FriendItem.Skeleton key={i} />
+            <div className="space-y-6">
+              {[...Array(2)].map((_, i) => (
+                <div key={i}>
+                  <div className="w-10 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2 mx-2 animate-pulse" />
+                  <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light">
+                    {[...Array(3)].map((_, j) => (
+                      <FriendItem.Skeleton key={j} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

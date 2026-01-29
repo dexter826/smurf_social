@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Users, Lock, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
-import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem } from '../ui';
+import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton } from '../ui';
 import { Post, User } from '../../types';
 import { CommentSection } from './CommentSection';
 import { formatRelativeTime } from '../../utils/dateUtils';
@@ -49,14 +49,40 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         onClose={onClose} 
         showHeader={false} 
         maxWidth="4xl"
-        className="!bg-black/98 sm:!bg-transparent h-[100dvh] md:h-auto overflow-hidden"
+        className="!p-0 bg-transparent h-full md:h-auto overflow-hidden"
       >
-        <div className="h-full md:h-[500px] flex items-center justify-center bg-bg-primary md:rounded-2xl transition-theme">
-          <Spinner size="lg" />
+        <div className="flex flex-col md:flex-row h-full md:h-[600px] bg-bg-primary md:rounded-2xl overflow-hidden">
+           {/* Fake Media Section */}
+           <div className="hidden md:flex flex-[1.5] bg-bg-secondary items-center justify-center border-r border-border-light">
+              <Skeleton className="w-[80%] aspect-video rounded-lg opacity-20" />
+           </div>
+           
+           {/* Fake Content Section */}
+           <div className="flex-1 p-4 flex flex-col h-full">
+              <div className="flex items-center gap-3 mb-4">
+                 <Skeleton variant="circle" width={40} height={40} />
+                 <div className="space-y-2">
+                    <Skeleton width={120} height={16} />
+                    <Skeleton width={80} height={12} />
+                 </div>
+              </div>
+              <div className="space-y-2 mb-6">
+                 <Skeleton width="100%" height={16} />
+                 <Skeleton width="100%" height={16} />
+                 <Skeleton width="70%" height={16} />
+              </div>
+              <div className="mt-auto space-y-4">
+                  <div className="flex gap-3">
+                     <Skeleton variant="circle" width={32} height={32} />
+                     <Skeleton className="flex-1 h-8 rounded-full" />
+                  </div>
+              </div>
+           </div>
         </div>
       </Modal>
     );
   }
+
 
   const allMedia = [
     ...(post.images || []).map(url => ({ url, type: 'image' })),

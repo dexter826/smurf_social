@@ -5,7 +5,7 @@ export const MessengerSkeleton: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-bg-primary overflow-hidden">
       {/* Sidebar Skeleton */}
-      <div className="hidden md:flex flex-col w-[320px] border-r border-border-light">
+      <div className="flex flex-col w-full md:w-[320px] border-r border-border-light flex-shrink-0">
         <div className="p-4 border-b border-border-light space-y-4">
           <div className="flex justify-between items-center">
             <Skeleton width={120} height={24} />
@@ -22,8 +22,8 @@ export const MessengerSkeleton: React.FC = () => {
             <div key={i} className="flex items-center gap-3 p-3">
               <Skeleton variant="circle" width={48} height={48} />
               <div className="flex-1 space-y-2">
-                <Skeleton width="70%" height={16} />
-                <Skeleton width="40%" height={12} />
+                <Skeleton width="40%" height={16} />
+                <Skeleton width="25%" height={12} />
               </div>
             </div>
           ))}
@@ -31,7 +31,7 @@ export const MessengerSkeleton: React.FC = () => {
       </div>
 
       {/* Main Chat Skeleton */}
-      <div className="flex-1 flex flex-col bg-bg-secondary">
+      <div className="hidden md:flex flex-1 flex-col bg-bg-secondary">
         <div className="h-[72px] px-4 border-b border-border-light bg-bg-primary flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Skeleton variant="circle" width={40} height={40} />

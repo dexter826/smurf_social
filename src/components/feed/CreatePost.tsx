@@ -134,10 +134,12 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
 };
 
 CreatePost.Skeleton = () => (
-  <div className="bg-bg-primary rounded-xl p-4 shadow-sm border border-border-light transition-theme mb-4">
+  <div className="bg-bg-primary rounded-xl p-3 sm:p-4 shadow-sm border border-border-light transition-theme mb-4">
     <div className="flex gap-3 mb-4">
       <Skeleton variant="circle" width={40} height={40} />
-      <div className="flex-1 bg-bg-secondary h-10 rounded-full" />
+      <div className="flex-1">
+        <Skeleton variant="rect" height={40} className="w-full rounded-full" />
+      </div>
     </div>
     <div className="flex gap-1 pt-2 border-t border-divider">
       {[...Array(3)].map((_, i) => (

@@ -64,14 +64,14 @@ export const FriendItem: React.FC<FriendItemProps> = ({
 };
 
 FriendItem.Skeleton = () => (
-  <div className="flex items-center justify-between p-3 border-b border-divider">
+  <div className="flex items-center justify-between p-3 border-b border-divider last:border-0">
     <div className="flex items-center gap-4 flex-1">
       <Skeleton variant="circle" width={40} height={40} />
       <div className="space-y-2">
-        <Skeleton width={128} height={16} />
-        <Skeleton width={80} height={12} />
+        <Skeleton variant="line" width={128} height={16} />
+        <Skeleton variant="line" width={80} height={12} />
       </div>
     </div>
-    <Skeleton width={32} height={32} className="rounded-lg" />
+    <Skeleton variant="rect" width={32} height={32} className="rounded-lg" />
   </div>
 );
