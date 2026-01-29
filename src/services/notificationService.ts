@@ -11,7 +11,8 @@ import {
   onSnapshot, 
   writeBatch,
   limit,
-  arrayUnion
+  arrayUnion,
+  deleteDoc
 } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
@@ -99,6 +100,35 @@ export const notificationService = {
       await batch.commit();
     } catch (error) {
       console.error("Lỗi đánh dấu tất cả đã đọc:", error);
+    }
+  },
+
+  // Xóa một thông báo
+  deleteNotification: async (notificationId: string): Promise<void> => {
+    try {
+      await deleteDoc(doc(db, 'notifications', notificationId));
+    } catch (error) {
+      console.error("Lỗi xóa thông báo:", error);
+      throw error;
+    }
+  },
+
+  // Xóa tất cả thông báo của người dùng
+  deleteAllNotifications: async (userId: string): Promise<void> => {
+    try {
+      const q = query(
+        collection(db, 'notifications'),
+        where('receiverId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+    } catch (error) {
+      console.error("Lỗi xóa tất cả thông báo:", error);
+      throw error;
     }
   },
 
