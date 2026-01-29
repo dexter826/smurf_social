@@ -63,7 +63,10 @@ const ChatPage: React.FC = () => {
     removeFromSearchHistory,
     clearSearchHistory,
     getOrCreateConversation,
-    setIsChatVisible
+    setIsChatVisible,
+    isLoadingMore,
+    hasMoreMessages,
+    handleLoadMoreMessages
   } = useChat();
 
   React.useEffect(() => {
@@ -156,6 +159,9 @@ const ChatPage: React.FC = () => {
                 setReplyingTo(null);
               }}
               isLoading={isLoading}
+              isLoadingMore={isLoadingMore}
+              hasMoreMessages={hasMoreMessages}
+              onLoadMore={handleLoadMoreMessages}
             />
             <ChatInput
               key={selectedConversationId}

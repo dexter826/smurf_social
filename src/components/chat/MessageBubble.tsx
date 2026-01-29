@@ -20,6 +20,7 @@ interface MessageBubbleProps {
   onEdit?: (message: Message) => void;
   currentUserId: string;
   usersMap: Record<string, User>;
+  isGroup?: boolean;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
@@ -35,11 +36,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onReply,
   onEdit,
   currentUserId,
-  usersMap
+  usersMap,
+  isGroup = false
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const [showRecallConfirm, setShowRecallConfirm] = useState(false);
+  const [showReaders, setShowReaders] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -52,7 +55,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     setShowMenu(!showMenu);
   };
 
-  const isRead = message.readBy && message.readBy.length > 1;
+  const otherReaders = (message.readBy || []).filter(uid => uid !== currentUserId);
+  const isRead = otherReaders.length > 0;
   const isDelivered = !!message.deliveredAt;
 
   // Giới hạn sửa tin nhắn (10 phút)
@@ -296,14 +300,42 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {/* Status moved to separate line below */}
             </span>
           )}
-          {isMe && isLastMessage && (
-            <div className="text-[11px] text-text-tertiary mt-0.5 font-medium text-right">
-              {isRead 
-                ? UI_MESSAGES.CHAT.READ
-                : isDelivered 
-                  ? UI_MESSAGES.CHAT.DELIVERED
-                  : UI_MESSAGES.CHAT.SENT
-              }
+          {isMe && (isLastMessage || (isGroup && isRead)) && (
+            <div className="flex flex-col items-end mt-0.5">
+              <div 
+                className={`text-[11px] font-medium cursor-pointer select-none ${
+                   isRead ? 'text-primary' : 'text-text-tertiary'
+                }`}
+                onClick={() => isRead && isGroup && setShowReaders(!showReaders)}
+              >
+                {isGroup ? (
+                   isRead 
+                    ? `Đã xem bởi ${otherReaders.length} người` 
+                    : isDelivered ? UI_MESSAGES.CHAT.DELIVERED : UI_MESSAGES.CHAT.SENT
+                ) : (
+                   isRead 
+                    ? UI_MESSAGES.CHAT.READ
+                    : isDelivered ? UI_MESSAGES.CHAT.DELIVERED : UI_MESSAGES.CHAT.SENT
+                )}
+              </div>
+              
+              {/* Danh sách người xem cho group chat */}
+              {isGroup && isRead && showReaders && (
+                <div className="flex flex-wrap justify-end gap-1 mt-1 max-w-[200px] animate-in fade-in slide-in-from-top-1 duration-200">
+                  {otherReaders.map(uid => {
+                    const reader = usersMap[uid];
+                    if (!reader) return null;
+                    return (
+                      <div key={uid} title={reader.name} className="relative group">
+                        <Avatar src={reader.avatar} name={reader.name} size="xs" />
+                        <div className="absolute bottom-full right-0 mb-1 hidden group-hover:block z-50 whitespace-nowrap bg-bg-primary border border-border-light rounded px-2 py-1 text-[10px] shadow-dropdown">
+                          {reader.name}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

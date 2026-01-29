@@ -20,6 +20,9 @@ interface ChatBoxProps {
   onReply?: (message: Message) => void;
   onEdit?: (message: Message) => void;
   isLoading?: boolean;
+  isLoadingMore?: boolean;
+  hasMoreMessages?: boolean;
+  onLoadMore?: () => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -35,14 +38,50 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onForward,
   onReply,
   onEdit,
-  isLoading
+  isLoading,
+  isLoadingMore,
+  hasMoreMessages,
+  onLoadMore
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
+  const prevMessagesLength = useRef(messages.length);
+  const scrollHeightBeforeLoad = useRef(0);
 
+  // Cuộn xuống cuối khi có tin nhắn mới (nếu đang ở gần cuối)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (messages.length > prevMessagesLength.current) {
+        // Nếu số lượng tin nhắn tăng lên và không phải do tải thêm (load more)
+        const isNewMessage = messages[messages.length - 1]?.timestamp > messages[prevMessagesLength.current - 1]?.timestamp;
+        
+        if (isNewMessage && shouldAutoScroll) {
+            messagesEndRef.current?.scrollIntoView();
+        } else if (!isNewMessage) {
+            if (messagesContainerRef.current) {
+                const currentScrollHeight = messagesContainerRef.current.scrollHeight;
+                messagesContainerRef.current.scrollTop = currentScrollHeight - scrollHeightBeforeLoad.current;
+            }
+        }
+    }
+    prevMessagesLength.current = messages.length;
+  }, [messages, shouldAutoScroll]);
+
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    
+    // Kiểm tra xem có nên tự động cuộn không
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShouldAutoScroll(isAtBottom);
+
+    // Trigger tải thêm khi cuộn lên gần đỉnh
+    if (scrollTop < 50 && hasMoreMessages && !isLoadingMore && onLoadMore) {
+      scrollHeightBeforeLoad.current = scrollHeight;
+      onLoadMore();
+    }
+  };
 
   const partner = conversation.isGroup
     ? null
@@ -137,67 +176,78 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
       </div>
 
-      {/* Khu vực tin nhắn */}
       <div
         ref={messagesContainerRef}
+        onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-0 bg-bg-secondary"
       >
         {isLoading ? (
           <ChatBoxSkeleton />
-        ) : groupedMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-              <Avatar 
-                src={avatarSrc} 
-                size="lg" 
-                isGroup={conversation.isGroup} 
-                members={conversation.participants} 
-              />
-            </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
-            <p className="text-sm text-text-secondary">{UI_MESSAGES.CHAT.START_CONVERSATION}</p>
-          </div>
         ) : (
-          <div className="space-y-4 px-4 py-4">
-            {groupedMessages.map((group, groupIndex) => (
-              <div key={groupIndex}>
-                <div className="flex items-center justify-center my-4">
-                  <div className="bg-secondary text-text-secondary text-xs px-3 py-1 rounded-full">
-                    {group.date}
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  {group.messages.map((msg, msgIndex) => {
-                    const sender = usersMap[msg.senderId];
-                    const isMe = msg.senderId === currentUserId;
-                    const showAvatar = shouldShowAvatar(msg, msgIndex, group.messages);
-                    const showName = shouldShowName(msg, msgIndex, group.messages);
-                    const isLastMessage = msg.id === messages[messages.length - 1]?.id;
-
-                    return (
-                      <MessageBubble
-                        key={msg.id}
-                        message={msg}
-                        isMe={isMe}
-                        sender={sender}
-                        showAvatar={showAvatar}
-                        showName={showName}
-                        isLastMessage={isLastMessage}
-                        onRecall={onRecall}
-                        onDeleteForMe={onDeleteForMe}
-                        onForward={onForward}
-                        onReply={onReply}
-                        onEdit={onEdit}
-                        currentUserId={currentUserId}
-                        usersMap={usersMap}
-                      />
-                    );
-                  })}
-                </div>
+          <div className="space-y-4 px-4 py-4 min-h-full">
+            {isLoadingMore && (
+              <div className="flex justify-center py-2">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
-            ))}
-            <div ref={messagesEndRef} />
+            )}
+            
+            {groupedMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
+                  <Avatar 
+                    src={avatarSrc} 
+                    size="lg" 
+                    isGroup={conversation.isGroup} 
+                    members={conversation.participants} 
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
+                <p className="text-sm text-text-secondary">{UI_MESSAGES.CHAT.START_CONVERSATION}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {groupedMessages.map((group, groupIndex) => (
+                  <div key={groupIndex}>
+                    <div className="flex items-center justify-center my-4">
+                      <div className="bg-secondary text-text-secondary text-xs px-3 py-1 rounded-full">
+                        {group.date}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      {group.messages.map((msg, msgIndex) => {
+                        const sender = usersMap[msg.senderId];
+                        const isMe = msg.senderId === currentUserId;
+                        const showAvatar = shouldShowAvatar(msg, msgIndex, group.messages);
+                        const showName = shouldShowName(msg, msgIndex, group.messages);
+                        const isLastMessage = msg.id === messages[messages.length - 1]?.id;
+
+                        return (
+                          <MessageBubble
+                            key={msg.id}
+                            message={msg}
+                            isMe={isMe}
+                            sender={sender}
+                            showAvatar={showAvatar}
+                            showName={showName}
+                            isLastMessage={isLastMessage}
+                            onRecall={onRecall}
+                            onDeleteForMe={onDeleteForMe}
+                            onForward={onForward}
+                            onReply={onReply}
+                            onEdit={onEdit}
+                            currentUserId={currentUserId}
+                            usersMap={usersMap}
+                            isGroup={conversation.isGroup}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
         )}
       </div>
