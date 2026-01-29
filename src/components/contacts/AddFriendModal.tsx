@@ -56,7 +56,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
           <div className="flex gap-2">
             <Input
               type="text"
-              placeholder="Tìm theo tên, email hoặc số điện thoại..."
+              placeholder="Nhập chính xác địa chỉ email..."
               icon={<Search size={18} />}
               containerClassName="flex-1"
               className="h-10"
@@ -74,13 +74,13 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
             </Button>
           </div>
 
-          <div className="min-h-[300px]">
+          <div className="mt-4">
             {isLoading ? (
-              <Loading variant="inline" size="lg" className="py-12" />
+              <Loading variant="inline" size="lg" className="py-6" />
             ) : hasSearched && searchResults.length === 0 ? (
-              <div className="text-center py-12 text-text-secondary">
+              <div className="text-center py-6 text-text-secondary">
                 <p className="text-lg font-medium">Không tìm thấy người dùng nào</p>
-                <p className="text-sm mt-2">Hãy thử tìm kiếm với từ khóa khác</p>
+                <p className="text-sm mt-2">Vui lòng nhập chính xác địa chỉ email của người dùng</p>
               </div>
             ) : searchResults.length > 0 ? (
               <div className="space-y-1">
@@ -93,10 +93,10 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 text-text-tertiary">
-                <Search size={64} className="mx-auto mb-4 opacity-20" />
-                <p className="text-lg font-medium text-text-secondary">Tìm kiếm người dùng</p>
-                <p className="text-sm mt-2">Nhập tên, email hoặc số điện thoại để tìm bạn bè mới</p>
+              <div className="text-center py-8 text-text-tertiary">
+                <Search size={48} className="mx-auto mb-3 opacity-20" />
+                <p className="text-base font-medium text-text-secondary">Tìm kiếm người dùng</p>
+                <p className="text-sm mt-1">Nhập chính xác email để tìm bạn bè mới</p>
               </div>
             )}
           </div>

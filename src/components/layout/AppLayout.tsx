@@ -64,7 +64,7 @@ export const AppLayout: React.FC = () => {
   const navItems = [
     { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
     { to: '/', Icon: MessageCircle, label: 'Tin nhắn' },
-    { to: '/contacts', Icon: Users, label: 'Danh bạ' },
+    { to: '/contacts', Icon: Users, label: 'Bạn bè' },
   ];
 
   return (

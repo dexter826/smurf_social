@@ -67,7 +67,7 @@ export const userService = {
         .map(doc => doc.data() as User)
         .filter(user => 
           user.id !== currentUserId &&
-          user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+          user.email?.toLowerCase() === searchTerm.toLowerCase()
         );
       
       return users;
