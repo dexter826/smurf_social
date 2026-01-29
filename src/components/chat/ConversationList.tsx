@@ -182,12 +182,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       )}
 
-      {/* Cập nhật danh sách ngầm */}
-      {isRevalidating && (
-        <div className="h-0.5 w-full bg-primary/5 overflow-hidden">
-          <div className="h-full bg-primary animate-revalidate-progress" />
-        </div>
-      )}
 
       {/* Danh sách hội thoại / Kết quả tìm kiếm */}
       <div className="flex-1 overflow-y-auto">
