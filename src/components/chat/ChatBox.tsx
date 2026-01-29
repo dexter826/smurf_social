@@ -134,6 +134,47 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     return prevMsg.senderId !== msg.senderId;
   };
 
+  // Tính toán tin nhắn cuối cùng mỗi người đã đọc
+  const lastReadByMap = React.useMemo(() => {
+    const map: Record<string, User[]> = {};
+    if (!conversation.isGroup && messages.length > 0) {
+        // Chat đơn: chỉ quan tâm người kia đã xem tin cuối cùng chưa
+        const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
+        if (partnerId) {
+            const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(partnerId));
+            if (lastReadMsg) {
+                map[lastReadMsg.id] = [usersMap[partnerId]].filter(Boolean);
+            }
+        }
+    } else if (conversation.isGroup) {
+        // Group chat: tìm tin nhắn cuối cùng mỗi thành viên đã đọc
+        conversation.participantIds.forEach(uid => {
+            if (uid === currentUserId) return;
+            const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(uid));
+            if (lastReadMsg) {
+                if (!map[lastReadMsg.id]) map[lastReadMsg.id] = [];
+                if (usersMap[uid]) {
+                    // Để đảm bảo thứ tự "sớm nhất", chúng ta sẽ dựa vào vị trí của uid trong mảng readBy của tin nhắn đó
+                    map[lastReadMsg.id].push(usersMap[uid]);
+                }
+            }
+        });
+
+        // Sắp xếp lại User trong mỗi tin nhắn theo thứ tự họ xuất hiện trong readBy (người xem sớm nhất đứng trước)
+        Object.keys(map).forEach(msgId => {
+            const msg = messages.find(m => m.id === msgId);
+            if (msg?.readBy) {
+                map[msgId].sort((a, b) => {
+                    const idxA = msg.readBy!.indexOf(a.id);
+                    const idxB = msg.readBy!.indexOf(b.id);
+                    return idxA - idxB;
+                });
+            }
+        });
+    }
+    return map;
+  }, [messages, conversation, usersMap, currentUserId]);
+
   return (
     <div className="relative flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
       {/* Header chat */}
@@ -231,6 +272,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                             showAvatar={showAvatar}
                             showName={showName}
                             isLastMessage={isLastMessage}
+                            lastReadByUsers={lastReadByMap[msg.id]}
                             onRecall={onRecall}
                             onDeleteForMe={onDeleteForMe}
                             onForward={onForward}
