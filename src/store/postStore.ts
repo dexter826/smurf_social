@@ -22,6 +22,11 @@ interface PostState {
 
   setLoading: (loading: boolean) => void;
   clearPosts: () => void;
+
+  selectedPost: Post | null;
+  isModalLoading: boolean;
+  setSelectedPost: (post: Post | null) => void;
+  fetchPostById: (postId: string, currentUserId: string, friendIds: string[]) => Promise<void>;
 }
 
 export const usePostStore = create<PostState>()(
@@ -174,7 +179,23 @@ export const usePostStore = create<PostState>()(
 
       setLoading: (loading: boolean) => set({ isLoading: loading }),
 
-      clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true })
+      clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true }),
+
+      selectedPost: null,
+      isModalLoading: false,
+
+      setSelectedPost: (post: Post | null) => set({ selectedPost: post }),
+
+      fetchPostById: async (postId: string, currentUserId: string, friendIds: string[]) => {
+        set({ isModalLoading: true });
+        try {
+          const post = await postService.getPostById(postId, currentUserId, friendIds);
+          set({ selectedPost: post, isModalLoading: false });
+        } catch (error) {
+          console.error("Lỗi lấy chi tiết bài viết:", error);
+          set({ isModalLoading: false });
+        }
+      },
     }),
     {
       name: 'smurf_feed_cache',

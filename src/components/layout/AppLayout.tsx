@@ -6,6 +6,9 @@ import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
 import { useContactStore } from '../../store/contactStore';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
+import { PostViewModal } from '../feed';
+import { usePostStore } from '../../store/postStore';
+import { useUserCache } from '../../store/userCacheStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationDropdown } from '../notifications/NotificationDropdown';
 
@@ -15,6 +18,10 @@ export const AppLayout: React.FC = () => {
   const { conversations, subscribeToConversations } = useChatStore();
   const { receivedRequests, subscribeToRequests } = useContactStore();
   const { initialize: initNotifications } = useNotificationStore();
+  
+  const { selectedPost, setSelectedPost, isModalLoading, likePost } = usePostStore();
+  const { users: usersMap, fetchUsers } = useUserCache();
+
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -30,6 +37,12 @@ export const AppLayout: React.FC = () => {
     };
   }, [user, subscribeToConversations, subscribeToRequests, initNotifications]);
 
+  useEffect(() => {
+    if (selectedPost && !usersMap[selectedPost.userId]) {
+      fetchUsers([selectedPost.userId]);
+    }
+  }, [selectedPost, usersMap, fetchUsers]);
+
   const totalUnread = user ? conversations.reduce((total, conv) => {
     const count = conv.unreadCount?.[user.id] || 0;
     return total + (count > 0 || conv.markedUnread ? (count || 1) : 0);
@@ -40,6 +53,12 @@ export const AppLayout: React.FC = () => {
   const handleConfirmLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handlePostLike = async (postId: string) => {
+    if (user) {
+      await likePost(postId, user.id);
+    }
   };
 
   const navItems = [
@@ -190,6 +209,18 @@ export const AppLayout: React.FC = () => {
         message="Bạn có chắc chắn muốn rời khỏi phiên làm việc này?"
         confirmLabel="Đăng xuất"
       />
+
+      {user && (
+        <PostViewModal
+          isOpen={!!selectedPost || isModalLoading}
+          onClose={() => setSelectedPost(null)}
+          post={selectedPost}
+          author={selectedPost ? usersMap[selectedPost.userId] : null}
+          currentUser={user}
+          onLike={handlePostLike}
+          isLoading={isModalLoading}
+        />
+      )}
     </div>
   );
 };

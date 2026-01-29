@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Spinner, Button, ConfirmDialog } from '../components/ui';
+import { PostViewModal } from '../components/feed';
+import { usePostStore } from '../store/postStore';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
@@ -35,6 +37,8 @@ const ProfilePage: React.FC = () => {
     handleAvatarDelete,
     handleCoverDelete,
   } = useProfile();
+
+  const { selectedPost, setSelectedPost } = usePostStore();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmUnfriendOpen, setIsConfirmUnfriendOpen] = useState(false);
@@ -239,6 +243,16 @@ const ProfilePage: React.FC = () => {
         message="Bạn có chắc chắn muốn xóa ảnh bìa hiện tại?"
         confirmLabel="Xóa ngay"
         variant="danger"
+      />
+      <PostViewModal
+        isOpen={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        post={selectedPost}
+        author={selectedPost?.userId === profile?.id ? profile : null}
+        currentUser={currentUser}
+        onLike={async (postId) => {
+          await usePostStore.getState().likePost(postId, currentUser.id);
+        }}
       />
     </div>
   );

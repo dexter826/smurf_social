@@ -6,6 +6,7 @@ import { userService } from '../../services/userService';
 import { PostItem, CreatePost } from '../feed';
 import { ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
+import { usePostStore } from '../../store/postStore';
 import { FileText } from 'lucide-react';
 
 interface PostsTabProps {
@@ -23,6 +24,8 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
 
   const [loading, setLoading] = useState(true);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  
+  const { setSelectedPost } = usePostStore();
 
   // Reset state khi đổi user
   useEffect(() => {
@@ -58,6 +61,8 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
     try {
       const result = await postService.getUserPosts(
         userId, 
+        currentUser.id,
+        currentUser.friendIds || [],
         10, 
         isFirstPage ? undefined : (lastDoc || undefined)
       );
@@ -171,6 +176,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
                       onComment={handleComment}
                       onEdit={handleEdit}
                       onDelete={(id) => setPostToDelete(id)}
+                      onViewDetail={(post) => setSelectedPost(post)}
                     />
                  </div>
                );
@@ -185,6 +191,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
                   onComment={handleComment}
                   onEdit={handleEdit}
                   onDelete={(id) => setPostToDelete(id)}
+                  onViewDetail={(post) => setSelectedPost(post)}
                 />
               );
             }

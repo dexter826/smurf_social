@@ -6,6 +6,8 @@ import { UserAvatar } from '../ui';
 import { notificationService } from '../../services/notificationService';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../../store/notificationStore';
+import { usePostStore } from '../../store/postStore';
+import { useAuthStore } from '../../store/authStore';
 
 interface NotificationItemProps {
   notification: AppNotification;
@@ -21,6 +23,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       await markAsRead(notification.id);
     }
 
+    const { fetchPostById } = usePostStore.getState();
+    const { user } = useAuthStore.getState();
+
     if (onClick) {
       onClick();
     }
@@ -29,7 +34,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
     switch (notification.type) {
       case NotificationType.LIKE_POST:
       case NotificationType.COMMENT_POST:
-        if (notification.data.postId) navigate(`/post/${notification.data.postId}`);
+        if (notification.data.postId && user) {
+          fetchPostById(notification.data.postId, user.id, user.friendIds || []);
+        }
         break;
       case NotificationType.FRIEND_REQUEST:
         navigate('/contacts');
@@ -39,7 +46,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
         break;
       case NotificationType.REPLY_COMMENT:
       case NotificationType.LIKE_COMMENT:
-        if (notification.data.postId) navigate(`/post/${notification.data.postId}`);
+        if (notification.data.postId && user) {
+          fetchPostById(notification.data.postId, user.id, user.friendIds || []);
+        }
         break;
     }
   };

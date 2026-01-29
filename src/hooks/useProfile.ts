@@ -68,7 +68,7 @@ export const useProfile = (): UseProfileReturn => {
       const [userData, userStats, userPosts] = await Promise.all([
         userService.getUserById(profileUserId),
         userService.getUserStats(profileUserId),
-        postService.getUserPosts(profileUserId, 20)
+        postService.getUserPosts(profileUserId, currentUser?.id || '', currentUser?.friendIds || [], 20)
       ]);
       
       setProfile(userData || null);

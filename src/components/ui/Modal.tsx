@@ -10,7 +10,11 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | '5xl' | '6xl' | '7xl';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  showHeader?: boolean;
+  showCloseButton?: boolean;
+  className?: string;
 }
 
 const maxWidthClasses = {
@@ -19,6 +23,17 @@ const maxWidthClasses = {
   lg: 'max-w-lg',
   xl: 'max-w-xl',
   '2xl': 'max-w-2xl',
+  '4xl': 'max-w-4xl',
+  '5xl': 'max-w-5xl',
+  '6xl': 'max-w-6xl',
+  '7xl': 'max-w-7xl',
+};
+
+const paddingClasses = {
+  none: 'p-0',
+  sm: 'p-2',
+  md: 'p-4',
+  lg: 'p-6',
 };
 
 export const Modal: React.FC<ModalProps> = ({
@@ -27,7 +42,11 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   children,
   footer,
-  maxWidth = 'md'
+  maxWidth = 'md',
+  padding = 'lg',
+  showHeader = true,
+  showCloseButton = true,
+  className = ''
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -51,22 +70,26 @@ export const Modal: React.FC<ModalProps> = ({
       
       <div className={`
         relative bg-bg-primary w-full rounded-2xl shadow-2xl transition-theme overflow-hidden flex flex-col animate-in zoom-in-95 duration-200
-        ${maxWidthClasses[maxWidth]}
+        ${maxWidthClasses[maxWidth]} ${className}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-light">
-          <h3 className="text-lg font-bold text-text-primary px-1">
-            {title || ''}
-          </h3>
-          <IconButton
-            onClick={onClose}
-            icon={<X size={20} />}
-            size="lg"
-          />
-        </div>
+        {showHeader && (
+          <div className="flex items-center justify-between p-4 border-b border-border-light">
+            <h3 className="text-lg font-bold text-text-primary px-1">
+              {title || ''}
+            </h3>
+            {showCloseButton && (
+              <IconButton
+                onClick={onClose}
+                icon={<X size={20} />}
+                size="lg"
+              />
+            )}
+          </div>
+        )}
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto max-h-[80vh]">
+        <div className={`overflow-y-auto max-h-[90vh] ${paddingClasses[padding]}`}>
           {children}
         </div>
 
