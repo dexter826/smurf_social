@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText } from '../ui';
 import { chatService } from '../../services/chatService';
 import { UI_MESSAGES } from '../../constants/uiMessages';
 
@@ -21,6 +21,7 @@ interface MessageBubbleProps {
   currentUserId: string;
   usersMap: Record<string, User>;
   isGroup?: boolean;
+  lastReadByUsers?: User[];
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
@@ -37,7 +38,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onEdit,
   currentUserId,
   usersMap,
-  isGroup = false
+  isGroup = false,
+  lastReadByUsers = []
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
@@ -300,41 +302,60 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {/* Status moved to separate line below */}
             </span>
           )}
-          {isMe && (isLastMessage || (isGroup && isRead)) && (
+          {isMe && (isLastMessage || lastReadByUsers.length > 0) && (
             <div className="flex flex-col items-end mt-0.5">
-              <div 
-                className={`text-[11px] font-medium cursor-pointer select-none ${
-                   isRead ? 'text-primary' : 'text-text-tertiary'
-                }`}
-                onClick={() => isRead && isGroup && setShowReaders(!showReaders)}
-              >
-                {isGroup ? (
-                   isRead 
-                    ? `Đã xem bởi ${otherReaders.length} người` 
-                    : isDelivered ? UI_MESSAGES.CHAT.DELIVERED : UI_MESSAGES.CHAT.SENT
-                ) : (
-                   isRead 
-                    ? UI_MESSAGES.CHAT.READ
-                    : isDelivered ? UI_MESSAGES.CHAT.DELIVERED : UI_MESSAGES.CHAT.SENT
-                )}
-              </div>
+              {/* Hiển thị "Đã gửi/Đã nhận" nếu là tin nhắn cuối cùng và chưa ai đọc */}
+              {isLastMessage && lastReadByUsers.length === 0 && (
+                <div className="text-[11px] font-medium text-text-tertiary select-none">
+                  {isDelivered ? UI_MESSAGES.CHAT.DELIVERED : UI_MESSAGES.CHAT.SENT}
+                </div>
+              )}
+
+              {/* Danh sách avatar người đã đọc tin nhắn này (đây là tin cuối cùng họ xem) */}
+              {lastReadByUsers.length > 0 && (
+                <div 
+                  className="flex items-center gap-1 mt-1 cursor-pointer"
+                  onClick={() => isGroup && setShowReaders(!showReaders)}
+                >
+                  <div className="flex -space-x-1.5 overflow-hidden">
+                    {lastReadByUsers.slice(0, 3).map(user => (
+                      <div key={user.id} className="inline-block h-4 w-4 rounded-full ring-1 ring-bg-primary overflow-hidden bg-bg-primary">
+                        <Avatar src={user.avatar} name={user.name} size="xs" />
+                      </div>
+                    ))}
+                  </div>
+                  {lastReadByUsers.length > 3 && (
+                    <span className="text-[10px] text-text-tertiary font-medium">
+                      +{lastReadByUsers.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
               
-              {/* Danh sách người xem cho group chat */}
-              {isGroup && isRead && showReaders && (
-                <div className="flex flex-wrap justify-end gap-1 mt-1 max-w-[200px] animate-in fade-in slide-in-from-top-1 duration-200">
-                  {otherReaders.map(uid => {
-                    const reader = usersMap[uid];
-                    if (!reader) return null;
-                    return (
-                      <div key={uid} title={reader.name} className="relative group">
-                        <Avatar src={reader.avatar} name={reader.name} size="xs" />
-                        <div className="absolute bottom-full right-0 mb-1 hidden group-hover:block z-50 whitespace-nowrap bg-bg-primary border border-border-light rounded px-2 py-1 text-[10px] shadow-dropdown">
-                          {reader.name}
+              {/* Danh sách người xem chi tiết khi click (chỉ cho group) */}
+              {isGroup && lastReadByUsers.length > 0 && (
+                <Modal
+                  isOpen={showReaders}
+                  onClose={() => setShowReaders(false)}
+                  title="Người đã xem"
+                  maxWidth="sm"
+                >
+                  <div className="space-y-3">
+                    {lastReadByUsers.map(reader => (
+                      <div key={reader.id} className="flex items-center gap-3 p-2 hover:bg-bg-hover rounded-lg transition-colors">
+                        <UserAvatar userId={reader.id} src={reader.avatar} size="md" initialStatus={reader.status} showStatus={true} />
+                        <div className="flex-1">
+                          <div className="text-sm font-bold text-text-primary">{reader.name}</div>
+                          <UserStatusText 
+                            userId={reader.id} 
+                            initialStatus={reader.status} 
+                            className="text-xs text-text-tertiary"
+                          />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                </Modal>
               )}
             </div>
           )}

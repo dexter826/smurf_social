@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
-import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton } from '../ui';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton, Avatar } from '../ui';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -58,7 +58,14 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     : 'Chưa có tin nhắn';
 
   const isLastMessageMine = lastMessage?.senderId === currentUserId;
-  const isLastMessageRead = lastMessage?.readBy && lastMessage.readBy.length > 1;
+  
+  // Lấy danh sách những người đã xem tin nhắn cuối cùng (không bao gồm chính mình)
+  const readers = (lastMessage?.readBy || [])
+    .filter(uid => uid !== currentUserId)
+    .map(uid => conversation.participants.find(p => p.id === uid))
+    .filter((u): u is User => !!u);
+
+  const isLastMessageRead = readers.length > 0;
   const isLastMessageDelivered = !!lastMessage?.deliveredAt;
 
   const timeAgo = conversation.updatedAt 
@@ -134,16 +141,30 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             })()}
           </p>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {isLastMessageMine && (conversation.typingUsers || []).filter(id => id !== currentUserId).length === 0 && (
-              <span className="text-[11px] font-medium text-text-secondary whitespace-nowrap">
-                {isLastMessageRead 
-                  ? 'Đã xem'
-                  : isLastMessageDelivered
-                    ? 'Đã nhận'
-                    : 'Đã gửi'
-                }
-              </span>
+              <div className="flex items-center">
+                {isLastMessageRead ? (
+                  <div className="flex items-center gap-1">
+                    <div className="flex -space-x-1 overflow-hidden">
+                      {readers.slice(0, 3).map(user => (
+                        <div key={user.id} className="inline-block h-3.5 w-3.5 rounded-full ring-1 ring-bg-primary overflow-hidden bg-bg-primary">
+                          <Avatar src={user.avatar} name={user.name} size="xs" />
+                        </div>
+                      ))}
+                    </div>
+                    {readers.length > 3 && (
+                      <span className="text-[9px] text-text-tertiary font-bold">
+                        +{readers.length - 3}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className={isLastMessageDelivered ? "text-primary" : "text-text-tertiary"}>
+                    {isLastMessageDelivered ? <CheckCheck size={14} strokeWidth={2.5} /> : <Check size={14} strokeWidth={2.5} />}
+                  </div>
+                )}
+              </div>
             )}
             
             {isUnread && unreadCount > 0 ? (
