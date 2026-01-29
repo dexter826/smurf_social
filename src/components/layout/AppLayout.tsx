@@ -62,87 +62,107 @@ export const AppLayout: React.FC = () => {
   };
 
   const navItems = [
+    { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
     { to: '/', Icon: MessageCircle, label: 'Tin nhắn' },
     { to: '/contacts', Icon: Users, label: 'Danh bạ' },
-    { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
   ];
 
   return (
-    <div className="flex h-[100dvh] w-full bg-bg-secondary overflow-hidden transition-theme">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md border-r border-border-sidebar transition-theme">
-        <div className="mb-8" onClick={() => navigate('/profile')}>
-          {user && (
-            <UserAvatar 
-              userId={user.id}
-              src={user.avatar} 
-              size="md" 
-              className="cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all" 
-              initialStatus={user.status}
-            />
-          )}
+    <div className="flex flex-col h-[100dvh] w-full bg-bg-secondary overflow-hidden transition-theme">
+      {/* Desktop Navbar */}
+      <header className="hidden md:flex h-16 w-full items-center justify-between bg-bg-primary px-6 z-50 shadow-sm border-b border-border-light transition-theme">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/feed')}>
+          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
+            <span className="text-white font-bold text-lg">S</span>
+          </div>
+          <span className="text-lg font-bold text-text-primary hidden lg:block tracking-tight">
+            Smurf Social
+          </span>
         </div>
-        
-        <nav className="flex-1 flex flex-col gap-2 w-full items-center">
+
+        {/* Center: Navigation */}
+        <nav className="flex items-center gap-1">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                `px-5 h-11 flex items-center justify-center rounded-xl transition-all duration-200 relative group ${
                   isActive 
-                  ? 'bg-sidebar-item-active text-white' 
-                  : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
+                  ? 'bg-bg-secondary text-primary shadow-sm' 
+                  : 'text-text-tertiary hover:bg-bg-secondary/70 hover:text-text-primary'
                 }`
               }
               title={item.label}
             >
-              <div className="relative">
-                <item.Icon size={28} />
+              <div className="flex items-center gap-2.5">
+                <item.Icon size={20} />
+                <span className="text-sm font-bold">{item.label}</span>
                 {item.to === '/' && totalUnread > 0 && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-sidebar-bg" />
+                  <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full ring-2 ring-bg-primary" />
                 )}
                 {item.to === '/contacts' && hasNewRequests && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-sidebar-bg" />
+                  <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full ring-2 ring-bg-primary" />
                 )}
               </div>
             </NavLink>
           ))}
-          <div className="mt-2 text-sidebar-item hover:text-white transition-colors">
-            <NotificationDropdown />
-          </div>
         </nav>
 
-        <div className="flex flex-col gap-2 mt-auto w-full items-center">
-           <button
-                onClick={toggleTheme} 
-                className="w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 text-sidebar-item hover:bg-sidebar-item-hover hover:text-white"
-                title="Chế độ tối"
-           >
-             {mode === 'light' ? <Moon size={28} /> : <Sun size={28} />}
-           </button>
-           <NavLink 
-              to="/settings"
-              className={({ isActive }) => 
-                `w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-sidebar-item-active text-white' 
-                    : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
-                }`
-              }
-              title="Cài đặt"
-           >
-             <Settings size={28} />
-           </NavLink>
-           <button
+        {/* Right: User Actions */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <NotificationDropdown />
+            
+            <button
+              onClick={toggleTheme} 
+              className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 text-text-tertiary hover:bg-bg-secondary hover:text-primary"
+              title="Chế độ tối"
+            >
+              {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+          </div>
+
+          <div className="w-px h-6 bg-border-light mx-1" />
+
+          <div className="flex items-center gap-2">
+             <NavLink 
+                to="/settings"
+                className={({ isActive }) => 
+                  `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-bg-secondary text-primary shadow-sm' 
+                      : 'text-text-tertiary hover:bg-bg-secondary hover:text-primary'
+                  }`
+                }
+                title="Cài đặt"
+              >
+                <Settings size={20} />
+              </NavLink>
+
+              <div className="group relative ml-1" onClick={() => navigate('/profile')}>
+                {user && (
+                  <UserAvatar 
+                    userId={user.id}
+                    src={user.avatar} 
+                    size="sm" 
+                    className="cursor-pointer ring-2 ring-transparent group-hover:ring-primary transition-all" 
+                    initialStatus={user.status}
+                  />
+                )}
+              </div>
+
+              <button
                 onClick={() => setShowLogoutConfirm(true)} 
-                className="w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 text-sidebar-item hover:bg-sidebar-item-hover hover:text-white" 
+                className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 text-text-tertiary hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-500" 
                 title="Đăng xuất"
-           >
-             <LogOut size={28} />
-           </button>
+              >
+                <LogOut size={20} />
+              </button>
+          </div>
         </div>
-      </aside>
+      </header>
 
       {/* Main Content */}
       <main className="flex-1 relative flex flex-col h-full overflow-hidden transition-theme pb-[60px] md:pb-0">
