@@ -17,6 +17,9 @@ interface ProfileHeaderProps {
   onCoverChange?: (file: File) => void;
   onAvatarDelete?: () => void;
   onCoverDelete?: () => void;
+  onBlockClick?: () => void;
+  onUnblockClick?: () => void;
+  isBlockedByMe?: boolean;
   uploading?: boolean;
 }
 
@@ -32,6 +35,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onCoverChange,
   onAvatarDelete,
   onCoverDelete,
+  onBlockClick,
+  onUnblockClick,
+  isBlockedByMe = false,
   uploading = false
 }) => {
   const navigate = useNavigate();
@@ -286,6 +292,24 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       className="bg-primary-600 hover:bg-primary-700 shadow-md"
                     >
                       Kết bạn
+                    </Button>
+                  )}
+
+                  {isBlockedByMe ? (
+                    <Button 
+                      variant="secondary" 
+                      onClick={onUnblockClick}
+                      className="border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
+                    >
+                      Bỏ chặn
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="secondary" 
+                      onClick={onBlockClick}
+                      className="border-border-medium text-text-secondary hover:text-red-600 hover:bg-red-50 hover:border-red-100"
+                    >
+                      Chặn
                     </Button>
                   )}
                 </>

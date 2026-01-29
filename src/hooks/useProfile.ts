@@ -28,6 +28,7 @@ interface UseProfileReturn {
   profileUserId: string | undefined;
   isOwnProfile: boolean;
   isFriend: boolean;
+  isBlockedByMe: boolean;
   canViewContent: boolean;
   
   activeTab: TabType;
@@ -42,6 +43,8 @@ interface UseProfileReturn {
   handleCoverChange: (file: File) => Promise<void>;
   handleAvatarDelete: () => Promise<void>;
   handleCoverDelete: () => Promise<void>;
+  handleBlockUser: () => Promise<void>;
+  handleUnblockUser: () => Promise<void>;
 }
 
 export const useProfile = (): UseProfileReturn => {
@@ -59,6 +62,7 @@ export const useProfile = (): UseProfileReturn => {
   const profileUserId = userId || currentUser?.id;
   const isOwnProfile = currentUser?.id === profileUserId;
   const isFriend = currentUser?.friendIds?.includes(profileUserId || '') || false;
+  const isBlockedByMe = currentUser?.blockedUserIds?.includes(profileUserId || '') || false;
   const canViewContent = isOwnProfile || isFriend;
 
   const loadProfile = useCallback(async () => {
@@ -228,6 +232,48 @@ export const useProfile = (): UseProfileReturn => {
     }
   }, [profile, isOwnProfile]);
 
+  const handleBlockUser = useCallback(async () => {
+    if (!currentUser || !profile || isOwnProfile) return;
+    try {
+      if (isFriend) {
+        await friendService.unfriend(currentUser.id, profile.id);
+      }
+      await userService.blockUser(currentUser.id, profile.id);
+      
+      // Cập nhật state local
+      useAuthStore.setState({
+        user: {
+          ...currentUser,
+          blockedUserIds: [...(currentUser.blockedUserIds || []), profile.id],
+          friendIds: currentUser.friendIds?.filter(id => id !== profile.id) || []
+        }
+      });
+      
+      toast.success('Đã chặn người dùng');
+    } catch (error) {
+      toast.error('Không thể chặn người dùng');
+    }
+  }, [currentUser, profile, isOwnProfile, isFriend]);
+
+  const handleUnblockUser = useCallback(async () => {
+    if (!currentUser || !profile || isOwnProfile) return;
+    try {
+      await userService.unblockUser(currentUser.id, profile.id);
+      
+      // Cập nhật state local
+      useAuthStore.setState({
+        user: {
+          ...currentUser,
+          blockedUserIds: currentUser.blockedUserIds?.filter(id => id !== profile.id) || []
+        }
+      });
+      
+      toast.success('Đã bỏ chặn người dùng');
+    } catch (error) {
+      toast.error('Không thể bỏ chặn người dùng');
+    }
+  }, [currentUser, profile, isOwnProfile]);
+
   return {
     currentUser,
     profile,
@@ -250,5 +296,8 @@ export const useProfile = (): UseProfileReturn => {
     handleCoverChange,
     handleAvatarDelete,
     handleCoverDelete,
+    isBlockedByMe,
+    handleBlockUser,
+    handleUnblockUser,
   };
 };

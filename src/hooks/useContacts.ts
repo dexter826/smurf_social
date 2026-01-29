@@ -63,21 +63,18 @@ export const useContacts = (): UseContactsReturn => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Đồng bộ bạn bè và yêu cầu
-  const handleFetchFriends = useCallback(() => {
-    if (!currentUser) return;
-    fetchFriends(currentUser.id);
-  }, [currentUser, fetchFriends]);
-
-  const handleSubscribeToRequests = useCallback(() => {
-    if (!currentUser) return () => {};
-    return subscribeToRequests(currentUser.id);
-  }, [currentUser, subscribeToRequests]);
+  const friendIdsString = JSON.stringify(currentUser?.friendIds || []);
 
   useEffect(() => {
-    handleFetchFriends();
-    const unsubscribe = handleSubscribeToRequests();
+    if (!currentUser) return;
+    fetchFriends(currentUser.id);
+  }, [currentUser?.id, friendIdsString, fetchFriends]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsubscribe = subscribeToRequests(currentUser.id);
     return () => unsubscribe();
-  }, [handleFetchFriends, handleSubscribeToRequests]);
+  }, [currentUser?.id, subscribeToRequests]);
 
   // Tải thông tin user cho yêu cầu kết bạn
   useEffect(() => {

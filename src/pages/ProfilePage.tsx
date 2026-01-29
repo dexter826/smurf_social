@@ -36,6 +36,9 @@ const ProfilePage: React.FC = () => {
     handleCoverChange,
     handleAvatarDelete,
     handleCoverDelete,
+    isBlockedByMe,
+    handleBlockUser,
+    handleUnblockUser,
   } = useProfile();
 
   const { selectedPost, setSelectedPost } = usePostStore();
@@ -44,6 +47,7 @@ const ProfilePage: React.FC = () => {
   const [isConfirmUnfriendOpen, setIsConfirmUnfriendOpen] = useState(false);
   const [isConfirmDeleteAvatarOpen, setIsConfirmDeleteAvatarOpen] = useState(false);
   const [isConfirmDeleteCoverOpen, setIsConfirmDeleteCoverOpen] = useState(false);
+  const [isConfirmBlockOpen, setIsConfirmBlockOpen] = useState(false);
 
   const onFriendActionClick = async () => {
     const { needConfirm } = await handleFriendAction();
@@ -86,6 +90,9 @@ const ProfilePage: React.FC = () => {
           onCoverChange={handleCoverChange}
           onAvatarDelete={() => setIsConfirmDeleteAvatarOpen(true)}
           onCoverDelete={() => setIsConfirmDeleteCoverOpen(true)}
+          onBlockClick={() => setIsConfirmBlockOpen(true)}
+          onUnblockClick={handleUnblockUser}
+          isBlockedByMe={isBlockedByMe}
           uploading={uploading}
         />
 
@@ -244,6 +251,20 @@ const ProfilePage: React.FC = () => {
         confirmLabel="Xóa ngay"
         variant="danger"
       />
+
+      <ConfirmDialog
+        isOpen={isConfirmBlockOpen}
+        onClose={() => setIsConfirmBlockOpen(false)}
+        onConfirm={async () => {
+          await handleBlockUser();
+          setIsConfirmBlockOpen(false);
+        }}
+        title="Chặn người dùng"
+        message={`Bạn có chắc chắn muốn chặn ${profile?.name || ''}? Hai bạn sẽ không thể tìm thấy nhau hoặc gửi tin nhắn mới.`}
+        confirmLabel="Chặn người dùng"
+        variant="danger"
+      />
+
       <PostViewModal
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
