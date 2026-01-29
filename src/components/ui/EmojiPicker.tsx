@@ -67,7 +67,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           {/* Mobile Overlay */}
           {showOverlay && (
             <div 
-              className="fixed inset-0 bg-black/50 z-[99] md:hidden" 
+              className="fixed inset-0 bg-bg-overlay backdrop-blur-sm z-[99] md:hidden" 
               onClick={() => setIsOpen(false)}
             />
           )}

@@ -64,7 +64,7 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-4 overflow-hidden">
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
       />
       
@@ -158,7 +158,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       {/* Backdrop */}
       <div 
         className={`
-          fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200
+          fixed inset-0 bg-bg-overlay backdrop-blur-sm transition-opacity duration-200
           ${isAnimating ? 'opacity-100' : 'opacity-0'}
         `}
         onClick={onClose}

@@ -146,7 +146,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
       <div
         onClick={onClose}
         className={`
-          fixed inset-0 bg-black/40 z-40 md:hidden
+          fixed inset-0 bg-bg-overlay backdrop-blur-sm z-40 md:hidden
           transition-opacity duration-300
           ${isAnimating ? 'opacity-100' : 'opacity-0'}
         `}
