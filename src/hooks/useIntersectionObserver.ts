@@ -11,7 +11,7 @@ export const useIntersectionObserver = (
   callback: () => void,
   options: UseIntersectionObserverOptions = {}
 ): RefObject<HTMLDivElement> => {
-  const { threshold = 1.0, rootMargin = '0px', enabled = true } = options;
+  const { threshold = 0.1, rootMargin = '100px', enabled = true } = options;
   const observerRef = useRef<HTMLDivElement>(null);
 
   const handleIntersection = useCallback(

@@ -62,16 +62,15 @@ export const useNotificationStore = create<NotificationState>()(
     }));
   },
 
-  initialize: (userId) => {
+  initialize: (userId: string, limit: number = 15) => {
     set({ isLoading: true });
     
-    // Đồng bộ thông báo thời gian thực
     const unsubscribe = notificationService.subscribeToNotifications(userId, (notifications) => {
       get().setNotifications(notifications);
       set({ isLoading: false });
-    });
+    }, limit);
 
-    // Yêu cầu quyền Push
+    // Xin quyền nhận push message qua trình duyệt.
     notificationService.requestPushPermission(userId).catch(err => {
       console.warn("Lỗi yêu cầu quyền Push tự động:", err);
     });

@@ -54,13 +54,13 @@ export const notificationService = {
     }
   },
 
-  // Đăng ký nghe thông báo thời gian thực
-  subscribeToNotifications: (userId: string, callback: (notifications: AppNotification[]) => void) => {
+  // Theo dõi thông báo mới nhất.
+  subscribeToNotifications: (userId: string, callback: (notifications: AppNotification[]) => void, limitCount: number = 20) => {
     const q = query(
       collection(db, 'notifications'),
       where('receiverId', '==', userId),
       orderBy('createdAt', 'desc'),
-      limit(50)
+      limit(limitCount)
     );
 
     return onSnapshot(q, (snapshot) => {
