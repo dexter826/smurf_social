@@ -130,19 +130,20 @@ export const notificationService = {
 
   // Helper để lấy text hiển thị ngắn gọn cho thông báo
   getNotificationText: (notification: AppNotification, senderName: string): string => {
+    const prefix = senderName ? `${senderName} ` : '';
     switch (notification.type) {
       case NotificationType.LIKE_POST:
-        return `${senderName} đã thích bài viết của bạn.`;
+        return `${prefix}đã thích bài viết của bạn.`;
       case NotificationType.COMMENT_POST:
-        return `${senderName} đã bình luận: "${notification.data.contentSnippet}"`;
+        return `${prefix}đã bình luận: "${notification.data.contentSnippet}"`;
       case NotificationType.REPLY_COMMENT:
-        return `${senderName} đã phản hồi bình luận của bạn.`;
+        return `${prefix}đã phản hồi bình luận của bạn.`;
       case NotificationType.LIKE_COMMENT:
-        return `${senderName} đã thích bình luận của bạn.`;
+        return `${prefix}đã thích bình luận của bạn.`;
       case NotificationType.FRIEND_REQUEST:
-        return `${senderName} đã gửi lời mời kết bạn.`;
+        return `${prefix}đã gửi lời mời kết bạn.`;
       case NotificationType.FRIEND_ACCEPT:
-        return `${senderName} đã chấp nhận lời mời kết bạn.`;
+        return `${prefix}đã chấp nhận lời mời kết bạn.`;
       default:
         return "Thông báo mới.";
     }
