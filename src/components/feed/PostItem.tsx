@@ -163,35 +163,39 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       )}
 
       {/* Stats */}
-      <div className="px-4 py-3 flex justify-between items-center border-b border-border-light">
-        <div className="flex items-center gap-1.5">
-          {post.likes.length > 0 && (
-            <>
-              <div className="bg-error p-1 rounded-full">
-                <Heart size={12} className="text-white fill-white" />
-              </div>
-              <span className="text-sm text-text-secondary font-medium">
-                {post.likes.length}
-              </span>
-            </>
-          )}
+      {post.likes.length > 0 || post.commentCount > 0 ? (
+        <div className="px-4 py-3 flex justify-between items-center border-b border-border-light">
+          <div className="flex items-center gap-1.5">
+            {post.likes.length > 0 && (
+              <>
+                <div className="bg-error p-1 rounded-full">
+                  <Heart size={12} className="text-white fill-white" />
+                </div>
+                <span className="text-sm text-text-secondary font-medium">
+                  {post.likes.length}
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
+            {post.commentCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onViewDetail?.(post)}
+                className="hover:underline hover:!bg-transparent text-text-secondary"
+              >
+                {post.commentCount} bình luận
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-sm text-text-secondary">
-          {post.commentCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewDetail?.(post)}
-              className="hover:underline hover:!bg-transparent text-text-secondary"
-            >
-              {post.commentCount} bình luận
-            </Button>
-          )}
-        </div>
-      </div>
+      ) : (
+        <div className="h-2 border-b border-border-light"></div>
+      )}
 
       {/* Actions */}
-      <div className="flex px-2 py-1 border-b border-border-light">
+      <div className="flex px-2 py-1">
         <Button
           variant="ghost"
           onClick={() => onLike(post.id)}
