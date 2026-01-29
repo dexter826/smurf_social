@@ -96,15 +96,15 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     ? "m-0 md:m-4 md:rounded-3xl shadow-none"
     : "md:max-h-[90vh] shadow-none";
   const containerClassName = hasMedia
-    ? "flex flex-col lg:flex-row h-[100dvh] lg:h-[85vh] bg-bg-primary overflow-hidden lg:rounded-3xl relative transition-all duration-300 w-full"
-    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary overflow-hidden md:rounded-2xl relative transition-all duration-300 w-full";
+    ? "flex flex-col lg:flex-row h-[100dvh] lg:min-h-[90vh] lg:h-[92vh] bg-bg-primary overflow-hidden lg:rounded-3xl relative transition-all duration-300 w-full border border-border-light shadow-2xl"
+    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary overflow-hidden md:rounded-2xl relative transition-all duration-300 w-full border border-border-light shadow-2xl";
 
   return (
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
       showHeader={false} 
-      maxWidth={hasMedia ? "5xl" : "lg"} 
+      maxWidth={hasMedia ? "7xl" : "lg"} 
       padding="none"
       className={modalClassName}
     >
@@ -124,43 +124,49 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               <X size={24} />
             </button>
 
-            <div className="w-full h-full flex items-center justify-center z-10 p-2 lg:p-6 pb-8 md:pb-6">
-               {allMedia[mediaIndex].type === 'video' ? (
-                <video 
-                  src={allMedia[mediaIndex].url} 
-                  controls 
-                  className="max-w-full max-h-full rounded-xl shadow-2xl"
-                />
-              ) : (
-                <img 
-                  src={allMedia[mediaIndex].url} 
-                  alt="" 
-                  className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-500"
-                />
-              )}
+            <div className="w-full h-full relative z-10">
+              
+              {/* Media Content (Full Space) */}
+              <div className="w-full h-full flex items-center justify-center bg-bg-secondary">
+                {allMedia[mediaIndex].type === 'video' ? (
+                  <video 
+                    src={allMedia[mediaIndex].url} 
+                    controls 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <img 
+                    src={allMedia[mediaIndex].url} 
+                    alt="" 
+                    className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-500"
+                  />
+                )}
+              </div>
 
-              {/* Nut dieu huong */}
+              {/* Overlay Navigation */}
               {allMedia.length > 1 && (
                 <>
-                  <div className="absolute inset-0 flex items-center justify-between px-2 md:px-6 pointer-events-none">
-                    <div className={`${mediaIndex === 0 ? 'invisible' : 'visible'}`}>
+                  <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-center pl-2 pointer-events-none group/nav">
+                    <div className={`${mediaIndex === 0 ? 'invisible' : 'visible'} pointer-events-auto`}>
                       <IconButton
                         onClick={() => setMediaIndex(mediaIndex - 1)}
-                        className="bg-bg-primary/80 hover:bg-bg-primary text-text-primary pointer-events-auto rounded-xl backdrop-blur-xl border border-border-light opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
-                        icon={<ChevronLeft size={24} strokeWidth={1.5} />}
+                        className="bg-black/20 hover:bg-black/40 text-white border-none rounded-full w-12 h-12 flex items-center justify-center backdrop-blur-sm transition-all transform active:scale-90"
+                        icon={<ChevronLeft size={28} strokeWidth={2} />}
                       />
                     </div>
-                    <div className={`${mediaIndex === allMedia.length - 1 ? 'invisible' : 'visible'}`}>
+                  </div>
+                  <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center pr-2 pointer-events-none group/nav">
+                    <div className={`${mediaIndex === allMedia.length - 1 ? 'invisible' : 'visible'} pointer-events-auto`}>
                       <IconButton
                         onClick={() => setMediaIndex(mediaIndex + 1)}
-                        className="bg-bg-primary/80 hover:bg-bg-primary text-text-primary pointer-events-auto rounded-xl backdrop-blur-xl border border-border-light opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
-                        icon={<ChevronRight size={24} strokeWidth={1.5} />}
+                        className="bg-black/20 hover:bg-black/40 text-white border-none rounded-full w-12 h-12 flex items-center justify-center backdrop-blur-sm transition-all transform active:scale-90"
+                        icon={<ChevronRight size={28} strokeWidth={2} />}
                       />
                     </div>
                   </div>
                   
-                  {/* Bo dem trang */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-bg-primary/80 text-text-primary px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-black backdrop-blur-2xl border border-border-light tracking-[0.15em] leading-none shadow-none transform opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+                  {/* Bo dem trang tinh te */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/40 text-white px-3 py-1 rounded-full text-[12px] font-medium backdrop-blur-md border border-white/10 tracking-wider">
                     {mediaIndex + 1} / {allMedia.length}
                   </div>
                 </>
