@@ -68,8 +68,8 @@ export const AppLayout: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-bg-secondary overflow-hidden">
-      <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md border-r border-border-sidebar">
+    <div className="flex h-screen w-full bg-bg-secondary overflow-hidden transition-theme">
+      <aside className="hidden md:flex w-[72px] flex-col items-center bg-sidebar-bg py-6 z-50 shadow-md border-r border-border-sidebar transition-theme">
         <div className="mb-8" onClick={() => navigate('/profile')}>
           {user && (
             <UserAvatar 
@@ -143,7 +143,7 @@ export const AppLayout: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 relative flex flex-col h-full overflow-hidden bg-bg-secondary">
+      <main className="flex-1 relative flex flex-col h-full overflow-hidden transition-theme">
         <Outlet />
       </main>
 
