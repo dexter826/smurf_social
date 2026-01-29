@@ -27,7 +27,7 @@ service cloud.firestore {
         request.resource.data.visibility in ['friends', 'private'];
       allow update: if request.auth != null && (
         resource.data.userId == request.auth.uid || 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likes'])
       );
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
