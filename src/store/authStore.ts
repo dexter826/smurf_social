@@ -6,6 +6,7 @@ import { auth } from '../firebase/config';
 import { User, UserStatus } from '../types';
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
+import { useUserCache } from './userCacheStore';
 
 interface AuthState {
   user: User | null;
@@ -85,12 +86,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const userData = await userService.getUserById(firebaseUser.uid);
           if (userData) {
             await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
-            set({ user: { ...userData, status: UserStatus.ONLINE } });
+            const initialUser = { ...userData, status: UserStatus.ONLINE };
+            set({ user: initialUser });
+            useUserCache.getState().setUser(initialUser);
 
             // Đăng ký nhận cập nhật dữ liệu người dùng
             userUnsubscribe = userService.subscribeToUser(firebaseUser.uid, (updatedUser) => {
               const currentStatus = get().user?.status || UserStatus.ONLINE;
-              set({ user: { ...updatedUser, status: currentStatus } });
+              const newUser = { ...updatedUser, status: currentStatus };
+              set({ user: newUser });
+              useUserCache.getState().setUser(newUser);
             });
           }
         } catch (error) {

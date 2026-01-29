@@ -7,6 +7,7 @@ import { chatService } from '../services/chatService';
 import { friendService } from '../services/friendService';
 import { postService } from '../services/postService';
 import { toast } from '../store/toastStore';
+import { useUserCache } from '../store/userCacheStore';
 import { validateFileSize } from '../utils/fileUtils';
 
 type TabType = 'media' | 'posts' | 'friends' | 'photos' | 'videos';
@@ -132,6 +133,7 @@ export const useProfile = (): UseProfileReturn => {
     try {
       const updated = await userService.updateProfile(profile.id, data);
       setProfile(updated);
+      useUserCache.getState().setUser(updated);
       
       if (isOwnProfile && currentUser) {
         useAuthStore.setState({ user: updated });
@@ -153,7 +155,10 @@ export const useProfile = (): UseProfileReturn => {
     setUploading(true);
     try {
       const newAvatarUrl = await userService.uploadAvatar(profile.id, file);
-      setProfile({ ...profile, avatar: newAvatarUrl });
+      const updatedProfile = { ...profile, avatar: newAvatarUrl };
+      setProfile(updatedProfile);
+      useUserCache.getState().setUser(updatedProfile);
+      
       if (currentUser) {
         useAuthStore.setState({ user: { ...currentUser, avatar: newAvatarUrl } });
       }
@@ -176,7 +181,9 @@ export const useProfile = (): UseProfileReturn => {
     setUploading(true);
     try {
       const newCoverUrl = await userService.uploadCoverImage(profile.id, file);
-      setProfile({ ...profile, coverImage: newCoverUrl });
+      const updatedProfile = { ...profile, coverImage: newCoverUrl };
+      setProfile(updatedProfile);
+      useUserCache.getState().setUser(updatedProfile);
     } catch (error) {
       console.error("Lỗi upload cover", error);
       toast.error('Không thể tải lên ảnh bìa');
@@ -190,7 +197,10 @@ export const useProfile = (): UseProfileReturn => {
     setUploading(true);
     try {
       await userService.deleteAvatar(profile.id);
-      setProfile({ ...profile, avatar: '' });
+      const updatedProfile = { ...profile, avatar: '' };
+      setProfile(updatedProfile);
+      useUserCache.getState().setUser(updatedProfile);
+      
       if (currentUser) {
         useAuthStore.setState({ user: { ...currentUser, avatar: '' } });
       }
@@ -207,7 +217,9 @@ export const useProfile = (): UseProfileReturn => {
     setUploading(true);
     try {
       await userService.deleteCoverImage(profile.id);
-      setProfile({ ...profile, coverImage: '' });
+      const updatedProfile = { ...profile, coverImage: '' };
+      setProfile(updatedProfile);
+      useUserCache.getState().setUser(updatedProfile);
       toast.success('Đã xóa ảnh bìa');
     } catch (error) {
       toast.error('Không thể xóa ảnh bìa');
