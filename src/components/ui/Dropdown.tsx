@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from './Button';
 
 interface DropdownItemProps {
   icon?: React.ReactNode;
@@ -56,7 +55,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   disableTriggerScale = false
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isControlled = controlledIsOpen !== undefined;
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
@@ -70,7 +69,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         handleOpenChange(false);
       }
     };
@@ -81,10 +80,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, isControlled, onOpenChange]); // Added dependencies
+  }, [isOpen]);
 
   return (
-    <div className={`relative inline-block ${className}`} ref={dropdownRef}>
+    <div className={`relative inline-block ${className}`} ref={containerRef}>
       <div 
         onClick={(e) => {
           e.stopPropagation();
@@ -97,12 +96,22 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-30 md:hidden bg-black/20 backdrop-blur-[1px]" onClick={() => handleOpenChange(false)} />
+          {/* Backdrop cho mobile */}
+          <div 
+            className="fixed inset-0 z-30 bg-black/20 backdrop-blur-[1px] md:hidden" 
+            onClick={() => handleOpenChange(false)} 
+          />
+          
+          {/* Dropdown menu */}
           <div 
             className={`
-              absolute z-40 mt-1 min-w-[220px] max-w-[calc(100vw-32px)] py-1.5 bg-bg-primary border border-border-light rounded-xl shadow-dropdown transition-all animate-in fade-in zoom-in-95 duration-200
-              md:absolute
-              fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-auto md:top-auto md:left-auto md:translate-x-0 md:translate-y-0
+              fixed bottom-0 left-0 right-0 z-40 
+              py-1.5 pb-20 bg-bg-primary border-t border-border-light rounded-t-2xl shadow-dropdown 
+              animate-in slide-in-from-bottom duration-300
+              max-h-[70vh] overflow-y-auto
+              md:absolute md:bottom-auto md:left-auto md:right-auto md:top-full md:mt-2 md:pb-1.5
+              md:min-w-[220px] md:w-auto md:max-w-[calc(100vw-32px)] md:border md:rounded-xl 
+              md:animate-in md:fade-in md:zoom-in-95 md:slide-in-from-top-2 md:duration-200
               ${align === 'right' ? 'md:right-0' : 'md:left-0'}
             `}
             onClick={() => handleOpenChange(false)}
