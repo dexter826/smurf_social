@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationItem } from './NotificationItem';
-import { Spinner } from '../ui';
+import { NotificationSkeleton } from './NotificationSkeleton';
 import { BellOff } from 'lucide-react';
 
 interface NotificationListProps {
@@ -13,11 +13,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onItemClick,
   const { notifications, isLoading } = useNotificationStore();
 
   if (isLoading && notifications.length === 0) {
-    return (
-      <div className="flex justify-center p-8">
-        <Spinner size="md" />
-      </div>
-    );
+    return <NotificationSkeleton />;
   }
 
   if (notifications.length === 0) {
