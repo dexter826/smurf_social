@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../../store/notificationStore';
 import { usePostStore } from '../../store/postStore';
 import { useAuthStore } from '../../store/authStore';
+import { useUserCache } from '../../store/userCacheStore';
+import { useEffect } from 'react';
 
 interface NotificationItemProps {
   notification: AppNotification;
@@ -16,6 +18,14 @@ interface NotificationItemProps {
 export const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClick }) => {
   const navigate = useNavigate();
   const markAsRead = useNotificationStore(state => state.markAsRead);
+  const { getUser, fetchUser } = useUserCache();
+  const sender = getUser(notification.senderId);
+
+  useEffect(() => {
+    if (!sender) {
+      fetchUser(notification.senderId);
+    }
+  }, [notification.senderId, sender, fetchUser]);
   
   const handleItemClick = async () => {
     if (!notification.isRead) {
@@ -62,7 +72,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       <UserAvatar userId={notification.senderId} size="md" />
       <div className="flex-1 min-w-0">
         <p className="text-sm text-text-primary leading-tight">
-          <span className="font-semibold">{/* Name will be fetched by UserAvatar, but for text we might need it */}</span> 
+          <span className="font-semibold mr-1">{sender?.name || 'Người dùng'}</span> 
           {notificationService.getNotificationText(notification, '')}
         </p>
         <span className="text-xs text-text-tertiary mt-1 block">
