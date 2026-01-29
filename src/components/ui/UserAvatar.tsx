@@ -17,6 +17,8 @@ interface UserAvatarProps {
   onClick?: () => void;
 }
 
+import { useAuthStore } from '../../store/authStore';
+
 export const UserAvatar: React.FC<UserAvatarProps> = ({
   userId,
   src,
@@ -31,6 +33,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 }) => {
   const [onlineStatus, setOnlineStatus] = useState<UserStatus | undefined>(initialStatus);
   const [fetchedName, setFetchedName] = useState<string | undefined>(name);
+  const currentUser = useAuthStore(state => state.user);
 
   useEffect(() => {
     if (!userId || isGroup) return;
@@ -49,12 +52,25 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     return () => unsubscribe();
   }, [userId, isGroup, name]);
 
+  // Kiểm tra quyền xem trạng thái bảo mật
+  const canShowStatus = () => {
+    if (!showStatus || !onlineStatus) return false;
+    if (userId === currentUser?.id) return true;
+    
+    const isFriend = currentUser?.friendIds?.includes(userId);
+    const isBlocked = currentUser?.blockedUserIds?.includes(userId);
+    
+    return isFriend && !isBlocked;
+  };
+
+  const statusToDisplay = canShowStatus() ? onlineStatus : undefined;
+
   return (
     <Avatar
       src={src}
       name={name || fetchedName}
       size={size}
-      status={showStatus ? onlineStatus : undefined}
+      status={statusToDisplay}
       className={className}
       isGroup={isGroup}
       members={members}

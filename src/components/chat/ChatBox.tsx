@@ -52,25 +52,28 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   // Cuộn xuống cuối khi mới vào hoặc đổi hội thoại
   useEffect(() => {
     if (messages.length > 0 && !isLoading) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
-      setShouldAutoScroll(true);
+      const timer = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+        setShouldAutoScroll(true);
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  }, [conversation.id, isLoading]);
+  }, [conversation.id, isLoading, messages.length === 0]);
 
   // Cuộn xuống cuối khi có tin nhắn mới (nếu đang ở gần cuối)
   useEffect(() => {
-    if (messages.length > 0 && messages.length > prevMessagesLength.current) {
-        // Kiểm tra xem tin nhắn cuối có phải là tin nhắn mới không
-        const lastMsg = messages[messages.length - 1];
-        const prevLastMsg = messages[prevMessagesLength.current - 1];
-        const isNewMessage = !prevLastMsg || lastMsg.timestamp > prevLastMsg.timestamp;
-        
-        if (isNewMessage && shouldAutoScroll) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        } else if (!isNewMessage && messagesContainerRef.current) {
-            // Xử lý giữ vị trí cuộn khi load more
-            const currentScrollHeight = messagesContainerRef.current.scrollHeight;
-            messagesContainerRef.current.scrollTop = currentScrollHeight - scrollHeightBeforeLoad.current;
+    if (messages.length > 0 && prevMessagesLength.current > 0) {
+        if (messages.length > prevMessagesLength.current) {
+            const lastMsg = messages[messages.length - 1];
+            const prevLastMsg = messages[prevMessagesLength.current - 1];
+            const isNewMessage = !prevLastMsg || lastMsg.timestamp > prevLastMsg.timestamp;
+            
+            if (isNewMessage && shouldAutoScroll) {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            } else if (!isNewMessage && messagesContainerRef.current) {
+                const currentScrollHeight = messagesContainerRef.current.scrollHeight;
+                messagesContainerRef.current.scrollTop = currentScrollHeight - scrollHeightBeforeLoad.current;
+            }
         }
     }
     prevMessagesLength.current = messages.length;
