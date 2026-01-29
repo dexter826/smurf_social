@@ -101,7 +101,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
           <div 
             className={`
               absolute z-40 mt-1 min-w-[220px] max-w-[calc(100vw-32px)] py-1.5 bg-bg-primary border border-border-light rounded-xl shadow-dropdown transition-all animate-in fade-in zoom-in-95 duration-200
-              ${align === 'right' ? 'right-0' : 'left-0'}
+              md:absolute
+              fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-auto md:top-auto md:left-auto md:translate-x-0 md:translate-y-0
+              ${align === 'right' ? 'md:right-0' : 'md:left-0'}
             `}
             onClick={() => handleOpenChange(false)}
           >

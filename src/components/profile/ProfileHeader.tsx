@@ -103,7 +103,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 hover:!text-white transition-all gap-2 border border-white/20 rounded-xl"
                   icon={<Pencil size={18} />}
                 >
-                  <span>Chỉnh sửa ảnh bìa</span>
+                  <span className="hidden md:inline">Chỉnh sửa ảnh bìa</span>
                 </Button>
               }
               align="right"
@@ -150,10 +150,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       {/* Profile Info */}
       <div className="px-4">
         <div className="relative pb-0 transition-theme">
-          <div className="flex flex-col md:flex-row md:items-end gap-6 pb-6 mt-2">
+          <div className="flex flex-col md:flex-row items-center md:items-end text-center md:text-left gap-6 pb-6 mt-2">
             
             {/* Avatar */}
-            <div className="relative group -mt-12 md:-mt-16">
+            <div className="relative group -mt-16 md:-mt-20 z-20 mx-auto md:mx-0">
               <div className="relative">
                 <div className="p-1 bg-bg-primary rounded-full transition-theme">
                   <UserAvatar 
@@ -162,19 +162,20 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     name={user.name}
                     size="2xl" 
                     className="border-4 border-bg-primary shadow-lg" 
-                    initialStatus={user.status} 
+                    initialStatus={user.status}
+                    showStatus={false}
                   />
                 </div>
                 
                 {isOwnProfile && (
-                  <div className="absolute bottom-2 right-2 z-10">
+                  <div className="absolute bottom-1 right-1 z-30">
                     <Dropdown
                       trigger={
                         <Button
                           isLoading={uploading}
                           variant="secondary"
-                          className="shadow-md border-2 border-bg-primary rounded-full w-10 h-10 p-0 flex items-center justify-center"
-                          icon={<Pencil size={18} />}
+                          className="shadow-md border-2 border-bg-primary rounded-full w-9 h-9 p-0 flex items-center justify-center bg-bg-card hover:bg-bg-hover"
+                          icon={<Pencil size={16} />}
                         />
                       }
                       align="left"
@@ -224,15 +225,17 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
               
               {/* Stats */}
-              <div className="flex items-center flex-wrap gap-2 md:gap-4 mt-3 text-sm text-text-secondary">
+              <div className="flex items-center justify-center md:justify-start flex-wrap gap-2 md:gap-4 mt-3 text-sm text-text-secondary">
                 <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-1.5 rounded-lg border border-border-light">
                   <FileText size={16} className="text-primary" />
                   <span><strong className="text-text-primary">{stats.postCount}</strong> bài viết</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-1.5 rounded-lg border border-border-light">
-                  <Users size={16} className="text-primary" />
-                  <span><strong className="text-text-primary">{stats.friendCount}</strong> bạn bè</span>
-                </div>
+                {isOwnProfile && (
+                  <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-1.5 rounded-lg border border-border-light">
+                    <Users size={16} className="text-primary" />
+                    <span><strong className="text-text-primary">{stats.friendCount}</strong> bạn bè</span>
+                  </div>
+                )}
               </div>
             </div>
 

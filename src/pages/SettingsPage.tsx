@@ -234,21 +234,21 @@ const SettingsPage: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full bg-bg-primary md:bg-bg-secondary">
+      <div className="flex-1 flex flex-col h-full bg-bg-primary md:bg-bg-secondary overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-border-light bg-bg-primary">
+        <div className="p-4 border-b border-border-light bg-bg-primary flex-shrink-0">
           <h2 className="text-lg font-bold text-text-primary">
             {MENU_ITEMS.find(m => m.id === activeSection)?.label}
           </h2>
         </div>
 
         {/* Mobile Tabs */}
-        <div className="md:hidden flex overflow-x-auto border-b border-border-light bg-bg-primary px-2 py-2 gap-1">
+        <div className="md:hidden flex overflow-x-auto border-b border-border-light bg-bg-primary px-2 py-2 gap-1 no-scrollbar flex-shrink-0">
           {MENU_ITEMS.map(item => (
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                 activeSection === item.id 
                   ? 'bg-primary-light text-primary font-medium' 
                   : 'text-text-secondary hover:bg-bg-hover'

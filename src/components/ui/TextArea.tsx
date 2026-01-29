@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useEffect, useRef, useImperativeHandle, useState } from 'react';
 
 interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -27,6 +27,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
   ...props 
 }, ref) => {
   const innerRef = useRef<HTMLTextAreaElement>(null);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
   useImperativeHandle(ref, () => innerRef.current!);
 
   const inputId = id || (label ? `textarea-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
@@ -37,6 +38,23 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
       innerRef.current.style.height = `${Math.min(innerRef.current.scrollHeight, maxHeight)}px`;
     }
   }, [value, autoResize, maxHeight]);
+
+  // Monitor scrollbar width to sync overlay
+  useEffect(() => {
+    if (!innerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (innerRef.current) {
+        // Calculate scrollbar width by difference in offsetWidth and clientWidth (minus borders)
+        // Assuming typical 1px border. 
+        const widthDiff = innerRef.current.offsetWidth - innerRef.current.clientWidth;
+        // If border is 1px each side, diff is 2px. Anything more is scrollbar.
+        const sbWidth = Math.max(0, widthDiff - 2); 
+        setScrollbarWidth(sbWidth);
+      }
+    });
+    observer.observe(innerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className={`flex flex-col gap-1.5 w-full ${containerClassName}`}>
@@ -58,11 +76,10 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
             aria-hidden="true"
             className={`
               absolute inset-0 w-full h-full pointer-events-none
-              bg-transparent outline-none text-[15px] leading-relaxed resize-none
+              bg-transparent outline-none text-base sm:text-[15px] leading-relaxed resize-none
               whitespace-pre-wrap break-words
               text-text-primary
               ${icon ? 'pl-11' : 'pl-4'} 
-              ${rightElement ? 'pr-32' : 'pr-4'} 
               ${!className.includes('py-') ? 'py-2' : ''}
               overflow-hidden
               z-20
@@ -70,12 +87,15 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
             style={{
               paddingTop: innerRef.current ? getComputedStyle(innerRef.current).paddingTop : '8px',
               paddingBottom: innerRef.current ? getComputedStyle(innerRef.current).paddingBottom : '8px',
+              // Add padding right dynamically to account for scrollbar + right element
+              paddingRight: `calc(${rightElement ? '2rem' : '1rem'} + ${scrollbarWidth}px)`,
             }}
             ref={(el) => {
               if (el && innerRef.current) {
                  el.scrollTop = innerRef.current.scrollTop;
               }
             }}
+            id={`${inputId}-overlay`}
           >
             {renderOverlay(value as string || '')}
           </div>
@@ -90,11 +110,11 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           ref={innerRef}
           id={inputId}
           className={`
-            block w-full bg-transparent outline-none text-[15px] leading-relaxed resize-none
+            block w-full bg-transparent outline-none text-base sm:text-[15px] leading-relaxed resize-none
             ${renderOverlay ? 'text-transparent caret-text-primary selection:bg-primary/20 selection:text-transparent' : 'text-text-primary'}
             placeholder:text-text-tertiary
             ${icon ? 'pl-11' : 'pl-4'} 
-            ${rightElement ? 'pr-32' : 'pr-4'} 
+            ${rightElement ? 'pr-8' : 'pr-4'} 
             ${!className.includes('py-') ? 'py-2' : ''}
             ${!className.includes('min-h-') ? 'min-h-[40px]' : ''}
             overflow-y-auto custom-scrollbar
@@ -103,12 +123,12 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           rows={1}
           value={value}
           onScroll={(e) => {
-             // Đồng bộ scroll với overlay
              const target = e.target as HTMLTextAreaElement;
-             const overlay = target.previousSibling?.previousSibling as HTMLDivElement;
-             if (overlay && overlay.scrollTop !== undefined) {
+             const overlay = document.getElementById(`${inputId}-overlay`);
+             if (overlay) {
                overlay.scrollTop = target.scrollTop;
              }
+             props.onScroll?.(e);
           }}
           onChange={(e) => {
             onChange?.(e);
@@ -116,6 +136,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           style={{ caretColor: 'var(--color-primary)' }}
           {...props}
         />
+
         {rightElement && (
           <div className="absolute bottom-1 right-1 pr-1 flex items-center h-8 z-20">
             {rightElement}
