@@ -33,23 +33,23 @@ export const NotificationDropdown: React.FC = () => {
     <div className="relative group" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-200 ${
+        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 ${
           isOpen 
-          ? 'bg-sidebar-item-active text-white' 
-          : 'text-sidebar-item hover:bg-sidebar-item-hover hover:text-white'
+          ? 'bg-bg-secondary text-primary shadow-sm' 
+          : 'text-text-tertiary hover:bg-bg-secondary hover:text-primary'
         }`}
         title="Thông báo"
       >
         <div className="relative">
-          <Bell size={28} />
+          <Bell size={20} />
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-sidebar-bg" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-bg-primary" />
           )}
         </div>
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 md:left-full md:top-0 md:ml-4 mt-2 w-80 md:w-96 bg-bg-primary rounded-xl shadow-2xl border border-border-light z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-bg-primary rounded-xl shadow-2xl border border-border-light z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
           <div className="flex items-center justify-between p-4 border-b border-border-light bg-bg-primary/50 backdrop-blur-md">
             <h3 className="font-bold text-lg text-text-primary">Thông báo</h3>
             {unreadCount > 0 && (

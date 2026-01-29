@@ -205,7 +205,7 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-bg-secondary">
       {/* Sidebar - Desktop */}
-      <div className="hidden md:flex flex-col w-[300px] border-r border-border-light bg-bg-primary pt-4">
+      <div className="hidden md:flex flex-col w-[320px] border-r border-border-light bg-bg-primary pt-4">
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-2 text-sm font-semibold text-text-tertiary uppercase tracking-wider">
             Cài đặt
