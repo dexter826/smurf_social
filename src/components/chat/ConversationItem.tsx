@@ -106,7 +106,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'hidden' : 'group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
+          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'md:hidden' : 'md:group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
             {timeAgo}
           </span>
         </div>
@@ -170,14 +170,14 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       </div>
 
       {/* Menu */}
-      <div className={`absolute top-2 right-2 transition-opacity ${isMenuOpen ? 'opacity-100 z-10' : 'opacity-0 group-hover:opacity-100'}`}>
+      <div className={`md:absolute md:top-2 md:right-2 transition-opacity flex-shrink-0 ${isMenuOpen ? 'opacity-100 md:z-10' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
         <Dropdown
           isOpen={isMenuOpen}
           onOpenChange={setIsMenuOpen}
           disableTriggerScale
           trigger={
             <IconButton
-              className={`opacity-0 group-hover:opacity-100 ${isMenuOpen ? 'opacity-100' : ''}`}
+              className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 ${isMenuOpen ? 'opacity-100' : ''}`}
               icon={<MoreVertical size={16} />}
               size="sm"
             />
