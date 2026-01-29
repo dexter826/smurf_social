@@ -12,6 +12,7 @@ interface EmojiPickerProps {
   size?: number;
   buttonSize?: 'sm' | 'md' | 'lg';
   iconClassName?: string;
+  showOverlay?: boolean;
 }
 
 export const EmojiPicker: React.FC<EmojiPickerProps> = ({ 
@@ -21,7 +22,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   disabled = false,
   size = 16,
   buttonSize = 'sm',
-  iconClassName = ''
+  iconClassName = '',
+  showOverlay = true
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,12 +65,14 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
       {isOpen && (
         <>
           {/* Mobile Overlay */}
-          <div 
-            className="fixed inset-0 bg-black/50 z-[99] md:hidden" 
-            onClick={() => setIsOpen(false)}
-          />
+          {showOverlay && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-[99] md:hidden" 
+              onClick={() => setIsOpen(false)}
+            />
+          )}
           
-          <div className="fixed bottom-0 left-0 right-0 z-[100] flex justify-center p-4 md:p-0 md:absolute md:bottom-full md:right-0 md:mb-2 md:left-auto md:w-auto">
+          <div className="fixed bottom-[calc(60px+env(safe-area-inset-bottom))] left-0 right-0 z-[100] flex justify-center p-4 md:p-0 md:absolute md:bottom-full md:right-0 md:mb-2 md:left-auto md:w-auto">
             <div className="w-full max-w-[350px] md:w-auto shadow-2xl rounded-t-2xl md:rounded-lg overflow-hidden pb-safe md:pb-0 bg-bg-primary">
               <EmojiPickerReact
                 onEmojiClick={handleEmojiClick}

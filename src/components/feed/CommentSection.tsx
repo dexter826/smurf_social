@@ -295,8 +295,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               maxHeight={160}
               rightElement={
                 <div className="flex items-center gap-0.5 pr-1 mb-0.5">
-                  <div className="flex items-center justify-center w-8 h-8 opacity-70 hover:opacity-100 hover:text-primary transition-all">
-                    <EmojiPicker onEmojiSelect={(e) => setNewComment(prev => prev + e)} size={20} />
+                  <div className="flex items-center justify-center w-8 h-8 hover:text-primary transition-all">
+                    <EmojiPicker onEmojiSelect={(e) => setNewComment(prev => prev + e)} size={20} showOverlay={false} buttonClassName="opacity-70 hover:opacity-100" />
                   </div>
                   <IconButton type="button" onClick={() => fileInputRef.current?.click()} icon={<ImageIcon size={18} />} size="sm" transparent className="opacity-70 hover:opacity-100" />
                   <IconButton type="button" onClick={() => videoInputRef.current?.click()} icon={<Video size={18} />} size="sm" transparent className="opacity-70 hover:opacity-100" />
