@@ -90,8 +90,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   );
 
   const renderSelectStep = () => (
-    <>
-      <div className="mb-4">
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex-none mb-4">
         <Input
           icon={<Search size={16} />}
           placeholder="Tìm bạn bè..."
@@ -102,7 +102,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       </div>
 
       {selectedIds.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 p-3 bg-bg-secondary rounded-xl">
+        <div className="flex-none flex flex-wrap gap-2 mb-4 p-3 bg-bg-secondary rounded-xl max-h-[120px] overflow-y-auto custom-scrollbar">
           {selectedIds.map(id => {
             const friend = friends.find(f => f.id === id);
             if (!friend) return null;
@@ -124,7 +124,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         </div>
       )}
 
-      <div className="max-h-[300px] overflow-y-auto space-y-1">
+      <div className="flex-1 overflow-y-auto space-y-1 -mr-2 pr-2 custom-scrollbar min-h-0">
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="animate-spin text-primary" size={24} />
@@ -165,7 +165,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           ))
         )}
       </div>
-    </>
+    </div>
   );
 
   const renderDetailsStep = () => {

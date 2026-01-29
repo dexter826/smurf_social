@@ -68,14 +68,14 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
 
       {/* Search Results */}
       {isSearching && searchTerm && (
-        <div className="max-h-[300px] overflow-y-auto">
+        <div className="flex flex-col">
           {searchResults.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
               <MessageCircle size={32} className="mb-2 opacity-50" />
               <p className="text-sm">Không tìm thấy tin nhắn</p>
             </div>
           ) : (
-            <div className="space-y-1 px-2">
+            <div className="space-y-1 px-2 pb-4">
               <p className="px-2 text-xs text-text-tertiary mb-2">
                 Tìm thấy {searchResults.length} tin nhắn
               </p>

@@ -118,12 +118,36 @@ const ContactsPage: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full bg-bg-primary md:bg-bg-secondary">
         {/* Header */}
-        <div className="p-4 border-b border-border-light bg-bg-primary">
+        <div className="p-4 border-b border-border-light bg-bg-primary sticky top-0 z-10">
+          
+          {/* Mobile Tab Switcher */}
+          <div className="flex md:hidden p-1 bg-bg-secondary rounded-xl mb-4">
+            <button 
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === 'all' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
+              onClick={() => setActiveTab('all')}
+            >
+              Bạn bè
+            </button>
+            <button 
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all relative ${activeTab === 'requests' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
+              onClick={() => setActiveTab('requests')}
+            >
+              Lời mời
+               {receivedRequests.length > 0 && <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+            </button>
+            <button 
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === 'sent' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
+              onClick={() => setActiveTab('sent')}
+            >
+              Đã gửi
+            </button>
+          </div>
+
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-text-primary">
-              {activeTab === 'all' && `Tất cả bạn bè (${friends.length})`}
-              {activeTab === 'requests' && `Lời mời kết bạn (${receivedRequests.length})`}
-              {activeTab === 'sent' && `Lời mời đã gửi (${sentRequests.length})`}
+              {activeTab === 'all' && `Bạn bè (${friends.length})`}
+              {activeTab === 'requests' && `Lời mời (${receivedRequests.length})`}
+              {activeTab === 'sent' && `Đã gửi (${sentRequests.length})`}
             </h2>
             <div className="md:hidden">
               <Button variant="primary" size="sm" icon={<UserPlus size={16} />} onClick={() => setShowAddModal(true)}>

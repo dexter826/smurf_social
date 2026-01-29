@@ -45,15 +45,15 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
 
   return (
     <>
-      <div className="bg-bg-primary rounded-xl p-4 shadow-sm border border-border-light transition-theme mb-4">
+      <div className="bg-bg-primary rounded-xl p-3 sm:p-4 shadow-sm border border-border-light transition-theme mb-4">
         <div className="flex gap-3 mb-4">
           <Avatar src={currentUser.avatar} name={currentUser.name} size="md" />
           <Button
             variant="secondary"
             onClick={() => setShowCreateModal(true)}
-            className="flex-1 justify-start text-text-secondary font-medium border-none rounded-full"
+            className="flex-1 justify-start text-text-secondary font-medium border-none rounded-full text-sm sm:text-base truncate"
           >
-            <span>{currentUser.name} ơi, bạn đang nghĩ gì thế?</span>
+            <span className="truncate">{currentUser.name} ơi, bạn đang nghĩ gì thế?</span>
           </Button>
         </div>
         
@@ -61,26 +61,26 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
           <Button
             variant="ghost"
             onClick={() => imageInputRef.current?.click()}
-            className="flex-1 group"
+            className="flex-1 group px-2"
             icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <span className="text-[15px] font-semibold">Ảnh</span>
+            <span className="text-xs sm:text-[15px] font-semibold">Ảnh</span>
           </Button>
           <Button
             variant="ghost"
             onClick={() => cameraPhotoRef.current?.click()}
-            className="flex-1 group"
+            className="flex-1 group px-2"
             icon={<Camera className="text-red-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <span className="text-[15px] font-semibold">Máy ảnh</span>
+            <span className="text-xs sm:text-[15px] font-semibold">Máy ảnh</span>
           </Button>
           <Button
             variant="ghost"
             onClick={() => videoInputRef.current?.click()}
-            className="flex-1 group"
+            className="flex-1 group px-2"
             icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
           >
-            <span className="text-[15px] font-semibold">Video</span>
+            <span className="text-xs sm:text-[15px] font-semibold">Video</span>
           </Button>
         </div>
 

@@ -176,16 +176,20 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         </div>
 
         {isOpen && (
-          <div className={`
-            absolute z-50 w-72 bg-bg-primary border border-border-light rounded-2xl shadow-lg transition-all animate-in fade-in zoom-in-95 duration-200 left-0
-            ${openUp ? 'bottom-full mb-2' : 'top-full mt-2'}
-          `}>
-            {renderHeader()}
-            <div className="p-2">
-              {renderDays()}
-              {renderCells()}
+          <>
+            <div className="fixed inset-0 z-40 md:hidden bg-black/20 backdrop-blur-[1px]" onClick={() => setIsOpen(false)} />
+            <div className={`
+              absolute z-50 w-72 bg-bg-primary border border-border-light rounded-2xl shadow-xl transition-all animate-in fade-in zoom-in-95 duration-200 
+              left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0
+              ${openUp ? 'bottom-full mb-2' : 'top-full mt-2'}
+            `}>
+              {renderHeader()}
+              <div className="p-2">
+                {renderDays()}
+                {renderCells()}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 

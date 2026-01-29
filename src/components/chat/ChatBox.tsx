@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Phone, Video, Info } from 'lucide-react';
+import { Phone, Video, Info, ChevronLeft } from 'lucide-react';
 import { Message, User, Conversation } from '../../types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button, Spinner } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
@@ -187,49 +187,55 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   return (
     <div className="relative flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
       {/* Header chat */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 h-[72px] border-b border-border-light bg-bg-primary">
-        <div className="flex items-center gap-3 flex-1">
+      <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-4 h-[64px] md:h-[72px] border-b border-border-light bg-bg-primary transition-theme">
+        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
           {onBack && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="md:hidden"
+              className="md:hidden -ml-2 text-text-secondary hover:text-text-primary h-10 w-10 p-0 rounded-full"
             >
-                ←
+                <ChevronLeft size={24} />
             </Button>
           )}
           
-          {conversation.isGroup ? (
-            <Avatar 
-              src={avatarSrc} 
-              name={chatName} 
-              size="md" 
-              isGroup 
-              members={conversation.participants} 
-            />
-          ) : (
-            <UserAvatar userId={partner?.id!} src={avatarSrc} name={chatName} size="md" initialStatus={partner?.status} showStatus={false} />
-          )}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold text-text-primary truncate">{chatName}</h2>
+          <div className="flex-shrink-0">
+            {conversation.isGroup ? (
+              <Avatar 
+                src={avatarSrc} 
+                name={chatName} 
+                size="md" 
+                isGroup 
+                members={conversation.participants} 
+              />
+            ) : (
+              <UserAvatar userId={partner?.id!} src={avatarSrc} name={chatName} size="md" initialStatus={partner?.status} showStatus={false} />
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <h2 className="text-sm font-bold text-text-primary truncate leading-tight">{chatName}</h2>
             {!conversation.isGroup && (
-              <UserStatusText userId={partner?.id!} className="text-xs text-text-tertiary" initialStatus={partner?.status} />
+              <UserStatusText userId={partner?.id!} className="text-xs text-text-tertiary truncate leading-tight" initialStatus={partner?.status} />
+            )}
+            {conversation.isGroup && (
+               <span className="text-xs text-text-tertiary truncate leading-tight">{conversation.participants.length} thành viên</span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.AUDIO_CALL} variant="primary" icon={<Phone size={20} />} size="lg" />
-          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.VIDEO_CALL} variant="primary" icon={<Video size={20} />} size="lg" />
-          <IconButton onClick={onInfoClick} title={UI_MESSAGES.CHAT.CONVERSATION_INFO} icon={<Info size={20} />} size="lg" />
+        <div className="flex items-center gap-0.5 md:gap-1">
+          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.AUDIO_CALL} variant="ghost" className="text-primary hover:bg-primary-light" icon={<Phone size={20} />} size="md" />
+          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.VIDEO_CALL} variant="ghost" className="text-primary hover:bg-primary-light" icon={<Video size={20} />} size="md" />
+          <IconButton onClick={onInfoClick} title={UI_MESSAGES.CHAT.CONVERSATION_INFO} variant="ghost" className="text-text-secondary hover:text-primary" icon={<Info size={20} />} size="md" />
         </div>
       </div>
 
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-0 bg-bg-secondary"
+        className="flex-1 overflow-y-auto p-0 bg-bg-secondary custom-scrollbar"
       >
         {isLoading ? (
           <ChatBoxSkeleton />

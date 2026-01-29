@@ -54,7 +54,7 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
 
   if (media.length === 0) {
     return (
-      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-8 text-center transition-theme">
+      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 sm:p-8 text-center transition-theme">
         <ImageIcon size={48} className="mx-auto mb-3 text-text-secondary" />
         <p className="text-text-secondary">Chưa có ảnh hoặc video nào</p>
       </div>
@@ -63,7 +63,7 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
 
   return (
     <>
-      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+      <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 sm:p-6 transition-theme">
           <h3 className="font-bold text-lg mb-4 text-text-primary">
             Ảnh/Video <span className="text-text-secondary font-normal">({media.length})</span>
           </h3>
@@ -126,7 +126,7 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
 };
 
 PhotosTab.Skeleton = () => (
-  <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-6 transition-theme">
+  <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 sm:p-6 transition-theme">
     <h3 className="font-bold text-lg mb-4 text-text-primary">
       Ảnh/Video <Skeleton width={40} height={20} className="inline-block" />
     </h3>

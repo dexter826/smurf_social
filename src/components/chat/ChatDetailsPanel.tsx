@@ -156,7 +156,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
       <div
         className={`
           fixed md:relative right-0 top-0 h-full z-50
-          w-[320px] bg-bg-primary border-l border-border-light
+          w-full md:w-[320px] bg-bg-primary border-l border-border-light
           flex flex-col shadow-xl
           transition-transform duration-300 ease-out
           ${isAnimating ? 'translate-x-0' : 'translate-x-full'}

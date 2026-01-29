@@ -44,8 +44,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   // Hien thi loading state
   if (isLoading || !post) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} showHeader={false} maxWidth="4xl">
-        <div className="h-[500px] flex items-center justify-center bg-bg-primary rounded-2xl transition-theme">
+      <Modal 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        showHeader={false} 
+        maxWidth="4xl"
+        className="!bg-black/98 sm:!bg-transparent h-[100dvh] md:h-auto overflow-hidden"
+      >
+        <div className="h-full md:h-[500px] flex items-center justify-center bg-bg-primary md:rounded-2xl transition-theme">
           <Spinner size="lg" />
         </div>
       </Modal>
@@ -66,21 +72,29 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       isOpen={isOpen} 
       onClose={onClose} 
       showHeader={false} 
-      maxWidth={hasMedia ? "max-w-[75vw]" : "2xl"} 
+      maxWidth={hasMedia ? "5xl" : "lg"} 
       padding="none"
-      className="!bg-black/98 sm:!bg-transparent"
+      className="!bg-black/98 sm:!bg-transparent m-0 md:m-4 md:rounded-3xl"
     >
-      <div className={`flex flex-col lg:flex-row h-screen lg:h-[85vh] bg-bg-primary overflow-hidden lg:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] relative transition-all duration-300 ${!hasMedia ? 'lg:max-h-[80vh] w-full' : ''}`}>
+      <div className={`flex flex-col lg:flex-row h-[100dvh] lg:h-[85vh] bg-bg-primary overflow-hidden lg:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] relative transition-all duration-300 w-full`}>
         
         {/* Nut dong modal (Cinema Mode only) - REMOVED to avoid overlap */}
 
         {/* Khong gian Cinema cho Media */}
         {hasMedia && (
-          <div className="flex-[1.6] bg-[#050505] flex items-center justify-center relative group min-h-[350px] lg:min-h-0 select-none overflow-hidden">
+          <div className="flex-[1.6] bg-[#050505] flex items-center justify-center relative group min-h-[40vh] max-h-[50vh] lg:min-h-0 lg:max-h-full select-none overflow-hidden touch-none grow lg:grow-[1.6] shrink-0">
             {/* Background gradient hieu ung anh sang */}
             <div className={`absolute inset-0 opacity-40 transition-opacity duration-700 ${allMedia[mediaIndex].type === 'image' ? 'bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_70%)]' : ''}`} />
             
-            <div className="w-full h-full flex items-center justify-center z-10 p-2 lg:p-6">
+            {/* Nut dong tren mobile khi co media */}
+            <button 
+              onClick={onClose} 
+              className="absolute top-4 right-4 z-50 text-white/50 hover:text-white lg:hidden p-2 bg-black/20 backdrop-blur-md rounded-full"
+            >
+              <X size={24} />
+            </button>
+
+            <div className="w-full h-full flex items-center justify-center z-10 p-2 lg:p-6 pb-8 md:pb-6">
                {allMedia[mediaIndex].type === 'video' ? (
                 <video 
                   src={allMedia[mediaIndex].url} 
@@ -98,25 +112,25 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               {/* Nut dieu huong */}
               {allMedia.length > 1 && (
                 <>
-                  <div className="absolute inset-0 flex items-center justify-between px-6 pointer-events-none">
+                  <div className="absolute inset-0 flex items-center justify-between px-2 md:px-6 pointer-events-none">
                     <div className={`${mediaIndex === 0 ? 'invisible' : 'visible'}`}>
                       <IconButton
                         onClick={() => setMediaIndex(mediaIndex - 1)}
-                        className="bg-white/10 hover:bg-white/20 text-white pointer-events-auto rounded-xl backdrop-blur-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 active:scale-95 w-12 h-14"
-                        icon={<ChevronLeft size={32} strokeWidth={1.5} />}
+                        className="bg-white/10 hover:bg-white/20 text-white pointer-events-auto rounded-xl backdrop-blur-xl border border-white/10 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
+                        icon={<ChevronLeft size={24} strokeWidth={1.5} />}
                       />
                     </div>
                     <div className={`${mediaIndex === allMedia.length - 1 ? 'invisible' : 'visible'}`}>
                       <IconButton
                         onClick={() => setMediaIndex(mediaIndex + 1)}
-                        className="bg-white/10 hover:bg-white/20 text-white pointer-events-auto rounded-xl backdrop-blur-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 active:scale-95 w-12 h-14"
-                        icon={<ChevronRight size={32} strokeWidth={1.5} />}
+                        className="bg-white/10 hover:bg-white/20 text-white pointer-events-auto rounded-xl backdrop-blur-xl border border-white/10 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform active:scale-95 w-10 h-10 md:w-12 md:h-14"
+                        icon={<ChevronRight size={24} strokeWidth={1.5} />}
                       />
                     </div>
                   </div>
                   
                   {/* Bo dem trang */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/10 text-white px-4 py-1.5 rounded-full text-[11px] font-black backdrop-blur-2xl border border-white/10 tracking-[0.15em] leading-none shadow-xl transform opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/10 text-white px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-black backdrop-blur-2xl border border-white/10 tracking-[0.15em] leading-none shadow-xl transform opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
                     {mediaIndex + 1} / {allMedia.length}
                   </div>
                 </>
@@ -126,11 +140,21 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         )}
 
         {/* Panel noi dung va tuong tac */}
-        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 ${hasMedia ? 'w-full lg:w-[440px] border-l border-border-light' : 'w-full'}`}>
+        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 ${hasMedia ? 'w-full lg:w-[440px] border-t lg:border-t-0 lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
           
           {/* Header thong tin tac gia */}
-          <div className="p-4 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary sticky top-0 z-30">
-            <div className="flex gap-3 items-center">
+          <div className="p-3 md:p-4 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary sticky top-0 z-30">
+            {/* Nut Back Mobile khi khong co media */}
+            {!hasMedia && (
+                <button 
+                  onClick={onClose} 
+                  className="mr-2 md:hidden text-text-secondary hover:text-text-primary"
+                >
+                   <ChevronLeft size={24} />
+                </button>
+            )}
+
+            <div className="flex gap-2.5 items-center flex-1 min-w-0">
               <UserAvatar 
                 userId={author?.id} 
                 src={author?.avatar} 
@@ -138,8 +162,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 size="md" 
                 initialStatus={author?.status} 
               />
-              <div>
-                <h3 className="font-semibold text-text-primary text-[15px]">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-text-primary text-[15px] truncate max-w-full">
                   {author?.name || 'Unknown User'}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">

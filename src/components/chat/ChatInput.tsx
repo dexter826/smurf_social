@@ -456,7 +456,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   // Thông báo nếu bị chặn chat
   if (blockedMessage) {
     return (
-      <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme">
+      <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme pb-safe z-30">
         <div className="flex items-center justify-center px-4 py-4 text-text-tertiary text-sm">
           <span>{blockedMessage}</span>
         </div>
@@ -465,7 +465,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }
 
   return (
-    <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme">
+    <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme pb-safe z-30 relative">
       {/* Danh sách file chờ gửi */}
       {selectedFiles.length > 0 && (
         <div className="p-3 border-b border-border-light bg-bg-primary overflow-x-auto">

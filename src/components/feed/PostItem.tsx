@@ -113,7 +113,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                 <video
                   src={currentMedia.url}
                   controls
-                  className="w-full h-auto max-h-[600px] bg-black"
+                  className="w-full h-auto max-h-[500px] md:max-h-[600px] bg-black aspect-video object-contain"
                 />
               );
             }
@@ -122,7 +122,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
               <img
                 src={currentMedia.url}
                 alt="Post content"
-                className="w-full h-auto max-h-[600px] object-contain"
+                className="w-full h-auto max-h-[500px] md:max-h-[600px] object-contain bg-bg-secondary"
                 loading="lazy"
               />
             );

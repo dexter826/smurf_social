@@ -100,64 +100,66 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
         </div>
       }
     >
-      <div className="mb-4">
-        <Input
-          icon={<Search size={16} />}
-          placeholder="Tìm bạn bè..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-bg-secondary h-11"
-        />
-      </div>
+      <div className="flex flex-col h-full min-h-0">
+        <div className="flex-none mb-4">
+          <Input
+            icon={<Search size={16} />}
+            placeholder="Tìm bạn bè..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="bg-bg-secondary h-11"
+          />
+        </div>
 
-      <div className="max-h-[350px] overflow-y-auto space-y-1">
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="animate-spin text-primary" size={24} />
-          </div>
-        ) : filteredFriends.length === 0 ? (
-          <div className="flex flex-col items-center py-8 text-center">
-            <UserPlus size={40} className="text-text-tertiary mb-3" />
-            <p className="text-text-tertiary">
-              {searchTerm 
-                ? 'Không tìm thấy bạn bè' 
-                : friends.length === 0 
-                  ? 'Tất cả bạn bè đã trong nhóm'
-                  : 'Không có bạn bè để thêm'
-              }
-            </p>
-          </div>
-        ) : (
-          filteredFriends.map(friend => (
-            <div
-              key={friend.id}
-              onClick={() => toggleSelect(friend.id)}
-              className={`
-                flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all
-                ${selectedIds.includes(friend.id) 
-                  ? 'bg-primary-light' 
-                  : 'hover:bg-bg-hover'
-                }
-              `}
-            >
-              <UserAvatar 
-                userId={friend.id}
-                src={friend.avatar} 
-                name={friend.name} 
-                size="sm"
-                initialStatus={friend.status}
-              />
-              <span className="flex-1 text-sm font-medium text-text-primary">
-                {friend.name}
-              </span>
-              {selectedIds.includes(friend.id) && (
-                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                  <Check size={12} className="text-white" />
-                </div>
-              )}
+        <div className="flex-1 overflow-y-auto space-y-1 -mr-2 pr-2 custom-scrollbar min-h-0">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="animate-spin text-primary" size={24} />
             </div>
-          ))
-        )}
+          ) : filteredFriends.length === 0 ? (
+            <div className="flex flex-col items-center py-8 text-center">
+              <UserPlus size={40} className="text-text-tertiary mb-3" />
+              <p className="text-text-tertiary">
+                {searchTerm 
+                  ? 'Không tìm thấy bạn bè' 
+                  : friends.length === 0 
+                    ? 'Tất cả bạn bè đã trong nhóm'
+                    : 'Không có bạn bè để thêm'
+                }
+              </p>
+            </div>
+          ) : (
+            filteredFriends.map(friend => (
+              <div
+                key={friend.id}
+                onClick={() => toggleSelect(friend.id)}
+                className={`
+                  flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all
+                  ${selectedIds.includes(friend.id) 
+                    ? 'bg-primary-light' 
+                    : 'hover:bg-bg-hover'
+                  }
+                `}
+              >
+                <UserAvatar 
+                  userId={friend.id}
+                  src={friend.avatar} 
+                  name={friend.name} 
+                  size="sm"
+                  initialStatus={friend.status}
+                />
+                <span className="flex-1 text-sm font-medium text-text-primary">
+                  {friend.name}
+                </span>
+                {selectedIds.includes(friend.id) && (
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                    <Check size={12} className="text-white" />
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </Modal>
   );
