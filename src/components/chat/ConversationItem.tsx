@@ -117,9 +117,32 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
               
               if (typingUserIds.length > 0) {
+                // Helper lấy tên
+                const getLastName = (fullName?: string) => {
+                  if (!fullName) return '';
+                  const parts = fullName.trim().split(' ');
+                  return parts[parts.length - 1];
+                };
+
+                let typingText = '';
+                const typingUsers = typingUserIds.map(uid => conversation.participants.find(p => p.id === uid)).filter(Boolean);
+
+                if (typingUsers.length === 1) {
+                  const name = getLastName(typingUsers[0]?.name) || 'Ai đó';
+                  typingText = `${name} đang soạn tin...`;
+                } else if (typingUsers.length === 2) {
+                  const name1 = getLastName(typingUsers[0]?.name) || 'Người dùng';
+                  const name2 = getLastName(typingUsers[1]?.name) || 'người dùng';
+                  typingText = `${name1} và ${name2} đang soạn tin...`;
+                } else {
+                   const name1 = getLastName(typingUsers[0]?.name) || 'Người dùng';
+                   const others = typingUsers.length - 1;
+                   typingText = `${name1} và ${others} người khác đang soạn tin...`;
+                }
+
                 return (
-                  <span className="text-primary italic text-[13px]">
-                    Đang soạn tin...
+                  <span className="text-primary italic text-[13px] truncate block">
+                    {typingText}
                   </span>
                 );
               }
