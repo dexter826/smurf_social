@@ -8,6 +8,3 @@ export * from './appConfig';
 
 // Theme constants
 export * from './theme';
-
-// UI messages
-export * from './uiMessages';

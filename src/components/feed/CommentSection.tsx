@@ -10,7 +10,7 @@ import { useCommentStore } from '../../store/commentStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { CommentSkeleton } from './CommentSkeleton';
 import { formatRelativeTime } from '../../utils/dateUtils';
-import { UI_MESSAGES } from '../../constants/uiMessages';
+
 
 interface CommentSectionProps {
   postId: string;
@@ -170,7 +170,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
         await updateComment(postId, editingComment.id, newComment, editingComment.parentId, finalImageUrl, finalVideoUrl);
         resetInput();
-        toast.success(UI_MESSAGES.FEED.UPDATE_SUCCESS);
+        toast.success('Đã cập nhật bình luận');
       } else {
         let imageUrl = '';
         let videoUrl = '';
@@ -189,7 +189,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         );
 
         resetInput();
-        toast.success(UI_MESSAGES.FEED.ADD_SUCCESS);
+        toast.success('Đã gửi bình luận');
       }
     } catch (error) {
       toast.error(inputMode === 'edit' ? "Lỗi cập nhật" : "Lỗi khi gửi");
@@ -210,7 +210,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       await deleteComment(postId, commentToDelete.id, commentToDelete.parentId);
       setCommentToDelete(null);
-      toast.success(UI_MESSAGES.FEED.DELETE_SUCCESS);
+      toast.success('Đã xóa bình luận');
     } catch (error) {
       toast.error("Lỗi xóa bình luận");
     }
@@ -268,7 +268,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-primary/5 rounded-xl text-[11px] text-primary border border-primary/10 backdrop-blur-sm">
             <span className="font-medium flex items-center gap-1.5">
                <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-               {UI_MESSAGES.FEED.REPLYING} <strong>{users[replyingTo?.userId || '']?.name}</strong>
+               Đang trả lời <strong>{users[replyingTo?.userId || '']?.name}</strong>
             </span>
             <IconButton onClick={resetInput} icon={<X size={12} />} size="xs" transparent />
           </div>
@@ -278,7 +278,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-bg-secondary rounded-xl text-[11px] text-text-secondary border border-border-light">
             <span className="font-medium flex items-center gap-1.5">
                <div className="w-1 h-1 rounded-full bg-text-tertiary" />
-               {UI_MESSAGES.FEED.EDITING}
+               Đang chỉnh sửa bình luận
             </span>
             <IconButton onClick={resetInput} icon={<X size={12} />} size="xs" />
           </div>
@@ -292,7 +292,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isReplyingNow ? UI_MESSAGES.FEED.PLACEHOLDER_REPLY : isEditingNow ? UI_MESSAGES.FEED.PLACEHOLDER_EDIT : UI_MESSAGES.FEED.PLACEHOLDER_COMMENT}
+              placeholder={isReplyingNow ? 'Viết câu trả lời...' : isEditingNow ? 'Sửa bình luận...' : 'Viết bình luận...'}
               className="rounded-2xl bg-bg-secondary/50 border border-border-light focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 min-h-[44px] transition-all text-[14px] leading-relaxed py-2.5"
               containerClassName="!gap-0"
               autoResize
@@ -314,7 +314,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             isLoading={isSubmitting}
             variant={(newComment.trim() || selectedImage || selectedVideo) ? 'primary' : 'secondary'}
             className={`w-10 h-10 shadow-sm active:scale-95 rounded-full p-0 flex items-center justify-center ${(newComment.trim() || selectedImage || selectedVideo) ? '' : 'opacity-50 cursor-not-allowed'}`}
-            title={UI_MESSAGES.COMMON.SEND}
+            title="Gửi"
             icon={<Send size={20} className={(newComment.trim() || selectedImage || selectedVideo) ? 'fill-current' : ''} />}
           />
         </form>
@@ -397,11 +397,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             
             <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
               <span>{formatRelativeTime(comment.timestamp)}</span>
-              <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">{UI_MESSAGES.COMMON.REPLY}</button>
+              <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Trả lời</button>
               {comment.userId === currentUser.id && (
                 <>
-                  <button onClick={() => handleEditClick(comment)} className="hover:text-primary transition-colors cursor-pointer">{UI_MESSAGES.COMMON.EDIT}</button>
-                  <button onClick={() => setCommentToDelete(comment)} className="text-error/70 hover:text-error transition-colors cursor-pointer">{UI_MESSAGES.COMMON.DELETE}</button>
+                  <button onClick={() => handleEditClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Chỉnh sửa</button>
+                  <button onClick={() => setCommentToDelete(comment)} className="text-error/70 hover:text-error transition-colors cursor-pointer">Xóa</button>
                 </>
               )}
             </div>
@@ -421,7 +421,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     <div className="space-y-1">{commentReplies.map(reply => renderCommentItem(reply, true))}</div>
                     {hasMoreR && (
                       <button onClick={() => loadReplies(comment.id, false)} className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" disabled={isLoadingR}>
-                        {isLoadingR ? UI_MESSAGES.COMMON.LOADING : UI_MESSAGES.FEED.VIEW_MORE_REPLIES}
+                        {isLoadingR ? 'Đang tải...' : 'Xem thêm trả lời'}
                       </button>
                     )}
                   </>
@@ -443,7 +443,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           {isLoading && currentRootComments.length === 0 ? (
             <div className="px-4 py-4"><CommentSkeleton count={3} /></div>
           ) : currentRootComments.length === 0 ? (
-            <div className="text-center py-10 text-text-secondary text-sm italic">{UI_MESSAGES.FEED.NO_COMMENTS}</div>
+            <div className="text-center py-10 text-text-secondary text-sm italic">Hãy là người đầu tiên bình luận!</div>
           ) : (
             <div className="flex flex-col">
               {currentRootComments.map(comment => renderCommentItem(comment))}
@@ -465,9 +465,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         isOpen={!!commentToDelete}
         onClose={() => setCommentToDelete(null)}
         onConfirm={handleDeleteConfirm}
-        title={UI_MESSAGES.FEED.DELETE_TITLE}
+        title="Xóa bình luận"
         message={commentToDelete?.parentId ? "Xóa câu trả lời này?" : "Xóa sẽ mất hết các câu trả lời liên quan?"}
-        confirmLabel={UI_MESSAGES.COMMON.DELETE}
+        confirmLabel="Xóa"
         variant="danger"
       />
     </div>

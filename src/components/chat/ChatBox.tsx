@@ -4,7 +4,7 @@ import { Message, User, Conversation } from '../../types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button, Spinner } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageBubble } from './MessageBubble';
-import { UI_MESSAGES } from '../../constants/uiMessages';
+
 
 interface ChatBoxProps {
   conversation: Conversation;
@@ -101,7 +101,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
   const chatName = conversation.isGroup
     ? conversation.groupName
-    : partner?.name || UI_MESSAGES.COMMON.UNKNOWN;
+    : partner?.name || 'Không rõ';
 
   const avatarSrc = conversation.isGroup
     ? conversation.groupAvatar
@@ -229,9 +229,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
 
         <div className="flex items-center gap-0.5 md:gap-1">
-          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.AUDIO_CALL} variant="ghost" className="text-primary hover:bg-primary-light" icon={<Phone size={20} />} size="md" />
-          <IconButton onClick={() => {}} title={UI_MESSAGES.CHAT.VIDEO_CALL} variant="ghost" className="text-primary hover:bg-primary-light" icon={<Video size={20} />} size="md" />
-          <IconButton onClick={onInfoClick} title={UI_MESSAGES.CHAT.CONVERSATION_INFO} variant="ghost" className="text-text-secondary hover:text-primary" icon={<Info size={20} />} size="md" />
+          <IconButton onClick={() => {}} title="Cuộc gọi âm thanh" variant="ghost" className="text-primary hover:bg-primary-light" icon={<Phone size={20} />} size="md" />
+          <IconButton onClick={() => {}} title="Cuộc gọi video" variant="ghost" className="text-primary hover:bg-primary-light" icon={<Video size={20} />} size="md" />
+          <IconButton onClick={onInfoClick} title="Thông tin hội thoại" variant="ghost" className="text-text-secondary hover:text-primary" icon={<Info size={20} />} size="md" />
         </div>
       </div>
 
@@ -261,7 +261,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                   />
                 </div>
                 <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
-                <p className="text-sm text-text-secondary">{UI_MESSAGES.CHAT.START_CONVERSATION}</p>
+                <p className="text-sm text-text-secondary">Bắt đầu cuộc trò chuyện</p>
               </div>
             ) : (
               <div className="space-y-4">

@@ -5,7 +5,7 @@ import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply,
 import { Message, User } from '../../types';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText } from '../ui';
 import { chatService } from '../../services/chatService';
-import { UI_MESSAGES } from '../../constants/uiMessages';
+
 
 interface MessageBubbleProps {
   message: Message;
@@ -78,7 +78,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     if (message.isRecalled) {
       return (
         <div className={`italic text-sm ${isMe ? 'text-white/80' : 'text-text-tertiary'}`}>
-          {UI_MESSAGES.CHAT.RECALLED}
+          Tin nhắn đã được thu hồi
         </div>
       );
     }
@@ -112,7 +112,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               <FileText size={24} className={isMe ? 'text-primary' : 'text-text-secondary'} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium truncate text-sm">{message.fileName || UI_MESSAGES.CHAT.DOCUMENT}</div>
+              <div className="font-medium truncate text-sm">{message.fileName || 'Tài liệu'}</div>
               <div className="text-xs opacity-70">{fileSize}</div>
             </div>
             <a
@@ -154,7 +154,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {renderTextWithMentions(message.content)}
             </div>
             {message.isEdited && !message.isRecalled && (
-              <span className="text-[10px] opacity-70 mt-0.5">{UI_MESSAGES.CHAT.EDITED_SUFFIX}</span>
+              <span className="text-[10px] opacity-70 mt-0.5">(đã chỉnh sửa)</span>
             )}
           </div>
         );
@@ -218,8 +218,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 >
                   <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
                     {message.replyToMessage.senderId === currentUserId 
-                      ? UI_MESSAGES.COMMON.YOU 
-                      : usersMap[message.replyToMessage.senderId]?.name || UI_MESSAGES.COMMON.USER}
+                      ? 'Bạn' 
+                      : usersMap[message.replyToMessage.senderId]?.name || 'Người dùng'}
                   </div>
                   <div className="truncate">
                     {message.replyToMessage.type === 'text' 
@@ -266,7 +266,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                         }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
                       >
-                        <Reply size={14} /> {UI_MESSAGES.COMMON.REPLY}
+                        <Reply size={14} /> Trả lời
                       </button>
                       <button
                         onClick={() => {
@@ -275,7 +275,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                         }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
                       >
-                        <Forward size={14} /> {UI_MESSAGES.CHAT.FORWARD}
+                        <Forward size={14} /> Chuyển tiếp
                       </button>
                       {canEdit && (
                         <button
@@ -285,7 +285,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                           }}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
                         >
-                          <Edit2 size={14} /> {UI_MESSAGES.COMMON.EDIT}
+                          <Edit2 size={14} /> Chỉnh sửa
                         </button>
                       )}
                       {isMe && (
@@ -296,7 +296,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                           }}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-warning"
                         >
-                          <RotateCcw size={14} /> {UI_MESSAGES.CHAT.RECALL}
+                          <RotateCcw size={14} /> Thu hồi
                         </button>
                       )}
                       <button
@@ -306,7 +306,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                         }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-error"
                       >
-                        <Trash2 size={14} /> {UI_MESSAGES.CHAT.DELETE_FOR_ME}
+                        <Trash2 size={14} /> Xóa phía tôi
                       </button>
                     </div>
                   </>
@@ -327,7 +327,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {/* Hiển thị "Đã gửi/Đã nhận" nếu là tin nhắn cuối cùng và chưa ai đọc */}
               {isLastMessage && lastReadByUsers.length === 0 && (
                 <div className="text-[11px] font-medium text-text-tertiary select-none">
-                  {isDelivered ? UI_MESSAGES.CHAT.DELIVERED : UI_MESSAGES.CHAT.SENT}
+                  {isDelivered ? 'Đã nhận' : 'Đã gửi'}
                 </div>
               )}
 
@@ -408,9 +408,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         isOpen={showRecallConfirm}
         onClose={() => setShowRecallConfirm(false)}
         onConfirm={() => onRecall?.(message.id)}
-        title={UI_MESSAGES.CHAT.RECALL_TITLE}
-        message={UI_MESSAGES.CHAT.RECALL_CONFIRM}
-        confirmLabel={UI_MESSAGES.CHAT.RECALL}
+        title="Thu hồi tin nhắn"
+        message="Tin nhắn này sẽ bị thu hồi đối với tất cả mọi người trong cuộc trò chuyện."
+        confirmLabel="Thu hồi"
         variant="warning"
       />
     </>
