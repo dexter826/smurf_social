@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { DocumentSnapshot } from 'firebase/firestore';
+import React, { useState } from 'react';
 import { Post, User } from '../../types';
-import { postService } from '../../services/postService';
-import { userService } from '../../services/userService';
 import { PostItem, CreatePost } from '../feed';
 import { ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
 import { usePostStore } from '../../store/postStore';
+import { useUserPosts, useIntersectionObserver } from '../../hooks';
 import { FileText } from 'lucide-react';
 
 interface PostsTabProps {
@@ -15,121 +13,32 @@ interface PostsTabProps {
 }
 
 export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [users, setUsers] = useState<Record<string, User>>({});
-  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const observer = useRef<IntersectionObserver>();
-
-  const [loading, setLoading] = useState(true);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  
   const { setSelectedPost } = usePostStore();
 
-  // Reset state khi đổi user
-  useEffect(() => {
-    setPosts([]);
-    setLastDoc(null);
-    setHasMore(true);
-    setLoading(true);
-    loadPosts(true);
-  }, [userId]);
+  const {
+    posts,
+    loading,
+    loadingMore,
+    hasMore,
+    users,
+    handleLoadMore,
+    handleLike,
+    handleDelete: performDelete,
+  } = useUserPosts(userId, currentUser);
 
-  const lastPostElementRef = useCallback((node: HTMLDivElement) => {
-    if (loading || loadingMore) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadPosts(false);
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [loading, loadingMore, hasMore]);
-
-
-
-  const loadPosts = async (isFirstPage: boolean = false) => {
-    if (!isFirstPage && !hasMore) return;
-    
-    if (isFirstPage) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
-
-    try {
-      const result = await postService.getUserPosts(
-        userId, 
-        currentUser.id,
-        currentUser.friendIds || [],
-        10, 
-        isFirstPage ? undefined : (lastDoc || undefined)
-      );
-      
-      const newPosts = result.posts;
-      setLastDoc(result.lastDoc);
-      setHasMore(result.posts.length === 10); // Nếu trả về < 10 bài -> hết dữ liệu
-
-      if (isFirstPage) {
-        setPosts(newPosts);
-      } else {
-        setPosts(prev => [...prev, ...newPosts]);
-      }
-      
-      // Load user info cho posts mới
-      const userIds = Array.from(new Set(newPosts.map(p => p.userId)));
-      // Lọc user đã có cache
-      const missingUserIds = userIds.filter(uid => !users[uid]);
-      
-      if (missingUserIds.length > 0) {
-        const newUsersData: Record<string, User> = {};
-        await Promise.all(missingUserIds.map(async (uid) => {
-          const user = await userService.getUserById(uid);
-          if (user) newUsersData[uid] = user;
-        }));
-        setUsers(prev => ({ ...prev, ...newUsersData }));
-      }
-
-    } catch (error) {
-      console.error("Lỗi load posts", error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  const handleLike = async (postId: string) => {
-    try {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
-
-      const isLiked = post.likes.includes(currentUser.id);
-      await postService.likePost(postId, currentUser.id, isLiked);
-      
-      await loadPosts(true);
-    } catch (error) {
-      console.error("Lỗi like post", error);
-    }
-  };
-
-  const handleComment = (postId: string) => {
-    // Cuộn đến bình luận
-  };
-
-  const handleEdit = (postId: string) => {
-    // Mở modal sửa
-  };
+  const observerRef = useIntersectionObserver(handleLoadMore, {
+    enabled: hasMore && !loading && !loadingMore
+  });
 
   const handleDelete = async () => {
     if (!postToDelete) return;
     
     try {
       const post = posts.find(p => p.id === postToDelete);
-      await postService.deletePost(postToDelete, post?.images);
+      await performDelete(postToDelete, post?.images);
       setPostToDelete(null);
       toast.success('Đã xóa bài viết');
-      await loadPosts(true);
     } catch (error) {
       console.error("Lỗi xóa post", error);
       toast.error('Không thể xóa bài viết');
@@ -164,38 +73,21 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
         </div>
       ) : (
         <>
-          {posts.map((post, index) => {
-            if (posts.length === index + 1) {
-               return (
-                 <div ref={lastPostElementRef} key={post.id}>
-                   <PostItem
-                      post={post}
-                      author={users[post.userId]}
-                      currentUser={currentUser}
-                      onLike={handleLike}
-                      onComment={handleComment}
-                      onEdit={handleEdit}
-                      onDelete={(id) => setPostToDelete(id)}
-                      onViewDetail={(post) => setSelectedPost(post)}
-                    />
-                 </div>
-               );
-            } else {
-              return (
-                <PostItem
-                  key={post.id}
-                  post={post}
-                  author={users[post.userId]}
-                  currentUser={currentUser}
-                  onLike={handleLike}
-                  onComment={handleComment}
-                  onEdit={handleEdit}
-                  onDelete={(id) => setPostToDelete(id)}
-                  onViewDetail={(post) => setSelectedPost(post)}
-                />
-              );
-            }
-          })}
+          {posts.map((post) => (
+            <PostItem
+              key={post.id}
+              post={post}
+              author={users[post.userId]}
+              currentUser={currentUser}
+              onLike={handleLike}
+              onComment={() => {}}
+              onEdit={() => {}}
+              onDelete={(id) => setPostToDelete(id)}
+              onViewDetail={(post) => setSelectedPost(post)}
+            />
+          ))}
+          
+          <div ref={observerRef} className="h-4 w-full" />
           {loadingMore && (
              <div className="space-y-4 mt-4">
                {[...Array(2)].map((_, i) => (

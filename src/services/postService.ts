@@ -212,6 +212,39 @@ export const postService = {
     }
   },
 
+  subscribeToUserPosts: (userId: string, currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.USER_POSTS) => {
+    const q = query(
+      collection(db, 'posts'),
+      where('userId', '==', userId),
+      orderBy('timestamp', 'desc'),
+      limit(limitCount)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const posts = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+        timestamp: doc.data().timestamp?.toDate() || new Date(),
+        editedAt: doc.data().editedAt?.toDate(),
+      })) as Post[];
+
+      // Lọc theo quyền riêng tư
+      const filteredPosts = posts.filter(post => {
+        const isOwner = userId === currentUserId;
+        const isFriend = friendIds?.includes(userId) || false;
+        
+        if (isOwner) return true;
+        if (isFriend) return post.visibility === 'friends';
+        
+        return false;
+      });
+
+      callback(filteredPosts);
+    }, (error) => {
+      console.error("Lỗi subscribe bài viết của user", error);
+    });
+  },
+
   createPost: async (postData: Omit<Post, 'id' | 'timestamp' | 'commentCount'>): Promise<string> => {
     try {
       const docRef = await addDoc(collection(db, 'posts'), {
