@@ -8,11 +8,16 @@ interface NotificationState {
   unreadCount: number;
   isLoading: boolean;
   isRevalidating: boolean;
+  currentLimit: number;
   setNotifications: (notifications: AppNotification[]) => void;
   addNotification: (notification: AppNotification) => void;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
-  initialize: (userId: string) => () => void;
+  deleteNotification: (id: string) => Promise<void>;
+  clearAllNotifications: (userId: string) => Promise<void>;
+  initialize: (userId: string, limit?: number) => () => void;
+  loadMore: (userId: string) => void;
+  _unsubscribe: (() => void) | null;
 }
 
 export const useNotificationStore = create<NotificationState>()(
@@ -22,6 +27,8 @@ export const useNotificationStore = create<NotificationState>()(
       unreadCount: 0,
       isLoading: false,
       isRevalidating: false,
+      currentLimit: 15,
+      _unsubscribe: null as (() => void) | null,
 
       setNotifications: (notifications) => {
         const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -62,27 +69,51 @@ export const useNotificationStore = create<NotificationState>()(
     }));
   },
 
-  initialize: (userId: string, limit: number = 15) => {
-    set({ isLoading: true });
+  deleteNotification: async (id) => {
+    const notification = get().notifications.find(n => n.id === id);
+    if (!notification) return;
+
+    await notificationService.deleteNotification(id);
+    set((state) => ({
+      notifications: state.notifications.filter(n => n.id !== id),
+      unreadCount: notification.isRead ? state.unreadCount : Math.max(0, state.unreadCount - 1)
+    }));
+  },
+
+  clearAllNotifications: async (userId) => {
+    await notificationService.deleteAllNotifications(userId);
+    set({ notifications: [], unreadCount: 0 });
+  },
+
+  initialize: (userId, limit = 15) => {
+    const { _unsubscribe } = get();
+    if (_unsubscribe) _unsubscribe();
+
+    set({ isLoading: true, currentLimit: limit });
     
     const unsubscribe = notificationService.subscribeToNotifications(userId, (notifications) => {
       get().setNotifications(notifications);
       set({ isLoading: false });
     }, limit);
 
-    // Xin quyền nhận push message qua trình duyệt.
+    set({ _unsubscribe: unsubscribe });
+
     notificationService.requestPushPermission(userId).catch(err => {
-      console.warn("Lỗi yêu cầu quyền Push tự động:", err);
+      console.warn("Lỗi push permission:", err);
     });
 
     return unsubscribe;
+  },
+
+  loadMore: (userId) => {
+    const newLimit = get().currentLimit + 15;
+    get().initialize(userId, newLimit);
   }
 }), {
   name: 'smurf_notify_cache',
   storage: createJSONStorage(() => localStorage),
-  // Giới hạn lưu 20 thông báo
   partialize: (state) => ({ 
-    notifications: state.notifications.slice(0, 20),
+    notifications: state.notifications.slice(0, 50),
     unreadCount: state.unreadCount
   }),
 }));
