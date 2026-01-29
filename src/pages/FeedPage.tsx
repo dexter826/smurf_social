@@ -62,14 +62,6 @@ const FeedPage: React.FC = () => {
       <div className="w-full max-w-[720px] py-6 space-y-4 px-2 md:px-0 pb-20">
         <CreatePost currentUser={currentUser} />
 
-        {/* Nhãn cập nhật bài viết */}
-        {isRevalidating && (
-          <div className="text-center py-2 bg-primary/5 rounded-lg border border-primary/10 animate-pulse">
-            <span className="text-xs text-primary font-medium italic">
-              Đang cập nhật bài viết mới nhất...
-            </span>
-          </div>
-        )}
 
         {posts.length === 0 ? (
           <div className="bg-bg-primary rounded-xl p-12 shadow-sm border border-border-light text-center transition-theme">

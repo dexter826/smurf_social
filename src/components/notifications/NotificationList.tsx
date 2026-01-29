@@ -30,14 +30,6 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onItemClick,
       className="overflow-y-auto custom-scrollbar relative" 
       style={{ maxHeight }}
     >
-      {/* Banner cập nhật thông báo */}
-      {isRevalidating && (
-        <div className="sticky top-0 z-10 bg-primary/10 backdrop-blur-sm text-center py-1 border-b border-primary/20">
-          <span className="text-[10px] text-primary font-bold animate-pulse">
-            ĐANG CẬP NHẬT...
-          </span>
-        </div>
-      )}
       <div className="flex flex-col">
         {notifications.map((notification) => (
           <NotificationItem 
