@@ -30,7 +30,7 @@ export const commentService = {
         collection(db, 'comments'),
         where('postId', '==', postId),
         where('parentId', '==', null),
-        orderBy('timestamp', 'asc'),
+        orderBy('timestamp', 'desc'),
         limit(limitCount)
       );
 
