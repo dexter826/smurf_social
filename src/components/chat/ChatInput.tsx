@@ -604,8 +604,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   title="Gửi file"
                   icon={<Paperclip size={16} />}
                   size="sm"
-               />
-             </div>
+               />               <IconButton
+                  type="button"
+                  onClick={() => { startRecording(); setShowActions(false); }}
+                  title="Ghi âm"
+                  icon={<Mic size={16} />}
+                  size="sm"
+                  disabled={disabled || isSending || isRecording} 
+               />             </div>
            )}
         </div>
 
@@ -682,9 +688,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               maxHeight={120}
               containerClassName="flex-1"
               className="rounded-2xl"
-              style={{ 
-                overflowY: inputText.split('\n').length > 5 ? 'auto' : 'hidden',
-              }}
               renderOverlay={(value) => {
                 const parts = value.split(/(@\[[^\]]+\])/g);
                 return (
@@ -705,14 +708,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               }}
               rightElement={
                 <div className="flex items-center gap-1">
-                  <IconButton
-                    type="button"
-                    onClick={startRecording}
-                    disabled={disabled || isSending || isRecording}
-                    title="Ghi âm"
-                    icon={<Mic size={16} />}
-                    size="sm"
-                  />
                   <EmojiPicker
                     onEmojiSelect={(emoji) => {
                       const start = inputRef.current?.selectionStart || 0;
