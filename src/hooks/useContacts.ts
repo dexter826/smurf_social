@@ -21,6 +21,7 @@ interface UseContactsReturn {
   groupedFriends: FriendGroup[];
   userCache: Record<string, User>;
   isLoading: boolean;
+  isRevalidating: boolean;
   
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
@@ -44,6 +45,7 @@ export const useContacts = (): UseContactsReturn => {
     receivedRequests, 
     sentRequests,
     isLoading, 
+    isRevalidating,
     fetchFriends,
     subscribeToRequests,
     acceptFriendRequest,
@@ -60,7 +62,7 @@ export const useContacts = (): UseContactsReturn => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Lấy danh sách bạn bè và theo dõi yêu cầu
+  // Đồng bộ bạn bè và yêu cầu
   const handleFetchFriends = useCallback(() => {
     if (!currentUser) return;
     fetchFriends(currentUser.id);
@@ -77,7 +79,7 @@ export const useContacts = (): UseContactsReturn => {
     return () => unsubscribe();
   }, [handleFetchFriends, handleSubscribeToRequests]);
 
-  // Lấy thông tin user cho requests
+  // Tải thông tin user cho yêu cầu kết bạn
   useEffect(() => {
     const userIds = [
       ...receivedRequests.map(r => r.senderId),
@@ -94,7 +96,7 @@ export const useContacts = (): UseContactsReturn => {
     friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Nhóm bạn bè theo chữ cái đầu
+  // Nhóm bạn bè theo chữ cái
   const groupedFriends = (() => {
     const groups: Record<string, User[]> = {};
     filteredFriends.forEach(friend => {
@@ -158,6 +160,7 @@ export const useContacts = (): UseContactsReturn => {
     groupedFriends,
     userCache,
     isLoading,
+    isRevalidating,
     activeTab,
     setActiveTab,
     searchTerm,

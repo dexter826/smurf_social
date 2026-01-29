@@ -16,6 +16,7 @@ const ChatPage: React.FC = () => {
     currentMessages,
     currentTypingUsers,
     isLoading,
+    isRevalidating,
     viewMode,
     setViewMode,
     isSearchFocused,
@@ -80,7 +81,7 @@ const ChatPage: React.FC = () => {
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
 
-  // Hiển thị skeleton khi chưa tải xong user
+  // Skeleton khi chưa tải xong user
   if (!currentUser) {
     return <MessengerSkeleton />;
   }
@@ -103,6 +104,7 @@ const ChatPage: React.FC = () => {
           currentUserId={currentUser.id}
           blockedUserIds={currentUser.blockedUserIds || []}
           isLoading={isLoading}
+          isRevalidating={isRevalidating}
           viewMode={viewMode}
           archivedCount={archivedCount}
           onViewModeChange={setViewMode}

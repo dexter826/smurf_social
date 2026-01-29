@@ -1,9 +1,10 @@
-import { create } from 'zustand';
 import { User } from '../types';
 import { getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { chunkArray } from '../utils/batchUtils';
 import { FIREBASE_LIMITS } from '../constants';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface UserCacheState {
   users: Record<string, User>;
@@ -17,17 +18,20 @@ interface UserCacheState {
   clear: () => void;
 }
 
-export const useUserCache = create<UserCacheState>((set, get) => ({
-  users: {},
-  loadingIds: new Set(),
+const MAX_CACHE_SIZE = 100;
 
-  // Tải thông tin nhiều người dùng theo lô (batch)
+export const useUserCache = create<UserCacheState>()(
+  persist(
+    (set, get) => ({
+      users: {},
+      loadingIds: new Set(),
+
+  // Tải thông tin user theo lô
   fetchUsers: async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
 
     const { users, loadingIds } = get();
     
-    // Bỏ qua các ID đã có hoặc đang tải
     const missingIds = ids.filter(id => !users[id] && !loadingIds.has(id));
     
     if (missingIds.length === 0) return;
@@ -35,7 +39,7 @@ export const useUserCache = create<UserCacheState>((set, get) => ({
     set({ loadingIds: new Set([...loadingIds, ...missingIds]) });
 
     try {
-      // Chia nhỏ IDs để tránh giới hạn của Firestore 'in' query
+      // Chia nhỏ ID tránh giới hạn Firestore
       const chunks = chunkArray(missingIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
       
       const results = await Promise.all(
@@ -89,7 +93,15 @@ export const useUserCache = create<UserCacheState>((set, get) => ({
 
   setUser: (user: User) => {
     const { users } = get();
-    set({ users: { ...users, [user.id]: user } });
+    let newUsers = { ...users, [user.id]: user };
+    
+    // Giới hạn cache 100 user
+    const keys = Object.keys(newUsers);
+    if (keys.length > MAX_CACHE_SIZE) {
+      delete newUsers[keys[0]];
+    }
+
+    set({ users: newUsers });
   },
 
   invalidateUser: (id: string) => {
@@ -101,4 +113,8 @@ export const useUserCache = create<UserCacheState>((set, get) => ({
   clear: () => {
     set({ users: {}, loadingIds: new Set() });
   }
+}), {
+  name: 'smurf_user_cache',
+  storage: createJSONStorage(() => localStorage),
+  partialize: (state) => ({ users: state.users }),
 }));

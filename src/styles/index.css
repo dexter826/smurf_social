@@ -151,6 +151,25 @@ input::-ms-clear {
   height: 6px;
 }
 
+/* Hiệu ứng cập nhật ngầm SWR */
+@keyframes revalidate-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-revalidate-progress {
+  animation: revalidate-progress 2s infinite linear;
+}
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }

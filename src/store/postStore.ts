@@ -1,11 +1,13 @@
-import { create } from 'zustand';
 import { Post, Comment } from '../types';
 import { postService } from '../services/postService';
 import { DocumentSnapshot } from 'firebase/firestore';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface PostState {
   posts: Post[];
   isLoading: boolean;
+  isRevalidating: boolean;
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
@@ -22,42 +24,53 @@ interface PostState {
   clearPosts: () => void;
 }
 
-export const usePostStore = create<PostState>((set, get) => ({
-  posts: [],
-  isLoading: false,
-  hasMore: true,
-  lastDoc: null,
-  abortController: null,
+export const usePostStore = create<PostState>()(
+  persist(
+    (set, get) => ({
+      posts: [],
+      isLoading: false,
+      isRevalidating: false,
+      hasMore: true,
+      lastDoc: null,
+      abortController: null,
 
-  fetchPosts: async (currentUserId: string, friendIds: string[], loadMore = false) => {
-    // Hủy request cũ nếu đang chạy
-    const { abortController: currentController } = get();
-    if (currentController) {
-      currentController.abort();
-    }
+      fetchPosts: async (currentUserId: string, friendIds: string[], loadMore = false) => {
+        const { abortController: currentController, posts } = get();
+        if (currentController) {
+          currentController.abort();
+        }
 
-    const newController = new AbortController();
-    set({ abortController: newController, isLoading: true });
+        const newController = new AbortController();
+        
+        // Dùng Revalidating nếu đã có cache
+        const shouldRevalidate = posts.length > 0 && !loadMore;
+        
+        set({ 
+          abortController: newController, 
+          isLoading: !shouldRevalidate,
+          isRevalidating: shouldRevalidate 
+        });
 
-    const { lastDoc, posts } = get();
+        const { lastDoc } = get();
 
     try {
       const result = await postService.getFeed(currentUserId, friendIds, 10, loadMore ? lastDoc || undefined : undefined);
       
       if (newController.signal.aborted) return;
 
-      set({
-        posts: loadMore ? [...posts, ...result.posts] : result.posts,
-        lastDoc: result.lastDoc,
-        hasMore: result.posts.length === 10,
-        isLoading: false,
-        abortController: null
-      });
-    } catch (error: any) {
-      if (error.name === 'AbortError') return;
-      console.error("Lỗi tải bài viết:", error);
-      set({ isLoading: false, abortController: null });
-    }
+          set({
+            posts: loadMore ? [...posts, ...result.posts] : result.posts,
+            lastDoc: result.lastDoc,
+            hasMore: result.posts.length === 10,
+            isLoading: false,
+            isRevalidating: false,
+            abortController: null
+          });
+        } catch (error: any) {
+          if (error.name === 'AbortError') return;
+          console.error("Lỗi tải bài viết:", error);
+          set({ isLoading: false, isRevalidating: false, abortController: null });
+        }
   },
 
   subscribeToPosts: (currentUserId: string, friendIds: string[]) => {
@@ -159,7 +172,15 @@ export const usePostStore = create<PostState>((set, get) => ({
     }
   },
 
-  setLoading: (loading: boolean) => set({ isLoading: loading }),
+      setLoading: (loading: boolean) => set({ isLoading: loading }),
 
-  clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true })
-}));
+      clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true })
+    }),
+    {
+      name: 'smurf_feed_cache',
+      storage: createJSONStorage(() => localStorage),
+      // Cache 10 bài viết mới nhất
+      partialize: (state) => ({ posts: state.posts.slice(0, 10) }),
+    }
+  )
+);

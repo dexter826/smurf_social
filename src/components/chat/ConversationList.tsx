@@ -11,6 +11,7 @@ interface ConversationListProps {
   currentUserId: string;
   blockedUserIds?: string[];
   isLoading: boolean;
+  isRevalidating?: boolean;
   onSelectConversation: (id: string) => void;
   onSearch: (term: string) => void;
   onPin: (id: string, pinned: boolean) => void;
@@ -42,6 +43,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   currentUserId,
   blockedUserIds = [],
   isLoading,
+  isRevalidating = false,
   onSelectConversation,
   onSearch,
   onPin,
@@ -177,6 +179,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
             )}
           </Button>
+        </div>
+      )}
+
+      {/* Cập nhật danh sách ngầm */}
+      {isRevalidating && (
+        <div className="h-0.5 w-full bg-primary/5 overflow-hidden">
+          <div className="h-full bg-primary animate-revalidate-progress" />
         </div>
       )}
 

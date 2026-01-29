@@ -16,6 +16,7 @@ interface UseChatReturn {
   usersMap: Record<string, User>;
   archivedCount: number;
   isLoading: boolean;
+  isRevalidating: boolean;
   isLoadingMore: boolean;
   hasMoreMessages: boolean;
   blockedMessage: string | undefined;
@@ -91,6 +92,7 @@ export const useChat = (): UseChatReturn => {
     messages,
     typingUsers,
     isLoading,
+    isRevalidating,
     subscribeToConversations,
     selectConversation,
     subscribeToMessages,
@@ -141,7 +143,7 @@ export const useChat = (): UseChatReturn => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
 
-  // Theo dõi tin nhắn và trạng thái đang nhập
+  // Đồng bộ tin nhắn và trạng thái soạn tin
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 
@@ -155,7 +157,7 @@ export const useChat = (): UseChatReturn => {
     };
   }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsDelivered]);
 
-  // Tự động đánh dấu đã đọc khi xem tin nhắn mới
+  // Tự động đánh dấu đã đọc
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 
@@ -171,7 +173,7 @@ export const useChat = (): UseChatReturn => {
     }
   }, [messages, selectedConversationId, currentUser, markAsRead]);
 
-  // Tự động tải thông tin người dùng trong hội thoại
+  // Tải thông tin user trong hội thoại
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
 
@@ -188,7 +190,7 @@ export const useChat = (): UseChatReturn => {
     fetchUsers(userIds);
   }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
 
-  // Tính toán các giá trị phụ trợ cho giao diện
+  // Dữ liệu phụ trợ UI
   const filteredConversations = conversations.filter(c => 
     viewMode === 'archived' ? c.archived : !c.archived
   );
@@ -199,7 +201,7 @@ export const useChat = (): UseChatReturn => {
   const isLoadingMore = selectedConversationId ? (storeIsLoadingMore[selectedConversationId] || false) : false;
   const hasMoreMessages = selectedConversationId ? (storeHasMoreMessages[selectedConversationId] || false) : false;
 
-  // Kiểm tra trạng thái chặn giữa hai người dùng
+  // Kiểm tra trạng thái chặn
   const partner = selectedConversation && !selectedConversation.isGroup
     ? selectedConversation.participants.find(p => p.id !== currentUser?.id)
     : null;
@@ -344,7 +346,7 @@ export const useChat = (): UseChatReturn => {
     
     const conv = conversations.find(c => c.id === selectedConversationId);
     
-    // Yêu cầu chỉ định admin mới khi chủ nhóm rời đi
+    // Yêu cầu chỉ định admin khi chủ nhóm rời đi
     if (conv?.isGroup && conv.creatorId === currentUser.id && conv.participantIds.length > 1) {
       return { needAssignAdmin: true };
     }
@@ -395,6 +397,7 @@ export const useChat = (): UseChatReturn => {
     usersMap,
     archivedCount,
     isLoading,
+    isRevalidating,
     isSearchFocused,
     searchResults,
     searchHistory,

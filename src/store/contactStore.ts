@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, FriendRequest } from '../types';
 import { userService } from '../services/userService';
 import { friendService } from '../services/friendService';
@@ -9,6 +10,7 @@ interface ContactState {
   sentRequests: FriendRequest[];
   searchResults: User[];
   isLoading: boolean;
+  isRevalidating: boolean;
   
   fetchFriends: (userId: string) => Promise<void>;
   fetchReceivedRequests: (userId: string) => Promise<void>;
@@ -28,22 +30,34 @@ interface ContactState {
   clearSearchResults: () => void;
 }
 
-export const useContactStore = create<ContactState>((set) => ({
-  friends: [],
-  receivedRequests: [],
-  sentRequests: [],
-  searchResults: [],
-  isLoading: false,
+export const useContactStore = create<ContactState>()(
+  persist(
+    (set, get) => ({
+      friends: [],
+      receivedRequests: [],
+      sentRequests: [],
+      searchResults: [],
+      isLoading: false,
+      isRevalidating: false,
 
-  fetchFriends: async (userId: string) => {
-    set({ isLoading: true });
-    try {
-      const data = await userService.getAllFriends(userId);
-      set({ friends: data });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
+      fetchFriends: async (userId: string) => {
+        const { friends } = get();
+        const hasCache = friends.length > 0;
+        
+        // Dùng Revalidating nếu đã có cache
+        set({ 
+          isLoading: !hasCache,
+          isRevalidating: hasCache 
+        });
+
+        try {
+          const data = await userService.getAllFriends(userId);
+          set({ friends: data, isLoading: false, isRevalidating: false });
+        } catch (error) {
+          console.error("Lỗi tải danh sách bạn bè:", error);
+          set({ isLoading: false, isRevalidating: false });
+        }
+      },
 
   fetchReceivedRequests: async (userId: string) => {
     try {
@@ -171,4 +185,16 @@ export const useContactStore = create<ContactState>((set) => ({
   })),
 
   clearSearchResults: () => set({ searchResults: [] }),
-}));
+    }),
+    {
+  name: 'smurf_contact_cache',
+  storage: createJSONStorage(() => localStorage),
+  // Cache bạn bè và lời mời
+  partialize: (state) => ({ 
+    friends: state.friends,
+    receivedRequests: state.receivedRequests,
+    sentRequests: state.sentRequests
+  }),
+    }
+  )
+);
