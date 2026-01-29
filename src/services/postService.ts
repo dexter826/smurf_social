@@ -26,11 +26,11 @@ import { PAGINATION, FIREBASE_LIMITS } from '../constants';
 import { notificationService } from './notificationService';
 
 export const postService = {
-  getFeed: async (currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
+  getFeed: async (currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
     try {
       if (!currentUserId) {
         console.warn("getFeed: currentUserId is missing");
-        return { posts: [], lastDoc: null };
+        return { posts: [], lastDoc: null, hasMore: false };
       }
 
       const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)];
@@ -71,10 +71,8 @@ export const postService = {
       allPosts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
       
       // Giới hạn số lượng
-      const posts = allPosts.slice(0, limitCount);
-
-      // Lọc theo quyền riêng tư
-      const filteredPosts = posts.filter(post => {
+      // Lọc theo quyền riêng tư.
+      const filteredPosts = allPosts.filter(post => {
         const isOwner = post.userId === currentUserId;
         const isFriend = friendIds?.includes(post.userId) || false;
         
@@ -84,14 +82,17 @@ export const postService = {
         return false;
       });
 
-      // Lấy cursor cho lần load tiếp theo
+      const finalPosts = filteredPosts.slice(0, limitCount);
       const allDocs = allResults.flatMap(r => r.docs);
-      const lastVisible = allDocs.length > 0 ? allDocs[allDocs.length - 1] : null;
+      
+      const lastPost = finalPosts[finalPosts.length - 1];
+      const lastVisible = lastPost ? allDocs.find(d => d.id === lastPost.id) || null : null;
+      const hasMore = filteredPosts.length > limitCount || (allDocs.length >= limitCount && filteredPosts.length > 0);
 
-      return { posts: filteredPosts, lastDoc: lastVisible };
+      return { posts: finalPosts, lastDoc: lastVisible, hasMore };
     } catch (error) {
       console.error("Lỗi lấy bài viết", error);
-      return { posts: [], lastDoc: null };
+      return { posts: [], lastDoc: null, hasMore: false };
     }
   },
 

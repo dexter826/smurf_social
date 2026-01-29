@@ -1,6 +1,6 @@
 // Phân trang
 export const PAGINATION = {
-  FEED_POSTS: 10,
+  FEED_POSTS: 15,
   USER_POSTS: 20,
   COMMENTS: 5,
   REPLIES: 3,

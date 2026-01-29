@@ -3,6 +3,7 @@ import { postService } from '../services/postService';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { PAGINATION } from '../constants';
 
 interface PostState {
   posts: Post[];
@@ -59,14 +60,14 @@ export const usePostStore = create<PostState>()(
         const { lastDoc } = get();
 
     try {
-      const result = await postService.getFeed(currentUserId, friendIds, 10, loadMore ? lastDoc || undefined : undefined);
+      const result = await postService.getFeed(currentUserId, friendIds, PAGINATION.FEED_POSTS, loadMore ? lastDoc || undefined : undefined);
       
       if (newController.signal.aborted) return;
 
           set({
             posts: loadMore ? [...posts, ...result.posts] : result.posts,
             lastDoc: result.lastDoc,
-            hasMore: result.posts.length === 10,
+            hasMore: result.hasMore,
             isLoading: false,
             isRevalidating: false,
             abortController: null
@@ -79,9 +80,23 @@ export const usePostStore = create<PostState>()(
   },
 
   subscribeToPosts: (currentUserId: string, friendIds: string[]) => {
-    const unsubscribe = postService.subscribeToFeed(currentUserId, friendIds, (posts) => {
-      set({ posts });
-    });
+    // Luôn lắng nghe ít nhất 10 bài viết mới nhất.
+    const currentCount = Math.max(get().posts.length, 10);
+    const unsubscribe = postService.subscribeToFeed(currentUserId, friendIds, (newPosts) => {
+      set((state) => {
+        // Cập nhật bài viết mới mà không xóa bài cũ đã tải.
+        if (state.posts.length <= 10) {
+          return { posts: newPosts };
+        }
+
+        const existingIds = new Set(newPosts.map(p => p.id));
+        const olderPosts = state.posts.filter(p => !existingIds.has(p.id));
+        
+        return { 
+          posts: [...newPosts, ...olderPosts].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        };
+      });
+    }, currentCount);
 
     return unsubscribe;
   },
@@ -228,8 +243,8 @@ export const usePostStore = create<PostState>()(
     {
       name: 'smurf_feed_cache',
       storage: createJSONStorage(() => localStorage),
-      // Cache 10 bài viết mới nhất
-      partialize: (state) => ({ posts: state.posts.slice(0, 10) }),
+      // Cache các bài viết mới nhất.
+      partialize: (state) => ({ posts: state.posts.slice(0, PAGINATION.FEED_POSTS) }),
     }
   )
 );
