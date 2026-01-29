@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageCircle, MoreVertical, UserMinus, User as UserIcon } from 'lucide-react';
-import { Avatar, UserAvatar, UserStatusText, IconButton, Dropdown, DropdownItem } from '../ui';
+import { Avatar, UserAvatar, UserStatusText, IconButton, Dropdown, DropdownItem, Skeleton } from '../ui';
 import { User, UserStatus } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -64,14 +64,14 @@ export const FriendItem: React.FC<FriendItemProps> = ({
 };
 
 FriendItem.Skeleton = () => (
-  <div className="flex items-center justify-between p-3 animate-pulse border-b border-divider">
+  <div className="flex items-center justify-between p-3 border-b border-divider">
     <div className="flex items-center gap-4 flex-1">
-      <div className="w-10 h-10 rounded-full bg-bg-tertiary" />
-      <div>
-        <div className="h-4 bg-bg-tertiary rounded w-32 mb-1" />
-        <div className="h-3 bg-bg-tertiary rounded w-20" />
+      <Skeleton variant="circle" width={40} height={40} />
+      <div className="space-y-2">
+        <Skeleton width={128} height={16} />
+        <Skeleton width={80} height={12} />
       </div>
     </div>
-    <div className="w-8 h-8 bg-bg-tertiary rounded" />
+    <Skeleton width={32} height={32} className="rounded-lg" />
   </div>
 );

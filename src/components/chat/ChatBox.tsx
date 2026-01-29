@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Phone, Video, Info } from 'lucide-react';
 import { Message, User, Conversation } from '../../types';
-import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button } from '../ui';
+import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button, Spinner } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageBubble } from './MessageBubble';
 import { UI_MESSAGES } from '../../constants/uiMessages';
@@ -228,7 +228,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           <div className="space-y-4 px-4 py-4 min-h-full">
             {isLoadingMore && (
               <div className="flex justify-center py-2">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <Spinner size="sm" />
               </div>
             )}
             

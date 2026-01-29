@@ -44,7 +44,7 @@ export const Button: React.FC<ButtonProps> = ({
         disabled={disabled || isLoading}
         {...props} 
     >
-        {isLoading && <Loader2 className="animate-spin" size={iconSize} />}
+        {isLoading && <Loader2 className="animate-spin shrink-0" size={iconSize} />}
         {!isLoading && icon && <span className="shrink-0">{icon}</span>}
         {!isLoading && children && <span className="truncate">{children}</span>}
     </button>
