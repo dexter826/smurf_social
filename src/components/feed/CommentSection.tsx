@@ -292,7 +292,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isReplyingNow ? 'Viết câu trả lời...' : isEditingNow ? 'Sửa bình luận...' : 'Viết bình luận...'}
+              placeholder={isReplyingNow ? 'Nhập câu trả lời...' : isEditingNow ? 'Nhập nội dung chỉnh sửa...' : 'Nhập bình luận...'}
               className="rounded-2xl bg-bg-secondary/50 border border-border-light focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 min-h-[44px] transition-all text-[14px] leading-relaxed py-2.5"
               containerClassName="!gap-0"
               autoResize

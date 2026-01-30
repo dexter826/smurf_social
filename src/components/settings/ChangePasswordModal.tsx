@@ -105,7 +105,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="w-full pl-10 pr-10 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                placeholder="••••••••"
+                placeholder="Nhập mật khẩu hiện tại"
                 required
               />
               <button
@@ -128,7 +128,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full pl-10 pr-10 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                placeholder="••••••••"
+                placeholder="Nhập mật khẩu mới"
                 required
               />
               <button
@@ -151,7 +151,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full pl-10 pr-10 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                placeholder="••••••••"
+                placeholder="Xác nhận mật khẩu mới"
                 required
               />
               <button

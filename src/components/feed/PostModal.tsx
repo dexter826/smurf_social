@@ -215,7 +215,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         <div className="flex-1 min-h-[120px] md:min-h-0 relative group">
           <textarea
             ref={textareaRef}
-            placeholder={`Bạn đang nghĩ gì, ${currentUser.name.split(' ').pop()}?`}
+            placeholder="Hãy viết gì đó..."
             className="w-full h-full resize-none outline-none text-base md:text-lg bg-transparent text-text-primary placeholder:text-text-tertiary"
             value={content}
             onChange={(e) => setContent(e.target.value)}

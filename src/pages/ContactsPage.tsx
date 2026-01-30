@@ -160,7 +160,7 @@ const ContactsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <Input
                 type="text"
-                placeholder="Tìm kiếm bạn bè"
+                placeholder="Tìm kiếm..."
                 icon={<Search size={18} />}
                 className="bg-bg-secondary h-10"
                 value={searchTerm}
