@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui';
 import { authService } from '../../services/authService';
+import { useAuthStore } from '../../store/authStore';
+import { toast } from '../../store/toastStore';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -16,6 +19,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
@@ -26,6 +32,10 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
     // Validation
     if (newPassword.length < 6) {
       setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setError("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -42,12 +52,12 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
       await authService.changePassword(newPassword);
       
       setSuccess(true);
-      setTimeout(() => {
+      toast.success("Mật khẩu đã được đổi. Vui lòng đăng nhập lại!");
+      
+      setTimeout(async () => {
+        await logout();
         onClose();
-        setSuccess(false);
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+        navigate('/login');
       }, 2000);
     } catch (err: any) {
       console.error("Lỗi đổi mật khẩu", err);
@@ -98,6 +108,14 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 placeholder="••••••••"
                 required
               />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPasswords(!showPasswords)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
+              >
+                {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
@@ -115,6 +133,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
               />
               <button
                 type="button"
+                tabIndex={-1}
                 onClick={() => setShowPasswords(!showPasswords)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
               >
@@ -131,10 +150,18 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 type={showPasswords ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className="w-full pl-10 pr-10 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 placeholder="••••••••"
                 required
               />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPasswords(!showPasswords)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
+              >
+                {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
