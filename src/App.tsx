@@ -3,7 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { useChatStore } from './store/chatStore';
 import { AppLayout } from './components/layout/AppLayout';
-import { Loading, ToastContainer } from './components/ui';
+import { Loading, ScreenLoader, ToastContainer } from './components/ui';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
 import FeedPage from './pages/FeedPage';
@@ -18,7 +18,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { user, isLoading } = useAuthStore();
 
   if (isLoading) {
-    return <Loading variant="page" />;
+    return <ScreenLoader />;
   }
 
   if (!user) {
