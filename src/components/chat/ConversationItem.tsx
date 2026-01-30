@@ -156,15 +156,19 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           </p>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {isLastMessageMine && (conversation.typingUsers || []).filter(id => id !== currentUserId).length === 0 && (
+            {isLastMessageMine && !isUnread && (conversation.typingUsers || []).filter(id => id !== currentUserId).length === 0 && (
               <div className="flex items-center">
                 {isLastMessageRead ? (
                   <div className="flex items-center gap-1">
-                    <div className="flex -space-x-1 overflow-hidden">
+                    <div className="flex -space-x-1">
                       {readers.slice(0, 3).map(user => (
-                        <div key={user.id} className="inline-block h-3.5 w-3.5 rounded-full ring-1 ring-bg-primary overflow-hidden bg-bg-primary">
-                          <Avatar src={user.avatar} name={user.name} size="xs" />
-                        </div>
+                        <Avatar 
+                          key={user.id}
+                          src={user.avatar} 
+                          name={user.name} 
+                          size="2xs" 
+                          className="ring-1 ring-bg-primary"
+                        />
                       ))}
                     </div>
                     {readers.length > 3 && (
