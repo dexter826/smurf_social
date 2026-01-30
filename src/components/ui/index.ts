@@ -12,6 +12,7 @@ export * from './Loading';
 export * from './Select';
 export * from './Dropdown';
 export * from './DatePicker';
+export * from './ScreenLoader';
 export * from './Toast';
 export * from './Modal';
 export * from './TextArea';
