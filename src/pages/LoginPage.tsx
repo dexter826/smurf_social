@@ -303,6 +303,7 @@ const LoginPage: React.FC = () => {
                     rightElement={
                       <button
                         type="button"
+                        tabIndex={-1}
                         onClick={() => setShowPassword(!showPassword)}
                         className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
                       >
@@ -341,6 +342,7 @@ const LoginPage: React.FC = () => {
                     rightElement={
                       <button
                         type="button"
+                        tabIndex={-1}
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
                       >
