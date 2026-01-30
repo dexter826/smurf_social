@@ -73,17 +73,14 @@ export const AppLayout: React.FC = () => {
       <header className="hidden md:flex h-16 w-full items-center justify-between bg-bg-primary px-6 z-50 shadow-sm border-b border-border-light transition-theme">
         {/* Left: Logo */}
         <div 
-          className="flex items-center gap-3 cursor-pointer group hover:scale-[0.98] active:scale-95 transition-transform duration-200" 
+          className="flex items-center cursor-pointer transition-transform duration-200" 
           onClick={() => navigate('/feed')}
         >
           <img 
-            src="/logo.svg" 
-            alt="Smurfy Logo" 
-            className="w-10 h-10 object-contain" 
+            src="/logo_text_blue.png" 
+            alt="Smurf Social" 
+            className="h-9 object-contain" 
           />
-          <span className="text-lg font-bold text-text-primary tracking-tight">
-            Smurf Social
-          </span>
         </div>
 
         {/* Center: Navigation */}
