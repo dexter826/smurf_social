@@ -2,6 +2,7 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
   signOut,
   updatePassword,
   EmailAuthProvider,
@@ -23,6 +24,13 @@ export const authService = {
 
   resetPassword: async (email: string): Promise<void> => {
     await sendPasswordResetEmail(auth, email.trim());
+  },
+
+  sendVerificationEmail: async (): Promise<void> => {
+    const user = auth.currentUser;
+    if (user) {
+      await sendEmailVerification(user);
+    }
   },
 
   logout: async (): Promise<void> => {
