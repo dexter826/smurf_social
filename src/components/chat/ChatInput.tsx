@@ -682,7 +682,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               value={inputText}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Aa"
+              placeholder="Nhập tin nhắn..."
               disabled={disabled || isSending}
               autoResize
               maxHeight={120}

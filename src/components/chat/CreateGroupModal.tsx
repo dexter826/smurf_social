@@ -94,7 +94,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       <div className="flex-none mb-4">
         <Input
           icon={<Search size={16} />}
-          placeholder="Tìm bạn bè..."
+          placeholder="Tìm kiếm bạn bè..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="bg-bg-secondary h-11"

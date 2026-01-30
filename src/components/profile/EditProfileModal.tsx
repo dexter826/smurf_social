@@ -117,7 +117,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 error={errors.name}
-                placeholder="Nhập tên của bạn"
+                placeholder="Nhập họ và tên"
               />
             </div>
 
@@ -126,7 +126,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 label="Giới thiệu"
                 value={formData.bio || ''}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
-                placeholder="Viết vài dòng giới thiệu về bản thân..."
+                placeholder="Nhập vài dòng giới thiệu về bản thân..."
                 rows={2}
                 className="rounded-xl"
                 rightElement={
@@ -151,7 +151,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 value={formData.location || ''}
                 onChange={(val) => setFormData({ ...formData, location: val })}
                 options={provinces}
-                placeholder="Chọn địa điểm"
+                placeholder="Chọn tỉnh/thành phố"
                 openUp
               />
             </div>

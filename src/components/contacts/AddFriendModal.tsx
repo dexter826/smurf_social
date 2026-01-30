@@ -56,7 +56,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
           <div className="flex gap-2">
             <Input
               type="text"
-              placeholder="Nhập chính xác địa chỉ email..."
+              placeholder="Nhập địa chỉ email chính xác..."
               icon={<Search size={18} />}
               containerClassName="flex-1"
               className="h-10"

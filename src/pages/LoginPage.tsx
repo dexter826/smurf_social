@@ -208,7 +208,7 @@ const LoginPage: React.FC = () => {
                 label="Địa chỉ Email"
                 icon={<Mail size={18} />}
                 type="email"
-                placeholder="Nhập email của bạn"
+                placeholder="Nhập địa chỉ email"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 error={errors.email}
@@ -270,7 +270,7 @@ const LoginPage: React.FC = () => {
                   <Input
                     label="Họ và Tên"
                     icon={<User size={18} />}
-                    placeholder="Nhập tên của bạn"
+                    placeholder="Nhập họ tên của bạn"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     error={errors.name}
@@ -282,7 +282,7 @@ const LoginPage: React.FC = () => {
                   label="Email"
                   icon={<Mail size={18} />}
                   type="email"
-                  placeholder="email@vidu.com"
+                  placeholder="Nhập địa chỉ email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   error={errors.email}
@@ -295,7 +295,7 @@ const LoginPage: React.FC = () => {
                     label="Mật khẩu"
                     icon={<Lock size={18} />}
                     type={showPassword ? "text" : "password"}
-                    placeholder="Tối thiểu 6 ký tự"
+                    placeholder="Nhập mật khẩu"
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                     error={errors.password}
@@ -334,7 +334,7 @@ const LoginPage: React.FC = () => {
                     label="Xác nhận mật khẩu"
                     icon={<Lock size={18} />}
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Nhập lại mật khẩu"
+                    placeholder="Xác nhận mật khẩu"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                     error={errors.confirmPassword}
