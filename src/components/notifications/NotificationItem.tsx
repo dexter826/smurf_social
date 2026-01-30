@@ -66,9 +66,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Xóa thông báo này?')) {
-      await deleteNotification(notification.id);
-    }
+    await deleteNotification(notification.id);
   };
 
   return (
@@ -97,8 +95,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           variant="ghost"
           size="sm"
           onClick={handleDelete}
-          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 h-auto text-text-tertiary hover:text-error hover:bg-error/10 transition-all rounded-full"
-          icon={<Trash2 size={14} />}
+          className="md:opacity-0 md:group-hover:opacity-100 p-2 h-auto text-text-tertiary hover:text-error hover:bg-error/10 transition-all rounded-full"
+          icon={<Trash2 size={16} />}
         />
       </div>
     </div>

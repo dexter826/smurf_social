@@ -18,7 +18,7 @@ const NotificationsPage: React.FC = () => {
   };
 
   const handleClearAll = async () => {
-    if (user && window.confirm('Bạn có chắc chắn muốn xóa tất cả thông báo không? Thao tác này không thể hoàn tác.')) {
+    if (user) {
       await clearAllNotifications(user.id);
     }
   };
@@ -42,16 +42,16 @@ const NotificationsPage: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleMarkAllRead}
-              className="text-primary hover:bg-primary/10 gap-2"
+              className="text-primary hover:bg-primary/10 px-2 sm:px-3 gap-1.5 sm:gap-2"
               icon={<CheckCheck size={18} />}
             >
-              Đọc tất cả
+              <span className="hidden sm:inline">Đọc tất cả</span>
             </Button>
           )}
           {notifications.length > 0 && (
@@ -59,19 +59,19 @@ const NotificationsPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={handleClearAll}
-              className="text-text-tertiary hover:text-error hover:bg-error/10 gap-2"
+              className="text-text-tertiary hover:text-error hover:bg-error/10 px-2 sm:px-3 gap-1.5 sm:gap-2"
               icon={<Trash2 size={18} />}
             >
-              Xóa tất cả
+              <span className="hidden sm:inline">Xóa tất cả</span>
             </Button>
           )}
         </div>
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-bg-secondary/30">
-        <div className="max-w-3xl mx-auto p-4 md:p-6">
-          <div className="bg-bg-primary rounded-2xl shadow-sm border border-border-light overflow-hidden">
+      <div className="flex-1 overflow-y-auto bg-bg-secondary/30 custom-scrollbar">
+        <div className="max-w-3xl mx-auto md:p-6">
+          <div className="bg-bg-primary md:rounded-2xl md:shadow-sm md:border md:border-border-light overflow-hidden">
             <NotificationList maxHeight="100%" />
             
             {notifications.length >= useNotificationStore.getState().currentLimit && (
