@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { Button, Input } from '../components/ui';
+import { Button, Input, Checkbox } from '../components/ui';
 import { toast } from '../store/toastStore';
-import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, AlertCircle } from 'lucide-react';
 
 
 const LoginPage: React.FC = () => {
-  const { login, register, resetPassword, isLoading } = useAuthStore();
+  const { login, register, resetPassword, sendVerificationEmail, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', name: '' });
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [verificationSent, setVerificationSent] = useState(false);
+
+  // Load email đã ghi nhớ
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem('remembered_email');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -53,10 +64,21 @@ const LoginPage: React.FC = () => {
     try {
       if (activeTab === 'login') {
         await login(formData.email, formData.password);
+        
+        // Lưu hoặc xóa email ghi nhớ
+        if (rememberMe) {
+          localStorage.setItem('remembered_email', formData.email);
+        } else {
+          localStorage.removeItem('remembered_email');
+        }
+        
+        navigate('/');
       } else {
         await register(formData.email, formData.password, formData.name);
+        setVerificationSent(true);
+        toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
+        setActiveTab('login');
       }
-      navigate('/');
     } catch (error: any) {
       const errorCode = error.code;
       let message = "Đã có lỗi xảy ra. Vui lòng thử lại.";
@@ -79,11 +101,26 @@ const LoginPage: React.FC = () => {
         case 'auth/weak-password':
           message = "Mật khẩu quá yếu.";
           break;
+        case 'auth/email-not-verified':
+          message = "Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn.";
+          break;
         default:
           message = error.message || "Thao tác thất bại.";
       }
       
+      setErrors({ auth: message });
       toast.error(message);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    try {
+      await sendVerificationEmail();
+      setErrors(prev => ({ ...prev, auth: undefined }));
+      setVerificationSent(true);
+      toast.success("Đã gửi lại email xác thực!");
+    } catch (error: any) {
+      toast.error("Không thể gửi email lúc này. Vui lòng thử lại sau.");
     }
   };
 
@@ -202,6 +239,33 @@ const LoginPage: React.FC = () => {
           ) : (
             <div className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
+                {errors.auth && (
+                  <div className="p-3.5 bg-error/5 border border-error/20 rounded-xl flex items-start gap-3 animate-shake">
+                    <AlertCircle size={18} className="text-error shrink-0 mt-0.5" />
+                    <div className="space-y-1.5 text-xs text-error font-medium leading-[1.4]">
+                      <p>{errors.auth}</p>
+                      {errors.auth.includes('xác thực email') && (
+                        <button 
+                          type="button"
+                          onClick={handleResendEmail}
+                          className="text-primary hover:underline font-bold block"
+                        >
+                          Gửi lại email xác thực
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {verificationSent && !errors.auth && (
+                  <div className="p-3.5 bg-success/5 border border-success/20 rounded-xl flex items-start gap-3">
+                    <AlertCircle size={18} className="text-success shrink-0 mt-0.5" />
+                    <div className="text-xs text-success font-medium leading-[1.4]">
+                      Đã gửi link xác thực đến email của bạn. Vui lòng kiểm tra hộp thư (và cả thư rác).
+                    </div>
+                  </div>
+                )}
+                
                 {activeTab === 'register' && (
                   <Input
                     label="Họ và Tên"
@@ -247,7 +311,12 @@ const LoginPage: React.FC = () => {
                     }
                   />
                   {activeTab === 'login' && (
-                    <div className="flex justify-end">
+                    <div className="flex items-center justify-between mt-1">
+                      <Checkbox 
+                        label="Ghi nhớ đăng nhập" 
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
                       <button 
                         type="button"
                         onClick={() => handleTabChange('forgot')}

@@ -14,6 +14,7 @@ interface AuthState {
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   setLoading: (isLoading: boolean) => void;
@@ -30,7 +31,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, pass) => {
     set({ isLoading: true });
     try {
-      await authService.login(email, pass);
+      const firebaseUser = await authService.login(email, pass);
+      
+      // Kiểm tra xác thực email
+      if (!firebaseUser.emailVerified) {
+        await authService.logout();
+        const error = new Error('Vui lòng xác thực email trước khi đăng nhập.');
+        (error as any).code = 'auth/email-not-verified';
+        throw error;
+      }
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -41,13 +50,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const firebaseUser = await authService.register(email, pass);
-      const newUser = await userService.updateProfile(firebaseUser.uid, {
+      await userService.updateProfile(firebaseUser.uid, {
         id: firebaseUser.uid,
         name: name,
         avatar: '',
         email: email.trim(),
       });
-      set({ user: newUser });
+      
+      // Gửi email xác thực
+      await authService.sendVerificationEmail();
+      
+      // Đăng xuất ngay sau khi đăng ký để bắt người dùng đăng nhập lại sau khi xác thực
+      await authService.logout();
+      set({ user: null });
     } finally {
       set({ isLoading: false });
     }
@@ -71,6 +86,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  sendVerificationEmail: async () => {
+    try {
+      await authService.sendVerificationEmail();
+    } catch (error) {
+      console.error("Lỗi gửi email xác thực:", error);
+      throw error;
+    }
+  },
+
   initialize: () => {
     let userUnsubscribe: (() => void) | null = null;
 
@@ -80,7 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         userUnsubscribe = null;
       }
 
-      if (firebaseUser) {
+      if (firebaseUser && firebaseUser.emailVerified) {
         try {
           // Lấy thông tin người dùng từ server
           const userData = await userService.getUserById(firebaseUser.uid);
