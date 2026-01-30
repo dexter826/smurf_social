@@ -39,9 +39,15 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     ? null 
     : conversation.participants.find(p => p.id !== currentUserId);
 
+  const isDataMissing = !conversation.isGroup && (!partner || !partner.name);
+
+  if (isDataMissing) {
+    return <ConversationItem.Skeleton />;
+  }
+
   const chatName = conversation.isGroup 
-    ? conversation.groupName 
-    : partner?.name || 'Unknown';
+    ? conversation.groupName || 'Nhóm chưa đặt tên' 
+    : partner.name;
 
   const avatar = conversation.isGroup 
     ? conversation.groupAvatar 
@@ -281,12 +287,14 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 };
 
 ConversationItem.Skeleton = () => (
-  <div className="flex items-center gap-3 px-4 py-3 animate-pulse">
-    <div className="w-12 h-12 rounded-full bg-bg-tertiary" />
-    <div className="flex-1">
-      <div className="h-4 bg-bg-tertiary rounded w-32 mb-2" />
-      <div className="h-3 bg-bg-tertiary rounded w-48" />
+  <div className="flex items-center gap-3 p-3.5 mx-2.5 my-1.5 rounded-xl animate-pulse">
+    <div className="w-12 h-12 rounded-full bg-bg-tertiary flex-shrink-0" />
+    <div className="flex-1 min-w-0">
+      <div className="flex justify-between mb-2">
+        <div className="h-4 bg-bg-tertiary rounded w-24" />
+        <div className="h-3 bg-bg-tertiary rounded w-10" />
+      </div>
+      <div className="h-3 bg-bg-tertiary rounded w-40" />
     </div>
-    <div className="h-3 bg-bg-tertiary rounded w-12" />
   </div>
 );

@@ -34,7 +34,6 @@ const LoginPage: React.FC = () => {
       newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
 
-
     if (activeTab === 'register') {
       if (!formData.confirmPassword) {
         newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
@@ -114,193 +113,203 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-slate-50 p-4 transition-theme selection:bg-primary-light selection:text-primary">
-      <div className="w-full max-w-[400px] bg-bg-primary rounded-2xl shadow-dropdown overflow-hidden transition-all ring-1 ring-black/5">
-        <div className="bg-bg-primary p-10 text-center relative">
-          <img 
-             src="/logo.svg" 
-             alt="Smurfy Logo" 
-             className="mx-auto w-20 h-20 drop-shadow-sm mb-4" 
-          />
-          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Smurfy</h1>
-          {activeTab === 'forgot' && (
-            <p className="text-text-tertiary text-sm font-medium mt-2">
-              Nhập email để lấy lại mật khẩu
-            </p>
-          )}
+    <div className="flex min-h-[100dvh] bg-bg-primary overflow-hidden transition-theme">
+      {/* Left Wall: Branding */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#4b8df8] to-[#0047b3] relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-[#000]/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex items-center">
+          <img src="/logo_text_white.png" alt="Smurfy" className="h-12 object-contain" />
         </div>
 
-        {activeTab !== 'forgot' && (
-          <div className="flex border-b border-border-light relative">
-            <Button
-              variant="ghost"
-              onClick={() => handleTabChange('login')}
-              className={`flex-1 py-3.5 text-sm font-semibold transition-all rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none hover:!bg-transparent ${
-                activeTab === 'login' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Đăng nhập
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => handleTabChange('register')}
-              className={`flex-1 py-3.5 text-sm font-semibold transition-all rounded-none focus:!ring-0 focus:!ring-offset-0 !outline-none hover:!bg-transparent ${
-                activeTab === 'register' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Đăng ký
-            </Button>
-            
-            {/* Animated Indicator */}
-            <div 
-                className="absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-spring"
-                style={{ 
-                    left: activeTab === 'login' ? '0%' : '50%', 
-                    width: '50%' 
-                }}
-            />
+        <div className="relative z-10 space-y-6">
+          <h2 className="text-6xl font-bold text-white leading-[1.1]">
+            Kết nối <br /> Mọi nơi.
+          </h2>
+          <p className="text-white/80 text-lg font-medium max-w-md">
+            Trải nghiệm mạng xã hội thế hệ mới với Smurfy. Kết nối, chia sẻ và trò chuyện với bạn bè một cách an toàn và riêng tư.
+          </p>
+        </div>
+
+        <div className="relative z-10 text-white/60 text-sm font-medium">
+          © {new Date().getFullYear()} Smurfy Social. Bảo lưu mọi quyền.
+        </div>
+      </div>
+
+      {/* Right Wall: Form Area */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme">
+        <div className="w-full max-w-[420px] fade-in">
+          {/* Logo mobile */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <img src="/logo_text_blue.png" alt="Smurfy" className="h-10 object-contain" />
           </div>
-        )}
 
-        <div className="p-6 md:p-8">
+          <div className="mb-8 text-center sm:text-left">
+            <h1 className="text-3xl font-extrabold text-text-primary mb-2">
+              {activeTab === 'login' ? 'Chào mừng trở lại' : activeTab === 'register' ? 'Tham gia ngay' : 'Khôi phục mật khẩu'}
+            </h1>
+            <p className="text-text-tertiary text-sm font-medium">
+              {activeTab === 'login' 
+                ? "Đăng nhập để tiếp tục cuộc trò chuyện của bạn." 
+                : activeTab === 'register' 
+                  ? "Tạo tài khoản mới để bắt đầu kết nối." 
+                  : "Nhập email của bạn để lấy lại mật khẩu."}
+            </p>
+          </div>
+
           {activeTab === 'forgot' ? (
-             <form onSubmit={handleResetSubmit} className="space-y-4">
-                {errors.success && (
-                  <div className="p-2 text-xs text-success bg-success-light rounded border border-success mb-2">
-                    {errors.success}
-                  </div>
-                )}
-                
-                  <Input
-                    label="Email đã đăng ký"
-                    icon={<Mail size={16} />}
-                    type="email"
-                    placeholder="Nhập email của bạn"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    error={errors.email}
-                    autoComplete="email"
-                  />
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full h-10 text-sm font-bold shadow-md hover:shadow-lg transition-all mt-2"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Đang gửi...' : 'Gửi link khôi phục'}
-                </Button>
-
-                <div className="text-center mt-3">
-                  <Button 
-                    variant="ghost"
-                    type="button"
-                    size="sm"
-                    onClick={() => handleTabChange('login')}
-                    className="text-xs text-text-secondary hover:text-text-primary font-medium"
-                  >
-                    Quay lại đăng nhập
-                  </Button>
+            <form onSubmit={handleResetSubmit} className="space-y-5">
+              {errors.success && (
+                <div className="p-3 text-xs font-semibold text-success bg-success-light/30 border border-success/30 rounded-xl mb-4">
+                  {errors.success}
                 </div>
-             </form>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Bỏ hiển thị errors.form để tránh lặp với Toast */}
-
-              {activeTab === 'register' && (
-                <Input
-                  label="Họ tên"
-                  icon={<User size={16} />}
-                  placeholder="Nhập họ tên của bạn"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  error={errors.name}
-                />
               )}
               
               <Input
-                label="Email"
-                icon={<Mail size={16} />}
+                label="Địa chỉ Email"
+                icon={<Mail size={18} />}
                 type="email"
                 placeholder="Nhập email của bạn"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 error={errors.email}
                 autoComplete="email"
+                className="rounded-xl h-12"
               />
-              
-              <Input
-                label="Mật khẩu"
-                icon={<Lock size={16} />}
-                type={showPassword ? "text" : "password"}
-                placeholder="Nhập mật khẩu của bạn"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                error={errors.password}
-                rightElement={
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    size="sm"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-text-tertiary hover:text-text-secondary"
-                    icon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  />
-                }
-              />
-
-              {activeTab === 'register' && (
-                <Input
-                  label="Xác nhận mật khẩu"
-                  icon={<Lock size={16} />}
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Nhập lại mật khẩu"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                  error={errors.confirmPassword}
-                  rightElement={
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      size="sm"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="text-text-tertiary hover:text-text-secondary"
-                      icon={showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    />
-                  }
-                />
-              )}
 
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full h-10 text-sm font-bold shadow-md hover:shadow-lg transition-all mt-2"
+                className="w-full h-12 text-sm font-bold rounded-xl shadow-md hover:shadow-primary/30 transition-all"
                 disabled={isLoading}
               >
-                {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký')}
+                {isLoading ? 'Đang gửi...' : 'Gửi mã khôi phục'}
               </Button>
 
-              {activeTab === 'login' && (
-                <div className="text-center mt-3">
-                  <Button 
-                    variant="ghost"
-                    type="button"
-                    size="sm"
-                    onClick={() => handleTabChange('forgot')}
-                    className="text-xs text-primary hover:text-primary-hover font-medium"
-                  >
-                    Quên mật khẩu?
-                  </Button>
-                </div>
-              )}
+              <div className="text-center pt-2">
+                <Button 
+                  variant="ghost"
+                  type="button"
+                  onClick={() => handleTabChange('login')}
+                  className="text-sm text-text-secondary hover:text-primary font-semibold"
+                >
+                  Quay lại đăng nhập
+                </Button>
+              </div>
             </form>
+          ) : (
+            <div className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {activeTab === 'register' && (
+                  <Input
+                    label="Họ và Tên"
+                    icon={<User size={18} />}
+                    placeholder="Nhập tên của bạn"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    error={errors.name}
+                    className="rounded-xl h-12"
+                  />
+                )}
+                
+                <Input
+                  label="Email"
+                  icon={<Mail size={18} />}
+                  type="email"
+                  placeholder="email@vidu.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  error={errors.email}
+                  autoComplete="email"
+                  className="rounded-xl h-12"
+                />
+                
+                <div className="space-y-1.5">
+                  <Input
+                    label="Mật khẩu"
+                    icon={<Lock size={18} />}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Tối thiểu 6 ký tự"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    error={errors.password}
+                    className="rounded-xl h-12"
+                    rightElement={
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    }
+                  />
+                  {activeTab === 'login' && (
+                    <div className="flex justify-end">
+                      <button 
+                        type="button"
+                        onClick={() => handleTabChange('forgot')}
+                        className="text-xs text-primary hover:underline font-bold"
+                      >
+                        Quên mật khẩu?
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {activeTab === 'register' && (
+                  <Input
+                    label="Xác nhận mật khẩu"
+                    icon={<Lock size={18} />}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Nhập lại mật khẩu"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                    error={errors.confirmPassword}
+                    className="rounded-xl h-12"
+                    rightElement={
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    }
+                  />
+                )}
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full h-12 text-sm font-bold rounded-xl shadow-md hover:shadow-primary/30 transition-all mt-2"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký')}
+                </Button>
+              </form>
+
+              <div className="text-center text-sm">
+                <span className="text-text-tertiary">
+                  {activeTab === 'login' ? "Chưa có tài khoản?" : "Đã có tài khoản?"}
+                </span>{' '}
+                <button
+                  onClick={() => handleTabChange(activeTab === 'login' ? 'register' : 'login')}
+                  className="text-primary hover:underline font-bold transition-all"
+                >
+                  {activeTab === 'login' ? 'Đăng ký ngay' : 'Đăng nhập'}
+                </button>
+              </div>
+            </div>
           )}
-        </div>
-        
-        <div className="bg-bg-secondary/50 p-4 text-center border-t border-border-light transition-theme">
-          <p className="text-[11px] text-text-tertiary">
-            Bằng việc tiếp tục, bạn đồng ý với <a href="#" className="font-medium text-primary hover:underline transition-all">Điều khoản</a> & <a href="#" className="font-medium text-primary hover:underline transition-all">Chính sách bảo mật</a> của Smurfy.
-          </p>
+
+          <div className="mt-12 text-center">
+            <p className="text-[11px] text-text-tertiary max-w-[300px] mx-auto leading-relaxed">
+              Bằng cách tiếp tục, bạn đồng ý với <a href="#" className="font-semibold text-text-secondary hover:text-primary">Điều khoản dịch vụ</a> & <a href="#" className="font-semibold text-text-secondary hover:text-primary">Chính sách quyền riêng tư</a>.
+            </p>
+          </div>
         </div>
       </div>
     </div>
