@@ -5,7 +5,7 @@ import { User } from '../../types';
 interface AvatarProps {
   src?: string;
   name?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   status?: 'online' | 'offline' | 'busy';
   className?: string;
   isGroup?: boolean;
@@ -24,6 +24,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   onClick
 }) => {
   const sizeClasses = {
+    '2xs': 'w-[14px] h-[14px] text-[8px]',
     xs: 'w-6 h-6 text-[10px]',
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
@@ -113,7 +114,7 @@ export const Avatar: React.FC<AvatarProps> = ({
 
     return (
       <div 
-        className="w-full h-full flex items-center justify-center font-bold text-text-on-primary uppercase"
+        className="w-full h-full flex items-center justify-center font-bold text-text-on-primary uppercase leading-none"
         style={{ background: getAvatarGradient(name || '?') }}
       >
         {getInitials(name || '?')}
@@ -126,7 +127,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} ${!isGroup ? 'rounded-full' : ''} ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      <div className={`w-full h-full relative ${!isGroup ? 'rounded-full overflow-hidden border border-border-light bg-bg-secondary' : ''} flex items-center justify-center`}>
+      <div className={`w-full h-full relative ${!isGroup ? 'rounded-full overflow-hidden border-border-light bg-bg-secondary' : ''} ${size !== '2xs' && !isGroup ? 'border' : ''} flex items-center justify-center`}>
         {renderContent()}
       </div>
       {status && (
