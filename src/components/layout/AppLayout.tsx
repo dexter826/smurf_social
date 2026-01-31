@@ -151,8 +151,8 @@ export const AppLayout: React.FC = () => {
                   className={({ isActive }) => 
                     `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 ${
                       isActive 
-                        ? 'bg-warning/10 text-warning shadow-sm' 
-                        : 'text-text-tertiary hover:bg-warning/10 hover:text-warning'
+                      ? 'bg-bg-secondary text-warning shadow-sm' 
+                      : 'text-text-tertiary hover:bg-bg-secondary hover:text-warning'
                     }`
                   }
                   title="Quản lý báo cáo"
