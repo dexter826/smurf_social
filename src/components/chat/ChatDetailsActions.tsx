@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Conversation } from '../../types';
-import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3 } from 'lucide-react';
+import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User } from 'lucide-react';
 import { ConfirmDialog, Button } from '../ui';
 
 interface ChatDetailsActionsProps {
@@ -13,6 +13,7 @@ interface ChatDetailsActionsProps {
   onDelete?: () => void;
   onLeaveGroup?: () => void;
   onEditGroup?: () => void;
+  onViewProfile?: () => void;
 }
 
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
@@ -24,7 +25,8 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   onToggleBlock,
   onDelete,
   onLeaveGroup,
-  onEditGroup
+  onEditGroup,
+  onViewProfile
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
@@ -59,6 +61,16 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
       icon: <Edit3 size={20} />,
       label: 'Chỉnh sửa nhóm',
       onClick: onEditGroup,
+      variant: 'default' as const,
+    });
+  }
+
+  // Xem trang cá nhân - chỉ cho chat 1-1
+  if (!isGroup && onViewProfile) {
+    actions.push({
+      icon: <User size={20} />,
+      label: 'Xem trang cá nhân',
+      onClick: onViewProfile,
       variant: 'default' as const,
     });
   }

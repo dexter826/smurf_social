@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useChat, useProfile } from '../hooks';
 import { 
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel, 
@@ -8,6 +9,7 @@ import {
 } from '../components/chat';
 
 const ChatPage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     currentUser,
     conversations,
@@ -231,6 +233,7 @@ const ChatPage: React.FC = () => {
           onRemoveMember={handleRemoveMember}
           onPromoteToAdmin={handlePromoteToAdmin}
           onDemoteFromAdmin={handleDemoteFromAdmin}
+          onMemberClick={(userId) => navigate(`/profile/${userId}`)}
         />
       )}
 

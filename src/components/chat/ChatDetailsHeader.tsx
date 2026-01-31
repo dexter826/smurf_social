@@ -28,7 +28,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
           name={displayName} 
           size="xl" 
           initialStatus={partner?.status}
-          showStatus
+          showStatus={false}
         />
       )}
       
