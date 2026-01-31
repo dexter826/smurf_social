@@ -61,6 +61,12 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           fetchPostById(notification.data.postId, user.id, user.friendIds || []);
         }
         break;
+      case NotificationType.REPORT_NEW:
+        navigate('/admin/reports');
+        break;
+      case NotificationType.REPORT_RESOLVED:
+      case NotificationType.CONTENT_VIOLATION:
+        break;
     }
   };
 

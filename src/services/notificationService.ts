@@ -174,6 +174,14 @@ export const notificationService = {
         return `${prefix}đã gửi lời mời kết bạn.`;
       case NotificationType.FRIEND_ACCEPT:
         return `${prefix}đã chấp nhận lời mời kết bạn.`;
+      case NotificationType.REPORT_NEW:
+        return `có báo cáo mới cần xử lý`;
+      case NotificationType.REPORT_RESOLVED:
+        return notification.data.contentSnippet 
+          ? `Báo cáo của bạn đã được xem xét` 
+          : `Báo cáo của bạn đã được xử lý. Cảm ơn bạn!`;
+      case NotificationType.CONTENT_VIOLATION:
+        return `Nội dung của bạn đã bị xóa do vi phạm quy tắc cộng đồng`;
       default:
         return "Thông báo mới.";
     }

@@ -46,6 +46,21 @@ export const VALIDATION = {
   MESSAGE_MAX_LENGTH: 5000,
 } as const;
 
+// Cấu hình báo cáo
+export const REPORT_CONFIG = {
+  DESCRIPTION_MAX_LENGTH: 500,
+  REASONS: {
+    spam: { label: 'Spam', description: 'Tin rác, quảng cáo không mong muốn' },
+    harassment: { label: 'Quấy rối', description: 'Bắt nạt, đe dọa cá nhân' },
+    hate_speech: { label: 'Ngôn từ thù ghét', description: 'Phân biệt chủng tộc, giới tính' },
+    violence: { label: 'Bạo lực', description: 'Nội dung bạo lực, đe dọa' },
+    nudity: { label: 'Nội dung người lớn', description: 'Hình ảnh/video khiêu dâm' },
+    scam: { label: 'Lừa đảo', description: 'Chiếm đoạt tài sản, thông tin' },
+    impersonation: { label: 'Giả mạo', description: 'Mạo danh người khác' },
+    other: { label: 'Khác', description: 'Lý do khác' }
+  }
+} as const;
+
 // Re-export file limits từ fileConfig
 export { FILE_LIMITS, type FileLimitType } from './fileConfig';
 

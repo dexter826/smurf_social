@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { db } from '../../firebase/config';
-import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button } from '../ui';
-import { Post, User, UserStatus } from '../../types';
+import { Post, User, UserStatus, ReportType } from '../../types';
+import { useReportStore } from '../../store/reportStore';
 
 
 interface PostItemProps {
@@ -31,6 +32,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   const navigate = useNavigate();
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const { openReportModal } = useReportStore();
 
   const isLiked = post.likes.includes(currentUser.id);
   const isOwner = post.userId === currentUser.id;
@@ -83,7 +85,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
           </div>
         </div>
 
-        {isOwner && (
+        {isOwner ? (
           <Dropdown
             trigger={<IconButton icon={<MoreHorizontal size={18} />} size="md" />}
           >
@@ -97,6 +99,17 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
               label="Xóa bài viết"
               variant="danger"
               onClick={() => onDelete?.(post.id)}
+            />
+          </Dropdown>
+        ) : (
+          <Dropdown
+            trigger={<IconButton icon={<MoreHorizontal size={18} />} size="md" />}
+          >
+            <DropdownItem
+              icon={<Flag size={16} />}
+              label="Báo cáo"
+              variant="danger"
+              onClick={() => openReportModal(ReportType.POST, post.id, post.userId)}
             />
           </Dropdown>
         )}

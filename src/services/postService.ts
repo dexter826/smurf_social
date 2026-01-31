@@ -358,6 +358,27 @@ export const postService = {
     }
   },
 
+  // Admin có thể xem mọi bài viết
+  getPostByIdForAdmin: async (postId: string): Promise<Post | null> => {
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      
+      if (!postSnap.exists()) return null;
+      
+      const data = postSnap.data();
+      return {
+        ...data,
+        id: postSnap.id,
+        timestamp: data.timestamp?.toDate() || new Date(),
+        editedAt: data.editedAt?.toDate(),
+      } as Post;
+    } catch (error) {
+      console.error("Lỗi lấy chi tiết bài viết", error);
+      return null;
+    }
+  },
+
   uploadPostMedia: async (files: File[], userId: string): Promise<{ images: string[], videos: string[] }> => {
     try {
       const images: string[] = [];

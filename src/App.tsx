@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore';
 import { useChatStore } from './store/chatStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { Loading, ScreenLoader, ToastContainer } from './components/ui';
+import { ReportModal } from './components/ui/ReportModal';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
 import FeedPage from './pages/FeedPage';
@@ -11,6 +12,9 @@ import ContactsPage from './pages/ContactsPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import AdminReportsPage from './pages/AdminReportsPage';
+import ReportDetailPage from './pages/ReportDetailPage';
+import { MobileMenuPage } from './pages/MobileMenuPage';
 import { userService } from './services/userService';
 import { UserStatus } from './types';
 
@@ -73,11 +77,21 @@ const App: React.FC = () => {
           <Route path="profile/:userId" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="admin/reports" element={<AdminReportsPage />} />
+          <Route path="admin/reports/:id" element={<ReportDetailPage />} />
         </Route>
+
+        {/* Mobile Menu - không dùng AppLayout */}
+        <Route path="/menu" element={
+          <ProtectedRoute>
+            <MobileMenuPage />
+          </ProtectedRoute>
+        } />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer />
+      <ReportModal />
     </HashRouter>
   );
 };

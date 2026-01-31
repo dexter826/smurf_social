@@ -232,5 +232,25 @@ export const commentService = {
       console.error("Lỗi like comment:", error);
       throw error;
     }
+  },
+
+  // Lấy chi tiết comment theo ID (cho admin)
+  getCommentById: async (commentId: string): Promise<Comment | null> => {
+    try {
+      const commentRef = doc(db, 'comments', commentId);
+      const commentSnap = await getDoc(commentRef);
+      
+      if (!commentSnap.exists()) return null;
+      
+      const data = commentSnap.data();
+      return {
+        ...data,
+        id: commentSnap.id,
+        timestamp: data.timestamp?.toDate() || new Date(),
+      } as Comment;
+    } catch (error) {
+      console.error("Lỗi lấy comment:", error);
+      return null;
+    }
   }
 };
