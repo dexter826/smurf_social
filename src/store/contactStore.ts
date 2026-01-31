@@ -28,6 +28,7 @@ interface ContactState {
   addFriend: (friend: User) => void;
   removeFriend: (friendId: string) => void;
   clearSearchResults: () => void;
+  reset: () => void;
 }
 
 export const useContactStore = create<ContactState>()(
@@ -39,6 +40,19 @@ export const useContactStore = create<ContactState>()(
       searchResults: [],
       isLoading: false,
       isRevalidating: false,
+
+      // ... (giữ nguyên các hàm khác)
+
+      reset: () => {
+        set({
+          friends: [],
+          receivedRequests: [],
+          sentRequests: [],
+          searchResults: [],
+          isLoading: false,
+          isRevalidating: false,
+        });
+      },
 
       fetchFriends: async (userId: string) => {
         const { friends } = get();

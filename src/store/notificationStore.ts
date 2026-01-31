@@ -17,6 +17,7 @@ interface NotificationState {
   clearAllNotifications: (userId: string) => Promise<void>;
   initialize: (userId: string, limit?: number) => () => void;
   loadMore: (userId: string) => void;
+  reset: () => void;
   _unsubscribe: (() => void) | null;
 }
 
@@ -29,6 +30,22 @@ export const useNotificationStore = create<NotificationState>()(
       isRevalidating: false,
       currentLimit: 15,
       _unsubscribe: null as (() => void) | null,
+
+      // ... (giữ nguyên các hàm khác)
+
+      reset: () => {
+        const { _unsubscribe } = get();
+        if (_unsubscribe) _unsubscribe();
+        
+        set({
+          notifications: [],
+          unreadCount: 0,
+          isLoading: false,
+          isRevalidating: false,
+          currentLimit: 15,
+          _unsubscribe: null,
+        });
+      },
 
       setNotifications: (notifications) => {
         const unreadCount = notifications.filter(n => !n.isRead).length;
