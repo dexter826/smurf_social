@@ -31,7 +31,7 @@ export const commentService = {
         where('postId', '==', postId),
         where('parentId', '==', null),
         orderBy('timestamp', 'desc'),
-        limit(limitCount)
+        limit(limitCount + 1)
       );
 
       if (lastDoc) {
@@ -39,7 +39,10 @@ export const commentService = {
       }
 
       const snapshot = await getDocs(q);
-      const comments = snapshot.docs.map(doc => ({
+      const hasMore = snapshot.docs.length > limitCount;
+      const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+
+      const comments = docsToProcess.map(doc => ({
         ...doc.data(),
         id: doc.id,
         timestamp: doc.data().timestamp?.toDate() || new Date(),
@@ -47,8 +50,8 @@ export const commentService = {
 
       return {
         comments,
-        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
-        hasMore: snapshot.docs.length === limitCount
+        lastDoc: docsToProcess[docsToProcess.length - 1] || null,
+        hasMore
       };
     } catch (error) {
       console.error("Lỗi lấy root comments:", error);
@@ -63,7 +66,7 @@ export const commentService = {
         collection(db, 'comments'),
         where('parentId', '==', commentId),
         orderBy('timestamp', 'asc'),
-        limit(limitCount)
+        limit(limitCount + 1)
       );
 
       if (lastDoc) {
@@ -71,7 +74,10 @@ export const commentService = {
       }
 
       const snapshot = await getDocs(q);
-      const replies = snapshot.docs.map(doc => ({
+      const hasMore = snapshot.docs.length > limitCount;
+      const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+
+      const replies = docsToProcess.map(doc => ({
         ...doc.data(),
         id: doc.id,
         timestamp: doc.data().timestamp?.toDate() || new Date(),
@@ -79,8 +85,8 @@ export const commentService = {
 
       return {
         replies,
-        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
-        hasMore: snapshot.docs.length === limitCount
+        lastDoc: docsToProcess[docsToProcess.length - 1] || null,
+        hasMore
       };
     } catch (error) {
       console.error("Lỗi lấy replies:", error);
