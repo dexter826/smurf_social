@@ -153,27 +153,27 @@ const AdminReportsPage: React.FC = () => {
   return (
     <div className="h-full flex flex-col overflow-hidden bg-bg-secondary">
       {/* Header */}
-      <div className="bg-bg-primary border-b border-border-light sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <div className="bg-bg-primary border-b border-border-light sticky top-0 z-10 transition-all duration-200">
+        <div className="max-w-4xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Shield size={24} className="text-primary" />
+              <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                <Shield size={22} className="text-primary md:w-6 md:h-6" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-text-primary uppercase tracking-tight">Hệ thống báo cáo</h1>
-                <p className="text-xs font-medium text-text-secondary">
-                  Quản lý nội dung vi phạm cộng đồng
+                <h1 className="text-base md:text-lg font-bold text-text-primary uppercase tracking-tight">Quản trị báo cáo</h1>
+                <p className="hidden xs:block text-[10px] md:text-xs font-medium text-text-secondary">
+                  Kiểm duyệt nội dung vi phạm cộng đồng
                 </p>
               </div>
             </div>
             
-            <div className="flex bg-bg-secondary p-1 rounded-lg border border-border-light">
+            <div className="flex bg-bg-secondary p-1 rounded-lg border border-border-light w-full sm:w-auto overflow-x-auto no-scrollbar">
               {tabs.map(tab => (
                 <button
                   key={tab.value}
                   onClick={() => setStatusFilter(tab.value as any)}
-                  className={`flex items-center px-4 py-1.5 rounded-md text-sm font-bold transition-colors duration-150 outline-none ring-0 ${
+                  className={`flex-1 sm:flex-initial flex items-center justify-center whitespace-nowrap px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-bold transition-all duration-150 outline-none ring-0 ${
                     statusFilter === tab.value 
                       ? `bg-bg-primary text-primary shadow-sm` 
                       : 'text-text-secondary hover:text-text-primary'
@@ -230,32 +230,32 @@ const AdminReportsPage: React.FC = () => {
         ) : (
           <>
             {/* Stat Cards - Static Display */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
               {tabs.map(tab => (
                 <div 
                   key={tab.value}
-                  className="bg-bg-primary p-6 rounded-xl border border-border-light shadow-sm flex flex-col gap-1"
+                  className="bg-bg-primary p-3 md:p-6 rounded-xl border border-border-light shadow-sm flex flex-col gap-0.5 md:gap-1"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded bg-bg-secondary text-${tab.color}`}>
-                      {tab.icon}
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <div className={`p-1 rounded bg-bg-secondary text-${tab.color} shrink-0`}>
+                      {React.cloneElement(tab.icon as React.ReactElement, { size: 14 })}
                     </div>
-                    <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{tab.label}</span>
+                    <span className="text-[9px] md:text-[10px] font-bold text-text-tertiary uppercase tracking-wider truncate">{tab.label}</span>
                   </div>
-                  <div className="text-2xl font-bold text-text-primary">{tab.count}</div>
+                  <div className="text-lg md:text-2xl font-bold text-text-primary">{tab.count}</div>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pt-6 border-t border-border-light">
-              <h2 className="text-base font-bold text-text-primary">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pt-6 border-t border-border-light">
+              <h2 className="text-sm md:text-base font-bold text-text-primary">
                 Danh sách báo cáo
               </h2>
 
-              <div className="flex items-center gap-1 bg-bg-secondary p-1 rounded-lg border border-border-light">
+              <div className="flex items-center gap-1 bg-bg-secondary p-1 rounded-lg border border-border-light overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => setTypeFilter('all')}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all outline-none ring-0 ${
+                  className={`flex-1 md:flex-initial px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-md whitespace-nowrap transition-all outline-none ring-0 ${
                     typeFilter === 'all' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
@@ -263,7 +263,7 @@ const AdminReportsPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setTypeFilter(ReportType.POST)}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all outline-none ring-0 ${
+                  className={`flex-1 md:flex-initial px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-md whitespace-nowrap transition-all outline-none ring-0 ${
                     typeFilter === ReportType.POST ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
@@ -271,7 +271,7 @@ const AdminReportsPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setTypeFilter(ReportType.COMMENT)}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all outline-none ring-0 ${
+                  className={`flex-1 md:flex-initial px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-md whitespace-nowrap transition-all outline-none ring-0 ${
                     typeFilter === ReportType.COMMENT ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
@@ -299,83 +299,87 @@ const AdminReportsPage: React.FC = () => {
                   className="bg-bg-primary rounded-xl p-5 border border-border-light shadow-sm transition-all duration-200"
                 >
                   {/* Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {getStatusBadge(report.status)}
-                      <span className="flex items-center gap-1 text-xs text-text-secondary bg-bg-secondary px-2 py-0.5 rounded-full">
+                      <span className="flex items-center gap-1 text-[10px] md:text-xs text-text-secondary bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light">
                         {getTypeIcon(report.targetType)}
                         {getTypeLabel(report.targetType)}
                       </span>
                     </div>
-                    <div className="flex flex-col items-end gap-0.5 select-none">
-                      <span className="text-[11px] font-bold text-text-tertiary uppercase tracking-tight">
+                    <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0.5 select-none text-text-tertiary">
+                      <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-tight">
                         {formatRelativeTime(report.createdAt)}
                       </span>
-                      <span className="text-[10px] text-text-tertiary opacity-60">
+                      <span className="hidden sm:block text-[9px] md:text-[10px] opacity-60">
                         {formatDateTime(report.createdAt)}
                       </span>
                     </div>
                   </div>
 
                   {/* Reason */}
-                  <div className="flex items-center gap-2 mb-3 p-2 bg-bg-secondary rounded-lg border border-border-light">
-                    <AlertTriangle size={14} className="text-error" />
-                    <span className="text-xs font-bold text-error">{reasonConfig?.label}</span>
-                    <span className="text-[11px] text-text-secondary"> - {reasonConfig?.description}</span>
+                  <div className="mb-3 p-2.5 md:p-3 bg-bg-secondary/50 rounded-lg border border-border-light flex items-start gap-2.5">
+                    <AlertTriangle size={14} className="text-error shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5 md:flex-row md:items-baseline md:gap-2">
+                      <span className="text-xs font-bold text-error whitespace-nowrap">{reasonConfig?.label}</span>
+                      <span className="text-[10px] md:text-[11px] text-text-secondary">{reasonConfig?.description}</span>
+                    </div>
                   </div>
 
                   {/* Description */}
                   {report.description && (
-                    <p className="text-sm text-text-secondary mb-3 p-2 bg-bg-secondary rounded-lg italic">
+                    <p className="text-xs md:text-sm text-text-secondary mb-4 p-3 bg-bg-secondary/30 rounded-lg italic border border-dashed border-border-light">
                       "{report.description}"
                     </p>
                   )}
 
                   {/* Users info */}
-                  <div className="flex items-center gap-4 text-xs text-text-secondary mb-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 text-[11px] md:text-xs text-text-secondary mb-4 p-2 bg-bg-secondary/20 rounded-lg">
+                    <div className="flex items-center gap-2 overflow-hidden">
                       <UserAvatar size="xs" src={reporter?.avatar} name={reporter?.name} />
-                      <span><strong>{reporter?.name || 'Unknown'}</strong> báo cáo</span>
+                      <span className="truncate"><strong>{reporter?.name || 'Unknown'}</strong> báo cáo</span>
                     </div>
-                    <span>→</span>
-                    <div className="flex items-center gap-2">
+                    <span className="hidden sm:block opacity-40">→</span>
+                    <div className="flex items-center gap-2 overflow-hidden border-t sm:border-t-0 pt-2 sm:pt-0 border-border-light/10">
                       <UserAvatar size="xs" src={target?.avatar} name={target?.name} />
-                      <span><strong>{target?.name || 'Unknown'}</strong></span>
+                      <span className="truncate"><strong>{target?.name || 'Unknown'}</strong></span>
                     </div>
                   </div>
 
                   {/* Actions */}
                   {report.status === ReportStatus.PENDING && (
-                    <div className="flex flex-wrap gap-2 pt-4 border-t border-border-light">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="!rounded-lg font-bold"
-                        icon={<CheckCircle size={14} />}
-                        onClick={() => {
-                          setSelectedReport(report);
-                          setActionType('resolve');
-                        }}
-                      >
-                        Xử lý
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        className="!rounded-lg font-bold"
-                        icon={<XCircle size={14} />}
-                        onClick={() => {
-                          setSelectedReport(report);
-                          setActionType('reject');
-                        }}
-                      >
-                        Từ chối
-                      </Button>
+                    <div className="flex flex-row items-center gap-2 pt-4 border-t border-border-light">
+                      <div className="flex gap-2 mr-auto">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="!h-9 !rounded-lg font-bold text-xs !gap-0 sm:!gap-2"
+                          icon={<CheckCircle size={14} />}
+                          onClick={() => {
+                            setSelectedReport(report);
+                            setActionType('resolve');
+                          }}
+                        >
+                          <span className="hidden sm:inline">Xử lý</span>
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className="!h-9 !rounded-lg font-bold text-xs !gap-0 sm:!gap-2"
+                          icon={<XCircle size={14} />}
+                          onClick={() => {
+                            setSelectedReport(report);
+                            setActionType('reject');
+                          }}
+                        >
+                          <span className="hidden sm:inline">Từ chối</span>
+                        </Button>
+                      </div>
                       <Button
                         variant="secondary"
                         size="sm"
                         icon={<Eye size={14} />}
-                        className="ml-auto !rounded-lg"
+                        className="!h-9 !rounded-lg text-xs"
                         onClick={() => navigate(`/admin/reports/${report.id}`)}
                       >
                         Chi tiết
@@ -387,11 +391,11 @@ const AdminReportsPage: React.FC = () => {
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="!rounded-lg"
+                        className="!h-9 !rounded-lg text-xs font-bold"
                         icon={<Eye size={14} />}
                         onClick={() => navigate(`/admin/reports/${report.id}`)}
                       >
-                        Xem chi tiết
+                        Chi tiết báo cáo
                       </Button>
                     </div>
                   )}

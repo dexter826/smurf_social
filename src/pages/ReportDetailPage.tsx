@@ -39,6 +39,7 @@ const ReportDetailPage: React.FC = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState<'resolve' | 'reject' | null>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (currentUser?.role !== 'admin') {
@@ -202,42 +203,42 @@ const ReportDetailPage: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-bg-secondary overflow-y-auto">
       {/* Header */}
-      <div className="bg-bg-primary border-b border-border-light sticky top-0 z-30">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="bg-bg-primary border-b border-border-light sticky top-0 z-30 transition-all">
+        <div className="max-w-4xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
             <button 
               onClick={() => navigate('/admin/reports')}
-              className="p-2 hover:bg-bg-secondary rounded-lg transition-colors border border-transparent hover:border-border-light focus:outline-none ring-0"
+              className="p-1.5 md:p-2 hover:bg-bg-secondary rounded-lg transition-colors border border-transparent hover:border-border-light focus:outline-none ring-0 shrink-0"
             >
-              <ArrowLeft size={20} className="text-text-secondary" />
+              <ArrowLeft size={18} className="text-text-secondary md:w-5 md:h-5" />
             </button>
-            <div>
-              <h1 className="text-base font-bold text-text-primary">
+            <div className="overflow-hidden">
+              <h1 className="text-sm md:text-base font-bold text-text-primary truncate">
                 Chi tiết báo cáo
               </h1>
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 md:gap-2 shrink-0">
             {report.status === ReportStatus.PENDING && (
               <>
                 <Button
                   variant="danger"
                   size="sm"
-                  className="!rounded-lg font-bold focus:outline-none ring-0"
+                  className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
                   icon={<XCircle size={14} />}
                   onClick={() => { setActionType('reject'); setShowConfirm(true); }}
                 >
-                  Từ chối
+                  <span className="hidden sm:inline">Từ chối</span>
                 </Button>
                 <Button
                   variant="primary"
                   size="sm"
-                  className="!rounded-lg font-bold focus:outline-none ring-0"
+                  className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
                   icon={<CheckCircle size={14} />}
                   onClick={() => { setActionType('resolve'); setShowConfirm(true); }}
                 >
-                  Xử lý
+                  <span className="hidden sm:inline">Xử lý</span>
                 </Button>
               </>
             )}
@@ -249,21 +250,21 @@ const ReportDetailPage: React.FC = () => {
         <div className="space-y-6">
           
           {/* Ưu tiên hiển thị thông tin đối tượng */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Reporter Profile */}
             <div 
               onClick={() => reporter && navigate(`/profile/${reporter.id}`)}
-              className="bg-bg-primary p-5 rounded-xl border border-border-light shadow-sm space-y-4 cursor-pointer hover:bg-bg-secondary/50 transition-colors group"
+              className="bg-bg-primary p-4 md:p-5 rounded-xl border border-border-light shadow-sm space-y-3 md:space-y-4 cursor-pointer hover:bg-bg-secondary/50 transition-colors group"
             >
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Người báo cáo</h4>
-                <ExternalLink size={14} className="text-text-tertiary group-hover:text-primary transition-colors" />
+                <h4 className="text-[9px] md:text-[10px] font-black text-text-tertiary uppercase tracking-widest">Người báo cáo</h4>
+                <ExternalLink size={12} className="text-text-tertiary group-hover:text-primary transition-colors md:w-[14px] md:h-[14px]" />
               </div>
               <div className="flex items-center gap-3">
-                <UserAvatar src={reporter?.avatar} name={reporter?.name} size="md" />
+                <UserAvatar src={reporter?.avatar} name={reporter?.name} size="md" className="shrink-0" />
                 <div className="overflow-hidden">
                   <div className="text-sm font-bold text-text-primary truncate">{reporter?.name}</div>
-                  <div className="text-xs text-text-tertiary truncate">{reporter?.email}</div>
+                  <div className="text-[11px] md:text-xs text-text-tertiary truncate">{reporter?.email}</div>
                 </div>
               </div>
             </div>
@@ -271,17 +272,17 @@ const ReportDetailPage: React.FC = () => {
             {/* Target Owner Profile */}
             <div 
               onClick={() => targetOwner && navigate(`/profile/${targetOwner.id}`)}
-              className="bg-bg-primary p-5 rounded-xl border border-border-light shadow-sm space-y-4 cursor-pointer hover:bg-bg-secondary/50 transition-colors group"
+              className="bg-bg-primary p-4 md:p-5 rounded-xl border border-border-light shadow-sm space-y-3 md:space-y-4 cursor-pointer hover:bg-bg-secondary/50 transition-colors group"
             >
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Người bị báo cáo</h4>
-                <ExternalLink size={14} className="text-text-tertiary group-hover:text-primary transition-colors" />
+                <h4 className="text-[9px] md:text-[10px] font-black text-text-tertiary uppercase tracking-widest">Bị báo cáo</h4>
+                <ExternalLink size={12} className="text-text-tertiary group-hover:text-primary transition-colors md:w-[14px] md:h-[14px]" />
               </div>
               <div className="flex items-center gap-3">
-                <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="md" />
+                <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="md" className="shrink-0" />
                 <div className="overflow-hidden">
                   <div className="text-sm font-bold text-text-primary truncate">{targetOwner?.name}</div>
-                  <div className="text-xs text-text-tertiary truncate">{targetOwner?.email}</div>
+                  <div className="text-[11px] md:text-xs text-text-tertiary truncate">{targetOwner?.email}</div>
                 </div>
               </div>
             </div>
@@ -290,9 +291,9 @@ const ReportDetailPage: React.FC = () => {
           {/* Main Info Box */}
           <div className="bg-bg-primary rounded-xl border border-border-light shadow-sm divide-y divide-border-light overflow-hidden">
             {/* Chi tiết nội dung báo cáo */}
-            <div className="px-6 py-4 bg-bg-secondary/20 flex items-start justify-between gap-4">
+            <div className="px-5 md:px-6 py-4 bg-bg-secondary/20 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div className="space-y-3 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {getStatusBadge(report.status)}
                   <div className="flex items-center gap-1.5 text-xs font-bold text-error bg-bg-secondary px-2 py-0.5 rounded border border-border-light">
                     <AlertTriangle size={14} />
@@ -300,18 +301,18 @@ const ReportDetailPage: React.FC = () => {
                   </div>
                 </div>
                 {report.description && (
-                  <div className="text-sm text-text-secondary bg-bg-secondary/30 p-3 rounded-lg border border-border-light italic">
+                  <div className="text-xs md:text-sm text-text-secondary bg-bg-secondary/30 p-3 rounded-lg border border-border-light italic">
                     "{report.description}"
                   </div>
                 )}
               </div>
-              <div className="text-[10px] font-bold text-text-tertiary flex flex-col items-end gap-0.5 pt-1 uppercase tracking-wider">
+              <div className="text-[9px] md:text-[10px] font-bold text-text-tertiary flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0.5 pt-1 uppercase tracking-wider shrink-0">
                 <span>{formatRelativeTime(report.createdAt)}</span>
-                <span className="opacity-70">{formatDateTime(report.createdAt)}</span>
+                <span className="opacity-70 hidden sm:block">{formatDateTime(report.createdAt)}</span>
               </div>
             </div>
 
-            <div className="p-8">
+            <div className="p-5 md:p-8">
               {!content ? (
                 <div className="py-12 text-center rounded-xl border border-dashed border-border-light bg-bg-secondary/10">
                   <Trash2 size={40} className="mx-auto text-text-tertiary opacity-30 mb-3" />
@@ -321,16 +322,36 @@ const ReportDetailPage: React.FC = () => {
                 <div className="space-y-6">
                   {/* Author Header */}
                   <div className="flex items-center gap-3">
-                    <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="md" />
-                    <div>
-                      <div className="text-sm font-bold text-text-primary">{targetOwner?.name}</div>
-                      <div className="text-xs text-text-tertiary">{formatRelativeTime((content as any).timestamp)} ({formatDateTime((content as any).timestamp)})</div>
+                    <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="sm" className="md:w-10 md:h-10 shrink-0" />
+                    <div className="overflow-hidden">
+                      <div className="text-[13px] md:text-sm font-bold text-text-primary truncate">{targetOwner?.name}</div>
+                      <div className="text-[10px] md:text-xs text-text-tertiary truncate">{formatRelativeTime((content as any).timestamp)} ({formatDateTime((content as any).timestamp)})</div>
                     </div>
                   </div>
 
                   {/* Body Text */}
-                  <div className="text-lg text-text-primary leading-relaxed font-medium whitespace-pre-wrap">
-                    {content.content}
+                  <div className="text-[15px] md:text-lg text-text-primary leading-relaxed font-medium whitespace-pre-wrap">
+                    {(() => {
+                      const threshold = 400;
+                      const shouldTruncate = content.content.length > threshold;
+                      const displayContent = !shouldTruncate || isExpanded 
+                        ? content.content 
+                        : content.content.slice(0, threshold) + '...';
+                      
+                      return (
+                        <>
+                          {displayContent}
+                          {shouldTruncate && (
+                            <button 
+                              onClick={() => setIsExpanded(!isExpanded)}
+                              className="text-text-secondary font-bold hover:underline ml-2 text-sm"
+                            >
+                              {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* Media Carousel */}
