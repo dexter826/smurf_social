@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { db } from '../../firebase/config';
 import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { formatRelativeTime } from '../../utils/dateUtils';
+import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button } from '../ui';
 import { Post, User, UserStatus, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
@@ -72,7 +72,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
               {author?.name || 'Unknown User'}
             </h3>
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
-              <span>
+              <span title={formatDateTime(post.timestamp)}>
                 {formatRelativeTime(post.timestamp)}
               </span>
               <span>•</span>

@@ -4,7 +4,7 @@ import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Users, Lock, MoreHo
 import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton } from '../ui';
 import { Post, User, ReportType } from '../../types';
 import { CommentSection } from './CommentSection';
-import { formatRelativeTime } from '../../utils/dateUtils';
+import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { useReportStore } from '../../store/reportStore';
 
 interface PostViewModalProps {
@@ -69,7 +69,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     }
   };
 
-  // Reset index khi doi post
+  // Reset trạng thái khi đổi bài viết
   React.useEffect(() => {
     if (isOpen) {
       setMediaIndex(0);
@@ -79,7 +79,6 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Hien thi loading state
   if (isLoading || !post) {
     return (
       <Modal 
@@ -90,12 +89,10 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         className="!p-0 shadow-none h-full md:h-auto overflow-hidden"
       >
         <div className="flex flex-col md:flex-row h-full md:h-[600px] bg-bg-primary md:rounded-2xl overflow-hidden">
-           {/* Fake Media Section */}
            <div className="hidden md:flex flex-[1.5] bg-bg-secondary items-center justify-center border-r border-border-light">
               <Skeleton className="w-[80%] aspect-video rounded-lg opacity-20" />
            </div>
            
-           {/* Fake Content Section */}
            <div className="flex-1 p-4 flex flex-col h-full">
               <div className="flex items-center gap-3 mb-4">
                  <Skeleton variant="circle" width={40} height={40} />
@@ -235,7 +232,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   {author?.name || 'Unknown User'}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
-                  <span>
+                  <span title={formatDateTime(post.timestamp)}>
                     {formatRelativeTime(post.timestamp)}
                   </span>
                   <span>•</span>
