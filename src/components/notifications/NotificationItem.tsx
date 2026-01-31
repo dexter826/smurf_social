@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
-import { formatRelativeTime } from '../../utils/dateUtils';
+import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { AppNotification, NotificationType } from '../../types';
 import { UserAvatar, Button } from '../ui';
 import { notificationService } from '../../services/notificationService';
@@ -88,7 +88,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           <span className="font-semibold mr-1">{sender?.name || 'Người dùng'}</span> 
           {notificationService.getNotificationText(notification, '')}
         </p>
-        <span className="text-xs text-text-tertiary mt-1 block">
+        <span className="text-xs text-text-tertiary mt-1 block" title={formatDateTime(notification.createdAt)}>
           {formatRelativeTime(notification.createdAt)}
         </span>
       </div>

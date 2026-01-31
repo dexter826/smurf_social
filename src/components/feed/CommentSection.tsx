@@ -10,7 +10,7 @@ import { useCommentStore } from '../../store/commentStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { useReportStore } from '../../store/reportStore';
 import { CommentSkeleton } from './CommentSkeleton';
-import { formatRelativeTime } from '../../utils/dateUtils';
+import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 
 
 interface CommentSectionProps {
@@ -50,14 +50,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const { users, fetchUsers } = useUserCache();
   const { openReportModal } = useReportStore();
 
-  // Loading state
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
   
-  // State input
   const [activeInputId, setActiveInputId] = useState<string | 'root'>('root');
   const [inputMode, setInputMode] = useState<'comment' | 'reply' | 'edit'>('comment');
   
-  // State form
   const [newComment, setNewComment] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -88,13 +85,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     loadInitialRootComments();
     return () => {
       resetInput();
-      // Tùy chọn: clearComments(postId); 
-      // Tuy nhiên trong ứng dụng mạng xã hội, thường ta muốn giữ cache khi quay lại 
-      // nên chỉ cần resetInput là đủ để tránh re-render sai input.
+      // Tránh re-render sai input khi quay lại
     };
   }, [postId]);
 
-  // Lấy thông tin user khi có comment mới
+  // Tải thông tin người dùng cho bình luận hiện tại
   useEffect(() => {
     if (currentRootComments.length > 0) {
       const userIds = [...new Set(currentRootComments.map(c => c.userId))];
@@ -404,7 +399,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             </div>
             
             <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
-              <span>{formatRelativeTime(comment.timestamp)}</span>
+              <span title={formatDateTime(comment.timestamp)}>{formatRelativeTime(comment.timestamp)}</span>
               <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Trả lời</button>
               {comment.userId === currentUser.id ? (
                 <>

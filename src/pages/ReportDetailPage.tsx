@@ -21,7 +21,7 @@ import { postService } from '../services/postService';
 import { commentService } from '../services/commentService';
 import { Button, UserAvatar, ConfirmDialog, Skeleton } from '../components/ui';
 import { REPORT_CONFIG } from '../constants';
-import { formatRelativeTime } from '../utils/dateUtils';
+import { formatRelativeTime, formatDateTime } from '../utils/dateUtils';
 import { toast } from '../store/toastStore';
 import { useAuthStore } from '../store/authStore';
 
@@ -248,7 +248,7 @@ const ReportDetailPage: React.FC = () => {
       <div className="max-w-4xl mx-auto w-full px-4 py-8">
         <div className="space-y-6">
           
-          {/* Profiles Grid - Moved to Top */}
+          {/* Ưu tiên hiển thị thông tin đối tượng */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Reporter Profile */}
             <div 
@@ -289,7 +289,7 @@ const ReportDetailPage: React.FC = () => {
 
           {/* Main Info Box */}
           <div className="bg-bg-primary rounded-xl border border-border-light shadow-sm divide-y divide-border-light overflow-hidden">
-            {/* Context Info */}
+            {/* Chi tiết nội dung báo cáo */}
             <div className="px-6 py-4 bg-bg-secondary/20 flex items-start justify-between gap-4">
               <div className="space-y-3 flex-1">
                 <div className="flex items-center gap-2">
@@ -305,12 +305,12 @@ const ReportDetailPage: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div className="text-xs font-bold text-text-tertiary whitespace-nowrap pt-1">
-                {formatRelativeTime(report.createdAt)}
+              <div className="text-[10px] font-bold text-text-tertiary flex flex-col items-end gap-0.5 pt-1 uppercase tracking-wider">
+                <span>{formatRelativeTime(report.createdAt)}</span>
+                <span className="opacity-70">{formatDateTime(report.createdAt)}</span>
               </div>
             </div>
 
-            {/* Content Display */}
             <div className="p-8">
               {!content ? (
                 <div className="py-12 text-center rounded-xl border border-dashed border-border-light bg-bg-secondary/10">
@@ -324,7 +324,7 @@ const ReportDetailPage: React.FC = () => {
                     <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="md" />
                     <div>
                       <div className="text-sm font-bold text-text-primary">{targetOwner?.name}</div>
-                      <div className="text-xs text-text-tertiary">Lúc: {formatRelativeTime((content as any).timestamp)}</div>
+                      <div className="text-xs text-text-tertiary">{formatRelativeTime((content as any).timestamp)} ({formatDateTime((content as any).timestamp)})</div>
                     </div>
                   </div>
 
@@ -388,7 +388,7 @@ const ReportDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Log if NOT pending */}
+          {/* Lịch sử xử lý cho báo cáo đã đóng */}
           {report.status !== ReportStatus.PENDING && (
             <div className="bg-bg-primary rounded-xl p-6 border border-border-light shadow-sm flex items-center gap-4">
               <div className={`p-2 rounded-lg ${report.status === ReportStatus.RESOLVED ? 'bg-success/10 text-success' : 'bg-text-secondary/10 text-text-secondary'}`}>
@@ -398,7 +398,7 @@ const ReportDetailPage: React.FC = () => {
                 <h4 className="text-sm font-bold text-text-primary">
                   {report.status === ReportStatus.RESOLVED ? 'Báo cáo đã chấp thuận và gỡ bỏ' : 'Báo cáo đã bị từ chối'}
                 </h4>
-                <p className="text-xs text-text-tertiary">Thời gian xử lý: {report.resolvedAt ? formatRelativeTime(report.resolvedAt) : 'N/A'}</p>
+                <p className="text-xs text-text-tertiary">Thời gian xử lý: {report.resolvedAt ? `${formatRelativeTime(report.resolvedAt)} (${formatDateTime(report.resolvedAt)})` : 'N/A'}</p>
               </div>
             </div>
           )}

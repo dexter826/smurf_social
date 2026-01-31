@@ -7,7 +7,7 @@ import { reportService } from '../services/reportService';
 import { userService } from '../services/userService';
 import { Button, UserAvatar, ConfirmDialog, Skeleton } from '../components/ui';
 import { REPORT_CONFIG } from '../constants';
-import { formatRelativeTime } from '../utils/dateUtils';
+import { formatRelativeTime, formatDateTime } from '../utils/dateUtils';
 import { toast } from '../store/toastStore';
 
 const AdminReportsPage: React.FC = () => {
@@ -28,7 +28,7 @@ const AdminReportsPage: React.FC = () => {
     rejected: 0
   });
 
-  // Kiểm tra quyền admin
+  // Chặn truy cập phi admin
   useEffect(() => {
     if (user && user.role !== 'admin') {
       toast.error('Bạn không có quyền truy cập trang này');
@@ -36,7 +36,7 @@ const AdminReportsPage: React.FC = () => {
     }
   }, [user, navigate]);
 
-  // Fetch reports
+  // Đồng bộ dữ liệu báo cáo
   useEffect(() => {
     if (user?.role !== 'admin') return;
     
@@ -307,9 +307,14 @@ const AdminReportsPage: React.FC = () => {
                         {getTypeLabel(report.targetType)}
                       </span>
                     </div>
-                    <span className="text-xs text-text-tertiary">
-                      {formatRelativeTime(report.createdAt)}
-                    </span>
+                    <div className="flex flex-col items-end gap-0.5 select-none">
+                      <span className="text-[11px] font-bold text-text-tertiary uppercase tracking-tight">
+                        {formatRelativeTime(report.createdAt)}
+                      </span>
+                      <span className="text-[10px] text-text-tertiary opacity-60">
+                        {formatDateTime(report.createdAt)}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Reason */}
