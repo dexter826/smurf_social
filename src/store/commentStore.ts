@@ -28,6 +28,7 @@ interface CommentState {
   addReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   clearComments: (postId: string) => void;
   updateCommentInStore: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null, videoUrl?: string | null) => void;
+  reset: () => void;
 }
 
 export const useCommentStore = create<CommentState>((set, get) => ({
@@ -38,6 +39,18 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   lastReplyDoc: {},
   hasMoreReply: {},
   isLoading: false,
+
+  reset: () => {
+    set({
+      rootComments: {},
+      replies: {},
+      lastRootDoc: {},
+      hasMoreRoot: {},
+      lastReplyDoc: {},
+      hasMoreReply: {},
+      isLoading: false,
+    });
+  },
 
   fetchRootComments: async (postId: string, loadMore = false) => {
     const { lastRootDoc, rootComments, isLoading } = get();

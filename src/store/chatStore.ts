@@ -74,6 +74,7 @@ interface ChatState {
   clearMessages: (conversationId: string) => void;
   setLoading: (loading: boolean) => void;
   setIsChatVisible: (visible: boolean) => void;
+  reset: () => void;
 }
 
 export const useChatStore = create<ChatState>()(
@@ -96,6 +97,27 @@ export const useChatStore = create<ChatState>()(
       },
       searchHistory: [],
       isChatVisible: false,
+
+      // ... (giữ nguyên các hàm khác)
+
+      reset: () => {
+        set({
+          conversations: [],
+          selectedConversationId: null,
+          messages: {},
+          lastMessageDocs: {},
+          hasMoreMessages: {},
+          typingUsers: {},
+          isLoading: false,
+          isRevalidating: false,
+          isLoadingMore: {},
+          searchTerm: '',
+          isSearchFocused: false,
+          searchResults: { conversations: [], users: [] },
+          searchHistory: [],
+          isChatVisible: false,
+        });
+      },
 
       // Đồng bộ danh sách hội thoại
       subscribeToConversations: (userId: string) => {

@@ -7,6 +7,11 @@ import { User, UserStatus } from '../types';
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
 import { useUserCache } from './userCacheStore';
+import { useChatStore } from './chatStore';
+import { usePostStore } from './postStore';
+import { useContactStore } from './contactStore';
+import { useNotificationStore } from './notificationStore';
+import { useCommentStore } from './commentStore';
 
 interface AuthState {
   user: User | null;
@@ -73,6 +78,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (user) {
       await userService.updateUserStatus(user.id, UserStatus.OFFLINE);
     }
+    
+    // Reset tất cả các store dữ liệu
+    useChatStore.getState().reset();
+    usePostStore.getState().reset();
+    useContactStore.getState().reset();
+    useNotificationStore.getState().reset();
+    useCommentStore.getState().reset();
+    useUserCache.getState().clear();
+
     await authService.logout();
     set({ user: null });
   },

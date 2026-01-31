@@ -28,6 +28,7 @@ interface PostState {
   isModalLoading: boolean;
   setSelectedPost: (post: Post | null) => void;
   fetchPostById: (postId: string, currentUserId: string, friendIds: string[]) => Promise<void>;
+  reset: () => void;
 }
 
 export const usePostStore = create<PostState>()(
@@ -39,6 +40,24 @@ export const usePostStore = create<PostState>()(
       hasMore: true,
       lastDoc: null,
       abortController: null,
+
+      // ... (giữ nguyên các hàm khác)
+
+      reset: () => {
+        const { abortController } = get();
+        if (abortController) abortController.abort();
+        
+        set({
+          posts: [],
+          isLoading: false,
+          isRevalidating: false,
+          hasMore: true,
+          lastDoc: null,
+          abortController: null,
+          selectedPost: null,
+          isModalLoading: false,
+        });
+      },
 
       fetchPosts: async (currentUserId: string, friendIds: string[], loadMore = false) => {
         const { abortController: currentController, posts } = get();
