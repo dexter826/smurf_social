@@ -252,12 +252,16 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             
             {groupedMessages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-                  <Avatar 
+                <div className="mb-4">
+                  <UserAvatar 
+                    userId={conversation.isGroup ? '' : partner?.id!} 
                     src={avatarSrc} 
-                    size="lg" 
+                    name={chatName}
+                    size="xl" 
                     isGroup={conversation.isGroup} 
                     members={conversation.participants} 
+                    initialStatus={partner?.status}
+                    showStatus={false}
                   />
                 </div>
                 <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>

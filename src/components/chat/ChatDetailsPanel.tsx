@@ -110,6 +110,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
               onDelete={onDelete}
               onLeaveGroup={onLeaveGroup}
               onEditGroup={onEditGroup}
+              onViewProfile={() => partner && onMemberClick?.(partner.id)}
             />
           </>
         );

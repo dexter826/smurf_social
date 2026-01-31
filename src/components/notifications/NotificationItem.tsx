@@ -76,7 +76,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       }`}
       onClick={handleItemClick}
     >
-      <UserAvatar userId={notification.senderId} size="md" />
+      <UserAvatar userId={notification.senderId} size="md" showStatus={false} />
       <div className="flex-1 min-w-0">
         <p className="text-sm text-text-primary leading-tight">
           <span className="font-semibold mr-1">{sender?.name || 'Người dùng'}</span> 
