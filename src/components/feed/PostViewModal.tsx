@@ -132,8 +132,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     ? "m-0 md:m-4 md:rounded-3xl shadow-none"
     : "md:max-h-[90vh] shadow-none";
   const containerClassName = hasMedia
-    ? "flex flex-col lg:flex-row h-[100dvh] lg:min-h-[90vh] lg:h-[92vh] bg-bg-primary overflow-hidden lg:rounded-3xl relative transition-all duration-300 w-full border border-border-light shadow-2xl"
-    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary overflow-hidden md:rounded-2xl relative transition-all duration-300 w-full border border-border-light shadow-2xl";
+    ? "flex flex-col lg:flex-row h-[100dvh] lg:min-h-[90vh] lg:h-[92vh] bg-bg-primary lg:rounded-3xl relative transition-all duration-300 w-full border border-border-light shadow-2xl"
+    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary md:rounded-2xl relative transition-all duration-300 w-full border border-border-light shadow-2xl";
 
   return (
     <Modal 
@@ -265,7 +265,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             currentUser={currentUser}
             variant="cinema"
             autoFocus={true}
-            className="flex-1 overflow-y-auto scroll-hide"
+            className="flex-1 min-h-0"
             onProfileClick={onClose}
             header={
               <div className="flex flex-col">

@@ -95,26 +95,82 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   },
 
   addComment: async (postId, userId, content, parentId, replyToUserId, imageUrl, videoUrl) => {
-    try {
-      const commentId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, videoUrl);
-      
-      if (parentId) {
-        const updatedRoot = (get().rootComments[postId] || []).map(c => 
-          c.id === parentId 
-            ? { ...c, replyCount: (c.replyCount || 0) + 1 } 
-            : c
-        );
-        set(state => ({
-          rootComments: { ...state.rootComments, [postId]: updatedRoot }
-        }));
+    const tempId = `temp-${Date.now()}`;
+    const optimisticComment: Comment = {
+      id: tempId,
+      postId,
+      userId,
+      content,
+      parentId: parentId || null,
+      replyToUserId: replyToUserId || null,
+      image: imageUrl || null,
+      video: videoUrl || null,
+      timestamp: new Date(),
+      likes: [],
+      replyCount: 0
+    };
 
-        await get().fetchReplies(postId, parentId);
-      } else {
-        await get().fetchRootComments(postId);
-      }
+    // Lưu trạng thái cũ để rollback nếu lỗi
+    const previousState = { 
+      rootComments: { ...get().rootComments },
+      replies: { ...get().replies }
+    };
+
+    // Thêm ngay vào Store
+    if (parentId) {
+      set(state => {
+        const postReplies = state.replies[postId] || {};
+        const parentReplies = postReplies[parentId] || [];
+        return {
+          replies: {
+            ...state.replies,
+            [postId]: { ...postReplies, [parentId]: [...parentReplies, optimisticComment] }
+          },
+          rootComments: {
+            ...state.rootComments,
+            [postId]: (state.rootComments[postId] || []).map(c => 
+              c.id === parentId ? { ...c, replyCount: (c.replyCount || 0) + 1 } : c
+            )
+          }
+        };
+      });
+    } else {
+      set(state => ({
+        rootComments: { ...state.rootComments, [postId]: [optimisticComment, ...(state.rootComments[postId] || [])] }
+      }));
+    }
+
+    try {
+      const realId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, videoUrl);
       
-      return commentId;
+      // Thay thế ID tạm bằng ID thật
+      set(state => {
+        if (parentId) {
+          const postReplies = state.replies[postId] || {};
+          const parentReplies = postReplies[parentId] || [];
+          return {
+            replies: {
+              ...state.replies,
+              [postId]: { 
+                ...postReplies, 
+                [parentId]: parentReplies.map(c => c.id === tempId ? { ...c, id: realId } : c) 
+              }
+            }
+          };
+        } else {
+          return {
+            rootComments: {
+              ...state.rootComments,
+              [postId]: (state.rootComments[postId] || []).map(c => c.id === tempId ? { ...c, id: realId } : c)
+            }
+          };
+        }
+      });
+      
+      return realId;
     } catch (error) {
+      // Rollback nếu lỗi
+      set(previousState);
       console.error('Lỗi thêm bình luận:', error);
       throw error;
     }
@@ -131,16 +187,42 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   },
 
   deleteComment: async (postId, commentId, parentId) => {
+    const previousState = { 
+      rootComments: { ...get().rootComments },
+      replies: { ...get().replies }
+    };
+
+    // Xóa ngay lập tức (Optimistic)
+    set(state => {
+      if (parentId) {
+        const postReplies = state.replies[postId] || {};
+        const parentReplies = postReplies[parentId] || [];
+        return {
+          replies: {
+            ...state.replies,
+            [postId]: { ...postReplies, [parentId]: parentReplies.filter(c => c.id !== commentId) }
+          },
+          rootComments: {
+            ...state.rootComments,
+            [postId]: (state.rootComments[postId] || []).map(c => 
+              c.id === parentId ? { ...c, replyCount: Math.max(0, (c.replyCount || 0) - 1) } : c
+            )
+          }
+        };
+      } else {
+        return {
+          rootComments: {
+            ...state.rootComments,
+            [postId]: (state.rootComments[postId] || []).filter(c => c.id !== commentId)
+          }
+        };
+      }
+    });
+
     try {
       await commentService.deleteComment(commentId, postId, parentId);
-      
-      // Làm mới danh sách sau khi xóa
-      if (parentId) {
-        await get().fetchReplies(postId, parentId);
-      } else {
-        await get().fetchRootComments(postId);
-      }
     } catch (error) {
+      set(previousState);
       console.error('Lỗi xóa bình luận:', error);
       throw error;
     }

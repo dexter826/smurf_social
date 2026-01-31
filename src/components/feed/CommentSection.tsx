@@ -84,6 +84,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   useEffect(() => {
     loadInitialRootComments();
+    return () => {
+      resetInput();
+      // Tùy chọn: clearComments(postId); 
+      // Tuy nhiên trong ứng dụng mạng xã hội, thường ta muốn giữ cache khi quay lại 
+      // nên chỉ cần resetInput là đủ để tránh re-render sai input.
+    };
   }, [postId]);
 
   // Lấy thông tin user khi có comment mới
@@ -260,8 +266,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     return (
       <div className={`
         transition-all duration-300 animate-in slide-in-from-top-2 z-20
-        ${!isInline ? 'pb-[calc(16px+env(safe-area-inset-bottom))]' : ''}
-        ${variant === 'cinema' && !isInline ? 'p-4 md:p-5 pb-6 md:pb-6 bg-bg-primary/95 backdrop-blur-md border-t border-border-light sticky bottom-0 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 
+        ${!isInline ? 'pb-[calc(16px+env(safe-area-inset-bottom))] sticky bottom-0 bg-bg-primary z-20' : ''}
+        ${variant === 'cinema' && !isInline ? 'p-4 md:p-5 pb-6 md:pb-6 bg-bg-primary/95 backdrop-blur-md border-t border-border-light shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 
           !isInline ? 'p-4 md:p-5 bg-bg-primary border-t border-border-light' : 'mt-3 pl-2'}
       `}>
         {(isReplyingNow || (isRootInput && replyingTo)) && (
@@ -421,7 +427,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     <div className="space-y-1">{commentReplies.map(reply => renderCommentItem(reply, true))}</div>
                     {hasMoreR && (
                       <button onClick={() => loadReplies(comment.id, false)} className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" disabled={isLoadingR}>
-                        {isLoadingR ? 'Đang tải...' : 'Xem thêm trả lời'}
+                        {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
                       </button>
                     )}
                   </>
@@ -435,7 +441,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   return (
-    <div className={`flex flex-col transition-all duration-300 ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
+    <div className={`flex flex-col min-h-0 transition-all duration-300 ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {header && <div className="bg-bg-primary">{header}</div>}
         
