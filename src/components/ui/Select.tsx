@@ -111,8 +111,8 @@ export const Select: React.FC<SelectProps> = ({
                     }
                   `}
                 >
-                  <span className="truncate">{option.label}</span>
-                  {option.value === value && <Check size={16} className="flex-shrink-0" />}
+                  <span className="whitespace-nowrap">{option.label}</span>
+                  {option.value === value && <Check size={16} className="ml-2 flex-shrink-0" />}
                 </button>
               ))}
             </div>

@@ -66,7 +66,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
       <div className={`
         relative group transition-all
         bg-bg-primary border border-border-light
-        focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-light/30
+        ${props.disabled ? 'bg-bg-secondary cursor-not-allowed opacity-60' : 'focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-light/30 transition-all'}
         ${!className.includes('rounded-') ? 'rounded-xl' : ''}
         ${error ? 'border-error ring-4 ring-error/10' : ''} 
         ${className}
