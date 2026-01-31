@@ -5,7 +5,8 @@ import {
   Shield, 
   Key, 
   Moon, 
-  Sun, 
+  Sun,
+  Flag,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -15,12 +16,13 @@ import { User } from '../types';
 import { UserAvatar, ConfirmDialog, Button, Skeleton } from '../components/ui';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 
-type SettingSection = 'appearance' | 'security' | 'blocked';
+type SettingSection = 'appearance' | 'security' | 'blocked' | 'admin';
 
-const MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNode }[] = [
+const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   { id: 'appearance', label: 'Giao diện', icon: <Moon size={20} /> },
   { id: 'security', label: 'Bảo mật', icon: <Shield size={20} /> },
   { id: 'blocked', label: 'Người dùng đã chặn', icon: <Ban size={20} /> },
+  { id: 'admin', label: 'Quản lý báo cáo', icon: <Flag size={20} />, adminOnly: true },
 ];
 
 const SettingsPage: React.FC = () => {
@@ -33,6 +35,9 @@ const SettingsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+
+  const isAdmin = currentUser?.role === 'admin';
+  const MENU_ITEMS = BASE_MENU_ITEMS.filter(item => !item.adminOnly || isAdmin);
 
   useEffect(() => {
     const fetchBlockedUsers = async () => {
@@ -194,6 +199,18 @@ const SettingsPage: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+        );
+
+      case 'admin':
+        return (
+          <div className="space-y-4">
+            <SettingItem
+              icon={<Flag size={20} />}
+              title="Quản lý báo cáo"
+              description="Xem và xử lý các báo cáo vi phạm"
+              onClick={() => navigate('/admin/reports')}
+            />
           </div>
         );
 

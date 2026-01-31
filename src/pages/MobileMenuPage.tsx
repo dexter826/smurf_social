@@ -1,0 +1,197 @@
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { 
+  User as UserIcon, 
+  Settings, 
+  Moon, 
+  Sun, 
+  Flag, 
+  LogOut, 
+  ChevronRight,
+  MessageCircle,
+  Users,
+  LayoutGrid,
+  Bell,
+  Menu
+} from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
+import { useChatStore } from '../store/chatStore';
+import { useContactStore } from '../store/contactStore';
+import { useNotificationStore } from '../store/notificationStore';
+import { UserAvatar, ConfirmDialog } from '../components/ui';
+
+export const MobileMenuPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
+  const { conversations } = useChatStore();
+  const { receivedRequests } = useContactStore();
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+
+  const isAdmin = user?.role === 'admin';
+
+  // Tính unread count 
+  const totalUnread = user ? conversations.reduce((total, conv) => {
+    const count = conv.unreadCount?.[user.id] || 0;
+    return total + (count > 0 || conv.markedUnread ? (count || 1) : 0);
+  }, 0) : 0;
+  const hasNewRequests = receivedRequests.length > 0;
+  const unreadNotifications = useNotificationStore.getState().unreadCount;
+
+  const handleConfirmLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Bottom nav items
+  const navItems = [
+    { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
+    { to: '/', Icon: MessageCircle, label: 'Tin nhắn', badge: totalUnread > 0 },
+    { to: '/contacts', Icon: Users, label: 'Bạn bè', badge: hasNewRequests },
+    { to: '/notifications', Icon: Bell, label: 'Thông báo', badge: unreadNotifications > 0 },
+  ];
+
+  return (
+    <div className="flex flex-col h-[100dvh] w-full bg-bg-secondary">
+      {/* Header */}
+      <div className="bg-bg-primary border-b border-border-light p-4">
+        <div className="flex items-center gap-3">
+          {user && (
+            <UserAvatar 
+              userId={user.id}
+              src={user.avatar} 
+              size="lg" 
+              initialStatus={user.status}
+            />
+          )}
+          <div className="flex-1">
+            <h2 className="font-bold text-lg text-text-primary">{user?.name}</h2>
+            <p className="text-sm text-text-tertiary">{user?.email}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu Items */}
+      <div className="flex-1 overflow-y-auto p-3 pb-[80px]">
+        <div className="space-y-1">
+          {/* Xem hồ sơ */}
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
+          >
+            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+              <UserIcon size={22} />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="font-semibold text-text-primary">Xem hồ sơ</span>
+              <p className="text-xs text-text-tertiary mt-0.5">Trang cá nhân của bạn</p>
+            </div>
+            <ChevronRight size={20} className="text-text-tertiary" />
+          </button>
+
+          {/* Cài đặt */}
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
+          >
+            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
+              <Settings size={22} />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="font-semibold text-text-primary">Cài đặt</span>
+              <p className="text-xs text-text-tertiary mt-0.5">Bảo mật, quyền riêng tư</p>
+            </div>
+            <ChevronRight size={20} className="text-text-tertiary" />
+          </button>
+
+          {/* Chế độ tối */}
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
+          >
+            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
+              {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
+            </div>
+            <div className="flex-1 text-left">
+              <span className="font-semibold text-text-primary">Chế độ tối</span>
+              <p className="text-xs text-text-tertiary mt-0.5">{mode === 'dark' ? 'Đang bật' : 'Đang tắt'}</p>
+            </div>
+            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${mode === 'dark' ? 'bg-primary' : 'bg-gray-300'}`}>
+              <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${mode === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
+            </div>
+          </button>
+
+          {/* Admin: Quản lý báo cáo */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin/reports')}
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-warning/30"
+            >
+              <div className="w-11 h-11 flex items-center justify-center rounded-full bg-warning/10 text-warning">
+                <Flag size={22} />
+              </div>
+              <div className="flex-1 text-left">
+                <span className="font-semibold text-text-primary">Quản lý báo cáo</span>
+                <p className="text-xs text-text-tertiary mt-0.5">Xem và xử lý vi phạm</p>
+              </div>
+              <ChevronRight size={20} className="text-text-tertiary" />
+            </button>
+          )}
+
+          <div className="h-3" />
+
+          {/* Đăng xuất */}
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-error/5 transition-colors border border-error/20"
+          >
+            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-error/10 text-error">
+              <LogOut size={22} />
+            </div>
+            <span className="font-semibold text-error">Đăng xuất</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
+                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+              }`
+            }
+          >
+            <div className="relative">
+              <item.Icon size={24} />
+              {item.badge && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
+              )}
+            </div>
+            <span className="text-[10px] font-medium">{item.label}</span>
+          </NavLink>
+        ))}
+        
+        {/* Menu active */}
+        <div className="flex flex-col items-center justify-center w-full h-full space-y-1 text-primary">
+          <Menu size={24} />
+          <span className="text-[10px] font-medium">Menu</span>
+        </div>
+      </nav>
+
+      {/* Logout Dialog */}
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleConfirmLogout}
+        title="Đăng xuất"
+        message="Bạn có chắc chắn muốn rời khỏi phiên làm việc này?"
+        confirmLabel="Đăng xuất"
+      />
+    </div>
+  );
+};

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Users, Lock, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Users, Lock, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton } from '../ui';
-import { Post, User } from '../../types';
+import { Post, User, ReportType } from '../../types';
 import { CommentSection } from './CommentSection';
 import { formatRelativeTime } from '../../utils/dateUtils';
+import { useReportStore } from '../../store/reportStore';
 
 interface PostViewModalProps {
   post: Post | null;
@@ -30,6 +31,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   isLoading
 }) => {
   const navigate = useNavigate();
+  const { openReportModal } = useReportStore();
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -247,13 +249,25 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {isOwner && (
+              {isOwner ? (
                 <Dropdown
                   trigger={<IconButton icon={<MoreHorizontal size={20} />} size="sm" className="text-text-secondary hover:text-text-primary" />}
                   menuClassName="w-48"
                 >
                   <DropdownItem icon={<Edit size={16} />} label="Chỉnh sửa" onClick={() => onEdit?.(post.id)} />
                   <DropdownItem icon={<Trash2 size={16} />} label="Xóa bài viết" variant="danger" onClick={() => onDelete?.(post.id)} />
+                </Dropdown>
+              ) : (
+                <Dropdown
+                  trigger={<IconButton icon={<MoreHorizontal size={20} />} size="sm" className="text-text-secondary hover:text-text-primary" />}
+                  menuClassName="w-48"
+                >
+                  <DropdownItem 
+                    icon={<Flag size={16} />} 
+                    label="Báo cáo" 
+                    variant="danger" 
+                    onClick={() => openReportModal(ReportType.POST, post.id, post.userId)} 
+                  />
                 </Dropdown>
               )}
               <IconButton icon={<X size={20} />} onClick={onClose} className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary rounded-full" />

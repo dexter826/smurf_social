@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Send, Image as ImageIcon, Video, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Send, Image as ImageIcon, Video, ChevronDown, ChevronRight, Flag } from 'lucide-react';
 import { UserAvatar, Button, TextArea, EmojiPicker, IconButton, ConfirmDialog } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
 import { toast } from '../../store/toastStore';
-import { Comment, User } from '../../types';
+import { Comment, User, ReportType } from '../../types';
 import { postService } from '../../services/postService';
 import { useCommentStore } from '../../store/commentStore';
 import { useUserCache } from '../../store/userCacheStore';
+import { useReportStore } from '../../store/reportStore';
 import { CommentSkeleton } from './CommentSkeleton';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
@@ -47,6 +48,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   } = useCommentStore();
 
   const { users, fetchUsers } = useUserCache();
+  const { openReportModal } = useReportStore();
 
   // Loading state
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
@@ -404,11 +406,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
               <span>{formatRelativeTime(comment.timestamp)}</span>
               <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Trả lời</button>
-              {comment.userId === currentUser.id && (
+              {comment.userId === currentUser.id ? (
                 <>
                   <button onClick={() => handleEditClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Chỉnh sửa</button>
                   <button onClick={() => setCommentToDelete(comment)} className="text-error/70 hover:text-error transition-colors cursor-pointer">Xóa</button>
                 </>
+              ) : (
+                <button 
+                  onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.userId)} 
+                  className="text-text-tertiary hover:text-error transition-colors cursor-pointer flex items-center gap-0.5"
+                >
+                  <Flag size={10} /> Báo cáo
+                </button>
               )}
             </div>
 

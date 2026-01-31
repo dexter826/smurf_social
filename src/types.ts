@@ -21,6 +21,7 @@ export interface User {
   coverImage?: string;
   lastSeen?: Date;
   fcmTokens?: string[];
+  role?: 'user' | 'admin';
 }
 
 export enum FriendRequestStatus {
@@ -120,7 +121,10 @@ export enum NotificationType {
   REPLY_COMMENT = 'reply_comment',
   LIKE_COMMENT = 'like_comment',
   FRIEND_REQUEST = 'friend_request',
-  FRIEND_ACCEPT = 'friend_accept'
+  FRIEND_ACCEPT = 'friend_accept',
+  REPORT_NEW = 'report_new',
+  REPORT_RESOLVED = 'report_resolved',
+  CONTENT_VIOLATION = 'content_violation'
 }
 
 export interface AppNotification {
@@ -133,7 +137,47 @@ export interface AppNotification {
     commentId?: string;
     friendRequestId?: string;
     contentSnippet?: string;
+    reportId?: string;
   };
   isRead: boolean;
   createdAt: Date;
+}
+
+// ========== REPORT TYPES ==========
+
+export enum ReportType {
+  POST = 'post',
+  COMMENT = 'comment',
+}
+
+export enum ReportReason {
+  SPAM = 'spam',
+  HARASSMENT = 'harassment',
+  HATE_SPEECH = 'hate_speech',
+  VIOLENCE = 'violence',
+  NUDITY = 'nudity',
+  SCAM = 'scam',
+  IMPERSONATION = 'impersonation',
+  OTHER = 'other'
+}
+
+export enum ReportStatus {
+  PENDING = 'pending',
+  RESOLVED = 'resolved',
+  REJECTED = 'rejected'
+}
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  targetType: ReportType;
+  targetId: string;
+  targetOwnerId: string;
+  reason: ReportReason;
+  description?: string;
+  status: ReportStatus;
+  createdAt: Date;
+  resolvedAt?: Date;
+  resolvedBy?: string;
+  resolution?: string;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Bell } from 'lucide-react';
+import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Bell, Flag, Menu } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
@@ -24,6 +24,8 @@ export const AppLayout: React.FC = () => {
 
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     if (!user) return;
@@ -141,7 +143,23 @@ export const AppLayout: React.FC = () => {
                 title="Cài đặt"
               >
                 <Settings size={20} />
-              </NavLink>
+               </NavLink>
+
+              {isAdmin && (
+                <NavLink 
+                  to="/admin/reports"
+                  className={({ isActive }) => 
+                    `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-warning/10 text-warning shadow-sm' 
+                        : 'text-text-tertiary hover:bg-warning/10 hover:text-warning'
+                    }`
+                  }
+                  title="Quản lý báo cáo"
+                >
+                  <Flag size={20} />
+                </NavLink>
+              )}
 
               <div className="group relative ml-1" onClick={() => navigate('/profile')}>
                 {user && (
@@ -214,17 +232,18 @@ export const AppLayout: React.FC = () => {
             <span className="text-[10px] font-medium">Thông báo</span>
           </NavLink>
           
+         {/* Mobile Menu Button */}
          <NavLink
-            to="/profile"
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
-                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-              }`
-            }
-          >
-            <UserIcon size={24} />
-            <span className="text-[10px] font-medium">Cá nhân</span>
-          </NavLink>
+           to="/menu"
+           className={({ isActive }) =>
+             `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
+               isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+             }`
+           }
+         >
+           <Menu size={24} />
+           <span className="text-[10px] font-medium">Menu</span>
+         </NavLink>
       </nav>
 
       <ConfirmDialog
