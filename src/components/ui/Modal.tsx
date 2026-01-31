@@ -90,7 +90,7 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Body */}
-        <div className={`overflow-y-auto flex-1 md:flex-none ${paddingClasses[padding]}`}>
+        <div className={`overflow-y-auto flex-1 min-h-0 ${paddingClasses[padding]}`}>
           {children}
         </div>
 

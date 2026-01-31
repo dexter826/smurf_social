@@ -39,6 +39,7 @@ export const Input: React.FC<InputProps> = ({
             block w-full rounded-xl transition-all outline-none text-base sm:text-sm
             bg-bg-primary border border-border-light text-text-primary placeholder:text-text-tertiary
             focus:border-primary focus:ring-4 focus:ring-primary-light/30
+            disabled:bg-bg-secondary disabled:text-text-tertiary disabled:cursor-not-allowed disabled:border-border-light
             ${icon ? 'pl-11' : 'pl-4'} 
             ${rightElement ? 'pr-11' : 'pr-4'} 
             ${error ? 'border-error ring-4 ring-error/10' : ''} 

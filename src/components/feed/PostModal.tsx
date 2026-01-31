@@ -57,6 +57,14 @@ export const PostModal: React.FC<PostModalProps> = ({
       }
     }
   }, [isOpen, isEdit, initialPost, initialFiles]);
+  
+  // Tự động điều chỉnh chiều cao textarea khi nội dung thay đổi
+  useEffect(() => {
+    if (isOpen && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [content, isOpen]);
 
   const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -131,6 +139,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       onClose={onClose}
       title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
       maxWidth="2xl"
+      padding="none"
       className="md:max-h-[85vh]"
       footer={
         <div className="w-full">
@@ -193,39 +202,44 @@ export const PostModal: React.FC<PostModalProps> = ({
         </div>
       }
     >
-      <div className="flex flex-col h-full min-h-[150px] md:min-h-0">
-        <div className="flex items-center gap-3 mb-4 flex-none">
-          <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="md" initialStatus={currentUser.status} />
-          <div>
-            <h3 className="font-semibold text-text-primary mb-0.5 text-sm md:text-base">{currentUser.name}</h3>
-            <Select
-              value={visibility}
-              onChange={(v) => setVisibility(v as any)}
-              options={[
-                { value: 'friends', label: 'Bạn bè', icon: <Users size={14} /> },
-                { value: 'private', label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
-              ]}
-              variant="ghost"
-              size="sm"
-              className="px-0 py-0 h-auto font-medium text-text-secondary hover:bg-transparent"
-            />
+      <div className="flex flex-col min-h-[150px]">
+        <div className="sticky top-0 z-10 bg-bg-primary px-4 md:px-6 py-3 border-b border-divider flex items-center justify-between flex-none">
+          <div className="flex items-center gap-3">
+            <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="md" initialStatus={currentUser.status} />
+            <h3 className="font-semibold text-text-primary text-sm md:text-base">{currentUser.name}</h3>
           </div>
-        </div>
-
-        <div className="flex-1 min-h-[120px] md:min-h-0 relative group">
-          <textarea
-            ref={textareaRef}
-            placeholder="Hãy viết gì đó..."
-            className="w-full h-full resize-none outline-none text-base md:text-lg bg-transparent text-text-primary placeholder:text-text-tertiary"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            disabled={isSubmitting}
-            autoFocus
+          <Select
+            value={visibility}
+            onChange={(v) => setVisibility(v as any)}
+            options={[
+              { value: 'friends', label: 'Bạn bè', icon: <Users size={14} /> },
+              { value: 'private', label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
+            ]}
+            variant="ghost"
+            size="sm"
+            className="px-0 py-0 h-auto font-medium text-text-secondary hover:bg-transparent min-w-[110px] md:min-w-[130px]"
           />
         </div>
 
+        <div className="flex-1 px-4 md:px-6 pt-2 pb-4">
+          <div className="relative group">
+            <textarea
+              ref={textareaRef}
+              placeholder="Hãy viết gì đó..."
+              className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 ${
+                content.length < 85 && images.length === 0 && videos.length === 0
+                  ? 'text-xl md:text-2xl font-medium min-h-[120px]'
+                  : 'text-base md:text-lg min-h-[100px]'
+              }`}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              disabled={isSubmitting}
+              autoFocus
+            />
+          </div>
+
         {(images.length > 0 || videos.length > 0) && (
-          <div className="grid grid-cols-2 gap-2 mt-4 flex-none">
+          <div className="grid grid-cols-2 gap-2 mt-4">
             {images.map((img, idx) => (
               <div key={`img-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -259,6 +273,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           </div>
         )}
       </div>
+    </div>
     </Modal>
   );
 };
