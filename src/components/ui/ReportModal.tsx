@@ -67,69 +67,75 @@ export const ReportModal: React.FC = () => {
       title="Báo cáo vi phạm"
       maxWidth="sm"
     >
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-        {/* Header info */}
-        <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
-          <AlertTriangle size={16} className="text-warning flex-shrink-0" />
-          <span>Chọn lý do phù hợp nhất để giúp chúng tôi xử lý nhanh hơn</span>
-        </div>
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full">
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto max-h-[60vh] pr-2 -mr-2 space-y-4 p-1">
+          {/* Header info */}
+          <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
+            <AlertTriangle size={16} className="text-warning flex-shrink-0" />
+            <span>Chọn lý do phù hợp nhất để giúp chúng tôi xử lý nhanh hơn</span>
+          </div>
 
-        {/* Danh sách lý do */}
-        <div className="space-y-2 max-h-[300px] overflow-y-auto">
-          {reasonEntries.map(([key, value]) => (
-            <label
-              key={key}
-              className={`
-                flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all
-                border ${formData.reason === key 
-                  ? 'border-primary bg-primary/5 shadow-sm' 
-                  : 'border-border-light hover:bg-bg-hover hover:border-border-medium'
-                }
-              `}
-            >
-              <input
-                type="radio"
-                value={key}
-                {...register('reason')}
-                className="mt-0.5 accent-primary w-4 h-4"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-text-primary text-sm">{value.label}</div>
-                <div className="text-xs text-text-secondary mt-0.5">{value.description}</div>
-              </div>
-            </label>
-          ))}
+          {/* Danh sách lý do */}
+          <div className="space-y-2">
+            {reasonEntries.map(([key, value]) => (
+              <label
+                key={key}
+                className={`
+                  flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all
+                  border ${formData.reason === key 
+                    ? 'border-primary bg-primary/5 shadow-sm' 
+                    : 'border-border-light hover:bg-bg-hover hover:border-border-medium'
+                  }
+                `}
+              >
+                <input
+                  type="radio"
+                  value={key}
+                  {...register('reason')}
+                  className="mt-0.5 accent-primary w-4 h-4"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-text-primary text-sm">{value.label}</div>
+                  <div className="text-xs text-text-secondary mt-0.5">{value.description}</div>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {/* Validation Error for Reason */}
           {errors.reason && (
             <p className="text-xs text-error mt-1">{errors.reason.message}</p>
           )}
+
+          {/* Mô tả thêm cho "Khác" hay các lý do cần thêm thông tin */}
+          {(formData.reason === ReportReason.OTHER || formData.reason !== '') && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+              <label className="text-sm font-medium text-text-primary">
+                Mô tả chi tiết {formData.reason === ReportReason.OTHER && <span className="text-text-secondary">(bắt buộc)</span>}
+              </label>
+              <TextArea
+                placeholder="Vui lòng mô tả lý do báo cáo..."
+                {...register('description')}
+                error={errors.description?.message}
+                maxLength={REPORT_CONFIG.DESCRIPTION_MAX_LENGTH}
+                rows={3}
+                autoFocus
+              />
+            </div>
+          )}
+
+          {/* Error message from store */}
+          {error && (
+            <div className="text-error text-sm bg-error/10 p-3 rounded-lg flex items-center gap-2">
+              <AlertTriangle size={14} />
+              {error}
+            </div>
+          )}
         </div>
 
-        {/* Mô tả thêm cho "Khác" hay các lý do cần thêm thông tin */}
-        {(formData.reason === ReportReason.OTHER || formData.reason !== '') && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-text-primary">
-              Mô tả chi tiết {formData.reason === ReportReason.OTHER && <span className="text-text-secondary">(bắt buộc)</span>}
-            </label>
-            <TextArea
-              placeholder="Vui lòng mô tả lý do báo cáo..."
-              {...register('description')}
-              error={errors.description?.message}
-              maxLength={REPORT_CONFIG.DESCRIPTION_MAX_LENGTH}
-              rows={3}
-            />
-          </div>
-        )}
-
-        {/* Error message from store */}
-        {error && (
-          <div className="text-error text-sm bg-error/10 p-3 rounded-lg flex items-center gap-2">
-            <AlertTriangle size={14} />
-            {error}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
+        {/* Fixed Actions Footer */}
+        <div className="flex gap-3 pt-4 mt-2 border-t border-border-light">
           <Button 
             type="button"
             variant="secondary" 

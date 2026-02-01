@@ -64,7 +64,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         </label>
       )}
       <div className={`
-        relative group transition-all
+        relative group transition-all overflow-hidden
         bg-bg-primary border border-border-light
         ${props.disabled ? 'bg-bg-secondary cursor-not-allowed opacity-60' : 'focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-light/30 transition-all'}
         ${!className.includes('rounded-') ? 'rounded-xl' : ''}
@@ -110,7 +110,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           ref={innerRef}
           id={inputId}
           className={`
-            block w-full bg-transparent outline-none text-base sm:text-[15px] leading-relaxed resize-none
+            block w-full bg-transparent outline-none border-none focus:ring-0 text-base sm:text-[15px] leading-relaxed resize-none
             ${renderOverlay ? 'text-transparent caret-text-primary selection:bg-primary/20 selection:text-transparent' : 'text-text-primary'}
             placeholder:text-text-tertiary
             ${icon ? 'pl-11' : 'pl-4'} 

@@ -328,6 +328,7 @@ const AdminReportsPage: React.FC = () => {
         }
         confirmLabel={actionType === 'resolve' ? 'Xử lý' : 'Từ chối'}
         variant={actionType === 'resolve' ? 'danger' : 'primary'}
+        isLoading={isProcessing}
       />
     </div>
   );

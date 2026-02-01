@@ -48,6 +48,7 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid || 
         get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.userId == request.auth.uid ||
         request.auth.uid in get(/databases/$(database)/documents/users/$(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.userId)).data.friendIds ||
+        (resource.data.parentId != null && get(/databases/$(database)/documents/comments/$(resource.data.parentId)).data.userId == request.auth.uid) ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
@@ -89,7 +90,7 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow update: if request.auth != null && resource.data.receiverId == request.auth.uid && 
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
-      allow delete: if false;
+      allow delete: if request.auth != null && resource.data.receiverId == request.auth.uid;
     }
 
     // Báo cáo vi phạm
@@ -111,7 +112,11 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['status', 'resolvedAt', 'resolvedBy', 'resolution']);
       
-      allow delete: if false;
+      allow delete: if request.auth != null && (
+        resource.data.reporterId == request.auth.uid ||
+        resource.data.targetOwnerId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
   }
 }
