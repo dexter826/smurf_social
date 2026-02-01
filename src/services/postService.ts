@@ -16,7 +16,8 @@ import {
   limit,
   startAfter,
   DocumentSnapshot,
-  increment
+  increment,
+  writeBatch
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
@@ -327,19 +328,86 @@ export const postService = {
             const mediaRef = ref(storage, url);
             await deleteObject(mediaRef);
           } catch (err) {
-            console.error("Lỗi xóa media trên storage", err);
+            console.error("Lỗi xóa media bài viết trên storage", err);
           }
         }
       }
 
-      await deleteDoc(doc(db, 'posts', postId));
-
       const commentsQuery = query(collection(db, 'comments'), where('postId', '==', postId));
       const commentsSnapshot = await getDocs(commentsQuery);
-      const deletePromises = commentsSnapshot.docs.map(doc => deleteDoc(doc.ref));
-      await Promise.all(deletePromises);
+      const allComments = commentsSnapshot.docs;
+
+      const commentMediaUrls: string[] = [];
+      allComments.forEach(cDoc => {
+        const data = cDoc.data();
+        if (data.image) commentMediaUrls.push(data.image);
+        if (data.video) commentMediaUrls.push(data.video);
+      });
+
+      for (const url of commentMediaUrls) {
+        try {
+          const mediaRef = ref(storage, url);
+          await deleteObject(mediaRef);
+        } catch (err) {
+          console.error("Lỗi xóa media bình luận khi xóa post", err);
+        }
+      }
+
+      // Xóa mọi thông báo liên quan bài và bình luận
+      const commentIds = allComments.map(d => d.id);
+      const notificationsToDelete: any[] = [];
+      
+      const postNotifQuery = query(collection(db, 'notifications'), where('data.postId', '==', postId));
+      const postNotifSnap = await getDocs(postNotifQuery);
+      notificationsToDelete.push(...postNotifSnap.docs);
+
+      if (commentIds.length > 0) {
+        const chunks = chunkArray(commentIds, 30);
+        for (const chunk of chunks) {
+          const commentNotifQuery = query(collection(db, 'notifications'), where('data.commentId', 'in', chunk));
+          const commentNotifSnap = await getDocs(commentNotifQuery);
+          notificationsToDelete.push(...commentNotifSnap.docs);
+        }
+      }
+
+      // Tìm báo cáo chưa xử lý để tự động đóng
+      const reportsQuery = query(
+        collection(db, 'reports'), 
+        where('targetId', '==', postId),
+        where('status', '==', 'pending')
+      );
+      const reportsSnap = await getDocs(reportsQuery);
+      const reportIds = reportsSnap.docs.map(d => d.id);
+
+      // Gỡ thông báo báo cáo mới khỏi bảng tin Admin
+      const adminReportNotifications: any[] = [];
+      if (reportIds.length > 0) {
+        const chunks = chunkArray(reportIds, 30);
+        for (const chunk of chunks) {
+          const q = query(collection(db, 'notifications'), where('data.reportId', 'in', chunk));
+          const snap = await getDocs(q);
+          adminReportNotifications.push(...snap.docs);
+        }
+      }
+
+      const batch = writeBatch(db);
+      
+      reportsSnap.docs.forEach(rDoc => {
+        batch.update(rDoc.ref, {
+          status: 'resolved',
+          resolvedAt: Timestamp.now(),
+          resolution: 'Nội dung đã bị xóa bởi người dùng'
+        });
+      });
+      
+      notificationsToDelete.forEach(doc => batch.delete(doc.ref));
+      adminReportNotifications.forEach(doc => batch.delete(doc.ref));
+      allComments.forEach(doc => batch.delete(doc.ref));
+      batch.delete(doc(db, 'posts', postId));
+
+      await batch.commit();
     } catch (error) {
-      console.error("Lỗi xóa bài viết", error);
+      console.error("Lỗi xóa bài viết triệt để:", error);
       throw error;
     }
   },

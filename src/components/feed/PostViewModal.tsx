@@ -337,7 +337,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                       {shouldTruncate && (
                         <span 
                           onClick={() => setIsExpanded(!isExpanded)}
-                          className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm uppercase tracking-wider"
+                          className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm tracking-wider"
                         >
                           {isExpanded ? 'Thu gọn' : 'Xem thêm'}
                         </span>

@@ -117,14 +117,14 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
 
       {/* Content */}
       <div 
-        className="px-4"
+        className="px-4 pb-3"
       >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
           {displayContent}
           {shouldTruncate && (
             <span 
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm uppercase tracking-wider"
+              className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm tracking-wider"
             >
               {isExpanded ? 'Thu gọn' : 'Xem thêm'}
             </span>

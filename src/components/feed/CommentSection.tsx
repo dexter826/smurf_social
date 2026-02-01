@@ -309,7 +309,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 <>
                   {renderCommentContent(comment)}
                   {(comment.image || comment.video) && (
-                    <div className="mt-3 rounded-xl overflow-hidden border border-border-light/50 bg-bg-primary/50">
+                    <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
                       {comment.image && <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />}
                       {comment.video && <video src={comment.video} controls className="max-h-60 w-full" />}
                     </div>
@@ -374,7 +374,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                         {hasMoreR && (
                           <button 
                             onClick={() => loadReplies(comment.id)} 
-                            className="text-primary hover:underline text-[10px] font-bold ml-10 mt-2 uppercase tracking-wider transition-all" 
+                            className="text-primary hover:underline text-[10px] font-bold ml-10 mt-2 tracking-wider transition-all" 
                             disabled={isLoadingR}
                           >
                             {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
@@ -431,7 +431,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       size="sm" 
                       onClick={loadMoreRootComments} 
                       isLoading={isLoading} 
-                      className="text-primary w-full justify-start font-bold text-xs h-10 border-border-light hover:bg-bg-primary uppercase tracking-widest"
+                      className="text-primary w-full justify-start font-bold text-xs h-10 border-border-light hover:bg-bg-primary tracking-widest"
                     >
                       Xem thêm bình luận cũ...
                     </Button>
