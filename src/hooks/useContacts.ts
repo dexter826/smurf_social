@@ -52,7 +52,8 @@ export const useContacts = (): UseContactsReturn => {
     rejectFriendRequest,
     cancelFriendRequest,
     unfriend,
-    blockUser
+    blockUser,
+    addFriend
   } = useContactStore();
 
   const { users: userCache, fetchUsers } = useUserCache();
@@ -121,8 +122,13 @@ export const useContacts = (): UseContactsReturn => {
   const handleAcceptRequest = useCallback(async (requestId: string, friendId: string) => {
     if (!currentUser) return;
     await acceptFriendRequest(requestId, currentUser.id, friendId);
-    await fetchFriends(currentUser.id);
-  }, [currentUser, acceptFriendRequest, fetchFriends]);
+    const friendFromCache = userCache[friendId];
+    if (friendFromCache) {
+      addFriend(friendFromCache);
+    } else {
+      await fetchFriends(currentUser.id);
+    }
+  }, [currentUser, acceptFriendRequest, userCache, addFriend, fetchFriends]);
 
   const handleRejectRequest = useCallback(async (requestId: string) => {
     await rejectFriendRequest(requestId);
