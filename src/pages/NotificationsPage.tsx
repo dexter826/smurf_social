@@ -80,7 +80,7 @@ const NotificationsPage: React.FC = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => user && useNotificationStore.getState().loadMore(user.id)}
-                  className="text-primary hover:bg-primary/5 font-bold py-2 px-6 uppercase tracking-widest"
+                  className="text-primary hover:bg-primary/5 font-bold py-2 px-6 tracking-widest"
                 >
                   Xem thêm thông báo cũ hơn
                 </Button>

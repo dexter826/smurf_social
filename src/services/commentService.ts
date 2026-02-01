@@ -19,7 +19,8 @@ import {
   writeBatch,
   onSnapshot
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../firebase/config';
 import { Comment, NotificationType } from '../types';
 import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
@@ -169,20 +170,84 @@ export const commentService = {
     }
   },
 
-  // Xóa bình luận và phản hồi con
+  // Xóa bình luận, phản hồi con và dữ liệu liên quan
   deleteComment: async (commentId: string, postId: string, parentId?: string | null) => {
     try {
-      const batch = writeBatch(db);
-
+      const commentRef = doc(db, 'comments', commentId);
+      const commentSnap = await getDoc(commentRef);
+      if (!commentSnap.exists()) return;
+      
+      const commentData = commentSnap.data() as Comment;
+      
       const repliesQuery = query(collection(db, 'comments'), where('parentId', '==', commentId));
       const repliesSnapshot = await getDocs(repliesQuery);
       const repliesToDelete = repliesSnapshot.docs;
 
+      // Xóa mọi ảnh/video đính kèm khỏi Storage
+      const mediaUrlsToDelele: string[] = [];
+      if (commentData.image) mediaUrlsToDelele.push(commentData.image);
+      if (commentData.video) mediaUrlsToDelele.push(commentData.video);
+      
+      repliesToDelete.forEach(replyDoc => {
+        const data = replyDoc.data();
+        if (data.image) mediaUrlsToDelele.push(data.image);
+        if (data.video) mediaUrlsToDelele.push(data.video);
+      });
+
+      for (const url of mediaUrlsToDelele) {
+        try {
+          const mediaRef = ref(storage, url);
+          await deleteObject(mediaRef);
+        } catch (err) {
+          console.error("Lỗi xóa media bình luận trên storage", err);
+        }
+      }
+
+      // Xử lý báo cáo liên quan cho bình luận này và phản hồi
+      const allDeletedCommentIds = [commentId, ...repliesToDelete.map(d => d.id)];
+      const reportsQuery = query(
+        collection(db, 'reports'),
+        where('targetId', 'in', allDeletedCommentIds),
+        where('status', '==', 'pending')
+      );
+      const reportsSnap = await getDocs(reportsQuery);
+      const reportIds = reportsSnap.docs.map(d => d.id);
+
+      // Gỡ thông báo báo cáo dành cho Admin
+      const adminReportNotifications: any[] = [];
+      if (reportIds.length > 0) {
+        const snap = await getDocs(query(collection(db, 'notifications'), where('data.reportId', 'in', reportIds)));
+        adminReportNotifications.push(...snap.docs);
+      }
+
+      const batch = writeBatch(db);
+
+      reportsSnap.docs.forEach(rDoc => {
+        batch.update(rDoc.ref, {
+          status: 'resolved',
+          resolvedAt: Timestamp.now(),
+          resolution: 'Nội dung đã bị xóa bởi người dùng'
+        });
+      });
+
+      // Xóa thông báo liên quan (thích, phản hồi)
+      const notificationsQuery = query(
+        collection(db, 'notifications'), 
+        where('data.commentId', 'in', allDeletedCommentIds)
+      );
+      const notificationsSnapshot = await getDocs(notificationsQuery);
+      notificationsSnapshot.docs.forEach(notifDoc => {
+        batch.delete(notifDoc.ref);
+      });
+
+      adminReportNotifications.forEach(notifDoc => {
+        batch.delete(notifDoc.ref);
+      });
+
       repliesToDelete.forEach(replyDoc => {
         batch.delete(replyDoc.ref);
       });
-
-      batch.delete(doc(db, 'comments', commentId));
+      batch.delete(commentRef);
 
       const totalDeleted = 1 + repliesToDelete.length;
       const postRef = doc(db, 'posts', postId);
@@ -191,15 +256,15 @@ export const commentService = {
       });
 
       if (parentId) {
-        const parentRef = doc(db, 'comments', parentId);
-        batch.update(parentRef, {
+        const parentCommentRef = doc(db, 'comments', parentId);
+        batch.update(parentCommentRef, {
           replyCount: increment(-1)
         });
       }
 
       await batch.commit();
     } catch (error) {
-      console.error("Lỗi xóa comment:", error);
+      console.error("Lỗi xóa comment triệt để:", error);
       throw error;
     }
   },

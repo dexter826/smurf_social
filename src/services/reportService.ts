@@ -13,11 +13,14 @@ import {
   getCountFromServer,
   limit,
   onSnapshot,
-  QueryConstraint
+  QueryConstraint,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Report, ReportType, ReportReason, ReportStatus, NotificationType } from '../types';
+import { Report, ReportType, ReportReason, ReportStatus, NotificationType, Post, Comment } from '../types';
 import { notificationService } from './notificationService';
+import { postService } from './postService';
+import { commentService } from './commentService';
 
 export const reportService = {
   // Tạo báo cáo mới
@@ -165,7 +168,7 @@ export const reportService = {
       
       const reportData = reportSnap.data();
 
-      // Cập nhật status báo cáo
+      // Cập nhật trạng thái xử lý báo cáo
       await updateDoc(reportRef, {
         status: ReportStatus.RESOLVED,
         resolvedAt: Timestamp.now(),
@@ -173,11 +176,21 @@ export const reportService = {
         resolution
       });
 
-      // Xóa nội dung vi phạm
+      // Gỡ bỏ nội dung vi phạm triệt để
       if (reportData.targetType === ReportType.POST) {
-        await deleteDoc(doc(db, 'posts', reportData.targetId));
+        const post = await postService.getPostByIdForAdmin(reportData.targetId);
+        if (post) {
+          await postService.deletePost(post.id, post.images, post.videos);
+        } else {
+          await deleteDoc(doc(db, 'posts', reportData.targetId));
+        }
       } else if (reportData.targetType === ReportType.COMMENT) {
-        await deleteDoc(doc(db, 'comments', reportData.targetId));
+        const comment = await commentService.getCommentById(reportData.targetId);
+        if (comment) {
+          await commentService.deleteComment(comment.id, comment.postId, comment.parentId);
+        } else {
+          await deleteDoc(doc(db, 'comments', reportData.targetId));
+        }
       }
 
       // Thông báo người báo cáo
