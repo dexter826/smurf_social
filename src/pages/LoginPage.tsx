@@ -1,114 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '../store/authStore';
 import { Button, Input, Checkbox } from '../components/ui';
 import { toast } from '../store/toastStore';
 import { Mail, Lock, Eye, EyeOff, User, AlertCircle } from 'lucide-react';
-
+import { 
+  loginSchema, 
+  registerSchema, 
+  forgotPasswordSchema,
+  LoginFormValues,
+  RegisterFormValues,
+  ForgotPasswordFormValues
+} from '../utils/validation';
 
 const LoginPage: React.FC = () => {
   const { login, register, resetPassword, sendVerificationEmail, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
-  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', name: '' });
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [authError, setAuthError] = useState<string | null>(null);
   const [verificationSent, setVerificationSent] = useState(false);
 
+  // Form Login
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' }
+  });
+
+  // Form Register
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: '', email: '', password: '', confirmPassword: '' }
+  });
+
+  // Form Forgot Password
+  const forgotForm = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' }
+  });
+
   // Load email đã ghi nhớ
-  React.useEffect(() => {
+  useEffect(() => {
     const savedEmail = localStorage.getItem('remembered_email');
     if (savedEmail) {
-      setFormData(prev => ({ ...prev, email: savedEmail }));
+      loginForm.setValue('email', savedEmail);
       setRememberMe(true);
     }
-  }, []);
+  }, [loginForm]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const handleAuthError = (error: any) => {
+    const errorCode = error.code;
+    let message = "Đã có lỗi xảy ra. Vui lòng thử lại.";
     
-    if (activeTab === 'register' && !formData.name.trim()) {
-      newErrors.name = 'Vui lòng nhập họ tên';
+    switch (errorCode) {
+      case 'auth/invalid-email': message = "Email không hợp lệ."; break;
+      case 'auth/user-disabled': message = "Tài khoản này đã bị khóa."; break;
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential': message = "Email hoặc mật khẩu không chính xác."; break;
+      case 'auth/email-already-in-use': message = "Email này đã được sử dụng."; break;
+      case 'auth/weak-password': message = "Mật khẩu quá yếu."; break;
+      case 'auth/email-not-verified': message = "Vui lòng xác thực email trước khi đăng nhập."; break;
+      default: message = error.message || "Thao tác thất bại.";
     }
-
-    if (!formData.email) {
-      newErrors.email = 'Vui lòng nhập email';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Vui lòng nhập mật khẩu';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    }
-
-    if (activeTab === 'register') {
-      if (!formData.confirmPassword) {
-        newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
-      } else if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    
+    setAuthError(message);
+    toast.error(message);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
+  const onLoginSubmit = async (data: LoginFormValues) => {
     try {
-      if (activeTab === 'login') {
-        await login(formData.email, formData.password);
-        
-        // Lưu hoặc xóa email ghi nhớ
-        if (rememberMe) {
-          localStorage.setItem('remembered_email', formData.email);
-        } else {
-          localStorage.removeItem('remembered_email');
-        }
-        
-        navigate('/');
+      setAuthError(null);
+      await login(data.email, data.password);
+      
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', data.email);
       } else {
-        await register(formData.email, formData.password, formData.name);
-        setVerificationSent(true);
-        toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
-        setActiveTab('login');
+        localStorage.removeItem('remembered_email');
       }
+      
+      navigate('/');
+    } catch (error) {
+      handleAuthError(error);
+    }
+  };
+
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
+    try {
+      setAuthError(null);
+      await register(data.email, data.password, data.name);
+      setVerificationSent(true);
+      toast.success("Đăng ký thành công! Vui lòng kiểm tra email.");
+      setActiveTab('login');
+    } catch (error) {
+      handleAuthError(error);
+    }
+  };
+
+  const onForgotSubmit = async (data: ForgotPasswordFormValues) => {
+    try {
+      setAuthError(null);
+      await resetPassword(data.email);
+      toast.success('Đã gửi email khôi phục!');
+      setVerificationSent(true);
     } catch (error: any) {
-      const errorCode = error.code;
-      let message = "Đã có lỗi xảy ra. Vui lòng thử lại.";
-      
-      switch (errorCode) {
-        case 'auth/invalid-email':
-          message = "Email không hợp lệ.";
-          break;
-        case 'auth/user-disabled':
-          message = "Tài khoản này đã bị khóa.";
-          break;
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          message = "Email hoặc mật khẩu không chính xác.";
-          break;
-        case 'auth/email-already-in-use':
-          message = "Email này đã được sử dụng cho tài khoản khác.";
-          break;
-        case 'auth/weak-password':
-          message = "Mật khẩu quá yếu.";
-          break;
-        case 'auth/email-not-verified':
-          message = "Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn.";
-          break;
-        default:
-          message = error.message || "Thao tác thất bại.";
-      }
-      
-      setErrors({ auth: message });
+      let message = "Có lỗi xảy ra khi gửi email.";
+      if (error.code === 'auth/user-not-found') message = "Email này chưa được đăng ký.";
       toast.error(message);
     }
   };
@@ -116,44 +117,24 @@ const LoginPage: React.FC = () => {
   const handleResendEmail = async () => {
     try {
       await sendVerificationEmail();
-      setErrors(prev => ({ ...prev, auth: undefined }));
+      setAuthError(null);
       setVerificationSent(true);
       toast.success("Đã gửi lại email xác thực!");
-    } catch (error: any) {
-      toast.error("Không thể gửi email lúc này. Vui lòng thử lại sau.");
-    }
-  };
-
-  const handleResetSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email) {
-      setErrors({ email: 'Vui lòng nhập email' });
-      return;
-    }
-
-    try {
-      await resetPassword(formData.email);
-      setErrors({ success: 'Email đặt lại mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư.' });
-      toast.success('Đã gửi email khôi phục!');
-    } catch (error: any) {
-      let message = "Không tìm thấy email hoặc có lỗi xảy ra.";
-      if (error.code === 'auth/invalid-email') message = 'Email không hợp lệ';
-      if (error.code === 'auth/user-not-found') message = "Email này chưa được đăng ký.";
-      
-      toast.error(message);
+    } catch (error) {
+      toast.error("Không thể gửi email lúc này.");
     }
   };
 
   const handleTabChange = (tab: 'login' | 'register' | 'forgot') => {
     setActiveTab(tab);
-    setErrors({});
+    setAuthError(null);
+    setVerificationSent(false);
   };
 
   return (
     <div className="flex min-h-[100dvh] bg-bg-primary overflow-hidden transition-theme">
-      {/* Left Wall: Branding */}
+      {/* Cánh trái: Branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#4b8df8] to-[#0047b3] relative overflow-hidden">
-        {/* Decorative elements */}
         <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-[#000]/10 rounded-full blur-3xl pointer-events-none" />
         
@@ -162,23 +143,20 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div className="relative z-10 space-y-6">
-          <h2 className="text-6xl font-bold text-white leading-[1.1]">
-            Kết nối <br /> Mọi nơi.
-          </h2>
+          <h2 className="text-6xl font-bold text-white leading-[1.1]">Kết nối <br /> Mọi nơi.</h2>
           <p className="text-white/80 text-lg font-medium max-w-md">
-            Trải nghiệm mạng xã hội thế hệ mới với Smurfy. Kết nối, chia sẻ và trò chuyện với bạn bè một cách an toàn và riêng tư.
+            Trải nghiệm mạng xã hội thế hệ mới với Smurfy. An toàn và riêng tư.
           </p>
         </div>
 
         <div className="relative z-10 text-white/60 text-sm font-medium">
-          © {new Date().getFullYear()} Smurfy Social. Bảo lưu mọi quyền.
+          © {new Date().getFullYear()} Smurfy Social.
         </div>
       </div>
 
-      {/* Right Wall: Form Area */}
+      {/* Cánh phải: Form Area */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme">
         <div className="w-full max-w-[420px] fade-in">
-          {/* Logo mobile */}
           <div className="lg:hidden flex justify-center mb-8">
             <img src="/logo_text_blue.png" alt="Smurfy" className="h-10 object-contain" />
           </div>
@@ -188,19 +166,15 @@ const LoginPage: React.FC = () => {
               {activeTab === 'login' ? 'Chào mừng trở lại' : activeTab === 'register' ? 'Tham gia ngay' : 'Khôi phục mật khẩu'}
             </h1>
             <p className="text-text-tertiary text-sm font-medium">
-              {activeTab === 'login' 
-                ? "Đăng nhập để tiếp tục cuộc trò chuyện của bạn." 
-                : activeTab === 'register' 
-                  ? "Tạo tài khoản mới để bắt đầu kết nối." 
-                  : "Nhập email của bạn để lấy lại mật khẩu."}
+              {activeTab === 'login' ? "Đăng nhập để tiếp tục." : activeTab === 'register' ? "Tạo tài khoản mới." : "Nhập email của bạn."}
             </p>
           </div>
 
           {activeTab === 'forgot' ? (
-            <form onSubmit={handleResetSubmit} className="space-y-5">
-              {errors.success && (
+            <form onSubmit={forgotForm.handleSubmit(onForgotSubmit)} className="space-y-5">
+              {verificationSent && (
                 <div className="p-3 text-xs font-semibold text-success bg-success-light/30 border border-success/30 rounded-xl mb-4">
-                  {errors.success}
+                  Email đặt lại mật khẩu đã được gửi!
                 </div>
               )}
               
@@ -209,9 +183,8 @@ const LoginPage: React.FC = () => {
                 icon={<Mail size={18} />}
                 type="email"
                 placeholder="Nhập địa chỉ email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                error={errors.email}
+                {...forgotForm.register('email')}
+                error={forgotForm.formState.errors.email?.message}
                 autoComplete="email"
                 className="rounded-xl h-12"
               />
@@ -219,37 +192,31 @@ const LoginPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full h-12 text-sm font-bold rounded-xl shadow-md hover:shadow-primary/30 transition-all"
-                disabled={isLoading}
+                className="w-full h-12 text-sm font-bold rounded-xl shadow-md"
+                isLoading={isLoading}
               >
-                {isLoading ? 'Đang gửi...' : 'Gửi mã khôi phục'}
+                Gửi mã khôi phục
               </Button>
 
               <div className="text-center pt-2">
-                <Button 
-                  variant="ghost"
-                  type="button"
-                  onClick={() => handleTabChange('login')}
-                  className="text-sm text-text-secondary hover:text-primary font-semibold"
-                >
+                <Button variant="ghost" type="button" onClick={() => handleTabChange('login')}>
                   Quay lại đăng nhập
                 </Button>
               </div>
             </form>
           ) : (
             <div className="space-y-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {errors.auth && (
-                  <div className="p-3.5 bg-error/5 border border-error/20 rounded-xl flex items-start gap-3 animate-shake">
+              <form 
+                onSubmit={activeTab === 'login' ? loginForm.handleSubmit(onLoginSubmit) : registerForm.handleSubmit(onRegisterSubmit)} 
+                className="space-y-4"
+              >
+                {authError && (
+                  <div className="p-3.5 bg-error/5 border border-error/20 rounded-xl flex items-start gap-3">
                     <AlertCircle size={18} className="text-error shrink-0 mt-0.5" />
                     <div className="space-y-1.5 text-xs text-error font-medium leading-[1.4]">
-                      <p>{errors.auth}</p>
-                      {errors.auth.includes('xác thực email') && (
-                        <button 
-                          type="button"
-                          onClick={handleResendEmail}
-                          className="text-primary hover:underline font-bold block"
-                        >
+                      <p>{authError}</p>
+                      {authError.includes('xác thực email') && (
+                        <button type="button" onClick={handleResendEmail} className="text-primary hover:underline font-bold block">
                           Gửi lại email xác thực
                         </button>
                       )}
@@ -257,11 +224,11 @@ const LoginPage: React.FC = () => {
                   </div>
                 )}
 
-                {verificationSent && !errors.auth && (
+                {verificationSent && !authError && activeTab === 'login' && (
                   <div className="p-3.5 bg-success/5 border border-success/20 rounded-xl flex items-start gap-3">
                     <AlertCircle size={18} className="text-success shrink-0 mt-0.5" />
-                    <div className="text-xs text-success font-medium leading-[1.4]">
-                      Đã gửi link xác thực đến email của bạn. Vui lòng kiểm tra hộp thư (và cả thư rác).
+                    <div className="text-xs text-success font-medium">
+                      Đã gửi link xác thực. Vui lòng kiểm tra email.
                     </div>
                   </div>
                 )}
@@ -270,10 +237,9 @@ const LoginPage: React.FC = () => {
                   <Input
                     label="Họ và Tên"
                     icon={<User size={18} />}
-                    placeholder="Nhập họ tên của bạn"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    error={errors.name}
+                    placeholder="Nhập họ tên"
+                    {...registerForm.register('name')}
+                    error={registerForm.formState.errors.name?.message}
                     className="rounded-xl h-12"
                   />
                 )}
@@ -283,9 +249,8 @@ const LoginPage: React.FC = () => {
                   icon={<Mail size={18} />}
                   type="email"
                   placeholder="Nhập địa chỉ email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  error={errors.email}
+                  {...(activeTab === 'login' ? loginForm.register('email') : registerForm.register('email'))}
+                  error={activeTab === 'login' ? loginForm.formState.errors.email?.message : registerForm.formState.errors.email?.message}
                   autoComplete="email"
                   className="rounded-xl h-12"
                 />
@@ -296,16 +261,14 @@ const LoginPage: React.FC = () => {
                     icon={<Lock size={18} />}
                     type={showPassword ? "text" : "password"}
                     placeholder="Nhập mật khẩu"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    error={errors.password}
+                    {...(activeTab === 'login' ? loginForm.register('password') : registerForm.register('password'))}
+                    error={activeTab === 'login' ? loginForm.formState.errors.password?.message : registerForm.formState.errors.password?.message}
                     className="rounded-xl h-12"
                     rightElement={
                       <button
                         type="button"
-                        tabIndex={-1}
                         onClick={() => setShowPassword(!showPassword)}
-                        className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                        className="p-2 text-text-tertiary hover:text-text-secondary"
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
@@ -318,11 +281,7 @@ const LoginPage: React.FC = () => {
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
                       />
-                      <button 
-                        type="button"
-                        onClick={() => handleTabChange('forgot')}
-                        className="text-xs text-primary hover:underline font-bold"
-                      >
+                      <button type="button" onClick={() => handleTabChange('forgot')} className="text-xs text-primary hover:underline font-bold">
                         Quên mật khẩu?
                       </button>
                     </div>
@@ -335,16 +294,14 @@ const LoginPage: React.FC = () => {
                     icon={<Lock size={18} />}
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Xác nhận mật khẩu"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                    error={errors.confirmPassword}
+                    {...registerForm.register('confirmPassword')}
+                    error={registerForm.formState.errors.confirmPassword?.message}
                     className="rounded-xl h-12"
                     rightElement={
                       <button
                         type="button"
-                        tabIndex={-1}
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                        className="p-2 text-text-tertiary hover:text-text-secondary"
                       >
                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
@@ -355,32 +312,21 @@ const LoginPage: React.FC = () => {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full h-12 text-sm font-bold rounded-xl shadow-md hover:shadow-primary/30 transition-all mt-2"
-                  disabled={isLoading}
+                  className="w-full h-12 text-sm font-bold rounded-xl shadow-md mt-2"
+                  isLoading={isLoading}
                 >
-                  {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký')}
+                  {activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký'}
                 </Button>
               </form>
 
               <div className="text-center text-sm">
-                <span className="text-text-tertiary">
-                  {activeTab === 'login' ? "Chưa có tài khoản?" : "Đã có tài khoản?"}
-                </span>{' '}
-                <button
-                  onClick={() => handleTabChange(activeTab === 'login' ? 'register' : 'login')}
-                  className="text-primary hover:underline font-bold transition-all"
-                >
+                <span className="text-text-tertiary">{activeTab === 'login' ? "Chưa có tài khoản?" : "Đã có tài khoản?"}</span>{' '}
+                <button onClick={() => handleTabChange(activeTab === 'login' ? 'register' : 'login')} className="text-primary hover:underline font-bold">
                   {activeTab === 'login' ? 'Đăng ký ngay' : 'Đăng nhập'}
                 </button>
               </div>
             </div>
           )}
-
-          <div className="mt-12 text-center">
-            <p className="text-[11px] text-text-tertiary max-w-[300px] mx-auto leading-relaxed">
-              Bằng cách tiếp tục, bạn đồng ý với <a href="#" className="font-semibold text-text-secondary hover:text-primary">Điều khoản dịch vụ</a> & <a href="#" className="font-semibold text-text-secondary hover:text-primary">Chính sách quyền riêng tư</a>.
-            </p>
-          </div>
         </div>
       </div>
     </div>
