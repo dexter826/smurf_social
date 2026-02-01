@@ -111,12 +111,35 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           
           if (action === 'add') {
             const existing = state.rootComments[postId] || [];
-            const newComments = comments.filter(c => !existing.some(e => e.id === c.id));
-            if (newComments.length === 0) return {};
+            
+            // Xử lý trùng lặp với Optimistic UI
+            const optimisticMatches = new Set<string>();
+            const updatedExisting = existing.map(e => {
+              if (e.id.startsWith('temp-')) {
+                const match = comments.find(c => 
+                  c.userId === e.userId && 
+                  c.content === e.content &&
+                  Math.abs(c.timestamp.getTime() - e.timestamp.getTime()) < 30000 // Trong vòng 30s
+                );
+                if (match) {
+                  optimisticMatches.add(match.id);
+                  return match;
+                }
+              }
+              return e;
+            });
+
+            const newComments = comments.filter(c => 
+              !optimisticMatches.has(c.id) && 
+              !existing.some(e => e.id === c.id)
+            );
+
+            if (newComments.length === 0 && optimisticMatches.size === 0) return {};
+
             return { 
               rootComments: { 
                 ...state.rootComments, 
-                [postId]: [...newComments, ...existing].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+                [postId]: [...newComments, ...updatedExisting].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
               } 
             };
           }
@@ -168,14 +191,36 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           }
 
           if (action === 'add') {
-            const newReplies = replies.filter(r => !currentReplies.some(e => e.id === r.id));
-            if (newReplies.length === 0) return {};
+            // Xử lý trùng lặp với Optimistic UI cho replies
+            const optimisticMatches = new Set<string>();
+            const updatedReplies = currentReplies.map(e => {
+              if (e.id.startsWith('temp-')) {
+                const match = replies.find(r => 
+                  r.userId === e.userId && 
+                  r.content === e.content &&
+                  Math.abs(r.timestamp.getTime() - e.timestamp.getTime()) < 30000
+                );
+                if (match) {
+                  optimisticMatches.add(match.id);
+                  return match;
+                }
+              }
+              return e;
+            });
+
+            const newReplies = replies.filter(r => 
+              !optimisticMatches.has(r.id) && 
+              !currentReplies.some(e => e.id === r.id)
+            );
+
+            if (newReplies.length === 0 && optimisticMatches.size === 0) return {};
+
             return {
               replies: {
                 ...state.replies,
                 [postId]: { 
                   ...postReplies, 
-                  [parentId]: [...currentReplies, ...newReplies].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+                  [parentId]: [...updatedReplies, ...newReplies].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
                 }
               }
             };

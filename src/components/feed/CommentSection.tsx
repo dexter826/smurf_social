@@ -22,6 +22,7 @@ interface CommentSectionProps {
   autoFocus?: boolean;
   onProfileClick?: () => void;
   postOwnerId?: string;
+  totalCommentCount?: number;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
@@ -32,7 +33,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   variant = 'default',
   autoFocus = false,
   onProfileClick,
-  postOwnerId
+  postOwnerId,
+  totalCommentCount = 0
 }) => {
   const {
     rootComments,
@@ -358,14 +360,29 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     </button>
                   )
                 ) : (
-                  <>
-                    <div className="space-y-1">{commentReplies.map(reply => renderCommentItem(reply, true, comment.userId))}</div>
-                    {hasMoreR && (
-                      <button onClick={() => loadReplies(comment.id)} className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" disabled={isLoadingR}>
-                        {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
-                      </button>
-                    )}
-                  </>
+                  (() => {
+                    const filteredReplies = commentReplies.filter(r => 
+                      r.userId === currentUser.id || 
+                      r.userId === postOwnerId || 
+                      currentUser.friendIds?.includes(r.userId)
+                    );
+                    return (
+                      <>
+                        <div className="space-y-1">
+                          {filteredReplies.map(reply => renderCommentItem(reply, true, comment.userId))}
+                        </div>
+                        {hasMoreR && (
+                          <button 
+                            onClick={() => loadReplies(comment.id)} 
+                            className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" 
+                            disabled={isLoadingR}
+                          >
+                            {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()
                 )}
               </div>
             )}
@@ -381,22 +398,48 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         {header && <div className="bg-bg-primary">{header}</div>}
 
         <div className="pb-4">
-          {isLoading && currentRootComments.length === 0 ? (
-            <div className="px-4 py-4"><CommentSkeleton count={3} /></div>
-          ) : currentRootComments.length === 0 ? (
-            <div className="text-center py-10 text-text-secondary text-sm italic">Hãy là người đầu tiên bình luận!</div>
-          ) : (
-            <div className="flex flex-col">
-              {currentRootComments.map(comment => renderCommentItem(comment, false, comment.userId))}
-              {currentHasMoreRoot && (
-                <div className="px-6 py-4">
-                  <Button variant="ghost" size="sm" onClick={loadMoreRootComments} isLoading={isLoading} className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary">
-                    Xem thêm bình luận cũ...
-                  </Button>
+          {(() => {
+            const filteredRootComments = currentRootComments.filter(c => 
+              c.userId === currentUser.id || 
+              c.userId === postOwnerId || 
+              currentUser.friendIds?.includes(c.userId)
+            );
+
+            if (isLoading && filteredRootComments.length === 0) {
+              return <div className="px-4 py-4"><CommentSkeleton /></div>;
+            }
+
+            if (filteredRootComments.length === 0) {
+              return (
+                <div className="text-center py-10 px-6">
+                  <p className="text-text-secondary text-sm italic">
+                    {totalCommentCount > 0 
+                      ? `Có ${totalCommentCount} bình luận. Bạn chỉ xem được bình luận của bạn bè.`
+                      : 'Hãy là người đầu tiên bình luận!'}
+                  </p>
                 </div>
-              )}
-            </div>
-          )}
+              );
+            }
+
+            return (
+              <div className="flex flex-col">
+                {filteredRootComments.map(comment => renderCommentItem(comment, false, comment.userId))}
+                {currentHasMoreRoot && (
+                  <div className="px-6 py-4">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={loadMoreRootComments} 
+                      isLoading={isLoading} 
+                      className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary"
+                    >
+                      Xem thêm bình luận cũ...
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
