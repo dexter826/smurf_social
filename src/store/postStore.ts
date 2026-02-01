@@ -13,8 +13,8 @@ interface PostState {
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
 
-  fetchPosts: (currentUserId: string, friendIds: string[], loadMore?: boolean) => Promise<void>;
-  subscribeToPosts: (currentUserId: string, friendIds: string[]) => () => void;
+  fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
+  subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
   createPost: (userId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
   updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
   deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
@@ -59,7 +59,7 @@ export const usePostStore = create<PostState>()(
         });
       },
 
-      fetchPosts: async (currentUserId: string, friendIds: string[], loadMore = false) => {
+      fetchPosts: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], loadMore = false) => {
         const { abortController: currentController, posts } = get();
         if (currentController) {
           currentController.abort();
@@ -79,7 +79,7 @@ export const usePostStore = create<PostState>()(
         const { lastDoc } = get();
 
     try {
-      const result = await postService.getFeed(currentUserId, friendIds, PAGINATION.FEED_POSTS, loadMore ? lastDoc || undefined : undefined);
+      const result = await postService.getFeed(currentUserId, friendIds, blockedUserIds, PAGINATION.FEED_POSTS, loadMore ? lastDoc || undefined : undefined);
       
       if (newController.signal.aborted) return;
 
@@ -98,24 +98,47 @@ export const usePostStore = create<PostState>()(
         }
   },
 
-  subscribeToPosts: (currentUserId: string, friendIds: string[]) => {
-    // Luôn lắng nghe ít nhất 10 bài viết mới nhất.
+  subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds: string[] = []) => {
     const currentCount = Math.max(get().posts.length, 10);
-    const unsubscribe = postService.subscribeToFeed(currentUserId, friendIds, (newPosts) => {
-      set((state) => {
-        // Cập nhật bài viết mới mà không xóa bài cũ đã tải.
-        if (state.posts.length <= 10) {
-          return { posts: newPosts };
-        }
-
-        const existingIds = new Set(newPosts.map(p => p.id));
-        const olderPosts = state.posts.filter(p => !existingIds.has(p.id));
-        
-        return { 
-          posts: [...newPosts, ...olderPosts].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        };
-      });
-    }, currentCount);
+    
+    const unsubscribe = postService.subscribeToFeed(
+      currentUserId, 
+      friendIds, 
+      blockedUserIds,
+      (action, changedPosts) => {
+        set((state) => {
+          if (action === 'initial') {
+            return { posts: changedPosts };
+          }
+          
+          if (action === 'add') {
+            const existingIds = new Set(state.posts.map(p => p.id));
+            const newPosts = changedPosts.filter(p => !existingIds.has(p.id));
+            return { 
+              posts: [...newPosts, ...state.posts].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+            };
+          }
+          
+          if (action === 'update') {
+            return {
+              posts: state.posts.map(p => {
+                const updated = changedPosts.find(cp => cp.id === p.id);
+                return updated || p;
+              }),
+              selectedPost: state.selectedPost?.id === changedPosts[0]?.id ? changedPosts[0] : state.selectedPost
+            };
+          }
+          
+          if (action === 'remove') {
+            const removedIds = new Set(changedPosts.map(p => p.id));
+            return { posts: state.posts.filter(p => !removedIds.has(p.id)) };
+          }
+          
+          return {};
+        });
+      }, 
+      currentCount
+    );
 
     return unsubscribe;
   },

@@ -26,68 +26,78 @@ import { PAGINATION, FIREBASE_LIMITS } from '../constants';
 import { notificationService } from './notificationService';
 
 export const postService = {
-  getFeed: async (currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
+  getFeed: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
     try {
       if (!currentUserId) {
         console.warn("getFeed: currentUserId is missing");
         return { posts: [], lastDoc: null, hasMore: false };
       }
 
-      const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)];
+      // Lọc blocked users khỏi danh sách bạn bè
+      const validFriendIds = friendIds.filter(id => !!id && !blockedUserIds.includes(id));
       
-
-      
-      // Chia nhỏ query do giới hạn 'in' của Firestore
-      const chunks = chunkArray(allowedUserIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
-      
-      const allResults = await Promise.all(
-        chunks.map(async (chunk) => {
-          let q = query(
-            collection(db, 'posts'),
-            where('userId', 'in', chunk),
-            orderBy('timestamp', 'desc'),
-            limit(limitCount)
-          );
-
-          if (lastDoc) {
-            q = query(q, startAfter(lastDoc));
-          }
-
-          const querySnapshot = await getDocs(q);
-          return {
-            docs: querySnapshot.docs,
-            posts: querySnapshot.docs.map(doc => ({
-              ...doc.data(),
-              id: doc.id,
-              timestamp: doc.data().timestamp?.toDate() || new Date(),
-              editedAt: doc.data().editedAt?.toDate(),
-            })) as Post[]
-          };
-        })
+      // Query 1: Lấy TẤT CẢ bài viết của owner
+      let ownerQuery = query(
+        collection(db, 'posts'),
+        where('userId', '==', currentUserId),
+        orderBy('timestamp', 'desc'),
+        limit(limitCount)
       );
+      if (lastDoc) ownerQuery = query(ownerQuery, startAfter(lastDoc));
+      
+      const ownerSnapshot = await getDocs(ownerQuery);
+      const ownerPosts = ownerSnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+        timestamp: doc.data().timestamp?.toDate() || new Date(),
+        editedAt: doc.data().editedAt?.toDate(),
+      })) as Post[];
+      
+      // Query 2: Lấy bài viết của bạn bè (CHỈ visibility='friends')
+      let friendPosts: Post[] = [];
+      let friendDocs: DocumentSnapshot[] = [];
+      
+      if (validFriendIds.length > 0) {
+        const chunks = chunkArray(validFriendIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
+        
+        const friendResults = await Promise.all(
+          chunks.map(async (chunk) => {
+            let q = query(
+              collection(db, 'posts'),
+              where('userId', 'in', chunk),
+              where('visibility', '==', 'friends'),
+              orderBy('timestamp', 'desc'),
+              limit(limitCount)
+            );
+            if (lastDoc) q = query(q, startAfter(lastDoc));
+            
+            const snapshot = await getDocs(q);
+            return {
+              docs: snapshot.docs,
+              posts: snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                timestamp: doc.data().timestamp?.toDate() || new Date(),
+                editedAt: doc.data().editedAt?.toDate(),
+              })) as Post[]
+            };
+          })
+        );
+        
+        friendPosts = friendResults.flatMap(r => r.posts);
+        friendDocs = friendResults.flatMap(r => r.docs);
+      }
 
-      // Gộp và sắp xếp theo thời gian
-      const allPosts = allResults.flatMap(r => r.posts);
+      // Merge, sort và giới hạn
+      const allPosts = [...ownerPosts, ...friendPosts];
       allPosts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
       
-      // Giới hạn số lượng
-      // Lọc theo quyền riêng tư.
-      const filteredPosts = allPosts.filter(post => {
-        const isOwner = post.userId === currentUserId;
-        const isFriend = friendIds?.includes(post.userId) || false;
-        
-        if (isOwner) return true;
-        if (isFriend) return post.visibility === 'friends';
-        
-        return false;
-      });
-
-      const finalPosts = filteredPosts.slice(0, limitCount);
-      const allDocs = allResults.flatMap(r => r.docs);
+      const finalPosts = allPosts.slice(0, limitCount);
+      const allDocs = [...ownerSnapshot.docs, ...friendDocs];
       
       const lastPost = finalPosts[finalPosts.length - 1];
       const lastVisible = lastPost ? allDocs.find(d => d.id === lastPost.id) || null : null;
-      const hasMore = filteredPosts.length > limitCount || (allDocs.length >= limitCount && filteredPosts.length > 0);
+      const hasMore = allPosts.length > limitCount;
 
       return { posts: finalPosts, lastDoc: lastVisible, hasMore };
     } catch (error) {
@@ -96,77 +106,105 @@ export const postService = {
     }
   },
 
-  subscribeToFeed: (currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.FEED_POSTS) => {
+  subscribeToFeed: (
+    currentUserId: string, 
+    friendIds: string[], 
+    blockedUserIds: string[] = [],
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', posts: Post[]) => void, 
+    limitCount: number = PAGINATION.FEED_POSTS
+  ) => {
     if (!currentUserId) {
       console.warn("subscribeToFeed: thiếu currentUserId");
-      callback([]);
+      callback('initial', []);
       return () => {};
     }
 
-    const allowedUserIds = [currentUserId, ...friendIds.filter(id => !!id)];
-    const chunks = chunkArray(allowedUserIds, 10);
+    // Lọc blocked users
+    const validFriendIds = friendIds.filter(id => !!id && !blockedUserIds.includes(id));
+    const unsubscribers: (() => void)[] = [];
+    let isInitialLoad = true;
+    let allCurrentPosts: Post[] = [];
 
-    // Lắng nghe thay đổi trên từng chunk
-    const unsubscribers = chunks.map(chunk => {
-      const q = query(
-        collection(db, 'posts'),
-        where('userId', 'in', chunk),
-        orderBy('timestamp', 'desc'),
-        limit(limitCount)
-      );
+    const convertDocToPost = (doc: DocumentSnapshot): Post => ({
+      ...doc.data(),
+      id: doc.id,
+      timestamp: doc.data()?.timestamp?.toDate() || new Date(),
+      editedAt: doc.data()?.editedAt?.toDate(),
+    } as Post);
 
-      return onSnapshot(q, () => {
-        // Reload lại toàn bộ feed khi có thay đổi
-        refreshFeed();
-      }, (error) => {
-        console.error("Lỗi subscribe bài viết", error);
-      });
-    });
+    // Query 1: Posts của owner
+    const ownerQuery = query(
+      collection(db, 'posts'),
+      where('userId', '==', currentUserId),
+      orderBy('timestamp', 'desc'),
+      limit(limitCount)
+    );
+    
+    unsubscribers.push(
+      onSnapshot(ownerQuery, (snapshot) => {
+        if (isInitialLoad) return;
+        
+        snapshot.docChanges().forEach(change => {
+          const post = convertDocToPost(change.doc);
+          if (change.type === 'added') {
+            allCurrentPosts = [post, ...allCurrentPosts.filter(p => p.id !== post.id)];
+            callback('add', [post]);
+          } else if (change.type === 'modified') {
+            allCurrentPosts = allCurrentPosts.map(p => p.id === post.id ? post : p);
+            callback('update', [post]);
+          } else if (change.type === 'removed') {
+            allCurrentPosts = allCurrentPosts.filter(p => p.id !== post.id);
+            callback('remove', [post]);
+          }
+        });
+      }, (error) => console.error("Lỗi subscribe owner posts", error))
+    );
 
-    const refreshFeed = async () => {
-      try {
-        const allResults = await Promise.all(
-          chunks.map(async (chunk) => {
-            const q = query(
-              collection(db, 'posts'),
-              where('userId', 'in', chunk),
-              orderBy('timestamp', 'desc'),
-              limit(limitCount)
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({
-              ...doc.data(),
-              id: doc.id,
-              timestamp: doc.data().timestamp?.toDate() || new Date(),
-              editedAt: doc.data().editedAt?.toDate(),
-            })) as Post[];
-          })
+    // Query 2: Posts của bạn bè (chỉ visibility='friends')
+    if (validFriendIds.length > 0) {
+      const chunks = chunkArray(validFriendIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
+      
+      chunks.forEach(chunk => {
+        const friendQuery = query(
+          collection(db, 'posts'),
+          where('userId', 'in', chunk),
+          where('visibility', '==', 'friends'),
+          orderBy('timestamp', 'desc'),
+          limit(limitCount)
         );
-
-        const allPosts = allResults.flat();
-        allPosts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
         
-        // Lọc theo quyền riêng tư
-        const posts = allPosts.filter(post => {
-          const isOwner = post.userId === currentUserId;
-          const isFriend = friendIds?.includes(post.userId) || false;
-          
-          if (isOwner) return true;
-          if (isFriend) return post.visibility === 'friends';
-          
-          return false;
-        }).slice(0, limitCount);
-        
-        callback(posts);
-      } catch (error) {
-        console.error("Lỗi refresh feed", error);
-      }
-    };
+        unsubscribers.push(
+          onSnapshot(friendQuery, (snapshot) => {
+            if (isInitialLoad) return;
+            
+            snapshot.docChanges().forEach(change => {
+              const post = convertDocToPost(change.doc);
+              if (change.type === 'added') {
+                allCurrentPosts = [post, ...allCurrentPosts.filter(p => p.id !== post.id)];
+                callback('add', [post]);
+              } else if (change.type === 'modified') {
+                allCurrentPosts = allCurrentPosts.map(p => p.id === post.id ? post : p);
+                callback('update', [post]);
+              } else if (change.type === 'removed') {
+                allCurrentPosts = allCurrentPosts.filter(p => p.id !== post.id);
+                callback('remove', [post]);
+              }
+            });
+          }, (error) => console.error("Lỗi subscribe friend posts", error))
+        );
+      });
+    }
 
     // Initial load
-    refreshFeed();
+    const loadInitial = async () => {
+      const result = await postService.getFeed(currentUserId, friendIds, blockedUserIds, limitCount);
+      allCurrentPosts = result.posts;
+      isInitialLoad = false;
+      callback('initial', result.posts);
+    };
+    
+    loadInitial();
 
-    // Return unsubscribe function
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };

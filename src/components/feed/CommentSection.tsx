@@ -37,7 +37,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     replies,
     hasMoreRoot,
     hasMoreReply,
-    isLoading,
+    isLoadingPost,
     fetchRootComments,
     fetchReplies,
     addComment,
@@ -62,6 +62,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const currentRootComments = rootComments[postId] || [];
   const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
+  const isLoading = isLoadingPost(postId);
+  const blockedUserIds = currentUser.blockedUserIds || [];
 
   useEffect(() => {
     loadInitialRootComments();
@@ -79,18 +81,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   }, [currentRootComments, fetchUsers]);
 
   const loadInitialRootComments = async () => {
-    await fetchRootComments(postId);
+    await fetchRootComments(postId, blockedUserIds);
   };
 
   const loadMoreRootComments = async () => {
-    await fetchRootComments(postId, true);
+    await fetchRootComments(postId, blockedUserIds, true);
   };
 
   const loadReplies = async (parentId: string, isInitial = true) => {
     if (isLoadingReplyMap[parentId]) return;
     setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
     try {
-      await fetchReplies(postId, parentId, !isInitial);
+      await fetchReplies(postId, parentId, blockedUserIds, !isInitial);
       // Fetch user data cho replies
       const parentReplies = replies[postId]?.[parentId] || [];
       const userIds = [...new Set(parentReplies.map(r => r.userId))];

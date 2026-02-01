@@ -35,7 +35,8 @@ export const useFeed = (): UseFeedReturn => {
   
   const handleLoadMore = useCallback(() => {
     if (!currentUser || isLoading || !hasMore) return;
-    fetchPosts(currentUser.id, currentUser.friendIds || [], true);
+    const blockedUserIds = currentUser.blockedUserIds || [];
+    fetchPosts(currentUser.id, currentUser.friendIds || [], blockedUserIds, true);
   }, [currentUser, isLoading, hasMore, fetchPosts]);
 
   const observerRef = useIntersectionObserver(handleLoadMore, {
@@ -45,13 +46,15 @@ export const useFeed = (): UseFeedReturn => {
   const handleFetchPosts = useCallback(() => {
     if (!currentUser) return;
     const friendIds = currentUser.friendIds || [];
-    fetchPosts(currentUser.id, friendIds);
+    const blockedUserIds = currentUser.blockedUserIds || [];
+    fetchPosts(currentUser.id, friendIds, blockedUserIds);
   }, [currentUser, fetchPosts]);
 
   const handleSubscribeToPosts = useCallback(() => {
     if (!currentUser) return;
     const friendIds = currentUser.friendIds || [];
-    return subscribeToPosts(currentUser.id, friendIds);
+    const blockedUserIds = currentUser.blockedUserIds || [];
+    return subscribeToPosts(currentUser.id, friendIds, blockedUserIds);
   }, [currentUser, subscribeToPosts]);
 
   // Lấy dữ liệu ban đầu và theo dõi
