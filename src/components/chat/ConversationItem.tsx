@@ -55,7 +55,12 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 
   const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
   const isUnread = (unreadCount > 0 || conversation.markedUnread) && !isActive;
-  const lastMessage = conversation.lastMessage;
+  
+  const joinedAt = conversation.memberJoinedAt?.[currentUserId];
+  const lastMessage = conversation.isGroup && joinedAt && conversation.lastMessage
+    ? (new Date(conversation.lastMessage.timestamp) >= new Date(joinedAt) ? conversation.lastMessage : undefined)
+    : conversation.lastMessage;
+
   const lastMessagePreview = lastMessage
     ? lastMessage.type === 'text'
       ? lastMessage.content.replace(/@\[([^\]]+)\]/g, '@$1')
@@ -73,7 +78,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   const isLastMessageRead = readers.length > 0;
   const isLastMessageDelivered = !!lastMessage?.deliveredAt;
 
-  const timeAgo = conversation.updatedAt ? formatChatTime(conversation.updatedAt) : '';
+  const displayTime = (!lastMessage && conversation.isGroup && joinedAt) 
+    ? joinedAt 
+    : conversation.updatedAt;
+
+  const timeAgo = displayTime ? formatChatTime(displayTime) : '';
 
   return (
     <div

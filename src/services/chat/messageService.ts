@@ -28,13 +28,24 @@ export const messageService = {
     conversationId: string,
     limitCount: number,
     callback: (messages: Message[], lastDoc: any) => void,
+    joinedAt?: Date,
   ) => {
-    const q = query(
+    let q = query(
       collection(db, "messages"),
       where("conversationId", "==", conversationId),
       orderBy("timestamp", "desc"),
       limit(limitCount),
     );
+
+    if (joinedAt) {
+      q = query(
+        collection(db, "messages"),
+        where("conversationId", "==", conversationId),
+        where("timestamp", ">=", joinedAt),
+        orderBy("timestamp", "desc"),
+        limit(limitCount),
+      );
+    }
 
     return onSnapshot(
       q,
@@ -68,15 +79,27 @@ export const messageService = {
     conversationId: string,
     lastVisibleDoc: any,
     limitCount: number,
+    joinedAt?: Date,
   ): Promise<{ messages: Message[]; lastDoc: any }> => {
     try {
-      const q = query(
+      let q = query(
         collection(db, "messages"),
         where("conversationId", "==", conversationId),
         orderBy("timestamp", "desc"),
         startAfter(lastVisibleDoc),
         limit(limitCount),
       );
+
+      if (joinedAt) {
+        q = query(
+          collection(db, "messages"),
+          where("conversationId", "==", conversationId),
+          where("timestamp", ">=", joinedAt),
+          orderBy("timestamp", "desc"),
+          startAfter(lastVisibleDoc),
+          limit(limitCount),
+        );
+      }
 
       const snapshot = await getDocs(q);
       const messages = snapshot.docs

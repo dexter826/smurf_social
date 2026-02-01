@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
 import { Message } from '../../types';
 import { chatService } from '../../services/chatService';
+import { useAuthStore } from '../authStore';
 
 export interface MessageSlice {
   messages: Record<string, Message[]>;
@@ -42,26 +43,35 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
   uploadProgress: {},
 
   subscribeToMessages: (conversationId: string) => {
+    const { conversations } = (get() as any);
+    const conversation = conversations.find((c: any) => c.id === conversationId);
+    const currentUser = useAuthStore.getState().user;
+    const joinedAt = conversation?.memberJoinedAt?.[currentUser?.id || ''];
+
     const unsubscribe = chatService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
       set((state) => ({
         messages: { ...state.messages, [conversationId]: messages },
         lastMessageDocs: { ...state.lastMessageDocs, [conversationId]: lastDoc },
         hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: messages.length >= LIMIT_PER_PAGE }
       }));
-    });
+    }, joinedAt);
     return unsubscribe;
   },
 
   loadMoreMessages: async (conversationId: string) => {
-    const { lastMessageDocs, isLoadingMore, hasMoreMessages } = get();
+    const { lastMessageDocs, isLoadingMore, hasMoreMessages, conversations } = get() as any;
     const lastDoc = lastMessageDocs[conversationId];
     
     if (!lastDoc || isLoadingMore[conversationId] || hasMoreMessages[conversationId] === false) return;
 
+    const conversation = conversations.find((c: any) => c.id === conversationId);
+    const currentUser = useAuthStore.getState().user;
+    const joinedAt = conversation?.memberJoinedAt?.[currentUser?.id || ''];
+
     set((state) => ({ isLoadingMore: { ...state.isLoadingMore, [conversationId]: true } }));
 
     try {
-      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE);
+      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt);
       
       set((state) => ({
         messages: { ...state.messages, [conversationId]: [...result.messages, ...(state.messages[conversationId] || [])] },

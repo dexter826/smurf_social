@@ -85,6 +85,7 @@ export interface Conversation {
   archived?: boolean;
   markedUnread?: boolean;
   typingUsers?: string[];
+  memberJoinedAt?: Record<string, Date>;
 }
 
 export interface Comment {

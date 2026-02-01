@@ -101,6 +101,10 @@ export const conversationService = {
           participants,
           updatedAt: data.updatedAt?.toDate() || new Date(),
           createdAt: data.createdAt?.toDate() || new Date(),
+          memberJoinedAt: data.memberJoinedAt ? Object.keys(data.memberJoinedAt).reduce((acc, uid) => ({
+            ...acc,
+            [uid]: data.memberJoinedAt[uid]?.toDate() || new Date()
+          }), {}) : undefined,
           lastMessage: data.lastMessage ? {
             ...data.lastMessage,
             timestamp: data.lastMessage.timestamp?.toDate() || new Date()
