@@ -98,9 +98,10 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   };
 
   const handleFormSubmit = async (data: CommentFormValues) => {
+    const submittedData = { ...data };
+    reset();
     try {
-      await onSubmit(data.content || '', data.image, data.video);
-      reset();
+      await onSubmit(submittedData.content || '', submittedData.image, submittedData.video);
     } catch (error) {
       console.error('Lỗi gửi bình luận:', error);
     }

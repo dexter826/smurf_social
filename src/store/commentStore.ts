@@ -13,10 +13,11 @@ interface CommentState {
   lastReplyDoc: Record<string, Record<string, DocumentSnapshot | null>>;
   hasMoreReply: Record<string, Record<string, boolean>>;
   
-  isLoading: boolean;
+  loadingPosts: Record<string, boolean>;
 
-  fetchRootComments: (postId: string, loadMore?: boolean) => Promise<void>;
-  fetchReplies: (postId: string, parentId: string, loadMore?: boolean) => Promise<void>;
+  fetchRootComments: (postId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
+  fetchReplies: (postId: string, parentId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
+  subscribeToComments: (postId: string, blockedUserIds?: string[]) => () => void;
   addComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string, videoUrl?: string) => Promise<string>;
   updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null, videoUrl?: string | null) => Promise<void>;
   deleteComment: (postId: string, commentId: string, parentId?: string | null) => Promise<void>;
@@ -28,6 +29,7 @@ interface CommentState {
   addReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   clearComments: (postId: string) => void;
   updateCommentInStore: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null, videoUrl?: string | null) => void;
+  isLoadingPost: (postId: string) => boolean;
   reset: () => void;
 }
 
@@ -38,7 +40,9 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   hasMoreRoot: {},
   lastReplyDoc: {},
   hasMoreReply: {},
-  isLoading: false,
+  loadingPosts: {},
+
+  isLoadingPost: (postId: string) => get().loadingPosts[postId] || false,
 
   reset: () => {
     set({
@@ -48,18 +52,18 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       hasMoreRoot: {},
       lastReplyDoc: {},
       hasMoreReply: {},
-      isLoading: false,
+      loadingPosts: {},
     });
   },
 
-  fetchRootComments: async (postId: string, loadMore = false) => {
-    const { lastRootDoc, rootComments, isLoading } = get();
-    if (isLoading) return;
+  fetchRootComments: async (postId: string, blockedUserIds: string[] = [], loadMore = false) => {
+    const { lastRootDoc, loadingPosts } = get();
+    if (loadingPosts[postId]) return;
 
-    set({ isLoading: true });
+    set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
       const lastDoc = loadMore ? lastRootDoc[postId] : undefined;
-      const result = await commentService.getRootComments(postId, 5, lastDoc || undefined);
+      const result = await commentService.getRootComments(postId, blockedUserIds, 5, lastDoc || undefined);
       
       if (loadMore) {
         get().addRootComments(postId, result.comments, result.lastDoc, result.hasMore);
@@ -69,18 +73,18 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     } catch (error) {
       console.error('Lỗi tải bình luận gốc:', error);
     } finally {
-      set({ isLoading: false });
+      set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: false } }));
     }
   },
 
-  fetchReplies: async (postId: string, parentId: string, loadMore = false) => {
-    const { lastReplyDoc, isLoading } = get();
-    if (isLoading) return;
+  fetchReplies: async (postId: string, parentId: string, blockedUserIds: string[] = [], loadMore = false) => {
+    const { lastReplyDoc, loadingPosts } = get();
+    if (loadingPosts[postId]) return;
 
-    set({ isLoading: true });
+    set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
       const lastDoc = loadMore ? lastReplyDoc[postId]?.[parentId] : undefined;
-      const result = await commentService.getReplies(parentId, 3, lastDoc || undefined);
+      const result = await commentService.getReplies(parentId, blockedUserIds, 3, lastDoc || undefined);
       
       if (loadMore) {
         get().addReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
@@ -90,8 +94,57 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     } catch (error) {
       console.error('Lỗi tải phản hồi:', error);
     } finally {
-      set({ isLoading: false });
+      set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: false } }));
     }
+  },
+
+  subscribeToComments: (postId: string, blockedUserIds: string[] = []) => {
+    return commentService.subscribeToComments(
+      postId,
+      blockedUserIds,
+      (action, comments, isReply, parentId) => {
+        set(state => {
+          if (action === 'initial') {
+            return { rootComments: { ...state.rootComments, [postId]: comments } };
+          }
+          
+          if (action === 'add') {
+            const existing = state.rootComments[postId] || [];
+            const newComments = comments.filter(c => !existing.some(e => e.id === c.id));
+            return { 
+              rootComments: { 
+                ...state.rootComments, 
+                [postId]: [...newComments, ...existing].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+              } 
+            };
+          }
+          
+          if (action === 'update') {
+            return {
+              rootComments: {
+                ...state.rootComments,
+                [postId]: (state.rootComments[postId] || []).map(c => {
+                  const updated = comments.find(uc => uc.id === c.id);
+                  return updated || c;
+                })
+              }
+            };
+          }
+          
+          if (action === 'remove') {
+            const removedIds = new Set(comments.map(c => c.id));
+            return {
+              rootComments: {
+                ...state.rootComments,
+                [postId]: (state.rootComments[postId] || []).filter(c => !removedIds.has(c.id))
+              }
+            };
+          }
+          
+          return {};
+        });
+      }
+    );
   },
 
   addComment: async (postId, userId, content, parentId, replyToUserId, imageUrl, videoUrl) => {

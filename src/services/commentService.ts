@@ -15,7 +15,9 @@ import {
   limit,
   startAfter,
   DocumentSnapshot,
-  increment
+  increment,
+  writeBatch,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Comment, NotificationType } from '../types';
@@ -24,7 +26,7 @@ import { notificationService } from './notificationService';
 
 export const commentService = {
   // Lấy danh sách bình luận gốc của bài viết
-  getRootComments: async (postId: string, limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
+  getRootComments: async (postId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
         collection(db, 'comments'),
@@ -42,11 +44,13 @@ export const commentService = {
       const hasMore = snapshot.docs.length > limitCount;
       const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
-      const comments = docsToProcess.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
-      })) as Comment[];
+      const comments = docsToProcess
+        .map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          timestamp: doc.data().timestamp?.toDate() || new Date(),
+        }) as Comment)
+        .filter(c => !blockedUserIds.includes(c.userId));
 
       return {
         comments,
@@ -60,7 +64,7 @@ export const commentService = {
   },
 
   // Lấy các phản hồi của một bình luận
-  getReplies: async (commentId: string, limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
+  getReplies: async (commentId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
         collection(db, 'comments'),
@@ -77,11 +81,13 @@ export const commentService = {
       const hasMore = snapshot.docs.length > limitCount;
       const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
-      const replies = docsToProcess.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
-      })) as Comment[];
+      const replies = docsToProcess
+        .map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          timestamp: doc.data().timestamp?.toDate() || new Date(),
+        }) as Comment)
+        .filter(c => !blockedUserIds.includes(c.userId));
 
       return {
         replies,
@@ -166,27 +172,32 @@ export const commentService = {
   // Xóa bình luận và toàn bộ phản hồi con
   deleteComment: async (commentId: string, postId: string, parentId?: string | null) => {
     try {
+      const batch = writeBatch(db);
+
       const repliesQuery = query(collection(db, 'comments'), where('parentId', '==', commentId));
       const repliesSnapshot = await getDocs(repliesQuery);
       const repliesToDelete = repliesSnapshot.docs;
 
-      const deletePromises = repliesToDelete.map(doc => deleteDoc(doc.ref));
-      await Promise.all(deletePromises);
+      repliesToDelete.forEach(replyDoc => {
+        batch.delete(replyDoc.ref);
+      });
 
-      await deleteDoc(doc(db, 'comments', commentId));
+      batch.delete(doc(db, 'comments', commentId));
 
       const totalDeleted = 1 + repliesToDelete.length;
       const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
+      batch.update(postRef, {
         commentCount: increment(-totalDeleted)
       });
 
       if (parentId) {
         const parentRef = doc(db, 'comments', parentId);
-        await updateDoc(parentRef, {
+        batch.update(parentRef, {
           replyCount: increment(-1)
         });
       }
+
+      await batch.commit();
     } catch (error) {
       console.error("Lỗi xóa comment:", error);
       throw error;
@@ -252,5 +263,56 @@ export const commentService = {
       console.error("Lỗi lấy comment:", error);
       return null;
     }
+  },
+
+  // Realtime subscription cho comments của một post
+  subscribeToComments: (
+    postId: string,
+    blockedUserIds: string[] = [],
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', comments: Comment[], isReply: boolean, parentId?: string) => void,
+    limitCount: number = PAGINATION.COMMENTS
+  ) => {
+    const convertDocToComment = (docSnap: DocumentSnapshot): Comment => ({
+      ...docSnap.data(),
+      id: docSnap.id,
+      timestamp: docSnap.data()?.timestamp?.toDate() || new Date(),
+    } as Comment);
+
+    const rootQuery = query(
+      collection(db, 'comments'),
+      where('postId', '==', postId),
+      where('parentId', '==', null),
+      orderBy('timestamp', 'desc'),
+      limit(limitCount)
+    );
+
+    let isInitialLoad = true;
+
+    const unsubscribe = onSnapshot(rootQuery, (snapshot) => {
+      if (isInitialLoad) {
+        const comments = snapshot.docs
+          .map(convertDocToComment)
+          .filter(c => !blockedUserIds.includes(c.userId));
+        callback('initial', comments, false);
+        isInitialLoad = false;
+        return;
+      }
+
+      snapshot.docChanges().forEach(change => {
+        const comment = convertDocToComment(change.doc);
+        
+        if (blockedUserIds.includes(comment.userId)) return;
+
+        if (change.type === 'added') {
+          callback('add', [comment], false);
+        } else if (change.type === 'modified') {
+          callback('update', [comment], false);
+        } else if (change.type === 'removed') {
+          callback('remove', [comment], false);
+        }
+      });
+    }, (error) => console.error("Lỗi subscribe comments:", error));
+
+    return unsubscribe;
   }
 };
