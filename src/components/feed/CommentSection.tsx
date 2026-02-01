@@ -374,7 +374,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                         {hasMoreR && (
                           <button 
                             onClick={() => loadReplies(comment.id)} 
-                            className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" 
+                            className="text-primary hover:underline text-[10px] font-bold ml-10 mt-2 uppercase tracking-wider transition-all" 
                             disabled={isLoadingR}
                           >
                             {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
@@ -431,7 +431,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       size="sm" 
                       onClick={loadMoreRootComments} 
                       isLoading={isLoading} 
-                      className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary"
+                      className="text-primary w-full justify-start font-bold text-xs h-10 border-border-light hover:bg-bg-primary uppercase tracking-widest"
                     >
                       Xem thêm bình luận cũ...
                     </Button>

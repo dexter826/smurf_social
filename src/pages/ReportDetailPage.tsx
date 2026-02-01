@@ -344,7 +344,7 @@ const ReportDetailPage: React.FC = () => {
                           {shouldTruncate && (
                             <button 
                               onClick={() => setIsExpanded(!isExpanded)}
-                              className="text-text-secondary font-bold hover:underline ml-2 text-sm"
+                              className="text-primary font-bold cursor-pointer hover:underline ml-2 transition-all text-xs md:text-sm uppercase tracking-wider"
                             >
                               {isExpanded ? 'Thu gọn' : 'Xem thêm'}
                             </button>

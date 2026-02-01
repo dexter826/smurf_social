@@ -128,11 +128,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const isOwner = post.userId === currentUser.id;
   const hasMedia = allMedia.length > 0;
   const modalClassName = hasMedia
-    ? "m-0 md:m-4 md:rounded-3xl shadow-none"
+    ? "m-0 md:m-6 lg:m-10 md:rounded-[32px] shadow-none"
     : "md:max-h-[90vh] shadow-none";
   const containerClassName = hasMedia
-    ? "flex flex-col lg:flex-row h-[100dvh] lg:min-h-[90vh] lg:h-[92vh] bg-bg-primary lg:rounded-3xl relative transition-all duration-300 w-full border border-border-light shadow-2xl"
-    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary md:rounded-2xl relative transition-all duration-300 w-full border border-border-light shadow-2xl";
+    ? "flex flex-col lg:flex-row h-[100dvh] lg:h-[85vh] xl:h-[88vh] bg-bg-primary lg:rounded-[32px] relative transition-all duration-500 w-full border border-border-light shadow-2xl overflow-hidden"
+    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary md:rounded-2xl relative transition-all duration-500 w-full border border-border-light shadow-2xl overflow-hidden";
 
   return (
     <Modal 
@@ -142,6 +142,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       maxWidth={hasMedia ? "7xl" : "lg"} 
       padding="none"
       className={modalClassName}
+      bodyClassName="!overflow-hidden"
     >
       <div className={containerClassName}>
 
@@ -150,18 +151,18 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           <div className="hidden lg:flex flex-[1.6] bg-bg-secondary items-center justify-center relative group select-none overflow-hidden touch-none grow shrink-0 border-r border-border-light">
             <div className="w-full h-full relative z-10">
               {/* Media Content */}
-              <div className="w-full h-full flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center bg-black/5">
                 {allMedia[mediaIndex].type === 'video' ? (
                   <video 
                     src={allMedia[mediaIndex].url} 
                     controls 
-                    className="max-w-full max-h-full object-contain"
+                    className="max-w-full max-h-full object-contain shadow-2xl"
                   />
                 ) : (
                   <img 
                     src={allMedia[mediaIndex].url} 
                     alt="" 
-                    className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-500"
+                    className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-500 shadow-2xl"
                   />
                 )}
               </div>
@@ -174,7 +175,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     className={`
                       absolute left-4 top-1/2 -translate-y-1/2 z-20
                       w-12 h-12 flex items-center justify-center 
-                      bg-bg-primary/30 backdrop-blur-lg text-text-primary 
+                      bg-bg-primary/30 backdrop-blur-lg text-white 
                       rounded-full border-none outline-none shadow-sm
                       transition-all duration-300 ease-in-out
                       opacity-0 group-hover:opacity-100 will-change-transform
@@ -190,7 +191,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     className={`
                       absolute right-4 top-1/2 -translate-y-1/2 z-20
                       w-12 h-12 flex items-center justify-center 
-                      bg-bg-primary/30 backdrop-blur-lg text-text-primary 
+                      bg-bg-primary/30 backdrop-blur-lg text-white 
                       rounded-full border-none outline-none shadow-sm
                       transition-all duration-300 ease-in-out
                       opacity-0 group-hover:opacity-100 will-change-transform
@@ -201,8 +202,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     <ChevronRight size={32} strokeWidth={2.5} />
                   </button>
 
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-bg-tertiary/60 backdrop-blur-md text-text-primary px-3 py-1 rounded-full text-[12px] font-bold border border-border-light tracking-wider shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
-                    {mediaIndex + 1} / {allMedia.length}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-bg-primary/40 backdrop-blur-xl text-text-primary px-4 py-1.5 rounded-full text-[13px] font-bold border border-white/10 tracking-widest shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
+                    {mediaIndex + 1} <span className="mx-1 opacity-50">/</span> {allMedia.length}
                   </div>
                 </>
               )}
@@ -211,11 +212,10 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         )}
 
         {/* Panel noi dung va tuong tac */}
-        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 ${hasMedia ? 'w-full lg:w-[440px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
+        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 overflow-hidden ${hasMedia ? 'w-full lg:w-[480px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
           
-          {/* Header thong tin tac gia (Sticky cho cả mobile và desktop) */}
-          <div className="p-3 md:p-4 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary sticky top-0 z-30 shadow-sm md:shadow-none">
-            <div className="flex gap-2.5 items-center flex-1 min-w-0">
+          <div className="p-4 md:p-5 lg:p-6 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary/80 backdrop-blur-xl z-30">
+            <div className="flex gap-3 items-center flex-1 min-w-0">
               <UserAvatar 
                 userId={author?.id} 
                 src={author?.avatar} 
@@ -226,20 +226,20 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               />
               <div className="min-w-0 flex-1">
                 <h3 
-                  className="font-semibold text-text-primary text-[15px] truncate max-w-full cursor-pointer hover:underline"
+                  className="font-bold text-text-primary text-[16px] tracking-tight truncate max-w-full cursor-pointer hover:text-primary transition-colors"
                   onClick={handleProfileClick}
                 >
                   {author?.name || 'Unknown User'}
                 </h3>
-                <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
-                  <span title={formatDateTime(post.timestamp)}>
+                <div className="flex items-center gap-2 text-[12px] text-text-tertiary font-semibold mt-0.5">
+                  <span title={formatDateTime(post.timestamp)} className="hover:text-text-secondary transition-colors cursor-default">
                     {formatRelativeTime(post.timestamp)}
                   </span>
-                  <span>•</span>
+                  <span className="opacity-40">•</span>
                   {post.visibility === 'friends' ? (
-                    <Users size={12} title="Bạn bè" />
+                    <Users size={13} title="Bạn bè" strokeWidth={2.5} className="opacity-80" />
                   ) : (
-                    <Lock size={12} title="Chỉ mình tôi" />
+                    <Lock size={13} title="Chỉ mình tôi" strokeWidth={2.5} className="opacity-80" />
                   )}
                 </div>
               </div>
@@ -248,26 +248,30 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             <div className="flex items-center gap-2">
               {isOwner ? (
                 <Dropdown
-                  trigger={<IconButton icon={<MoreHorizontal size={20} />} size="sm" className="text-text-secondary hover:text-text-primary" />}
-                  menuClassName="w-48"
+                  trigger={<IconButton icon={<MoreHorizontal size={22} />} size="md" className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-all" />}
+                  menuClassName="w-52"
                 >
-                  <DropdownItem icon={<Edit size={16} />} label="Chỉnh sửa" onClick={() => onEdit?.(post.id)} />
-                  <DropdownItem icon={<Trash2 size={16} />} label="Xóa bài viết" variant="danger" onClick={() => onDelete?.(post.id)} />
+                  <DropdownItem icon={<Edit size={18} />} label="Chỉnh sửa bài viết" onClick={() => onEdit?.(post.id)} />
+                  <DropdownItem icon={<Trash2 size={18} />} label="Xóa bài viết" variant="danger" onClick={() => onDelete?.(post.id)} />
                 </Dropdown>
               ) : (
                 <Dropdown
-                  trigger={<IconButton icon={<MoreHorizontal size={20} />} size="sm" className="text-text-secondary hover:text-text-primary" />}
-                  menuClassName="w-48"
+                  trigger={<IconButton icon={<MoreHorizontal size={22} />} size="md" className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-all" />}
+                  menuClassName="w-52"
                 >
                   <DropdownItem 
-                    icon={<Flag size={16} />} 
-                    label="Báo cáo" 
+                    icon={<Flag size={18} />} 
+                    label="Báo cáo bài viết" 
                     variant="danger" 
                     onClick={() => openReportModal(ReportType.POST, post.id, post.userId)} 
                   />
                 </Dropdown>
               )}
-              <IconButton icon={<X size={20} />} onClick={onClose} className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary rounded-full" />
+              <IconButton 
+                icon={<X size={22} />} 
+                onClick={onClose} 
+                className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-all" 
+              />
             </div>
           </div>
 
@@ -285,7 +289,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 {/* Media Component cho Mobile (Nằm giữa Header và Content) */}
                 {hasMedia && (
                   <div 
-                    className="lg:hidden w-full bg-bg-secondary aspect-square max-h-[60vh] flex items-center justify-center relative select-none overflow-hidden touch-none -mt-0.5 mb-2 border-b border-border-light"
+                    className="lg:hidden w-full bg-bg-secondary aspect-square max-h-[50vh] flex items-center justify-center relative select-none overflow-hidden touch-none -mt-0.5 border-b border-border-light shadow-inner"
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
@@ -300,12 +304,12 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     {allMedia.length > 1 && (
                       <>
                         <div className="absolute inset-y-0 left-0 flex items-center px-1">
-                           <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-bg-primary/25 backdrop-blur-md text-text-primary rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === 0 ? 'invisible' : ''}`}>
+                           <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-bg-primary/25 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === 0 ? 'invisible' : ''}`}>
                               <ChevronLeft size={28} strokeWidth={2.5} />
                            </button>
                         </div>
                         <div className="absolute inset-y-0 right-0 flex items-center px-1">
-                           <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-bg-primary/25 backdrop-blur-md text-text-primary rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
+                           <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-bg-primary/25 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
                               <ChevronRight size={28} strokeWidth={2.5} />
                            </button>
                         </div>
@@ -318,8 +322,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 )}
 
                 {/* Noi dung van ban */}
-                <div className="px-4 py-3 pb-2">
-                  <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
+                <div className="px-5 md:px-6 py-4 pb-3">
+                  <p className="text-text-primary whitespace-pre-line text-[15px] md:text-[16px] leading-[1.6]">
                     {(() => {
                       const threshold = 300;
                       const shouldTruncate = post.content.length > threshold;
@@ -330,14 +334,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                       return (
                         <>
                           {displayContent}
-                          {shouldTruncate && (
-                            <span 
-                              onClick={() => setIsExpanded(!isExpanded)}
-                              className="text-text-secondary font-bold cursor-pointer hover:underline ml-1"
-                            >
-                              {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-                            </span>
-                          )}
+                      {shouldTruncate && (
+                        <span 
+                          onClick={() => setIsExpanded(!isExpanded)}
+                          className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm uppercase tracking-wider"
+                        >
+                          {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                        </span>
+                      )}
                         </>
                       );
                     })()}
@@ -345,20 +349,20 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 </div>
 
                 {/* Thong ke luot thich/binh luan */}
-                <div className="px-4 py-3 flex justify-between items-center border-b border-border-light">
-                  <div className="flex items-center gap-1.5">
+                <div className="px-5 md:px-6 py-4 flex justify-between items-center border-b border-border-light/60">
+                  <div className="flex items-center gap-2">
                     {post.likes.length > 0 && (
-                      <>
-                        <div className="bg-error p-1 rounded-full">
-                          <Heart size={12} className="text-white fill-white" />
+                      <div className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1 rounded-full border border-border-light/30">
+                        <div className="bg-error p-1 rounded-full shadow-sm shadow-error/20">
+                          <Heart size={10} className="text-white fill-white" />
                         </div>
-                        <span className="text-sm text-text-secondary font-medium">
+                        <span className="text-[13px] text-text-primary font-bold">
                           {post.likes.length}
                         </span>
-                      </>
+                      </div>
                     )}
                   </div>
-                  <div className="text-sm text-text-secondary">
+                  <div className="text-[13px] text-text-secondary font-medium tracking-tight">
                     {post.commentCount > 0 && `${post.commentCount} bình luận`}
                   </div>
                 </div>

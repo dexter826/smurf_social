@@ -15,6 +15,7 @@ interface ModalProps {
   showHeader?: boolean;
   showCloseButton?: boolean;
   className?: string;
+  bodyClassName?: string;
 }
 
 const maxWidthClasses = {
@@ -46,7 +47,8 @@ export const Modal: React.FC<ModalProps> = ({
   padding = 'lg',
   showHeader = true,
   showCloseButton = true,
-  className = ''
+  className = '',
+  bodyClassName = ''
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -90,7 +92,7 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Body */}
-        <div className={`overflow-y-auto flex-1 min-h-0 ${paddingClasses[padding]}`}>
+        <div className={`overflow-y-auto flex-1 min-h-0 ${paddingClasses[padding]} ${bodyClassName}`}>
           {children}
         </div>
 
