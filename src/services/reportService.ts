@@ -11,7 +11,9 @@ import {
   updateDoc,
   deleteDoc,
   getCountFromServer,
-  limit
+  limit,
+  onSnapshot,
+  QueryConstraint
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Report, ReportType, ReportReason, ReportStatus, NotificationType } from '../types';
@@ -119,6 +121,34 @@ export const reportService = {
       console.error("Lỗi lấy báo cáo:", error);
       return [];
     }
+  },
+
+  // Xử lý báo cáo theo thời gian thực
+  subscribeToReports: (
+    callback: (reports: Report[]) => void,
+    statusFilter?: ReportStatus,
+    limitCount: number = 100
+  ) => {
+    const constraints: QueryConstraint[] = [
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    ];
+    
+    if (statusFilter) {
+      constraints.unshift(where('status', '==', statusFilter));
+    }
+    
+    const q = query(collection(db, 'reports'), ...constraints);
+    
+    return onSnapshot(q, (snapshot) => {
+      const reports = snapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt?.toDate(),
+        resolvedAt: docSnap.data().resolvedAt?.toDate()
+      })) as Report[];
+      callback(reports);
+    });
   },
 
   // Xử lý báo cáo - xóa nội dung vi phạm (Admin)

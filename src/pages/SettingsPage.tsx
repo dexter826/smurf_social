@@ -11,7 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
-import { userService } from '../services/userService';
+import { useUserCache } from '../store/userCacheStore';
 import { User } from '../types';
 import { UserAvatar, ConfirmDialog, Button, Skeleton } from '../components/ui';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
@@ -25,10 +25,56 @@ const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNod
   { id: 'admin', label: 'Quản lý báo cáo', icon: <Flag size={20} />, adminOnly: true },
 ];
 
+const Toggle = React.memo(({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
+  <div 
+    onClick={onToggle}
+    className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+      enabled ? 'bg-primary' : 'bg-gray-400'
+    }`}
+  >
+    <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${
+      enabled ? 'translate-x-6' : 'translate-x-0'
+    }`} />
+  </div>
+));
+
+const SettingItem = React.memo(({ 
+  icon, 
+  title, 
+  description, 
+  action,
+  onClick 
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  description: string; 
+  action?: React.ReactNode;
+  onClick?: () => void;
+}) => (
+  <div 
+    onClick={onClick}
+    className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border border-border-light ${
+      onClick ? 'cursor-pointer hover:bg-bg-hover transition-colors' : ''
+    }`}
+  >
+    <div className="flex items-center gap-4">
+      <div className="p-2 bg-primary-light rounded-lg text-primary">
+        {icon}
+      </div>
+      <div>
+        <h3 className="font-medium text-text-primary">{title}</h3>
+        <p className="text-sm text-text-tertiary">{description}</p>
+      </div>
+    </div>
+    {action}
+  </div>
+));
+
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user: currentUser, setUser } = useAuthStore();
+  const { user: currentUser } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
+  const { users: userCache, fetchUsers } = useUserCache();
   
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance');
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
@@ -40,32 +86,35 @@ const SettingsPage: React.FC = () => {
   const MENU_ITEMS = BASE_MENU_ITEMS.filter(item => !item.adminOnly || isAdmin);
 
   useEffect(() => {
-    const fetchBlockedUsers = async () => {
-      if (!currentUser?.blockedUserIds?.length) {
+    const loadBlockedUsers = async () => {
+      const blockedIds = currentUser?.blockedUserIds || [];
+      if (blockedIds.length === 0) {
         setBlockedUsers([]);
         setIsLoading(false);
         return;
       }
 
       try {
-        const users = await Promise.all(
-          currentUser.blockedUserIds.map(id => userService.getUserById(id))
-        );
-        setBlockedUsers(users.filter((u): u is User => u !== null));
-      } catch (error) {
-        console.error("Lỗi lấy danh sách chặn", error);
+        await fetchUsers(blockedIds);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchBlockedUsers();
-  }, [currentUser?.blockedUserIds]);
+    loadBlockedUsers();
+  }, [currentUser?.blockedUserIds, fetchUsers]);
+
+  useEffect(() => {
+    const blockedIds = currentUser?.blockedUserIds || [];
+    const users = blockedIds.map(id => userCache[id]).filter((u): u is User => !!u);
+    setBlockedUsers(users);
+  }, [userCache, currentUser?.blockedUserIds]);
 
   const handleUnblock = async () => {
     if (!unblockUserId || !currentUser) return;
     
     try {
+      const { userService } = await import('../services/userService');
       await userService.unblockUser(currentUser.id, unblockUserId);
       setBlockedUsers(prev => prev.filter(u => u.id !== unblockUserId));
     } catch (error) {
@@ -74,52 +123,6 @@ const SettingsPage: React.FC = () => {
       setUnblockUserId(null);
     }
   };
-  // Toggle component
-  const Toggle = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
-    <div 
-      onClick={onToggle}
-      className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${
-        enabled ? 'bg-primary' : 'bg-gray-400'
-      }`}
-    >
-      <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${
-        enabled ? 'translate-x-6' : 'translate-x-0'
-      }`} />
-    </div>
-  );
-
-  // Setting Item component
-  const SettingItem = ({ 
-    icon, 
-    title, 
-    description, 
-    action,
-    onClick 
-  }: { 
-    icon: React.ReactNode; 
-    title: string; 
-    description: string; 
-    action?: React.ReactNode;
-    onClick?: () => void;
-  }) => (
-    <div 
-      onClick={onClick}
-      className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border border-border-light ${
-        onClick ? 'cursor-pointer hover:bg-bg-hover transition-colors' : ''
-      }`}
-    >
-      <div className="flex items-center gap-4">
-        <div className="p-2 bg-primary-light rounded-lg text-primary">
-          {icon}
-        </div>
-        <div>
-          <h3 className="font-medium text-text-primary">{title}</h3>
-          <p className="text-sm text-text-tertiary">{description}</p>
-        </div>
-      </div>
-      {action}
-    </div>
-  );
 
   // Render section content
   const renderContent = () => {
