@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Users, Camera, Check, Loader2, Crown } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from '../../types';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
 import { Modal, Input, Button, Avatar, UserAvatar, IconButton } from '../ui';
+import { groupSchema, GroupFormValues } from '../../utils/validation';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -21,20 +24,36 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const [step, setStep] = useState<'select' | 'details'>('select');
   const [searchTerm, setSearchTerm] = useState('');
   const [friends, setFriends] = useState<User[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [groupName, setGroupName] = useState('');
+  
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm<GroupFormValues>({
+    resolver: zodResolver(groupSchema),
+    defaultValues: {
+      name: '',
+      memberIds: []
+    }
+  });
+
+  const formData = watch();
   const [isLoading, setIsLoading] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       loadFriends();
       setStep('select');
-      setSelectedIds([]);
-      setGroupName('');
       setSearchTerm('');
+      reset({
+        name: '',
+        memberIds: []
+      });
     }
-  }, [isOpen]);
+  }, [isOpen, reset]);
 
   const loadFriends = async () => {
     setIsLoading(true);
@@ -49,39 +68,35 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   };
 
   const toggleSelect = (userId: string) => {
-    setSelectedIds(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+    const currentIds = formData.memberIds;
+    const newIds = currentIds.includes(userId) 
+      ? currentIds.filter(id => id !== userId)
+      : [...currentIds, userId];
+    
+    setValue('memberIds', newIds, { shouldValidate: step === 'select' });
   };
 
   const handleNext = () => {
-    if (selectedIds.length < 2) return;
+    if (formData.memberIds.length < 2) return;
     
     // Tự động tạo tên nhóm từ tên thành viên (bao gồm người tạo)
     const { user: currentUser } = useAuthStore.getState();
-    const selectedFriends = friends.filter(f => selectedIds.includes(f.id));
+    const selectedFriends = friends.filter(f => formData.memberIds.includes(f.id));
     const allNames = [
       currentUser?.name.split(' ')[0] || 'Bạn',
       ...selectedFriends.map(f => f.name.split(' ')[0])
     ];
     const autoName = allNames.join(', ');
-    setGroupName(autoName);
+    setValue('name', autoName);
     setStep('details');
   };
 
-  const handleCreate = async () => {
-    if (!groupName.trim() || selectedIds.length < 2) return;
-    
-    setIsCreating(true);
+  const onFormSubmit = async (data: GroupFormValues) => {
     try {
-      await onCreateGroup(selectedIds, groupName.trim());
+      await onCreateGroup(data.memberIds, data.name.trim());
       onClose();
     } catch (error) {
       console.error('Lỗi tạo group', error);
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -101,9 +116,9 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         />
       </div>
 
-      {selectedIds.length > 0 && (
+      {formData.memberIds.length > 0 && (
         <div className="flex-none flex flex-wrap gap-2 mb-4 p-3 bg-bg-secondary rounded-xl max-h-[120px] overflow-y-auto custom-scrollbar">
-          {selectedIds.map(id => {
+          {formData.memberIds.map(id => {
             const friend = friends.find(f => f.id === id);
             if (!friend) return null;
             return (
@@ -140,7 +155,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               onClick={() => toggleSelect(friend.id)}
               className={`
                 flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all
-                ${selectedIds.includes(friend.id) 
+                ${formData.memberIds.includes(friend.id) 
                   ? 'bg-primary-light' 
                   : 'hover:bg-bg-hover'
                 }
@@ -156,7 +171,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               <span className="flex-1 text-sm font-medium text-text-primary">
                 {friend.name}
               </span>
-              {selectedIds.includes(friend.id) && (
+              {formData.memberIds.includes(friend.id) && (
                 <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                   <Check size={12} className="text-white" />
                 </div>
@@ -165,12 +180,15 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           ))
         )}
       </div>
+      {errors.memberIds && (
+        <p className="text-xs text-error mt-2">{errors.memberIds.message}</p>
+      )}
     </div>
   );
 
   const renderDetailsStep = () => {
     const { user: currentUser } = useAuthStore.getState();
-    const totalMembers = selectedIds.length + 1; // +1 cho người tạo
+    const totalMembers = formData.memberIds.length + 1; // +1 cho người tạo
     
     return (
       <div className="space-y-6">
@@ -189,8 +207,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           </label>
           <Input
             placeholder="Nhập tên nhóm..."
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
+            {...register('name')}
+            error={errors.name?.message}
             className="bg-bg-secondary h-11"
           />
         </div>
@@ -209,7 +227,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               </div>
             )}
             {/* Hiển thị các thành viên đã chọn */}
-            {selectedIds.map(id => {
+            {formData.memberIds.map(id => {
               const friend = friends.find(f => f.id === id);
               if (!friend) return null;
               return (
@@ -237,6 +255,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             <Button
               variant="secondary"
               onClick={() => setStep('select')}
+              disabled={isSubmitting}
             >
               Quay lại
             </Button>
@@ -245,16 +264,16 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             <Button
               variant="primary"
               onClick={handleNext}
-              disabled={selectedIds.length < 2}
+              disabled={formData.memberIds.length < 2}
             >
-              Tiếp tục ({selectedIds.length}/2+)
+              Tiếp tục ({formData.memberIds.length}/2+)
             </Button>
           ) : (
             <Button
               variant="primary"
-              onClick={handleCreate}
-              disabled={!groupName.trim() || isCreating}
-              isLoading={isCreating}
+              onClick={handleSubmit(onFormSubmit)}
+              disabled={isSubmitting}
+              isLoading={isSubmitting}
             >
               Tạo nhóm
             </Button>

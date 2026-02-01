@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Send, Image as ImageIcon, Video, ChevronDown, ChevronRight, Flag } from 'lucide-react';
-import { UserAvatar, Button, TextArea, EmojiPicker, IconButton, ConfirmDialog } from '../ui';
-import { validateFileSize } from '../../utils/fileUtils';
+import { ChevronDown, ChevronRight, Flag, X } from 'lucide-react';
+import { UserAvatar, Button, ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
 import { Comment, User, ReportType } from '../../types';
 import { postService } from '../../services/postService';
@@ -11,6 +10,7 @@ import { useUserCache } from '../../store/userCacheStore';
 import { useReportStore } from '../../store/reportStore';
 import { CommentSkeleton } from './CommentSkeleton';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
+import { CommentInput } from './CommentInput';
 
 
 interface CommentSectionProps {
@@ -32,10 +32,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   autoFocus = false,
   onProfileClick
 }) => {
-  const { 
-    rootComments, 
-    replies, 
-    hasMoreRoot, 
+  const {
+    rootComments,
+    replies,
+    hasMoreRoot,
     hasMoreReply,
     isLoading,
     fetchRootComments,
@@ -43,7 +43,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     addComment,
     updateComment,
     deleteComment,
-    likeComment,
     clearComments
   } = useCommentStore();
 
@@ -51,41 +50,23 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const { openReportModal } = useReportStore();
 
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
-  
+
   const [activeInputId, setActiveInputId] = useState<string | 'root'>('root');
   const [inputMode, setInputMode] = useState<'comment' | 'reply' | 'edit'>('comment');
-  
-  const [newComment, setNewComment] = useState('');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null);
 
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   const currentRootComments = rootComments[postId] || [];
   const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
 
   useEffect(() => {
-    if (autoFocus && activeInputId === 'root') {
-       setTimeout(() => {
-          commentInputRef.current?.focus();
-       }, 300);
-    }
-  }, [autoFocus, activeInputId]);
-
-  useEffect(() => {
     loadInitialRootComments();
     return () => {
       resetInput();
-      // Tránh re-render sai input khi quay lại
     };
   }, [postId]);
 
@@ -131,8 +112,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setEditingComment(null);
     setActiveInputId(comment.id);
     setInputMode('reply');
-    setNewComment('');
-    setTimeout(() => commentInputRef.current?.focus(), 100);
   };
 
   const handleEditClick = (comment: Comment) => {
@@ -140,71 +119,37 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setReplyingTo(null);
     setActiveInputId(comment.id);
     setInputMode('edit');
-    setNewComment(comment.content);
-    setImagePreview(comment.image || null);
-    setVideoPreview(comment.video || null);
-    setTimeout(() => commentInputRef.current?.focus(), 100);
   };
 
   const resetInput = () => {
-    setNewComment('');
-    setSelectedImage(null);
-    setImagePreview(null);
-    setSelectedVideo(null);
-    setVideoPreview(null);
     setReplyingTo(null);
     setEditingComment(null);
     setActiveInputId('root');
     setInputMode('comment');
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if ((!newComment.trim() && !selectedImage && !selectedVideo) || isSubmitting) return;
-
-    setIsSubmitting(true);
+  const handleCommentSubmit = async (content: string, image?: string, video?: string) => {
     try {
       if (inputMode === 'edit' && editingComment) {
-        let finalImageUrl = imagePreview === editingComment.image ? undefined : imagePreview;
-        let finalVideoUrl = videoPreview === editingComment.video ? undefined : videoPreview;
-
-        if (selectedImage) finalImageUrl = await postService.uploadCommentImage(selectedImage, currentUser.id);
-        if (selectedVideo) finalVideoUrl = await postService.uploadCommentVideo(selectedVideo, currentUser.id);
-
-        await updateComment(postId, editingComment.id, newComment, editingComment.parentId, finalImageUrl, finalVideoUrl);
-        resetInput();
+        await updateComment(postId, editingComment.id, content, editingComment.parentId, image, video);
         toast.success('Đã cập nhật bình luận');
       } else {
-        let imageUrl = '';
-        let videoUrl = '';
-        if (selectedImage) imageUrl = await postService.uploadCommentImage(selectedImage, currentUser.id);
-        if (selectedVideo) videoUrl = await postService.uploadCommentVideo(selectedVideo, currentUser.id);
-
         const parentId = replyingTo ? (replyingTo.parentId || replyingTo.id) : null;
         await addComment(
           postId,
           currentUser.id,
-          newComment,
+          content,
           parentId,
           replyingTo?.userId,
-          imageUrl,
-          videoUrl
+          image,
+          video
         );
-
-        resetInput();
         toast.success('Đã gửi bình luận');
       }
+      resetInput();
     } catch (error) {
       toast.error(inputMode === 'edit' ? "Lỗi cập nhật" : "Lỗi khi gửi");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
+      throw error;
     }
   };
 
@@ -231,116 +176,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     );
   };
 
-  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!validateFileSize(file, type === 'image' ? 'IMAGE' : 'VIDEO')) return;
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'image') {
-          setSelectedImage(file);
-          setImagePreview(reader.result as string);
-          setSelectedVideo(null);
-          setVideoPreview(null);
-        } else {
-          setSelectedVideo(file);
-          setVideoPreview(reader.result as string);
-          setSelectedImage(null);
-          setImagePreview(null);
-        }
-      };
-      reader.readAsDataURL(file);
+  const handleUploadMedia = async (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return await postService.uploadCommentImage(file, currentUser.id);
+    } else {
+      return await postService.uploadCommentVideo(file, currentUser.id);
     }
-  };
-
-  const renderInputForm = (isInline = false) => {
-    const isReplyingNow = isInline && inputMode === 'reply';
-    const isEditingNow = isInline && inputMode === 'edit';
-    const isRootInput = !isInline && activeInputId === 'root';
-
-    if (isInline && activeInputId !== activeInputId) return null;
-
-    return (
-      <div className={`
-        transition-all duration-300 animate-in slide-in-from-top-2 z-20
-        ${!isInline ? 'pb-[calc(16px+env(safe-area-inset-bottom))] sticky bottom-0 bg-bg-primary z-20' : ''}
-        ${variant === 'cinema' && !isInline ? 'p-4 md:p-5 pb-6 md:pb-6 bg-bg-primary/95 backdrop-blur-md border-t border-border-light shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 
-          !isInline ? 'p-4 md:p-5 bg-bg-primary border-t border-border-light' : 'mt-3 pl-2'}
-      `}>
-        {(isReplyingNow || (isRootInput && replyingTo)) && (
-          <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-primary/5 rounded-xl text-[11px] text-primary border border-primary/10 backdrop-blur-sm">
-            <span className="font-medium flex items-center gap-1.5">
-               <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-               Đang trả lời <strong>{users[replyingTo?.userId || '']?.name}</strong>
-            </span>
-            <IconButton onClick={resetInput} icon={<X size={12} />} size="xs" transparent />
-          </div>
-        )}
-
-        {(isEditingNow) && (
-          <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-bg-secondary rounded-xl text-[11px] text-text-secondary border border-border-light">
-            <span className="font-medium flex items-center gap-1.5">
-               <div className="w-1 h-1 rounded-full bg-text-tertiary" />
-               Đang chỉnh sửa bình luận
-            </span>
-            <IconButton onClick={resetInput} icon={<X size={12} />} size="xs" />
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex gap-2.5 items-center">
-          <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size={isInline ? 'xs' : 'sm'} className="border border-border-light shadow-sm" />
-          <div className="flex-1 relative flex items-center">
-            <TextArea
-              ref={commentInputRef}
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={isReplyingNow ? 'Nhập câu trả lời...' : isEditingNow ? 'Nhập nội dung chỉnh sửa...' : 'Nhập bình luận...'}
-              className="rounded-2xl bg-bg-secondary/50 border border-border-light focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 min-h-[44px] transition-all text-[14px] leading-relaxed py-2.5"
-              containerClassName="!gap-0"
-              autoResize
-              maxHeight={160}
-              rightElement={
-                <div className="flex items-center gap-0.5 pr-1 mb-0.5">
-                  <div className="flex items-center justify-center w-8 h-8 hover:text-primary transition-all">
-                    <EmojiPicker onEmojiSelect={(e) => setNewComment(prev => prev + e)} size={20} showOverlay={false} buttonClassName="opacity-70 hover:opacity-100" />
-                  </div>
-                  <IconButton type="button" onClick={() => fileInputRef.current?.click()} icon={<ImageIcon size={18} />} size="sm" className="opacity-70 hover:opacity-100" />
-                  <IconButton type="button" onClick={() => videoInputRef.current?.click()} icon={<Video size={18} />} size="sm" className="opacity-70 hover:opacity-100" />
-                </div>
-              }
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={(!newComment.trim() && !selectedImage && !selectedVideo)}
-            isLoading={isSubmitting}
-            variant={(newComment.trim() || selectedImage || selectedVideo) ? 'primary' : 'secondary'}
-            className={`w-10 h-10 shadow-sm active:scale-95 rounded-full p-0 flex items-center justify-center ${(newComment.trim() || selectedImage || selectedVideo) ? '' : 'opacity-50 cursor-not-allowed'}`}
-            title="Gửi"
-            icon={<Send size={20} className={(newComment.trim() || selectedImage || selectedVideo) ? 'fill-current' : ''} />}
-          />
-        </form>
-
-        {(imagePreview || videoPreview) && (
-          <div className="mt-3 relative animate-in zoom-in-95 duration-300">
-            <div className="relative inline-block overflow-hidden rounded-xl border-2 border-primary/20 bg-bg-secondary">
-              {imagePreview && <img src={imagePreview} alt="" className="h-24 object-cover min-w-[100px]" />}
-              {videoPreview && <video src={videoPreview} className="h-24 w-40 object-cover" />}
-              <IconButton 
-                onClick={() => { setSelectedImage(null); setImagePreview(null); setSelectedVideo(null); setVideoPreview(null); }}
-                className="absolute top-1 right-1 bg-black/50 text-white hover:bg-black p-1"
-                icon={<X size={12} />}
-                size="xs"
-              />
-            </div>
-          </div>
-        )}
-
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => handleMediaSelect(e, 'image')} className="hidden" />
-        <input ref={videoInputRef} type="file" accept="video/*" onChange={(e) => handleMediaSelect(e, 'video')} className="hidden" />
-      </div>
-    );
   };
 
   const renderCommentItem = (comment: Comment, isReply = false) => {
@@ -368,7 +209,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               ${variant === 'cinema' ? 'bg-bg-secondary py-2.5' : 'bg-bg-secondary'}
             `}>
               <div className="flex items-center gap-1 mb-0.5 flex-nowrap overflow-hidden">
-                <h4 
+                <h4
                   className="font-bold text-[13px] text-text-primary whitespace-nowrap cursor-pointer hover:underline"
                   onClick={handleProfileClick}
                 >
@@ -377,7 +218,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 {isReply && comment.replyToUserId && users[comment.replyToUserId] && (
                   <>
                     <ChevronRight size={12} className="text-text-tertiary flex-shrink-0 mx-0.5" />
-                    <h4 
+                    <h4
                       className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline"
                       onClick={() => {
                         onProfileClick?.();
@@ -389,34 +230,65 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   </>
                 )}
               </div>
-              {renderCommentContent(comment)}
-              {(comment.image || comment.video) && (
-                <div className="mt-3 rounded-xl overflow-hidden border border-border-light/50 bg-bg-primary/50">
-                  {comment.image && <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />}
-                  {comment.video && <video src={comment.video} controls className="max-h-60 w-full" />}
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
-              <span title={formatDateTime(comment.timestamp)}>{formatRelativeTime(comment.timestamp)}</span>
-              <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Trả lời</button>
-              {comment.userId === currentUser.id ? (
-                <>
-                  <button onClick={() => handleEditClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Chỉnh sửa</button>
-                  <button onClick={() => setCommentToDelete(comment)} className="text-error/70 hover:text-error transition-colors cursor-pointer">Xóa</button>
-                </>
+
+              {isEditing ? (
+                 <div className="mt-2 min-w-[200px] md:min-w-[300px]">
+                   <CommentInput
+                     user={currentUser}
+                     initialValue={comment.content}
+                     initialImage={comment.image}
+                     initialVideo={comment.video}
+                     onSubmit={handleCommentSubmit}
+                     onCancel={resetInput}
+                     onUploadMedia={handleUploadMedia}
+                     autoFocus
+                   />
+                 </div>
               ) : (
-                <button 
-                  onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.userId)} 
-                  className="text-text-tertiary hover:text-error transition-colors cursor-pointer flex items-center gap-0.5"
-                >
-                  <Flag size={10} /> Báo cáo
-                </button>
+                <>
+                  {renderCommentContent(comment)}
+                  {(comment.image || comment.video) && (
+                    <div className="mt-3 rounded-xl overflow-hidden border border-border-light/50 bg-bg-primary/50">
+                      {comment.image && <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />}
+                      {comment.video && <video src={comment.video} controls className="max-h-60 w-full" />}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            {(isReplying || isEditing) && renderInputForm(true)}
+            {!isEditing && (
+              <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
+                <span title={formatDateTime(comment.timestamp)}>{formatRelativeTime(comment.timestamp)}</span>
+                <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Trả lời</button>
+                {comment.userId === currentUser.id ? (
+                  <>
+                    <button onClick={() => handleEditClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Chỉnh sửa</button>
+                    <button onClick={() => setCommentToDelete(comment)} className="text-error/70 hover:text-error transition-colors cursor-pointer">Xóa</button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.userId)}
+                    className="text-text-tertiary hover:text-error transition-colors cursor-pointer flex items-center gap-0.5"
+                  >
+                    <Flag size={10} /> Báo cáo
+                  </button>
+                )}
+              </div>
+            )}
+
+            {isReplying && (
+              <div className="mt-3 pl-2">
+                <CommentInput
+                  user={currentUser}
+                  placeholder={`Trả lời ${author?.name}...`}
+                  onSubmit={handleCommentSubmit}
+                  onCancel={resetInput}
+                  onUploadMedia={handleUploadMedia}
+                  autoFocus
+                />
+              </div>
+            )}
 
             {!isReply && ((comment.replyCount || 0) > 0 || commentReplies.length > 0) && (
               <div className="mt-2 pl-2 border-l-2 border-border-light ml-2">
@@ -448,7 +320,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     <div className={`flex flex-col min-h-0 transition-all duration-300 ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {header && <div className="bg-bg-primary">{header}</div>}
-        
+
         <div className="pb-4">
           {isLoading && currentRootComments.length === 0 ? (
             <div className="px-4 py-4"><CommentSkeleton count={3} /></div>
@@ -469,7 +341,29 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         </div>
       </div>
 
-      {activeInputId === 'root' && renderInputForm()}
+      <div className={`
+        pb-[calc(16px+env(safe-area-inset-bottom))] sticky bottom-0 bg-bg-primary z-20
+        ${variant === 'cinema' ? 'p-4 md:p-5 pb-6 md:pb-6 bg-bg-primary/95 backdrop-blur-md border-t border-border-light shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 'p-4 md:p-5 bg-bg-primary border-t border-border-light'}
+      `}>
+        {replyingTo && (
+          <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-primary/5 rounded-xl text-[11px] text-primary border border-primary/10 backdrop-blur-sm">
+            <span className="font-medium flex items-center gap-1.5">
+               <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+               Đang trả lời <strong>{users[replyingTo.userId || '']?.name}</strong>
+            </span>
+            <button onClick={resetInput} className="p-0.5 hover:bg-primary/10 rounded-full transition-colors">
+              <X size={12} />
+            </button>
+          </div>
+        )}
+        <CommentInput
+          user={currentUser}
+          onSubmit={handleCommentSubmit}
+          onUploadMedia={handleUploadMedia}
+          autoFocus={autoFocus}
+          placeholder={replyingTo ? 'Nhập câu trả lời...' : 'Nhập bình luận...'}
+        />
+      </div>
 
       <ConfirmDialog
         isOpen={!!commentToDelete}

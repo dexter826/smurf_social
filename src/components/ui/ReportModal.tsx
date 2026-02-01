@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Flag, AlertTriangle } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { TextArea } from './TextArea';
@@ -8,31 +10,52 @@ import { useReportStore } from '../../store/reportStore';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { REPORT_CONFIG } from '../../constants';
+import { reportSchema, ReportFormValues } from '../../utils/validation';
 
 export const ReportModal: React.FC = () => {
   const { user } = useAuthStore();
   const { isOpen, isSubmitting, error, closeReportModal, submitReport } = useReportStore();
   const { addToast } = useToastStore();
   
-  const [selectedReason, setSelectedReason] = useState<ReportReason | null>(null);
-  const [description, setDescription] = useState('');
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm<ReportFormValues>({
+    resolver: zodResolver(reportSchema),
+    defaultValues: {
+      reason: '',
+      description: ''
+    }
+  });
 
-  const handleSubmit = async () => {
-    if (!selectedReason || !user) return;
+  const formData = watch();
 
-    const success = await submitReport(user.id, selectedReason, description || undefined);
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        reason: '',
+        description: ''
+      });
+    }
+  }, [isOpen, reset]);
+
+  const onFormSubmit = async (data: ReportFormValues) => {
+    if (!user) return;
+
+    const success = await submitReport(user.id, data.reason as ReportReason, data.description || undefined);
     
     if (success) {
       addToast('Đã gửi báo cáo thành công. Chúng tôi sẽ xem xét trong thời gian sớm nhất.', 'success');
-      setSelectedReason(null);
-      setDescription('');
+      handleClose();
     }
   };
 
   const handleClose = () => {
     closeReportModal();
-    setSelectedReason(null);
-    setDescription('');
   };
 
   const reasonEntries = Object.entries(REPORT_CONFIG.REASONS) as [ReportReason, { label: string; description: string }][];
@@ -44,7 +67,7 @@ export const ReportModal: React.FC = () => {
       title="Báo cáo vi phạm"
       maxWidth="sm"
     >
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
         {/* Header info */}
         <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
           <AlertTriangle size={16} className="text-warning flex-shrink-0" />
@@ -58,7 +81,7 @@ export const ReportModal: React.FC = () => {
               key={key}
               className={`
                 flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all
-                border ${selectedReason === key 
+                border ${formData.reason === key 
                   ? 'border-primary bg-primary/5 shadow-sm' 
                   : 'border-border-light hover:bg-bg-hover hover:border-border-medium'
                 }
@@ -66,10 +89,8 @@ export const ReportModal: React.FC = () => {
             >
               <input
                 type="radio"
-                name="reason"
                 value={key}
-                checked={selectedReason === key}
-                onChange={() => setSelectedReason(key)}
+                {...register('reason')}
                 className="mt-0.5 accent-primary w-4 h-4"
               />
               <div className="flex-1 min-w-0">
@@ -78,25 +99,28 @@ export const ReportModal: React.FC = () => {
               </div>
             </label>
           ))}
+          {errors.reason && (
+            <p className="text-xs text-error mt-1">{errors.reason.message}</p>
+          )}
         </div>
 
-        {/* Mô tả thêm cho "Khác" */}
-        {selectedReason === ReportReason.OTHER && (
+        {/* Mô tả thêm cho "Khác" hay các lý do cần thêm thông tin */}
+        {(formData.reason === ReportReason.OTHER || formData.reason !== '') && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-primary">
-              Mô tả chi tiết <span className="text-text-secondary">(bắt buộc)</span>
+              Mô tả chi tiết {formData.reason === ReportReason.OTHER && <span className="text-text-secondary">(bắt buộc)</span>}
             </label>
             <TextArea
               placeholder="Vui lòng mô tả lý do báo cáo..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              {...register('description')}
+              error={errors.description?.message}
               maxLength={REPORT_CONFIG.DESCRIPTION_MAX_LENGTH}
               rows={3}
             />
           </div>
         )}
 
-        {/* Error message */}
+        {/* Error message from store */}
         {error && (
           <div className="text-error text-sm bg-error/10 p-3 rounded-lg flex items-center gap-2">
             <AlertTriangle size={14} />
@@ -107,6 +131,7 @@ export const ReportModal: React.FC = () => {
         {/* Actions */}
         <div className="flex gap-3 pt-2">
           <Button 
+            type="button"
             variant="secondary" 
             onClick={handleClose}
             className="flex-1"
@@ -114,9 +139,9 @@ export const ReportModal: React.FC = () => {
             Hủy
           </Button>
           <Button
+            type="submit"
             variant="primary"
-            onClick={handleSubmit}
-            disabled={!selectedReason || isSubmitting || (selectedReason === ReportReason.OTHER && !description.trim())}
+            disabled={isSubmitting}
             isLoading={isSubmitting}
             className="flex-1"
             icon={<Flag size={16} />}
@@ -124,7 +149,7 @@ export const ReportModal: React.FC = () => {
             Gửi báo cáo
           </Button>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 };
