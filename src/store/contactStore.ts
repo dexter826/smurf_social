@@ -10,6 +10,7 @@ interface ContactState {
   sentRequests: FriendRequest[];
   searchResults: User[];
   isLoading: boolean;
+  isSearching: boolean;
   isRevalidating: boolean;
   
   fetchFriends: (userId: string) => Promise<void>;
@@ -39,6 +40,7 @@ export const useContactStore = create<ContactState>()(
       sentRequests: [],
       searchResults: [],
       isLoading: false,
+      isSearching: false,
       isRevalidating: false,
 
       // ... (giữ nguyên các hàm khác)
@@ -50,6 +52,7 @@ export const useContactStore = create<ContactState>()(
           sentRequests: [],
           searchResults: [],
           isLoading: false,
+          isSearching: false,
           isRevalidating: false,
         });
       },
@@ -112,12 +115,12 @@ export const useContactStore = create<ContactState>()(
       return;
     }
     
-    set({ isLoading: true });
+    set({ isSearching: true });
     try {
       const results = await userService.searchUsers(searchTerm, userId);
       set({ searchResults: results });
     } finally {
-      set({ isLoading: false });
+      set({ isSearching: false });
     }
   },
 
@@ -131,36 +134,45 @@ export const useContactStore = create<ContactState>()(
   },
 
   acceptFriendRequest: async (requestId: string, userId: string, friendId: string) => {
+    const previousRequests = get().receivedRequests;
+    set(state => ({
+      receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
+    }));
+    
     try {
       await friendService.acceptFriendRequest(requestId, userId, friendId);
-      set((state) => ({
-        receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
-      }));
     } catch (error) {
+      set({ receivedRequests: previousRequests });
       console.error("Lỗi chấp nhận kết bạn:", error);
       throw error;
     }
   },
 
   rejectFriendRequest: async (requestId: string) => {
+    const previousRequests = get().receivedRequests;
+    set(state => ({
+      receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
+    }));
+    
     try {
       await friendService.rejectFriendRequest(requestId);
-      set((state) => ({
-        receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
-      }));
     } catch (error) {
+      set({ receivedRequests: previousRequests });
       console.error("Lỗi từ chối kết bạn:", error);
       throw error;
     }
   },
 
   cancelFriendRequest: async (requestId: string) => {
+    const previousRequests = get().sentRequests;
+    set(state => ({
+      sentRequests: state.sentRequests.filter(r => r.id !== requestId)
+    }));
+    
     try {
       await friendService.cancelFriendRequest(requestId);
-      set((state) => ({
-        sentRequests: state.sentRequests.filter(r => r.id !== requestId)
-      }));
     } catch (error) {
+      set({ sentRequests: previousRequests });
       console.error("Lỗi hủy lời mời:", error);
       throw error;
     }
