@@ -39,8 +39,10 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
     setPendingFiles([]);
   };
 
-  const handleUploadImages = async (files: File[]) => {
-    return await postService.uploadPostMedia(files, currentUser.id);
+  const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
+    return await postService.uploadPostMedia(files, currentUser.id, (progress) => {
+      onProgress?.(progress);
+    });
   };
 
   return (

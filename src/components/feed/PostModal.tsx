@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserAvatar, Button, EmojiPicker, Loading, Select, Modal, IconButton } from '../ui';
+import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, UploadProgress } from '../ui';
 import { toast } from '../../store/toastStore';
 import { validateFileSize } from '../../utils/fileUtils';
 import { User, Post } from '../../types';
@@ -15,7 +15,7 @@ interface PostModalProps {
   initialPost?: Post; 
   initialFiles?: File[]; 
   onSubmit: (content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
-  onUploadImages: (files: File[]) => Promise<{ images: string[], videos: string[] }>;
+  onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<{ images: string[], videos: string[] }>;
 }
 
 export const PostModal: React.FC<PostModalProps> = ({
@@ -52,6 +52,7 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   const formData = watch();
   const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState<number>(0);
 
   // Khởi tạo dữ liệu
   useEffect(() => {
@@ -103,8 +104,11 @@ export const PostModal: React.FC<PostModalProps> = ({
     if (validFiles.length === 0) return;
 
     setIsUploading(true);
+    setUploadProgress(0);
     try {
-      const result = await onUploadImages(validFiles);
+      const result = await onUploadImages(validFiles, (progress) => {
+        setUploadProgress(progress);
+      });
       setValue('images', [...formData.images, ...result.images], { shouldDirty: true });
       setValue('videos', [...formData.videos, ...result.videos], { shouldDirty: true });
     } catch (error) {
@@ -112,6 +116,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       toast.error('Lỗi upload media. Vui lòng thử lại.');
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (videoInputRef.current) videoInputRef.current.value = '';
     }
@@ -280,8 +285,12 @@ export const PostModal: React.FC<PostModalProps> = ({
               </div>
             ))}
             {isUploading && (
-              <div className="flex items-center justify-center aspect-square md:aspect-video bg-bg-secondary rounded-xl border border-border-light">
-                 <Loading size="md" />
+              <div className="flex flex-col items-center justify-center aspect-square md:aspect-video bg-bg-secondary rounded-xl border border-border-light p-4">
+                <UploadProgress 
+                  progress={uploadProgress} 
+                  fileName="Đang tải lên media..." 
+                  showDetails 
+                />
               </div>
             )}
           </div>

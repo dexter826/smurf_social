@@ -16,3 +16,5 @@ export * from './ScreenLoader';
 export * from './Toast';
 export * from './Modal';
 export * from './TextArea';
+export * from './UploadProgress';
+export * from './LazyMedia';

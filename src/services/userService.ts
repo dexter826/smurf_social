@@ -1,8 +1,9 @@
 import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { db } from '../firebase/config';
 import { User, UserStatus } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
+import { compressImage, withRetry } from '../utils/imageUtils';
+import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 
 export const userService = {
   // Lấy thông tin người dùng theo ID
@@ -134,14 +135,25 @@ export const userService = {
   },
 
   // Tải lên ảnh đại diện
-  uploadAvatar: async (userId: string, file: File): Promise<string> => {
+  uploadAvatar: async (
+    userId: string, 
+    file: File,
+    onProgress?: ProgressCallback
+  ): Promise<string> => {
     try {
+      // Compress ảnh avatar
+      const compressedFile = await compressImage(file, { 
+        maxSizeMB: 0.5, 
+        maxWidthOrHeight: 512 
+      });
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
-      const storageRef = ref(storage, `avatars/${userId}/${fileName}`);
+      const path = `avatars/${userId}/${fileName}`;
 
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
+      const downloadURL = await withRetry(() => 
+        uploadWithProgress(path, compressedFile, onProgress)
+      );
       await userService.updateProfile(userId, { avatar: downloadURL });
       
       return downloadURL;
@@ -152,14 +164,25 @@ export const userService = {
   },
 
   // Tải lên ảnh bìa
-  uploadCoverImage: async (userId: string, file: File): Promise<string> => {
+  uploadCoverImage: async (
+    userId: string, 
+    file: File,
+    onProgress?: ProgressCallback
+  ): Promise<string> => {
     try {
+      // Compress ảnh cover
+      const compressedFile = await compressImage(file, { 
+        maxSizeMB: 1, 
+        maxWidthOrHeight: 1920 
+      });
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `cover_${userId}_${Date.now()}.${fileExt}`;
-      const storageRef = ref(storage, `covers/${userId}/${fileName}`);
+      const path = `covers/${userId}/${fileName}`;
 
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
+      const downloadURL = await withRetry(() => 
+        uploadWithProgress(path, compressedFile, onProgress)
+      );
       await userService.updateProfile(userId, { coverImage: downloadURL });
       
       return downloadURL;

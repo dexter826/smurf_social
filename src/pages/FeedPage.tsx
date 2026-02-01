@@ -38,9 +38,11 @@ const FeedPage: React.FC = () => {
     setPostToDelete(null);
   };
 
-  const handleUploadImages = async (files: File[]) => {
+  const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
     if (!currentUser) throw new Error('Not authenticated');
-    return await postService.uploadPostMedia(files, currentUser.id);
+    return await postService.uploadPostMedia(files, currentUser.id, (progress) => {
+      onProgress?.(progress);
+    });
   };
 
   if (!currentUser) {

@@ -16,10 +16,11 @@ import {
   limit,
   startAfter
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../../firebase/config";
+import { db } from "../../firebase/config";
 import { Message, MessageType } from "../../types";
 import { TIME_LIMITS } from "../../constants";
+import { compressImage, generateVideoThumbnail, withRetry } from "../../utils/imageUtils";
+import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
 
 export const messageService = {
   // Đăng ký nhận tin nhắn thời gian thực với giới hạn số lượng
@@ -164,15 +165,18 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
+      // Compress ảnh trước khi upload
+      const compressedFile = await compressImage(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1920 });
+      
       const timestamp = Date.now();
-      const fileRef = ref(
-        storage,
-        `chats/${conversationId}/${timestamp}_${file.name}`,
+      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      
+      const imageUrl = await withRetry(() => 
+        uploadWithProgress(path, compressedFile, onProgress)
       );
-      await uploadBytes(fileRef, file);
-      const imageUrl = await getDownloadURL(fileRef);
 
       const messageData: Record<string, any> = {
         conversationId,
@@ -225,15 +229,15 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
-      const fileRef = ref(
-        storage,
-        `chats/${conversationId}/${timestamp}_${file.name}`,
+      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      
+      const fileUrl = await withRetry(() => 
+        uploadWithProgress(path, file, onProgress)
       );
-      await uploadBytes(fileRef, file);
-      const fileUrl = await getDownloadURL(fileRef);
 
       const messageData: Record<string, any> = {
         conversationId,
@@ -288,15 +292,23 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
+      // Generate thumbnail từ video
+      let thumbnail: string | undefined;
+      try {
+        thumbnail = await generateVideoThumbnail(file);
+      } catch {
+        // Ignore thumbnail error
+      }
+
       const timestamp = Date.now();
-      const fileRef = ref(
-        storage,
-        `chats/${conversationId}/${timestamp}_${file.name}`,
+      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      
+      const videoUrl = await withRetry(() => 
+        uploadWithProgress(path, file, onProgress)
       );
-      await uploadBytes(fileRef, file);
-      const videoUrl = await getDownloadURL(fileRef);
 
       const messageData: Record<string, any> = {
         conversationId,
@@ -310,6 +322,7 @@ export const messageService = {
         deliveredAt: serverTimestamp(),
       };
 
+      if (thumbnail) messageData.thumbnail = thumbnail;
       if (replyToId) messageData.replyToId = replyToId;
 
       await addDoc(collection(db, "messages"), messageData);
@@ -349,15 +362,15 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
       const timestamp = Date.now();
-      const fileRef = ref(
-        storage,
-        `chats/${conversationId}/${timestamp}_${file.name}`,
+      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      
+      const voiceUrl = await withRetry(() => 
+        uploadWithProgress(path, file, onProgress)
       );
-      await uploadBytes(fileRef, file);
-      const voiceUrl = await getDownloadURL(fileRef);
 
       const messageData: Record<string, any> = {
         conversationId,

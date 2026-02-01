@@ -24,6 +24,7 @@ interface UseProfileReturn {
   latestMedia: string[];
   loading: boolean;
   uploading: boolean;
+  uploadProgress: number;
   
   profileUserId: string | undefined;
   isOwnProfile: boolean;
@@ -57,6 +58,7 @@ export const useProfile = (): UseProfileReturn => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [latestMedia, setLatestMedia] = useState<string[]>([]);
 
   const profileUserId = userId || currentUser?.id;
@@ -157,8 +159,11 @@ export const useProfile = (): UseProfileReturn => {
     if (!validateFileSize(file, 'AVATAR')) return;
     
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const newAvatarUrl = await userService.uploadAvatar(profile.id, file);
+      const newAvatarUrl = await userService.uploadAvatar(profile.id, file, (p) => {
+        setUploadProgress(p.progress);
+      });
       const updatedProfile = { ...profile, avatar: newAvatarUrl };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
@@ -171,6 +176,7 @@ export const useProfile = (): UseProfileReturn => {
       toast.error('Không thể tải lên ảnh đại diện');
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }, [profile, isOwnProfile, currentUser]);
 
@@ -183,8 +189,11 @@ export const useProfile = (): UseProfileReturn => {
     if (!validateFileSize(file, 'COVER')) return;
     
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const newCoverUrl = await userService.uploadCoverImage(profile.id, file);
+      const newCoverUrl = await userService.uploadCoverImage(profile.id, file, (p) => {
+        setUploadProgress(p.progress);
+      });
       const updatedProfile = { ...profile, coverImage: newCoverUrl };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
@@ -193,6 +202,7 @@ export const useProfile = (): UseProfileReturn => {
       toast.error('Không thể tải lên ảnh bìa');
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }, [profile, isOwnProfile]);
 
@@ -281,6 +291,7 @@ export const useProfile = (): UseProfileReturn => {
     latestMedia,
     loading,
     uploading,
+    uploadProgress,
     profileUserId,
     isOwnProfile,
     isFriend,
