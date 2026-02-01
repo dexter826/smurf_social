@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 import { API_ENDPOINTS } from '../../constants/api';
-
+import { profileSchema, ProfileFormValues } from '../../utils/validation';
 
 interface EditProfileModalProps {
   user: User;
@@ -18,25 +20,41 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onClose,
   onSave
 }) => {
-  const [formData, setFormData] = useState<Partial<User>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [provinces, setProvinces] = useState<{ value: string, label: string }[]>([]);
 
-  const [provinces, setProvinces] = useState<{ id: string, name: string }[]>([]);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isDirty }
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user.name,
+      bio: user.bio || '',
+      location: user.location || '',
+      gender: user.gender || 'male',
+      birthDate: user.birthDate
+    }
+  });
+
+  const formData = watch();
 
   useEffect(() => {
     if (isOpen) {
-      setFormData({
+      reset({
         name: user.name,
         bio: user.bio || '',
         location: user.location || '',
         gender: user.gender || 'male',
         birthDate: user.birthDate
       });
-      setErrors({});
       fetchProvinces();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, reset]);
 
   const fetchProvinces = async () => {
     try {
@@ -48,33 +66,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
   };
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.name?.trim()) {
-      newErrors.name = 'Tên không được để trống';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const isChanged = () => {
-    return (
-      formData.name !== user.name ||
-      formData.bio !== (user.bio || '') ||
-      formData.location !== (user.location || '') ||
-      formData.gender !== (user.gender || 'male') ||
-      formData.birthDate !== user.birthDate
-    );
-  };
-
-  const handleSave = async () => {
-    if (!validate()) return;
-    
+  const handleSave = async (data: ProfileFormValues) => {
     setSaving(true);
     try {
-      await onSave(formData);
+      await onSave(data);
       toast.success('Cập nhật thông tin thành công!');
       onClose();
     } catch (error) {
@@ -97,8 +92,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </Button>
           <Button 
             variant="primary" 
-            onClick={handleSave} 
-            disabled={saving || !isChanged()}
+            onClick={handleSubmit(handleSave)}
+            disabled={saving || !isDirty}
           >
             {saving ? 'Đang lưu...' : 'Lưu'}
           </Button>
@@ -106,17 +101,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       }
     >
       <div className="space-y-5">
-        
-        {/* Thông tin chung */}
         <div>
           <h3 className="font-semibold mb-3 text-text-primary">Thông tin chung</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-1 sm:col-span-2">
               <Input
                 label="Tên hiển thị *"
-                value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                error={errors.name}
+                {...register('name')}
+                error={errors.name?.message}
                 placeholder="Nhập họ và tên"
               />
             </div>
@@ -124,8 +116,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <div className="col-span-1 sm:col-span-2">
               <TextArea
                 label="Giới thiệu"
-                value={formData.bio || ''}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
+                {...register('bio')}
+                onChange={(e) => {
+                  const val = e.target.value.slice(0, 150);
+                  setValue('bio', val, { shouldDirty: true });
+                }}
+                error={errors.bio?.message}
                 placeholder="Nhập vài dòng giới thiệu về bản thân..."
                 rows={2}
                 className="rounded-xl"
@@ -149,7 +145,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <Select
                 label="Tỉnh/Thành phố"
                 value={formData.location || ''}
-                onChange={(val) => setFormData({ ...formData, location: val })}
+                onChange={(val) => setValue('location', val, { shouldDirty: true })}
                 options={provinces}
                 placeholder="Chọn tỉnh/thành phố"
                 openUp
@@ -160,7 +156,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <Select
                 label="Giới tính"
                 value={formData.gender || 'male'}
-                onChange={(val) => setFormData({ ...formData, gender: val as any })}
+                onChange={(val) => setValue('gender', val as any, { shouldDirty: true })}
                 options={[
                   { value: 'male', label: 'Nam' },
                   { value: 'female', label: 'Nữ' },
@@ -173,13 +169,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <DatePicker
                 label="Ngày sinh"
                 value={formData.birthDate}
-                onChange={(ts) => setFormData({ ...formData, birthDate: ts })}
+                onChange={(ts) => setValue('birthDate', ts, { shouldDirty: true })}
                 placeholder="Chọn ngày sinh"
               />
             </div>
           </div>
         </div>
-
       </div>
     </Modal>
   );

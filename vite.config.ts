@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
             manualChunks: {
               'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage', 'firebase/messaging'],
               'vendor-ui': ['lucide-react', 'date-fns', 'styled-components', 'react-loading-skeleton'],
-              'vendor-react': ['react', 'react-dom', 'react-router-dom', 'zustand'],
+              'vendor-react': ['react', 'react-dom', 'react-router-dom', 'zustand', 'react-hook-form', 'zod', '@hookform/resolvers/zod'],
               'vendor-emoji': ['emoji-picker-react'],
             }
           }

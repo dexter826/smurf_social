@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../ui';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
+import { changePasswordSchema, ChangePasswordFormValues } from '../../utils/validation';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -12,9 +15,6 @@ interface ChangePasswordModalProps {
 }
 
 const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClose }) => {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,33 +23,30 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
   const { logout } = useAuthStore();
   const navigate = useNavigate();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+  });
+
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ChangePasswordFormValues) => {
     setError(null);
-
-    // Validation
-    if (newPassword.length < 6) {
-      setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
-      return;
-    }
-    if (newPassword === currentPassword) {
-      setError("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError("Mật khẩu mới không khớp nhau.");
-      return;
-    }
-
     setIsLoading(true);
     try {
       // 1. Xác thực lại người dùng
-      await authService.reauthenticate(currentPassword);
+      await authService.reauthenticate(data.currentPassword);
       
       // 2. Đổi mật khẩu
-      await authService.changePassword(newPassword);
+      await authService.changePassword(data.newPassword);
       
       setSuccess(true);
       toast.success("Mật khẩu đã được đổi. Vui lòng đăng nhập lại!");
@@ -81,11 +78,16 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm">
-              <AlertCircle size={18} />
-              <span>{error}</span>
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+          {(error || Object.keys(errors).length > 0) && (
+            <div className="flex flex-col gap-1.5 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={18} />
+                <span>{error || "Vui lòng kiểm tra lại thông tin:"}</span>
+              </div>
+              {Object.values(errors).map((err, i) => (
+                <p key={i} className="pl-7 text-xs">• {err?.message}</p>
+              ))}
             </div>
           )}
 
@@ -102,11 +104,11 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
               <input
                 type={showPasswords ? "text" : "password"}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                {...register('currentPassword')}
+                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
+                  errors.currentPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
+                }`}
                 placeholder="Nhập mật khẩu hiện tại"
-                required
               />
               <button
                 type="button"
@@ -125,11 +127,11 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
               <input
                 type={showPasswords ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                {...register('newPassword')}
+                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
+                  errors.newPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
+                }`}
                 placeholder="Nhập mật khẩu mới"
-                required
               />
               <button
                 type="button"
@@ -148,11 +150,11 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
               <input
                 type={showPasswords ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                {...register('confirmPassword')}
+                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
+                  errors.confirmPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
+                }`}
                 placeholder="Xác nhận mật khẩu mới"
-                required
               />
               <button
                 type="button"
