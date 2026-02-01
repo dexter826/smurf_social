@@ -1,9 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
-import { Avatar, UserAvatar, Button, EmojiPicker, Loading, Select, Modal, IconButton } from '../ui';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { UserAvatar, Button, EmojiPicker, Loading, Select, Modal, IconButton } from '../ui';
 import { toast } from '../../store/toastStore';
 import { validateFileSize } from '../../utils/fileUtils';
 import { User, Post } from '../../types';
+import { postSchema, PostFormValues } from '../../utils/validation';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -24,39 +27,56 @@ export const PostModal: React.FC<PostModalProps> = ({
   onSubmit,
   onUploadImages
 }) => {
-  const [content, setContent] = useState('');
-  const [images, setImages] = useState<string[]>([]);
-  const [videos, setVideos] = useState<string[]>([]);
-  const [visibility, setVisibility] = useState<'friends' | 'private'>('friends');
-  const [isUploading, setIsUploading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isEdit = !!initialPost;
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { isSubmitting, isValid, isDirty }
+  } = useForm<PostFormValues>({
+    resolver: zodResolver(postSchema),
+    defaultValues: {
+      content: '',
+      images: [],
+      videos: [],
+      visibility: 'friends'
+    }
+  });
+
+  const formData = watch();
+  const [isUploading, setIsUploading] = React.useState(false);
+
   // Khởi tạo dữ liệu
   useEffect(() => {
     if (isOpen) {
       if (isEdit && initialPost) {
-        setContent(initialPost.content);
-        setImages(initialPost.images || []);
-        setVideos(initialPost.videos || []);
-        setVisibility(initialPost.visibility);
+        reset({
+          content: initialPost.content,
+          images: initialPost.images || [],
+          videos: initialPost.videos || [],
+          visibility: initialPost.visibility
+        });
       } else {
-        setContent('');
-        setImages([]);
-        setVideos([]);
-        setVisibility('friends');
+        reset({
+          content: '',
+          images: [],
+          videos: [],
+          visibility: 'friends'
+        });
         // Xử lý file ban đầu
         if (initialFiles?.length > 0) {
           processFiles(initialFiles);
         }
       }
     }
-  }, [isOpen, isEdit, initialPost, initialFiles]);
+  }, [isOpen, isEdit, initialPost, initialFiles, reset]);
   
   // Tự động điều chỉnh chiều cao textarea khi nội dung thay đổi
   useEffect(() => {
@@ -64,7 +84,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [content, isOpen]);
+  }, [formData.content, isOpen]);
 
   const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -85,8 +105,8 @@ export const PostModal: React.FC<PostModalProps> = ({
     setIsUploading(true);
     try {
       const result = await onUploadImages(validFiles);
-      setImages(prev => [...prev, ...result.images]);
-      setVideos(prev => [...prev, ...result.videos]);
+      setValue('images', [...formData.images, ...result.images], { shouldDirty: true });
+      setValue('videos', [...formData.videos, ...result.videos], { shouldDirty: true });
     } catch (error) {
       console.error('Lỗi upload media:', error);
       toast.error('Lỗi upload media. Vui lòng thử lại.');
@@ -103,33 +123,22 @@ export const PostModal: React.FC<PostModalProps> = ({
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+    setValue('images', formData.images.filter((_, i) => i !== index), { shouldDirty: true });
   };
 
   const handleRemoveVideo = (index: number) => {
-    setVideos(prev => prev.filter((_, i) => i !== index));
+    setValue('videos', formData.videos.filter((_, i) => i !== index), { shouldDirty: true });
   };
 
-  const handleSubmit = async () => {
-    if (!content.trim() && images.length === 0 && videos.length === 0) return;
-
-    setIsSubmitting(true);
+  const onFormSubmit = async (data: PostFormValues) => {
     try {
-      await onSubmit(content.trim(), images, videos, visibility);
+      await onSubmit(data.content || '', data.images, data.videos, data.visibility);
       onClose();
     } catch (error) {
       console.error('Lỗi xử lý bài viết:', error);
       toast.error(`Lỗi ${isEdit ? 'cập nhật' : 'tạo'} bài viết. Vui lòng thử lại.`);
-    } finally {
-      setIsSubmitting(false);
     }
   };
-
-  const isChanged = !isEdit || 
-    content !== initialPost?.content || 
-    JSON.stringify(images) !== JSON.stringify(initialPost?.images || []) ||
-    JSON.stringify(videos) !== JSON.stringify(initialPost?.videos || []) ||
-    visibility !== initialPost?.visibility;
 
   if (!isOpen) return null;
 
@@ -171,8 +180,9 @@ export const PostModal: React.FC<PostModalProps> = ({
                   onEmojiSelect={(emoji) => {
                     const start = textareaRef.current?.selectionStart || 0;
                     const end = textareaRef.current?.selectionEnd || 0;
-                    const newText = content.substring(0, start) + emoji + content.substring(end);
-                    setContent(newText);
+                    const currentContent = formData.content || '';
+                    const newText = currentContent.substring(0, start) + emoji + currentContent.substring(end);
+                    setValue('content', newText, { shouldDirty: true });
                     setTimeout(() => {
                       textareaRef.current?.focus();
                       textareaRef.current?.setSelectionRange(start + emoji.length, start + emoji.length);
@@ -193,8 +203,8 @@ export const PostModal: React.FC<PostModalProps> = ({
           <Button
             variant="primary"
             className="w-full h-10 md:h-11 text-[15px] font-bold shadow-sm"
-            onClick={handleSubmit}
-            disabled={(!content.trim() && images.length === 0 && videos.length === 0) || !isChanged || isSubmitting || isUploading}
+            onClick={handleSubmit(onFormSubmit)}
+            disabled={!isDirty || isSubmitting || isUploading}
             isLoading={isSubmitting}
           >
             {isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
@@ -209,8 +219,8 @@ export const PostModal: React.FC<PostModalProps> = ({
             <h3 className="font-semibold text-text-primary text-sm md:text-base">{currentUser.name}</h3>
           </div>
           <Select
-            value={visibility}
-            onChange={(v) => setVisibility(v as any)}
+            value={formData.visibility}
+            onChange={(v) => setValue('visibility', v as any, { shouldDirty: true })}
             options={[
               { value: 'friends', label: 'Bạn bè', icon: <Users size={14} /> },
               { value: 'private', label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
@@ -224,26 +234,29 @@ export const PostModal: React.FC<PostModalProps> = ({
         <div className="flex-1 px-4 md:px-6 pt-2 pb-4">
           <div className="relative group">
             <textarea
-              ref={textareaRef}
+              {...register('content')}
+              ref={(e) => {
+                register('content').ref(e);
+                (textareaRef as any).current = e;
+              }}
               placeholder="Hãy viết gì đó..."
               className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 ${
-                content.length < 85 && images.length === 0 && videos.length === 0
+                (formData.content?.length || 0) < 85 && formData.images.length === 0 && formData.videos.length === 0
                   ? 'text-xl md:text-2xl font-medium min-h-[120px]'
                   : 'text-base md:text-lg min-h-[100px]'
               }`}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
               disabled={isSubmitting}
               autoFocus
             />
           </div>
 
-        {(images.length > 0 || videos.length > 0) && (
+        {(formData.images.length > 0 || formData.videos.length > 0) && (
           <div className="grid grid-cols-2 gap-2 mt-4">
-            {images.map((img, idx) => (
+            {formData.images.map((img, idx) => (
               <div key={`img-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
                 <img src={img} alt="" className="w-full h-full object-cover" />
                 <button
+                  type="button"
                   onClick={() => handleRemoveImage(idx)}
                   className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
                 >
@@ -251,13 +264,14 @@ export const PostModal: React.FC<PostModalProps> = ({
                 </button>
               </div>
             ))}
-            {videos.map((video, idx) => (
+            {formData.videos.map((video, idx) => (
               <div key={`vid-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
                 <video src={video} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                    <Video className="text-white/80" size={32} />
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleRemoveVideo(idx)}
                   className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
                 >
