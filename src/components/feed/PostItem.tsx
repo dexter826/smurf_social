@@ -124,7 +124,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
           {shouldTruncate && (
             <span 
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-text-secondary font-bold cursor-pointer hover:underline ml-1"
+              className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm uppercase tracking-wider"
             >
               {isExpanded ? 'Thu gọn' : 'Xem thêm'}
             </span>
