@@ -12,7 +12,8 @@ import {
   Trash2,
   ExternalLink,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FileX
 } from 'lucide-react';
 import { Report, ReportStatus, ReportType, User, Post, Comment } from '../types';
 import { reportService } from '../services/reportService';
@@ -109,6 +110,7 @@ const ReportDetailPage: React.FC = () => {
       case ReportStatus.PENDING: return 'Chờ xử lý';
       case ReportStatus.RESOLVED: return 'Đã xử lý';
       case ReportStatus.REJECTED: return 'Đã từ chối';
+      case ReportStatus.ORPHANED: return 'Nội dung đã xóa';
     }
   };
 
@@ -121,6 +123,8 @@ const ReportDetailPage: React.FC = () => {
         return <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-success/5 text-success outline-none ring-0">{label}</span>;
       case ReportStatus.REJECTED:
         return <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-text-secondary/5 text-text-secondary outline-none ring-0">{label}</span>;
+      case ReportStatus.ORPHANED:
+        return <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-text-tertiary/5 text-text-tertiary outline-none ring-0">{label}</span>;
     }
   };
 
@@ -412,14 +416,27 @@ const ReportDetailPage: React.FC = () => {
           {/* Lịch sử xử lý cho báo cáo đã đóng */}
           {report.status !== ReportStatus.PENDING && (
             <div className="bg-bg-primary rounded-xl p-6 border border-border-light shadow-sm flex items-center gap-4">
-              <div className={`p-2 rounded-lg ${report.status === ReportStatus.RESOLVED ? 'bg-success/10 text-success' : 'bg-text-secondary/10 text-text-secondary'}`}>
-                {report.status === ReportStatus.RESOLVED ? <CheckCircle size={20} /> : <XCircle size={20} />}
+              <div className={`p-2 rounded-lg ${
+                report.status === ReportStatus.RESOLVED ? 'bg-success/10 text-success' : 
+                report.status === ReportStatus.ORPHANED ? 'bg-text-tertiary/10 text-text-tertiary' :
+                'bg-text-secondary/10 text-text-secondary'
+              }`}>
+                {report.status === ReportStatus.RESOLVED ? <CheckCircle size={20} /> : 
+                 report.status === ReportStatus.ORPHANED ? <FileX size={20} /> : 
+                 <XCircle size={20} />}
               </div>
               <div>
                 <h4 className="text-sm font-bold text-text-primary">
-                  {report.status === ReportStatus.RESOLVED ? 'Báo cáo đã chấp thuận và gỡ bỏ' : 'Báo cáo đã bị từ chối'}
+                  {report.status === ReportStatus.RESOLVED ? 'Báo cáo đã chấp thuận và gỡ bỏ' : 
+                   report.status === ReportStatus.ORPHANED ? 'Nội dung đã bị chủ sở hữu xóa' :
+                   'Báo cáo đã bị từ chối'}
                 </h4>
-                <p className="text-xs text-text-tertiary">Thời gian xử lý: {report.resolvedAt ? `${formatRelativeTime(report.resolvedAt)} (${formatDateTime(report.resolvedAt)})` : 'N/A'}</p>
+                <p className="text-xs text-text-tertiary">
+                  {report.status === ReportStatus.ORPHANED 
+                    ? (report.resolution || 'Nội dung gốc không còn tồn tại')
+                    : `Thời gian xử lý: ${report.resolvedAt ? `${formatRelativeTime(report.resolvedAt)} (${formatDateTime(report.resolvedAt)})` : 'N/A'}`
+                  }
+                </p>
               </div>
             </div>
           )}

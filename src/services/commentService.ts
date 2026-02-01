@@ -21,7 +21,7 @@ import {
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
-import { Comment, NotificationType } from '../types';
+import { Comment, NotificationType, ReportStatus } from '../types';
 import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 
@@ -212,7 +212,7 @@ export const commentService = {
 
       const batch = writeBatch(db);
 
-      // Xóa report liên quan
+      // Archive reports thay vì xóa - đánh dấu ORPHANED
       try {
         const reportsQuery = query(
           collection(db, 'reports'), 
@@ -220,7 +220,12 @@ export const commentService = {
           where('targetId', '==', commentId)
         );
         const reportsSnapshot = await getDocs(reportsQuery);
-        reportsSnapshot.forEach(r => batch.delete(r.ref));
+        reportsSnapshot.forEach(r => {
+          batch.update(r.ref, {
+            status: ReportStatus.ORPHANED,
+            resolution: 'Nội dung đã bị chủ sở hữu xóa'
+          });
+        });
       } catch (err) {
         // Bỏ qua lỗi permission
       }

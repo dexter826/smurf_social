@@ -21,7 +21,7 @@ import {
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
-import { Post, Comment, NotificationType } from '../types';
+import { Post, Comment, NotificationType, ReportStatus } from '../types';
 import { chunkArray } from '../utils/batchUtils';
 import { PAGINATION, FIREBASE_LIMITS } from '../constants';
 import { notificationService } from './notificationService';
@@ -355,7 +355,7 @@ export const postService = {
 
       const batch = writeBatch(db);
 
-      // Xóa report liên quan
+      // Archive reports thay vì xóa - đánh dấu ORPHANED
       try {
         const reportsQuery = query(
           collection(db, 'reports'), 
@@ -364,11 +364,34 @@ export const postService = {
         );
         const reportsSnapshot = await getDocs(reportsQuery);
         reportsSnapshot.forEach(reportDoc => {
-          batch.delete(reportDoc.ref);
+          batch.update(reportDoc.ref, {
+            status: ReportStatus.ORPHANED,
+            resolution: 'Nội dung đã bị chủ sở hữu xóa'
+          });
         });
+
+        // Archive reports của comments thuộc bài viết này
+        const commentIds = allComments.map(c => c.id);
+        if (commentIds.length > 0) {
+          const commentReportsQuery = query(
+            collection(db, 'reports'),
+            where('targetType', '==', 'comment'),
+            where('targetId', 'in', commentIds.slice(0, 30))
+          );
+          const commentReportsSnapshot = await getDocs(commentReportsQuery);
+          commentReportsSnapshot.forEach(reportDoc => {
+            batch.update(reportDoc.ref, {
+              status: ReportStatus.ORPHANED,
+              resolution: 'Nội dung đã bị xóa do bài viết gốc bị xóa'
+            });
+          });
+        }
       } catch (err) {
         // Bỏ qua lỗi permission
       }
+
+      // Xóa notifications liên quan đến bài viết
+      await notificationService.deleteNotificationsByPostId(postId);
       
       allComments.forEach(doc => batch.delete(doc.ref));
       batch.delete(doc(db, 'posts', postId));

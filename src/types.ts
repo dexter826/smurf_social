@@ -165,7 +165,8 @@ export enum ReportReason {
 export enum ReportStatus {
   PENDING = 'pending',
   RESOLVED = 'resolved',
-  REJECTED = 'rejected'
+  REJECTED = 'rejected',
+  ORPHANED = 'orphaned'
 }
 
 export interface Report {
