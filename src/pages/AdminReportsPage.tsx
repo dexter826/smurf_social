@@ -107,14 +107,14 @@ const AdminReportsPage: React.FC = () => {
         {isLoading ? (
           <div className="space-y-8">
             {/* Stat Cards Skeleton */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-bg-primary p-6 rounded-xl border border-border-light shadow-sm space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-bg-primary p-3 md:p-4 rounded-xl border border-border-light shadow-sm space-y-2">
                   <div className="flex items-center gap-2">
-                    <Skeleton className="h-6 w-6 rounded" />
-                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-3 w-16" />
                   </div>
-                  <Skeleton className="h-8 w-12" />
+                  <Skeleton className="h-6 w-10" />
                 </div>
               ))}
             </div>
@@ -144,20 +144,20 @@ const AdminReportsPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Stat Cards */}
-            <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
+            {/* Stat Cards - 4 cột trên cùng 1 dòng */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">
               {tabs.map(tab => (
                 <div 
                   key={tab.value}
-                  className="bg-bg-primary p-3 md:p-6 rounded-xl border border-border-light shadow-sm flex flex-col gap-0.5 md:gap-1"
+                  className="bg-bg-primary p-2.5 md:p-4 rounded-xl border border-border-light shadow-sm flex flex-col gap-0.5"
                 >
-                  <div className="flex items-center gap-1.5 md:gap-2">
+                  <div className="flex items-center gap-1.5">
                     <div className={`p-1 rounded bg-bg-secondary text-${tab.color} shrink-0`}>
-                      {React.cloneElement(tab.icon as React.ReactElement, { size: 14 })}
+                      {React.cloneElement(tab.icon as React.ReactElement, { size: 12, className: 'md:w-[14px] md:h-[14px]' })}
                     </div>
-                    <span className="text-[9px] md:text-[10px] font-bold text-text-tertiary uppercase tracking-wider truncate">{tab.label}</span>
+                    <span className="text-[8px] md:text-[10px] font-bold text-text-tertiary uppercase tracking-wider truncate">{tab.label}</span>
                   </div>
-                  <div className="text-lg md:text-2xl font-bold text-text-primary">{tab.count}</div>
+                  <div className="text-base md:text-xl font-bold text-text-primary">{tab.count}</div>
                 </div>
               ))}
             </div>
