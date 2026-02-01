@@ -21,6 +21,7 @@ interface CommentSectionProps {
   variant?: 'default' | 'cinema';
   autoFocus?: boolean;
   onProfileClick?: () => void;
+  postOwnerId?: string;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
@@ -30,7 +31,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   className = '',
   variant = 'default',
   autoFocus = false,
-  onProfileClick
+  onProfileClick,
+  postOwnerId
 }) => {
   const {
     rootComments,
@@ -232,7 +234,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  const renderCommentItem = (comment: Comment, isReply = false) => {
+  const renderCommentItem = (comment: Comment, isReply = false, rootAuthorId?: string) => {
     const author = users[comment.userId];
     const commentReplies = replies[postId]?.[comment.id] || [];
     const hasMoreR = hasMoreReply[postId]?.[comment.id];
@@ -267,7 +269,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 >
                   {author?.name || 'Người dùng'}
                 </h4>
-                {isReply && comment.replyToUserId && users[comment.replyToUserId] && (
+                {comment.userId === postOwnerId && (
+                  <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold ml-1 flex-shrink-0">
+                    Tác giả
+                  </span>
+                )}
+                {isReply && comment.replyToUserId && users[comment.replyToUserId] && (comment.replyToUserId !== rootAuthorId || comment.replyToUserId === comment.userId) && (
                   <>
                     <ChevronRight size={12} className="text-text-tertiary flex-shrink-0 mx-0.5" />
                     <h4
@@ -352,7 +359,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   )
                 ) : (
                   <>
-                    <div className="space-y-1">{commentReplies.map(reply => renderCommentItem(reply, true))}</div>
+                    <div className="space-y-1">{commentReplies.map(reply => renderCommentItem(reply, true, comment.userId))}</div>
                     {hasMoreR && (
                       <button onClick={() => loadReplies(comment.id)} className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" disabled={isLoadingR}>
                         {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
@@ -380,7 +387,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <div className="text-center py-10 text-text-secondary text-sm italic">Hãy là người đầu tiên bình luận!</div>
           ) : (
             <div className="flex flex-col">
-              {currentRootComments.map(comment => renderCommentItem(comment))}
+              {currentRootComments.map(comment => renderCommentItem(comment, false, comment.userId))}
               {currentHasMoreRoot && (
                 <div className="px-6 py-4">
                   <Button variant="ghost" size="sm" onClick={loadMoreRootComments} isLoading={isLoading} className="text-primary w-full justify-start font-bold text-sm h-10 border-border-light hover:bg-bg-primary">

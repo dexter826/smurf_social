@@ -278,6 +278,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             autoFocus={true}
             className="flex-1 min-h-0"
             onProfileClick={onClose}
+            postOwnerId={post.userId}
             header={
               <div className="flex flex-col">
                 {/* Media Component cho Mobile (Nằm giữa Header và Content) */}
