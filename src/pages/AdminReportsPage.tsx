@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Flag, CheckCircle, XCircle, Clock, Eye, AlertTriangle, FileText, MessageSquare } from 'lucide-react';
+import { Shield, Flag, CheckCircle, XCircle, Clock, Eye, AlertTriangle, FileText, MessageSquare, FileX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ReportStatus, ReportType } from '../types';
 import { Button, UserAvatar, ConfirmDialog, Skeleton } from '../components/ui';
@@ -31,6 +31,8 @@ const getStatusBadge = (status: ReportStatus) => {
       return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success flex items-center gap-1"><CheckCircle size={10} /> Đã xử lý</span>;
     case ReportStatus.REJECTED:
       return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-text-secondary/10 text-text-secondary flex items-center gap-1"><XCircle size={10} /> Từ chối</span>;
+    case ReportStatus.ORPHANED:
+      return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-text-tertiary/10 text-text-tertiary flex items-center gap-1"><FileX size={10} /> Đã xóa</span>;
   }
 };
 
@@ -59,7 +61,8 @@ const AdminReportsPage: React.FC = () => {
   const tabs = [
     { label: 'Chờ xử lý', value: 'pending', color: 'warning', icon: <Clock size={16} />, count: stats.pending },
     { label: 'Đã xử lý', value: ReportStatus.RESOLVED, color: 'success', icon: <CheckCircle size={16} />, count: stats.resolved },
-    { label: 'Từ chối', value: ReportStatus.REJECTED, color: 'error', icon: <XCircle size={16} />, count: stats.rejected }
+    { label: 'Từ chối', value: ReportStatus.REJECTED, color: 'error', icon: <XCircle size={16} />, count: stats.rejected },
+    { label: 'Đã xóa', value: ReportStatus.ORPHANED, color: 'tertiary', icon: <FileX size={16} />, count: stats.orphaned || 0 }
   ];
 
   return (

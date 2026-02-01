@@ -132,6 +132,37 @@ export const notificationService = {
     }
   },
 
+  // Xóa notifications liên quan đến một bài viết
+  deleteNotificationsByPostId: async (postId: string): Promise<void> => {
+    try {
+      const notificationTypes = [
+        'like_post',
+        'comment_post', 
+        'reply_comment',
+        'like_comment'
+      ];
+      
+      for (const type of notificationTypes) {
+        const q = query(
+          collection(db, 'notifications'),
+          where('type', '==', type),
+          where('data.postId', '==', postId)
+        );
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          const batch = writeBatch(db);
+          snapshot.docs.forEach(docSnap => {
+            batch.delete(docSnap.ref);
+          });
+          await batch.commit();
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi xóa notifications theo postId:", error);
+    }
+  },
+
   // Yêu cầu quyền FCM và lưu Token
   requestPushPermission: async (userId: string): Promise<string | null> => {
     try {
