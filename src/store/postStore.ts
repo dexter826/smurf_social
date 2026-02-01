@@ -99,7 +99,7 @@ export const usePostStore = create<PostState>()(
   },
 
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds: string[] = []) => {
-    const currentCount = Math.max(get().posts.length, 10);
+    const currentCount = Math.max(get().posts.length, PAGINATION.FEED_POSTS);
     
     const unsubscribe = postService.subscribeToFeed(
       currentUserId, 

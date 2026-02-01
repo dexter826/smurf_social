@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG } from '../constants/appConfig';
+import { ReportReason } from '../types';
 
 // Schema cho Đăng nhập
 export const loginSchema = z.object({
@@ -7,20 +9,20 @@ export const loginSchema = z.object({
     .email('Email không hợp lệ'),
   password: z.string()
     .min(1, 'Vui lòng nhập mật khẩu')
-    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+    .min(VALIDATION.PASSWORD_MIN_LENGTH, `Mật khẩu phải có ít nhất ${VALIDATION.PASSWORD_MIN_LENGTH} ký tự`),
 });
 
 // Schema cho Đăng ký
 export const registerSchema = z.object({
   name: z.string()
     .min(1, 'Vui lòng nhập họ tên')
-    .max(50, 'Họ tên không được quá 50 ký tự'),
+    .max(GROUP_LIMITS.NAME_MAX_LENGTH, `Họ tên không được quá ${GROUP_LIMITS.NAME_MAX_LENGTH} ký tự`),
   email: z.string()
     .min(1, 'Vui lòng nhập email')
     .email('Email không hợp lệ'),
   password: z.string()
     .min(1, 'Vui lòng nhập mật khẩu')
-    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+    .min(VALIDATION.PASSWORD_MIN_LENGTH, `Mật khẩu phải có ít nhất ${VALIDATION.PASSWORD_MIN_LENGTH} ký tự`),
   confirmPassword: z.string()
     .min(1, 'Vui lòng xác nhận mật khẩu'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -39,9 +41,9 @@ export const forgotPasswordSchema = z.object({
 export const profileSchema = z.object({
   name: z.string()
     .min(1, 'Tên không được để trống')
-    .max(50, 'Tên không được quá 50 ký tự'),
+    .max(GROUP_LIMITS.NAME_MAX_LENGTH, `Tên không được quá ${GROUP_LIMITS.NAME_MAX_LENGTH} ký tự`),
   bio: z.string()
-    .max(150, 'Giới thiệu không được quá 150 ký tự')
+    .max(VALIDATION.BIO_MAX_LENGTH, `Giới thiệu không được quá ${VALIDATION.BIO_MAX_LENGTH} ký tự`)
     .optional(),
   location: z.string().optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
@@ -54,7 +56,7 @@ export const changePasswordSchema = z.object({
     .min(1, 'Vui lòng nhập mật khẩu hiện tại'),
   newPassword: z.string()
     .min(1, 'Vui lòng nhập mật khẩu mới')
-    .min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
+    .min(VALIDATION.PASSWORD_MIN_LENGTH, `Mật khẩu mới phải có ít nhất ${VALIDATION.PASSWORD_MIN_LENGTH} ký tự`),
   confirmPassword: z.string()
     .min(1, 'Vui lòng xác nhận mật khẩu mới'),
 }).refine((data) => data.newPassword !== data.currentPassword, {
@@ -68,7 +70,7 @@ export const changePasswordSchema = z.object({
 // Schema cho Bài viết
 export const postSchema = z.object({
   content: z.string()
-    .max(5000, 'Nội dung không được quá 5000 ký tự')
+    .max(VALIDATION.POST_CONTENT_MAX_LENGTH, `Nội dung không được quá ${VALIDATION.POST_CONTENT_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
   visibility: z.enum(['friends', 'private']),
@@ -83,11 +85,11 @@ export const postSchema = z.object({
 export const reportSchema = z.object({
   reason: z.string().min(1, 'Vui lòng chọn lý do báo cáo'),
   description: z.string()
-    .max(500, 'Mô tả không được quá 500 ký tự')
+    .max(REPORT_CONFIG.DESCRIPTION_MAX_LENGTH, `Mô tả không được quá ${REPORT_CONFIG.DESCRIPTION_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
 }).refine(data => {
-  if (data.reason === 'OTHER' && !data.description?.trim()) return false;
+  if (data.reason === ReportReason.OTHER && !data.description?.trim()) return false;
   return true;
 }, {
   message: "Vui lòng mô tả chi tiết lý do",
@@ -98,14 +100,14 @@ export const reportSchema = z.object({
 export const groupSchema = z.object({
   name: z.string()
     .min(1, 'Tên nhóm không được để trống')
-    .max(50, 'Tên nhóm không được quá 50 ký tự'),
-  memberIds: z.array(z.string()).min(2, 'Nhóm phải có ít nhất 2 thành viên'),
+    .max(GROUP_LIMITS.NAME_MAX_LENGTH, `Tên nhóm không được quá ${GROUP_LIMITS.NAME_MAX_LENGTH} ký tự`),
+  memberIds: z.array(z.string()).min(GROUP_LIMITS.MIN_MEMBERS, `Nhóm phải có ít nhất ${GROUP_LIMITS.MIN_MEMBERS} thành viên`),
 });
 
 // Schema cho Bình luận
 export const commentSchema = z.object({
   content: z.string()
-    .max(1000, 'Bình luận không được quá 1000 ký tự')
+    .max(VALIDATION.COMMENT_MAX_LENGTH, `Bình luận không được quá ${VALIDATION.COMMENT_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
   image: z.string().optional(),

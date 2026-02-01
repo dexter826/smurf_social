@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { AppNotification } from '../types';
 import { notificationService } from '../services/notificationService';
+import { PAGINATION } from '../constants/appConfig';
 
 interface NotificationState {
   notifications: AppNotification[];
@@ -28,10 +29,8 @@ export const useNotificationStore = create<NotificationState>()(
       unreadCount: 0,
       isLoading: false,
       isRevalidating: false,
-      currentLimit: 15,
+      currentLimit: PAGINATION.NOTIFICATIONS,
       _unsubscribe: null as (() => void) | null,
-
-      // ... (giữ nguyên các hàm khác)
 
       reset: () => {
         const { _unsubscribe } = get();
@@ -42,7 +41,7 @@ export const useNotificationStore = create<NotificationState>()(
           unreadCount: 0,
           isLoading: false,
           isRevalidating: false,
-          currentLimit: 15,
+          currentLimit: PAGINATION.NOTIFICATIONS,
           _unsubscribe: null,
         });
       },
@@ -102,7 +101,7 @@ export const useNotificationStore = create<NotificationState>()(
     set({ notifications: [], unreadCount: 0 });
   },
 
-  initialize: (userId, limit = 15) => {
+  initialize: (userId, limit = PAGINATION.NOTIFICATIONS) => {
     const { _unsubscribe } = get();
     if (_unsubscribe) _unsubscribe();
 
@@ -123,14 +122,14 @@ export const useNotificationStore = create<NotificationState>()(
   },
 
   loadMore: (userId) => {
-    const newLimit = get().currentLimit + 15;
+    const newLimit = get().currentLimit + PAGINATION.NOTIFICATIONS;
     get().initialize(userId, newLimit);
   }
 }), {
   name: 'smurf_notify_cache',
   storage: createJSONStorage(() => localStorage),
   partialize: (state) => ({ 
-    notifications: state.notifications.slice(0, 50),
+    notifications: state.notifications.slice(0, PAGINATION.MESSAGES),
     unreadCount: state.unreadCount
   }),
 }));

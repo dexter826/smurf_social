@@ -7,6 +7,7 @@ export const PAGINATION = {
   FRIENDS: 50,
   MESSAGES: 50,
   SEARCH_RESULTS: 20,
+  NOTIFICATIONS: 15,
 } as const;
 
 // Giới hạn Firebase
