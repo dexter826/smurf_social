@@ -339,9 +339,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 >
                   <div className="flex -space-x-1.5 overflow-hidden">
                     {lastReadByUsers.slice(0, 3).map(user => (
-                      <div key={user.id} className="inline-block h-4 w-4 rounded-full ring-1 ring-bg-primary overflow-hidden bg-bg-primary">
-                        <Avatar src={user.avatar} name={user.name} size="xs" />
-                      </div>
+                      <Avatar 
+                        key={user.id}
+                        src={user.avatar} 
+                        name={user.name} 
+                        size="2xs" 
+                        className="ring-1 ring-bg-primary"
+                      />
                     ))}
                   </div>
                   {lastReadByUsers.length > 3 && (

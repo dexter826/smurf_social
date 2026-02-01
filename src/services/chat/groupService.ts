@@ -31,6 +31,7 @@ export const groupService = {
         creatorId,
         adminIds: [creatorId],
         unreadCount: participantIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {}),
+        memberJoinedAt: participantIds.reduce((acc, id) => ({ ...acc, [id]: serverTimestamp() }), {}),
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
         pinned: false,
@@ -69,6 +70,7 @@ export const groupService = {
       await updateDoc(conversationRef, {
         participantIds: arrayUnion(userId),
         [`unreadCount.${userId}`]: 0,
+        [`memberJoinedAt.${userId}`]: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
     } catch (error) {
@@ -112,6 +114,9 @@ export const groupService = {
         const newUnreadCount = { ...data.unreadCount };
         delete newUnreadCount[userId];
         
+        const newMemberJoinedAt = { ...data.memberJoinedAt || {} };
+        delete newMemberJoinedAt[userId];
+        
         const newParticipantIds = data.participantIds.filter((id: string) => id !== userId);
         const newAdminIds = (data.adminIds || []).filter((id: string) => id !== userId);
         
@@ -123,6 +128,7 @@ export const groupService = {
             participantIds: newParticipantIds,
             adminIds: newAdminIds,
             unreadCount: newUnreadCount,
+            memberJoinedAt: newMemberJoinedAt,
             updatedAt: serverTimestamp()
           };
           
