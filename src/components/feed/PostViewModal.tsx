@@ -279,6 +279,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             className="flex-1 min-h-0"
             onProfileClick={onClose}
             postOwnerId={post.userId}
+            totalCommentCount={post.commentCount}
             header={
               <div className="flex flex-col">
                 {/* Media Component cho Mobile (Nằm giữa Header và Content) */}
