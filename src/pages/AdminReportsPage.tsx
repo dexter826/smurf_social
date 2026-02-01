@@ -1,154 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Flag, CheckCircle, XCircle, Clock, Eye, AlertTriangle, FileText, MessageSquare, User as UserIcon } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import React from 'react';
+import { Shield, Flag, CheckCircle, XCircle, Clock, Eye, AlertTriangle, FileText, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Report, ReportStatus, ReportType, User } from '../types';
-import { reportService } from '../services/reportService';
-import { userService } from '../services/userService';
+import { ReportStatus, ReportType } from '../types';
 import { Button, UserAvatar, ConfirmDialog, Skeleton } from '../components/ui';
 import { REPORT_CONFIG } from '../constants';
 import { formatRelativeTime, formatDateTime } from '../utils/dateUtils';
-import { toast } from '../store/toastStore';
+import { useAdminReports } from '../hooks/useAdminReports';
+
+const getTypeIcon = (type: ReportType) => {
+  switch (type) {
+    case ReportType.POST: return <FileText size={14} />;
+    case ReportType.COMMENT: return <MessageSquare size={14} />;
+    default: return <Flag size={14} />;
+  }
+};
+
+const getTypeLabel = (type: ReportType) => {
+  switch (type) {
+    case ReportType.POST: return 'Bài viết';
+    case ReportType.COMMENT: return 'Bình luận';
+    default: return 'Khác';
+  }
+};
+
+const getStatusBadge = (status: ReportStatus) => {
+  switch (status) {
+    case ReportStatus.PENDING:
+      return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-warning/10 text-warning flex items-center gap-1"><Clock size={10} /> Chờ xử lý</span>;
+    case ReportStatus.RESOLVED:
+      return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success flex items-center gap-1"><CheckCircle size={10} /> Đã xử lý</span>;
+    case ReportStatus.REJECTED:
+      return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-text-secondary/10 text-text-secondary flex items-center gap-1"><XCircle size={10} /> Từ chối</span>;
+  }
+};
 
 const AdminReportsPage: React.FC = () => {
-  const { user } = useAuthStore();
   const navigate = useNavigate();
-  
-  const [reports, setReports] = useState<Report[]>([]);
-  const [users, setUsers] = useState<Record<string, User>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('pending');
-  const [typeFilter, setTypeFilter] = useState<ReportType | 'all'>('all');
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [actionType, setActionType] = useState<'resolve' | 'reject' | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [stats, setStats] = useState({
-    pending: 0,
-    resolved: 0,
-    rejected: 0
-  });
+  const {
+    reports,
+    stats,
+    isLoading,
+    isProcessing,
+    statusFilter,
+    typeFilter,
+    selectedReport,
+    actionType,
+    isAdmin,
+    setStatusFilter,
+    setTypeFilter,
+    getUser,
+    handleAction,
+    openConfirmDialog,
+    closeConfirmDialog
+  } = useAdminReports();
 
-  // Chặn truy cập phi admin
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      toast.error('Bạn không có quyền truy cập trang này');
-      navigate('/');
-    }
-  }, [user, navigate]);
-
-  // Đồng bộ dữ liệu báo cáo
-  useEffect(() => {
-    if (user?.role !== 'admin') return;
-    
-    const fetchReports = async () => {
-      setIsLoading(true);
-      try {
-        const data = statusFilter === 'all' 
-          ? await reportService.getAllReports()
-          : await reportService.getPendingReports();
-        
-        // Tính toán thống kê từ dữ liệu gốc trước khi lọc type
-        const allReports = statusFilter === 'all' ? data : await reportService.getAllReports(200);
-        setStats({
-          pending: allReports.filter(r => r.status === ReportStatus.PENDING).length,
-          resolved: allReports.filter(r => r.status === ReportStatus.RESOLVED).length,
-          rejected: allReports.filter(r => r.status === ReportStatus.REJECTED).length
-        });
-
-        // Lọc theo type nếu cần
-        const filteredData = typeFilter === 'all' 
-          ? data 
-          : data.filter(r => r.targetType === typeFilter);
-
-        setReports(filteredData);
-
-        // Fetch thông tin users
-        const userIds = [...new Set([
-          ...filteredData.map(r => r.reporterId),
-          ...filteredData.map(r => r.targetOwnerId)
-        ])];
-        const usersData: Record<string, User> = {};
-        await Promise.all(userIds.map(async (id) => {
-          const userData = await userService.getUserById(id);
-          if (userData) usersData[id] = userData;
-        }));
-        setUsers(usersData);
-      } catch (error) {
-        toast.error('Lỗi tải danh sách báo cáo');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchReports();
-  }, [user, statusFilter, typeFilter]);
-
-  const handleAction = async () => {
-    if (!selectedReport || !actionType || !user) return;
-    
-    setIsProcessing(true);
-    try {
-      if (actionType === 'resolve') {
-        await reportService.resolveReport(selectedReport.id, user.id);
-        toast.success('Đã xử lý báo cáo và xóa nội dung vi phạm');
-      } else {
-        await reportService.rejectReport(selectedReport.id, user.id);
-        toast.success('Đã từ chối báo cáo');
-      }
-      
-      // Cập nhật local state
-      setReports(prev => prev.map(r => 
-        r.id === selectedReport.id 
-          ? { ...r, status: actionType === 'resolve' ? ReportStatus.RESOLVED : ReportStatus.REJECTED }
-          : r
-      ));
-    } catch (error) {
-      toast.error('Lỗi xử lý báo cáo');
-    } finally {
-      setIsProcessing(false);
-      setSelectedReport(null);
-      setActionType(null);
-    }
-  };
-
-  const getTypeIcon = (type: ReportType) => {
-    switch (type) {
-      case ReportType.POST: return <FileText size={14} />;
-      case ReportType.COMMENT: return <MessageSquare size={14} />;
-      default: return <Flag size={14} />;
-    }
-  };
-
-  const getTypeLabel = (type: ReportType) => {
-    switch (type) {
-      case ReportType.POST: return 'Bài viết';
-      case ReportType.COMMENT: return 'Bình luận';
-      default: return 'Khác';
-    }
-  };
-
-  const getStatusBadge = (status: ReportStatus) => {
-    switch (status) {
-      case ReportStatus.PENDING:
-        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-warning/10 text-warning flex items-center gap-1"><Clock size={10} /> Chờ xử lý</span>;
-      case ReportStatus.RESOLVED:
-        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success flex items-center gap-1"><CheckCircle size={10} /> Đã xử lý</span>;
-      case ReportStatus.REJECTED:
-        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-text-secondary/10 text-text-secondary flex items-center gap-1"><XCircle size={10} /> Từ chối</span>;
-    }
-  };
-
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
+  if (!isAdmin) return null;
 
   const tabs = [
     { label: 'Chờ xử lý', value: 'pending', color: 'warning', icon: <Clock size={16} />, count: stats.pending },
     { label: 'Đã xử lý', value: ReportStatus.RESOLVED, color: 'success', icon: <CheckCircle size={16} />, count: stats.resolved },
     { label: 'Từ chối', value: ReportStatus.REJECTED, color: 'error', icon: <XCircle size={16} />, count: stats.rejected }
   ];
-
-  const pendingCount = reports.filter(r => r.status === ReportStatus.PENDING).length;
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-bg-secondary">
@@ -229,7 +141,7 @@ const AdminReportsPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Stat Cards - Static Display */}
+            {/* Stat Cards */}
             <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
               {tabs.map(tab => (
                 <div 
@@ -289,8 +201,8 @@ const AdminReportsPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {reports.map(report => {
-              const reporter = users[report.reporterId];
-              const target = users[report.targetOwnerId];
+              const reporter = getUser(report.reporterId);
+              const target = getUser(report.targetOwnerId);
               const reasonConfig = REPORT_CONFIG.REASONS[report.reason as keyof typeof REPORT_CONFIG.REASONS];
               
               return (
@@ -355,10 +267,7 @@ const AdminReportsPage: React.FC = () => {
                           size="sm"
                           className="!h-9 !rounded-lg font-bold text-xs !gap-0 sm:!gap-2"
                           icon={<CheckCircle size={14} />}
-                          onClick={() => {
-                            setSelectedReport(report);
-                            setActionType('resolve');
-                          }}
+                          onClick={() => openConfirmDialog(report, 'resolve')}
                         >
                           <span className="hidden sm:inline">Xử lý</span>
                         </Button>
@@ -367,10 +276,7 @@ const AdminReportsPage: React.FC = () => {
                           size="sm"
                           className="!h-9 !rounded-lg font-bold text-xs !gap-0 sm:!gap-2"
                           icon={<XCircle size={14} />}
-                          onClick={() => {
-                            setSelectedReport(report);
-                            setActionType('reject');
-                          }}
+                          onClick={() => openConfirmDialog(report, 'reject')}
                         >
                           <span className="hidden sm:inline">Từ chối</span>
                         </Button>
@@ -412,10 +318,7 @@ const AdminReportsPage: React.FC = () => {
       {/* Confirm Dialog */}
       <ConfirmDialog
         isOpen={!!selectedReport && !!actionType}
-        onClose={() => {
-          setSelectedReport(null);
-          setActionType(null);
-        }}
+        onClose={closeConfirmDialog}
         onConfirm={handleAction}
         title={actionType === 'resolve' ? 'Xử lý báo cáo' : 'Từ chối báo cáo'}
         message={
