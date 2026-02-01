@@ -780,4 +780,34 @@ export const messageService = {
       throw error;
     }
   },
+
+  // Gửi tin nhắn hệ thống (không tăng unread count)
+  sendSystemMessage: async (
+    conversationId: string,
+    content: string,
+  ): Promise<void> => {
+    try {
+      const messageData = {
+        conversationId,
+        senderId: 'system',
+        content,
+        type: 'system' as MessageType,
+        timestamp: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(collection(db, 'messages'), messageData);
+
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        lastMessage: {
+          ...messageData,
+          id: docRef.id,
+          timestamp: new Date(),
+        },
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Lỗi gửi tin nhắn hệ thống:", error);
+    }
+  },
 };

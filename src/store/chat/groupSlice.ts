@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { chatService } from '../../services/chatService';
+import { useAuthStore } from '../authStore';
 
 export interface GroupSlice {
   createGroup: (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => Promise<string>;
@@ -29,11 +30,14 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
   },
 
   updateGroupInfo: async (conversationId: string, updates: { groupName?: string; groupAvatar?: string }) => {
+    const actorId = useAuthStore.getState().user?.id;
+    if (!actorId) return;
+
     set((state) => ({
       conversations: state.conversations.map((c: any) => c.id === conversationId ? { ...c, ...updates } : c)
     } as any));
     try {
-      await chatService.updateGroupInfo(conversationId, updates);
+      await chatService.updateGroupInfo(conversationId, actorId, updates);
     } catch (error) {
       console.error("Lỗi cập nhật thông tin nhóm:", error);
       throw error;
@@ -41,8 +45,10 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
   },
 
   addMember: async (conversationId: string, userId: string) => {
+    const actorId = useAuthStore.getState().user?.id;
+    if (!actorId) return;
     try {
-      await chatService.addGroupMember(conversationId, userId);
+      await chatService.addGroupMember(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi thêm thành viên:", error);
       throw error;
@@ -50,8 +56,10 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
   },
 
   removeMember: async (conversationId: string, userId: string) => {
+    const actorId = useAuthStore.getState().user?.id;
+    if (!actorId) return;
     try {
-      await chatService.removeGroupMember(conversationId, userId);
+      await chatService.removeGroupMember(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi xóa thành viên:", error);
       throw error;
@@ -72,8 +80,10 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
   },
 
   promoteToAdmin: async (conversationId: string, userId: string) => {
+    const actorId = useAuthStore.getState().user?.id;
+    if (!actorId) return;
     try {
-      await chatService.promoteToAdmin(conversationId, userId);
+      await chatService.promoteToAdmin(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi chỉ định admin:", error);
       throw error;
@@ -81,8 +91,10 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
   },
 
   demoteFromAdmin: async (conversationId: string, userId: string) => {
+    const actorId = useAuthStore.getState().user?.id;
+    if (!actorId) return;
     try {
-      await chatService.demoteFromAdmin(conversationId, userId);
+      await chatService.demoteFromAdmin(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi gỡ quyền admin:", error);
       throw error;

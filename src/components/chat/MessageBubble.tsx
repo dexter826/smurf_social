@@ -131,6 +131,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           <img src={message.content} alt="sticker" className="w-24 h-24 object-contain" />
         );
         
+      case 'system':
+        return (
+          <div className="flex flex-col items-center w-full my-1">
+            <span className="bg-bg-secondary/50 px-3 py-1 rounded-full text-[11px] text-text-tertiary italic text-center max-w-[90%]">
+              {message.content}
+            </span>
+          </div>
+        );
+        
       default:
         // Format thẻ tag: @[Name]
         const renderTextWithMentions = (text: string) => {
@@ -160,6 +169,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         );
     }
   };
+
+  if (message.type === 'system') {
+    return (
+      <div className="w-full flex justify-center mb-3">
+        {renderContent()}
+      </div>
+    );
+  }
 
   return (
     <>

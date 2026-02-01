@@ -11,6 +11,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { conversationService } from './conversationService';
+import { messageService } from './messageService';
+import { userService } from '../userService';
 
 export const groupService = {
   // Tạo hội thoại nhóm mới
@@ -39,6 +41,11 @@ export const groupService = {
       };
       
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
+      
+      // Thông báo tạo nhóm
+      const creator = await userService.getUserById(creatorId);
+      await messageService.sendSystemMessage(docRef.id, `${creator?.name || 'Ai đó'} đã tạo nhóm "${groupName}"`);
+      
       return docRef.id;
     } catch (error) {
       console.error("Lỗi tạo nhóm:", error);
@@ -49,6 +56,7 @@ export const groupService = {
   // Cập nhật tên hoặc ảnh đại diện nhóm
   updateGroupInfo: async (
     conversationId: string,
+    actorId: string,
     updates: { groupName?: string; groupAvatar?: string }
   ): Promise<void> => {
     try {
@@ -57,6 +65,15 @@ export const groupService = {
         ...updates,
         updatedAt: serverTimestamp()
       });
+
+      // Thông báo cập nhật thông tin (tên/ảnh)
+      if (updates.groupName || updates.groupAvatar) {
+        const actor = await userService.getUserById(actorId);
+        const content = updates.groupName 
+          ? `${actor?.name || 'Ai đó'} đã đổi tên nhóm thành "${updates.groupName}"`
+          : `${actor?.name || 'Ai đó'} đã cập nhật ảnh đại diện của nhóm`;
+        await messageService.sendSystemMessage(conversationId, content);
+      }
     } catch (error) {
       console.error("Lỗi cập nhật thông tin nhóm:", error);
       throw error;
@@ -64,7 +81,7 @@ export const groupService = {
   },
 
   // Thêm thành viên mới vào nhóm
-  addGroupMember: async (conversationId: string, userId: string): Promise<void> => {
+  addGroupMember: async (conversationId: string, actorId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, {
@@ -73,6 +90,13 @@ export const groupService = {
         [`memberJoinedAt.${userId}`]: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+
+      // Thông báo thêm thành viên
+      const [actor, user] = await Promise.all([
+        userService.getUserById(actorId),
+        userService.getUserById(userId)
+      ]);
+      await messageService.sendSystemMessage(conversationId, `${actor?.name || 'Ai đó'} đã thêm ${user?.name || 'Thành viên mới'} vào nhóm`);
     } catch (error) {
       console.error("Lỗi thêm thành viên:", error);
       throw error;
@@ -80,7 +104,7 @@ export const groupService = {
   },
 
   // Xóa thành viên khỏi nhóm
-  removeGroupMember: async (conversationId: string, userId: string): Promise<void> => {
+  removeGroupMember: async (conversationId: string, actorId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
@@ -96,6 +120,13 @@ export const groupService = {
           unreadCount: newUnreadCount,
           updatedAt: serverTimestamp()
         });
+
+        // Thông báo mời ra khỏi nhóm
+        const [actor, user] = await Promise.all([
+          userService.getUserById(actorId),
+          userService.getUserById(userId)
+        ]);
+        await messageService.sendSystemMessage(conversationId, `${actor?.name || 'Ai đó'} đã xóa ${user?.name || 'thành viên'} ra khỏi nhóm`);
       }
     } catch (error) {
       console.error("Lỗi xóa thành viên:", error);
@@ -141,6 +172,15 @@ export const groupService = {
           }
           
           await updateDoc(conversationRef, updates);
+
+          // Thông báo rời nhóm hoặc chuyển chủ nhóm
+          const user = await userService.getUserById(userId);
+          await messageService.sendSystemMessage(conversationId, `${user?.name || 'Ai đó'} đã rời khỏi nhóm`);
+          
+          if (updates.creatorId && updates.creatorId !== data.creatorId) {
+            const newOwner = await userService.getUserById(updates.creatorId);
+            await messageService.sendSystemMessage(conversationId, `${newOwner?.name || 'Ai đó'} đã trở thành chủ nhóm mới`);
+          }
         }
       }
     } catch (error) {
@@ -150,12 +190,19 @@ export const groupService = {
   },
 
   // Chỉ định thành viên làm quản trị viên
-  promoteToAdmin: async (conversationId: string, userId: string): Promise<void> => {
+  promoteToAdmin: async (conversationId: string, actorId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, {
         adminIds: arrayUnion(userId)
       });
+
+      // Thông báo thăng chức Admin
+      const [actor, user] = await Promise.all([
+        userService.getUserById(actorId),
+        userService.getUserById(userId)
+      ]);
+      await messageService.sendSystemMessage(conversationId, `${actor?.name || 'Ai đó'} đã chỉ định ${user?.name || 'thành viên'} làm quản trị viên`);
     } catch (error) {
       console.error("Lỗi thăng quản trị viên:", error);
       throw error;
@@ -163,12 +210,19 @@ export const groupService = {
   },
 
   // Gỡ quyền quản trị viên của thành viên
-  demoteFromAdmin: async (conversationId: string, userId: string): Promise<void> => {
+  demoteFromAdmin: async (conversationId: string, actorId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, {
         adminIds: arrayRemove(userId)
       });
+
+      // Thông báo hạ chức Admin
+      const [actor, user] = await Promise.all([
+        userService.getUserById(actorId),
+        userService.getUserById(userId)
+      ]);
+      await messageService.sendSystemMessage(conversationId, `${actor?.name || 'Ai đó'} đã xóa quyền quản trị viên của ${user?.name || 'thành viên'}`);
     } catch (error) {
       console.error("Lỗi hạ quyền quản trị viên:", error);
       throw error;
