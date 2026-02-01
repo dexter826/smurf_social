@@ -25,7 +25,7 @@ import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 
 export const commentService = {
-  // Lấy danh sách bình luận gốc của bài viết
+  // Lấy bình luận gốc
   getRootComments: async (postId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -63,7 +63,7 @@ export const commentService = {
     }
   },
 
-  // Lấy các phản hồi của một bình luận
+  // Lấy phản hồi mục
   getReplies: async (commentId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -100,7 +100,7 @@ export const commentService = {
     }
   },
 
-  // Tạo bình luận mới và cập nhật số lượng
+  // Tạo bình luận mới
   addComment: async (
     postId: string, 
     userId: string, 
@@ -138,7 +138,7 @@ export const commentService = {
         commentCount: increment(1)
       });
 
-      // Gửi thông báo cho chủ bài viết hoặc người được phản hồi
+      // Thông báo cho chủ bài viết hoặc người phản hồi
       const postSnap = await getDoc(postRef);
       const postData = postSnap.data();
       
@@ -169,7 +169,7 @@ export const commentService = {
     }
   },
 
-  // Xóa bình luận và toàn bộ phản hồi con
+  // Xóa bình luận và phản hồi con
   deleteComment: async (commentId: string, postId: string, parentId?: string | null) => {
     try {
       const batch = writeBatch(db);
@@ -204,7 +204,7 @@ export const commentService = {
     }
   },
 
-  // Chỉnh sửa nội dung hoặc đính kèm của bình luận
+  // Cập nhật nội dung bình luận
   updateComment: async (commentId: string, content: string, imageUrl?: string | null, videoUrl?: string | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -218,7 +218,7 @@ export const commentService = {
     }
   },
 
-  // Cập nhật trạng thái yêu thích bình luận
+  // Thích bình luận
   likeComment: async (commentId: string, userId: string, isLiked: boolean) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -245,7 +245,7 @@ export const commentService = {
     }
   },
 
-  // Lấy chi tiết comment theo ID (cho admin)
+  // Lấy bình luận theo ID
   getCommentById: async (commentId: string): Promise<Comment | null> => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -265,11 +265,11 @@ export const commentService = {
     }
   },
 
-  // Realtime subscription cho comments của một post
+  // Theo dõi bình luận realtime
   subscribeToComments: (
     postId: string,
     blockedUserIds: string[] = [],
-    callback: (action: 'initial' | 'add' | 'update' | 'remove', comments: Comment[], isReply: boolean, parentId?: string) => void,
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', comments: Comment[]) => void,
     limitCount: number = PAGINATION.COMMENTS
   ) => {
     const convertDocToComment = (docSnap: DocumentSnapshot): Comment => ({
@@ -288,31 +288,75 @@ export const commentService = {
 
     let isInitialLoad = true;
 
-    const unsubscribe = onSnapshot(rootQuery, (snapshot) => {
+    return onSnapshot(rootQuery, (snapshot) => {
       if (isInitialLoad) {
         const comments = snapshot.docs
           .map(convertDocToComment)
           .filter(c => !blockedUserIds.includes(c.userId));
-        callback('initial', comments, false);
+        callback('initial', comments);
         isInitialLoad = false;
         return;
       }
 
       snapshot.docChanges().forEach(change => {
         const comment = convertDocToComment(change.doc);
-        
         if (blockedUserIds.includes(comment.userId)) return;
 
         if (change.type === 'added') {
-          callback('add', [comment], false);
+          callback('add', [comment]);
         } else if (change.type === 'modified') {
-          callback('update', [comment], false);
+          callback('update', [comment]);
         } else if (change.type === 'removed') {
-          callback('remove', [comment], false);
+          callback('remove', [comment]);
         }
       });
     }, (error) => console.error("Lỗi subscribe comments:", error));
+  },
 
-    return unsubscribe;
+  // Theo dõi phản hồi realtime
+  subscribeToReplies: (
+    parentId: string,
+    blockedUserIds: string[] = [],
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', replies: Comment[]) => void,
+    limitCount: number = PAGINATION.REPLIES
+  ) => {
+    const convertDocToComment = (docSnap: DocumentSnapshot): Comment => ({
+      ...docSnap.data(),
+      id: docSnap.id,
+      timestamp: docSnap.data()?.timestamp?.toDate() || new Date(),
+    } as Comment);
+
+    const q = query(
+      collection(db, 'comments'),
+      where('parentId', '==', parentId),
+      orderBy('timestamp', 'asc'),
+      limit(limitCount)
+    );
+
+    let isInitialLoad = true;
+
+    return onSnapshot(q, (snapshot) => {
+      if (isInitialLoad) {
+        const replies = snapshot.docs
+          .map(convertDocToComment)
+          .filter(c => !blockedUserIds.includes(c.userId));
+        callback('initial', replies);
+        isInitialLoad = false;
+        return;
+      }
+
+      snapshot.docChanges().forEach(change => {
+        const reply = convertDocToComment(change.doc);
+        if (blockedUserIds.includes(reply.userId)) return;
+
+        if (change.type === 'added') {
+          callback('add', [reply]);
+        } else if (change.type === 'modified') {
+          callback('update', [reply]);
+        } else if (change.type === 'removed') {
+          callback('remove', [reply]);
+        }
+      });
+    }, (error) => console.error("Lỗi subscribe replies:", error));
   }
 };

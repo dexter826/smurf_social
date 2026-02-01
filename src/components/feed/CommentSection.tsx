@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Flag, X } from 'lucide-react';
 import { UserAvatar, Button, ConfirmDialog, UploadProgress } from '../ui';
@@ -40,6 +40,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     isLoadingPost,
     fetchRootComments,
     fetchReplies,
+    subscribeToComments,
+    subscribeToReplies,
     addComment,
     updateComment,
     deleteComment,
@@ -59,6 +61,21 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
   const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null);
 
+  const replySubscriptionsRef = useRef<Record<string, () => void>>({});
+  const commentRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Cuộn tới ô nhập liệu khi active
+  useEffect(() => {
+    if (activeInputId && activeInputId !== 'root' && commentRefs.current[activeInputId]) {
+      setTimeout(() => {
+        commentRefs.current[activeInputId]?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }, 100);
+    }
+  }, [activeInputId]);
+
   const navigate = useNavigate();
 
   const currentRootComments = rootComments[postId] || [];
@@ -66,14 +83,27 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const isLoading = isLoadingPost(postId);
   const blockedUserIds = currentUser.blockedUserIds || [];
 
+  // Reset input khi đổi bài viết
   useEffect(() => {
-    loadInitialRootComments();
+    resetInput();
     return () => {
-      resetInput();
+      // Dọn dẹp subscriptions khi unmount hoặc đổi post
+      Object.values(replySubscriptionsRef.current).forEach(unsub => {
+        if (typeof unsub === 'function') unsub();
+      });
+      replySubscriptionsRef.current = {};
     };
   }, [postId]);
 
-  // Tải thông tin người dùng cho bình luận hiện tại
+  // Theo dõi bình luận gốc
+  useEffect(() => {
+    const unsubscribe = subscribeToComments(postId, blockedUserIds);
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [postId, blockedUserIds.join(','), subscribeToComments]);
+
+  // Tải thông tin người dùng
   useEffect(() => {
     if (currentRootComments.length > 0) {
       const userIds = [...new Set(currentRootComments.map(c => c.userId))];
@@ -81,34 +111,42 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }, [currentRootComments, fetchUsers]);
 
-  const loadInitialRootComments = async () => {
-    await fetchRootComments(postId, blockedUserIds);
-  };
-
   const loadMoreRootComments = async () => {
     await fetchRootComments(postId, blockedUserIds, true);
   };
 
-  const loadReplies = async (parentId: string, isInitial = true) => {
-    if (isLoadingReplyMap[parentId]) return;
+  const loadReplies = async (parentId: string) => {
+    if (isLoadingReplyMap[parentId] || replySubscriptionsRef.current[parentId]) return;
+    
     setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
     try {
-      await fetchReplies(postId, parentId, blockedUserIds, !isInitial);
-      // Fetch user data cho replies
-      const parentReplies = replies[postId]?.[parentId] || [];
-      const userIds = [...new Set(parentReplies.map(r => r.userId))];
-      if (userIds.length > 0) {
-        await fetchUsers(userIds);
-      }
-      // Fetch replyToUser nếu có
-      const replyToUserIds = parentReplies.map(r => r.replyToUserId).filter(id => !!id) as string[];
-      if (replyToUserIds.length > 0) {
-        await fetchUsers([...new Set(replyToUserIds)]);
-      }
+      // Dùng subscription
+      const unsubscribe = subscribeToReplies(postId, parentId, blockedUserIds);
+      replySubscriptionsRef.current[parentId] = unsubscribe;
+
+      // Fetch user data sẽ được trigger bởi useEffect theo dõi replies store
     } finally {
       setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: false }));
     }
   };
+
+  // Tải thông tin người dùng cho phản hồi
+  useEffect(() => {
+    const postReplies = replies[postId] || {};
+    // Chúng ta lặp qua replies để fetch user info cho bất kỳ reply mới nào
+    Object.keys(postReplies).forEach(async (parentId) => {
+      const parentReplies = postReplies[parentId] || [];
+      if (parentReplies.length > 0) {
+        const userIds = [...new Set([
+          ...parentReplies.map(r => r.userId),
+          ...parentReplies.map(r => r.replyToUserId).filter(id => !!id) as string[]
+        ])];
+        if (userIds.length > 0) {
+          await fetchUsers(userIds);
+        }
+      }
+    });
+  }, [replies, postId, fetchUsers]);
 
   const handleReplyClick = (comment: Comment) => {
     setReplyingTo(comment);
@@ -210,7 +248,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     };
 
     return (
-      <div key={comment.id} className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
+      <div 
+        key={comment.id} 
+        ref={el => commentRefs.current[comment.id] = el}
+        className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}
+      >
         <div className="flex gap-3">
           <UserAvatar userId={comment.userId} src={author?.avatar} name={author?.name} size={isReply ? 'xs' : 'sm'} onClick={handleProfileClick} />
           <div className="flex-1 min-w-0">
@@ -312,7 +354,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   <>
                     <div className="space-y-1">{commentReplies.map(reply => renderCommentItem(reply, true))}</div>
                     {hasMoreR && (
-                      <button onClick={() => loadReplies(comment.id, false)} className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" disabled={isLoadingR}>
+                      <button onClick={() => loadReplies(comment.id)} className="text-text-secondary hover:text-primary text-[11px] font-bold ml-10 mt-2" disabled={isLoadingR}>
                         {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
                       </button>
                     )}
@@ -376,13 +418,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           </div>
         )}
         
-        <CommentInput
-          user={currentUser}
-          onSubmit={handleCommentSubmit}
-          onUploadMedia={handleUploadMedia}
-          autoFocus={autoFocus}
-          placeholder={replyingTo ? 'Nhập câu trả lời...' : 'Nhập bình luận...'}
-        />
+        {activeInputId === 'root' && (
+          <CommentInput
+            user={currentUser}
+            onSubmit={handleCommentSubmit}
+            onUploadMedia={handleUploadMedia}
+            autoFocus={autoFocus}
+            placeholder="Nhập bình luận..."
+          />
+        )}
       </div>
 
       <ConfirmDialog
