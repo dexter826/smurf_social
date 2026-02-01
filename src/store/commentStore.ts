@@ -18,6 +18,7 @@ interface CommentState {
   fetchRootComments: (postId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   fetchReplies: (postId: string, parentId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToComments: (postId: string, blockedUserIds?: string[]) => () => void;
+  subscribeToReplies: (postId: string, parentId: string, blockedUserIds?: string[]) => () => void;
   addComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string, videoUrl?: string) => Promise<string>;
   updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null, videoUrl?: string | null) => Promise<void>;
   deleteComment: (postId: string, commentId: string, parentId?: string | null) => Promise<void>;
@@ -102,7 +103,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     return commentService.subscribeToComments(
       postId,
       blockedUserIds,
-      (action, comments, isReply, parentId) => {
+      (action, comments) => {
         set(state => {
           if (action === 'initial') {
             return { rootComments: { ...state.rootComments, [postId]: comments } };
@@ -111,6 +112,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           if (action === 'add') {
             const existing = state.rootComments[postId] || [];
             const newComments = comments.filter(c => !existing.some(e => e.id === c.id));
+            if (newComments.length === 0) return {};
             return { 
               rootComments: { 
                 ...state.rootComments, 
@@ -147,6 +149,72 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     );
   },
 
+  subscribeToReplies: (postId: string, parentId: string, blockedUserIds: string[] = []) => {
+    return commentService.subscribeToReplies(
+      parentId,
+      blockedUserIds,
+      (action, replies) => {
+        set(state => {
+          const postReplies = state.replies[postId] || {};
+          const currentReplies = postReplies[parentId] || [];
+
+          if (action === 'initial') {
+            return {
+              replies: {
+                ...state.replies,
+                [postId]: { ...postReplies, [parentId]: replies }
+              }
+            };
+          }
+
+          if (action === 'add') {
+            const newReplies = replies.filter(r => !currentReplies.some(e => e.id === r.id));
+            if (newReplies.length === 0) return {};
+            return {
+              replies: {
+                ...state.replies,
+                [postId]: { 
+                  ...postReplies, 
+                  [parentId]: [...currentReplies, ...newReplies].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+                }
+              }
+            };
+          }
+
+          if (action === 'update') {
+            return {
+              replies: {
+                ...state.replies,
+                [postId]: {
+                  ...postReplies,
+                  [parentId]: currentReplies.map(r => {
+                    const updated = replies.find(ur => ur.id === r.id);
+                    return updated || r;
+                  })
+                }
+              }
+            };
+          }
+
+          if (action === 'remove') {
+            const removedIds = new Set(replies.map(r => r.id));
+            return {
+              replies: {
+                ...state.replies,
+                [postId]: {
+                  ...postReplies,
+                  [parentId]: currentReplies.filter(r => !removedIds.has(r.id))
+                }
+              }
+            };
+          }
+
+          return {};
+        });
+      }
+    );
+  },
+
   addComment: async (postId, userId, content, parentId, replyToUserId, imageUrl, videoUrl) => {
     const tempId = `temp-${Date.now()}`;
     const optimisticComment: Comment = {
@@ -163,7 +231,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       replyCount: 0
     };
 
-    // Lưu trạng thái cũ để rollback nếu lỗi
+    // Lưu trạng thái để rollback
     const previousState = { 
       rootComments: { ...get().rootComments },
       replies: { ...get().replies }
@@ -196,25 +264,33 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const realId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, videoUrl);
       
-      // Thay thế ID tạm bằng ID thật
+      // Ghi đè ID thật
       set(state => {
         if (parentId) {
           const postReplies = state.replies[postId] || {};
           const parentReplies = postReplies[parentId] || [];
+          
+          const exists = parentReplies.some(c => c.id === realId);
           return {
             replies: {
               ...state.replies,
               [postId]: { 
                 ...postReplies, 
-                [parentId]: parentReplies.map(c => c.id === tempId ? { ...c, id: realId } : c) 
+                [parentId]: exists 
+                  ? parentReplies.filter(c => c.id !== tempId)
+                  : parentReplies.map(c => c.id === tempId ? { ...c, id: realId } : c)
               }
             }
           };
         } else {
+          const currentRoots = state.rootComments[postId] || [];
+          const exists = currentRoots.some(c => c.id === realId);
           return {
             rootComments: {
               ...state.rootComments,
-              [postId]: (state.rootComments[postId] || []).map(c => c.id === tempId ? { ...c, id: realId } : c)
+              [postId]: exists
+                ? currentRoots.filter(c => c.id !== tempId)
+                : currentRoots.map(c => c.id === tempId ? { ...c, id: realId } : c)
             }
           };
         }
@@ -222,7 +298,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       
       return realId;
     } catch (error) {
-      // Rollback nếu lỗi
+      // Phục hồi khi lỗi
       set(previousState);
       console.error('Lỗi thêm bình luận:', error);
       throw error;
