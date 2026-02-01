@@ -8,6 +8,7 @@ export interface MessageSlice {
   hasMoreMessages: Record<string, boolean>;
   isLoadingMore: Record<string, boolean>;
   typingUsers: Record<string, string[]>;
+  uploadProgress: Record<string, number>;
 
   subscribeToMessages: (conversationId: string) => () => void;
   loadMoreMessages: (conversationId: string) => Promise<void>;
@@ -27,6 +28,7 @@ export interface MessageSlice {
   subscribeToTyping: (conversationId: string) => () => void;
   toggleReaction: (messageId: string, userId: string, emoji: string) => Promise<void>;
   clearMessages: (conversationId: string) => void;
+  setUploadProgress: (conversationId: string, progress: number) => void;
 }
 
 const LIMIT_PER_PAGE = 20;
@@ -37,6 +39,7 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
   hasMoreMessages: {},
   isLoadingMore: {},
   typingUsers: {},
+  uploadProgress: {},
 
   subscribeToMessages: (conversationId: string) => {
     const unsubscribe = chatService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
@@ -103,37 +106,57 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
 
   sendImageMessage: async (conversationId: string, senderId: string, file: File) => {
     try {
-      await chatService.sendImageMessage(conversationId, senderId, file);
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
+      await chatService.sendImageMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
+      });
     } catch (error) {
       console.error("Lỗi gửi ảnh:", error);
       throw error;
+    } finally {
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
     }
   },
 
   sendFileMessage: async (conversationId: string, senderId: string, file: File) => {
     try {
-      await chatService.sendFileMessage(conversationId, senderId, file);
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
+      await chatService.sendFileMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
+      });
     } catch (error) {
       console.error("Lỗi gửi tệp:", error);
       throw error;
+    } finally {
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
     }
   },
 
   sendVideoMessage: async (conversationId: string, senderId: string, file: File) => {
     try {
-      await chatService.sendVideoMessage(conversationId, senderId, file);
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
+      await chatService.sendVideoMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
+      });
     } catch (error) {
       console.error("Lỗi gửi video:", error);
       throw error;
+    } finally {
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
     }
   },
 
   sendVoiceMessage: async (conversationId: string, senderId: string, file: File) => {
     try {
-      await chatService.sendVoiceMessage(conversationId, senderId, file);
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
+      await chatService.sendVoiceMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
+      });
     } catch (error) {
       console.error("Lỗi gửi tin nhắn thoại:", error);
       throw error;
+    } finally {
+      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
     }
   },
 
@@ -228,5 +251,11 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
       delete newMessages[conversationId];
       return { messages: newMessages };
     });
+  },
+
+  setUploadProgress: (conversationId: string, progress: number) => {
+    set((state) => ({
+      uploadProgress: { ...state.uploadProgress, [conversationId]: progress }
+    }));
   },
 });

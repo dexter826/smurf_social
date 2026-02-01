@@ -18,12 +18,14 @@ import {
   DocumentSnapshot,
   increment
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { Post, Comment, NotificationType } from '../types';
 import { chunkArray } from '../utils/batchUtils';
 import { PAGINATION, FIREBASE_LIMITS } from '../constants';
 import { notificationService } from './notificationService';
+import { compressImage, isImageFile, withRetry } from '../utils/imageUtils';
+import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 
 export const postService = {
   getFeed: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
@@ -417,29 +419,44 @@ export const postService = {
     }
   },
 
-  uploadPostMedia: async (files: File[], userId: string): Promise<{ images: string[], videos: string[] }> => {
+  uploadPostMedia: async (
+    files: File[], 
+    userId: string,
+    onProgress?: (progress: number, fileIndex: number, totalFiles: number) => void
+  ): Promise<{ images: string[], videos: string[] }> => {
     try {
       const images: string[] = [];
       const videos: string[] = [];
+      const totalFiles = files.length;
 
-      const uploadPromises = files.map(async (file) => {
+      for (let i = 0; i < totalFiles; i++) {
+        let file = files[i];
         const isVideo = file.type.startsWith('video/');
         const typeFolder = isVideo ? 'videos' : 'images';
         const timestamp = Date.now();
         const fileName = `${timestamp}_${file.name}`;
-        const storageRef = ref(storage, `posts/${userId}/${typeFolder}/${fileName}`);
-        
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
+        const path = `posts/${userId}/${typeFolder}/${fileName}`;
+
+        // Compress ảnh trước khi upload
+        if (isImageFile(file)) {
+          file = await compressImage(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 });
+        }
+
+        const url = await withRetry(() => 
+          uploadWithProgress(path, file, (progress) => {
+            const fileProgress = progress.progress / 100;
+            const overallProgress = ((i + fileProgress) / totalFiles) * 100;
+            onProgress?.(overallProgress, i, totalFiles);
+          })
+        );
         
         if (isVideo) {
           videos.push(url);
         } else {
           images.push(url);
         }
-      });
+      }
 
-      await Promise.all(uploadPromises);
       return { images, videos };
     } catch (error) {
       console.error("Lỗi upload media", error);
@@ -447,28 +464,37 @@ export const postService = {
     }
   },
 
-  uploadCommentImage: async (file: File, userId: string): Promise<string> => {
+  uploadCommentImage: async (
+    file: File, 
+    userId: string,
+    onProgress?: ProgressCallback
+  ): Promise<string> => {
     try {
+      // Compress ảnh
+      const compressedFile = await compressImage(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1280 });
+      
       const timestamp = Date.now();
       const fileName = `comment_img_${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `comments/${userId}/images/${fileName}`);
+      const path = `comments/${userId}/images/${fileName}`;
       
-      await uploadBytes(storageRef, file);
-      return await getDownloadURL(storageRef);
+      return await withRetry(() => uploadWithProgress(path, compressedFile, onProgress));
     } catch (error) {
       console.error("Lỗi upload ảnh bình luận", error);
       throw error;
     }
   },
 
-  uploadCommentVideo: async (file: File, userId: string): Promise<string> => {
+  uploadCommentVideo: async (
+    file: File, 
+    userId: string,
+    onProgress?: ProgressCallback
+  ): Promise<string> => {
     try {
       const timestamp = Date.now();
       const fileName = `comment_vid_${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `comments/${userId}/videos/${fileName}`);
+      const path = `comments/${userId}/videos/${fileName}`;
       
-      await uploadBytes(storageRef, file);
-      return await getDownloadURL(storageRef);
+      return await withRetry(() => uploadWithProgress(path, file, onProgress));
     } catch (error) {
       console.error("Lỗi upload video bình luận", error);
       throw error;

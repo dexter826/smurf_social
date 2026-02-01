@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Flag, X } from 'lucide-react';
-import { UserAvatar, Button, ConfirmDialog } from '../ui';
+import { UserAvatar, Button, ConfirmDialog, UploadProgress } from '../ui';
 import { toast } from '../../store/toastStore';
 import { Comment, User, ReportType } from '../../types';
 import { postService } from '../../services/postService';
@@ -50,6 +50,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const { openReportModal } = useReportStore();
 
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const [activeInputId, setActiveInputId] = useState<string | 'root'>('root');
   const [inputMode, setInputMode] = useState<'comment' | 'reply' | 'edit'>('comment');
@@ -179,10 +180,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleUploadMedia = async (file: File) => {
-    if (file.type.startsWith('image/')) {
-      return await postService.uploadCommentImage(file, currentUser.id);
-    } else {
-      return await postService.uploadCommentVideo(file, currentUser.id);
+    setUploadProgress(0);
+    try {
+      const onProgress = (p: { progress: number }) => setUploadProgress(p.progress);
+      
+      if (file.type.startsWith('image/')) {
+        return await postService.uploadCommentImage(file, currentUser.id, onProgress);
+      } else {
+        return await postService.uploadCommentVideo(file, currentUser.id, onProgress);
+      }
+    } finally {
+      setUploadProgress(null);
     }
   };
 
@@ -358,6 +366,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             </button>
           </div>
         )}
+        
+        {uploadProgress !== null && (
+          <div className="mb-2">
+            <UploadProgress 
+              progress={uploadProgress} 
+              fileName="Đang tải lên media..."
+            />
+          </div>
+        )}
+        
         <CommentInput
           user={currentUser}
           onSubmit={handleCommentSubmit}
