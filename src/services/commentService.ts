@@ -179,9 +179,16 @@ export const commentService = {
       
       const commentData = commentSnap.data() as Comment;
       
-      const repliesQuery = query(collection(db, 'comments'), where('parentId', '==', commentId));
-      const repliesSnapshot = await getDocs(repliesQuery);
-      const repliesToDelete = repliesSnapshot.docs;
+      let repliesToDelete: any[] = [];
+      try {
+        const repliesQuery = query(collection(db, 'comments'), where('parentId', '==', commentId));
+        const repliesSnapshot = await getDocs(repliesQuery);
+        repliesToDelete = repliesSnapshot.docs;
+      } catch (err: any) {
+        if (err.code !== 'permission-denied') {
+          console.warn("Lỗi khi lấy phản hồi để xóa:", err);
+        }
+      }
 
       // Xóa mọi ảnh/video đính kèm khỏi Storage
       const mediaUrlsToDelele: string[] = [];
@@ -203,46 +210,20 @@ export const commentService = {
         }
       }
 
-      // Xử lý báo cáo liên quan cho bình luận này và phản hồi
-      const allDeletedCommentIds = [commentId, ...repliesToDelete.map(d => d.id)];
-      const reportsQuery = query(
-        collection(db, 'reports'),
-        where('targetId', 'in', allDeletedCommentIds),
-        where('status', '==', 'pending')
-      );
-      const reportsSnap = await getDocs(reportsQuery);
-      const reportIds = reportsSnap.docs.map(d => d.id);
-
-      // Gỡ thông báo báo cáo dành cho Admin
-      const adminReportNotifications: any[] = [];
-      if (reportIds.length > 0) {
-        const snap = await getDocs(query(collection(db, 'notifications'), where('data.reportId', 'in', reportIds)));
-        adminReportNotifications.push(...snap.docs);
-      }
-
       const batch = writeBatch(db);
 
-      reportsSnap.docs.forEach(rDoc => {
-        batch.update(rDoc.ref, {
-          status: 'resolved',
-          resolvedAt: Timestamp.now(),
-          resolution: 'Nội dung đã bị xóa bởi người dùng'
-        });
-      });
-
-      // Xóa thông báo liên quan (thích, phản hồi)
-      const notificationsQuery = query(
-        collection(db, 'notifications'), 
-        where('data.commentId', 'in', allDeletedCommentIds)
-      );
-      const notificationsSnapshot = await getDocs(notificationsQuery);
-      notificationsSnapshot.docs.forEach(notifDoc => {
-        batch.delete(notifDoc.ref);
-      });
-
-      adminReportNotifications.forEach(notifDoc => {
-        batch.delete(notifDoc.ref);
-      });
+      // Xóa report liên quan
+      try {
+        const reportsQuery = query(
+          collection(db, 'reports'), 
+          where('targetType', '==', 'comment'),
+          where('targetId', '==', commentId)
+        );
+        const reportsSnapshot = await getDocs(reportsQuery);
+        reportsSnapshot.forEach(r => batch.delete(r.ref));
+      } catch (err) {
+        // Bỏ qua lỗi permission
+      }
 
       repliesToDelete.forEach(replyDoc => {
         batch.delete(replyDoc.ref);
