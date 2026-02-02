@@ -94,7 +94,7 @@ export const useProfile = (): UseProfileReturn => {
     } finally {
       setLoading(false);
     }
-  }, [profileUserId]);
+  }, [profileUserId, currentUser?.id, currentUser?.friendIds]);
 
   useEffect(() => {
     loadProfile();
