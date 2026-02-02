@@ -73,7 +73,7 @@ export const postSchema = z.object({
     .max(VALIDATION.POST_CONTENT_MAX_LENGTH, `Nội dung không được quá ${VALIDATION.POST_CONTENT_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
-  visibility: z.enum(['friends', 'private']),
+  visibility: z.enum(['public', 'friends', 'private']),
   images: z.array(z.string()),
   videos: z.array(z.string()),
 }).refine(data => data.content?.trim() || data.images.length > 0 || data.videos.length > 0, {

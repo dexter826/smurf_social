@@ -68,7 +68,7 @@ export const postService = {
             let q = query(
               collection(db, 'posts'),
               where('userId', 'in', chunk),
-              where('visibility', '==', 'friends'),
+              where('visibility', 'in', ['friends', 'public']),
               orderBy('timestamp', 'desc'),
               limit(limitCount)
             );
@@ -171,7 +171,7 @@ export const postService = {
         const friendQuery = query(
           collection(db, 'posts'),
           where('userId', 'in', chunk),
-          where('visibility', '==', 'friends'),
+          where('visibility', 'in', ['friends', 'public']),
           orderBy('timestamp', 'desc'),
           limit(limitCount)
         );
@@ -215,9 +215,23 @@ export const postService = {
 
   getUserPosts: async (userId: string, currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.USER_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
+      const isOwner = userId === currentUserId;
+      const isFriend = friendIds?.includes(userId) || false;
+
+      // Owner xem tất cả, friend xem public+friends, stranger chỉ xem public
+      let visibilityFilter: string[];
+      if (isOwner) {
+        visibilityFilter = ['public', 'friends', 'private'];
+      } else if (isFriend) {
+        visibilityFilter = ['public', 'friends'];
+      } else {
+        visibilityFilter = ['public'];
+      }
+
       let q = query(
         collection(db, 'posts'),
         where('userId', '==', userId),
+        where('visibility', 'in', visibilityFilter),
         orderBy('timestamp', 'desc'),
         limit(limitCount)
       );
@@ -234,20 +248,9 @@ export const postService = {
         editedAt: doc.data().editedAt?.toDate(),
       })) as Post[];
 
-      // Lọc theo quyền riêng tư
-      const filteredPosts = posts.filter(post => {
-        const isOwner = userId === currentUserId;
-        const isFriend = friendIds?.includes(userId) || false;
-        
-        if (isOwner) return true;
-        if (isFriend) return post.visibility === 'friends';
-        
-        return false;
-      });
-
       const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
 
-      return { posts: filteredPosts, lastDoc: lastVisible };
+      return { posts, lastDoc: lastVisible };
     } catch (error) {
       console.error("Lỗi lấy bài viết của user", error);
       return { posts: [], lastDoc: null };
@@ -255,9 +258,23 @@ export const postService = {
   },
 
   subscribeToUserPosts: (userId: string, currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.USER_POSTS) => {
+    const isOwner = userId === currentUserId;
+    const isFriend = friendIds?.includes(userId) || false;
+
+    // Owner xem tất cả, friend xem public+friends, stranger chỉ xem public
+    let visibilityFilter: string[];
+    if (isOwner) {
+      visibilityFilter = ['public', 'friends', 'private'];
+    } else if (isFriend) {
+      visibilityFilter = ['public', 'friends'];
+    } else {
+      visibilityFilter = ['public'];
+    }
+
     const q = query(
       collection(db, 'posts'),
       where('userId', '==', userId),
+      where('visibility', 'in', visibilityFilter),
       orderBy('timestamp', 'desc'),
       limit(limitCount)
     );
@@ -270,18 +287,7 @@ export const postService = {
         editedAt: doc.data().editedAt?.toDate(),
       })) as Post[];
 
-      // Lọc theo quyền riêng tư
-      const filteredPosts = posts.filter(post => {
-        const isOwner = userId === currentUserId;
-        const isFriend = friendIds?.includes(userId) || false;
-        
-        if (isOwner) return true;
-        if (isFriend) return post.visibility === 'friends';
-        
-        return false;
-      });
-
-      callback(filteredPosts);
+      callback(posts);
     }, (error) => {
       console.error("Lỗi subscribe bài viết của user", error);
     });
@@ -302,7 +308,7 @@ export const postService = {
     }
   },
 
-  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private'): Promise<void> => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private'): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
@@ -440,8 +446,11 @@ export const postService = {
       const isOwner = data.userId === currentUserId;
       const isFriend = friendIds?.includes(data.userId) || false;
 
-      // Chỉ cho phép xem nếu là chủ hoặc (là bạn bè và bài viết ở chế độ friends)
-      if (!isOwner && !(isFriend && data.visibility === 'friends')) {
+      // Kiểm tra quyền xem
+      if (data.visibility === 'private' && !isOwner) {
+        return null;
+      }
+      if (data.visibility === 'friends' && !isOwner && !isFriend) {
         return null;
       }
 

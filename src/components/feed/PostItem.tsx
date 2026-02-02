@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../../firebase/config';
-import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Users, Lock, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Globe, Users, Lock, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button } from '../ui';
@@ -76,7 +76,9 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                 {formatRelativeTime(post.timestamp)}
               </span>
               <span>•</span>
-              {post.visibility === 'friends' ? (
+              {post.visibility === 'public' ? (
+                <Globe size={12} title="Công khai" />
+              ) : post.visibility === 'friends' ? (
                 <Users size={12} title="Bạn bè" />
               ) : (
                 <Lock size={12} title="Chỉ mình tôi" />

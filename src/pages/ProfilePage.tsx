@@ -204,8 +204,8 @@ const ProfilePage: React.FC = () => {
             <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
               <Lock size={40} className="text-text-secondary" />
             </div>
-            <h2 className="text-2xl font-bold text-text-primary mb-3">Trang cá nhân của {profile.name}</h2>
-            <p className="text-text-secondary mb-8">Kết bạn để xem bài viết và thông tin của người này.</p>
+            <h2 className="text-2xl font-bold text-text-primary mb-3">Không thể xem trang này</h2>
+            <p className="text-text-secondary mb-8">Bạn đã chặn người dùng này. Bỏ chặn để xem nội dung của họ.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button onClick={() => navigate('/contacts')} variant="primary" className="px-8">
                 Tìm kiếm bạn bè
