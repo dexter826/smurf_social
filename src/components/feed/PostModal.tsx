@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
+import { X, Image as ImageIcon, Video, Globe, Users, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, UploadProgress } from '../ui';
@@ -14,7 +14,7 @@ interface PostModalProps {
   currentUser: User;
   initialPost?: Post; 
   initialFiles?: File[]; 
-  onSubmit: (content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
+  onSubmit: (content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
   onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<{ images: string[], videos: string[] }>;
 }
 
@@ -46,7 +46,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       content: '',
       images: [],
       videos: [],
-      visibility: 'friends'
+      visibility: 'public'
     }
   });
 
@@ -69,7 +69,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           content: '',
           images: [],
           videos: [],
-          visibility: 'friends'
+          visibility: 'public'
         });
         // Xử lý file ban đầu
         if (initialFiles?.length > 0) {
@@ -227,6 +227,7 @@ export const PostModal: React.FC<PostModalProps> = ({
             value={formData.visibility}
             onChange={(v) => setValue('visibility', v as any, { shouldDirty: true })}
             options={[
+              { value: 'public', label: 'Công khai', icon: <Globe size={14} /> },
               { value: 'friends', label: 'Bạn bè', icon: <Users size={14} /> },
               { value: 'private', label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
             ]}

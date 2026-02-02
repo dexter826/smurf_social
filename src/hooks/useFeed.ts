@@ -13,7 +13,7 @@ interface UseFeedReturn {
   usersMap: Record<string, User>;
   handleLoadMore: () => void;
   handleLike: (postId: string) => Promise<void>;
-  handleUpdate: (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
+  handleUpdate: (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
   handleDelete: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   observerRef: RefObject<HTMLDivElement | null>;
 }
@@ -85,7 +85,7 @@ export const useFeed = (): UseFeedReturn => {
     content: string,
     images: string[],
     videos: string[],
-    visibility: 'friends' | 'private'
+    visibility: 'public' | 'friends' | 'private'
   ) => {
     await updatePost(postId, content, images, videos, visibility);
   }, [updatePost]);

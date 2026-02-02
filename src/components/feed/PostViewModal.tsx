@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Users, Lock, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Globe, Users, Lock, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton } from '../ui';
 import { Post, User, ReportType } from '../../types';
 import { CommentSection } from './CommentSection';
@@ -236,7 +236,9 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     {formatRelativeTime(post.timestamp)}
                   </span>
                   <span className="opacity-40">•</span>
-                  {post.visibility === 'friends' ? (
+                  {post.visibility === 'public' ? (
+                    <Globe size={13} title="Công khai" strokeWidth={2.5} className="opacity-80" />
+                  ) : post.visibility === 'friends' ? (
                     <Users size={13} title="Bạn bè" strokeWidth={2.5} className="opacity-80" />
                   ) : (
                     <Lock size={13} title="Chỉ mình tôi" strokeWidth={2.5} className="opacity-80" />

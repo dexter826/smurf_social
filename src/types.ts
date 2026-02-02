@@ -116,7 +116,7 @@ export interface Post {
   likes: string[];
   commentCount: number;
   timestamp: Date;
-  visibility: "friends" | "private";
+  visibility: "public" | "friends" | "private";
   edited?: boolean;
   editedAt?: Date;
 }

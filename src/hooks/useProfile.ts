@@ -65,7 +65,7 @@ export const useProfile = (): UseProfileReturn => {
   const isOwnProfile = currentUser?.id === profileUserId;
   const isFriend = currentUser?.friendIds?.includes(profileUserId || '') || false;
   const isBlockedByMe = currentUser?.blockedUserIds?.includes(profileUserId || '') || false;
-  const canViewContent = isOwnProfile || isFriend;
+  const canViewContent = !isBlockedByMe; 
 
   const loadProfile = useCallback(async () => {
     if (!profileUserId) return;

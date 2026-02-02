@@ -35,13 +35,14 @@ service cloud.firestore {
     // ══════════════════════════════════════════
     match /posts/{postId} {
       allow read: if request.auth != null && (
+        resource.data.visibility == 'public' ||
         resource.data.userId == request.auth.uid || 
         request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.userId)).data.friendIds ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
       allow create: if request.auth != null && 
         request.resource.data.userId == request.auth.uid &&
-        request.resource.data.visibility in ['friends', 'private'];
+        request.resource.data.visibility in ['public', 'friends', 'private'];
       // Cho phép update likes/commentCount từ bất kỳ ai
       allow update: if request.auth != null && (
         resource.data.userId == request.auth.uid || 

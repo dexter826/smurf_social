@@ -15,8 +15,8 @@ interface PostState {
 
   fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
-  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
-  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => Promise<void>;
+  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
+  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
   deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   likePost: (postId: string, userId: string) => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[] }>;
@@ -143,7 +143,7 @@ export const usePostStore = create<PostState>()(
     return unsubscribe;
   },
 
-  createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private' = 'friends') => {
+  createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private' = 'public') => {
     try {
       await postService.createPost({
         userId,
@@ -159,7 +159,7 @@ export const usePostStore = create<PostState>()(
     }
   },
 
-  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => {
     try {
       await postService.updatePost(postId, content, images, videos, visibility);
       set((state) => ({

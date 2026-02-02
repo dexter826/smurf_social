@@ -25,7 +25,7 @@ const FeedPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  const handleEditPost = async (content: string, images: string[], videos: string[], visibility: 'friends' | 'private') => {
+  const handleEditPost = async (content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => {
     if (!showEditModal) return;
     await handleUpdate(showEditModal, content, images, videos, visibility);
     setShowEditModal(null);

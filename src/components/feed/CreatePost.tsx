@@ -33,7 +33,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
     content: string,
     images: string[],
     videos: string[],
-    visibility: 'friends' | 'private'
+    visibility: 'public' | 'friends' | 'private'
   ) => {
     await createPost(currentUser.id, content, images, videos, visibility);
     setPendingFiles([]);
