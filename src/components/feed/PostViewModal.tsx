@@ -129,24 +129,17 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const myReaction = post.reactions?.[currentUser.id];
   const isOwner = post.userId === currentUser.id;
   const hasMedia = allMedia.length > 0;
-  const modalClassName = hasMedia
-    ? "m-0 md:m-6 lg:m-10 md:rounded-[32px] shadow-none"
-    : "md:max-h-[90vh] shadow-none";
-  const containerClassName = hasMedia
-    ? "flex flex-col lg:flex-row h-[100dvh] lg:h-[85vh] xl:h-[88vh] bg-bg-primary lg:rounded-[32px] relative transition-all duration-500 w-full border border-border-light shadow-2xl overflow-hidden"
-    : "flex flex-col h-[100dvh] md:h-auto md:max-h-[85vh] bg-bg-primary md:rounded-2xl relative transition-all duration-500 w-full border border-border-light shadow-2xl overflow-hidden";
 
   return (
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
       showHeader={false} 
-      maxWidth={hasMedia ? "7xl" : "lg"} 
-      padding="none"
-      fullScreen
-      bodyClassName="!overflow-hidden"
+      maxWidth={hasMedia ? "6xl" : "lg"} 
+      padding="none" 
+      className={`!fixed !inset-0 !z-[120] !w-screen !h-[100dvh] !max-w-none !rounded-none !m-0 md:!relative md:!inset-auto md:!w-full md:!z-auto ${hasMedia ? "md:h-[90vh] lg:h-[85vh] xl:h-[88vh]" : "md:max-h-[85vh] md:h-auto"} !rounded-none md:!rounded-[24px] lg:!rounded-[32px] transition-all duration-500`}
+      bodyClassName={`!overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row' : ''}`}
     >
-      <div className={containerClassName}>
 
         {/* Khong gian Cinema cho Media (Chỉ hiển thị trên Desktop ở vị trí này) */}
         {hasMedia && (
@@ -404,7 +397,6 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             }
           />
         </div>
-      </div>
     </Modal>
   );
 };
