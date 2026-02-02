@@ -267,29 +267,29 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 </>
               ) : (
                 <>
+                  <Button 
+                    onClick={onMessageClick} 
+                    icon={<MessageCircle size={18} />}
+                    className="bg-primary-600 hover:bg-primary-700 shadow-md"
+                  >
+                    Nhắn tin
+                  </Button>
+                  
                   {isFriend ? (
-                    <>
-                      <Button 
-                        onClick={onMessageClick} 
-                        icon={<MessageCircle size={18} />}
-                        className="bg-primary-600 hover:bg-primary-700 shadow-md"
-                      >
-                        Nhắn tin
-                      </Button>
-                      <Button 
-                        variant="secondary" 
-                        onClick={onFriendClick} 
-                        icon={<UserCheck size={18} />}
-                        className="border-primary-100 bg-primary-50 text-primary-600 hover:bg-primary-100"
-                      >
-                        Bạn bè
-                      </Button>
-                    </>
+                    <Button 
+                      variant="secondary" 
+                      onClick={onFriendClick} 
+                      icon={<UserCheck size={18} />}
+                      className="border-primary-100 bg-primary-50 text-primary-600 hover:bg-primary-100"
+                    >
+                      Bạn bè
+                    </Button>
                   ) : (
                     <Button 
+                      variant="secondary"
                       onClick={onFriendClick} 
                       icon={<UserPlus size={18} />}
-                      className="bg-primary-600 hover:bg-primary-700 shadow-md"
+                      className="border-border-medium text-text-primary hover:bg-bg-hover"
                     >
                       Kết bạn
                     </Button>

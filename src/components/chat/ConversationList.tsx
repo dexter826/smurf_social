@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Search, Users, ArrowLeft, Archive, X, UserPlus } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Users, X, UserPlus, ChevronDown, MessageCircle } from 'lucide-react';
 import { Conversation, User } from '../../types';
-import { Input, Spinner, Dropdown, DropdownItem, Button, IconButton } from '../ui';
+import { Input, Button, IconButton } from '../ui';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
 
@@ -9,6 +9,7 @@ interface ConversationListProps {
   conversations: Conversation[];
   selectedId: string | null;
   currentUserId: string;
+  currentUserFriendIds?: string[];
   blockedUserIds?: string[];
   isLoading: boolean;
   isRevalidating?: boolean;
@@ -41,6 +42,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   selectedId,
   currentUserId,
+  currentUserFriendIds = [],
   blockedUserIds = [],
   isLoading,
   isRevalidating = false,
@@ -66,6 +68,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onClearHistory
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [requestsExpanded, setRequestsExpanded] = useState(true);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -79,18 +82,47 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     onSearchFocus?.(false);
   };
 
-  // Sắp xếp và lọc người dùng bị chặn
-  const sortedConversations = [...conversations]
-    .filter(conv => {
+  // Phân loại conversations: bạn bè vs người lạ
+  const { friendConversations, requestConversations, sortedConversations } = useMemo(() => {
+    const filtered = conversations.filter(conv => {
       if (conv.isGroup) return true;
       const partnerId = conv.participantIds.find(id => id !== currentUserId);
       return !partnerId || !blockedUserIds.includes(partnerId);
-    })
-    .sort((a, b) => {
+    });
+
+    const friends: Conversation[] = [];
+    const requests: Conversation[] = [];
+
+    filtered.forEach(conv => {
+      if (conv.isGroup) {
+        friends.push(conv);
+      } else {
+        const partnerId = conv.participantIds.find(id => id !== currentUserId);
+        if (partnerId && currentUserFriendIds.includes(partnerId)) {
+          friends.push(conv);
+        } else {
+          requests.push(conv);
+        }
+      }
+    });
+
+    const sortFn = (a: Conversation, b: Conversation) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
+    };
+
+    return {
+      friendConversations: friends.sort(sortFn),
+      requestConversations: requests.sort(sortFn),
+      sortedConversations: filtered.sort(sortFn)
+    };
+  }, [conversations, currentUserId, currentUserFriendIds, blockedUserIds]);
+
+  // Lấy danh sách hiển thị theo viewMode
+  const displayConversations = viewMode === 'requests' 
+    ? requestConversations 
+    : friendConversations;
 
   return (
     <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
@@ -210,7 +242,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             onClearHistory={onClearHistory || (() => {})}
             isLoading={isLoading && searchTerm !== ''}
           />
-        ) : sortedConversations.length === 0 ? (
+        ) : (friendConversations.length === 0 && requestConversations.length === 0) ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
               <Users size={32} className="text-text-tertiary" />
@@ -226,7 +258,55 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </div>
         ) : (
           <div>
-            {sortedConversations.map((conversation) => {
+            {/* Section Tin nhắn chờ (chỉ hiện khi viewMode = normal) */}
+            {viewMode === 'normal' && requestConversations.length > 0 && (
+              <>
+                <button
+                  onClick={() => setRequestsExpanded(!requestsExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 bg-bg-tertiary border-b border-border-light hover:bg-bg-hover transition-theme"
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium text-text-primary">
+                    <MessageCircle size={16} className="text-primary" />
+                    Tin nhắn chờ
+                    <span className="text-[10px] bg-primary text-text-on-primary px-1.5 py-0.5 rounded-full min-w-[18px]">
+                      {requestConversations.length}
+                    </span>
+                  </span>
+                  <ChevronDown 
+                    size={16} 
+                    className={`text-text-secondary transition-transform duration-200 ${requestsExpanded ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+                
+                {requestsExpanded && (
+                  <div>
+                    {requestConversations.map((conversation) => {
+                      const partnerId = conversation.participantIds.find(id => id !== currentUserId);
+                      return (
+                        <ConversationItem
+                          key={conversation.id}
+                          conversation={conversation}
+                          isActive={conversation.id === selectedId}
+                          currentUserId={currentUserId}
+                          currentUserFriendIds={currentUserFriendIds}
+                          showMessageRequestBadge={false}
+                          onClick={() => onSelectConversation(conversation.id)}
+                          onPin={() => onPin(conversation.id, !conversation.pinned)}
+                          onMute={() => onMute(conversation.id, !conversation.muted)}
+                          onDelete={() => onDelete(conversation.id)}
+                          onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
+                          onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archived) : undefined}
+                          onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Danh sách conversations bình thường */}
+            {friendConversations.map((conversation) => {
               const partnerId = conversation.isGroup 
                 ? null 
                 : conversation.participantIds.find(id => id !== currentUserId);
@@ -237,6 +317,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   conversation={conversation}
                   isActive={conversation.id === selectedId}
                   currentUserId={currentUserId}
+                  currentUserFriendIds={currentUserFriendIds}
+                  showMessageRequestBadge={false}
                   onClick={() => onSelectConversation(conversation.id)}
                   onPin={() => onPin(conversation.id, !conversation.pinned)}
                   onMute={() => onMute(conversation.id, !conversation.muted)}
