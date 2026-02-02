@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useChat, useProfile } from '../hooks';
+import { friendService } from '../services/friendService';
+import { FriendRequest } from '../types';
 import { 
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel, 
   CreateGroupModal, AddMemberModal, EditGroupModal, 
@@ -88,6 +90,61 @@ const ChatPage: React.FC = () => {
     return <MessengerSkeleton />;
   }
 
+  // Track friend request status
+  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    const unsubSent = friendService.subscribeToSentRequests(currentUser.id, setSentRequests);
+    const unsubReceived = friendService.subscribeToReceivedRequests(currentUser.id, setReceivedRequests);
+
+    return () => {
+      unsubSent();
+      unsubReceived();
+    };
+  }, [currentUser?.id]);
+
+  // Tính trạng thái friend request cho partner hiện tại
+  const friendRequestStatus = useMemo(() => {
+    if (!selectedConversation || selectedConversation.isGroup) return 'none';
+    const partnerId = selectedConversation.participantIds.find(id => id !== currentUser.id);
+    if (!partnerId) return 'none';
+
+    if (sentRequests.some(r => r.receiverId === partnerId)) return 'sent';
+    if (receivedRequests.some(r => r.senderId === partnerId)) return 'received';
+    return 'none';
+  }, [selectedConversation, currentUser.id, sentRequests, receivedRequests]) as 'none' | 'sent' | 'received';
+
+  // Tìm request ID cho accept/reject
+  const currentReceivedRequest = useMemo(() => {
+    if (!selectedConversation || selectedConversation.isGroup) return null;
+    const partnerId = selectedConversation.participantIds.find(id => id !== currentUser.id);
+    return receivedRequests.find(r => r.senderId === partnerId);
+  }, [selectedConversation, currentUser.id, receivedRequests]);
+
+  // Gửi lời mời kết bạn
+  const handleSendFriendRequest = async (userId: string) => {
+    try {
+      await friendService.sendFriendRequest(currentUser.id, userId);
+    } catch (error) {
+      console.error('Lỗi gửi lời mời kết bạn:', error);
+    }
+  };
+
+  // Chấp nhận lời mời kết bạn
+  const handleAcceptFriendRequest = async (userId: string) => {
+    const request = receivedRequests.find(r => r.senderId === userId);
+    if (request) {
+      try {
+        await friendService.acceptFriendRequest(request.id, currentUser.id, userId);
+      } catch (error) {
+        console.error('Lỗi chấp nhận kết bạn:', error);
+      }
+    }
+  };
+
   const filteredConversations = conversations.filter(c => 
     viewMode === 'archived' ? c.archived : !c.archived
   );
@@ -104,6 +161,7 @@ const ChatPage: React.FC = () => {
           conversations={filteredConversations}
           selectedId={selectedConversationId}
           currentUserId={currentUser.id}
+          currentUserFriendIds={currentUser.friendIds || []}
           blockedUserIds={currentUser.blockedUserIds || []}
           isLoading={isLoading}
           isRevalidating={isRevalidating}
@@ -147,6 +205,8 @@ const ChatPage: React.FC = () => {
               conversation={selectedConversation}
               messages={currentMessages}
               currentUserId={currentUser.id}
+              currentUserFriendIds={currentUser.friendIds || []}
+              friendRequestStatus={friendRequestStatus}
               usersMap={usersMap}
               typingUsers={currentTypingUsers}
               onBack={handleBackToList}
@@ -162,6 +222,9 @@ const ChatPage: React.FC = () => {
                 setEditingMessage(msg);
                 setReplyingTo(null);
               }}
+              onAddFriend={handleSendFriendRequest}
+              onAcceptFriend={handleAcceptFriendRequest}
+              onBlock={handleToggleBlock}
               isLoading={isLoading}
               isLoadingMore={isLoadingMore}
               hasMoreMessages={hasMoreMessages}

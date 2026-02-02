@@ -4,12 +4,15 @@ import { Message, User, Conversation } from '../../types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button, Spinner } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageBubble } from './MessageBubble';
+import { MessageRequestBanner } from './MessageRequestBanner';
 
 
 interface ChatBoxProps {
   conversation: Conversation;
   messages: Message[];
   currentUserId: string;
+  currentUserFriendIds?: string[];
+  friendRequestStatus?: 'none' | 'sent' | 'received';
   usersMap: Record<string, User>;
   typingUsers: string[];
   onBack?: () => void;
@@ -19,6 +22,9 @@ interface ChatBoxProps {
   onForward?: (message: Message) => void;
   onReply?: (message: Message) => void;
   onEdit?: (message: Message) => void;
+  onAddFriend?: (userId: string) => void;
+  onAcceptFriend?: (userId: string) => void;
+  onBlock?: (userId: string) => void;
   isLoading?: boolean;
   isLoadingMore?: boolean;
   hasMoreMessages?: boolean;
@@ -29,6 +35,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   conversation,
   messages,
   currentUserId,
+  currentUserFriendIds = [],
+  friendRequestStatus = 'none',
   usersMap,
   typingUsers,
   onBack,
@@ -38,6 +46,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onForward,
   onReply,
   onEdit,
+  onAddFriend,
+  onAcceptFriend,
+  onBlock,
   isLoading,
   isLoadingMore,
   hasMoreMessages,
@@ -107,6 +118,10 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     ? conversation.groupAvatar
     : partner?.avatar;
 
+  // Kiểm tra xem đây có phải tin nhắn từ người lạ không
+  const isMessageRequest = !conversation.isGroup && partner && 
+    !currentUserFriendIds.includes(partner.id);
+
   const groupedMessages: { date: string; messages: Message[] }[] = [];
   let currentDate = '';
 
@@ -147,12 +162,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   };
 
   // Tính toán tin nhắn cuối cùng mỗi người đã đọc
+  // Ẩn "Đã xem" cho chat với người lạ (không phải bạn bè)
   const lastReadByMap = React.useMemo(() => {
     const map: Record<string, User[]> = {};
     if (!conversation.isGroup && messages.length > 0) {
-        // Chat đơn: chỉ quan tâm người kia đã xem tin cuối cùng chưa
         const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
-        if (partnerId) {
+        // Chỉ hiển thị "Đã xem" nếu là bạn bè
+        const isFriend = partnerId && currentUserFriendIds.includes(partnerId);
+        if (partnerId && isFriend) {
             const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(partnerId));
             if (lastReadMsg) {
                 map[lastReadMsg.id] = [usersMap[partnerId]].filter(Boolean);
@@ -234,6 +251,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           <IconButton onClick={onInfoClick} title="Thông tin hội thoại" variant="ghost" className="text-text-secondary hover:text-primary" icon={<Info size={20} />} size="md" />
         </div>
       </div>
+
+      {/* Banner tin nhắn chờ */}
+      {isMessageRequest && partner && onAddFriend && onBlock && (
+        <MessageRequestBanner
+          partnerName={partner.name || 'Người dùng'}
+          friendRequestStatus={friendRequestStatus}
+          onAddFriend={() => onAddFriend(partner.id)}
+          onAcceptFriend={onAcceptFriend ? () => onAcceptFriend(partner.id) : undefined}
+          onBlock={() => onBlock(partner.id)}
+        />
+      )}
 
       <div
         ref={messagesContainerRef}

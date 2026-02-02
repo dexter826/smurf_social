@@ -10,6 +10,8 @@ interface ConversationItemProps {
   conversation: Conversation;
   isActive: boolean;
   currentUserId: string;
+  currentUserFriendIds?: string[];
+  showMessageRequestBadge?: boolean;
   onClick: () => void;
   onPin?: () => void;
   onMute?: () => void;
@@ -23,6 +25,8 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   conversation,
   isActive,
   currentUserId,
+  currentUserFriendIds = [],
+  showMessageRequestBadge = false,
   onClick,
   onPin,
   onMute,
@@ -52,6 +56,10 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   const avatar = conversation.isGroup 
     ? conversation.groupAvatar 
     : partner?.avatar;
+
+  // Tin nhắn từ người lạ (không phải bạn bè)
+  const isMessageRequest = !conversation.isGroup && partner && 
+    !currentUserFriendIds.includes(partner.id);
 
   const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
   const isUnread = (unreadCount > 0 || conversation.markedUnread) && !isActive;
@@ -114,6 +122,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatName}
             </h3>
+            {showMessageRequestBadge && isMessageRequest && (
+              <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200 flex-shrink-0">
+                Tin nhắn chờ
+              </span>
+            )}
             {conversation.pinned && (
               <Pin size={14} className="text-primary flex-shrink-0" />
             )}

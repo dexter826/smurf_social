@@ -371,7 +371,6 @@ const ReportDetailPage: React.FC = () => {
                     } else if (report.targetType === ReportType.COMMENT) {
                       const comment = content as Comment;
                       if (comment.image) allMedia.push({ url: comment.image, type: 'image' });
-                      if (comment.video) allMedia.push({ url: comment.video, type: 'video' });
                     }
 
                     if (allMedia.length === 0) return null;

@@ -18,3 +18,4 @@ export * from './MessengerSkeleton';
 export * from './ChatBoxSkeleton';
 export { ForwardModal } from './ForwardModal';
 export { MentionList } from './MentionList';
+export { MessageRequestBanner } from './MessageRequestBanner';

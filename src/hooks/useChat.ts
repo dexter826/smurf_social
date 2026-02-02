@@ -211,11 +211,11 @@ export const useChat = (): UseChatReturn => {
   const isBlocked = isBlockedByMe || isBlockedByPartner;
   const isFriend = partnerId ? currentUser?.friendIds?.includes(partnerId) ?? false : false;
 
+  // Cho phép nhắn tin người lạ, chỉ chặn khi bị block
   const getBlockedMessage = (): string | undefined => {
     if (!selectedConversation?.isGroup && partnerId) {
       if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
       if (isBlockedByPartner) return 'Bạn không thể gửi tin nhắn cho người này.';
-      if (!isFriend) return 'Hai bạn không còn là bạn bè. Kết bạn lại để tiếp tục nhắn tin.';
     }
     return undefined;
   };
