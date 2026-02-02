@@ -17,7 +17,7 @@ interface ContactState {
   fetchReceivedRequests: (userId: string) => Promise<void>;
   fetchSentRequests: (userId: string) => Promise<void>;
   subscribeToRequests: (userId: string) => () => void;
-  searchUsers: (searchTerm: string, userId: string) => Promise<void>;
+  searchUsers: (searchTerm: string, userId: string) => Promise<User[]>;
   
   sendFriendRequest: (senderId: string, receiverId: string, message?: string) => Promise<void>;
   acceptFriendRequest: (requestId: string, userId: string, friendId: string) => Promise<void>;
@@ -112,13 +112,14 @@ export const useContactStore = create<ContactState>()(
   searchUsers: async (searchTerm: string, userId: string) => {
     if (!searchTerm.trim()) {
       set({ searchResults: [] });
-      return;
+      return [];
     }
     
     set({ isSearching: true });
     try {
       const results = await userService.searchUsers(searchTerm, userId);
       set({ searchResults: results });
+      return results;
     } finally {
       set({ isSearching: false });
     }
