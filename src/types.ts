@@ -1,8 +1,8 @@
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = "light" | "dark";
 
 export enum UserStatus {
-  ONLINE = 'online',
-  OFFLINE = 'offline'
+  ONLINE = "online",
+  OFFLINE = "offline",
 }
 
 export interface User {
@@ -11,7 +11,7 @@ export interface User {
   avatar: string;
   email: string;
   location?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   birthDate?: Date;
   status: UserStatus;
   bio?: string;
@@ -21,13 +21,13 @@ export interface User {
   coverImage?: string;
   lastSeen?: Date;
   fcmTokens?: string[];
-  role?: 'user' | 'admin';
+  role?: "user" | "admin";
 }
 
 export enum FriendRequestStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected'
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
 }
 
 export interface FriendRequest {
@@ -40,7 +40,13 @@ export interface FriendRequest {
   updatedAt: Date;
 }
 
-export type MessageType = 'text' | 'image' | 'video' | 'file' | 'voice' | 'system';
+export type MessageType =
+  | "text"
+  | "image"
+  | "video"
+  | "file"
+  | "voice"
+  | "system";
 
 export interface Message {
   id: string;
@@ -97,7 +103,6 @@ export interface Comment {
   timestamp: Date;
   likes?: string[];
   image?: string;
-  video?: string;
   replyCount?: number;
   replyToUserId?: string;
 }
@@ -111,21 +116,21 @@ export interface Post {
   likes: string[];
   commentCount: number;
   timestamp: Date;
-  visibility: 'friends' | 'private';
+  visibility: "friends" | "private";
   edited?: boolean;
   editedAt?: Date;
 }
 
 export enum NotificationType {
-  LIKE_POST = 'like_post',
-  COMMENT_POST = 'comment_post',
-  REPLY_COMMENT = 'reply_comment',
-  LIKE_COMMENT = 'like_comment',
-  FRIEND_REQUEST = 'friend_request',
-  FRIEND_ACCEPT = 'friend_accept',
-  REPORT_NEW = 'report_new',
-  REPORT_RESOLVED = 'report_resolved',
-  CONTENT_VIOLATION = 'content_violation'
+  LIKE_POST = "like_post",
+  COMMENT_POST = "comment_post",
+  REPLY_COMMENT = "reply_comment",
+  LIKE_COMMENT = "like_comment",
+  FRIEND_REQUEST = "friend_request",
+  FRIEND_ACCEPT = "friend_accept",
+  REPORT_NEW = "report_new",
+  REPORT_RESOLVED = "report_resolved",
+  CONTENT_VIOLATION = "content_violation",
 }
 
 export interface AppNotification {
@@ -147,26 +152,26 @@ export interface AppNotification {
 // ========== REPORT TYPES ==========
 
 export enum ReportType {
-  POST = 'post',
-  COMMENT = 'comment',
+  POST = "post",
+  COMMENT = "comment",
 }
 
 export enum ReportReason {
-  SPAM = 'spam',
-  HARASSMENT = 'harassment',
-  HATE_SPEECH = 'hate_speech',
-  VIOLENCE = 'violence',
-  NUDITY = 'nudity',
-  SCAM = 'scam',
-  IMPERSONATION = 'impersonation',
-  OTHER = 'other'
+  SPAM = "spam",
+  HARASSMENT = "harassment",
+  HATE_SPEECH = "hate_speech",
+  VIOLENCE = "violence",
+  NUDITY = "nudity",
+  SCAM = "scam",
+  IMPERSONATION = "impersonation",
+  OTHER = "other",
 }
 
 export enum ReportStatus {
-  PENDING = 'pending',
-  RESOLVED = 'resolved',
-  REJECTED = 'rejected',
-  ORPHANED = 'orphaned'
+  PENDING = "pending",
+  RESOLVED = "resolved",
+  REJECTED = "rejected",
+  ORPHANED = "orphaned",
 }
 
 export interface Report {
