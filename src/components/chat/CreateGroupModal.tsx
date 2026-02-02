@@ -105,7 +105,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   );
 
   const renderSelectStep = () => (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col min-h-0">
       <div className="flex-none mb-4">
         <Input
           icon={<Search size={16} />}

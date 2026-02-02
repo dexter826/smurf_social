@@ -67,9 +67,9 @@ export const ReportModal: React.FC = () => {
       title="Báo cáo vi phạm"
       maxWidth="sm"
     >
-      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col">
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto max-h-[60vh] pr-2 -mr-2 space-y-4 p-1">
+        <div className="overflow-y-auto max-h-[60vh] pr-2 -mr-2 space-y-4 p-1">
           {/* Header info */}
           <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
             <AlertTriangle size={16} className="text-warning flex-shrink-0" />

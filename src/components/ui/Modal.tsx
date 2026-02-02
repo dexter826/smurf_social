@@ -16,6 +16,7 @@ interface ModalProps {
   showCloseButton?: boolean;
   className?: string;
   bodyClassName?: string;
+  fullScreen?: boolean;
 }
 
 const maxWidthClasses = {
@@ -48,7 +49,8 @@ export const Modal: React.FC<ModalProps> = ({
   showHeader = true,
   showCloseButton = true,
   className = '',
-  bodyClassName = ''
+  bodyClassName = '',
+  fullScreen = false
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -64,15 +66,17 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-4 overflow-hidden">
+    <div className={`fixed inset-0 z-[110] flex items-center justify-center ${fullScreen ? 'p-0' : 'p-4'} overflow-hidden`}>
       <div 
         className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
       />
       
       <div className={`
-        relative bg-bg-primary w-full md:rounded-2xl shadow-2xl transition-theme overflow-hidden flex flex-col justify-between md:justify-start 
-        h-full md:h-auto md:max-h-[90vh] rounded-none animate-in slide-in-from-bottom md:zoom-in-95 duration-200
+        relative bg-bg-primary w-full shadow-2xl transition-theme overflow-hidden flex flex-col justify-between md:justify-start 
+        ${fullScreen 
+          ? 'h-full max-h-screen rounded-none' 
+          : 'rounded-2xl h-auto md:h-auto md:max-h-[90vh] animate-in slide-in-from-bottom md:zoom-in-95 duration-200'}
         ${maxWidthClasses[maxWidth]} ${className}
       `}>
         {/* Header */}
