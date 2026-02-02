@@ -93,7 +93,7 @@ export const Avatar: React.FC<AvatarProps> = ({
               >
                 {isLastOfMany ? (
                   <div className="w-full h-full flex items-center justify-center bg-bg-hover text-[8px] font-bold text-text-primary">
-                    ...
+                    +{members.length - 3}
                   </div>
                 ) : member.avatar ? (
                   <img src={member.avatar} alt="" className="w-full h-full object-cover" />
