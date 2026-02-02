@@ -17,13 +17,14 @@ import {
   startAfter,
   DocumentSnapshot,
   increment,
-  writeBatch
+  writeBatch,
+  deleteField
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { Post, Comment, NotificationType, ReportStatus } from '../types';
 import { chunkArray } from '../utils/batchUtils';
-import { PAGINATION, FIREBASE_LIMITS } from '../constants';
+import { PAGINATION, FIREBASE_LIMITS, REACTIONS } from '../constants';
 import { notificationService } from './notificationService';
 import { compressImage, isImageFile, withRetry } from '../utils/imageUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
@@ -409,28 +410,39 @@ export const postService = {
     }
   },
 
-  likePost: async (postId: string, userId: string, isLiked: boolean): Promise<void> => {
+  reactToPost: async (postId: string, userId: string, reaction: string): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        likes: isLiked ? arrayRemove(userId) : arrayUnion(userId)
-      });
+      const postSnap = await getDoc(postRef);
 
-      // Gửi thông báo nếu là like mới (không phải bỏ like)
-      if (!isLiked) {
-        const postSnap = await getDoc(postRef);
-        const postData = postSnap.data();
-        if (postData && postData.userId !== userId) {
+      if (postSnap.exists()) {
+        const data = postSnap.data();
+        const reactions: Record<string, string> = data.reactions || {};
+        const currentReaction = reactions[userId];
+        
+        // Cập nhật trạng thái cảm xúc
+        if (reaction === 'REMOVE' || currentReaction === reaction) {
+          await updateDoc(postRef, {
+            [`reactions.${userId}`]: deleteField()
+          });
+        } else {
+          await updateDoc(postRef, {
+            [`reactions.${userId}`]: reaction
+          });
+        }
+
+        // Gửi thông báo nếu có cảm xúc mới (và không phải là thao tác xóa)
+        if (reaction !== 'REMOVE' && !currentReaction && reactions[userId] && data.userId !== userId) {
           await notificationService.createNotification({
-            receiverId: postData.userId,
+            receiverId: data.userId,
             senderId: userId,
-            type: NotificationType.LIKE_POST,
+            type: NotificationType.LIKE_POST, // Có thể cập nhật type Notification sau
             data: { postId }
           });
         }
       }
     } catch (error) {
-      console.error("Lỗi like bài viết", error);
+      console.error("Lỗi react bài viết", error);
       throw error;
     }
   },

@@ -18,3 +18,5 @@ export * from './Modal';
 export * from './TextArea';
 export * from './UploadProgress';
 export * from './LazyMedia';
+export * from './ReactionSelector';
+export * from './ReactionDisplay';

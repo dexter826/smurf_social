@@ -113,7 +113,7 @@ export interface Post {
   content: string;
   images?: string[];
   videos?: string[];
-  likes: string[];
+  reactions?: Record<string, string>;
   commentCount: number;
   timestamp: Date;
   visibility: "public" | "friends" | "private";

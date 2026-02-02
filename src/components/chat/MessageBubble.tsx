@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatTimeOnly } from '../../utils/dateUtils';
-import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight } from 'lucide-react';
+import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText, ReactionDisplay, ReactionSelector } from '../ui';
 import { chatService } from '../../services/chatService';
+import { useChatStore } from '../../store/chatStore';
 
 
 interface MessageBubbleProps {
@@ -47,8 +48,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [showFullImage, setShowFullImage] = useState(false);
   const [showRecallConfirm, setShowRecallConfirm] = useState(false);
   const [showReaders, setShowReaders] = useState(false);
+  const [showReactionSelector, setShowReactionSelector] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const { toggleReaction } = useChatStore();
 
   const handleProfileClick = () => {
     if (sender?.id) {
@@ -74,6 +77,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     (new Date().getTime() - new Date(message.timestamp).getTime()) / (1000 * 60) <= 10
   );
   
+  const hasReactions = message.reactions && Object.keys(message.reactions).length > 0;
+
   const renderContent = () => {
     if (message.isRecalled) {
       return (
@@ -251,15 +256,46 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {message.type === 'text' && (
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
                   isMe ? 'text-white/80' : 'text-text-tertiary'
-                }`}>
+                } ${hasReactions ? 'mb-2' : ''}`}>
                   <span>{formatTimeOnly(message.timestamp)}</span>
+                </div>
+              )}
+
+              {/* Hiển thị cảm xúc */}
+              {hasReactions && (
+                <div className={`absolute -bottom-3 z-10 shadow-md border-[2px] border-bg-primary bg-bg-secondary rounded-full px-1.5 py-0.5 flex items-center justify-center ${isMe ? '-left-2' : '-right-2'}`}>
+                    <ReactionDisplay reactions={message.reactions} />
                 </div>
               )}
             </div>
 
-             {/* Menu thao tác */}
+             {/* Menu và chức năng cảm xúc */}
             {!message.isRecalled && (
-              <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
+              <div 
+                className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}
+                onMouseLeave={() => setShowReactionSelector(false)}
+              >
+                {/* Nút cảm xúc */}
+                <div className="relative">
+                   <IconButton
+                      icon={<Smile size={14} />}
+                      size="sm"
+                      onClick={(e) => {
+                          e.stopPropagation();
+                          setShowReactionSelector(!showReactionSelector);
+                      }}
+                      onMouseEnter={() => setShowReactionSelector(true)}
+                   />
+                   {showReactionSelector && (
+                      <ReactionSelector 
+                        onSelect={(emoji) => toggleReaction(message.id, currentUserId, emoji)}
+                        onClose={() => setShowReactionSelector(false)}
+                        className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
+                        currentReaction={message.reactions?.[currentUserId]}
+                      />
+                   )}
+                </div>
+
                 <IconButton
                   ref={menuButtonRef}
                   onClick={toggleMenu}

@@ -46,7 +46,7 @@ service cloud.firestore {
       // Cho phép update likes/commentCount từ bất kỳ ai
       allow update: if request.auth != null && (
         resource.data.userId == request.auth.uid || 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likes'])
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'reactions'])
       );
       allow delete: if request.auth != null && (
         resource.data.userId == request.auth.uid ||
@@ -100,11 +100,11 @@ service cloud.firestore {
       allow create: if request.auth != null && 
         (request.resource.data.senderId == request.auth.uid || request.resource.data.senderId == 'system') &&
         request.auth.uid in get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data.participantIds;
-      // Cho phép update readBy/deliveredAt/deletedBy từ participants
+      // Cho phép update readBy/deliveredAt/deletedBy/reactions từ participants
       allow update: if request.auth != null && (
         resource.data.senderId == request.auth.uid || 
         (request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participantIds && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy', 'deliveredAt', 'deliveredTo', 'deletedBy']))
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy', 'deliveredAt', 'deliveredTo', 'deletedBy', 'reactions']))
       );
       allow delete: if request.auth != null && resource.data.senderId == request.auth.uid;
     }

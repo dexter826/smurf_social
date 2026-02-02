@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Globe, Users, Lock, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
-import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton } from '../ui';
+import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton, ReactionSelector, ReactionDisplay } from '../ui';
 import { Post, User, ReportType } from '../../types';
 import { CommentSection } from './CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { useReportStore } from '../../store/reportStore';
+import { REACTION_LABELS } from '../../constants';
 
 interface PostViewModalProps {
   post: Post | null;
@@ -13,7 +14,7 @@ interface PostViewModalProps {
   currentUser: User;
   isOpen: boolean;
   onClose: () => void;
-  onLike: (postId: string) => void;
+  onReact: (postId: string, reaction: string) => void;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   isLoading?: boolean;
@@ -25,7 +26,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   currentUser,
   isOpen,
   onClose,
-  onLike,
+  onReact,
   onEdit,
   onDelete,
   isLoading
@@ -34,6 +35,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const { openReportModal } = useReportStore();
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
 
   const handleProfileClick = () => {
     if (author?.id) {
@@ -124,7 +126,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     ...(post.videos || []).map(url => ({ url, type: 'video' }))
   ];
   
-  const isLiked = post.likes.includes(currentUser.id);
+  const myReaction = post.reactions?.[currentUser.id];
   const isOwner = post.userId === currentUser.id;
   const hasMedia = allMedia.length > 0;
   const modalClassName = hasMedia
@@ -353,16 +355,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 {/* Thong ke luot thich/binh luan */}
                 <div className="px-5 md:px-6 py-4 flex justify-between items-center border-b border-border-light/60">
                   <div className="flex items-center gap-2">
-                    {post.likes.length > 0 && (
-                      <div className="flex items-center gap-1.5 bg-bg-secondary px-2.5 py-1 rounded-full border border-border-light/30">
-                        <div className="bg-error p-1 rounded-full shadow-sm shadow-error/20">
-                          <Heart size={10} className="text-white fill-white" />
-                        </div>
-                        <span className="text-[13px] text-text-primary font-bold">
-                          {post.likes.length}
-                        </span>
-                      </div>
-                    )}
+                    <ReactionDisplay reactions={post.reactions} />
                   </div>
                   <div className="text-[13px] text-text-secondary font-medium tracking-tight">
                     {post.commentCount > 0 && `${post.commentCount} bình luận`}
@@ -370,17 +363,35 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 </div>
 
                 {/* Cac nut hanh dong */}
-                <div className="flex px-2 py-1 border-b border-border-light">
-                  <Button
-                    variant="ghost"
-                    onClick={() => onLike(post.id)}
-                    className={`flex-1 ${
-                      isLiked ? '!text-error' : 'text-text-secondary hover:text-error'
-                    }`}
-                    icon={<Heart size={20} className={isLiked ? 'fill-error text-error' : ''} />}
+                <div className="flex px-2 py-1 border-b border-border-light relative">
+                  <div 
+                      className="flex-1 relative group/reaction-btn" 
+                      onMouseLeave={() => setShowReactions(false)}
                   >
-                    <span className={`text-sm font-medium ${isLiked ? 'text-error' : ''}`}>Thích</span>
-                  </Button>
+                    {showReactions && (
+                      <ReactionSelector 
+                        className="absolute bottom-full left-0 mb-2 ml-4 transform origin-bottom-left z-50"
+                        onSelect={(emoji) => {
+                          onReact(post.id, emoji);
+                          setShowReactions(false);
+                        }}
+                        onClose={() => setShowReactions(false)}
+                      />
+                    )}
+                    <Button
+                      variant="ghost"
+                      className={`w-full group ${myReaction ? 'text-primary' : 'text-text-secondary hover:text-primary'}`}
+                      onClick={() => onReact(post.id, myReaction || '👍')}
+                      onMouseEnter={() => setShowReactions(true)}
+                    >
+                      <div className="flex items-center gap-2 transition-transform active:scale-95">
+                        {myReaction ? <span className="text-xl animate-in zoom-in spin-in-12 duration-300">{myReaction}</span> : <Heart size={20} className="group-hover:scale-110 transition-transform" />}
+                        <span className={`text-sm font-medium ${myReaction ? `text-${REACTION_LABELS[myReaction]}` : ''}`}>
+                          {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}
+                        </span>
+                      </div>
+                    </Button>
+                  </div>
                   <Button
                     variant="ghost"
                     className="flex-1 text-text-secondary"

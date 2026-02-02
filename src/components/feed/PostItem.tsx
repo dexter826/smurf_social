@@ -3,16 +3,16 @@ import { db } from '../../firebase/config';
 import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Globe, Users, Lock, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
-import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button } from '../ui';
+import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button, ReactionDisplay, ReactionSelector } from '../ui';
 import { Post, User, UserStatus, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
-
+import { REACTION_LABELS, REACTIONS } from '../../constants';
 
 interface PostItemProps {
   post: Post;
   author: User;
   currentUser: User;
-  onLike: (postId: string) => void;
+  onReact: (postId: string, reaction: string) => void;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onViewDetail?: (post: Post) => void;
@@ -23,7 +23,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   post,
   author,
   currentUser,
-  onLike,
+  onReact,
   onEdit,
   onDelete,
   onViewDetail,
@@ -32,9 +32,10 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   const navigate = useNavigate();
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
   const { openReportModal } = useReportStore();
 
-  const isLiked = post.likes.includes(currentUser.id);
+  const myReaction = post.reactions?.[currentUser.id];
   const isOwner = post.userId === currentUser.id;
 
   const handleProfileClick = () => {
@@ -213,20 +214,11 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         </div>
       )}
 
-      {/* Stats */}
-      {post.likes.length > 0 || post.commentCount > 0 ? (
-        <div className="px-4 py-1 flex justify-between items-center border-b border-border-light">
+      {/* Thống kê */}
+      {(post.reactions && Object.keys(post.reactions).length > 0) || post.commentCount > 0 ? (
+        <div className="px-4 py-1 flex justify-between items-center border-b border-border-light min-h-[40px]">
           <div className="flex items-center gap-1.5">
-            {post.likes.length > 0 && (
-              <>
-                <div className="bg-error p-1 rounded-full">
-                  <Heart size={12} className="text-white fill-white" />
-                </div>
-                <span className="text-sm text-text-secondary font-medium">
-                  {post.likes.length}
-                </span>
-              </>
-            )}
+            <ReactionDisplay reactions={post.reactions} />
           </div>
           <div className="flex items-center gap-4 text-sm text-text-secondary">
             {post.commentCount > 0 && (
@@ -245,18 +237,37 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         <div className="h-2 border-b border-border-light"></div>
       )}
 
-      {/* Actions */}
-      <div className="flex px-2 py-1">
-        <Button
-          variant="ghost"
-          onClick={() => onLike(post.id)}
-          className={`flex-1 ${
-            isLiked ? '!text-error' : 'text-text-secondary hover:text-error'
-          }`}
-          icon={<Heart size={20} className={isLiked ? 'fill-error text-error' : ''} />}
+      {/* Thao tác */}
+      <div className="flex px-2 py-1 relative">
+        <div 
+            className="flex-1 relative group/reaction-btn" 
+            onMouseLeave={() => setShowReactions(false)}
         >
-          <span className={`text-sm font-medium ${isLiked ? 'text-error' : ''}`}>Thích</span>
-        </Button>
+          {showReactions && (
+            <ReactionSelector 
+              className="absolute bottom-full left-0 mb-2 ml-4 transform origin-bottom-left"
+              onSelect={(emoji) => {
+                onReact(post.id, emoji);
+                setShowReactions(false);
+              }}
+              onClose={() => setShowReactions(false)}
+            />
+          )}
+          <Button
+            variant="ghost"
+            className={`w-full group ${myReaction ? 'text-primary' : 'text-text-secondary hover:text-primary'}`}
+            onClick={() => onReact(post.id, myReaction || '👍')}
+            onMouseEnter={() => setShowReactions(true)}
+            // onTouchStart={() => setShowReactions(true)} // Handle separate for mobile if needed
+          >
+            <div className="flex items-center gap-2 transition-transform active:scale-95">
+              {myReaction ? <span className="text-xl animate-in zoom-in spin-in-12 duration-300">{myReaction}</span> : <Heart size={20} className="group-hover:scale-110 transition-transform" />}
+              <span className={`text-sm font-medium ${myReaction ? `text-${REACTION_LABELS[myReaction]}` : ''}`}>
+                {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}
+              </span>
+            </div>
+          </Button>
+        </div>
         <Button
           variant="ghost"
           onClick={() => onViewDetail?.(post)}

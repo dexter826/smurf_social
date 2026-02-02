@@ -12,7 +12,7 @@ interface UseFeedReturn {
   hasMore: boolean;
   usersMap: Record<string, User>;
   handleLoadMore: () => void;
-  handleLike: (postId: string) => Promise<void>;
+  handleReact: (postId: string, reaction: string) => Promise<void>;
   handleUpdate: (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
   handleDelete: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   observerRef: RefObject<HTMLDivElement | null>;
@@ -27,7 +27,7 @@ export const useFeed = (): UseFeedReturn => {
     hasMore,
     fetchPosts,
     subscribeToPosts,
-    likePost,
+    reactToPost,
     updatePost,
     deletePost,
   } = usePostStore();
@@ -75,10 +75,10 @@ export const useFeed = (): UseFeedReturn => {
     }
   }, [posts, fetchUsers]);
 
-  const handleLike = useCallback(async (postId: string) => {
+  const handleReact = useCallback(async (postId: string, reaction: string) => {
     if (!currentUser) return;
-    await likePost(postId, currentUser.id);
-  }, [currentUser, likePost]);
+    await reactToPost(postId, currentUser.id, reaction);
+  }, [currentUser, reactToPost]);
 
   const handleUpdate = useCallback(async (
     postId: string,
@@ -105,7 +105,7 @@ export const useFeed = (): UseFeedReturn => {
     hasMore,
     usersMap,
     handleLoadMore,
-    handleLike,
+    handleReact,
     handleUpdate,
     handleDelete,
     observerRef,

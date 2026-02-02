@@ -14,7 +14,7 @@ const FeedPage: React.FC = () => {
     isRevalidating,
     hasMore,
     usersMap,
-    handleLike,
+    handleReact,
     handleUpdate,
     handleDelete,
     observerRef,
@@ -91,7 +91,7 @@ const FeedPage: React.FC = () => {
                   post={post}
                   author={author}
                   currentUser={currentUser}
-                  onLike={handleLike}
+                  onReact={handleReact}
                   onEdit={(postId) => setShowEditModal(postId)}
                   onDelete={(postId) => setPostToDelete(postId)}
                   onViewDetail={(post) => setSelectedPost(post)}
@@ -133,7 +133,7 @@ const FeedPage: React.FC = () => {
         post={selectedPost}
         author={selectedPost ? usersMap[selectedPost.userId] : null}
         currentUser={currentUser}
-        onLike={handleLike}
+        onReact={handleReact}
       />
 
       <ConfirmDialog

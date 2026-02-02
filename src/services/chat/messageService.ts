@@ -14,7 +14,8 @@ import {
   arrayUnion,
   arrayRemove,
   limit,
-  startAfter
+  startAfter,
+  deleteField
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { Message, MessageType } from "../../types";
@@ -754,7 +755,7 @@ export const messageService = {
     });
   },
 
-  // Thêm hoặc xóa cảm xúc (reaction) cho tin nhắn
+  // Bật/tắt cảm xúc tin nhắn
   toggleReaction: async (
     messageId: string,
     userId: string,
@@ -762,18 +763,21 @@ export const messageService = {
   ): Promise<void> => {
     try {
       const messageRef = doc(db, "messages", messageId);
+      
       const messageSnap = await getDoc(messageRef);
-
       if (messageSnap.exists()) {
-        const reactions = messageSnap.data().reactions || {};
-
-        if (reactions[userId] === emoji) {
-          delete reactions[userId];
+        const data = messageSnap.data();
+        const currentReaction = data.reactions?.[userId];
+        
+        if (emoji === 'REMOVE' || currentReaction === emoji) {
+           await updateDoc(messageRef, {
+             [`reactions.${userId}`]: deleteField()
+           });
         } else {
-          reactions[userId] = emoji;
+           await updateDoc(messageRef, {
+             [`reactions.${userId}`]: emoji
+           });
         }
-
-        await updateDoc(messageRef, { reactions });
       }
     } catch (error) {
       console.error("Lỗi toggle reaction", error);
