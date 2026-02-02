@@ -100,7 +100,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
         </div>
       }
     >
-      <div className="flex flex-col h-full min-h-0">
+      <div className="flex flex-col min-h-0">
         <div className="flex-none mb-4">
           <Input
             icon={<Search size={16} />}
@@ -111,7 +111,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-1 -mr-2 pr-2 custom-scrollbar min-h-0">
+        <div className="overflow-y-auto space-y-1 -mr-2 pr-2 custom-scrollbar min-h-0">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="animate-spin text-primary" size={24} />

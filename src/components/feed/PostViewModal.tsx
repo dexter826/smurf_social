@@ -141,7 +141,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       showHeader={false} 
       maxWidth={hasMedia ? "7xl" : "lg"} 
       padding="none"
-      className={modalClassName}
+      fullScreen
       bodyClassName="!overflow-hidden"
     >
       <div className={containerClassName}>

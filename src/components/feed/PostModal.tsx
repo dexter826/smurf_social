@@ -154,7 +154,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
       maxWidth="2xl"
       padding="none"
-      className="md:max-h-[85vh]"
+      fullScreen
       footer={
         <div className="w-full">
           {/* Media Actions */}
@@ -218,7 +218,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       }
     >
       <div className="flex flex-col min-h-[150px]">
-        <div className="sticky top-0 z-10 bg-bg-primary px-4 md:px-6 py-3 border-b border-divider flex items-center justify-between flex-none">
+        <div className="sticky top-[-1px] z-10 bg-bg-primary px-4 md:px-6 py-3 border-b border-divider flex items-center justify-between flex-none">
           <div className="flex items-center gap-3">
             <UserAvatar userId={currentUser.id} src={currentUser.avatar} name={currentUser.name} size="md" initialStatus={currentUser.status} />
             <h3 className="font-semibold text-text-primary text-sm md:text-base">{currentUser.name}</h3>

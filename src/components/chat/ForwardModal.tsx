@@ -65,7 +65,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         </Button>
       }
     >
-      <div className="flex flex-col h-full min-h-0">
+      <div className="flex flex-col min-h-0">
         {/* Search */}
         <div className="flex-none relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
@@ -86,7 +86,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto space-y-1 pr-2 -mr-2 custom-scrollbar min-h-0">
+        <div className="overflow-y-auto space-y-1 pr-2 -mr-2 custom-scrollbar min-h-0">
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv) => {
               const partner = conv.participants.find(p => p.id !== currentUserId);
@@ -106,6 +106,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                       name={name}
                       size="sm"
                       isGroup={conv.isGroup}
+                      members={conv.participants}
                     />
                     <span className="text-sm font-medium text-text-primary truncate">{name}</span>
                   </div>
