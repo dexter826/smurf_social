@@ -211,12 +211,31 @@ export const userService = {
   },
 
   // Lấy thống kê số lượng bạn bè và bài viết
-  getUserStats: async (userId: string): Promise<{ friendCount: number, postCount: number }> => {
+  getUserStats: async (userId: string, currentUserId?: string, friendIds?: string[]): Promise<{ friendCount: number, postCount: number }> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', userId));
-      const friendCount = (userDoc.data()?.friendIds || []).length;
+      const friendCount = userId === currentUserId 
+        ? (userDoc.data()?.friendIds || []).length 
+        : 0;
       
-      const postsQuery = query(collection(db, 'posts'), where('userId', '==', userId));
+      const isOwner = userId === currentUserId;
+      const isFriend = friendIds?.includes(userId) || false;
+
+      // Đếm bài viết theo visibility mà người xem có thể thấy
+      let visibilityFilter: string[];
+      if (isOwner) {
+        visibilityFilter = ['public', 'friends', 'private'];
+      } else if (isFriend) {
+        visibilityFilter = ['public', 'friends'];
+      } else {
+        visibilityFilter = ['public'];
+      }
+
+      const postsQuery = query(
+        collection(db, 'posts'), 
+        where('userId', '==', userId),
+        where('visibility', 'in', visibilityFilter)
+      );
       const postsSnapshot = await getDocs(postsQuery);
       const postCount = postsSnapshot.size;
       
