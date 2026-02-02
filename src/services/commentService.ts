@@ -108,8 +108,7 @@ export const commentService = {
     content: string, 
     parentId: string | null = null,
     replyToUserId?: string,
-    imageUrl?: string, 
-    videoUrl?: string
+    imageUrl?: string
   ): Promise<string> => {
     try {
       const commentData = {
@@ -119,7 +118,6 @@ export const commentService = {
         parentId,
         replyToUserId: replyToUserId || null,
         image: imageUrl || null,
-        video: videoUrl || null,
         timestamp: Timestamp.now(),
         likes: [],
         replyCount: 0
@@ -193,12 +191,10 @@ export const commentService = {
       // Xóa mọi ảnh/video đính kèm khỏi Storage
       const mediaUrlsToDelele: string[] = [];
       if (commentData.image) mediaUrlsToDelele.push(commentData.image);
-      if (commentData.video) mediaUrlsToDelele.push(commentData.video);
       
       repliesToDelete.forEach(replyDoc => {
         const data = replyDoc.data();
         if (data.image) mediaUrlsToDelele.push(data.image);
-        if (data.video) mediaUrlsToDelele.push(data.video);
       });
 
       for (const url of mediaUrlsToDelele) {
@@ -256,12 +252,11 @@ export const commentService = {
   },
 
   // Cập nhật nội dung bình luận
-  updateComment: async (commentId: string, content: string, imageUrl?: string | null, videoUrl?: string | null) => {
+  updateComment: async (commentId: string, content: string, imageUrl?: string | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
       const updateData: any = { content };
       if (imageUrl !== undefined) updateData.image = imageUrl;
-      if (videoUrl !== undefined) updateData.video = videoUrl;
       await updateDoc(commentRef, updateData);
     } catch (error) {
       console.error("Lỗi cập nhật comment:", error);

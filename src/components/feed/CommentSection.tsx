@@ -173,10 +173,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setInputMode('comment');
   };
 
-  const handleCommentSubmit = async (content: string, image?: string, video?: string) => {
+  const handleCommentSubmit = async (content: string, image?: string) => {
     try {
       if (inputMode === 'edit' && editingComment) {
-        await updateComment(postId, editingComment.id, content, editingComment.parentId, image, video);
+        await updateComment(postId, editingComment.id, content, editingComment.parentId, image);
         toast.success('Đã cập nhật bình luận');
       } else {
         const parentId = replyingTo ? (replyingTo.parentId || replyingTo.id) : null;
@@ -186,8 +186,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           content,
           parentId,
           replyingTo?.userId,
-          image,
-          video
+          image
         );
         toast.success('Đã gửi bình luận');
       }
@@ -228,9 +227,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       
       if (file.type.startsWith('image/')) {
         return await postService.uploadCommentImage(file, currentUser.id, onProgress);
-      } else {
-        return await postService.uploadCommentVideo(file, currentUser.id, onProgress);
       }
+      throw new Error('Chỉ hỗ trợ tải ảnh');
     } finally {
       setUploadProgress(null);
     }
@@ -298,7 +296,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                      user={currentUser}
                      initialValue={comment.content}
                      initialImage={comment.image}
-                     initialVideo={comment.video}
                      onSubmit={handleCommentSubmit}
                      onCancel={resetInput}
                      onUploadMedia={handleUploadMedia}
@@ -308,10 +305,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               ) : (
                 <>
                   {renderCommentContent(comment)}
-                  {(comment.image || comment.video) && (
+                  {comment.image && (
                     <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
-                      {comment.image && <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />}
-                      {comment.video && <video src={comment.video} controls className="max-h-60 w-full" />}
+                      <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />
                     </div>
                   )}
                 </>

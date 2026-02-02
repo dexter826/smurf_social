@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Image as ImageIcon, Video, X, Send } from 'lucide-react';
+import { Image as ImageIcon, X, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, IconButton, EmojiPicker, Loading } from '../ui';
@@ -16,8 +16,7 @@ interface CommentInputProps {
   placeholder?: string;
   initialValue?: string;
   initialImage?: string;
-  initialVideo?: string;
-  onSubmit: (content: string, image?: string, video?: string) => Promise<void>;
+  onSubmit: (content: string, image?: string) => Promise<void>;
   onCancel?: () => void;
   onUploadMedia: (file: File) => Promise<string>;
   autoFocus?: boolean;
@@ -28,14 +27,12 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   placeholder = 'Viết bình luận...',
   initialValue = '',
   initialImage,
-  initialVideo,
   onSubmit,
   onCancel,
   onUploadMedia,
   autoFocus = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -49,8 +46,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     resolver: zodResolver(commentSchema),
     defaultValues: {
       content: initialValue,
-      image: initialImage,
-      video: initialVideo
+      image: initialImage
     }
   });
 
@@ -71,24 +67,18 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     }
   }, [formData.content]);
 
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!validateFileSize(file, type === 'image' ? 'IMAGE' : 'VIDEO')) {
+    if (!validateFileSize(file, 'IMAGE')) {
       return;
     }
 
     setIsUploading(true);
     try {
       const url = await onUploadMedia(file);
-      if (type === 'image') {
-        setValue('image', url, { shouldDirty: true });
-        setValue('video', undefined);
-      } else {
-        setValue('video', url, { shouldDirty: true });
-        setValue('image', undefined);
-      }
+      setValue('image', url, { shouldDirty: true });
     } catch (error) {
       toast.error('Lỗi tải media lên');
     } finally {
@@ -101,7 +91,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     const submittedData = { ...data };
     reset();
     try {
-      await onSubmit(submittedData.content || '', submittedData.image, submittedData.video);
+      await onSubmit(submittedData.content || '', submittedData.image);
     } catch (error) {
       console.error('Lỗi gửi bình luận:', error);
     }
@@ -109,7 +99,6 @@ export const CommentInput: React.FC<CommentInputProps> = ({
 
   const handleRemoveMedia = () => {
     setValue('image', undefined, { shouldDirty: true });
-    setValue('video', undefined, { shouldDirty: true });
   };
 
   return (
@@ -140,7 +129,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             }}
           />
 
-          {(formData.image || formData.video || isUploading) && (
+          {(formData.image || isUploading) && (
             <div className="mt-2 relative inline-block">
               {isUploading ? (
                 <div className="w-20 h-20 flex items-center justify-center bg-bg-third rounded-lg">
@@ -149,17 +138,6 @@ export const CommentInput: React.FC<CommentInputProps> = ({
               ) : formData.image ? (
                 <div className="relative group">
                   <img src={formData.image} alt="Preview" className="h-20 w-auto rounded-lg object-cover" />
-                  <button
-                    type="button"
-                    onClick={handleRemoveMedia}
-                    className="absolute -top-2 -right-2 bg-text-primary text-bg-primary rounded-full p-0.5 shadow-md hover:scale-110 transition-transform"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ) : formData.video ? (
-                <div className="relative group">
-                  <video src={formData.video} className="h-20 w-auto rounded-lg" />
                   <button
                     type="button"
                     onClick={handleRemoveMedia}
@@ -181,15 +159,6 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                 icon={<ImageIcon size={16} />}
                 size="sm"
                 title="Thêm ảnh"
-                disabled={isSubmitting || isUploading}
-              />
-              <IconButton
-                type="button"
-                className="text-text-tertiary hover:text-blue-500"
-                onClick={() => videoInputRef.current?.click()}
-                icon={<Video size={16} />}
-                size="sm"
-                title="Thêm video"
                 disabled={isSubmitting || isUploading}
               />
               <EmojiPicker
@@ -230,8 +199,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             </div>
           </div>
         </form>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e, 'image')} />
-        <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => handleMediaUpload(e, 'video')} />
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e)} />
       </div>
     </div>
   );

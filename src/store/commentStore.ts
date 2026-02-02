@@ -19,8 +19,8 @@ interface CommentState {
   fetchReplies: (postId: string, parentId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToComments: (postId: string, blockedUserIds?: string[]) => () => void;
   subscribeToReplies: (postId: string, parentId: string, blockedUserIds?: string[]) => () => void;
-  addComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string, videoUrl?: string) => Promise<string>;
-  updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null, videoUrl?: string | null) => Promise<void>;
+  addComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string) => Promise<string>;
+  updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null) => Promise<void>;
   deleteComment: (postId: string, commentId: string, parentId?: string | null) => Promise<void>;
   likeComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
 
@@ -29,7 +29,7 @@ interface CommentState {
   setReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   addReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   clearComments: (postId: string) => void;
-  updateCommentInStore: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null, videoUrl?: string | null) => void;
+  updateCommentInStore: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null) => void;
   isLoadingPost: (postId: string) => boolean;
   reset: () => void;
 }
@@ -260,7 +260,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     );
   },
 
-  addComment: async (postId, userId, content, parentId, replyToUserId, imageUrl, videoUrl) => {
+  addComment: async (postId, userId, content, parentId, replyToUserId, imageUrl) => {
     const tempId = `temp-${Date.now()}`;
     const optimisticComment: Comment = {
       id: tempId,
@@ -270,7 +270,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       parentId: parentId || null,
       replyToUserId: replyToUserId || null,
       image: imageUrl || null,
-      video: videoUrl || null,
       timestamp: new Date(),
       likes: [],
       replyCount: 0
@@ -307,7 +306,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
 
     try {
-      const realId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, videoUrl);
+      const realId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl);
       
       // Ghi đè ID thật
       set(state => {
@@ -350,10 +349,10 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
   },
 
-  updateComment: async (postId, commentId, content, parentId, imageUrl, videoUrl) => {
+  updateComment: async (postId, commentId, content, parentId, imageUrl) => {
     try {
-      await commentService.updateComment(commentId, content, imageUrl, videoUrl);
-      get().updateCommentInStore(postId, commentId, content, parentId, imageUrl, videoUrl);
+      await commentService.updateComment(commentId, content, imageUrl);
+      get().updateCommentInStore(postId, commentId, content, parentId, imageUrl);
     } catch (error) {
       console.error('Lỗi cập nhật bình luận:', error);
       throw error;
@@ -530,12 +529,11 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     };
   }),
 
-  updateCommentInStore: (postId, commentId, content, parentId, imageUrl, videoUrl) => set((state) => {
+  updateCommentInStore: (postId, commentId, content, parentId, imageUrl) => set((state) => {
     const updateObj = (c: Comment) => ({
       ...c,
       content,
-      ...(imageUrl !== undefined && { image: imageUrl }),
-      ...(videoUrl !== undefined && { video: videoUrl })
+      ...(imageUrl !== undefined && { image: imageUrl })
     });
 
     if (!parentId) {

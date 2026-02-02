@@ -111,8 +111,7 @@ export const commentSchema = z.object({
     .optional()
     .or(z.literal('')),
   image: z.string().optional(),
-  video: z.string().optional(),
-}).refine(data => data.content?.trim() || data.image || data.video, {
+}).refine(data => data.content?.trim() || data.image, {
   message: "Bình luận không được để trống",
   path: ["content"],
 });
