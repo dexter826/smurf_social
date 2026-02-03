@@ -150,7 +150,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 py-1.5 pb-max(20px, env(safe-area-inset-bottom)) bg-bg-primary border-t border-border-light rounded-2xl shadow-dropdown 
                 max-h-[70vh] overflow-y-auto
                 md:bottom-auto md:left-auto md:right-auto md:max-h-none
-                md:min-w-[220px] md:w-auto md:max-w-[calc(100vw-32px)] md:border md:rounded-xl 
+                md:min-w-max md:w-auto md:max-w-[calc(100vw-32px)] md:border md:rounded-xl 
                 shadow-2xl
               `}
               onClick={() => handleOpenChange(false)}
