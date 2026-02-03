@@ -562,22 +562,5 @@ export const postService = {
       console.error("Lỗi upload ảnh bình luận", error);
       throw error;
     }
-  },
-
-  uploadCommentVideo: async (
-    file: File, 
-    userId: string,
-    onProgress?: ProgressCallback
-  ): Promise<string> => {
-    try {
-      const timestamp = Date.now();
-      const fileName = `comment_vid_${timestamp}_${file.name}`;
-      const path = `comments/${userId}/videos/${fileName}`;
-      
-      return await withRetry(() => uploadWithProgress(path, file, onProgress));
-    } catch (error) {
-      console.error("Lỗi upload video bình luận", error);
-      throw error;
-    }
   }
 };
