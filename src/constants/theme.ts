@@ -1,6 +1,5 @@
 // Hằng số theme
 
-
 export const THEME_COLORS = {
   light: {
     primary: '#0068ff',

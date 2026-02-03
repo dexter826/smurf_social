@@ -1,6 +1,5 @@
 /**
  * Các hằng số giới hạn kích thước file (tính bằng byte)
- * Đã sync với Firebase Storage Rules
  */
 export const FILE_LIMITS = {
   IMAGE: 5 * 1024 * 1024,      // 5MB (posts/images, avatars)

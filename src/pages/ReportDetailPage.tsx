@@ -21,7 +21,7 @@ import { userService } from '../services/userService';
 import { postService } from '../services/postService';
 import { commentService } from '../services/commentService';
 import { Button, UserAvatar, ConfirmDialog, Skeleton, IconButton } from '../components/ui';
-import { REPORT_CONFIG } from '../constants';
+import { REPORT_CONFIG, CONFIRM_MESSAGES } from '../constants';
 import { formatRelativeTime, formatDateTime } from '../utils/dateUtils';
 import { toast } from '../store/toastStore';
 import { useAuthStore } from '../store/authStore';
@@ -520,23 +520,19 @@ const ReportDetailPage: React.FC = () => {
         onClose={() => setShowConfirm(false)}
         onConfirm={handleAction}
         title={
-          actionType === 'resolve' ? 'Xác nhận xóa nội dung' : 
-          actionType === 'warn' ? 'Gửi cảnh báo' :
-          actionType === 'ban' ? 'Khóa tài khoản' : 'Bỏ qua báo cáo'
+          actionType === 'resolve' ? CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.TITLE : 
+          actionType === 'warn' ? CONFIRM_MESSAGES.ADMIN.WARN_USER.TITLE :
+          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.TITLE : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.TITLE
         }
         message={
-          actionType === 'resolve'
-            ? 'Nội dung vi phạm sẽ bị xóa vĩnh viễn khỏi hệ thống. Bạn có chắc chắn?'
-            : actionType === 'warn' 
-            ? 'Người dùng sẽ nhận được thông báo cảnh báo về vi phạm này.'
-            : actionType === 'ban'
-            ? 'Tài khoản người dùng sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị. Hành động này rất nghiêm trọng.'
-            : 'Báo cáo sẽ được đóng lại và nội dung vẫn được giữ nguyên. Tiếp tục?'
+          actionType === 'resolve' ? CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.MESSAGE : 
+          actionType === 'warn' ? CONFIRM_MESSAGES.ADMIN.WARN_USER.MESSAGE :
+          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.MESSAGE : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.MESSAGE
         }
         confirmLabel={
-          actionType === 'resolve' ? 'Đồng ý xóa' : 
-          actionType === 'warn' ? 'Gửi cảnh báo' :
-          actionType === 'ban' ? 'Khóa ngay' : 'Xác nhận'
+          actionType === 'resolve' ? CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.CONFIRM : 
+          actionType === 'warn' ? CONFIRM_MESSAGES.ADMIN.WARN_USER.CONFIRM :
+          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.CONFIRM : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.CONFIRM
         }
         variant={
           actionType === 'reject' ? 'secondary' : 

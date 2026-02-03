@@ -11,3 +11,6 @@ export * from './theme';
 
 // Reaction constants
 export * from './reactions';
+
+// Confirm dialog messages
+export * from './confirmMessages';

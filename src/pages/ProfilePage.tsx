@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Spinner, Button, ConfirmDialog } from '../components/ui';
+import { CONFIRM_MESSAGES } from '../constants';
 import { PostViewModal } from '../components/feed';
 import { usePostStore } from '../store/postStore';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
@@ -226,9 +227,9 @@ const ProfilePage: React.FC = () => {
         isOpen={isConfirmUnfriendOpen}
         onClose={() => setIsConfirmUnfriendOpen(false)}
         onConfirm={onUnfriendConfirm}
-        title="Hủy kết bạn"
-        message={`Bạn có chắc chắn muốn hủy kết bạn với ${profile?.name || ''}?`}
-        confirmLabel="Hủy kết bạn"
+        title={CONFIRM_MESSAGES.FRIEND.UNFRIEND.TITLE}
+        message={CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(profile?.name || '')}
+        confirmLabel={CONFIRM_MESSAGES.FRIEND.UNFRIEND.CONFIRM}
         variant="danger"
       />
 
@@ -236,9 +237,9 @@ const ProfilePage: React.FC = () => {
         isOpen={isConfirmDeleteAvatarOpen}
         onClose={() => setIsConfirmDeleteAvatarOpen(false)}
         onConfirm={onAvatarDeleteClick}
-        title="Xóa ảnh đại diện"
-        message="Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại? Bạn sẽ quay về sử dụng ảnh mặc định."
-        confirmLabel="Xóa ngay"
+        title={CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.TITLE}
+        message={CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.CONFIRM}
         variant="danger"
       />
 
@@ -246,9 +247,9 @@ const ProfilePage: React.FC = () => {
         isOpen={isConfirmDeleteCoverOpen}
         onClose={() => setIsConfirmDeleteCoverOpen(false)}
         onConfirm={onCoverDeleteClick}
-        title="Xóa ảnh bìa"
-        message="Bạn có chắc chắn muốn xóa ảnh bìa hiện tại?"
-        confirmLabel="Xóa ngay"
+        title={CONFIRM_MESSAGES.MEDIA.DELETE_COVER.TITLE}
+        message={CONFIRM_MESSAGES.MEDIA.DELETE_COVER.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.MEDIA.DELETE_COVER.CONFIRM}
         variant="danger"
       />
 
@@ -259,9 +260,9 @@ const ProfilePage: React.FC = () => {
           await handleBlockUser();
           setIsConfirmBlockOpen(false);
         }}
-        title="Chặn người dùng"
-        message={`Bạn có chắc chắn muốn chặn ${profile?.name || ''}? Hai bạn sẽ không thể tìm thấy nhau hoặc gửi tin nhắn mới.`}
-        confirmLabel="Chặn người dùng"
+        title={CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE}
+        message={CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(profile?.name || '')}
+        confirmLabel={CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM}
         variant="danger"
       />
 

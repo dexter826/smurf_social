@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserPlus, Users, Search, Bell, ArrowUpDown } from 'lucide-react';
 import { useContacts } from '../hooks';
 import { Button, Input, ConfirmDialog } from '../components/ui';
+import { CONFIRM_MESSAGES } from '../constants';
 import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/contacts';
 
 const ContactsPage: React.FC = () => {
@@ -288,9 +289,9 @@ const ContactsPage: React.FC = () => {
         isOpen={!!unfriendId}
         onClose={() => setUnfriendId(null)}
         onConfirm={onUnfriendConfirm}
-        title="Hủy kết bạn"
-        message="Bạn có chắc muốn hủy kết bạn với người này?"
-        confirmLabel="Hủy kết bạn"
+        title={CONFIRM_MESSAGES.FRIEND.UNFRIEND.TITLE}
+        message={CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(userCache[unfriendId || '']?.name || 'người này')}
+        confirmLabel={CONFIRM_MESSAGES.FRIEND.UNFRIEND.CONFIRM}
         variant="danger"
       />
 
@@ -298,9 +299,9 @@ const ContactsPage: React.FC = () => {
         isOpen={!!blockUserId}
         onClose={() => setBlockUserId(null)}
         onConfirm={onBlockConfirm}
-        title="Chặn người dùng"
-        message="Bạn có chắc muốn chặn người dùng này?"
-        confirmLabel="Chặn ngay"
+        title={CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE}
+        message={CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(userCache[blockUserId || '']?.name || 'người dùng này')}
+        confirmLabel={CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM}
         variant="danger"
       />
     </div>
