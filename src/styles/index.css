@@ -68,7 +68,7 @@
 
 .dark {
   /* === Brand Colors === */
-  --color-primary: #3b82f6;
+  --color-primary: #0068ff;
   --color-primary-hover: #2563eb;
   --color-primary-active: #1d4ed8;
   --color-primary-light: rgba(59, 130, 246, 0.25);
@@ -88,10 +88,9 @@
   --bg-hover: #1e2530;
   --bg-active: #28303d;
   --bg-chat: #0b0e14;
-  --bg-message-sent: #3b82f6;
+  --bg-message-sent: #0068ff;
   --bg-message-received: #1e242d;
   --bg-overlay: rgba(0, 0, 0, 0.85);
-  /* Tăng độ mờ một chút ở dark mode */
 
   /* === Text Colors === */
   --text-primary: #f8fafc;
