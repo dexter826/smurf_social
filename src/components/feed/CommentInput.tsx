@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Image as ImageIcon, X, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserAvatar, IconButton, EmojiPicker, Loading } from '../ui';
+import { UserAvatar, IconButton, Button, EmojiPicker, Loading } from '../ui';
 import { validateFileSize } from '../../utils/fileUtils';
 import { toast } from '../../store/toastStore';
 import { commentSchema, CommentFormValues } from '../../utils/validation';
@@ -187,14 +187,13 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                   Hủy
                 </button>
               )}
-              <IconButton
+              <Button
                 type="submit"
                 variant="primary"
                 disabled={!isDirty || isSubmitting || isUploading}
                 isLoading={isSubmitting}
-                className="w-8 h-8 rounded-full shadow-none bg-primary text-white"
-                icon={<Send size={14} />}
-                size="sm"
+                className="w-9 h-9 rounded-full shadow-sm active:scale-90 p-0 flex-shrink-0"
+                icon={<Send size={16} className="fill-current" />}
               />
             </div>
           </div>
