@@ -12,6 +12,13 @@ import { validateFileSize } from '../utils/fileUtils';
 
 type TabType = 'media' | 'posts' | 'friends' | 'photos' | 'videos';
 
+export enum FriendStatus {
+  NOT_FRIEND = 'not_friend',
+  PENDING_SENT = 'pending_sent',
+  PENDING_RECEIVED = 'pending_received',
+  FRIEND = 'friend'
+}
+
 interface ProfileStats {
   friendCount: number;
   postCount: number;
@@ -28,7 +35,8 @@ interface UseProfileReturn {
   
   profileUserId: string | undefined;
   isOwnProfile: boolean;
-  isFriend: boolean;
+  friendStatus: FriendStatus;
+  pendingRequestId?: string;
   isBlockedByMe: boolean;
   canViewContent: boolean;
   
@@ -63,9 +71,11 @@ export const useProfile = (): UseProfileReturn => {
 
   const profileUserId = userId || currentUser?.id;
   const isOwnProfile = currentUser?.id === profileUserId;
-  const isFriend = currentUser?.friendIds?.includes(profileUserId || '') || false;
   const isBlockedByMe = currentUser?.blockedUserIds?.includes(profileUserId || '') || false;
   const canViewContent = !isBlockedByMe; 
+
+  const [friendStatus, setFriendStatus] = useState<FriendStatus>(FriendStatus.NOT_FRIEND);
+  const [pendingRequestId, setPendingRequestId] = useState<string | undefined>();
 
   const loadProfile = useCallback(async () => {
     if (!profileUserId) return;
@@ -100,6 +110,48 @@ export const useProfile = (): UseProfileReturn => {
     loadProfile();
   }, [loadProfile]);
 
+  useEffect(() => {
+    if (!currentUser || !profileUserId || isOwnProfile) return;
+
+    // Đồng bộ trạng thái bạn bè và lời mời
+    if (currentUser.friendIds?.includes(profileUserId)) {
+      setFriendStatus(FriendStatus.FRIEND);
+      setPendingRequestId(null);
+      return;
+    }
+
+    let sentRequest: any = null;
+    let receivedRequest: any = null;
+
+    const updateStatus = () => {
+      if (sentRequest) {
+        setFriendStatus(FriendStatus.PENDING_SENT);
+        setPendingRequestId(sentRequest.id);
+      } else if (receivedRequest) {
+        setFriendStatus(FriendStatus.PENDING_RECEIVED);
+        setPendingRequestId(receivedRequest.id);
+      } else {
+        setFriendStatus(FriendStatus.NOT_FRIEND);
+        setPendingRequestId(null);
+      }
+    };
+
+    const unsubscribeSent = friendService.subscribeToSentRequests(currentUser.id, (requests) => {
+      sentRequest = requests.find(r => r.receiverId === profileUserId);
+      updateStatus();
+    });
+
+    const unsubscribeReceived = friendService.subscribeToReceivedRequests(currentUser.id, (requests) => {
+      receivedRequest = requests.find(r => r.senderId === profileUserId);
+      updateStatus();
+    });
+
+    return () => {
+      unsubscribeSent();
+      unsubscribeReceived();
+    };
+  }, [currentUser, profileUserId, isOwnProfile]);
+
   const handleMessage = useCallback(async () => {
     if (!currentUser || !profile) return;
     try {
@@ -111,16 +163,35 @@ export const useProfile = (): UseProfileReturn => {
   }, [currentUser, profile, navigate]);
 
   const handleFriendAction = useCallback(async (): Promise<{ needConfirm: boolean }> => {
-    if (!currentUser || !profile) return { needConfirm: false };
+    if (!currentUser || !profile || isOwnProfile) return { needConfirm: false };
     
-    if (isFriend) {
-      return { needConfirm: true };
-    } else {
-      await friendService.sendFriendRequest(currentUser.id, profile.id);
-      toast.success('Đã gửi lời mời kết bạn');
-      return { needConfirm: false };
+    try {
+      if (friendStatus === FriendStatus.FRIEND) {
+        return { needConfirm: true };
+      } 
+      
+      if (friendStatus === FriendStatus.PENDING_RECEIVED && pendingRequestId) {
+        await friendService.acceptFriendRequest(pendingRequestId, currentUser.id, profile.id);
+        toast.success('Đã trở thành bạn bè');
+        return { needConfirm: false };
+      }
+
+      if (friendStatus === FriendStatus.PENDING_SENT && pendingRequestId) {
+        await friendService.cancelFriendRequest(pendingRequestId);
+        toast.success('Đã hủy lời mời kết bạn');
+        return { needConfirm: false };
+      }
+
+      if (friendStatus === FriendStatus.NOT_FRIEND) {
+        await friendService.sendFriendRequest(currentUser.id, profile.id);
+        toast.success('Đã gửi lời mời kết bạn');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Thao tác thất bại');
     }
-  }, [currentUser, profile, isFriend]);
+    
+    return { needConfirm: false };
+  }, [currentUser, profile, isOwnProfile, friendStatus, pendingRequestId]);
 
   const confirmUnfriend = useCallback(async () => {
     if (!currentUser || !profile) return;
@@ -245,9 +316,14 @@ export const useProfile = (): UseProfileReturn => {
   const handleBlockUser = useCallback(async () => {
     if (!currentUser || !profile || isOwnProfile) return;
     try {
-      if (isFriend) {
+      if (friendStatus === FriendStatus.FRIEND) {
         await friendService.unfriend(currentUser.id, profile.id);
       }
+      
+      if (pendingRequestId) {
+        await friendService.cancelFriendRequest(pendingRequestId);
+      }
+
       await userService.blockUser(currentUser.id, profile.id);
       
       // Cập nhật state local
@@ -263,7 +339,7 @@ export const useProfile = (): UseProfileReturn => {
     } catch (error) {
       toast.error('Không thể chặn người dùng');
     }
-  }, [currentUser, profile, isOwnProfile, isFriend]);
+  }, [currentUser, profile, isOwnProfile, friendStatus, pendingRequestId]);
 
   const handleUnblockUser = useCallback(async () => {
     if (!currentUser || !profile || isOwnProfile) return;
@@ -294,7 +370,8 @@ export const useProfile = (): UseProfileReturn => {
     uploadProgress,
     profileUserId,
     isOwnProfile,
-    isFriend,
+    friendStatus,
+    pendingRequestId,
     canViewContent,
     activeTab,
     setActiveTab,
