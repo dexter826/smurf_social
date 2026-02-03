@@ -737,9 +737,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           disabled={disabled || (!inputText.trim() && selectedFiles.length === 0)}
           isLoading={isSending}
           variant={(inputText.trim() || selectedFiles.length > 0) ? 'primary' : 'secondary'}
-          className={`w-10 h-10 shadow-sm active:scale-95 rounded-full ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-50 cursor-not-allowed'}`}
+          className={`w-10 h-10 shadow-md active:scale-90 rounded-full flex-shrink-0 ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-40'}`}
           title="Gửi"
-          icon={<Send size={20} className={inputText.trim() || selectedFiles.length > 0 ? 'fill-current' : ''} />}
+          icon={<Send size={18} className={inputText.trim() || selectedFiles.length > 0 ? 'fill-current' : ''} />}
         />
       </form>
     </div>
