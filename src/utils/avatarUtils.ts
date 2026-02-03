@@ -1,4 +1,14 @@
-import { THEME_GRADIENTS } from '../constants/theme';
+const AVATAR_GRADIENTS = [
+  ['#FF6B6B', '#FF8E53'],
+  ['#4E54C8', '#8F94FB'],
+  ['#11998E', '#38EF7D'],
+  ['#FC466B', '#3F5EFB'],
+  ['#F2994A', '#F2C94C'],
+  ['#56CCF2', '#2F80ED'],
+  ['#B122E5', '#FF63DE'],
+  ['#00B09B', '#96C93D'],
+  ['#642B73', '#C6426E']
+] as const;
 
 // Lấy chữ cái đầu (tối đa 2 ký tự)
 export const getInitials = (name: string): string => {
@@ -14,7 +24,7 @@ export const getAvatarGradient = (seed: string): string => {
   for (let i = 0; i < seed.length; i++) {
     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const gradients = THEME_GRADIENTS;
+  const gradients = AVATAR_GRADIENTS;
   const index = Math.abs(hash) % gradients.length;
   const [c1, c2] = gradients[index];
   return `linear-gradient(135deg, ${c1}, ${c2})`;
