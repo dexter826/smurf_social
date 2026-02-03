@@ -65,7 +65,7 @@ export const ReportModal: React.FC = () => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
+      const files = Array.from(e.target.files) as File[];
       const totalImages = selectedImages.length + files.length;
       
       if (totalImages > 5) {
@@ -117,6 +117,9 @@ export const ReportModal: React.FC = () => {
       if (success) {
         addToast('Đã gửi báo cáo thành công. Chúng tôi sẽ xem xét trong thời gian sớm nhất.', 'success');
         handleClose();
+      } else {
+        const error = useReportStore.getState().error;
+        if (error) addToast(error, 'error');
       }
     } catch (error) {
       console.error("Lỗi gửi báo cáo:", error);
@@ -247,13 +250,6 @@ export const ReportModal: React.FC = () => {
             </div>
           )}
 
-          {/* Error message from store */}
-          {error && (
-            <div className="text-error text-sm bg-error/10 p-3 rounded-lg flex items-center gap-2">
-              <AlertTriangle size={14} />
-              {error}
-            </div>
-          )}
         </div>
 
         {/* Fixed Actions Footer */}
