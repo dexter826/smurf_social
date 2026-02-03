@@ -202,7 +202,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
 
-        <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative`}>
+        <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative ${hasReactions ? 'mb-4' : 'mb-1'}`}>
           {/* Tên người gửi trong nhóm */}
           {!isMe && showName && (
             <span 
@@ -217,7 +217,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* Nội dung tin nhắn */}
             <div 
               className={`
-                relative px-3 py-1.5 text-sm shadow-sm
+                relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
                 ${message.type === 'text' ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe 
                   ? (message.type === 'text' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '') 
@@ -256,45 +256,59 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {message.type === 'text' && (
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
                   isMe ? 'text-white/80' : 'text-text-tertiary'
-                } ${hasReactions ? 'mb-2' : ''}`}>
+                }`}>
                   <span>{formatTimeOnly(message.timestamp)}</span>
                 </div>
               )}
 
-              {/* Hiển thị cảm xúc */}
-              {hasReactions && (
-                <div className={`absolute -bottom-3 z-10 shadow-md border-[2px] border-bg-primary bg-bg-secondary rounded-full px-1.5 py-0.5 flex items-center justify-center ${isMe ? '-left-2' : '-right-2'}`}>
-                    <ReactionDisplay reactions={message.reactions} />
+              {/* Hiển thị cảm xúc & Bộ chọn Emoji */}
+              {!message.isRecalled && (
+                <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'right-1' : 'left-1'}`}>
+                    {hasReactions ? (
+                      <ReactionDisplay 
+                        reactions={message.reactions} 
+                        onClick={() => setShowReactionSelector(!showReactionSelector)}
+                      />
+                    ) : (
+                      <div className="opacity-0 group-hover/message:opacity-100 transition-opacity">
+                         <button
+                            className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-200"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowReactionSelector(!showReactionSelector);
+                            }}
+                         >
+                            <Smile size={12} />
+                         </button>
+                      </div>
+                    )}
+
+                    {showReactionSelector && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40 bg-transparent" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowReactionSelector(false);
+                          }}
+                        />
+                        <ReactionSelector 
+                          onSelect={(emoji) => toggleReaction(message.id, currentUserId, emoji)}
+                          onClose={() => setShowReactionSelector(false)}
+                          className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
+                          currentReaction={message.reactions?.[currentUserId]}
+                        />
+                      </>
+                    )}
                 </div>
               )}
             </div>
 
-             {/* Menu và chức năng cảm xúc */}
+             {/* Menu chức năng (đã bỏ nút Emoji) */}
             {!message.isRecalled && (
               <div 
                 className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}
-                onMouseLeave={() => setShowReactionSelector(false)}
               >
-                {/* Nút cảm xúc */}
-                <div className="relative">
-                   <IconButton
-                      icon={<Smile size={14} />}
-                      size="sm"
-                      onClick={(e) => {
-                          e.stopPropagation();
-                          setShowReactionSelector(!showReactionSelector);
-                      }}
-                      onMouseEnter={() => setShowReactionSelector(true)}
-                   />
-                   {showReactionSelector && (
-                      <ReactionSelector 
-                        onSelect={(emoji) => toggleReaction(message.id, currentUserId, emoji)}
-                        onClose={() => setShowReactionSelector(false)}
-                        className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
-                        currentReaction={message.reactions?.[currentUserId]}
-                      />
-                   )}
-                </div>
 
                 <IconButton
                   ref={menuButtonRef}
