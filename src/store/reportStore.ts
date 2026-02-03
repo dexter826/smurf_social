@@ -22,10 +22,17 @@ interface ReportState {
   submitReport: (
     reporterId: string, 
     reason: ReportReason, 
-    description?: string
+    description?: string,
+    images?: string[]
   ) => Promise<boolean>;
   resetState: () => void;
   fetchPendingCount: () => Promise<void>;
+  
+  data: {
+    type: ReportType | null;
+    id: string | null;
+    ownerId: string | null;
+  }
 }
 
 export const useReportStore = create<ReportState>((set, get) => ({
@@ -43,7 +50,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
       targetType: type,
       targetId: id,
       targetOwnerId: ownerId,
-      error: null
+      error: null,
+      data: { type, id, ownerId }
     });
   },
 
@@ -53,11 +61,18 @@ export const useReportStore = create<ReportState>((set, get) => ({
       targetType: null,
       targetId: null,
       targetOwnerId: null,
-      error: null
+      error: null,
+      data: { type: null, id: null, ownerId: null }
     });
   },
 
-  submitReport: async (reporterId, reason, description) => {
+  data: {
+    type: null,
+    id: null,
+    ownerId: null
+  },
+
+  submitReport: async (reporterId, reason, description, images) => {
     const { targetType, targetId, targetOwnerId } = get();
     
     if (!targetType || !targetId || !targetOwnerId) {
@@ -93,7 +108,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
         targetId,
         targetOwnerId,
         reason,
-        description
+        description,
+        images
       });
 
       set({ isOpen: false, isSubmitting: false });
@@ -111,7 +127,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
       targetId: null,
       targetOwnerId: null,
       isSubmitting: false,
-      error: null
+      error: null,
+      data: { type: null, id: null, ownerId: null }
     });
   },
 

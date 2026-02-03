@@ -3,6 +3,7 @@ export type ThemeMode = "light" | "dark";
 export enum UserStatus {
   ONLINE = "online",
   OFFLINE = "offline",
+  BANNED = "banned",
 }
 
 export interface User {
@@ -154,6 +155,7 @@ export interface AppNotification {
 export enum ReportType {
   POST = "post",
   COMMENT = "comment",
+  USER = "user",
 }
 
 export enum ReportReason {
@@ -182,6 +184,7 @@ export interface Report {
   targetOwnerId: string;
   reason: ReportReason;
   description?: string;
+  images?: string[];
   status: ReportStatus;
   createdAt: Date;
   resolvedAt?: Date;

@@ -286,5 +286,31 @@ export const userService = {
         } as User);
       }
     });
+  },
+
+  // Khóa tài khoản người dùng
+  banUser: async (userId: string): Promise<void> => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        status: UserStatus.BANNED,
+      });
+    } catch (error) {
+      console.error("Lỗi khóa tài khoản user", error);
+      throw error;
+    }
+  },
+
+  // Mở khóa tài khoản người dùng
+  unbanUser: async (userId: string): Promise<void> => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        status: UserStatus.OFFLINE, // Reset về Offline sau khi unban
+      });
+    } catch (error) {
+      console.error("Lỗi mở khóa tài khoản user", error);
+      throw error;
+    }
   }
 };

@@ -122,19 +122,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
           // Lấy thông tin người dùng từ server
           const userData = await userService.getUserById(firebaseUser.uid);
+          
           if (userData) {
+            if (userData.status === UserStatus.BANNED) {
+               await authService.logout();
+               const error = new Error('Tài khoản của bạn đã bị khóa vị quy phạm chính sách.');
+               throw error;
+            }
+
             await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
             const initialUser = { ...userData, status: UserStatus.ONLINE };
             set({ user: initialUser });
             useUserCache.getState().setUser(initialUser);
 
             // Đăng ký nhận cập nhật dữ liệu người dùng
-            userUnsubscribe = userService.subscribeToUser(firebaseUser.uid, (updatedUser) => {
+            userUnsubscribe = userService.subscribeToUser(firebaseUser.uid, async (updatedUser) => {
+              if (updatedUser.status === UserStatus.BANNED) {
+                 await get().logout();
+                 alert('Tài khoản của bạn đã bị khóa vị quy phạm chính sách.');
+                 return;
+              }
+
               const currentStatus = get().user?.status || UserStatus.ONLINE;
               const newUser = { ...updatedUser, status: currentStatus };
               set({ user: newUser });
               useUserCache.getState().setUser(newUser);
             });
+          } else {
+            // Trường hợp không tìm thấy user doc, có thể là lỗi hoặc user bị xóa
+             set({ user: null });
           }
         } catch (error) {
           console.error("Lỗi đồng bộ dữ liệu người dùng:", error);

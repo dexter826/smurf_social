@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Flag, CheckCircle, XCircle, Clock, Eye, AlertTriangle, FileText, MessageSquare, FileX } from 'lucide-react';
+import { Shield, Flag, CheckCircle, XCircle, Clock, Eye, AlertTriangle, FileText, MessageSquare, FileX, User as UserIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ReportStatus, ReportType } from '../types';
 import { Button, UserAvatar, ConfirmDialog, Skeleton } from '../components/ui';
@@ -11,6 +11,7 @@ const getTypeIcon = (type: ReportType) => {
   switch (type) {
     case ReportType.POST: return <FileText size={14} />;
     case ReportType.COMMENT: return <MessageSquare size={14} />;
+    case ReportType.USER: return <UserIcon size={14} />;
     default: return <Flag size={14} />;
   }
 };
@@ -19,6 +20,7 @@ const getTypeLabel = (type: ReportType) => {
   switch (type) {
     case ReportType.POST: return 'Bài viết';
     case ReportType.COMMENT: return 'Bình luận';
+    case ReportType.USER: return 'Người dùng';
     default: return 'Khác';
   }
 };
@@ -191,6 +193,14 @@ const AdminReportsPage: React.FC = () => {
                   }`}
                 >
                   Bình luận
+                </button>
+                <button
+                  onClick={() => setTypeFilter(ReportType.USER)}
+                  className={`flex-1 md:flex-initial px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-md whitespace-nowrap transition-all outline-none ring-0 ${
+                    typeFilter === ReportType.USER ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Người dùng
                 </button>
               </div>
             </div>

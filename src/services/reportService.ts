@@ -21,6 +21,7 @@ import { Report, ReportType, ReportReason, ReportStatus, NotificationType, Post,
 import { notificationService } from './notificationService';
 import { postService } from './postService';
 import { commentService } from './commentService';
+import { userService } from './userService';
 
 export const reportService = {
   // Tạo báo cáo mới
@@ -158,7 +159,8 @@ export const reportService = {
   resolveReport: async (
     reportId: string, 
     adminId: string, 
-    resolution: string = 'Đã xử lý'
+    resolution: string = 'Đã xử lý',
+    action: 'delete_content' | 'warn_user' | 'ban_user' = 'delete_content'
   ): Promise<void> => {
     try {
       const reportRef = doc(db, 'reports', reportId);
@@ -192,6 +194,14 @@ export const reportService = {
           await deleteDoc(doc(db, 'comments', reportData.targetId));
         }
       }
+      
+      // Xử lý báo cáo người dùng (Cảnh báo hoặc Khóa)
+      if (reportData.targetType === ReportType.USER) {
+        if (action === 'ban_user') {
+           await userService.banUser(reportData.targetId);
+        }
+        // Nếu là warn_user thì chỉ gửi noti ở dưới, không cần làm gì thêm ở bước này
+      }
 
       // Thông báo người báo cáo
       await notificationService.createNotification({
@@ -208,6 +218,16 @@ export const reportService = {
         type: NotificationType.CONTENT_VIOLATION,
         data: { contentSnippet: reportData.reason }
       });
+      
+      // Nếu là cảnh báo người dùng (User Report)
+      if (reportData.targetType === ReportType.USER && action === 'warn_user') {
+         await notificationService.createNotification({
+          receiverId: reportData.targetOwnerId,
+          senderId: adminId,
+          type: NotificationType.CONTENT_VIOLATION, // Tạm dùng type này hoặc tạo type mới SYSTEM_WARNING
+          data: { contentSnippet: `Cảnh báo: Tài khoản của bạn bị báo cáo vì lý do: ${reportData.reason}. Vui lòng tuân thủ quy tắc cộng đồng.` }
+        });
+      }
     } catch (error) {
       console.error("Lỗi xử lý báo cáo:", error);
       throw error;

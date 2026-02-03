@@ -38,7 +38,7 @@ const ReportDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [actionType, setActionType] = useState<'resolve' | 'reject' | null>(null);
+  const [actionType, setActionType] = useState<'resolve' | 'reject' | 'warn' | 'ban' | null>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -70,9 +70,12 @@ const ReportDetailPage: React.FC = () => {
         if (reportData.targetType === ReportType.POST) {
           const postData = await postService.getPostByIdForAdmin(reportData.targetId);
           setContent(postData);
-        } else {
+        } else if (reportData.targetType === ReportType.COMMENT) {
           const commentData = await commentService.getCommentById(reportData.targetId);
           setContent(commentData);
+        } else {
+          // User report - no content to fetch, just targetOwner is enough
+          setContent(null);
         }
       } catch (error) {
         toast.error('Lỗi tải thông tin chi tiết');
@@ -90,8 +93,14 @@ const ReportDetailPage: React.FC = () => {
     setIsProcessing(true);
     try {
       if (actionType === 'resolve') {
-        await reportService.resolveReport(report.id, currentUser.id);
+        await reportService.resolveReport(report.id, currentUser.id, 'Đã xử lý xóa nội dung', 'delete_content');
         toast.success('Đã xử lý và xóa nội dung vi phạm');
+      } else if (actionType === 'warn') {
+        await reportService.resolveReport(report.id, currentUser.id, 'Đã gửi cảnh báo', 'warn_user');
+        toast.success('Đã gửi cảnh báo tới người dùng');
+      } else if (actionType === 'ban') {
+        await reportService.resolveReport(report.id, currentUser.id, 'Đã khóa tài khoản', 'ban_user');
+        toast.success('Đã khóa tài khoản người dùng');
       } else {
         await reportService.rejectReport(report.id, currentUser.id);
         toast.success('Đã từ chối báo cáo');
@@ -235,15 +244,39 @@ const ReportDetailPage: React.FC = () => {
                 >
                   <span className="hidden sm:inline">Từ chối</span>
                 </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
-                  icon={<CheckCircle size={14} />}
-                  onClick={() => { setActionType('resolve'); setShowConfirm(true); }}
-                >
-                  <span className="hidden sm:inline">Xử lý</span>
-                </Button>
+                
+                {report.targetType === ReportType.USER ? (
+                  <>
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
+                      icon={<AlertTriangle size={14} />}
+                      onClick={() => { setActionType('warn'); setShowConfirm(true); }}
+                    >
+                      <span className="hidden sm:inline">Cảnh báo</span>
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2 bg-red-600 hover:bg-red-700 text-white"
+                      icon={<Trash2 size={14} />}
+                      onClick={() => { setActionType('ban'); setShowConfirm(true); }}
+                    >
+                      <span className="hidden sm:inline">Khóa TK</span>
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
+                    icon={<CheckCircle size={14} />}
+                    onClick={() => { setActionType('resolve'); setShowConfirm(true); }}
+                  >
+                    <span className="hidden sm:inline">Xử lý xong</span>
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -309,6 +342,8 @@ const ReportDetailPage: React.FC = () => {
                     "{report.description}"
                   </div>
                 )}
+                
+
               </div>
               <div className="text-[9px] md:text-[10px] font-bold text-text-tertiary flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0.5 pt-1 uppercase tracking-wider shrink-0">
                 <span>{formatRelativeTime(report.createdAt)}</span>
@@ -316,100 +351,137 @@ const ReportDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-5 md:p-8">
-              {!content ? (
-                <div className="py-12 text-center rounded-xl border border-dashed border-border-light bg-bg-secondary/10">
-                  <Trash2 size={40} className="mx-auto text-text-tertiary opacity-30 mb-3" />
-                  <p className="text-sm font-bold text-text-secondary">Nội dung này không còn tồn tại</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Author Header */}
-                  <div className="flex items-center gap-3">
-                    <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="sm" className="md:w-10 md:h-10 shrink-0" />
-                    <div className="overflow-hidden">
-                      <div className="text-[13px] md:text-sm font-bold text-text-primary truncate">{targetOwner?.name}</div>
-                      <div className="text-[10px] md:text-xs text-text-tertiary truncate">{formatRelativeTime((content as any).timestamp)} ({formatDateTime((content as any).timestamp)})</div>
+            {(!content && report.targetType === ReportType.USER) ? null : (
+              <div className="p-5 md:p-8">
+                {!content ? (
+                  <div className="py-12 text-center rounded-xl border border-dashed border-border-light bg-bg-secondary/10">
+                    <Trash2 size={40} className="mx-auto text-text-tertiary opacity-30 mb-3" />
+                    <p className="text-sm font-bold text-text-secondary">Nội dung này không còn tồn tại</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="sm" className="md:w-10 md:h-10 shrink-0" />
+                      <div className="overflow-hidden">
+                        <div className="text-[13px] md:text-sm font-bold text-text-primary truncate">{targetOwner?.name}</div>
+                        <div className="text-[10px] md:text-xs text-text-tertiary truncate">{formatRelativeTime((content as any).timestamp)} ({formatDateTime((content as any).timestamp)})</div>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Body Text */}
-                  <div className="text-[15px] md:text-lg text-text-primary leading-relaxed font-medium whitespace-pre-wrap">
-                    {(() => {
-                      const threshold = 400;
-                      const shouldTruncate = content.content.length > threshold;
-                      const displayContent = !shouldTruncate || isExpanded 
-                        ? content.content 
-                        : content.content.slice(0, threshold) + '...';
-                      
-                      return (
-                        <>
-                          {displayContent}
-                          {shouldTruncate && (
-                            <button 
-                              onClick={() => setIsExpanded(!isExpanded)}
-                              className="text-primary font-bold cursor-pointer hover:underline ml-2 transition-all text-xs md:text-sm tracking-wider"
-                            >
-                              {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-                            </button>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
+                    <div className="text-[15px] md:text-lg text-text-primary leading-relaxed font-medium whitespace-pre-wrap">
+                      {(() => {
+                        const threshold = 400;
+                        const shouldTruncate = content.content.length > threshold;
+                        const displayContent = !shouldTruncate || isExpanded 
+                          ? content.content 
+                          : content.content.slice(0, threshold) + '...';
+                        
+                        return (
+                          <>
+                            {displayContent}
+                            {shouldTruncate && (
+                              <button 
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="text-primary font-bold cursor-pointer hover:underline ml-2 transition-all text-xs md:text-sm tracking-wider"
+                              >
+                                {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
 
-                  {/* Media Carousel */}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="px-5 md:px-8 pb-8">
                   {(() => {
                     let allMedia: { url: string; type: string }[] = [];
                     
-                    if (report.targetType === ReportType.POST) {
-                      const post = content as Post;
-                      allMedia = [
-                        ...(post.images || []).map(url => ({ url, type: 'image' })),
-                        ...(post.videos || []).map(url => ({ url, type: 'video' }))
-                      ];
-                    } else if (report.targetType === ReportType.COMMENT) {
-                      const comment = content as Comment;
-                      if (comment.image) allMedia.push({ url: comment.image, type: 'image' });
+                    if (report.images && report.images.length > 0) {
+                       allMedia = [
+                         ...allMedia,
+                         ...report.images.map(url => ({ url, type: 'image' }))
+                       ];
+                    }
+
+                    if (content) {
+                      if (report.targetType === ReportType.POST) {
+                        const post = content as Post;
+                        allMedia = [
+                          ...allMedia,
+                          ...(post.images || []).map(url => ({ url, type: 'image' })),
+                          ...(post.videos || []).map(url => ({ url, type: 'video' }))
+                        ];
+                      } else if (report.targetType === ReportType.COMMENT) {
+                        const comment = content as Comment;
+                        if (comment.image) allMedia.push({ url: comment.image, type: 'image' });
+                      }
                     }
 
                     if (allMedia.length === 0) return null;
 
                     return (
-                      <div className="relative group rounded-xl overflow-hidden border border-border-light bg-bg-secondary select-none">
-                        <div className="aspect-video flex items-center justify-center bg-black">
-                          {allMedia[mediaIndex].type === 'video' ? (
-                            <video src={allMedia[mediaIndex].url} controls className="max-w-full max-h-full" />
-                          ) : (
-                            <img src={allMedia[mediaIndex].url} alt="" className="max-w-full max-h-full object-contain" />
+                      <div className="mt-4 border-t border-border-light pt-6">
+                        <p className="text-sm font-bold text-text-secondary mb-3">
+                          {report.targetType === ReportType.USER ? "Hình ảnh bằng chứng:" : "Media chi tiết:"}
+                        </p>
+                        <div className="relative group rounded-xl overflow-hidden border border-border-light bg-bg-secondary select-none">
+                          <div className="aspect-video flex items-center justify-center bg-black">
+                            {allMedia[mediaIndex].type === 'video' ? (
+                              <video src={allMedia[mediaIndex].url} controls className="max-w-full max-h-full" />
+                            ) : (
+                              <img src={allMedia[mediaIndex].url} alt="" className="max-w-full max-h-full object-contain" />
+                            )}
+                          </div>
+
+                          {allMedia.length > 1 && (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setMediaIndex(Math.max(0, mediaIndex - 1)); }}
+                                className={`absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 text-white rounded-full hover:bg-black/60 transition-colors ${mediaIndex === 0 ? 'invisible' : ''}`}
+                              >
+                                <ChevronLeft size={20} />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setMediaIndex(Math.min(allMedia.length - 1, mediaIndex + 1)); }}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 text-white rounded-full hover:bg-black/60 transition-colors ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}
+                              >
+                                <ChevronRight size={20} />
+                              </button>
+                            </>
                           )}
                         </div>
-
+                        
+                        {/* Thumbnail strip if multiple images */}
                         {allMedia.length > 1 && (
-                          <>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setMediaIndex(Math.max(0, mediaIndex - 1)); }}
-                              className={`absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 text-white rounded-full hover:bg-black/60 transition-colors ${mediaIndex === 0 ? 'invisible' : ''}`}
-                            >
-                              <ChevronLeft size={20} />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setMediaIndex(Math.min(allMedia.length - 1, mediaIndex + 1)); }}
-                              className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 text-white rounded-full hover:bg-black/60 transition-colors ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}
-                            >
-                              <ChevronRight size={20} />
-                            </button>
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
-                              {mediaIndex + 1} / {allMedia.length}
-                            </div>
-                          </>
+                          <div className="flex gap-2 mt-3 overflow-x-auto py-1">
+                            {allMedia.map((media, idx) => (
+                              <div 
+                                key={idx}
+                                onClick={() => setMediaIndex(idx)}
+                                className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
+                                  mediaIndex === idx ? 'border-primary opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
+                                }`}
+                              >
+                                {media.type === 'video' ? (
+                                  <div className="w-full h-full bg-black flex items-center justify-center">
+                                    <div className="text-white text-[10px]">Video</div>
+                                  </div>
+                                ) : (
+                                  <img src={media.url} alt="" className="w-full h-full object-cover" />
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     );
                   })()}
-                </div>
-              )}
-            </div>
+             </div>
           </div>
 
           {/* Lịch sử xử lý cho báo cáo đã đóng */}
@@ -426,7 +498,7 @@ const ReportDetailPage: React.FC = () => {
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs md:text-sm font-bold text-text-primary">
-                  {report.status === ReportStatus.RESOLVED ? 'Báo cáo đã chấp thuận và gỡ bỏ' : 
+                  {report.status === ReportStatus.RESOLVED ? (report.resolution || 'Đã xử lý') : 
                    report.status === ReportStatus.ORPHANED ? 'Nội dung đã bị chủ sở hữu xóa' :
                    'Báo cáo đã bị từ chối'}
                 </h4>
@@ -446,14 +518,26 @@ const ReportDetailPage: React.FC = () => {
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleAction}
-        title={actionType === 'resolve' ? 'Xác nhận xóa nội dung' : 'Bỏ qua báo cáo'}
+        title={
+          actionType === 'resolve' ? 'Xác nhận xóa nội dung' : 
+          actionType === 'warn' ? 'Gửi cảnh báo' :
+          actionType === 'ban' ? 'Khóa tài khoản' : 'Bỏ qua báo cáo'
+        }
         message={
           actionType === 'resolve'
             ? 'Nội dung vi phạm sẽ bị xóa vĩnh viễn khỏi hệ thống. Bạn có chắc chắn?'
+            : actionType === 'warn' 
+            ? 'Người dùng sẽ nhận được thông báo cảnh báo về vi phạm này.'
+            : actionType === 'ban'
+            ? 'Tài khoản người dùng sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị. Hành động này rất nghiêm trọng.'
             : 'Báo cáo sẽ được đóng lại và nội dung vẫn được giữ nguyên. Tiếp tục?'
         }
-        confirmLabel={actionType === 'resolve' ? 'Đồng ý xóa' : 'Xác nhận'}
-        variant={actionType === 'resolve' ? 'danger' : 'primary'}
+        confirmLabel={
+          actionType === 'resolve' ? 'Đồng ý xóa' : 
+          actionType === 'warn' ? 'Gửi cảnh báo' :
+          actionType === 'ban' ? 'Khóa ngay' : 'Xác nhận'
+        }
+        variant={actionType === 'reject' ? 'primary' : 'danger'}
         isLoading={isProcessing}
       />
     </div>

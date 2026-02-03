@@ -88,6 +88,7 @@ export const reportSchema = z.object({
     .max(REPORT_CONFIG.DESCRIPTION_MAX_LENGTH, `Mô tả không được quá ${REPORT_CONFIG.DESCRIPTION_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
+  images: z.array(z.string()).optional(),
 }).refine(data => {
   if (data.reason === ReportReason.OTHER && !data.description?.trim()) return false;
   return true;

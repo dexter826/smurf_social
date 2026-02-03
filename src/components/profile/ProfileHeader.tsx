@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { User, UserStatus } from '../../types';
+import { User, UserStatus, ReportType } from '../../types';
 import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
+import { useReportStore } from '../../store/reportStore';
 
 interface ProfileHeaderProps {
   user: User;
@@ -45,6 +46,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarCameraRef = useRef<HTMLInputElement>(null);
   const coverCameraRef = useRef<HTMLInputElement>(null);
+  const { openReportModal } = useReportStore();
 
   const handleAvatarClick = () => {
     if (isOwnProfile && !uploading) {
@@ -312,6 +314,24 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       Chặn
                     </Button>
                   )}
+
+                  <Dropdown
+                    trigger={
+                      <Button
+                        variant="secondary"
+                        icon={<MoreHorizontal size={18} />}
+                        className="border-border-medium text-text-primary hover:bg-bg-hover"
+                      />
+                    }
+                    align="right"
+                  >
+                    <DropdownItem
+                      icon={<Flag size={16} />}
+                      label="Báo cáo người dùng"
+                      variant="danger"
+                      onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
+                    />
+                  </Dropdown>
                 </>
               )}
             </div>
