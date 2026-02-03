@@ -141,23 +141,23 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       bodyClassName={`!overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row' : ''}`}
     >
 
-        {/* Khong gian Cinema cho Media (Chỉ hiển thị trên Desktop ở vị trí này) */}
+        {/* Khong gian Cinema cho Media (Desktop) */}
         {hasMedia && (
-          <div className="hidden lg:flex flex-[1.6] bg-bg-secondary items-center justify-center relative group select-none overflow-hidden touch-none grow shrink-0 border-r border-border-light">
-            <div className="w-full h-full relative z-10">
+          <div className="hidden lg:flex flex-[1.6] bg-black items-center justify-center relative group select-none overflow-hidden touch-none grow shrink-0 border-r border-white/5">
+            <div className="w-full h-full relative z-10 flex items-center justify-center">
               {/* Media Content */}
-              <div className="w-full h-full flex items-center justify-center bg-black/5">
+              <div className="w-full h-full flex items-center justify-center">
                 {allMedia[mediaIndex].type === 'video' ? (
                   <video 
                     src={allMedia[mediaIndex].url} 
                     controls 
-                    className="max-w-full max-h-full object-contain shadow-2xl"
+                    className="max-w-full max-h-full object-contain"
                   />
                 ) : (
                   <img 
                     src={allMedia[mediaIndex].url} 
                     alt="" 
-                    className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-500 shadow-2xl"
+                    className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-500"
                   />
                 )}
               </div>
@@ -165,41 +165,38 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               {/* Overlay Navigation (Desktop) */}
               {allMedia.length > 1 && (
                 <>
-                  <button
-                    onClick={() => setMediaIndex(mediaIndex - 1)}
-                    className={`
-                      absolute left-4 top-1/2 -translate-y-1/2 z-20
-                      w-12 h-12 flex items-center justify-center 
-                      bg-bg-primary/30 backdrop-blur-lg text-white 
-                      rounded-full border-none outline-none shadow-sm
-                      transition-all duration-300 ease-in-out
-                      opacity-0 group-hover:opacity-100 will-change-transform
-                      active:scale-90
-                      ${mediaIndex === 0 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
-                    `}
-                  >
-                    <ChevronLeft size={32} strokeWidth={2.5} />
-                  </button>
-
-                  <button
-                    onClick={() => setMediaIndex(mediaIndex + 1)}
-                    className={`
-                      absolute right-4 top-1/2 -translate-y-1/2 z-20
-                      w-12 h-12 flex items-center justify-center 
-                      bg-bg-primary/30 backdrop-blur-lg text-white 
-                      rounded-full border-none outline-none shadow-sm
-                      transition-all duration-300 ease-in-out
-                      opacity-0 group-hover:opacity-100 will-change-transform
-                      active:scale-90
-                      ${mediaIndex === allMedia.length - 1 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
-                    `}
-                  >
-                    <ChevronRight size={32} strokeWidth={2.5} />
-                  </button>
-
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-bg-primary/40 backdrop-blur-xl text-text-primary px-4 py-1.5 rounded-full text-[13px] font-bold border border-white/10 tracking-widest shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
-                    {mediaIndex + 1} <span className="mx-1 opacity-50">/</span> {allMedia.length}
+                  {/* Nut chuyen anh - Trai */}
+                  <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-start pl-4 z-20 group-hover:opacity-100 opacity-0 transition-opacity">
+                    <button
+                      onClick={() => setMediaIndex(mediaIndex - 1)}
+                      className={`
+                        w-12 h-12 flex items-center justify-center 
+                        bg-white/10 hover:bg-white/20 backdrop-blur-md text-white 
+                        rounded-full border border-white/10 outline-none
+                        transition-all duration-200 active:scale-95
+                        ${mediaIndex === 0 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
+                      `}
+                    >
+                      <ChevronLeft size={32} strokeWidth={2} />
+                    </button>
                   </div>
+
+                  {/* Nut chuyen anh - Phai */}
+                  <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-end pr-4 z-20 group-hover:opacity-100 opacity-0 transition-opacity">
+                    <button
+                      onClick={() => setMediaIndex(mediaIndex + 1)}
+                      className={`
+                        w-12 h-12 flex items-center justify-center 
+                        bg-white/10 hover:bg-white/20 backdrop-blur-md text-white 
+                        rounded-full border border-white/10 outline-none
+                        transition-all duration-200 active:scale-95
+                        ${mediaIndex === allMedia.length - 1 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
+                      `}
+                    >
+                      <ChevronRight size={32} strokeWidth={2} />
+                    </button>
+                  </div>
+
                 </>
               )}
             </div>
@@ -207,9 +204,9 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         )}
 
         {/* Panel noi dung va tuong tac */}
-        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 overflow-hidden ${hasMedia ? 'w-full lg:w-[480px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
+        <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 overflow-hidden ${hasMedia ? 'w-full lg:w-[460px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
           
-          <div className="p-4 md:p-5 lg:p-6 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary/80 backdrop-blur-xl z-30">
+          <div className="p-4 md:p-5 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary z-30">
             <div className="flex gap-3 items-center flex-1 min-w-0">
               <UserAvatar 
                 userId={author?.id} 
@@ -221,31 +218,31 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               />
               <div className="min-w-0 flex-1">
                 <h3 
-                  className="font-bold text-text-primary text-[16px] tracking-tight truncate max-w-full cursor-pointer hover:text-primary transition-colors"
+                  className="font-bold text-text-primary text-[15px] truncate cursor-pointer hover:underline transition-colors"
                   onClick={handleProfileClick}
                 >
                   {author?.name || 'Unknown User'}
                 </h3>
-                <div className="flex items-center gap-2 text-[12px] text-text-tertiary font-semibold mt-0.5">
-                  <span title={formatDateTime(post.timestamp)} className="hover:text-text-secondary transition-colors cursor-default">
+                <div className="flex items-center gap-2 text-[12px] text-text-tertiary mt-0.5">
+                  <span title={formatDateTime(post.timestamp)}>
                     {formatRelativeTime(post.timestamp)}
                   </span>
                   <span className="opacity-40">•</span>
                   {post.visibility === 'public' ? (
-                    <Globe size={13} title="Công khai" strokeWidth={2.5} className="opacity-80" />
+                    <Globe size={13} title="Công khai" />
                   ) : post.visibility === 'friends' ? (
-                    <Users size={13} title="Bạn bè" strokeWidth={2.5} className="opacity-80" />
+                    <Users size={13} title="Bạn bè" />
                   ) : (
-                    <Lock size={13} title="Chỉ mình tôi" strokeWidth={2.5} className="opacity-80" />
+                    <Lock size={13} title="Chỉ mình tôi" />
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {isOwner ? (
                 <Dropdown
-                  trigger={<IconButton icon={<MoreHorizontal size={22} />} size="md" className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-all" />}
+                  trigger={<IconButton icon={<MoreHorizontal size={20} />} size="md" variant="ghost" />}
                   menuClassName="w-52"
                 >
                   <DropdownItem icon={<Edit size={18} />} label="Chỉnh sửa bài viết" onClick={() => onEdit?.(post.id)} />
@@ -253,7 +250,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 </Dropdown>
               ) : (
                 <Dropdown
-                  trigger={<IconButton icon={<MoreHorizontal size={22} />} size="md" className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-all" />}
+                  trigger={<IconButton icon={<MoreHorizontal size={20} />} size="md" variant="ghost" />}
                   menuClassName="w-52"
                 >
                   <DropdownItem 
@@ -265,9 +262,9 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 </Dropdown>
               )}
               <IconButton 
-                icon={<X size={22} />} 
+                icon={<X size={20} />} 
                 onClick={onClose} 
-                className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-all" 
+                variant="ghost"
               />
             </div>
           </div>
@@ -283,17 +280,17 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             totalCommentCount={post.commentCount}
             header={
               <div className="flex flex-col">
-                {/* Media Component cho Mobile (Nằm giữa Header và Content) */}
+                {/* Media cho Mobile */}
                 {hasMedia && (
                   <div 
-                    className="lg:hidden w-full bg-bg-secondary aspect-square max-h-[50vh] flex items-center justify-center relative select-none overflow-hidden touch-none -mt-0.5 border-b border-border-light shadow-inner"
+                    className="lg:hidden w-full bg-black aspect-video sm:aspect-square max-h-[60vh] flex items-center justify-center relative select-none overflow-hidden touch-none"
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
                   >
-                    <div className="w-full h-full flex items-center justify-center pointer-events-none">
+                    <div className="w-full h-full flex items-center justify-center">
                        {allMedia[mediaIndex].type === 'video' ? (
-                         <video src={allMedia[mediaIndex].url} controls className="max-w-full max-h-full pointer-events-auto" />
+                         <video src={allMedia[mediaIndex].url} controls className="max-w-full max-h-full" />
                        ) : (
                          <img src={allMedia[mediaIndex].url} alt="" className="max-w-full max-h-full object-contain" />
                        )}
@@ -301,17 +298,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     {allMedia.length > 1 && (
                       <>
                         <div className="absolute inset-y-0 left-0 flex items-center px-1">
-                           <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-bg-primary/25 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === 0 ? 'invisible' : ''}`}>
-                              <ChevronLeft size={28} strokeWidth={2.5} />
+                           <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-black/20 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === 0 ? 'invisible' : ''}`}>
+                              <ChevronLeft size={24} strokeWidth={2.5} />
                            </button>
                         </div>
                         <div className="absolute inset-y-0 right-0 flex items-center px-1">
-                           <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-bg-primary/25 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
-                              <ChevronRight size={28} strokeWidth={2.5} />
+                           <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-black/20 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
+                              <ChevronRight size={24} strokeWidth={2.5} />
                            </button>
-                        </div>
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-bg-tertiary text-text-primary px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-border-light shadow-sm">
-                           {mediaIndex + 1} / {allMedia.length}
                         </div>
                       </>
                     )}
