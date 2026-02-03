@@ -25,7 +25,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   
-  const { setSelectedPost, likePost: storeLikePost } = usePostStore();
+  const { setSelectedPost, reactToPost: storeReactToPost } = usePostStore();
   const { users, fetchUsers } = useUserCache();
 
   const loadPosts = useCallback(async (isFirstPage: boolean = false) => {
@@ -56,7 +56,6 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
         setPosts(prev => [...prev, ...newPosts]);
       }
       
-      // Load user info từ cache store
       const userIds = [...new Set(newPosts.map(p => p.userId))];
       fetchUsers(userIds);
 
@@ -68,27 +67,21 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     }
   }, [userId, currentUser.id, currentUser.friendIds, hasMore, lastDoc, fetchUsers]);
 
-  // Reset và load khi đổi userId
   useEffect(() => {
     loadPosts(true);
     
-    // Đăng ký theo dõi thay đổi real-time
     const unsubscribe = postService.subscribeToUserPosts(
       userId,
       currentUser.id,
       currentUser.friendIds || [],
       (newPosts) => {
-        // Chỉ cập nhật trang đầu nếu đang không load thêm
         setPosts(prev => {
-          // Logic đơn giản: Nếu là bài mới thì thêm vào đầu, nếu là update thì thay thế
-          // Tuy nhiên để đồng nhất với Infinite scroll, ta chỉ nên cập nhật các bài đang hiển thị
           const updatedPosts = [...prev];
           newPosts.forEach(npm => {
             const index = updatedPosts.findIndex(p => p.id === npm.id);
             if (index !== -1) {
               updatedPosts[index] = npm;
             } else {
-              // Bài mới (có thể kiểm tra timestamp để đưa lên đầu)
               const firstPostTime = updatedPosts[0]?.timestamp?.getTime() || 0;
               if (npm.timestamp.getTime() > firstPostTime) {
                 updatedPosts.unshift(npm);
@@ -98,13 +91,12 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
           return updatedPosts;
         });
 
-        // Fetch users cho các bài mới
         fetchUsers(newPosts.map(p => p.userId));
       }
     );
 
     return () => unsubscribe();
-  }, [userId, currentUser.id, currentUser.friendIds, fetchUsers]);
+  }, [userId, currentUser.id, currentUser.friendIds, loadPosts, fetchUsers]);
 
   const handleLoadMore = useCallback(() => {
     if (!loading && !loadingMore && hasMore) {
@@ -113,35 +105,38 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   }, [loading, loadingMore, hasMore, loadPosts]);
 
   const handleLike = useCallback(async (postId: string) => {
-    // Cập nhật UI nhanh thông qua store nếu post đó có trong store
-    // Hoặc cập nhật local state nếu không có trong store
-    const isLiked = posts.find(p => p.id === postId)?.likes.includes(currentUser.id);
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const isLiked = post.reactions?.[currentUser.id] === '👍';
     
-    setPosts(prev => prev.map(p => 
-      p.id === postId 
-        ? { 
-            ...p, 
-            likes: isLiked 
-              ? p.likes.filter(id => id !== currentUser.id) 
-              : [...p.likes, currentUser.id] 
-          } 
-        : p
-    ));
+    setPosts(prev => prev.map(p => {
+      if (p.id !== postId) return p;
+      
+      const newReactions = { ...(p.reactions || {}) };
+      if (isLiked) {
+        delete newReactions[currentUser.id];
+      } else {
+        newReactions[currentUser.id] = '👍';
+      }
+      return { ...p, reactions: newReactions };
+    }));
 
     try {
-      await postService.likePost(postId, currentUser.id, !!isLiked);
+      await postService.reactToPost(postId, currentUser.id, isLiked ? 'REMOVE' : '👍');
     } catch (error) {
-      // Rollback nếu lỗi
-      setPosts(prev => prev.map(p => 
-        p.id === postId 
-          ? { 
-              ...p, 
-              likes: isLiked 
-                ? [...p.likes, currentUser.id] 
-                : p.likes.filter(id => id !== currentUser.id) 
-            } 
-          : p
-      ));
+      // Rollback
+      setPosts(prev => prev.map(p => {
+        if (p.id !== postId) return p;
+        
+        const oldReactions = { ...(p.reactions || {}) };
+        if (isLiked) {
+          oldReactions[currentUser.id] = '👍';
+        } else {
+          delete oldReactions[currentUser.id];
+        }
+        return { ...p, reactions: oldReactions };
+      }));
     }
   }, [posts, currentUser.id]);
 
