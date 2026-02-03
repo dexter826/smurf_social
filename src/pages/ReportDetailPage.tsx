@@ -20,7 +20,7 @@ import { reportService } from '../services/reportService';
 import { userService } from '../services/userService';
 import { postService } from '../services/postService';
 import { commentService } from '../services/commentService';
-import { Button, UserAvatar, ConfirmDialog, Skeleton } from '../components/ui';
+import { Button, UserAvatar, ConfirmDialog, Skeleton, IconButton } from '../components/ui';
 import { REPORT_CONFIG } from '../constants';
 import { formatRelativeTime, formatDateTime } from '../utils/dateUtils';
 import { toast } from '../store/toastStore';
@@ -219,12 +219,13 @@ const ReportDetailPage: React.FC = () => {
       <div className="bg-bg-primary border-b border-border-light sticky top-0 z-30 transition-all">
         <div className="max-w-4xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-            <button 
+            <IconButton
+              icon={<ArrowLeft size={18} />}
               onClick={() => navigate('/admin/reports')}
-              className="p-1.5 md:p-2 hover:bg-bg-secondary rounded-lg transition-colors border border-transparent hover:border-border-light focus:outline-none ring-0 shrink-0"
-            >
-              <ArrowLeft size={18} className="text-text-secondary md:w-5 md:h-5" />
-            </button>
+              variant="ghost"
+              size="md"
+              title="Quay lại"
+            />
             <div className="overflow-hidden">
               <h1 className="text-sm md:text-base font-bold text-text-primary truncate">
                 Chi tiết báo cáo
@@ -236,9 +237,9 @@ const ReportDetailPage: React.FC = () => {
             {report.status === ReportStatus.PENDING && (
               <>
                 <Button
-                  variant="danger"
+                  variant="secondary"
                   size="sm"
-                  className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
+                  className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold text-xs md:text-sm !gap-0 sm:!gap-2"
                   icon={<XCircle size={14} />}
                   onClick={() => { setActionType('reject'); setShowConfirm(true); }}
                 >
@@ -250,7 +251,7 @@ const ReportDetailPage: React.FC = () => {
                     <Button
                       variant="warning"
                       size="sm"
-                      className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
+                      className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold text-xs md:text-sm !gap-0 sm:!gap-2"
                       icon={<AlertTriangle size={14} />}
                       onClick={() => { setActionType('warn'); setShowConfirm(true); }}
                     >
@@ -259,7 +260,7 @@ const ReportDetailPage: React.FC = () => {
                     <Button
                       variant="danger"
                       size="sm"
-                      className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2 bg-red-600 hover:bg-red-700 text-white"
+                      className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold text-xs md:text-sm !gap-0 sm:!gap-2"
                       icon={<Trash2 size={14} />}
                       onClick={() => { setActionType('ban'); setShowConfirm(true); }}
                     >
@@ -270,7 +271,7 @@ const ReportDetailPage: React.FC = () => {
                   <Button
                     variant="primary"
                     size="sm"
-                    className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold focus:outline-none ring-0 text-xs md:text-sm !gap-0 sm:!gap-2"
+                    className="!h-9 !px-3 md:!px-4 !rounded-lg font-bold text-xs md:text-sm !gap-0 sm:!gap-2"
                     icon={<CheckCircle size={14} />}
                     onClick={() => { setActionType('resolve'); setShowConfirm(true); }}
                   >
@@ -537,7 +538,11 @@ const ReportDetailPage: React.FC = () => {
           actionType === 'warn' ? 'Gửi cảnh báo' :
           actionType === 'ban' ? 'Khóa ngay' : 'Xác nhận'
         }
-        variant={actionType === 'reject' ? 'primary' : 'danger'}
+        variant={
+          actionType === 'reject' ? 'secondary' : 
+          actionType === 'resolve' ? 'primary' :
+          actionType === 'warn' ? 'warning' : 'danger'
+        }
         isLoading={isProcessing}
       />
     </div>

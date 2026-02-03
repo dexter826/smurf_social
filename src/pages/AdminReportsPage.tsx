@@ -285,7 +285,7 @@ const AdminReportsPage: React.FC = () => {
                           <span className="hidden sm:inline">Xử lý</span>
                         </Button>
                         <Button
-                          variant="danger"
+                          variant="secondary"
                           size="sm"
                           className="!h-9 !rounded-lg font-bold text-xs !gap-0 sm:!gap-2"
                           icon={<XCircle size={14} />}
@@ -340,7 +340,7 @@ const AdminReportsPage: React.FC = () => {
             : 'Xác nhận từ chối? Nội dung sẽ được giữ nguyên.'
         }
         confirmLabel={actionType === 'resolve' ? 'Xử lý' : 'Từ chối'}
-        variant={actionType === 'resolve' ? 'danger' : 'primary'}
+        variant={actionType === 'resolve' ? 'primary' : 'secondary'}
         isLoading={isProcessing}
       />
     </div>

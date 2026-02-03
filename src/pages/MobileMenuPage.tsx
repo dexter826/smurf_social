@@ -19,7 +19,7 @@ import { useThemeStore } from '../store/themeStore';
 import { useChatStore } from '../store/chatStore';
 import { useContactStore } from '../store/contactStore';
 import { useNotificationStore } from '../store/notificationStore';
-import { UserAvatar, ConfirmDialog } from '../components/ui';
+import { UserAvatar, ConfirmDialog, Button } from '../components/ui';
 
 export const MobileMenuPage: React.FC = () => {
   const navigate = useNavigate();
@@ -142,15 +142,19 @@ export const MobileMenuPage: React.FC = () => {
           <div className="h-3" />
 
           {/* Đăng xuất */}
-          <button
+          <Button
+            variant="ghost"
+            fullWidth
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-error/5 transition-colors border border-error/20"
+            className="!justify-start !p-3.5 !h-auto !rounded-xl !bg-bg-primary hover:!bg-error/5 !border !border-error/20 !text-error"
+            icon={
+              <div className="w-11 h-11 flex items-center justify-center rounded-full bg-error/10 text-error">
+                <LogOut size={22} />
+              </div>
+            }
           >
-            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-error/10 text-error">
-              <LogOut size={22} />
-            </div>
-            <span className="font-semibold text-error">Đăng xuất</span>
-          </button>
+            Đăng xuất
+          </Button>
         </div>
       </div>
 

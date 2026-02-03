@@ -119,7 +119,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'danger' | 'primary';
+  variant?: 'danger' | 'primary' | 'success' | 'secondary' | 'outline' | 'ghost';
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -201,7 +201,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </Button>
           <Button
             onClick={handleConfirm}
-            variant={variant === 'danger' ? 'danger' : 'primary'}
+            variant={variant}
             className="flex-1"
           >
             {confirmLabel}

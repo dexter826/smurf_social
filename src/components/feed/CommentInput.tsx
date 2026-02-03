@@ -138,13 +138,13 @@ export const CommentInput: React.FC<CommentInputProps> = ({
               ) : formData.image ? (
                 <div className="relative group">
                   <img src={formData.image} alt="Preview" className="h-20 w-auto rounded-lg object-cover" />
-                  <button
+                  <IconButton
                     type="button"
                     onClick={handleRemoveMedia}
-                    className="absolute -top-2 -right-2 bg-text-primary text-bg-primary rounded-full p-0.5 shadow-md hover:scale-110 transition-transform"
-                  >
-                    <X size={12} />
-                  </button>
+                    className="absolute -top-2 -right-2 bg-text-primary text-bg-primary shadow-md hover:scale-110"
+                    size="sm"
+                    icon={<X size={12} />}
+                  />
                 </div>
               ) : null}
             </div>
@@ -179,13 +179,14 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             </div>
             <div className="flex items-center gap-1">
               {onCancel && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={onCancel}
-                  className="text-xs font-medium text-text-tertiary hover:text-text-secondary px-2 py-1"
+                  className="!h-auto !py-1.5 !px-2.5 text-xs font-semibold"
                 >
                   Hủy
-                </button>
+                </Button>
               )}
               <Button
                 type="submit"

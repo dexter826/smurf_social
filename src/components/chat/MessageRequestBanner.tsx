@@ -44,9 +44,9 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               onClick={onAcceptFriend}
+              variant="primary"
               size="sm"
               icon={<UserCheck size={16} />}
-              className="bg-primary hover:bg-primary-hover text-text-on-primary"
             >
               Chấp nhận
             </Button>
@@ -66,9 +66,9 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               onClick={onAddFriend}
+              variant="primary"
               size="sm"
               icon={<UserPlus size={16} />}
-              className="bg-primary hover:bg-primary-hover text-text-on-primary"
             >
               Kết bạn
             </Button>
