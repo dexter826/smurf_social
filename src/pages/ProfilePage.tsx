@@ -24,7 +24,7 @@ const ProfilePage: React.FC = () => {
     loading,
     uploading,
     isOwnProfile,
-    isFriend,
+    friendStatus,
     canViewContent,
     activeTab,
     setActiveTab,
@@ -82,7 +82,7 @@ const ProfilePage: React.FC = () => {
           user={profile}
           stats={stats}
           isOwnProfile={isOwnProfile}
-          isFriend={isFriend}
+          friendStatus={friendStatus}
           onEditClick={() => setIsEditModalOpen(true)}
           onMessageClick={handleMessage}
           onFriendClick={onFriendActionClick}

@@ -23,6 +23,23 @@ import { notificationService } from './notificationService';
 export const friendService = {
   sendFriendRequest: async (senderId: string, receiverId: string, message?: string): Promise<FriendRequest> => {
     try {
+      if (senderId === receiverId) {
+        throw new Error("Không thể gửi lời mời kết bạn cho chính mình");
+      }
+
+      // Tránh gửi trùng lời mời
+      const q = query(
+        collection(db, 'friendRequests'),
+        where('senderId', '==', senderId),
+        where('receiverId', '==', receiverId),
+        where('status', '==', FriendRequestStatus.PENDING)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        throw new Error("Đã gửi lời mời kết bạn rồi");
+      }
+
       const requestData = {
         senderId,
         receiverId,
@@ -34,7 +51,6 @@ export const friendService = {
 
       const docRef = await addDoc(collection(db, 'friendRequests'), requestData);
       
-      // Gửi thông báo lời mời kết bạn
       await notificationService.createNotification({
         receiverId,
         senderId,

@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
+import { FriendStatus } from '../../hooks/useProfile';
 import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 import { useReportStore } from '../../store/reportStore';
@@ -10,7 +11,7 @@ interface ProfileHeaderProps {
   user: User;
   stats: { friendCount: number; postCount: number };
   isOwnProfile: boolean;
-  isFriend?: boolean;
+  friendStatus?: FriendStatus;
   onEditClick?: () => void;
   onMessageClick?: () => void;
   onFriendClick?: () => void;
@@ -28,7 +29,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user,
   stats,
   isOwnProfile,
-  isFriend = false,
+  friendStatus = FriendStatus.NOT_FRIEND,
   onEditClick,
   onMessageClick,
   onFriendClick,
@@ -277,7 +278,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     Nhắn tin
                   </Button>
                   
-                  {isFriend ? (
+                  {friendStatus === FriendStatus.FRIEND ? (
                     <Button 
                       variant="secondary" 
                       onClick={onFriendClick} 
@@ -285,6 +286,24 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       className="border-primary-100 bg-primary-50 text-primary-600 hover:bg-primary-100"
                     >
                       Bạn bè
+                    </Button>
+                  ) : friendStatus === FriendStatus.PENDING_SENT ? (
+                    <Button 
+                      variant="secondary"
+                      onClick={onFriendClick} 
+                      icon={<UserPlus size={18} />}
+                      className="border-border-medium text-text-tertiary bg-bg-secondary cursor-pointer hover:bg-bg-hover"
+                    >
+                      Đã gửi lời mời
+                    </Button>
+                  ) : friendStatus === FriendStatus.PENDING_RECEIVED ? (
+                    <Button 
+                      variant="primary"
+                      onClick={onFriendClick} 
+                      icon={<UserPlus size={18} />}
+                      className="bg-primary-600 hover:bg-primary-700 shadow-md"
+                    >
+                      Chấp nhận
                     </Button>
                   ) : (
                     <Button 
