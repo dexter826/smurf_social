@@ -67,15 +67,16 @@ export const AppLayout: React.FC = () => {
     { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
     { to: '/', Icon: MessageCircle, label: 'Tin nhắn' },
     { to: '/contacts', Icon: Users, label: 'Bạn bè' },
+    ...(isAdmin ? [{ to: '/admin/reports', Icon: Flag, label: 'Quản trị' }] : []),
   ];
 
   return (
     <div className="flex flex-col h-[100dvh] w-full bg-bg-secondary overflow-hidden transition-theme">
       {/* Desktop Navbar */}
-      <header className="hidden md:flex h-16 w-full items-center justify-between bg-bg-primary px-6 z-50 shadow-sm border-b border-border-light transition-theme">
+      <header className="hidden md:flex h-16 w-full items-center bg-bg-primary px-6 z-50 shadow-sm border-b border-border-light transition-theme">
         {/* Left: Logo */}
         <div 
-          className="flex items-center cursor-pointer transition-transform duration-200" 
+          className="flex-1 flex items-center cursor-pointer transition-transform duration-200" 
           onClick={() => navigate('/feed')}
         >
           <img 
@@ -115,7 +116,7 @@ export const AppLayout: React.FC = () => {
         </nav>
 
         {/* Right: User Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex-1 flex items-center justify-end gap-2">
           <div className="flex items-center gap-1">
             <NotificationDropdown />
             
@@ -145,21 +146,7 @@ export const AppLayout: React.FC = () => {
                 <Settings size={20} />
                </NavLink>
 
-              {isAdmin && (
-                <NavLink 
-                  to="/admin/reports"
-                  className={({ isActive }) => 
-                    `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                      isActive 
-                      ? 'bg-bg-secondary text-warning shadow-sm' 
-                      : 'text-text-tertiary hover:bg-bg-secondary hover:text-warning'
-                    }`
-                  }
-                  title="Quản lý báo cáo"
-                >
-                  <Flag size={20} />
-                </NavLink>
-              )}
+
 
               <div className="group relative ml-1" onClick={() => navigate('/profile')}>
                 {user && (
