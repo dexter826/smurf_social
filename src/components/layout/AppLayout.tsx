@@ -19,7 +19,7 @@ export const AppLayout: React.FC = () => {
   const { receivedRequests, subscribeToRequests } = useContactStore();
   const { initialize: initNotifications } = useNotificationStore();
   
-  const { selectedPost, setSelectedPost, isModalLoading, likePost } = usePostStore();
+  const { selectedPost, setSelectedPost, isModalLoading, reactToPost } = usePostStore();
   const { users: usersMap, fetchUsers } = useUserCache();
 
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ export const AppLayout: React.FC = () => {
 
   const handlePostLike = async (postId: string) => {
     if (user) {
-      await likePost(postId, user.id);
+      await reactToPost(postId, user.id, '👍');
     }
   };
 

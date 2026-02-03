@@ -273,7 +273,7 @@ const ProfilePage: React.FC = () => {
         author={selectedPost?.userId === profile?.id ? profile : null}
         currentUser={currentUser}
         onLike={async (postId) => {
-          await usePostStore.getState().likePost(postId, currentUser.id);
+          await usePostStore.getState().reactToPost(postId, currentUser.id, '👍');
         }}
       />
     </div>
