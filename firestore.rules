@@ -2,21 +2,24 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ══════════════════════════════════════════
-    // USERS - owner write, friendIds/blockedUserIds cho interactions
-    // ══════════════════════════════════════════
+    // Kiểm tra quyền Admin
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // USERS
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create, delete: if request.auth != null && request.auth.uid == userId;
       allow update: if request.auth != null && (
         request.auth.uid == userId || 
+        isAdmin() || // Admin có quyền chỉnh sửa/ban user
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friendIds', 'blockedUserIds'])
       );
     }
     
-    // ══════════════════════════════════════════
-    // FRIEND REQUESTS - sender/receiver access
-    // ══════════════════════════════════════════
+    // FRIEND REQUESTS
     match /friendRequests/{requestId} {
       allow read: if request.auth != null && 
         (resource.data.senderId == request.auth.uid || 
@@ -30,15 +33,13 @@ service cloud.firestore {
         resource.data.senderId == request.auth.uid;
     }
     
-    // ══════════════════════════════════════════
-    // POSTS - privacy: owner, friends, admin
-    // ══════════════════════════════════════════
+    // POSTS
     match /posts/{postId} {
       allow read: if request.auth != null && (
         resource.data.visibility == 'public' ||
         resource.data.userId == request.auth.uid || 
         request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.userId)).data.friendIds ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        isAdmin()
       );
       allow create: if request.auth != null && 
         request.resource.data.userId == request.auth.uid &&
@@ -50,21 +51,19 @@ service cloud.firestore {
       );
       allow delete: if request.auth != null && (
         resource.data.userId == request.auth.uid ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        isAdmin()
       );
     }
     
-    // ══════════════════════════════════════════
-    // COMMENTS - privacy theo post owner's friends + cascade delete
-    // ══════════════════════════════════════════
+    // COMMENTS
     match /comments/{commentId} {
-      // Read: owner, post owner, post owner's friends, parent comment owner, admin
+      // Read: owner, post owner, friends, parent comment owner, admin
       allow read: if request.auth != null && (
         resource.data.userId == request.auth.uid || 
         get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.userId == request.auth.uid ||
         request.auth.uid in get(/databases/$(database)/documents/users/$(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.userId)).data.friendIds ||
         (resource.data.parentId != null && get(/databases/$(database)/documents/comments/$(resource.data.parentId)).data.userId == request.auth.uid) ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        isAdmin()
       );
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       // Cho phép update likes/replyCount từ bất kỳ ai
@@ -77,13 +76,11 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid || 
         get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.userId == request.auth.uid ||
         (resource.data.parentId != null && get(/databases/$(database)/documents/comments/$(resource.data.parentId)).data.userId == request.auth.uid) ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        isAdmin()
       );
     }
     
-    // ══════════════════════════════════════════
-    // CONVERSATIONS - participants only
-    // ══════════════════════════════════════════
+    // CONVERSATIONS
     match /conversations/{conversationId} {
       allow read, create, delete: if request.auth != null && 
         request.auth.uid in (resource != null ? resource.data.participantIds : request.resource.data.participantIds);
@@ -91,9 +88,7 @@ service cloud.firestore {
         (request.auth.uid in resource.data.participantIds);
     }
     
-    // ══════════════════════════════════════════
-    // MESSAGES - participants access, senderId = system cho system messages
-    // ══════════════════════════════════════════
+    // MESSAGES
     match /messages/{messageId} {
       allow read: if request.auth != null && 
         request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participantIds;
@@ -109,44 +104,37 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.senderId == request.auth.uid;
     }
 
-    // ══════════════════════════════════════════
-    // NOTIFICATIONS - receiver access, delete cho cleanup cascade
-    // ══════════════════════════════════════════
+    // NOTIFICATIONS
     match /notifications/{notificationId} {
       allow read: if request.auth != null && resource.data.receiverId == request.auth.uid;
       allow create: if request.auth != null;
       allow update: if request.auth != null && resource.data.receiverId == request.auth.uid && 
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
-      // Delete: receiver, sender, post owner (nếu post còn tồn tại), admin
+      // Delete: receiver, sender, post owner, admin
       allow delete: if request.auth != null && (
         resource.data.receiverId == request.auth.uid ||
         resource.data.senderId == request.auth.uid ||
         (resource.data.data.postId != null && 
          exists(/databases/$(database)/documents/posts/$(resource.data.data.postId)) &&
          get(/databases/$(database)/documents/posts/$(resource.data.data.postId)).data.userId == request.auth.uid) ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        isAdmin()
       );
     }
 
-    // ══════════════════════════════════════════
-    // REPORTS - reporter/admin read, orphaned status cho cascade
-    // ══════════════════════════════════════════
+    // REPORTS
     match /reports/{reportId} {
-      // Không cho phép tự báo cáo chính mình
+      // Chặn tự báo cáo chính mình
       allow create: if request.auth != null && 
         request.resource.data.reporterId == request.auth.uid &&
         request.resource.data.reporterId != request.resource.data.targetOwnerId;
       
       allow read: if request.auth != null && (
         resource.data.reporterId == request.auth.uid ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        isAdmin()
       );
       
-      // Admin: full fields | Target owner: orphaned only | Post owner: orphaned comment reports
       allow update: if request.auth != null && (
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
-         request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['status', 'resolvedAt', 'resolvedBy', 'resolution'])) ||
+        isAdmin() || // Admin có toàn quyền xử lý
         (resource.data.targetOwnerId == request.auth.uid &&
          request.resource.data.status == 'orphaned' &&
          request.resource.data.diff(resource.data).affectedKeys()
@@ -163,7 +151,7 @@ service cloud.firestore {
       allow delete: if request.auth != null && (
         resource.data.reporterId == request.auth.uid ||
         resource.data.targetOwnerId == request.auth.uid ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        isAdmin()
       );
     }
   }

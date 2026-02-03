@@ -212,7 +212,7 @@ export const notificationService = {
           ? `Báo cáo của bạn đã được xem xét` 
           : `Báo cáo của bạn đã được xử lý. Cảm ơn bạn!`;
       case NotificationType.CONTENT_VIOLATION:
-        return `Nội dung của bạn đã bị xóa do vi phạm quy tắc cộng đồng`;
+        return notification.data.contentSnippet || 'Nội dung của bạn đã bị xóa do vi phạm quy tắc cộng đồng';
       default:
         return "Thông báo mới.";
     }
