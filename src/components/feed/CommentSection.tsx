@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Flag, X } from 'lucide-react';
 import { UserAvatar, Button, ConfirmDialog, UploadProgress } from '../ui';
+import { CONFIRM_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
 import { Comment, User, ReportType } from '../../types';
 import { postService } from '../../services/postService';
@@ -479,9 +480,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         isOpen={!!commentToDelete}
         onClose={() => setCommentToDelete(null)}
         onConfirm={handleDeleteConfirm}
-        title="Xóa bình luận"
-        message={commentToDelete?.parentId ? "Xóa câu trả lời này?" : "Xóa sẽ mất hết các câu trả lời liên quan?"}
-        confirmLabel="Xóa"
+        title={CONFIRM_MESSAGES.FEED.DELETE_COMMENT.TITLE}
+        message={CONFIRM_MESSAGES.FEED.DELETE_COMMENT.MESSAGE(!!commentToDelete?.replyCount || !!replies[postId]?.[commentToDelete?.id || '']?.length)}
+        confirmLabel={CONFIRM_MESSAGES.FEED.DELETE_COMMENT.CONFIRM}
         variant="danger"
       />
     </div>

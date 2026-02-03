@@ -14,6 +14,7 @@ import { useThemeStore } from '../store/themeStore';
 import { useUserCache } from '../store/userCacheStore';
 import { User } from '../types';
 import { UserAvatar, ConfirmDialog, Button, Skeleton } from '../components/ui';
+import { CONFIRM_MESSAGES } from '../constants';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 
 type SettingSection = 'appearance' | 'security' | 'blocked';
@@ -282,9 +283,9 @@ const SettingsPage: React.FC = () => {
         isOpen={!!unblockUserId}
         onClose={() => setUnblockUserId(null)}
         onConfirm={handleUnblock}
-        title="Bỏ chặn người dùng"
-        message="Bạn có chắc chắn muốn bỏ chặn người này? Họ sẽ có thể gửi tin nhắn cho bạn."
-        confirmLabel="Bỏ chặn"
+        title={CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE}
+        message={CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(blockedUsers.find(u => u.id === unblockUserId)?.name || 'người này')}
+        confirmLabel={CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM}
       />
       <ChangePasswordModal 
         isOpen={isChangePasswordOpen}
