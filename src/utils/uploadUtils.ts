@@ -60,31 +60,6 @@ export const uploadWithProgress = (
 };
 
 /**
- * Upload nhiều files với combined progress
- */
-export const uploadMultipleWithProgress = async (
-  files: { file: File; path: string }[],
-  onProgress?: (overallProgress: number, fileIndex: number) => void
-): Promise<string[]> => {
-  const urls: string[] = [];
-  const totalFiles = files.length;
-
-  for (let i = 0; i < totalFiles; i++) {
-    const { file, path } = files[i];
-    
-    const url = await uploadWithProgress(path, file, (progress) => {
-      const fileProgress = progress.progress / 100;
-      const overallProgress = ((i + fileProgress) / totalFiles) * 100;
-      onProgress?.(overallProgress, i);
-    });
-    
-    urls.push(url);
-  }
-
-  return urls;
-};
-
-/**
  * Format bytes thành readable string
  */
 export const formatBytes = (bytes: number): string => {
@@ -93,25 +68,4 @@ export const formatBytes = (bytes: number): string => {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-};
-
-/**
- * Ước tính thời gian còn lại dựa trên tốc độ upload
- */
-export const estimateTimeRemaining = (
-  bytesTransferred: number,
-  totalBytes: number,
-  elapsedMs: number
-): string => {
-  if (bytesTransferred === 0 || elapsedMs === 0) return 'Đang tính...';
-  
-  const bytesPerMs = bytesTransferred / elapsedMs;
-  const remainingBytes = totalBytes - bytesTransferred;
-  const remainingMs = remainingBytes / bytesPerMs;
-  
-  const seconds = Math.ceil(remainingMs / 1000);
-  
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.ceil(seconds / 60)} phút`;
-  return `${Math.ceil(seconds / 3600)} giờ`;
 };

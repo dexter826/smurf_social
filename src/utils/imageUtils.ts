@@ -134,23 +134,3 @@ export const isImageFile = (file: File): boolean => {
   return file.type.startsWith('image/');
 };
 
-/**
- * Kiểm tra file có phải là video không
- */
-export const isVideoFile = (file: File): boolean => {
-  return file.type.startsWith('video/');
-};
-
-/**
- * Tạo preview URL cho file
- */
-export const createPreviewUrl = (file: File): string => {
-  return URL.createObjectURL(file);
-};
-
-/**
- * Giải phóng preview URL
- */
-export const revokePreviewUrl = (url: string): void => {
-  URL.revokeObjectURL(url);
-};
