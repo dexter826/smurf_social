@@ -160,12 +160,10 @@ export enum ReportType {
 
 export enum ReportReason {
   SPAM = "spam",
-  HARASSMENT = "harassment",
+  HARASSMENT_VIOLENCE = "harassment_violence",
   HATE_SPEECH = "hate_speech",
-  VIOLENCE = "violence",
-  NUDITY = "nudity",
-  SCAM = "scam",
-  IMPERSONATION = "impersonation",
+  SENSITIVE = "sensitive",
+  SCAM_IMPERSONATION = "scam_impersonation",
   OTHER = "other",
 }
 

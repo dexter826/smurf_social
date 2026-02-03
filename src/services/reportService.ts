@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Report, ReportType, ReportReason, ReportStatus, NotificationType, Post, Comment } from '../types';
+import { REPORT_CONFIG } from '../constants';
 import { notificationService } from './notificationService';
 import { postService } from './postService';
 import { commentService } from './commentService';
@@ -45,13 +46,16 @@ export const reportService = {
       const adminsSnapshot = await getDocs(adminsQuery);
       
       for (const adminDoc of adminsSnapshot.docs) {
+        const typeLabel = REPORT_CONFIG.TYPE_LABELS[data.targetType as keyof typeof REPORT_CONFIG.TYPE_LABELS] || data.targetType;
+        const reasonLabel = REPORT_CONFIG.REASONS[data.reason as keyof typeof REPORT_CONFIG.REASONS]?.label || data.reason;
+        
         await notificationService.createNotification({
           receiverId: adminDoc.id,
           senderId: data.reporterId,
           type: NotificationType.REPORT_NEW,
           data: { 
             reportId: docRef.id,
-            contentSnippet: `${data.targetType} - ${data.reason}`
+            contentSnippet: `${typeLabel} - ${reasonLabel}`
           }
         });
       }

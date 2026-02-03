@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
 import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
@@ -297,24 +297,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     </Button>
                   )}
 
-                  {isBlockedByMe ? (
-                    <Button 
-                      variant="secondary" 
-                      onClick={onUnblockClick}
-                      className="border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
-                    >
-                      Bỏ chặn
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="secondary" 
-                      onClick={onBlockClick}
-                      className="border-border-medium text-text-secondary hover:text-red-600 hover:bg-red-50 hover:border-red-100"
-                    >
-                      Chặn
-                    </Button>
-                  )}
-
                   <Dropdown
                     trigger={
                       <Button
@@ -325,9 +307,23 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     }
                     align="right"
                   >
+                    {isBlockedByMe ? (
+                      <DropdownItem
+                        icon={<UserCheck size={16} />}
+                        label="Bỏ chặn"
+                        onClick={onUnblockClick || (() => {})}
+                      />
+                    ) : (
+                      <DropdownItem
+                        icon={<Ban size={16} />}
+                        label="Chặn"
+                        variant="danger"
+                        onClick={onBlockClick || (() => {})}
+                      />
+                    )}
                     <DropdownItem
                       icon={<Flag size={16} />}
-                      label="Báo cáo người dùng"
+                      label="Báo cáo"
                       variant="danger"
                       onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
                     />
