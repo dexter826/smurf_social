@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Flag, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Flag, X, Lock } from 'lucide-react';
 import { UserAvatar, Button, ConfirmDialog, UploadProgress } from '../ui';
 import { CONFIRM_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
-import { Comment, User, ReportType } from '../../types';
+import { Comment, User, ReportType, UserStatus } from '../../types';
 import { postService } from '../../services/postService';
 import { useCommentStore } from '../../store/commentStore';
 import { useUserCache } from '../../store/userCacheStore';
@@ -270,6 +270,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 >
                   {author?.name || 'Người dùng'}
                 </h4>
+                {author?.status === UserStatus.BANNED && (
+                  <span className="bg-error/10 text-error text-[10px] px-1.5 py-0.5 rounded-md font-bold ml-1 flex-shrink-0 flex items-center gap-0.5">
+                    <Lock size={10} /> Đã khóa
+                  </span>
+                )}
                 {comment.userId === postOwnerId && (
                   <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold ml-1 flex-shrink-0">
                     Tác giả

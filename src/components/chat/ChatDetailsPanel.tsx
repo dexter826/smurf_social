@@ -58,9 +58,11 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const partner = conversation.isGroup
+  const partnerId = conversation.isGroup
     ? null
-    : conversation.participants.find(p => p.id !== currentUserId);
+    : conversation.participants.find(p => p.id !== currentUserId)?.id;
+
+  const partner = partnerId ? usersMap[partnerId] : null;
 
   useEffect(() => {
     if (isOpen) {

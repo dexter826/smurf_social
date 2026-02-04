@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Bell, Flag, Menu } from 'lucide-react';
+import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Bell, Flag, Menu, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
@@ -67,7 +67,10 @@ export const AppLayout: React.FC = () => {
     { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
     { to: '/', Icon: MessageCircle, label: 'Tin nhắn' },
     { to: '/contacts', Icon: Users, label: 'Bạn bè' },
-    ...(isAdmin ? [{ to: '/admin/reports', Icon: Flag, label: 'Quản trị' }] : []),
+    ...(isAdmin ? [
+      { to: '/admin/reports', Icon: Flag, label: 'Báo cáo' },
+      { to: '/admin/users', Icon: Shield, label: 'Người dùng' }
+    ] : []),
   ];
 
   return (

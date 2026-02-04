@@ -21,9 +21,10 @@ import {
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
-import { Comment, NotificationType, ReportStatus } from '../types';
+import { Comment, NotificationType, ReportStatus, UserStatus } from '../types';
 import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
+import { batchGetUsers } from '../utils/batchUtils';
 
 export const commentService = {
   // Lấy bình luận gốc
@@ -45,13 +46,16 @@ export const commentService = {
       const hasMore = snapshot.docs.length > limitCount;
       const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const usersMap = await batchGetUsers(authorIds);
+
       const comments = docsToProcess
         .map(doc => ({
           ...doc.data(),
           id: doc.id,
           timestamp: doc.data().timestamp?.toDate() || new Date(),
         }) as Comment)
-        .filter(c => !blockedUserIds.includes(c.userId));
+        .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
 
       return {
         comments,
@@ -82,13 +86,16 @@ export const commentService = {
       const hasMore = snapshot.docs.length > limitCount;
       const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const usersMap = await batchGetUsers(authorIds);
+
       const replies = docsToProcess
         .map(doc => ({
           ...doc.data(),
           id: doc.id,
           timestamp: doc.data().timestamp?.toDate() || new Date(),
         }) as Comment)
-        .filter(c => !blockedUserIds.includes(c.userId));
+        .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
 
       return {
         replies,

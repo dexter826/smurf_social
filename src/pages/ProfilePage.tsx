@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User } from '../types';
+import { User, UserStatus } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Spinner, Button, ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
@@ -12,7 +12,7 @@ import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { PostsTab } from '../components/profile/PostsTab';
 import { PhotosTab } from '../components/profile/PhotosTab';
 import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
-import { Video, User as UserIcon, Lock } from 'lucide-react';
+import { Video, User as UserIcon, Lock, AlertTriangle } from 'lucide-react';
 import { useProfile } from '../hooks';
 
 const ProfilePage: React.FC = () => {
@@ -76,8 +76,34 @@ const ProfilePage: React.FC = () => {
     return <ProfileSkeleton />;
   }
 
+  const isBannedProfile = profile.status === UserStatus.BANNED;
+
+  // Nếu là profile bị ban (và không phải chính mình), ẩn hoàn toàn
+  if (isBannedProfile && !isOwnProfile) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center bg-bg-secondary h-full flex items-center justify-center">
+        <div className="bg-bg-primary rounded-2xl shadow-sm border border-border-light p-10 w-full max-w-lg">
+          <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock size={40} className="text-text-secondary" />
+          </div>
+          <h2 className="text-2xl font-bold text-text-primary mb-3">Tài khoản này đã bị khóa</h2>
+          <p className="text-text-secondary mb-8">
+            Người dùng này đã vi phạm quy tắc cộng đồng hoặc không còn tồn tại trên hệ thống.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button onClick={() => navigate(-1)} variant="ghost">Quay lại</Button>
+            <Button onClick={() => navigate('/')} variant="primary" className="px-8">
+              Trang chủ
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full overflow-y-auto bg-bg-secondary">
+
       <div className="bg-bg-primary shadow-sm mb-4">
         <ProfileHeader
           user={profile}

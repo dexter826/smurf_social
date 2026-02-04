@@ -13,9 +13,11 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  FileX
+  FileX,
+  Unlock,
+  Lock
 } from 'lucide-react';
-import { Report, ReportStatus, ReportType, User, Post, Comment } from '../types';
+import { Report, ReportStatus, ReportType, User, Post, Comment, UserStatus } from '../types';
 import { reportService } from '../services/reportService';
 import { userService } from '../services/userService';
 import { postService } from '../services/postService';
@@ -38,7 +40,7 @@ const ReportDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [actionType, setActionType] = useState<'resolve' | 'reject' | 'warn' | 'ban' | null>(null);
+  const [actionType, setActionType] = useState<'resolve' | 'reject' | 'warn' | 'ban' | 'unban' | null>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -101,11 +103,21 @@ const ReportDetailPage: React.FC = () => {
       } else if (actionType === 'ban') {
         await reportService.resolveReport(report.id, currentUser.id, 'Đã khóa tài khoản', 'ban_user');
         toast.success('Đã khóa tài khoản người dùng');
+        const refreshedOwner = await userService.getUserById(report.targetOwnerId);
+        setTargetOwner(refreshedOwner || null);
+      } else if (actionType === 'unban') {
+        await userService.unbanUser(report.targetOwnerId);
+        toast.success('Đã mở khóa tài khoản người dùng');
+        // Refresh targetOwner data
+        const refreshedOwner = await userService.getUserById(report.targetOwnerId);
+        setTargetOwner(refreshedOwner || null);
       } else {
         await reportService.rejectReport(report.id, currentUser.id);
         toast.success('Đã từ chối báo cáo');
       }
-      navigate('/admin/reports');
+      if (actionType !== 'unban') {
+        navigate('/admin/reports');
+      }
     } catch (error) {
       toast.error('Lỗi thực hiện thao tác');
     } finally {
@@ -313,7 +325,14 @@ const ReportDetailPage: React.FC = () => {
               className="bg-bg-primary p-4 md:p-5 rounded-xl border border-border-light shadow-sm space-y-3 md:space-y-4 cursor-pointer hover:bg-bg-secondary/50 transition-colors group"
             >
               <div className="flex items-center justify-between">
-                <h4 className="text-[9px] md:text-[10px] font-black text-text-tertiary uppercase tracking-widest">Bị báo cáo</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-[9px] md:text-[10px] font-black text-text-tertiary uppercase tracking-widest">Bị báo cáo</h4>
+                  {targetOwner?.status === UserStatus.BANNED && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold bg-error/10 text-error flex items-center gap-1">
+                      <Lock size={10} /> Đã bị khóa
+                    </span>
+                  )}
+                </div>
                 <ExternalLink size={12} className="text-text-tertiary group-hover:text-primary transition-colors md:w-[14px] md:h-[14px]" />
               </div>
               <div className="flex items-center gap-3">
@@ -323,6 +342,22 @@ const ReportDetailPage: React.FC = () => {
                   <div className="text-[11px] md:text-xs text-text-tertiary truncate">{targetOwner?.email}</div>
                 </div>
               </div>
+              {/* Nút Unban nếu user đang bị khóa */}
+              {targetOwner?.status === UserStatus.BANNED && (
+                <Button
+                  variant="warning"
+                  size="sm"
+                  className="w-full !h-8 !rounded-lg font-bold text-xs"
+                  icon={<Unlock size={14} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActionType('unban');
+                    setShowConfirm(true);
+                  }}
+                >
+                  Mở khóa tài khoản
+                </Button>
+              )}
             </div>
           </div>
 
@@ -522,22 +557,25 @@ const ReportDetailPage: React.FC = () => {
         title={
           actionType === 'resolve' ? CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.TITLE : 
           actionType === 'warn' ? CONFIRM_MESSAGES.ADMIN.WARN_USER.TITLE :
-          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.TITLE : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.TITLE
+          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.TITLE :
+          actionType === 'unban' ? CONFIRM_MESSAGES.ADMIN.UNBAN_USER.TITLE : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.TITLE
         }
         message={
           actionType === 'resolve' ? CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.MESSAGE : 
           actionType === 'warn' ? CONFIRM_MESSAGES.ADMIN.WARN_USER.MESSAGE :
-          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.MESSAGE : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.MESSAGE
+          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.MESSAGE :
+          actionType === 'unban' ? CONFIRM_MESSAGES.ADMIN.UNBAN_USER.MESSAGE : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.MESSAGE
         }
         confirmLabel={
           actionType === 'resolve' ? CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.CONFIRM : 
           actionType === 'warn' ? CONFIRM_MESSAGES.ADMIN.WARN_USER.CONFIRM :
-          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.CONFIRM : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.CONFIRM
+          actionType === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.CONFIRM :
+          actionType === 'unban' ? CONFIRM_MESSAGES.ADMIN.UNBAN_USER.CONFIRM : CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.CONFIRM
         }
         variant={
           actionType === 'reject' ? 'secondary' : 
           actionType === 'resolve' ? 'primary' :
-          actionType === 'warn' ? 'warning' : 'danger'
+          actionType === 'warn' || actionType === 'unban' ? 'warning' : 'danger'
         }
         isLoading={isProcessing}
       />

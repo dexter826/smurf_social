@@ -13,7 +13,9 @@ import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import AdminReportsPage from './pages/AdminReportsPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 import ReportDetailPage from './pages/ReportDetailPage';
+import BannedPage from './pages/BannedPage';
 import { MobileMenuPage } from './pages/MobileMenuPage';
 import { userService } from './services/userService';
 import { UserStatus } from './types';
@@ -27,6 +29,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user.status === UserStatus.BANNED) {
+    return <Navigate to="/banned" replace />;
   }
 
   return <>{children}</>;
@@ -79,14 +85,16 @@ const App: React.FC = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="admin/reports" element={<AdminReportsPage />} />
           <Route path="admin/reports/:id" element={<ReportDetailPage />} />
+          <Route path="admin/users" element={<AdminUsersPage />} />
         </Route>
 
-        {/* Mobile Menu - không dùng AppLayout */}
         <Route path="/menu" element={
           <ProtectedRoute>
             <MobileMenuPage />
           </ProtectedRoute>
         } />
+
+        <Route path="/banned" element={<BannedPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

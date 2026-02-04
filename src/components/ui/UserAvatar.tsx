@@ -54,7 +54,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
   // Kiểm tra quyền xem trạng thái bảo mật
   const canShowStatus = () => {
-    if (!showStatus || !onlineStatus) return false;
+    if (!showStatus || !onlineStatus || onlineStatus === UserStatus.BANNED) return false;
     if (userId === currentUser?.id) return true;
     
     const isFriend = currentUser?.friendIds?.includes(userId);

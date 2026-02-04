@@ -51,7 +51,7 @@ export const userService = {
       if (friendIds.length === 0) return [];
 
       const friendsMap = await batchGetUsers(friendIds);
-      return Object.values(friendsMap);
+      return Object.values(friendsMap).filter(u => u.status !== UserStatus.BANNED);
     } catch (error) {
       console.error("Lỗi lấy danh sách bạn bè", error);
       return [];
@@ -68,6 +68,7 @@ export const userService = {
         .map(doc => doc.data() as User)
         .filter(user => 
           user.id !== currentUserId &&
+          user.status !== UserStatus.BANNED &&
           user.email?.toLowerCase() === searchTerm.toLowerCase()
         );
       
@@ -91,8 +92,9 @@ export const userService = {
       const friends = Object.values(friendsMap);
       
       return friends.filter(friend => 
-        friend.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        friend.status !== UserStatus.BANNED &&
+        (friend.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         friend.email?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     } catch (error) {
       console.error("Lỗi tìm kiếm bạn bè", error);

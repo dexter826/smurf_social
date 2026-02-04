@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Message, User, Conversation } from '../types';
+import { Message, User, Conversation, UserStatus } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
 import { useUserCache } from '../store/userCacheStore';
@@ -211,9 +211,29 @@ export const useChat = (): UseChatReturn => {
   const isBlocked = isBlockedByMe || isBlockedByPartner;
   const isFriend = partnerId ? currentUser?.friendIds?.includes(partnerId) ?? false : false;
 
-  // Cho phép nhắn tin người lạ, chỉ chặn khi bị block
+  const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
+
+  useEffect(() => {
+    if (!partnerId) {
+      setPartnerStatus(undefined);
+      return;
+    }
+
+    const unsub = userService.subscribeToUser(partnerId, (u) => {
+      setPartnerStatus(u.status);
+      useUserCache.getState().setUser(u);
+    });
+    return () => unsub();
+  }, [partnerId]);
+
+  // Cho phép nhắn tin người lạ, chỉ chặn khi bị block hoặc banned
   const getBlockedMessage = (): string | undefined => {
     if (!selectedConversation?.isGroup && partnerId) {
+      const currentStatus = partnerStatus || partner?.status || usersMap[partnerId]?.status;
+      
+      if (currentStatus === UserStatus.BANNED) {
+        return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
+      }
       if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
       if (isBlockedByPartner) return 'Bạn không thể gửi tin nhắn cho người này.';
     }
