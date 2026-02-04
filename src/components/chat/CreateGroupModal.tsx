@@ -112,7 +112,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           placeholder="Tìm kiếm bạn bè..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-bg-secondary h-11"
+          className="bg-bg-secondary"
         />
       </div>
 

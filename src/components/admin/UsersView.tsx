@@ -61,8 +61,8 @@ export const UsersView: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               icon={<Search size={18} />}
-              containerClassName="bg-bg-secondary border-border-light h-11"
-              className="bg-transparent"
+              containerClassName=""
+              className="bg-bg-secondary border border-border-light text-sm"
             />
           </div>
           

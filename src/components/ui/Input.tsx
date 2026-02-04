@@ -43,7 +43,7 @@ export const Input: React.FC<InputProps> = ({
             ${icon ? 'pl-11' : 'pl-4'} 
             ${rightElement ? 'pr-11' : 'pr-4'} 
             ${error ? 'border-error ring-4 ring-error/10' : ''} 
-            ${className || 'h-11'}
+            h-11 ${className}
           `}
           {...props}
         />
