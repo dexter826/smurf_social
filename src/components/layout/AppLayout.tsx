@@ -11,6 +11,7 @@ import { usePostStore } from '../../store/postStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationDropdown } from '../notifications/NotificationDropdown';
+import { CONFIRM_MESSAGES } from '../../constants';
 
 export const AppLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -239,9 +240,9 @@ export const AppLayout: React.FC = () => {
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={handleConfirmLogout}
-        title="Đăng xuất"
-        message="Bạn có chắc chắn muốn rời khỏi phiên làm việc này?"
-        confirmLabel="Đăng xuất"
+        title={CONFIRM_MESSAGES.AUTH.LOGOUT.TITLE}
+        message={CONFIRM_MESSAGES.AUTH.LOGOUT.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.AUTH.LOGOUT.CONFIRM}
       />
 
       {user && (

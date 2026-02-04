@@ -73,5 +73,12 @@ export const CONFIRM_MESSAGES = {
       MESSAGE: 'Người dùng sẽ có thể đăng nhập và sử dụng ứng dụng bình thường trở lại.',
       CONFIRM: 'Mở khóa',
     },
+  },
+  AUTH: {
+    LOGOUT: {
+      TITLE: 'Đăng xuất',
+      MESSAGE: 'Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc này?',
+      CONFIRM: 'Đăng xuất',
+    }
   }
 };

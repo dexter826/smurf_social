@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { User, UserStatus } from '../../types';
 import { userService } from '../../services/userService';
-import { Button, UserAvatar, Skeleton, IconButton, Select, Input } from '../ui';
+import { Button, UserAvatar, Skeleton, IconButton, Select, Input, ConfirmDialog } from '../ui';
+import { CONFIRM_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,15 +29,69 @@ export const UsersView: React.FC = () => {
     { value: 'banned', label: 'Đã khóa' },
   ];
 
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    type: 'ban' | 'unban';
+    userId: string;
+    userName: string;
+  }>({
+    isOpen: false,
+    type: 'ban',
+    userId: '',
+    userName: '',
+  });
+
   useEffect(() => {
     setIsLoading(true);
-    const unsubscribe = userService.subscribeToAdminUsers(undefined, (fetchedUsers) => {
-      setUsers(fetchedUsers);
-      setIsLoading(false);
-    });
+    const unsubscribe = userService.subscribeToAdminUsers(
+      undefined, 
+      (fetchedUsers) => {
+        setUsers(fetchedUsers);
+        setIsLoading(false);
+      },
+      (error) => {
+        setIsLoading(false);
+        toast.error("Không thể tải danh sách người dùng. Vui lòng thử lại sau.");
+      }
+    );
 
     return () => unsubscribe();
   }, []);
+
+  const handleBanClick = (userId: string, userName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      type: 'ban',
+      userId,
+      userName,
+    });
+  };
+
+  const handleUnbanClick = (userId: string, userName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      type: 'unban',
+      userId,
+      userName,
+    });
+  };
+
+  const handleConfirmAction = async () => {
+    const { type, userId, userName } = confirmDialog;
+    try {
+      if (type === 'ban') {
+        await userService.banUser(userId);
+        toast.success(`Đã khóa tài khoản ${userName}`);
+      } else {
+        await userService.unbanUser(userId);
+        toast.success(`Đã mở khóa tài khoản ${userName}`);
+      }
+    } catch (error) {
+      toast.error(type === 'ban' ? "Lỗi khi khóa tài khoản" : "Lỗi khi mở khóa tài khoản");
+    } finally {
+      setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+    }
+  };
 
   const filteredUsers = users.filter(user => {
     const matchSearch = !searchTerm || 
@@ -78,14 +133,14 @@ export const UsersView: React.FC = () => {
 
       {/* Users List */}
       <div className="flex-1 overflow-y-auto bg-bg-secondary/30 p-4 md:p-6">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 gap-4">
           {isLoading ? (
             [1, 2, 3, 4].map(i => (
-              <div key={i} className="bg-bg-primary p-4 rounded-2xl border border-border-light flex items-center gap-4">
-                <Skeleton variant="circle" width={48} height={48} />
+              <div key={i} className="bg-bg-primary p-5 rounded-2xl border border-border-light flex items-center gap-4">
+                <Skeleton variant="circle" width={56} height={56} />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-40" />
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-56" />
                 </div>
               </div>
             ))
@@ -98,40 +153,57 @@ export const UsersView: React.FC = () => {
             filteredUsers.map(user => (
               <div 
                 key={user.id}
-                className="bg-bg-primary p-3 rounded-xl border border-border-light shadow-sm hover:border-primary/20 transition-all flex items-center justify-between group"
+                className="bg-bg-primary p-5 rounded-xl border border-border-light shadow-sm hover:border-primary/20 transition-all flex items-center justify-between group"
               >
-                <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex items-center gap-4 overflow-hidden">
                   <UserAvatar 
                     src={user.avatar} 
                     name={user.name} 
-                    size="sm" 
+                    size="md" 
                     className="shrink-0"
                     onClick={() => navigate(`/profile/${user.id}`)}
                   />
                   <div className="overflow-hidden">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-text-primary truncate">{user.name}</span>
-                      {user.role === 'admin' && <Shield size={10} className="text-primary" />}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-text-primary truncate">{user.name}</span>
+                      {user.role === 'admin' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                          Quản trị viên
+                        </span>
+                      )}
+                      {user.status === UserStatus.BANNED && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-error/10 text-error border border-error/20">
+                          ĐÃ KHÓA
+                        </span>
+                      )}
                     </div>
-                    <div className="text-[10px] text-text-tertiary truncate">{user.email}</div>
+                    <div className="text-xs text-text-tertiary truncate">{user.email}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 ml-2">
+                <div className="flex items-center gap-2 ml-4">
                   <IconButton
-                    icon={<Eye size={14} />}
+                    icon={<Eye size={18} />}
                     onClick={() => navigate(`/profile/${user.id}`)}
                     variant="ghost"
-                    size="sm"
+                    title="Xem chi tiết"
                   />
                   {user.status === UserStatus.BANNED ? (
-                    <div className="p-1 text-error" title="Đã khóa">
-                      <Lock size={14} />
-                    </div>
+                    <IconButton
+                      icon={<Unlock size={18} />}
+                      onClick={() => handleUnbanClick(user.id, user.name)}
+                      variant="ghost"
+                      className="text-error hover:bg-error/10"
+                      title="Mở khóa tài khoản"
+                    />
                   ) : (
-                    <div className="p-1 text-success" title="Hoạt động">
-                      <CheckCircle size={14} />
-                    </div>
+                    <IconButton
+                      icon={<Lock size={18} />}
+                      onClick={() => handleBanClick(user.id, user.name)}
+                      variant="ghost"
+                      className="text-text-tertiary hover:text-error hover:bg-error/10"
+                      title="Khóa tài khoản"
+                    />
                   )}
                 </div>
               </div>
@@ -139,6 +211,20 @@ export const UsersView: React.FC = () => {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handleConfirmAction}
+        title={confirmDialog.type === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.TITLE : CONFIRM_MESSAGES.ADMIN.UNBAN_USER.TITLE}
+        message={
+          confirmDialog.type === 'ban' 
+            ? CONFIRM_MESSAGES.ADMIN.BAN_USER.MESSAGE
+            : CONFIRM_MESSAGES.ADMIN.UNBAN_USER.MESSAGE
+        }
+        confirmLabel={confirmDialog.type === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.CONFIRM : CONFIRM_MESSAGES.ADMIN.UNBAN_USER.CONFIRM}
+        variant={confirmDialog.type === 'ban' ? 'danger' : 'primary'}
+      />
     </div>
   );
 };
