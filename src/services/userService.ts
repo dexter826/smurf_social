@@ -4,6 +4,7 @@ import { User, UserStatus } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage, withRetry } from '../utils/imageUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
+import { PAGINATION } from '../constants';
 
 export const userService = {
   // Lấy thông tin người dùng theo ID
@@ -318,7 +319,7 @@ export const userService = {
 
   // API dành riêng cho Admin - Lấy danh sách users có phân trang
   getAdminUsers: async (
-    limitCount: number = 20, 
+    limitCount: number = PAGINATION.ADMIN_USERS, 
     lastVisibleDoc?: DocumentSnapshot
   ): Promise<{ users: User[], lastDoc: DocumentSnapshot | null }> => {
     try {
@@ -371,5 +372,33 @@ export const userService = {
       console.error("Lỗi lấy thống kê admin", error);
       return { total: 0, active: 0, banned: 0 };
     }
+  },
+
+  // Đăng ký nhận danh sách người dùng cho Admin (Realtime)
+  subscribeToAdminUsers: (
+    limitCount: number = PAGINATION.ADMIN_USERS,
+    callback: (users: User[]) => void
+  ): (() => void) => {
+    const usersRef = collection(db, 'users');
+    const q = query(
+      usersRef, 
+      orderBy('createdAt', 'desc'), 
+      limit(limitCount)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const users = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+        } as User;
+      });
+      callback(users);
+    }, (error) => {
+      console.error("Lỗi subscribe admin users", error);
+    });
   }
 };

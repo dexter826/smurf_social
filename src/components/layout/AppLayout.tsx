@@ -68,8 +68,7 @@ export const AppLayout: React.FC = () => {
     { to: '/', Icon: MessageCircle, label: 'Tin nhắn' },
     { to: '/contacts', Icon: Users, label: 'Bạn bè' },
     ...(isAdmin ? [
-      { to: '/admin/reports', Icon: Flag, label: 'Báo cáo' },
-      { to: '/admin/users', Icon: Shield, label: 'Người dùng' }
+      { to: '/admin', Icon: Shield, label: 'Quản trị' }
     ] : []),
   ];
 

@@ -5,6 +5,7 @@ import { reportService } from '../services/reportService';
 import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { toast } from '../store/toastStore';
+import { PAGINATION } from '../constants';
 
 interface Stats {
   pending: number;
@@ -70,7 +71,9 @@ export function useAdminReports() {
           ...filtered.map(r => r.targetOwnerId)
         ])];
         fetchUsers(userIds);
-      }
+      },
+      undefined,
+      PAGINATION.ADMIN_REPORTS
     );
 
     return () => unsubscribe();

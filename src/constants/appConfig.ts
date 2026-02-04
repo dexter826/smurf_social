@@ -8,6 +8,8 @@ export const PAGINATION = {
   MESSAGES: 50,
   SEARCH_RESULTS: 20,
   NOTIFICATIONS: 15,
+  ADMIN_REPORTS: 50,
+  ADMIN_USERS: 50,
 } as const;
 
 // Giới hạn Firebase

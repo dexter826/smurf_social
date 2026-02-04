@@ -12,16 +12,20 @@ import ContactsPage from './pages/ContactsPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
-import AdminReportsPage from './pages/AdminReportsPage';
-import AdminUsersPage from './pages/AdminUsersPage';
-import ReportDetailPage from './pages/ReportDetailPage';
+// Admins pages are now lazy loaded below
 import BannedPage from './pages/BannedPage';
 import { MobileMenuPage } from './pages/MobileMenuPage';
 import { userService } from './services/userService';
 import { UserStatus } from './types';
+import { AdminLayout } from './components/layout/AdminLayout';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Lazy load admin pages
+const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
+const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ children, requireAdmin }) => {
   const { user, isLoading } = useAuthStore();
+// ... (giữ nguyên logic bên dưới)
 
   if (isLoading) {
     return <ScreenLoader />;
@@ -33,6 +37,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (user.status === UserStatus.BANNED) {
     return <Navigate to="/banned" replace />;
+  }
+
+  if (requireAdmin && user.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -68,36 +76,47 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<ChatPage />} />
-          <Route path="feed" element={<FeedPage />} />
-          <Route path="contacts" element={<ContactsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="profile/:userId" element={<ProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="admin/reports" element={<AdminReportsPage />} />
-          <Route path="admin/reports/:id" element={<ReportDetailPage />} />
-          <Route path="admin/users" element={<AdminUsersPage />} />
-        </Route>
+      <React.Suspense fallback={<ScreenLoader />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Main App Routes */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<ChatPage />} />
+            <Route path="feed" element={<FeedPage />} />
+            <Route path="contacts" element={<ContactsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="profile/:userId" element={<ProfilePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+          </Route>
 
-        <Route path="/menu" element={
-          <ProtectedRoute>
-            <MobileMenuPage />
-          </ProtectedRoute>
-        } />
+          {/* Admin Routes with Sidebar in Layout */}
+          <Route path="/admin" element={
+            <ProtectedRoute requireAdmin>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/admin/reports" replace />} />
+            <Route path="reports" element={<AdminReportsPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+          </Route>
 
-        <Route path="/banned" element={<BannedPage />} />
+          <Route path="/menu" element={
+            <ProtectedRoute>
+              <MobileMenuPage />
+            </ProtectedRoute>
+          } />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="/banned" element={<BannedPage />} />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </React.Suspense>
       <ToastContainer />
       <ReportModal />
     </HashRouter>
