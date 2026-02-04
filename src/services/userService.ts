@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { User, UserStatus } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
@@ -313,6 +313,63 @@ export const userService = {
     } catch (error) {
       console.error("Lỗi mở khóa tài khoản user", error);
       throw error;
+    }
+  },
+
+  // API dành riêng cho Admin - Lấy danh sách users có phân trang
+  getAdminUsers: async (
+    limitCount: number = 20, 
+    lastVisibleDoc?: DocumentSnapshot
+  ): Promise<{ users: User[], lastDoc: DocumentSnapshot | null }> => {
+    try {
+      const usersRef = collection(db, 'users');
+      let q = query(
+        usersRef, 
+        orderBy('createdAt', 'desc'), 
+        limit(limitCount)
+      );
+
+      if (lastVisibleDoc) {
+        q = query(q, startAfter(lastVisibleDoc));
+      }
+
+      const snapshot = await getDocs(q);
+      const users = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+        } as User;
+      });
+
+      const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
+      return { users, lastDoc };
+    } catch (error) {
+      console.error("Lỗi lấy danh sách admin users", error);
+      throw error;
+    }
+  },
+
+  // Lấy thống kê tổng hợp cho Admin dashboard
+  getAdminStats: async (): Promise<{ total: number, active: number, banned: number }> => {
+    try {
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      
+      const users = snapshot.docs.map(doc => doc.data() as User);
+      const total = users.length;
+      const banned = users.filter(u => u.status === UserStatus.BANNED).length;
+      
+      return {
+        total,
+        banned,
+        active: total - banned
+      };
+    } catch (error) {
+      console.error("Lỗi lấy thống kê admin", error);
+      return { total: 0, active: 0, banned: 0 };
     }
   }
 };
