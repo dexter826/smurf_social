@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
@@ -20,19 +20,23 @@ interface UseUserPostsReturn {
 
 export const useUserPosts = (userId: string, currentUser: User): UseUserPostsReturn => {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  
+  const lastDocRef = useRef<DocumentSnapshot | null>(null);
+  const hasMoreRef = useRef(true);
   
   const { setSelectedPost, reactToPost: storeReactToPost } = usePostStore();
   const { users, fetchUsers } = useUserCache();
 
   const loadPosts = useCallback(async (isFirstPage: boolean = false) => {
-    if (!isFirstPage && !hasMore) return;
+    if (!isFirstPage && !hasMoreRef.current) return;
     
     if (isFirstPage) {
       setLoading(true);
+      lastDocRef.current = null;
+      hasMoreRef.current = true;
     } else {
       setLoadingMore(true);
     }
@@ -43,12 +47,13 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
         currentUser.id,
         currentUser.friendIds || [],
         10, 
-        isFirstPage ? undefined : (lastDoc || undefined)
+        isFirstPage ? undefined : (lastDocRef.current || undefined)
       );
       
       const newPosts = result.posts;
-      setLastDoc(result.lastDoc);
-      setHasMore(result.posts.length === 10);
+      lastDocRef.current = result.lastDoc;
+      hasMoreRef.current = result.posts.length === 10;
+      setHasMore(hasMoreRef.current);
 
       if (isFirstPage) {
         setPosts(newPosts);
@@ -62,10 +67,10 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     } catch (error) {
       console.error("Lỗi load posts", error);
     } finally {
-      setLoading(false);
+      if (isFirstPage) setLoading(false);
       setLoadingMore(false);
     }
-  }, [userId, currentUser.id, currentUser.friendIds, hasMore, lastDoc, fetchUsers]);
+  }, [userId, currentUser.id, currentUser.friendIds, fetchUsers]);
 
   useEffect(() => {
     loadPosts(true);
@@ -96,7 +101,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     );
 
     return () => unsubscribe();
-  }, [userId, currentUser.id, currentUser.friendIds, loadPosts, fetchUsers]);
+  }, [userId, currentUser.id, currentUser.friendIds, loadPosts]);
 
   const handleLoadMore = useCallback(() => {
     if (!loading && !loadingMore && hasMore) {
