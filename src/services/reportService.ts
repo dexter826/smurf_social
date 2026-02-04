@@ -18,7 +18,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Report, ReportType, ReportReason, ReportStatus, NotificationType, Post, Comment } from '../types';
-import { REPORT_CONFIG } from '../constants';
+import { REPORT_CONFIG, PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 import { postService } from './postService';
 import { commentService } from './commentService';
@@ -90,7 +90,7 @@ export const reportService = {
   },
 
   // Lấy danh sách báo cáo chờ xử lý (Admin)
-  getPendingReports: async (limitCount: number = 50): Promise<Report[]> => {
+  getPendingReports: async (limitCount: number = PAGINATION.ADMIN_REPORTS): Promise<Report[]> => {
     try {
       const q = query(
         collection(db, 'reports'),
@@ -111,7 +111,7 @@ export const reportService = {
   },
 
   // Lấy tất cả báo cáo (Admin)
-  getAllReports: async (limitCount: number = 100): Promise<Report[]> => {
+  getAllReports: async (limitCount: number = PAGINATION.ADMIN_REPORTS): Promise<Report[]> => {
     try {
       const q = query(
         collection(db, 'reports'),
@@ -135,7 +135,7 @@ export const reportService = {
   subscribeToReports: (
     callback: (reports: Report[]) => void,
     statusFilter?: ReportStatus,
-    limitCount: number = 100
+    limitCount: number = PAGINATION.ADMIN_REPORTS
   ) => {
     const constraints: QueryConstraint[] = [
       orderBy('createdAt', 'desc'),
