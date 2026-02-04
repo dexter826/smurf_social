@@ -163,7 +163,7 @@ const ContactsPage: React.FC = () => {
                 type="text"
                 placeholder="Tìm kiếm..."
                 icon={<Search size={18} />}
-                className="bg-bg-secondary h-10"
+                className="bg-bg-secondary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 containerClassName="flex-1"

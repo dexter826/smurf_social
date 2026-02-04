@@ -52,7 +52,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
             placeholder="Nhập địa chỉ email chính xác..."
             icon={<Search size={18} />}
             containerClassName="flex-1"
-            className="h-10"
+            className=""
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);

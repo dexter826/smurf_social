@@ -136,7 +136,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               value={searchTerm}
               onChange={handleSearchChange}
               onFocus={() => onSearchFocus?.(true)}
-              className="bg-bg-secondary text-sm pr-10 h-10"
+              className="bg-bg-secondary text-sm pr-10"
               containerClassName="flex-1"
             />
             {searchTerm && (

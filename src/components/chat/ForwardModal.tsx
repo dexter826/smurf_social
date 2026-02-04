@@ -73,7 +73,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
             placeholder="Tìm kiếm người dùng hoặc nhóm..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-11 bg-bg-secondary"
+            className="pl-10 bg-bg-secondary"
           />
         </div>
 

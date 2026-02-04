@@ -130,7 +130,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
             placeholder="Nhập tên nhóm..."
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
-            className="bg-bg-secondary h-11"
+            className="bg-bg-secondary"
           />
         </div>
 

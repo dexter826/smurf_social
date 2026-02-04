@@ -263,7 +263,7 @@ const LoginPage: React.FC = () => {
                     placeholder="Nhập mật khẩu"
                     {...(activeTab === 'login' ? loginForm.register('password') : registerForm.register('password'))}
                     error={activeTab === 'login' ? loginForm.formState.errors.password?.message : registerForm.formState.errors.password?.message}
-                    className="rounded-xl h-12"
+                    className="rounded-xl"
                     rightElement={
                       <button
                         type="button"
