@@ -9,7 +9,9 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  Filter
+  Filter,
+  Plus,
+  Loader2
 } from 'lucide-react';
 import { User, UserStatus } from '../types';
 import { userService } from '../services/userService';
@@ -18,8 +20,7 @@ import { Button, UserAvatar, ConfirmDialog, Skeleton, IconButton } from '../comp
 import { CONFIRM_MESSAGES } from '../constants';
 import { formatRelativeTime, formatDateTime } from '../utils/dateUtils';
 import { toast } from '../store/toastStore';
-import { collection, getDocs, query, orderBy, limit, startAfter, where, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { DocumentSnapshot } from 'firebase/firestore';
 
 type StatusFilter = 'all' | 'active' | 'banned';
 
@@ -29,57 +30,53 @@ const AdminUsersPage: React.FC = () => {
 
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [actionType, setActionType] = useState<'ban' | 'unban' | null>(null);
   const [stats, setStats] = useState({ total: 0, active: 0, banned: 0 });
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(true);
 
   const isAdmin = currentUser?.role === 'admin';
 
-  const fetchUsers = useCallback(async () => {
+  const fetchStats = useCallback(async () => {
+    const data = await userService.getAdminStats();
+    setStats(data);
+  }, []);
+
+  const fetchUsers = useCallback(async (isLoadMore = false) => {
     if (!isAdmin) return;
     
-    setIsLoading(true);
+    if (isLoadMore) setIsLoadingMore(true);
+    else setIsLoading(true);
+
     try {
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, limit(500));
-      const snapshot = await getDocs(q);
+      const limitCount = 20;
+      const { users: newUsers, lastDoc: newLastDoc } = await userService.getAdminUsers(
+        limitCount, 
+        isLoadMore ? lastDoc || undefined : undefined
+      );
       
-      const usersData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
-          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
-        } as User;
-      });
-
-      // Sắp xếp client-side theo thời gian tạo mới nhất
-      usersData.sort((a, b) => {
-        const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
-        const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
-        return dateB - dateA;
-      });
-
-      setUsers(usersData);
+      if (isLoadMore) {
+        setUsers(prev => [...prev, ...newUsers]);
+      } else {
+        setUsers(newUsers);
+        fetchStats(); // Chỉ fetch stats ở lần load đầu hoặc refresh
+      }
       
-      // Tính stats
-      const bannedCount = usersData.filter(u => u.status === UserStatus.BANNED).length;
-      setStats({
-        total: usersData.length,
-        active: usersData.length - bannedCount,
-        banned: bannedCount
-      });
+      setLastDoc(newLastDoc);
+      setHasMore(newUsers.length === limitCount);
     } catch (error) {
       console.error('Lỗi tải danh sách users:', error);
       toast.error('Không thể tải danh sách người dùng');
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, lastDoc, fetchStats]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -87,7 +84,7 @@ const AdminUsersPage: React.FC = () => {
       return;
     }
     fetchUsers();
-  }, [isAdmin, navigate, fetchUsers]);
+  }, [isAdmin]); // Chỉ chạy 1 lần khi mount hoặc khi role thay đổi
 
   const handleAction = async () => {
     if (!selectedUser || !actionType) return;
@@ -101,7 +98,13 @@ const AdminUsersPage: React.FC = () => {
         await userService.unbanUser(selectedUser.id);
         toast.success(`Đã mở khóa tài khoản ${selectedUser.name}`);
       }
-      await fetchUsers();
+      // Cập nhật state local thay vì refetch toàn bộ để tối ưu
+      setUsers(prev => prev.map(u => 
+        u.id === selectedUser.id 
+          ? { ...u, status: actionType === 'ban' ? UserStatus.BANNED : UserStatus.OFFLINE } 
+          : u
+      ));
+      fetchStats();
     } catch (error) {
       toast.error('Lỗi thực hiện thao tác');
     } finally {
@@ -178,7 +181,7 @@ const AdminUsersPage: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 py-8">
-          {isLoading ? (
+          {isLoading && !users.length ? (
             <div className="space-y-8">
               {/* Stat Cards Skeleton */}
               <div className="grid grid-cols-3 gap-3 md:gap-4">
@@ -238,7 +241,7 @@ const AdminUsersPage: React.FC = () => {
                   <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                   <input
                     type="text"
-                    placeholder="Tìm kiếm theo tên hoặc email..."
+                    placeholder="Tìm kiếm theo tên hoặc email trong danh sách này..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-bg-primary border border-border-light rounded-xl text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -258,7 +261,7 @@ const AdminUsersPage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 pb-10">
                   {filteredUsers.map(user => {
                     const isBanned = user.status === UserStatus.BANNED;
                     const isCurrentUser = user.id === currentUser?.id;
@@ -342,6 +345,21 @@ const AdminUsersPage: React.FC = () => {
                       </div>
                     );
                   })}
+
+                  {hasMore && (
+                    <div className="pt-6 flex justify-center">
+                      <Button
+                        variant="ghost"
+                        onClick={() => fetchUsers(true)}
+                        isLoading={isLoadingMore}
+                        disabled={isLoadingMore}
+                        className="text-primary font-bold text-sm hover:bg-primary/5 px-8"
+                        icon={!isLoadingMore && <Plus size={16} />}
+                      >
+                        {isLoadingMore ? 'Đang tải...' : 'Tải thêm người dùng'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </>

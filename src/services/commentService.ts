@@ -341,19 +341,24 @@ export const commentService = {
 
     let isInitialLoad = true;
 
-    return onSnapshot(rootQuery, (snapshot) => {
+    return onSnapshot(rootQuery, async (snapshot) => {
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const usersMap = await batchGetUsers(authorIds);
+
       if (isInitialLoad) {
         const comments = snapshot.docs
           .map(convertDocToComment)
-          .filter(c => !blockedUserIds.includes(c.userId));
+          .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
         callback('initial', comments);
         isInitialLoad = false;
         return;
       }
 
-      snapshot.docChanges().forEach(change => {
+      snapshot.docChanges().forEach(async (change) => {
         const comment = convertDocToComment(change.doc);
-        if (blockedUserIds.includes(comment.userId)) return;
+        const user = await batchGetUsers([comment.userId]);
+
+        if (blockedUserIds.includes(comment.userId) || user[comment.userId]?.status === UserStatus.BANNED) return;
 
         if (change.type === 'added') {
           callback('add', [comment]);
@@ -388,11 +393,14 @@ export const commentService = {
 
     let isInitialLoad = true;
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, async (snapshot) => {
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const usersMap = await batchGetUsers(authorIds);
+
       if (isInitialLoad) {
         const replies = snapshot.docs
           .map(convertDocToComment)
-          .filter(c => !blockedUserIds.includes(c.userId));
+          .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
         callback('initial', replies);
         isInitialLoad = false;
         return;
