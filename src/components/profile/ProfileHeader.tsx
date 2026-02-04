@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
+import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag, Ban, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
 import { FriendStatus } from '../../hooks/useProfile';
@@ -231,7 +231,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
             {/* Info */}
             <div className="flex-1 pb-1">
-              <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
+              <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
+              </div>
               
               {/* Stats */}
               <div className="flex items-center justify-center md:justify-start flex-wrap gap-2 md:gap-4 mt-3 text-sm text-text-secondary">
@@ -268,6 +270,24 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     Cài đặt
                   </Button>
                 </>
+              ) : user.status === UserStatus.BANNED ? (
+                <Dropdown
+                  trigger={
+                    <Button
+                      variant="secondary"
+                      icon={<MoreHorizontal size={18} />}
+                      className="border-border-medium text-text-primary hover:bg-bg-hover"
+                    />
+                  }
+                  align="right"
+                >
+                  <DropdownItem
+                    icon={<Flag size={16} />}
+                    label="Báo cáo"
+                    variant="danger"
+                    onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
+                  />
+                </Dropdown>
               ) : (
                 <>
                   <Button 
@@ -347,7 +367,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
                     />
                   </Dropdown>
-                </>
+                </> 
               )}
             </div>
           </div>

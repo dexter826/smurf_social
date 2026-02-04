@@ -1,7 +1,7 @@
 import React from 'react';
-import { Search, X, Clock } from 'lucide-react';
+import { Search, X, Clock, Lock } from 'lucide-react';
 import { Button, Skeleton } from '../ui';
-import { Conversation, User } from '../../types';
+import { Conversation, User, UserStatus } from '../../types';
 
 interface SearchResultsProps {
   searchTerm: string;
@@ -67,7 +67,15 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
           </Button>
         </div>
         <div className="space-y-1">
-          {history.map((item) => {
+          {history.filter(item => {
+            if ('status' in item) {
+              return item.status !== UserStatus.BANNED;
+            }
+            if ('participants' in item) {
+              return !item.participants.some(p => p.status === UserStatus.BANNED);
+            }
+            return true;
+          }).map((item) => {
             const isConversation = 'participantIds' in item;
             const displayName = isConversation 
               ? (item.isGroup ? item.groupName : item.participants.find(p => p.id !== currentUserId)?.name)
@@ -138,7 +146,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
               className="w-10 h-10 rounded-full object-cover ring-1 ring-border-light"
             />
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-text-primary truncate">
+              <div className="font-medium text-text-primary truncate flex items-center gap-1.5">
                 {user.name}
               </div>
             </div>

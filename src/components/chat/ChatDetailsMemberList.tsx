@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Conversation } from '../../types';
+import { User, Conversation, UserStatus } from '../../types';
 import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button, IconButton } from '../ui';
-import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMinus, LogOut } from 'lucide-react';
+import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMinus, LogOut, Lock } from 'lucide-react';
 
 interface ChatDetailsMemberListProps {
   conversation: Conversation;
@@ -29,7 +29,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
 
   if (!conversation.isGroup) return null;
 
-  const members = conversation.participants;
+  const members = conversation.participants.filter(m => m.status !== UserStatus.BANNED);
   const creatorId = conversation.creatorId;
   const adminIds = conversation.adminIds || [];
   const isCurrentUserAdmin = adminIds.includes(currentUserId);

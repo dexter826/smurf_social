@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { formatChatTime } from '../../utils/dateUtils';
-import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail } from 'lucide-react';
+import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail, Lock } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton, Avatar } from '../ui';
 
@@ -122,6 +122,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatName}
             </h3>
+            {!conversation.isGroup && partner?.status === UserStatus.BANNED && (
+              <span className="text-[10px] text-error bg-error/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0">
+                <Lock size={10} />
+              </span>
+            )}
             {showMessageRequestBadge && isMessageRequest && (
               <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200 flex-shrink-0">
                 Tin nhắn chờ

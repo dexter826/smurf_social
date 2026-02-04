@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { User } from '../types';
+import { User, UserStatus } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
 import { chatService } from '../services/chatService';
@@ -72,6 +72,7 @@ export const useProfile = (): UseProfileReturn => {
   const profileUserId = userId || currentUser?.id;
   const isOwnProfile = currentUser?.id === profileUserId;
   const isBlockedByMe = currentUser?.blockedUserIds?.includes(profileUserId || '') || false;
+  const isBannedProfile = profile?.status === UserStatus.BANNED;
   const canViewContent = !isBlockedByMe; 
 
   const [friendStatus, setFriendStatus] = useState<FriendStatus>(FriendStatus.NOT_FRIEND);
@@ -154,6 +155,12 @@ export const useProfile = (): UseProfileReturn => {
 
   const handleMessage = useCallback(async () => {
     if (!currentUser || !profile) return;
+    
+    if (profile.status === UserStatus.BANNED) {
+      toast.error('Không thể nhắn tin cho người dùng đã bị khóa');
+      return;
+    }
+    
     try {
       const conversationId = await chatService.getOrCreateConversation(currentUser.id, profile.id);
       navigate(`/?conv=${conversationId}`);
@@ -164,6 +171,11 @@ export const useProfile = (): UseProfileReturn => {
 
   const handleFriendAction = useCallback(async (): Promise<{ needConfirm: boolean }> => {
     if (!currentUser || !profile || isOwnProfile) return { needConfirm: false };
+    
+    if (profile.status === UserStatus.BANNED) {
+      toast.error('Không thể tương tác với người dùng đã bị khóa');
+      return { needConfirm: false };
+    }
     
     try {
       if (friendStatus === FriendStatus.FRIEND) {

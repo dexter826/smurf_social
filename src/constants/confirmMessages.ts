@@ -68,5 +68,10 @@ export const CONFIRM_MESSAGES = {
       MESSAGE: 'Tài khoản người dùng sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị. Hành động này rất nghiêm trọng.',
       CONFIRM: 'Khóa ngay',
     },
+    UNBAN_USER: {
+      TITLE: 'Mở khóa tài khoản',
+      MESSAGE: 'Người dùng sẽ có thể đăng nhập và sử dụng ứng dụng bình thường trở lại.',
+      CONFIRM: 'Mở khóa',
+    },
   }
 };

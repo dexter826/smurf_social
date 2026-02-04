@@ -22,8 +22,9 @@ import {
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
-import { Post, Comment, NotificationType, ReportStatus } from '../types';
-import { chunkArray } from '../utils/batchUtils';
+import { Post, Comment, NotificationType, ReportStatus, UserStatus } from '../types';
+import { chunkArray, batchGetUsers } from '../utils/batchUtils';
+import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, REACTIONS } from '../constants';
 import { notificationService } from './notificationService';
 import { compressImage, isImageFile, withRetry } from '../utils/imageUtils';
@@ -92,11 +93,17 @@ export const postService = {
         friendDocs = friendResults.flatMap(r => r.docs);
       }
 
-      // Merge, sort và giới hạn
+      // Merge và sort trước khi lọc
       const allPosts = [...ownerPosts, ...friendPosts];
       allPosts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+      // Lấy thông tin user để lọc banned
+      const authorIds = [...new Set(allPosts.map(p => p.userId))];
+      const usersMap = await batchGetUsers(authorIds);
       
-      const finalPosts = allPosts.slice(0, limitCount);
+      const filteredPosts = allPosts.filter(p => usersMap[p.userId]?.status !== UserStatus.BANNED);
+      
+      const finalPosts = filteredPosts.slice(0, limitCount);
       const allDocs = [...ownerSnapshot.docs, ...friendDocs];
       
       const lastPost = finalPosts[finalPosts.length - 1];
@@ -241,6 +248,11 @@ export const postService = {
         q = query(q, startAfter(lastDoc));
       }
 
+      const user = await userService.getUserById(userId);
+      if (user?.status === UserStatus.BANNED) {
+        return { posts: [], lastDoc: null };
+      }
+
       const querySnapshot = await getDocs(q);
       const posts = querySnapshot.docs.map(doc => ({
         ...doc.data(),
@@ -280,18 +292,34 @@ export const postService = {
       limit(limitCount)
     );
 
-    return onSnapshot(q, (snapshot) => {
-      const posts = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
-        editedAt: doc.data().editedAt?.toDate(),
-      })) as Post[];
+    let unsubscribe: (() => void) | null = null;
 
-      callback(posts);
-    }, (error) => {
-      console.error("Lỗi subscribe bài viết của user", error);
-    });
+    const setup = async () => {
+      const user = await userService.getUserById(userId);
+      if (user?.status === UserStatus.BANNED) {
+        callback([]);
+        return;
+      }
+
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const posts = snapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          timestamp: doc.data().timestamp?.toDate() || new Date(),
+          editedAt: doc.data().editedAt?.toDate(),
+        })) as Post[];
+
+        callback(posts);
+      }, (error) => {
+        console.error("Lỗi subscribe bài viết của user", error);
+      });
+    };
+
+    setup();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   },
 
   createPost: async (postData: Omit<Post, 'id' | 'timestamp' | 'commentCount'>): Promise<string> => {

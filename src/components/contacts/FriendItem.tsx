@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, MoreVertical, UserMinus, User as UserIcon } from 'lucide-react';
+import { MessageCircle, MoreVertical, UserMinus, User as UserIcon, Lock } from 'lucide-react';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Dropdown, DropdownItem, Skeleton } from '../ui';
 import { User, UserStatus } from '../../types';
 import { useNavigate } from 'react-router-dom';
@@ -39,9 +39,17 @@ export const FriendItem: React.FC<FriendItemProps> = ({
           initialStatus={friend.status} 
         />
         <div>
-          <h3 className="font-semibold text-text-primary">
-            {friend.name}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-text-primary">
+              {friend.name}
+            </h3>
+            {friend.status === UserStatus.BANNED && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-error/10 text-error">
+                <Lock size={10} />
+                Đã khóa
+              </span>
+            )}
+          </div>
           <UserStatusText userId={friend.id} className="text-xs text-text-tertiary" initialStatus={friend.status} />
         </div>
       </div>

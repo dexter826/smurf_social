@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { Phone, Video, Info, ChevronLeft } from 'lucide-react';
-import { Message, User, Conversation } from '../../types';
+import { Phone, Video, Info, ChevronLeft, Lock } from 'lucide-react';
+import { Message, User, Conversation, UserStatus } from '../../types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button, Spinner } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageBubble } from './MessageBubble';
@@ -235,7 +235,15 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           </div>
           
           <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <h2 className="text-sm font-bold text-text-primary truncate leading-tight">{chatName}</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-sm font-bold text-text-primary truncate leading-tight">{chatName}</h2>
+              {!conversation.isGroup && usersMap[partner?.id!]?.status === UserStatus.BANNED && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-error/10 text-error">
+                  <Lock size={10} />
+                  Đã khóa
+                </span>
+              )}
+            </div>
             {!conversation.isGroup && (
               <UserStatusText userId={partner?.id!} className="text-xs text-text-tertiary truncate leading-tight" initialStatus={partner?.status} />
             )}

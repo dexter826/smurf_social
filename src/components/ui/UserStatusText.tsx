@@ -40,6 +40,10 @@ export const UserStatusText: React.FC<UserStatusTextProps> = ({
     return () => unsubscribe();
   }, [userId]);
 
+  if (user?.status === UserStatus.BANNED) {
+    return null;
+  }
+
   const getStatusText = () => {
     if (user?.status === UserStatus.ONLINE) return onlineText;
     
