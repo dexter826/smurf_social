@@ -326,7 +326,6 @@ export const userService = {
       const usersRef = collection(db, 'users');
       let q = query(
         usersRef, 
-        orderBy('createdAt', 'desc'), 
         limit(limitCount)
       );
 
@@ -377,12 +376,12 @@ export const userService = {
   // Đăng ký nhận danh sách người dùng cho Admin (Realtime)
   subscribeToAdminUsers: (
     limitCount: number = PAGINATION.ADMIN_USERS,
-    callback: (users: User[]) => void
+    callback: (users: User[]) => void,
+    onError?: (error: any) => void
   ): (() => void) => {
     const usersRef = collection(db, 'users');
     const q = query(
       usersRef, 
-      orderBy('createdAt', 'desc'), 
       limit(limitCount)
     );
 
@@ -398,7 +397,7 @@ export const userService = {
       });
       callback(users);
     }, (error) => {
-      console.error("Lỗi subscribe admin users", error);
+      if (onError) onError(error);
     });
   }
 };
