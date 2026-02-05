@@ -59,11 +59,16 @@
   --badge-bg: #ef4444;
   --badge-text: #ffffff;
 
-  /* === Shadows === */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.12);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+  /* === Z-Index System === */
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-modal: 1200;
+  --z-overlay: 1300;
+  --z-dialog: 1400;
+  --z-toast: 1500;
 }
 
 .dark {
@@ -90,7 +95,7 @@
   --bg-chat: #0b0e14;
   --bg-message-sent: #0068ff;
   --bg-message-received: #1e242d;
-  --bg-overlay: rgba(0, 0, 0, 0.85);
+  --bg-overlay: rgba(15, 23, 42, 0.7);
 
   /* === Text Colors === */
   --text-primary: #f8fafc;

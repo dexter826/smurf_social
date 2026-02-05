@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
 interface SelectOption {
@@ -92,11 +93,19 @@ export const Select: React.FC<SelectProps> = ({
           />
         </div>
 
-        {isOpen && (
-          <div className={`
-            absolute z-50 w-full bg-bg-primary border border-border-light rounded-xl shadow-lg py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200
-            ${openUp ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}
-          `}>
+        {isOpen && createPortal(
+          <div 
+            style={{
+              top: openUp ? 'auto' : `calc(${containerRef.current?.getBoundingClientRect().bottom ?? 0}px + 6px)`,
+              bottom: openUp ? `calc(${window.innerHeight - (containerRef.current?.getBoundingClientRect().top ?? 0)}px + 6px)` : 'auto',
+              left: `${containerRef.current?.getBoundingClientRect().left ?? 0}px`,
+              width: `${containerRef.current?.getBoundingClientRect().width ?? 0}px`,
+              position: 'fixed'
+            }}
+            className={`
+              z-[var(--z-dropdown)] bg-bg-primary border border-border-light rounded-xl shadow-dropdown py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200
+            `}
+          >
             <div className="max-h-60 overflow-y-auto custom-scrollbar">
               {options.map((option) => (
                 <button
@@ -116,7 +125,8 @@ export const Select: React.FC<SelectProps> = ({
                 </button>
               ))}
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
       

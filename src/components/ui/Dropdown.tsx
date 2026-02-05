@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 interface DropdownItemProps {
   icon?: React.ReactNode;
@@ -55,6 +56,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onOpenChange,
   disableTriggerScale = false
 }) => {
+  const isMobile = useIsMobile();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const [isReverse, setIsReverse] = useState(false);
@@ -145,13 +147,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 position: 'fixed'
               }}
               className={`
-                z-[101] 
+                z-[var(--z-dropdown)] 
                 fixed bottom-0 left-0 right-0 
-                py-1.5 pb-max(20px, env(safe-area-inset-bottom)) bg-bg-primary border-t border-border-light rounded-2xl shadow-dropdown 
+                py-1.5 pb-max(20px, env(safe-area-inset-bottom)) bg-bg-primary border-t border-border-light rounded-2xl 
                 max-h-[70vh] overflow-y-auto
                 md:bottom-auto md:left-auto md:right-auto md:max-h-none
                 md:min-w-max md:w-auto md:max-w-[calc(100vw-32px)] md:border md:rounded-xl 
-                shadow-2xl
+                shadow-dropdown animate-in fade-in zoom-in-95 duration-200
               `}
               onClick={() => handleOpenChange(false)}
             >

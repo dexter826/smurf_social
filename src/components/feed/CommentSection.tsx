@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Flag, X, Lock } from 'lucide-react';
+import { ChevronDown, ChevronRight, Flag, X, Lock, PenTool } from 'lucide-react';
 import { UserAvatar, Button, ConfirmDialog, UploadProgress } from '../ui';
 import { CONFIRM_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
@@ -213,13 +213,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     return formatRelativeTime(date);
   };
 
-  const renderCommentContent = (comment: Comment) => {
-    return (
-      <div className="text-sm text-text-primary mt-1 break-words leading-relaxed flex flex-wrap items-center gap-1">
-        <span>{comment.content}</span>
-      </div>
-    );
-  };
 
   const handleUploadMedia = async (file: File) => {
     setUploadProgress(0);
@@ -235,7 +228,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  const renderCommentItem = (comment: Comment, isReply = false, rootAuthorId?: string) => {
+  interface CommentItemProps {
+    comment: Comment;
+    isReply?: boolean;
+    rootAuthorId?: string;
+  }
+
+  const CommentItem: React.FC<CommentItemProps> = ({ 
+    comment, 
+    isReply = false, 
+    rootAuthorId 
+  }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
     const author = users[comment.userId];
     const commentReplies = replies[postId]?.[comment.id] || [];
     const hasMoreR = hasMoreReply[postId]?.[comment.id];
@@ -250,9 +254,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       }
     };
 
+    const threshold = 200;
+    const shouldTruncate = comment.content.length > threshold;
+    const displayContent = !shouldTruncate || isExpanded 
+      ? comment.content 
+      : comment.content.slice(0, threshold) + '...';
+
     return (
       <div 
-        key={comment.id} 
         ref={el => commentRefs.current[comment.id] = el}
         className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}
       >
@@ -263,20 +272,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               rounded-2xl px-4 py-2 inline-block max-w-full shadow-sm transition-all group
               ${variant === 'cinema' ? 'bg-bg-secondary py-2.5' : 'bg-bg-secondary'}
             `}>
-              <div className="flex items-center gap-1 mb-0.5 flex-nowrap overflow-hidden">
+              <div className="flex items-center gap-1.5 mb-1.5 flex-nowrap overflow-hidden">
                 <h4
-                  className="font-bold text-[13px] text-text-primary whitespace-nowrap cursor-pointer hover:underline"
+                  className="font-bold text-[13px] text-text-primary whitespace-nowrap cursor-pointer hover:underline leading-none"
                   onClick={handleProfileClick}
                 >
                   {author?.name || 'Người dùng'}
                 </h4>
-                {author?.status === UserStatus.BANNED && (
-                  <span className="bg-error/10 text-error text-[10px] px-1.5 py-0.5 rounded-md font-bold ml-1 flex-shrink-0 flex items-center gap-0.5">
-                    <Lock size={10} /> Đã khóa
-                  </span>
-                )}
                 {comment.userId === postOwnerId && (
-                  <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold ml-1 flex-shrink-0">
+                  <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 leading-none mt-[1px] flex items-center gap-0.5">
+                    <PenTool size={10} className="stroke-[2.5px]" />
                     Tác giả
                   </span>
                 )}
@@ -310,7 +315,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                  </div>
               ) : (
                 <>
-                  {renderCommentContent(comment)}
+                  <div className="text-sm text-text-primary mt-1 break-words break-all leading-relaxed">
+                    {displayContent}
+                    {shouldTruncate && (
+                      <span 
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-[11px] tracking-wider"
+                      >
+                        {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                      </span>
+                    )}
+                  </div>
                   {comment.image && (
                     <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
                       <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />
@@ -371,7 +386,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     return (
                       <>
                         <div className="space-y-1">
-                          {filteredReplies.map(reply => renderCommentItem(reply, true, comment.userId))}
+                          {filteredReplies.map(reply => (
+                            <CommentItem 
+                              key={reply.id} 
+                              comment={reply} 
+                              isReply 
+                              rootAuthorId={comment.userId} 
+                            />
+                          ))}
                         </div>
                         {hasMoreR && (
                           <button 
@@ -425,7 +447,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
             return (
               <div className="flex flex-col">
-                {filteredRootComments.map(comment => renderCommentItem(comment, false, comment.userId))}
+                {filteredRootComments.map(comment => (
+                  <CommentItem 
+                    key={comment.id} 
+                    comment={comment} 
+                    isReply={false} 
+                    rootAuthorId={comment.userId} 
+                  />
+                ))}
                 {currentHasMoreRoot && (
                   <div className="px-6 py-4">
                     <Button 
@@ -447,7 +476,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
       <div className={`
         pb-[calc(16px+env(safe-area-inset-bottom))] sticky bottom-0 bg-bg-primary z-20
-        ${variant === 'cinema' ? 'p-4 md:p-5 pb-6 md:pb-6 bg-bg-primary/95 backdrop-blur-md border-t border-border-light shadow-[0_-8px_30px_rgba(0,0,0,0.08)]' : 'p-4 md:p-5 bg-bg-primary border-t border-border-light'}
+        ${variant === 'cinema' ? 'p-4 md:p-5 pb-6 md:pb-6 bg-bg-primary/95 backdrop-blur-md border-t border-border-light shadow-md' : 'p-4 md:p-5 bg-bg-primary border-t border-border-light'}
       `}>
         {replyingTo && (
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-primary/5 rounded-xl text-[11px] text-primary border border-primary/10 backdrop-blur-sm">

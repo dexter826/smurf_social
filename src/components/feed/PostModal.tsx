@@ -154,7 +154,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
       maxWidth="2xl"
       padding="none"
-      fullScreen
+      fullScreen="mobile"
       footer={
         <div className="w-full">
           {/* Media Actions */}
@@ -237,7 +237,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           />
         </div>
 
-        <div className="flex-1 px-4 md:px-6 pt-2 pb-4">
+        <div className="flex-1 px-4 md:px-6 pt-3 md:pt-4 pb-6">
           <div className="relative group">
             <textarea
               {...register('content')}
