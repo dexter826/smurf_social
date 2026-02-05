@@ -12,7 +12,8 @@ import {
   Users,
   LayoutGrid,
   Bell,
-  Menu
+  Menu,
+  Shield
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
@@ -122,18 +123,18 @@ export const MobileMenuPage: React.FC = () => {
             </div>
           </button>
 
-          {/* Admin: Quản lý báo cáo */}
+          {/* Admin: Quản trị */}
           {isAdmin && (
             <button
-              onClick={() => navigate('/admin/reports')}
+              onClick={() => navigate('/admin')}
               className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-warning/30"
             >
               <div className="w-11 h-11 flex items-center justify-center rounded-full bg-warning/10 text-warning">
-                <Flag size={22} />
+                <Shield size={22} />
               </div>
               <div className="flex-1 text-left">
-                <span className="font-semibold text-text-primary">Quản lý báo cáo</span>
-                <p className="text-xs text-text-tertiary mt-0.5">Xem và xử lý vi phạm</p>
+                <span className="font-semibold text-text-primary">Quản trị</span>
+                <p className="text-xs text-text-tertiary mt-0.5">Quản lý hệ thống, người dùng...</p>
               </div>
               <ChevronRight size={20} className="text-text-tertiary" />
             </button>

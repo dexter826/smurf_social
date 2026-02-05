@@ -181,7 +181,7 @@ export const AppLayout: React.FC = () => {
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
-        {navItems.map((item) => (
+        {navItems.filter(item => item.to !== '/admin').map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
