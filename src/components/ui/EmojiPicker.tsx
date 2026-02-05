@@ -4,6 +4,7 @@ import EmojiPickerReact, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { useThemeStore } from '../../store/themeStore';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
@@ -32,6 +33,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const { mode } = useThemeStore();
+  const isMobile = useIsMobile();
 
   const updateCoords = () => {
     if (containerRef.current) {
@@ -107,8 +109,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
 
       {isOpen && createPortal(
         <div 
-          className="fixed inset-0 z-[9999] pointer-events-none"
-          style={{ zIndex: 9999 }}
+          className="fixed inset-0 z-[var(--z-overlay)] pointer-events-none"
+          style={{ zIndex: 'var(--z-overlay)' as any }}
         >
           {/* Mobile Overlay */}
           {showOverlay && (
@@ -123,22 +125,22 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
             ref={pickerRef}
             className="pointer-events-auto absolute"
             style={{
-              top: isReverse ? 'auto' : (window.innerWidth < 768 ? 'auto' : coords.bottom + 8),
-              bottom: window.innerWidth < 768 ? 0 : (isReverse ? (window.innerHeight - coords.top + 8) : 'auto'),
-              left: window.innerWidth < 768 ? 0 : 'auto',
-              right: window.innerWidth < 768 ? 0 : (window.innerWidth - coords.right > 350 ? coords.right : 16),
+              top: isReverse ? 'auto' : (isMobile ? 'auto' : (coords.bottom + 8)),
+              bottom: isMobile ? 0 : (isReverse ? (window.innerHeight - coords.top + 8) : 'auto'),
+              left: isMobile ? 0 : 'auto',
+              right: isMobile ? 0 : (window.innerWidth - coords.right > 350 ? coords.right : 16),
               position: 'fixed'
             }}
           >
-             <div className="w-full md:w-auto shadow-2xl rounded-t-2xl md:rounded-xl overflow-hidden bg-bg-primary border border-border-light pb-safe md:pb-0">
+             <div className="w-full md:w-auto shadow-dropdown rounded-t-2xl md:rounded-xl overflow-hidden bg-bg-primary border border-border-light pb-safe md:pb-0 animate-in slide-in-from-bottom duration-200">
               <EmojiPickerReact
                 onEmojiClick={handleEmojiClick}
                 autoFocusSearch={false}
                 theme={mode === 'dark' ? Theme.DARK : Theme.LIGHT}
                 lazyLoadEmojis={true}
                 searchPlaceholder="Tìm kiếm emoji..."
-                width={window.innerWidth < 768 ? "100%" : 350}
-                height={window.innerWidth < 768 ? 350 : 400}
+                width={isMobile ? "100%" : 350}
+                height={isMobile ? 350 : 400}
                 previewConfig={{ showPreview: false }}
               />
             </div>

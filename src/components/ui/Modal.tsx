@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface ModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ interface ModalProps {
   showCloseButton?: boolean;
   className?: string;
   bodyClassName?: string;
-  fullScreen?: boolean;
+  fullScreen?: boolean | 'mobile';
 }
 
 const maxWidthClasses = {
@@ -52,21 +53,15 @@ export const Modal: React.FC<ModalProps> = ({
   bodyClassName = '',
   fullScreen = false
 }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 
-  return (
-    <div className={`fixed inset-0 z-[110] flex items-center justify-center ${fullScreen ? 'p-0' : 'p-4'} overflow-hidden`}>
+  const isFullScreenAlways = typeof fullScreen === 'boolean' && fullScreen === true;
+  const isFullScreenMobile = typeof fullScreen === 'string' && fullScreen === 'mobile';
+
+  const modalContent = (
+    <div className={`fixed inset-0 z-[var(--z-modal)] flex items-center justify-center ${isFullScreenAlways ? 'p-0' : (isFullScreenMobile ? 'max-md:p-0 p-4' : 'p-4')} overflow-hidden`}>
       <div 
         className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
@@ -74,9 +69,12 @@ export const Modal: React.FC<ModalProps> = ({
       
       <div className={`
         relative bg-bg-primary w-full shadow-2xl transition-theme overflow-hidden flex flex-col justify-between md:justify-start 
-        ${fullScreen 
+        ${isFullScreenAlways 
           ? 'h-full max-h-screen rounded-none' 
-          : 'rounded-2xl h-auto md:h-auto md:max-h-[90vh] animate-in slide-in-from-bottom md:zoom-in-95 duration-200'}
+          : (isFullScreenMobile
+            ? 'h-full md:h-auto max-md:max-h-screen md:max-h-[90vh] rounded-none md:rounded-2xl animate-in slide-in-from-bottom md:zoom-in-95 duration-300'
+            : 'rounded-2xl h-auto md:h-auto md:max-h-[90vh] animate-in slide-in-from-bottom md:zoom-in-95 duration-200'
+          )}
         ${maxWidthClasses[maxWidth]} ${className}
       `}>
         {/* Header */}
@@ -109,6 +107,8 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 interface ConfirmDialogProps {
@@ -134,22 +134,22 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  useScrollLock(isOpen);
 
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
-      document.body.style.overflow = 'hidden';
       requestAnimationFrame(() => {
         setIsAnimating(true);
       });
     } else {
       setIsAnimating(false);
-      document.body.style.overflow = 'unset';
       const timer = setTimeout(() => {
         setIsVisible(false);
       }, 200);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen]);
 
   if (!isVisible) return null;
@@ -160,7 +160,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   };
 
   const dialogContent = (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className={`

@@ -14,7 +14,7 @@ export const ToastContainer: React.FC = () => {
   const { toasts, removeToast } = useToastStore();
 
   return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] flex flex-col items-center gap-3 pointer-events-none w-full px-4">
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[var(--z-toast)] flex flex-col items-center gap-3 pointer-events-none w-full px-4">
       {toasts.map((toast) => (
         <div
           key={toast.id}

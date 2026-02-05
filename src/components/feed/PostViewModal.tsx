@@ -137,13 +137,17 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       showHeader={false} 
       maxWidth={hasMedia ? "6xl" : "lg"} 
       padding="none" 
-      className={`!fixed !inset-0 !z-[120] !w-screen !h-[100dvh] max-md:!max-w-none !rounded-none !m-0 md:!relative md:!inset-auto md:!w-full md:!z-auto ${hasMedia ? "md:h-[90vh] lg:h-[85vh] xl:h-[88vh]" : "md:max-h-[85vh] md:h-auto"} !rounded-none md:!rounded-[24px] lg:!rounded-[32px] transition-all duration-500`}
-      bodyClassName={`!overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row' : ''}`}
+      fullScreen="mobile"
+      className={`
+        ${hasMedia ? "md:h-[90vh] lg:h-[85vh] xl:h-[88vh]" : "md:max-h-[85vh] md:h-auto"} 
+        transition-all duration-500 !rounded-none md:!rounded-[32px] overflow-hidden
+      `}
+      bodyClassName={`overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row' : ''}`}
     >
 
         {/* Khong gian Cinema cho Media (Desktop) */}
         {hasMedia && (
-          <div className="hidden lg:flex flex-[1.6] bg-black items-center justify-center relative group select-none overflow-hidden touch-none grow shrink-0 border-r border-white/5">
+          <div className="hidden lg:flex flex-[1.6] bg-[#0a0c10] items-center justify-center relative group select-none overflow-hidden touch-none grow shrink-0 border-r border-white/5">
             <div className="w-full h-full relative z-10 flex items-center justify-center">
               {/* Media Content */}
               <div className="w-full h-full flex items-center justify-center">
@@ -283,7 +287,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 {/* Media cho Mobile */}
                 {hasMedia && (
                   <div 
-                    className="lg:hidden w-full bg-black aspect-video sm:aspect-square max-h-[60vh] flex items-center justify-center relative select-none overflow-hidden touch-none"
+                    className="lg:hidden w-full bg-[#0a0c10] aspect-video sm:aspect-square max-h-[60vh] flex items-center justify-center relative select-none overflow-hidden touch-none"
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
