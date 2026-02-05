@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -24,22 +25,29 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [view, setView] = useState<'days' | 'months' | 'years'>('days');
   const [openUp, setOpenUp] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      // Cần khoảng 350px
       setOpenUp(spaceBelow < 350);
+    }
+    if (!isOpen) {
+      setView('days');
     }
   }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const isInsideContainer = containerRef.current?.contains(event.target as Node);
+      const isInsideDropdown = dropdownRef.current?.contains(event.target as Node);
+      
+      if (!isInsideContainer && !isInsideDropdown) {
         setIsOpen(false);
       }
     };
@@ -61,42 +69,182 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     setIsOpen(false);
   };
 
+  const handleMonthSelect = (monthIndex: number) => {
+    const newDate = new Date(currentMonth);
+    newDate.setMonth(monthIndex);
+    setCurrentMonth(newDate);
+    setView('days');
+  };
+
+  const handleYearSelect = (year: number) => {
+    const newDate = new Date(currentMonth);
+    newDate.setFullYear(year);
+    setCurrentMonth(newDate);
+    setView('months');
+  };
+
+  const navigate = (direction: 'next' | 'prev') => {
+    if (view === 'days') {
+      setCurrentMonth(direction === 'next' ? addMonths(currentMonth, 1) : subMonths(currentMonth, 1));
+    } else if (view === 'years') {
+      const newDate = new Date(currentMonth);
+      newDate.setFullYear(newDate.getFullYear() + (direction === 'next' ? 12 : -12));
+      setCurrentMonth(newDate);
+    }
+  };
+
   const renderHeader = () => {
     return (
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
-        <span className="text-sm font-bold text-text-primary capitalize">
-          {format(currentMonth, 'MMMM yyyy', { locale: vi })}
-        </span>
-        <div className="flex gap-1">
-          <IconButton
-            type="button"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            icon={<ChevronLeft size={18} />}
-            size="sm"
-          />
-          <IconButton
-            type="button"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            icon={<ChevronRight size={18} />}
-            size="sm"
-          />
+        <div className="flex items-center gap-1 text-sm font-bold text-text-primary">
+          {view === 'days' && (
+            <>
+              <button 
+                type="button"
+                onClick={() => setView('months')}
+                className="hover:text-primary transition-colors capitalize px-1 py-0.5 rounded-md hover:bg-bg-hover"
+              >
+                {format(currentMonth, 'MMMM', { locale: vi })}
+              </button>
+              <button 
+                type="button"
+                onClick={() => setView('years')}
+                className="hover:text-primary transition-colors px-1 py-0.5 rounded-md hover:bg-bg-hover"
+              >
+                {format(currentMonth, 'yyyy')}
+              </button>
+            </>
+          )}
+          {view === 'months' && (
+            <button 
+              type="button"
+              onClick={() => setView('years')}
+              className="hover:text-primary transition-colors px-1 py-0.5 rounded-md hover:bg-bg-hover"
+            >
+              Năm {format(currentMonth, 'yyyy')}
+            </button>
+          )}
+          {view === 'years' && (
+            <span>
+              {currentMonth.getFullYear() - 5} - {currentMonth.getFullYear() + 6}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-1 items-center">
+          {view === 'days' && (
+            <>
+              <IconButton
+                type="button"
+                onClick={(e) => { e.stopPropagation(); navigate('prev'); }}
+                icon={<ChevronLeft size={18} />}
+                size="sm"
+              />
+              <IconButton
+                type="button"
+                onClick={(e) => { e.stopPropagation(); navigate('next'); }}
+                icon={<ChevronRight size={18} />}
+                size="sm"
+              />
+            </>
+          )}
+          {view === 'years' && (
+            <>
+              <IconButton
+                type="button"
+                onClick={(e) => { e.stopPropagation(); navigate('prev'); }}
+                icon={<ChevronLeft size={18} />}
+                size="sm"
+              />
+              <IconButton
+                type="button"
+                onClick={(e) => { e.stopPropagation(); navigate('next'); }}
+                icon={<ChevronRight size={18} />}
+                size="sm"
+              />
+              <button 
+                className="text-xs text-primary font-semibold px-2 py-1 ml-1 rounded-md hover:bg-primary-light"
+                onClick={() => setView('days')}
+              >
+                Hủy
+              </button>
+            </>
+          )}
+          {view === 'months' && (
+            <button 
+              className="text-xs text-primary font-semibold px-2 py-1 rounded-md hover:bg-primary-light"
+              onClick={() => setView('days')}
+            >
+              Hủy
+            </button>
+          )}
         </div>
       </div>
     );
   };
 
-  const renderDays = () => {
-    const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  const renderMonths = () => {
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(2024, i, 1);
+      return {
+        name: format(date, 'MMMM', { locale: vi }),
+        index: i
+      };
+    });
+
     return (
+      <div className="grid grid-cols-3 gap-2 p-3">
+        {months.map((m) => (
+          <button
+            key={m.index}
+            type="button"
+            onClick={() => handleMonthSelect(m.index)}
+            className={`
+              h-12 text-sm rounded-xl transition-all capitalize
+              ${currentMonth.getMonth() === m.index ? 'bg-primary text-white font-bold' : 'hover:bg-bg-hover text-text-primary'}
+            `}
+          >
+            {m.name}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderYears = () => {
+    const centerYear = currentMonth.getFullYear();
+    const years = Array.from({ length: 12 }, (_, i) => centerYear - 5 + i);
+
+    return (
+      <div className="grid grid-cols-3 gap-2 p-3">
+        {years.map((y) => (
+          <button
+            key={y}
+            type="button"
+            onClick={() => handleYearSelect(y)}
+            className={`
+              h-12 text-sm rounded-xl transition-all
+              ${centerYear === y ? 'bg-primary text-white font-bold' : 'hover:bg-bg-hover text-text-primary'}
+            `}
+          >
+            {y}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderDaysView = () => (
+    <div className="p-2">
       <div className="grid grid-cols-7 mb-2">
-        {days.map((day, i) => (
+        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((day, i) => (
           <div key={i} className="text-[10px] font-bold text-center text-text-tertiary uppercase py-2">
             {day}
           </div>
         ))}
       </div>
-    );
-  };
+      {renderCells()}
+    </div>
+  );
 
   const renderCells = () => {
     const monthStart = startOfMonth(currentMonth);
@@ -118,7 +266,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           <button
             key={d.toString()}
             type="button"
-            onClick={() => handleDateSelect(d)}
+            onClick={(e) => { e.stopPropagation(); handleDateSelect(d); }}
             className={`
               relative h-10 w-full flex items-center justify-center text-sm transition-all rounded-lg
               ${!isCurrentMonth ? 'text-text-tertiary opacity-40' : 'text-text-primary'}
@@ -141,7 +289,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       );
       days = [];
     }
-    return <div className="px-2 pb-3">{rows}</div>;
+    return <div className="px-1 pb-2">{rows}</div>;
   };
 
   const displayValue = value ? format(new Date(value), 'dd/MM/yyyy') : '';
@@ -163,33 +311,32 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             ${isOpen ? 'border-primary ring-4 ring-primary-light/30' : 'border-border-light hover:border-primary'}
             ${error ? 'border-error ring-4 ring-error/10' : ''}
             ${disabled ? 'opacity-50 cursor-not-allowed bg-bg-secondary' : 'cursor-pointer'}
-            ${className}
           `}
         >
           <span className={`truncate ${!value ? 'text-text-tertiary' : 'text-text-primary'}`}>
             {displayValue || placeholder}
           </span>
-          <CalendarIcon 
-            size={18} 
-            className="text-text-tertiary" 
-          />
+          <CalendarIcon size={18} className="text-text-tertiary flex-shrink-0" />
         </div>
 
-        {isOpen && (
-          <>
-            <div className="fixed inset-0 z-40 md:hidden bg-bg-overlay backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-            <div className={`
-              absolute z-50 w-72 bg-bg-primary border border-border-light rounded-2xl shadow-xl transition-all animate-in fade-in zoom-in-95 duration-200 
-              left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0
-              ${openUp ? 'bottom-full mb-2' : 'top-full mt-2'}
-            `}>
-              {renderHeader()}
-              <div className="p-2">
-                {renderDays()}
-                {renderCells()}
-              </div>
-            </div>
-          </>
+        {isOpen && createPortal(
+          <div 
+            ref={dropdownRef}
+            style={{
+              top: openUp ? 'auto' : `calc(${containerRef.current?.getBoundingClientRect().bottom ?? 0}px + 8px)`,
+              bottom: openUp ? `calc(${window.innerHeight - (containerRef.current?.getBoundingClientRect().top ?? 0)}px + 8px)` : 'auto',
+              left: `${containerRef.current?.getBoundingClientRect().left ?? 0}px`,
+              position: 'fixed'
+            }}
+            className="z-[var(--z-dropdown)] w-72 bg-bg-primary border border-border-light rounded-2xl shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {renderHeader()}
+            {view === 'days' && renderDaysView()}
+            {view === 'months' && renderMonths()}
+            {view === 'years' && renderYears()}
+          </div>,
+          document.body
         )}
       </div>
 
