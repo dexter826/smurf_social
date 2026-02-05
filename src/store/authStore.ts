@@ -113,7 +113,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await firebaseUser.reload();
       if (firebaseUser.emailVerified) {
         set({ isPendingVerification: false });
-        get().initialize();
+        
+        try {
+          const userData = await userService.getUserById(firebaseUser.uid);
+          if (userData) {
+            await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
+            const userWithStatus = { ...userData, status: UserStatus.ONLINE };
+            set({ user: userWithStatus });
+            useUserCache.getState().setUser(userWithStatus);
+          }
+        } catch (error) {
+          console.error("Lỗi đồng bộ sau xác thực:", error);
+        }
       }
     }
   },
