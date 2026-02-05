@@ -203,9 +203,10 @@ export const useContactStore = create<ContactState>()(
     }
   },
 
-  addFriend: (friend) => set((state) => ({ 
-    friends: [...state.friends, friend] 
-  })),
+  addFriend: (friend) => set((state) => {
+    if (state.friends.some(f => f.id === friend.id)) return state;
+    return { friends: [...state.friends, friend] };
+  }),
 
   removeFriend: (friendId) => set((state) => ({ 
     friends: state.friends.filter(f => f.id !== friendId) 

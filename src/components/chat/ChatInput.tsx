@@ -331,6 +331,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     setSelectedFiles([]);
   };
 
+  const handleCancelAction = () => {
+    if (editingMessage) {
+      setInputText('');
+    }
+    onCancelAction();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -377,14 +384,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         setInputText('');
       }
 
-      if (onCancelAction) onCancelAction();
+      handleCancelAction();
 
     } catch (error) {
       console.error("Lỗi gửi tin nhắn", error);
       toast.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
     } finally {
       setIsSending(false);
-      // Focus lại input ngay lập tức sau khi gửi
       requestAnimationFrame(() => {
         inputRef.current?.focus();
       });
@@ -539,7 +545,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             </div>
           </div>
           <IconButton
-            onClick={onCancelAction}
+            onClick={handleCancelAction}
             icon={<X size={14} />}
             size="sm"
             variant="ghost"

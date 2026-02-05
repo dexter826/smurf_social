@@ -14,6 +14,14 @@ const EmailVerificationPage: React.FC = () => {
     setIsChecking(true);
     try {
       await checkVerificationStatus();
+      
+      const currentStore = useAuthStore.getState();
+      if (!currentStore.isPendingVerification) {
+        toast.success("Xác thực email thành công!");
+        navigate('/');
+      } else {
+        toast.info("Email vẫn chưa được xác thực. Vui lòng kiểm tra lại.");
+      }
     } catch (error) {
       toast.error("Không thể kiểm tra trạng thái lúc này.");
     } finally {
