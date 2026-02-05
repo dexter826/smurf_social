@@ -63,7 +63,7 @@
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
 
   /* === Z-Index System === */
-  --z-dropdown: 1000;
+  --z-dropdown: 1350;
   --z-sticky: 1100;
   --z-modal: 1200;
   --z-overlay: 1300;

@@ -33,6 +33,7 @@ export const Select: React.FC<SelectProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedOption = options.find(opt => opt.value === value);
 
   useEffect(() => {
@@ -47,7 +48,10 @@ export const Select: React.FC<SelectProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const isInsideContainer = containerRef.current?.contains(event.target as Node);
+      const isInsideDropdown = dropdownRef.current?.contains(event.target as Node);
+      
+      if (!isInsideContainer && !isInsideDropdown) {
         setIsOpen(false);
       }
     };
@@ -95,6 +99,7 @@ export const Select: React.FC<SelectProps> = ({
 
         {isOpen && createPortal(
           <div 
+            ref={dropdownRef}
             style={{
               top: openUp ? 'auto' : `calc(${containerRef.current?.getBoundingClientRect().bottom ?? 0}px + 6px)`,
               bottom: openUp ? `calc(${window.innerHeight - (containerRef.current?.getBoundingClientRect().top ?? 0)}px + 6px)` : 'auto',
