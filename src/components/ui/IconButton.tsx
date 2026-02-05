@@ -21,7 +21,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
+  const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover outline-none focus:outline-none focus:ring-0 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
 
   const variants = {
     default: "text-text-secondary hover:text-text-primary",

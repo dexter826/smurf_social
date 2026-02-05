@@ -60,6 +60,7 @@ interface UseChatReturn {
   handleTyping: (isTyping: boolean) => Promise<void>;
   
   handleSearch: (term: string) => Promise<void>;
+  handleMarkAllRead: () => Promise<void>;
   setSearchFocused: (focused: boolean) => void;
   addToSearchHistory: (item: any) => void;
   removeFromSearchHistory: (id: string) => void;
@@ -134,7 +135,8 @@ export const useChat = (): UseChatReturn => {
     setIsChatVisible,
     isLoadingMore: storeIsLoadingMore,
     hasMoreMessages: storeHasMoreMessages,
-    loadMoreMessages
+    loadMoreMessages,
+    markAllAsRead
   } = useChatStore();
 
   const { users: usersMap, fetchUsers } = useUserCache();
@@ -448,6 +450,9 @@ export const useChat = (): UseChatReturn => {
     handleForwardMessage,
     handleTyping,
     handleSearch,
+    handleMarkAllRead: async () => {
+      if (currentUser) await markAllAsRead(currentUser.id);
+    },
     setSearchFocused,
     addToSearchHistory,
     removeFromSearchHistory,

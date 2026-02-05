@@ -183,5 +183,40 @@ export const conversationService = {
       console.error("Lỗi xóa hội thoại:", error);
       throw error;
     }
+  },
+
+  // Đánh dấu tất cả hội thoại là đã đọc cho người dùng hiện tại
+  markAllAsRead: async (userId: string): Promise<void> => {
+    try {
+      const q = query(
+        collection(db, 'conversations'),
+        where('participantIds', 'array-contains', userId)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      let hasUpdates = false;
+
+      querySnapshot.docs.forEach(d => {
+        const data = d.data();
+        if (data.unreadCount && data.unreadCount[userId] > 0) {
+          batch.update(d.ref, {
+            [`unreadCount.${userId}`]: 0,
+            markedUnread: false
+          });
+          hasUpdates = true;
+        } else if (data.markedUnread) {
+          batch.update(d.ref, { markedUnread: false });
+          hasUpdates = true;
+        }
+      });
+
+      if (hasUpdates) {
+        await batch.commit();
+      }
+    } catch (error) {
+      console.error("Lỗi đánh dấu tất cả đã đọc:", error);
+      throw error;
+    }
   }
 };

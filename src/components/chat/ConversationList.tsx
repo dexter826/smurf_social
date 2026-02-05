@@ -4,6 +4,8 @@ import { Conversation, User } from '../../types';
 import { Input, Button, IconButton } from '../ui';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
+import { Dropdown } from '../ui/Dropdown';
+import { MoreVertical, Archive, CheckCircle2 } from 'lucide-react';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -36,7 +38,10 @@ interface ConversationListProps {
   searchHistory?: (Conversation | User)[];
   onRemoveFromHistory?: (id: string) => void;
   onClearHistory?: () => void;
+  onMarkAllRead?: () => void;
 }
+
+type FilterType = 'all' | 'group';
 
 export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
@@ -65,9 +70,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   searchResults = { conversations: [], users: [] },
   searchHistory = [],
   onRemoveFromHistory,
-  onClearHistory
+  onClearHistory,
+  onMarkAllRead
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [requestsExpanded, setRequestsExpanded] = useState(true);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,16 +126,28 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     };
   }, [conversations, currentUserId, currentUserFriendIds, blockedUserIds]);
 
-  // Lấy danh sách hiển thị theo viewMode
-  const displayConversations = viewMode === 'requests' 
-    ? requestConversations 
-    : friendConversations;
+  // Lấy danh sách hiển thị theo viewMode và Filter
+  const displayConversations = useMemo(() => {
+    let list = viewMode === 'archived' ? conversations.filter(c => c.archived) : sortedConversations;
+    
+    // Nếu đang xem danh sách chính, áp dụng thêm Filter Nhóm
+    if (viewMode === 'normal' && activeFilter === 'group') {
+      list = list.filter(c => c.isGroup);
+    }
+    
+    return list;
+  }, [viewMode, sortedConversations, conversations, activeFilter, currentUserId]);
+
+  const filters: { id: FilterType; label: string }[] = [
+    { id: 'all', label: 'Tất cả' },
+    { id: 'group', label: 'Nhóm' },
+  ];
 
   return (
     <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
       {/* Header danh sách */}
-      <div className="flex-shrink-0 px-4 h-[72px] flex items-center border-b border-border-light">
-        <div className="flex items-center gap-3 flex-1">
+      <div className="flex-shrink-0 px-3 h-[72px] flex items-center border-b border-border-light gap-1.5">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <div className="relative flex-1 flex items-center">
             <Input
               icon={<Search size={16} />}
@@ -151,66 +170,110 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               />
             )}
           </div>
-          {!isSearchFocused && onNewGroup && (
-            <Button
-              onClick={onNewGroup}
-              variant="primary"
-              size="md"
-              icon={<Users size={20} />}
-              title="Tạo nhóm mới"
-              className="flex-shrink-0"
-            />
-          )}
-          {isSearchFocused && (
-            <Button
-              onClick={handleBack}
-              variant="ghost"
-              size="md"
-              className="text-primary flex-shrink-0"
-            >
-              Hủy
-            </Button>
-          )}
-          {!isSearchFocused && onNewChat && (
-            <Button
-              onClick={onNewChat}
-              variant="ghost"
-              size="md"
-              icon={<UserPlus size={20} />}
-              title="Tạo cuộc trò chuyện mới"
-              className="text-primary hover:bg-primary-light flex-shrink-0"
-            />
-          )}
-        </div>
-      </div>
+            {isSearchFocused && (
+              <Button
+                onClick={handleBack}
+                variant="ghost"
+                size="md"
+                className="text-primary flex-shrink-0"
+              >
+                Hủy
+              </Button>
+            )}
+          </div>
 
-      {/* Tabs điều hướng */}
-      {!isSearchFocused && !searchTerm && (
+        <div className="flex items-center">
+          {!isSearchFocused && !searchTerm && (
+            <>
+              {onNewGroup && (
+                <IconButton
+                  onClick={onNewGroup}
+                  variant="ghost"
+                  size="md"
+                  icon={<Users size={20} />}
+                  title="Tạo nhóm mới"
+                  className="text-primary hover:bg-primary-light"
+                />
+              )}
+              {onNewChat && (
+                <IconButton
+                  onClick={onNewChat}
+                  variant="ghost"
+                  size="md"
+                  icon={<UserPlus size={20} />}
+                  title="Tạo cuộc trò chuyện mới"
+                  className="text-primary hover:bg-primary-light"
+                />
+              )}
+            </>
+          )}
+
+        {/* Menu ba chấm cho các hành động bổ sung */}
+        <Dropdown
+          align="right"
+          trigger={
+            <IconButton 
+              icon={<MoreVertical size={20} />} 
+              variant="ghost" 
+              className="text-text-secondary hover:bg-bg-secondary"
+            />
+          }
+        >
+          <div className="py-1">
+            <button
+              onClick={() => onViewModeChange?.(viewMode === 'archived' ? 'normal' : 'archived')}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+            >
+              <Archive size={18} className="text-text-tertiary" />
+              {viewMode === 'archived' ? 'Quay lại tin nhắn' : 'Tin nhắn đã lưu trữ'}
+              {archivedCount > 0 && (
+                <span className="ml-auto text-xs bg-bg-tertiary px-1.5 py-0.5 rounded text-text-secondary">
+                  {archivedCount}
+                </span>
+              )}
+            </button>
+            {onMarkAllRead && (
+              <button
+                onClick={onMarkAllRead}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+              >
+                <CheckCircle2 size={18} className="text-text-tertiary" />
+                Đánh dấu tất cả đã đọc
+              </button>
+            )}
+          </div>
+        </Dropdown>
+      </div>
+    </div>
+
+      {/* Tabs điều hướng theo Filter */}
+      {!isSearchFocused && !searchTerm && viewMode === 'normal' && (
         <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
-          <Button
-            variant="ghost"
-            onClick={() => onViewModeChange?.('normal')}
-            className={`flex-1 h-full relative hover:!bg-transparent hover:!text-current ${
-              viewMode === 'normal' ? 'text-primary' : 'text-text-tertiary'
-            }`}
-          >
-            Tất cả
-            {viewMode === 'normal' && (
-              <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => onViewModeChange?.('archived')}
-            className={`flex-1 h-full relative hover:!bg-transparent hover:!text-current ${
-              viewMode === 'archived' ? 'text-primary' : 'text-text-tertiary'
-            }`}
-          >
-            Lưu trữ
-            {viewMode === 'archived' && (
-              <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
-            )}
-          </Button>
+          {filters.map((filter) => (
+            <Button
+              key={filter.id}
+              variant="ghost"
+              onClick={() => setActiveFilter(filter.id)}
+              className={`flex-1 h-full relative hover:!bg-transparent hover:!text-current transition-colors ${
+                activeFilter === filter.id ? 'text-primary' : 'text-text-tertiary'
+              }`}
+            >
+              {filter.label}
+              {activeFilter === filter.id && (
+                <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
+              )}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {/* Header cho chế độ xem Lưu trữ */}
+      {viewMode === 'archived' && (
+        <div className="flex-shrink-0 flex items-center px-4 h-12 bg-bg-secondary border-b border-border-light">
+          <span className="text-sm font-bold text-text-secondary flex items-center gap-2">
+            <Archive size={16} />
+            Hội thoại đã lưu trữ
+          </span>
         </div>
       )}
 
@@ -259,8 +322,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </div>
         ) : (
           <div>
-            {/* Section Tin nhắn chờ (chỉ hiện khi viewMode = normal) */}
-            {viewMode === 'normal' && requestConversations.length > 0 && (
+            {/* Section Tin nhắn chờ (chỉ hiện khi viewMode = normal và đang ở filter Tất cả) */}
+            {viewMode === 'normal' && activeFilter === 'all' && requestConversations.length > 0 && (
               <>
                 <button
                   onClick={() => setRequestsExpanded(!requestsExpanded)}
@@ -306,8 +369,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               </>
             )}
 
-            {/* Danh sách conversations bình thường */}
-            {friendConversations.map((conversation) => {
+            {/* Danh sách conversations chính */}
+            {displayConversations.map((conversation) => {
+              // Nếu đang ở filter Tất cả và viewMode normal, bỏ qua các tin nhắn chờ đã hiện ở trên
+              if (viewMode === 'normal' && activeFilter === 'all') {
+                const partnerId = conversation.participantIds.find(id => id !== currentUserId);
+                const isRequest = !conversation.isGroup && partnerId && !currentUserFriendIds.includes(partnerId);
+                if (isRequest) return null;
+              }
+
               const partnerId = conversation.isGroup 
                 ? null 
                 : conversation.participantIds.find(id => id !== currentUserId);

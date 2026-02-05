@@ -23,13 +23,13 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyle = "inline-flex items-center justify-center font-semibold transition-all duration-200 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
   
   const variants = {
-    primary: "bg-primary hover:bg-primary-hover text-white shadow-sm hover:shadow-md active:scale-[0.98]",
-    secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary border border-border-light active:scale-[0.98]",
-    outline: "border border-border-medium bg-transparent hover:bg-bg-hover text-text-primary active:scale-[0.98]",
-    ghost: "hover:bg-bg-hover text-text-secondary hover:text-text-primary active:scale-[0.95]",
-    danger: "bg-error hover:opacity-90 text-white shadow-sm active:scale-[0.98]",
-    success: "bg-success hover:opacity-90 text-white shadow-sm active:scale-[0.98]",
-    warning: "bg-warning hover:opacity-90 text-white shadow-sm active:scale-[0.98]"
+    primary: "bg-primary hover:bg-primary-hover text-white shadow-sm hover:shadow-md",
+    secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary border border-border-light",
+    outline: "border border-border-medium bg-transparent hover:bg-bg-hover text-text-primary",
+    ghost: "hover:bg-bg-hover text-text-secondary hover:text-text-primary",
+    danger: "bg-error hover:opacity-90 text-white shadow-sm",
+    success: "bg-success hover:opacity-90 text-white shadow-sm",
+    warning: "bg-warning hover:opacity-90 text-white shadow-sm"
   };
 
   const sizes = {

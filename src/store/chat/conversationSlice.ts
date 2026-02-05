@@ -34,6 +34,7 @@ export interface ConversationSlice {
   setSearchTerm: (term: string) => void;
   setLoading: (loading: boolean) => void;
   setIsChatVisible: (visible: boolean) => void;
+  markAllAsRead: (userId: string) => Promise<void>;
 }
 
 export const createConversationSlice: StateCreator<ConversationSlice, [], [], ConversationSlice> = (set, get) => ({
@@ -223,5 +224,21 @@ export const createConversationSlice: StateCreator<ConversationSlice, [], [], Co
 
   setIsChatVisible: (visible: boolean) => {
     set({ isChatVisible: visible });
+  },
+
+  markAllAsRead: async (userId: string) => {
+    set(state => ({
+      conversations: state.conversations.map(c => ({
+        ...c,
+        unreadCount: { ...c.unreadCount, [userId]: 0 },
+        markedUnread: false
+      }))
+    }));
+
+    try {
+      await chatService.markAllAsRead(userId);
+    } catch (error) {
+      console.error("Lỗi đánh dấu tất cả đã đọc:", error);
+    }
   }
 });

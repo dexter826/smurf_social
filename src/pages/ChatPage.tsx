@@ -55,6 +55,7 @@ const ChatPage: React.FC = () => {
     handleArchive,
     handleMarkUnread,
     handleDelete,
+    handleMarkAllRead,
     handleToggleBlock,
     handleCreateGroup,
     handleAddMembers,
@@ -193,6 +194,7 @@ const ChatPage: React.FC = () => {
           onArchive={handleArchive}
           onMarkUnread={handleMarkUnread}
           onDelete={handleDelete}
+          onMarkAllRead={handleMarkAllRead}
           onNewGroup={() => setShowCreateGroup(true)}
         />
       </div>
