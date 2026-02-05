@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Message } from '../types';
+import { PAGINATION } from '../constants';
 import { 
   createMessageSlice, 
   createConversationSlice, 
@@ -47,7 +48,7 @@ export const useChatStore = create<ChatState>()(
       partialize: (state) => {
         const cachedMessages: Record<string, Message[]> = {};
         Object.keys(state.messages).forEach(convId => {
-          cachedMessages[convId] = (state.messages[convId] || []).slice(-20);
+          cachedMessages[convId] = (state.messages[convId] || []).slice(-PAGINATION.CHAT_CACHE_LIMIT);
         });
         return { 
           conversations: state.conversations,

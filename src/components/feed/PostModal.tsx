@@ -14,8 +14,8 @@ interface PostModalProps {
   currentUser: User;
   initialPost?: Post; 
   initialFiles?: File[]; 
-  onSubmit: (content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
-  onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<{ images: string[], videos: string[] }>;
+  onSubmit: (content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => Promise<void>;
+  onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
 }
 
 export const PostModal: React.FC<PostModalProps> = ({
@@ -46,6 +46,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       content: '',
       images: [],
       videos: [],
+      videoThumbnails: {},
       visibility: 'public'
     }
   });
@@ -62,6 +63,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           content: initialPost.content,
           images: initialPost.images || [],
           videos: initialPost.videos || [],
+          videoThumbnails: initialPost.videoThumbnails || {},
           visibility: initialPost.visibility
         });
       } else {
@@ -69,6 +71,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           content: '',
           images: [],
           videos: [],
+          videoThumbnails: {},
           visibility: 'public'
         });
         // Xử lý file ban đầu
@@ -111,6 +114,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       });
       setValue('images', [...formData.images, ...result.images], { shouldDirty: true });
       setValue('videos', [...formData.videos, ...result.videos], { shouldDirty: true });
+      setValue('videoThumbnails', { ...formData.videoThumbnails, ...result.videoThumbnails }, { shouldDirty: true });
     } catch (error) {
       console.error('Lỗi upload media:', error);
       toast.error('Lỗi upload media. Vui lòng thử lại.');
@@ -137,7 +141,7 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   const onFormSubmit = async (data: PostFormValues) => {
     try {
-      await onSubmit(data.content || '', data.images, data.videos, data.visibility);
+      await onSubmit(data.content || '', data.images, data.videos, data.visibility, data.videoThumbnails);
       onClose();
     } catch (error) {
       console.error('Lỗi xử lý bài viết:', error);

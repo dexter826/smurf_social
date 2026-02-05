@@ -134,3 +134,22 @@ export const isImageFile = (file: File): boolean => {
   return file.type.startsWith('image/');
 };
 
+/**
+ * Chuyển đổi DataURL (base64) sang Blob
+ */
+export const dataURLToBlob = (dataURL: string): Blob => {
+  const [header, data] = dataURL.split(',');
+  const mimeMatch = header.match(/:(.*?);/);
+  if (!mimeMatch) throw new Error('Invalid DataURL');
+  
+  const mime = mimeMatch[1];
+  const byteString = atob(data);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  
+  return new Blob([ab], { type: mime });
+};

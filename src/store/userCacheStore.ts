@@ -2,7 +2,7 @@ import { User } from '../types';
 import { getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { chunkArray } from '../utils/batchUtils';
-import { FIREBASE_LIMITS } from '../constants';
+import { FIREBASE_LIMITS, PAGINATION } from '../constants';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -18,7 +18,7 @@ interface UserCacheState {
   clear: () => void;
 }
 
-const MAX_CACHE_SIZE = 100;
+// Hằng số này đã được chuyển vào PAGINATION.USER_CACHE_LIMIT
 
 export const useUserCache = create<UserCacheState>()(
   persist(
@@ -95,9 +95,9 @@ export const useUserCache = create<UserCacheState>()(
     const { users } = get();
     let newUsers = { ...users, [user.id]: user };
     
-    // Giới hạn cache 100 user
+    // Giới hạn cache user
     const keys = Object.keys(newUsers);
-    if (keys.length > MAX_CACHE_SIZE) {
+    if (keys.length > PAGINATION.USER_CACHE_LIMIT) {
       delete newUsers[keys[0]];
     }
 

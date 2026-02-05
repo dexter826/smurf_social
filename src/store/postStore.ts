@@ -15,11 +15,11 @@ interface PostState {
 
   fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
-  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
-  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => Promise<void>;
+  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => Promise<void>;
+  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => Promise<void>;
   deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
-  uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[] }>;
+  uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
 
   setLoading: (loading: boolean) => void;
   clearPosts: () => void;
@@ -143,13 +143,14 @@ export const usePostStore = create<PostState>()(
     return unsubscribe;
   },
 
-  createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private' = 'public') => {
+  createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private' = 'public', videoThumbnails?: Record<string, string>) => {
     try {
       await postService.createPost({
         userId,
         content,
         images,
         videos,
+        videoThumbnails,
         reactions: {},
         visibility
       });
@@ -159,13 +160,13 @@ export const usePostStore = create<PostState>()(
     }
   },
 
-  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private') => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => {
     try {
-      await postService.updatePost(postId, content, images, videos, visibility);
+      await postService.updatePost(postId, content, images, videos, visibility, videoThumbnails);
       set((state) => ({
         posts: state.posts.map(p =>
           p.id === postId
-            ? { ...p, content, images, videos, visibility, edited: true, editedAt: new Date() }
+            ? { ...p, content, images, videos, visibility, videoThumbnails, edited: true, editedAt: new Date() }
             : p
         )
       }));
@@ -259,8 +260,7 @@ export const usePostStore = create<PostState>()(
     {
       name: 'smurf_feed_cache',
       storage: createJSONStorage(() => localStorage),
-      // Cache các bài viết mới nhất.
-      partialize: (state) => ({ posts: state.posts.slice(0, PAGINATION.FEED_POSTS) }),
+      partialize: (state) => ({ posts: state.posts.slice(0, PAGINATION.FEED_CACHE_LIMIT) }),
     }
   )
 );

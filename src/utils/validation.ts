@@ -76,7 +76,13 @@ export const postSchema = z.object({
   visibility: z.enum(['public', 'friends', 'private']),
   images: z.array(z.string()),
   videos: z.array(z.string()),
-}).refine(data => data.content?.trim() || data.images.length > 0 || data.videos.length > 0, {
+  videoThumbnails: z.record(z.string(), z.string()).optional(),
+}).refine(data => {
+  const hasContent = data.content?.trim()?.length && data.content.trim().length > 0;
+  const hasImages = data.images && data.images.length > 0;
+  const hasVideos = data.videos && data.videos.length > 0;
+  return hasContent || hasImages || hasVideos;
+}, {
   message: "Bài viết không được để trống",
   path: ["content"],
 });

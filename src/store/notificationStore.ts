@@ -129,7 +129,7 @@ export const useNotificationStore = create<NotificationState>()(
   name: 'smurf_notify_cache',
   storage: createJSONStorage(() => localStorage),
   partialize: (state) => ({ 
-    notifications: state.notifications.slice(0, PAGINATION.MESSAGES),
+    notifications: state.notifications.slice(0, PAGINATION.NOTIFY_CACHE_LIMIT),
     unreadCount: state.unreadCount
   }),
 }));
