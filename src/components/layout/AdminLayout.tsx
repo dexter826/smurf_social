@@ -83,7 +83,7 @@ export const AdminLayout: React.FC = () => {
           
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-error/5 hover:text-error rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-error rounded-xl transition-all"
           >
             <LogOut size={20} />
             Đăng xuất
