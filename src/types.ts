@@ -115,6 +115,7 @@ export interface Post {
   images?: string[];
   videos?: string[];
   reactions?: Record<string, string>;
+  videoThumbnails?: Record<string, string>;
   commentCount: number;
   timestamp: Date;
   visibility: "public" | "friends" | "private";

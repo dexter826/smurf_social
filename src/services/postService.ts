@@ -27,7 +27,7 @@ import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, REACTIONS } from '../constants';
 import { notificationService } from './notificationService';
-import { compressImage, isImageFile, withRetry } from '../utils/imageUtils';
+import { compressImage, isImageFile, withRetry, generateVideoThumbnail, dataURLToBlob } from '../utils/imageUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 
 export const postService = {
@@ -337,13 +337,14 @@ export const postService = {
     }
   },
 
-  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private'): Promise<void> => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
         content,
         images,
         videos: videos || [],
+        videoThumbnails: videoThumbnails || {},
         visibility,
         edited: true,
         editedAt: Timestamp.now()
@@ -531,10 +532,11 @@ export const postService = {
     files: File[], 
     userId: string,
     onProgress?: (progress: number, fileIndex: number, totalFiles: number) => void
-  ): Promise<{ images: string[], videos: string[] }> => {
+  ): Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }> => {
     try {
       const images: string[] = [];
       const videos: string[] = [];
+      const videoThumbnails: Record<string, string> = {};
       const totalFiles = files.length;
 
       for (let i = 0; i < totalFiles; i++) {
@@ -560,12 +562,23 @@ export const postService = {
         
         if (isVideo) {
           videos.push(url);
+          try {
+            const thumbDataUrl = await generateVideoThumbnail(file);
+            const thumbBlob = dataURLToBlob(thumbDataUrl);
+            const thumbFile = new File([thumbBlob], `thumb_${fileName}.jpg`, { type: 'image/jpeg' });
+            const thumbPath = `posts/${userId}/thumbnails/thumb_${timestamp}.jpg`;
+            
+            const thumbUrl = await withRetry(() => uploadWithProgress(thumbPath, thumbFile));
+            videoThumbnails[url] = thumbUrl;
+          } catch (thumbError) {
+            console.error("Không thể tạo thumbnail cho video:", thumbError);
+          }
         } else {
           images.push(url);
         }
       }
 
-      return { images, videos };
+      return { images, videos, videoThumbnails };
     } catch (error) {
       console.error("Lỗi upload media", error);
       throw error;

@@ -162,7 +162,12 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                     style={{ backgroundImage: `url(${item.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
                   />
                   {item.type === 'video' ? (
-                    <video src={item.url} controls className="relative z-10 w-full h-auto max-h-[600px] object-contain" />
+                    <video 
+                      src={item.url} 
+                      poster={post.videoThumbnails?.[item.url]}
+                      controls 
+                      className="relative z-10 w-full h-auto max-h-[600px] object-contain" 
+                    />
                   ) : (
                     <img src={item.url} alt="" className="relative z-10 w-full h-auto max-h-[600px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
                   )}
@@ -189,7 +194,11 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                       className={`relative overflow-hidden bg-bg-tertiary ${isLarge ? 'row-span-2' : ''}`}
                     >
                       {item.type === 'video' ? (
-                        <video src={item.url} className="w-full h-full object-cover" />
+                        <video 
+                          src={item.url} 
+                          poster={post.videoThumbnails?.[item.url]}
+                          className="w-full h-full object-cover" 
+                        />
                       ) : (
                         <img src={item.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
                       )}
