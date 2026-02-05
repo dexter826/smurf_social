@@ -220,7 +220,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       {(post.reactions && Object.keys(post.reactions).length > 0) || post.commentCount > 0 ? (
         <div className="px-4 py-1 flex justify-between items-center border-b border-border-light min-h-[40px]">
           <div className="flex items-center gap-1.5">
-            <ReactionDisplay reactions={post.reactions} />
+            <ReactionDisplay reactions={post.reactions} variant="minimal" />
           </div>
           <div className="flex items-center gap-4 text-sm text-text-secondary">
             {post.commentCount > 0 && (

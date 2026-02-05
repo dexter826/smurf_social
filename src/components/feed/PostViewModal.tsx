@@ -346,7 +346,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 {/* Thong ke luot thich/binh luan */}
                 <div className="px-5 md:px-6 py-4 flex justify-between items-center border-b border-border-light/60">
                   <div className="flex items-center gap-2">
-                    <ReactionDisplay reactions={post.reactions} />
+                    <ReactionDisplay reactions={post.reactions} variant="minimal" />
                   </div>
                   <div className="text-[13px] text-text-secondary font-medium tracking-tight">
                     {post.commentCount > 0 && `${post.commentCount} bình luận`}
