@@ -33,6 +33,8 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
   const [reporter, setReporter] = useState<User | null>(null);
   const [targetOwner, setTargetOwner] = useState<User | null>(null);
   const [content, setContent] = useState<Post | Comment | null>(null);
+  const [resolver, setResolver] = useState<User | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -51,12 +53,19 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
         }
         setReport(reportData);
 
-        const [reporterData, ownerData] = await Promise.all([
+        const fetchTasks: Promise<any>[] = [
           userService.getUserById(reportData.reporterId),
           userService.getUserById(reportData.targetOwnerId)
-        ]);
+        ];
+
+        if (reportData.resolvedBy) {
+          fetchTasks.push(userService.getUserById(reportData.resolvedBy));
+        }
+
+        const [reporterData, ownerData, resolverData] = await Promise.all(fetchTasks);
         setReporter(reporterData);
         setTargetOwner(ownerData);
+        if (resolverData) setResolver(resolverData);
 
         if (reportData.targetType === ReportType.POST) {
           const postData = await postService.getPostByIdForAdmin(reportData.targetId);
@@ -101,26 +110,8 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center">
-        <div className="bg-bg-primary w-full max-w-2xl mx-4 rounded-3xl shadow-2xl border border-border-light p-8 space-y-6">
-           <Skeleton className="h-8 w-48" />
-           <div className="flex gap-4">
-              <Skeleton variant="circle" width={48} height={48} />
-              <div className="space-y-2 flex-1">
-                 <Skeleton className="h-4 w-1/3" />
-                 <Skeleton className="h-3 w-1/2" />
-              </div>
-           </div>
-           <Skeleton className="h-32 w-full rounded-2xl" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!report) return null;
-  const reasonConfig = REPORT_CONFIG.REASONS[report.reason as keyof typeof REPORT_CONFIG.REASONS];
+  if (!report && !isLoading) return null;
+  const reasonConfig = report ? REPORT_CONFIG.REASONS[report.reason as keyof typeof REPORT_CONFIG.REASONS] : null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
@@ -136,7 +127,7 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
             </div>
             <div>
               <h2 className="text-base font-bold text-text-primary">Chi tiết vi phạm</h2>
-              <p className="text-[10px] text-text-tertiary uppercase font-black tracking-widest">{report.id}</p>
+              {!report && isLoading && <Skeleton className="h-3 w-20 mt-1" />}
             </div>
           </div>
           <IconButton 
@@ -149,97 +140,220 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          {/* Reason Card */}
-          <div className="bg-bg-secondary/50 p-4 rounded-2xl border border-border-light text-center">
-            <h3 className="text-lg font-black text-error mb-1 capitalize">{reasonConfig?.label}</h3>
-            <p className="text-xs text-text-secondary">{reasonConfig?.description}</p>
-            {report.description && (
-              <div className="mt-4 p-3 bg-bg-primary/50 rounded-xl border border-dashed border-border-light italic text-xs text-text-secondary">
-                "{report.description}"
+          {isLoading ? (
+            <div className="space-y-8 animate-pulse">
+              <div className="bg-bg-secondary/50 p-4 rounded-2xl border border-border-light text-center space-y-2">
+                <Skeleton className="h-6 w-1/2 mx-auto" />
+                <Skeleton className="h-4 w-3/4 mx-auto" />
               </div>
-            )}
-          </div>
-
-          {/* Users Info */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
-              <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block">Người báo cáo</span>
-              <div className="flex items-center gap-3">
-                <UserAvatar src={reporter?.avatar} name={reporter?.name} size="sm" />
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-text-primary truncate">{reporter?.name}</div>
-                  <div className="text-[10px] text-text-tertiary truncate">{reporter?.email}</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="circle" width={32} height={32} />
+                    <div className="space-y-1 flex-1">
+                      <Skeleton className="h-3 w-2/3" />
+                      <Skeleton className="h-2 w-1/2" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="circle" width={32} height={32} />
+                    <div className="space-y-1 flex-1">
+                      <Skeleton className="h-3 w-2/3" />
+                      <Skeleton className="h-2 w-1/2" />
+                    </div>
+                  </div>
                 </div>
               </div>
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+              </div>
             </div>
-            <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
-              <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block">Bị khiếu nại</span>
-              <div className="flex items-center gap-3">
-                <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="sm" />
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-text-primary truncate">{targetOwner?.name}</div>
-                  <div className="text-[10px] text-text-tertiary truncate">{targetOwner?.email}</div>
+          ) : (
+            <>
+              {/* Reason Card */}
+              <div className="bg-bg-secondary/50 p-4 rounded-2xl border border-border-light text-center">
+                <h3 className="text-lg font-black text-error mb-1 capitalize">{reasonConfig?.label}</h3>
+                <p className="text-xs text-text-secondary">{reasonConfig?.description}</p>
+                {report?.description && (
+                  <div className="mt-4 p-3 bg-bg-primary/50 rounded-xl border border-dashed border-border-light italic text-xs text-text-secondary">
+                    "{report.description}"
+                  </div>
+                )}
+              </div>
+
+              {/* Users Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
+                  <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block">Người báo cáo</span>
+                  <div className="flex items-center gap-3">
+                    <UserAvatar src={reporter?.avatar} name={reporter?.name} size="sm" />
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-text-primary truncate">{reporter?.name}</div>
+                      <div className="text-[10px] text-text-tertiary truncate">{reporter?.email}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
+                  <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block">Bị khiếu nại</span>
+                  <div className="flex items-center gap-3">
+                    <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="sm" />
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-text-primary truncate">{targetOwner?.name}</div>
+                      <div className="text-[10px] text-text-tertiary truncate">{targetOwner?.email}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Violated Content */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-black text-text-tertiary uppercase tracking-widest">Nội dung vi phạm</h4>
-            {content ? (
-              <div className="bg-bg-primary p-5 rounded-2xl border border-border-light shadow-sm">
-                 <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{content.content}</p>
-                 {/* Media if any */}
-                 {((content as Post).images?.length || 0) > 0 && (
-                   <div className="mt-4 aspect-video rounded-xl bg-black overflow-hidden">
-                      <img src={(content as Post).images?.[0]} className="w-full h-full object-contain" />
-                   </div>
-                 )}
-              </div>
-            ) : (
-              <div className="text-center py-10 bg-bg-secondary/20 rounded-2xl border border-dashed border-border-light">
-                 <Trash2 size={32} className="mx-auto text-text-tertiary opacity-30 mb-2" />
-                 <p className="text-xs font-medium text-text-tertiary">Nội dung đã bị xóa hoặc không còn tồn tại</p>
-              </div>
-            )}
-          </div>
+              {/* Evidence Images */}
+              {report?.images && report.images.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black text-text-tertiary uppercase tracking-widest">Hình ảnh bằng chứng</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {report.images.map((img, idx) => (
+                      <div 
+                        key={idx} 
+                        className="aspect-square rounded-xl overflow-hidden border border-border-light bg-bg-secondary group cursor-pointer relative"
+                        onClick={() => setPreviewImage(img)}
+                      >
+                        <img src={img} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase">Xem ảnh</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Resolution Info if processed */}
+              {report && report.status !== ReportStatus.PENDING && (
+                <div className={`p-5 rounded-2xl border ${
+                  report.status === ReportStatus.RESOLVED 
+                    ? 'bg-success/5 border-success/20' 
+                    : 'bg-text-secondary/5 border-border-light'
+                } space-y-4`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       {report.status === ReportStatus.RESOLVED ? (
+                         <CheckCircle className="text-success" size={18} />
+                       ) : (
+                         <XCircle className="text-text-secondary" size={18} />
+                       )}
+                       <span className={`text-sm font-bold ${
+                         report.status === ReportStatus.RESOLVED ? 'text-success' : 'text-text-secondary'
+                       }`}>
+                         {report.status === ReportStatus.RESOLVED ? 'Đã xử lý' : 'Đã từ chối'}
+                       </span>
+                    </div>
+                    {report.resolvedAt && (
+                      <span className="text-[10px] text-text-tertiary font-medium">
+                        {formatDateTime(report.resolvedAt)}
+                      </span>
+                    )}
+                  </div>
+
+                  {resolver && (
+                    <div className="flex items-center gap-2 pt-3 border-t border-border-light/50">
+                      <span className="text-[10px] text-text-tertiary font-bold uppercase tracking-wider">Người xử lý:</span>
+                      <div className="flex items-center gap-2">
+                        <UserAvatar src={resolver.avatar} name={resolver.name} size="xs" />
+                        <span className="text-xs font-bold text-text-primary">{resolver.name}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {report.resolution && (
+                    <div className="bg-bg-primary/50 p-3 rounded-xl border border-border-light/50">
+                      <p className="text-xs text-text-secondary italic">"{report.resolution}"</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Violated Content - Only show for POST/COMMENT reports */}
+              {report?.targetType !== ReportType.USER && (
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-text-tertiary uppercase tracking-widest">Nội dung vi phạm</h4>
+                  {content ? (
+                    <div className="bg-bg-primary p-5 rounded-2xl border border-border-light shadow-sm">
+                      <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{content.content}</p>
+                      {/* Media if any */}
+                      {((content as Post).images?.length || 0) > 0 && (
+                        <div 
+                          className="mt-4 aspect-video rounded-xl bg-black overflow-hidden cursor-pointer group relative"
+                          onClick={() => setPreviewImage((content as Post).images?.[0] || null)}
+                        >
+                          <img src={(content as Post).images?.[0]} className="w-full h-full object-contain transition-transform group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">Xem ảnh cỡ lớn</div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 bg-bg-secondary/20 rounded-2xl border border-dashed border-border-light">
+                      <Trash2 size={32} className="mx-auto text-text-tertiary opacity-30 mb-2" />
+                      <p className="text-xs font-medium text-text-tertiary">Nội dung đã bị xóa hoặc không còn tồn tại</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Footer Actions */}
         <div className="p-6 bg-bg-secondary/30 border-t border-border-light flex gap-3">
-          <Button
-            variant="ghost"
-            className="flex-1 !rounded-2xl font-bold"
-            onClick={() => { setActionType('reject'); setShowConfirm(true); }}
-          >
-            Bỏ qua
-          </Button>
-          {report.targetType === ReportType.USER ? (
-             <>
-               <Button
-                 variant="warning"
-                 className="flex-1 !rounded-2xl font-bold"
-                 onClick={() => { setActionType('warn'); setShowConfirm(true); }}
-               >
-                 Cảnh báo
-               </Button>
-               <Button
-                 variant="danger"
-                 className="flex-1 !rounded-2xl font-bold text-white shadow-lg shadow-error/20"
-                 onClick={() => { setActionType('ban'); setShowConfirm(true); }}
-               >
-                 Khóa TK
-               </Button>
-             </>
+          {isLoading ? (
+            <>
+              <Skeleton className="flex-1 h-10 rounded-2xl" />
+              <Skeleton className="flex-1 h-10 rounded-2xl" />
+              <Skeleton className="flex-1 h-10 rounded-2xl" />
+            </>
+          ) : report && report.status === ReportStatus.PENDING ? (
+            <>
+              <Button
+                variant="ghost"
+                className="flex-1 !rounded-2xl font-bold"
+                onClick={() => { setActionType('reject'); setShowConfirm(true); }}
+              >
+                Bỏ qua
+              </Button>
+              {report.targetType === ReportType.USER ? (
+                <>
+                  <Button
+                    variant="warning"
+                    className="flex-1 !rounded-2xl font-bold"
+                    onClick={() => { setActionType('warn'); setShowConfirm(true); }}
+                  >
+                    Cảnh báo
+                  </Button>
+                  <Button
+                    variant="danger"
+                    className="flex-1 !rounded-2xl font-bold text-white shadow-lg shadow-error/20"
+                    onClick={() => { setActionType('ban'); setShowConfirm(true); }}
+                  >
+                    Khóa TK
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="primary"
+                  className="flex-[2] !rounded-2xl font-bold text-white shadow-lg shadow-primary/20"
+                  onClick={() => { setActionType('resolve'); setShowConfirm(true); }}
+                >
+                  Xử lý & Xóa nội dung
+                </Button>
+              )}
+            </>
           ) : (
-             <Button
-               variant="primary"
-               className="flex-[2] !rounded-2xl font-bold text-white shadow-lg shadow-primary/20"
-               onClick={() => { setActionType('resolve'); setShowConfirm(true); }}
-             >
-               Xử lý & Xóa nội dung
-             </Button>
+            <Button
+              variant="secondary"
+              className="flex-1 !rounded-2xl font-bold"
+              onClick={onClose}
+            >
+              Đóng
+            </Button>
           )}
         </div>
       </div>
@@ -252,6 +366,34 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
         message="Hành động này sẽ thay đổi trạng thái và thực hiện các biện pháp kỷ luật tương ứng."
         isLoading={isProcessing}
       />
+
+      {/* Lightbox - Image Preview */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center animate-in fade-in duration-200 cursor-zoom-out"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="absolute top-6 right-6 flex gap-4">
+             <button 
+               className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md"
+               onClick={(e) => {
+                 e.stopPropagation();
+                 setPreviewImage(null);
+               }}
+             >
+               <X size={24} />
+             </button>
+          </div>
+          <div className="max-w-[95%] max-h-[90%] flex items-center justify-center p-4">
+            <img 
+              src={previewImage} 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+              alt="Evidence preview"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
