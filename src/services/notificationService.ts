@@ -16,7 +16,8 @@ import {
 } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
-import { AppNotification, NotificationType } from '../types';
+import { AppNotification, NotificationType, ReportReason } from '../types';
+import { REPORT_CONFIG } from '../constants/appConfig';
 
 export const notificationService = {
   // Tạo thông báo mới và lưu vào Firestore
@@ -222,8 +223,11 @@ export const notificationService = {
           ? `Báo cáo của bạn đã được xem xét và không phát hiện vi phạm.`
           : `Báo cáo của bạn đã được xử lý. Cảm ơn bạn đã đóng góp!`;
       case NotificationType.CONTENT_VIOLATION:
+        const reasonKey = notification.data.contentSnippet as ReportReason;
+        const reasonLabel = REPORT_CONFIG.REASONS[reasonKey]?.label || notification.data.contentSnippet;
+        
         return notification.data.contentSnippet 
-          ? `Nội dung bị báo cáo: ${notification.data.contentSnippet}. Vui lòng tuân thủ quy tắc cộng đồng.`
+          ? `Nội dung bị báo cáo: ${reasonLabel}. Vui lòng tuân thủ quy tắc cộng đồng.`
           : 'Nội dung của bạn đã bị xóa do vi phạm quy tắc cộng đồng.';
       default:
         return "Thông báo mới.";
