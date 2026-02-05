@@ -26,7 +26,7 @@ const BannedPage: React.FC = () => {
 
         {/* Description */}
         <p className="text-text-secondary mb-6">
-          Tài khoản của bạn đã bị khóa do vi phạm quy tắc cộng đồng của Smurf Social.
+          Tài khoản của bạn đã bị khóa do vi phạm quy tắc cộng đồng của Smurfy.
         </p>
 
         {/* Divider */}
@@ -42,16 +42,16 @@ const BannedPage: React.FC = () => {
             Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ với chúng tôi:
           </p>
           <a 
-            href="mailto:support@smurfsocial.com"
+            href="mailto:support@smurfy.com"
             className="text-primary font-medium hover:underline text-sm"
           >
-            📧 support@smurfsocial.com
+            📧 support@smurfy.com
           </a>
         </div>
 
         {/* Logout Button */}
         <Button
-          variant="secondary"
+          variant="danger"
           className="w-full"
           icon={<LogOut size={18} />}
           onClick={handleLogout}

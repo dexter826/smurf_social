@@ -84,7 +84,7 @@ export const AppLayout: React.FC = () => {
         >
           <img 
             src="/logo_text_blue.png" 
-            alt="Smurf Social" 
+            alt="Smurfy" 
             className="h-9 object-contain" 
           />
         </div>
