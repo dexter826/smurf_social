@@ -185,7 +185,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <>
-      <div className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start gap-3'}`}>
+      <div 
+        id={`msg-${message.id}`}
+        className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start gap-3'}`}
+      >
         {/* Avatar người nhận */}
         {!isMe && (
           <div className="w-8 flex-shrink-0 flex items-end">
