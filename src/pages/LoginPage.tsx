@@ -95,7 +95,7 @@ const LoginPage: React.FC = () => {
       await register(data.email, data.password, data.name);
       setVerificationSent(true);
       toast.success("Đăng ký thành công! Vui lòng kiểm tra email.");
-      setActiveTab('login');
+      navigate('/');
     } catch (error) {
       handleAuthError(error);
     }

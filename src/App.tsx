@@ -14,6 +14,7 @@ import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 // Admins pages are now lazy loaded below
 import BannedPage from './pages/BannedPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
 import { MobileMenuPage } from './pages/MobileMenuPage';
 import { userService } from './services/userService';
 import { UserStatus } from './types';
@@ -24,11 +25,14 @@ const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ children, requireAdmin }) => {
-  const { user, isLoading } = useAuthStore();
-// ... (giữ nguyên logic bên dưới)
+  const { user, isPendingVerification, isLoading } = useAuthStore();
 
   if (isLoading) {
     return <ScreenLoader />;
+  }
+
+  if (isPendingVerification) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   if (!user) {
@@ -112,6 +116,7 @@ const App: React.FC = () => {
             </ProtectedRoute>
           } />
 
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/banned" element={<BannedPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
