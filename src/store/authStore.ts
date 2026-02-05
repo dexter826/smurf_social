@@ -16,10 +16,12 @@ import { useCommentStore } from './commentStore';
 interface AuthState {
   user: User | null;
   isLoading: boolean;
+  isPendingVerification: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
+  checkVerificationStatus: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   setLoading: (isLoading: boolean) => void;
@@ -29,6 +31,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
+  isPendingVerification: false,
 
   setUser: (user) => set({ user }),
   setLoading: (isLoading) => set({ isLoading }),
@@ -38,15 +41,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const firebaseUser = await authService.login(email, pass);
       
-      // Kiểm tra xác thực email
       if (!firebaseUser.emailVerified) {
-        await authService.logout();
-        const error = new Error('Vui lòng xác thực email trước khi đăng nhập.');
-        (error as any).code = 'auth/email-not-verified';
-        throw error;
+        set({ isPendingVerification: true, isLoading: false });
+        return;
       }
+      set({ isPendingVerification: false });
     } catch (error) {
-      set({ isLoading: false });
+      set({ isLoading: false, isPendingVerification: false });
       throw error;
     }
   },
@@ -62,12 +63,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email: email.trim(),
       });
       
-      // Gửi email xác thực
       await authService.sendVerificationEmail();
       
-      // Đăng xuất ngay sau khi đăng ký để bắt người dùng đăng nhập lại sau khi xác thực
-      await authService.logout();
-      set({ user: null });
+      set({ isPendingVerification: true });
     } finally {
       set({ isLoading: false });
     }
@@ -109,6 +107,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  checkVerificationStatus: async () => {
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser) {
+      await firebaseUser.reload();
+      if (firebaseUser.emailVerified) {
+        set({ isPendingVerification: false });
+        get().initialize();
+      }
+    }
+  },
+
   initialize: () => {
     let userUnsubscribe: (() => void) | null = null;
 
@@ -118,24 +127,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         userUnsubscribe = null;
       }
 
-      if (firebaseUser && firebaseUser.emailVerified) {
+      if (firebaseUser) {
+        if (!firebaseUser.emailVerified) {
+          set({ user: null, isPendingVerification: true, isLoading: false });
+          return;
+        }
+
         try {
           const userData = await userService.getUserById(firebaseUser.uid);
           
           if (userData) {
             if (userData.status === UserStatus.BANNED) {
               set({ user: userData, isLoading: false });
+              get().logout();
               return;
             }
 
             await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
             const initialUser = { ...userData, status: UserStatus.ONLINE };
-            set({ user: initialUser });
+            set({ user: initialUser, isPendingVerification: false });
             useUserCache.getState().setUser(initialUser);
 
             userUnsubscribe = userService.subscribeToUser(firebaseUser.uid, async (updatedUser) => {
               if (updatedUser.status === UserStatus.BANNED) {
                 set({ user: updatedUser });
+                get().logout();
                 return;
               }
 
