@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Conversation } from '../../types';
-import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User } from 'lucide-react';
+import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User, Flag } from 'lucide-react';
 import { ConfirmDialog, Button } from '../ui';
+import { useReportStore } from '../../store/reportStore';
+import { ReportType } from '../../types';
 
 interface ChatDetailsActionsProps {
   conversation: Conversation;
@@ -28,6 +30,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   onEditGroup,
   onViewProfile
 }) => {
+  const { openReportModal } = useReportStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -83,6 +86,16 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
       onClick: () => setShowBlockConfirm(true),
       variant: 'danger' as const,
     });
+
+    const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
+    if (partnerId) {
+      actions.push({
+        icon: <Flag size={20} />,
+        label: 'Báo cáo người dùng',
+        onClick: () => openReportModal(ReportType.USER, partnerId, partnerId),
+        variant: 'danger' as const,
+      });
+    }
   }
 
   // Leave group - cho group (không phải creator)

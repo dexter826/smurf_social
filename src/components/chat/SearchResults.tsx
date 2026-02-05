@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X, Clock, Lock } from 'lucide-react';
-import { Button, Skeleton } from '../ui';
+import { Button, Skeleton, Avatar, UserAvatar } from '../ui';
 import { Conversation, User, UserStatus } from '../../types';
 
 interface SearchResultsProps {
@@ -9,6 +9,7 @@ interface SearchResultsProps {
     conversations: Conversation[];
     users: User[];
   };
+  conversations: Conversation[];
   currentUserId: string;
   selectedId: string | null;
   history: (Conversation | User)[];
@@ -29,7 +30,8 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
   onSelectUser,
   onRemoveFromHistory,
   onClearHistory,
-  isLoading
+  isLoading,
+  conversations
 }) => {
   const isHistoryEmpty = history.length === 0;
   
@@ -77,12 +79,23 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
             return true;
           }).map((item) => {
             const isConversation = 'participantIds' in item;
+            
+            // Đồng bộ dữ liệu mới nhất cho hội thoại
+            let displayItem = item;
+            if (isConversation) {
+              const latestConv = conversations.find(c => c.id === item.id);
+              if (latestConv) displayItem = latestConv;
+            }
+
+            const itemAsConv = displayItem as Conversation;
+            const itemAsUser = displayItem as User;
+
             const displayName = isConversation 
-              ? (item.isGroup ? item.groupName : item.participants.find(p => p.id !== currentUserId)?.name)
-              : item.name;
+              ? (itemAsConv.isGroup ? itemAsConv.groupName : itemAsConv.participants.find(p => p.id !== currentUserId)?.name)
+              : itemAsUser.name;
             const avatar = isConversation
-              ? (item.isGroup ? item.groupIcon : item.participants.find(p => p.id !== currentUserId)?.avatar)
-              : item.avatar;
+              ? (itemAsConv.isGroup ? itemAsConv.groupAvatar : itemAsConv.participants.find(p => p.id !== currentUserId)?.avatar)
+              : itemAsUser.avatar;
 
             return (
               <div
@@ -90,11 +103,23 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
                 className="group flex items-center gap-3 px-3 py-2 hover:bg-bg-secondary cursor-pointer transition-all rounded-xl relative"
                 onClick={() => isConversation ? onSelectConversation(item.id) : onSelectUser(item as User)}
               >
-                <img
-                  src={avatar || `https://i.pravatar.cc/150?u=${item.id}`}
-                  alt={displayName || ''}
-                  className="w-10 h-10 rounded-full object-cover ring-1 ring-border-light flex-shrink-0"
-                />
+                {isConversation ? (
+                  <Avatar 
+                    src={avatar} 
+                    name={displayName || ''} 
+                    size="md" 
+                    isGroup={itemAsConv.isGroup} 
+                    members={itemAsConv.participants}
+                  />
+                ) : (
+                  <UserAvatar 
+                    userId={displayItem.id} 
+                    src={avatar} 
+                    name={displayName || ''} 
+                    size="md" 
+                    initialStatus={itemAsUser.status}
+                  />
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-text-primary truncate">
                     {displayName}
@@ -140,10 +165,12 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
             onClick={() => onSelectUser(user)}
             className="flex items-center gap-3 px-4 py-3 hover:bg-bg-secondary cursor-pointer transition-all active:bg-bg-tertiary rounded-lg mx-2"
           >
-            <img
-              src={user.avatar || `https://i.pravatar.cc/150?u=${user.id}`}
-              alt={user.name}
-              className="w-10 h-10 rounded-full object-cover ring-1 ring-border-light"
+            <UserAvatar 
+              userId={user.id} 
+              src={user.avatar} 
+              name={user.name} 
+              size="md" 
+              initialStatus={user.status}
             />
             <div className="flex-1 min-w-0">
               <div className="font-medium text-text-primary truncate flex items-center gap-1.5">

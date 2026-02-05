@@ -56,12 +56,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onOpenChange,
   disableTriggerScale = false
 }) => {
-  const isMobile = useIsMobile();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
-  const [isReverse, setIsReverse] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const isControlled = controlledIsOpen !== undefined;
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
@@ -73,53 +69,17 @@ export const Dropdown: React.FC<DropdownProps> = ({
     onOpenChange?.(newOpen);
   };
 
-  const updateCoords = () => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      
-      // Kiểm tra xem có đủ chỗ bên dưới không (giả định menu cao ~250px)
-      const spaceBelow = windowHeight - rect.bottom;
-      const needsReverse = spaceBelow < 250 && rect.top > spaceBelow;
-      
-      setIsReverse(needsReverse);
-      setCoords({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width
-      });
-    }
-  };
-
-  useLayoutEffect(() => {
-    if (isOpen) {
-      updateCoords();
-    }
-  }, [isOpen]);
-
   useEffect(() => {
-    const handleEvents = () => {
-      if (isOpen) {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         handleOpenChange(false);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', (e) => {
-        if (containerRef.current && !containerRef.current.contains(e.target as Node) && 
-            menuRef.current && !menuRef.current.contains(e.target as Node)) {
-          handleOpenChange(false);
-        }
-      });
-      window.addEventListener('resize', handleEvents);
-      window.addEventListener('scroll', handleEvents, true);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleEvents);
-      window.removeEventListener('resize', handleEvents);
-      window.removeEventListener('scroll', handleEvents, true);
-    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   return (
@@ -135,33 +95,20 @@ export const Dropdown: React.FC<DropdownProps> = ({
       </div>
 
       {isOpen && (
-        <>
-          {createPortal(
-            <div 
-              ref={menuRef}
-              style={{
-                top: isReverse ? 'auto' : `${coords.top + 40}px`,
-                bottom: isReverse ? `${window.innerHeight - coords.top + 8}px` : 'auto',
-                left: align === 'left' ? `${coords.left}px` : 'auto',
-                right: align === 'right' ? `${window.innerWidth - (coords.left + coords.width)}px` : 'auto',
-                position: 'fixed'
-              }}
-              className={`
-                z-[var(--z-dropdown)] 
-                fixed bottom-0 left-0 right-0 
-                py-1.5 pb-max(20px, env(safe-area-inset-bottom)) bg-bg-primary border-t border-border-light rounded-2xl 
-                max-h-[70vh] overflow-y-auto
-                md:bottom-auto md:left-auto md:right-auto md:max-h-none
-                md:min-w-max md:w-auto md:max-w-[calc(100vw-32px)] md:border md:rounded-xl 
-                shadow-dropdown animate-in fade-in zoom-in-95 duration-200
-              `}
-              onClick={() => handleOpenChange(false)}
-            >
-              {children}
-            </div>,
-            document.body
-          )}
-        </>
+        <div 
+          className={`
+            absolute z-[var(--z-dropdown)] mt-1.5
+            min-w-[180px] w-max max-w-[calc(100vw-32px)]
+            bg-bg-primary border border-border-light rounded-xl 
+            shadow-dropdown overflow-hidden
+            animate-in fade-in zoom-in-95 duration-200
+            ${align === 'right' ? 'right-0' : 'left-0'}
+            origin-top-${align}
+          `}
+          onClick={() => handleOpenChange(false)}
+        >
+          {children}
+        </div>
       )}
     </div>
   );
