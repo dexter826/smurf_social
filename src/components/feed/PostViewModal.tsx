@@ -137,7 +137,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       showHeader={false} 
       maxWidth={hasMedia ? "6xl" : "lg"} 
       padding="none" 
-      className={`!fixed !inset-0 !z-[120] !w-screen !h-[100dvh] !max-w-none !rounded-none !m-0 md:!relative md:!inset-auto md:!w-full md:!z-auto ${hasMedia ? "md:h-[90vh] lg:h-[85vh] xl:h-[88vh]" : "md:max-h-[85vh] md:h-auto"} !rounded-none md:!rounded-[24px] lg:!rounded-[32px] transition-all duration-500`}
+      className={`!fixed !inset-0 !z-[120] !w-screen !h-[100dvh] max-md:!max-w-none !rounded-none !m-0 md:!relative md:!inset-auto md:!w-full md:!z-auto ${hasMedia ? "md:h-[90vh] lg:h-[85vh] xl:h-[88vh]" : "md:max-h-[85vh] md:h-auto"} !rounded-none md:!rounded-[24px] lg:!rounded-[32px] transition-all duration-500`}
       bodyClassName={`!overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row' : ''}`}
     >
 
