@@ -299,6 +299,14 @@ const ChatPage: React.FC = () => {
           onPromoteToAdmin={handlePromoteToAdmin}
           onDemoteFromAdmin={handleDemoteFromAdmin}
           onMemberClick={(userId) => navigate(`/profile/${userId}`)}
+          onMessageClick={(messageId) => {
+            const element = document.getElementById(`msg-${messageId}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              element.classList.add('animate-highlight');
+              setTimeout(() => element.classList.remove('animate-highlight'), 2000);
+            }
+          }}
         />
       )}
 

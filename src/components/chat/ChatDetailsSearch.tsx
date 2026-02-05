@@ -3,6 +3,7 @@ import { Message, User } from '../../types';
 import { Search, X, MessageCircle } from 'lucide-react';
 import { formatTimeOnly } from '../../utils/dateUtils';
 import { Input, IconButton } from '../ui';
+import { PAGINATION } from '../../constants';
 
 interface ChatDetailsSearchProps {
   messages: Message[];
@@ -23,11 +24,13 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
     
     const term = searchTerm.toLowerCase();
     return messages
-      .filter((msg) => 
-        msg.type === 'text' && 
-        msg.content.toLowerCase().includes(term)
-      )
-      .slice(0, 20); // Giới hạn 20 kết quả
+      .filter((msg) => {
+        const contentMatch = msg.content?.toLowerCase().includes(term);
+        const fileNameMatch = msg.type === 'file' && msg.fileName?.toLowerCase().includes(term);
+        return contentMatch || fileNameMatch;
+      })
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, PAGINATION.MESSAGES);
   }, [messages, searchTerm]);
 
   const highlightText = (text: string, term: string) => {
@@ -96,7 +99,14 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
                       </span>
                     </div>
                     <p className="text-sm text-text-primary line-clamp-2">
-                      {highlightText(msg.content, searchTerm)}
+                      {msg.type === 'file' ? (
+                        <span className="flex items-center gap-1">
+                          <span className="text-primary font-medium shrink-0">[File]</span>
+                          {highlightText(msg.fileName || msg.content, searchTerm)}
+                        </span>
+                      ) : (
+                        highlightText(msg.content, searchTerm)
+                      )}
                     </p>
                   </button>
                 );
