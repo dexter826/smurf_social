@@ -45,6 +45,31 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     };
   }, [isOpen, handleKeyDown]);
 
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && currentIndex < images.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    }
+    if (isRightSwipe && currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    }
+  };
+
   if (!isOpen) return null;
 
   const handleNext = (e: React.MouseEvent) => {
@@ -61,6 +86,9 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     <div 
       className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm flex items-center justify-center select-none animate-in fade-in duration-200"
       onClick={onClose}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
       {/* Controls */}
       <div className="absolute top-4 right-4 z-[202]">
@@ -78,14 +106,14 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       {images.length > 1 && (
         <>
           <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[201] transition-all active:scale-95"
+            className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[201] transition-all active:scale-95"
             onClick={handlePrev}
           >
             <ChevronLeft size={32} />
           </button>
           
           <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[201] transition-all active:scale-95"
+            className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[201] transition-all active:scale-95"
             onClick={handleNext}
           >
             <ChevronRight size={32} />
