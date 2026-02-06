@@ -16,7 +16,7 @@ import { reportService } from '../../services/reportService';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { commentService } from '../../services/commentService';
-import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog } from '../ui';
+import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, ImageViewer } from '../ui';
 import { REPORT_CONFIG, CONFIRM_MESSAGES } from '../../constants';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
@@ -34,7 +34,14 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
   const [targetOwner, setTargetOwner] = useState<User | null>(null);
   const [content, setContent] = useState<Post | Comment | null>(null);
   const [resolver, setResolver] = useState<User | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  
+  // Viewer State replacing previewImage
+  const [viewerState, setViewerState] = useState({
+    isOpen: false,
+    images: [] as string[],
+    index: 0
+  });
+
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -217,7 +224,11 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
                       <div 
                         key={idx} 
                         className="aspect-square rounded-xl overflow-hidden border border-border-light bg-bg-secondary group cursor-pointer relative"
-                        onClick={() => setPreviewImage(img)}
+                        onClick={() => setViewerState({
+                          isOpen: true,
+                          images: report.images || [],
+                          index: idx
+                        })}
                       >
                         <img src={img} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase">Xem ảnh</div>
@@ -283,7 +294,11 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
                       {((content as Post).images?.length || 0) > 0 && (
                         <div 
                           className="mt-4 aspect-video rounded-xl bg-black overflow-hidden cursor-pointer group relative"
-                          onClick={() => setPreviewImage((content as Post).images?.[0] || null)}
+                          onClick={() => setViewerState({
+                            isOpen: true,
+                            images: (content as Post).images || [],
+                            index: 0
+                          })}
                         >
                           <img src={(content as Post).images?.[0]} className="w-full h-full object-contain transition-transform group-hover:scale-105" />
                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">Xem ảnh cỡ lớn</div>
@@ -367,33 +382,13 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
         isLoading={isProcessing}
       />
 
-      {/* Lightbox - Image Preview */}
-      {previewImage && (
-        <div 
-          className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center animate-in fade-in duration-200 cursor-zoom-out"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="absolute top-6 right-6 flex gap-4">
-             <button 
-               className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md"
-               onClick={(e) => {
-                 e.stopPropagation();
-                 setPreviewImage(null);
-               }}
-             >
-               <X size={24} />
-             </button>
-          </div>
-          <div className="max-w-[95%] max-h-[90%] flex items-center justify-center p-4">
-            <img 
-              src={previewImage} 
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
-              onClick={(e) => e.stopPropagation()}
-              alt="Evidence preview"
-            />
-          </div>
-        </div>
-      )}
+      {/* Lightbox - Image Viewer */}
+      <ImageViewer 
+        images={viewerState.images}
+        initialIndex={viewerState.index}
+        isOpen={viewerState.isOpen}
+        onClose={() => setViewerState(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };
