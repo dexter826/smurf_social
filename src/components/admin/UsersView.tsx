@@ -124,7 +124,7 @@ export const UsersView: React.FC = () => {
           <div className="flex-1 sm:flex-initial min-w-[160px]">
             <Select
               value={statusFilter}
-              onChange={(val) => setStatusFilter(val as any)}
+              onChange={(val) => setStatusFilter(val as UserStatus | 'all')}
               options={statusOptions}
             />
           </div>

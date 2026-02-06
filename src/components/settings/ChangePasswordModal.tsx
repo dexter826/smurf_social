@@ -56,9 +56,10 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
         onClose();
         navigate('/login');
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Lỗi đổi mật khẩu", err);
-      if (err.code === 'auth/wrong-password') {
+      const firebaseError = err as { code?: string };
+      if (firebaseError.code === 'auth/wrong-password') {
         setError("Mật khẩu hiện tại không chính xác.");
       } else {
         setError("Có lỗi xảy ra. Vui lòng thử lại sau.");

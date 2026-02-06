@@ -1,11 +1,13 @@
 import { StateCreator } from 'zustand';
-import { Message } from '../../types';
+import { Message, MessageType, Conversation } from '../../types';
 import { chatService } from '../../services/chatService';
 import { useAuthStore } from '../authStore';
+import { DocumentSnapshot } from 'firebase/firestore';
+import type { ChatState } from '../chatStore';
 
 export interface MessageSlice {
   messages: Record<string, Message[]>;
-  lastMessageDocs: Record<string, any>;
+  lastMessageDocs: Record<string, DocumentSnapshot | null>;
   hasMoreMessages: Record<string, boolean>;
   isLoadingMore: Record<string, boolean>;
   typingUsers: Record<string, string[]>;
@@ -36,7 +38,7 @@ export interface MessageSlice {
 
 const LIMIT_PER_PAGE = 20;
 
-export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice> = (set, get) => ({
+export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> = (set, get) => ({
   messages: {},
   lastMessageDocs: {},
   hasMoreMessages: {},
@@ -45,8 +47,8 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
   uploadProgress: {},
 
   subscribeToMessages: (conversationId: string) => {
-    const { conversations } = (get() as any);
-    const conversation = conversations.find((c: any) => c.id === conversationId);
+    const { conversations } = get();
+    const conversation = conversations.find((c: Conversation) => c.id === conversationId);
     const currentUser = useAuthStore.getState().user;
     const joinedAtDate = conversation?.memberJoinedAt?.[currentUser?.id || ''];
     const deletedAtDate = conversation?.deletedAt?.[currentUser?.id || ''];
@@ -66,12 +68,12 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
   },
 
   loadMoreMessages: async (conversationId: string) => {
-    const { lastMessageDocs, isLoadingMore, hasMoreMessages, conversations } = get() as any;
+    const { lastMessageDocs, isLoadingMore, hasMoreMessages, conversations } = get();
     const lastDoc = lastMessageDocs[conversationId];
     
     if (!lastDoc || isLoadingMore[conversationId] || hasMoreMessages[conversationId] === false) return;
 
-    const conversation = conversations.find((c: any) => c.id === conversationId);
+    const conversation = conversations.find((c: Conversation) => c.id === conversationId);
     const currentUser = useAuthStore.getState().user;
     const joinedAtDate = conversation?.memberJoinedAt?.[currentUser?.id || ''];
     const deletedAtDate = conversation?.deletedAt?.[currentUser?.id || ''];
@@ -104,8 +106,8 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
       conversationId,
       senderId,
       content,
-      timestamp: new Date(),
-      type: 'text' as any,
+      createdAt: new Date(),
+      type: MessageType.TEXT,
       mentions: mentions || [],
       readBy: [],
       deliveredTo: [],
@@ -136,8 +138,8 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
       senderId,
       content: localUrl,
       fileUrl: localUrl,
-      timestamp: new Date(),
-      type: 'image',
+      createdAt: new Date(),
+      type: MessageType.IMAGE,
       readBy: [senderId],
       deliveredTo: [senderId],
     };
@@ -171,8 +173,8 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
       senderId,
       content: localUrl,
       fileUrl: localUrl,
-      timestamp: new Date(),
-      type: 'video',
+      createdAt: new Date(),
+      type: MessageType.VIDEO,
       readBy: [senderId],
       deliveredTo: [senderId],
     };
@@ -206,8 +208,8 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
       content: file.name,
       fileName: file.name,
       fileSize: file.size,
-      timestamp: new Date(),
-      type: 'file',
+      createdAt: new Date(),
+      type: MessageType.FILE,
       readBy: [senderId],
       deliveredTo: [senderId],
     };
@@ -241,8 +243,8 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
       senderId,
       content: localUrl,
       fileUrl: localUrl,
-      timestamp: new Date(),
-      type: 'voice',
+      createdAt: new Date(),
+      type: MessageType.VOICE,
       readBy: [senderId],
       deliveredTo: [senderId],
     };

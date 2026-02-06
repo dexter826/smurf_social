@@ -22,8 +22,8 @@ interface UseChatReturn {
   blockedMessage: string | undefined;
   
   isSearchFocused: boolean;
-  searchResults: any;
-  searchHistory: any[];
+  searchResults: { conversations: Conversation[]; users: User[] };
+  searchHistory: (Conversation | User)[];
   
   forwardingMessage: Message | null;
   setForwardingMessage: (msg: Message | null) => void;
@@ -62,7 +62,7 @@ interface UseChatReturn {
   handleSearch: (term: string) => Promise<void>;
   handleMarkAllRead: () => Promise<void>;
   setSearchFocused: (focused: boolean) => void;
-  addToSearchHistory: (item: any) => void;
+  addToSearchHistory: (item: Conversation | User) => void;
   removeFromSearchHistory: (id: string) => void;
   clearSearchHistory: () => void;
   getOrCreateConversation: (userId1: string, userId2: string) => Promise<string>;

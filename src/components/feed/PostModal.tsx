@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, UploadProgress } from '../ui';
 import { toast } from '../../store/toastStore';
 import { validateFileSize } from '../../utils/fileUtils';
-import { User, Post } from '../../types';
+import { User, Post, Visibility } from '../../types';
 import { postSchema, PostFormValues } from '../../utils/validation';
 
 interface PostModalProps {
@@ -47,7 +47,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       images: [],
       videos: [],
       videoThumbnails: {},
-      visibility: 'public'
+      visibility: Visibility.PUBLIC
     }
   });
 
@@ -76,7 +76,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           images: [],
           videos: [],
           videoThumbnails: {},
-          visibility: 'public'
+          visibility: Visibility.PUBLIC
         });
         // Xử lý file ban đầu
         if (initialFiles?.length > 0) {
@@ -266,7 +266,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           </div>
           <Select
             value={formData.visibility}
-            onChange={(v) => setValue('visibility', v as any, { shouldDirty: true })}
+            onChange={(v) => setValue('visibility', v as Visibility, { shouldDirty: true })}
             options={[
               { value: 'public', label: 'Công khai', icon: <Globe size={14} /> },
               { value: 'friends', label: 'Bạn bè', icon: <Users size={14} /> },
@@ -284,7 +284,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               {...register('content')}
               ref={(e) => {
                 register('content').ref(e);
-                (textareaRef as any).current = e;
+                (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
               }}
               placeholder="Hãy viết gì đó..."
               className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 ${

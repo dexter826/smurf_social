@@ -1,4 +1,4 @@
-import { Post, Comment } from '../types';
+import { Post, Comment, Visibility } from '../types';
 import { postService } from '../services/postService';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { create } from 'zustand';
@@ -15,8 +15,8 @@ interface PostState {
 
   fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
-  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => Promise<void>;
-  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => Promise<void>;
+  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
+  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
   deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
@@ -91,8 +91,9 @@ export const usePostStore = create<PostState>()(
             isRevalidating: false,
             abortController: null
           });
-        } catch (error: any) {
-          if (error.name === 'AbortError') return;
+        } catch (error: unknown) {
+          const err = error as { name?: string };
+          if (err.name === 'AbortError') return;
           console.error("Lỗi tải bài viết:", error);
           set({ isLoading: false, isRevalidating: false, abortController: null });
         }
@@ -115,7 +116,7 @@ export const usePostStore = create<PostState>()(
             const existingIds = new Set(state.posts.map(p => p.id));
             const newPosts = changedPosts.filter(p => !existingIds.has(p.id));
             return { 
-              posts: [...newPosts, ...state.posts].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+              posts: [...newPosts, ...state.posts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
             };
           }
           
@@ -143,7 +144,7 @@ export const usePostStore = create<PostState>()(
     return unsubscribe;
   },
 
-  createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private' = 'public', videoThumbnails?: Record<string, string>) => {
+  createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: Visibility = Visibility.PUBLIC, videoThumbnails?: Record<string, string>) => {
     try {
       await postService.createPost({
         userId,
@@ -160,13 +161,13 @@ export const usePostStore = create<PostState>()(
     }
   },
 
-  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => {
     try {
       await postService.updatePost(postId, content, images, videos, visibility, videoThumbnails);
       set((state) => ({
         posts: state.posts.map(p =>
           p.id === postId
-            ? { ...p, content, images, videos, visibility, videoThumbnails, edited: true, editedAt: new Date() }
+            ? { ...p, content, images, videos, visibility, videoThumbnails, isEdited: true, editedAt: new Date() }
             : p
         )
       }));

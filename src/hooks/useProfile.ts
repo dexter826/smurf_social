@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { User, UserStatus } from '../types';
+import { User, UserStatus, FriendRequest } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
 import { chatService } from '../services/chatService';
@@ -10,7 +10,7 @@ import { toast } from '../store/toastStore';
 import { useUserCache } from '../store/userCacheStore';
 import { validateFileSize } from '../utils/fileUtils';
 
-type TabType = 'media' | 'posts' | 'friends' | 'photos' | 'videos';
+type TabType = 'posts' | 'media';
 
 export enum FriendStatus {
   NOT_FRIEND = 'not_friend',
@@ -121,8 +121,8 @@ export const useProfile = (): UseProfileReturn => {
       return;
     }
 
-    let sentRequest: any = null;
-    let receivedRequest: any = null;
+    let sentRequest: FriendRequest | null = null;
+    let receivedRequest: FriendRequest | null = null;
 
     const updateStatus = () => {
       if (sentRequest) {
@@ -198,8 +198,9 @@ export const useProfile = (): UseProfileReturn => {
         await friendService.sendFriendRequest(currentUser.id, profile.id);
         toast.success('Đã gửi lời mời kết bạn');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Thao tác thất bại');
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      toast.error(err.message || 'Thao tác thất bại');
     }
     
     return { needConfirm: false };

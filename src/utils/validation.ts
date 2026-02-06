@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG, MEDIA_CONSTRAINTS } from '../constants/appConfig';
-import { ReportReason } from '../types';
+import { ReportReason, Visibility, Gender } from '../types';
 
 // Schema cho Đăng nhập
 export const loginSchema = z.object({
@@ -46,7 +46,7 @@ export const profileSchema = z.object({
     .max(VALIDATION.BIO_MAX_LENGTH, `Giới thiệu không được quá ${VALIDATION.BIO_MAX_LENGTH} ký tự`)
     .optional(),
   location: z.string().optional(),
-  gender: z.enum(['male', 'female', 'other']).optional(),
+  gender: z.nativeEnum(Gender).optional(),
   birthDate: z.number().optional(),
 });
 
@@ -73,7 +73,7 @@ export const postSchema = z.object({
     .max(VALIDATION.POST_CONTENT_MAX_LENGTH, `Nội dung không được quá ${VALIDATION.POST_CONTENT_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
-  visibility: z.enum(['public', 'friends', 'private']),
+  visibility: z.nativeEnum(Visibility),
   images: z.array(z.string())
     .max(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST, `Chỉ được tải lên tối đa ${MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST} ảnh`),
   videos: z.array(z.string())

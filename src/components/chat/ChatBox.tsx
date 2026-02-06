@@ -78,7 +78,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         if (messages.length > prevMessagesLength.current) {
             const lastMsg = messages[messages.length - 1];
             const prevLastMsg = messages[prevMessagesLength.current - 1];
-            const isNewMessage = !prevLastMsg || lastMsg.timestamp > prevLastMsg.timestamp;
+            const isNewMessage = !prevLastMsg || lastMsg.createdAt > prevLastMsg.createdAt;
             
             if (isNewMessage && shouldAutoScroll) {
                 messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -138,7 +138,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
 
   // Nhóm tin nhắn theo ngày
   processedMessages.forEach((msg) => {
-    const msgDate = new Date(msg.timestamp).toLocaleDateString('vi-VN');
+    const msgDate = new Date(msg.createdAt).toLocaleDateString('vi-VN');
     if (msgDate !== currentDate) {
       currentDate = msgDate;
       groupedMessages.push({ date: msgDate, messages: [msg] });
@@ -330,8 +330,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                             while (j < dayMessages.length) {
                               const nextMsg = dayMessages[j];
                               const prevMsgInGroup = imageGroup[imageGroup.length - 1];
-                              const nextMsgTime = new Date(nextMsg.timestamp).getTime();
-                              const prevMsgTime = new Date(prevMsgInGroup.timestamp).getTime();
+                               const nextMsgTime = new Date(nextMsg.createdAt).getTime();
+                               const prevMsgTime = new Date(prevMsgInGroup.createdAt).getTime();
                               const timeDiff = nextMsgTime - prevMsgTime;
                               const MAX_GROUP_TIME = 60 * 1000; 
 

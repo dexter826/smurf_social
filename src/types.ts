@@ -1,28 +1,23 @@
 export type ThemeMode = "light" | "dark";
 
+// ========== ENUMS ==========
+
 export enum UserStatus {
   ONLINE = "online",
   OFFLINE = "offline",
   BANNED = "banned",
 }
 
-export interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  email: string;
-  location?: string;
-  gender?: "male" | "female" | "other";
-  birthDate?: Date;
-  status: UserStatus;
-  bio?: string;
-  friendIds?: string[];
-  blockedUserIds?: string[];
-  createdAt?: Date;
-  coverImage?: string;
-  lastSeen?: Date;
-  fcmTokens?: string[];
-  role?: "user" | "admin";
+export enum Gender {
+  MALE = "male",
+  FEMALE = "female",
+  OTHER = "other",
+}
+
+export enum Visibility {
+  PUBLIC = "public",
+  FRIENDS = "friends",
+  PRIVATE = "private",
 }
 
 export enum FriendRequestStatus {
@@ -31,99 +26,13 @@ export enum FriendRequestStatus {
   REJECTED = "rejected",
 }
 
-export interface FriendRequest {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  status: FriendRequestStatus;
-  message?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type MessageType =
-  | "text"
-  | "image"
-  | "video"
-  | "file"
-  | "voice"
-  | "system";
-
-export interface Message {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  content: string;
-  timestamp: Date;
-  type: MessageType;
-  fileUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-  videoThumbnails?: Record<string, string>;
-  readBy?: string[];
-  deliveredTo?: string[];
-  deliveredAt?: Date;
-  mentions?: string[];
-  reactions?: Record<string, string>;
-  isRecalled?: boolean;
-  recalledAt?: Date;
-  deletedBy?: string[];
-  isForwarded?: boolean;
-  replyToId?: string;
-  replyToMessage?: Message;
-  isEdited?: boolean;
-  editedAt?: Date;
-}
-
-export interface Conversation {
-  id: string;
-  participantIds: string[];
-  participants: User[];
-  lastMessage?: Message;
-  unreadCount: Record<string, number>;
-  isGroup: boolean;
-  groupName?: string;
-  groupAvatar?: string;
-  creatorId?: string;
-  adminIds?: string[];
-  updatedAt: Date;
-  createdAt: Date;
-  pinned?: boolean;
-  muted?: boolean;
-  archived?: boolean;
-  markedUnread?: boolean;
-  typingUsers?: string[];
-  memberJoinedAt?: Record<string, Date>;
-  deletedBy?: string[];
-  deletedAt?: Record<string, any>;
-}
-
-export interface Comment {
-  id: string;
-  postId: string;
-  userId: string;
-  parentId?: string;
-  content: string;
-  timestamp: Date;
-  likes?: string[];
-  image?: string;
-  replyCount?: number;
-  replyToUserId?: string;
-}
-
-export interface Post {
-  id: string;
-  userId: string;
-  content: string;
-  images?: string[];
-  videos?: string[];
-  reactions?: Record<string, string>;
-  videoThumbnails?: Record<string, string>;
-  commentCount: number;
-  timestamp: Date;
-  visibility: "public" | "friends" | "private";
-  edited?: boolean;
-  editedAt?: Date;
+export enum MessageType {
+  TEXT = "text",
+  IMAGE = "image",
+  VIDEO = "video",
+  FILE = "file",
+  VOICE = "voice",
+  SYSTEM = "system",
 }
 
 export enum NotificationType {
@@ -137,24 +46,6 @@ export enum NotificationType {
   REPORT_RESOLVED = "report_resolved",
   CONTENT_VIOLATION = "content_violation",
 }
-
-export interface AppNotification {
-  id: string;
-  receiverId: string;
-  senderId: string;
-  type: NotificationType;
-  data: {
-    postId?: string;
-    commentId?: string;
-    friendRequestId?: string;
-    contentSnippet?: string;
-    reportId?: string;
-  };
-  isRead: boolean;
-  createdAt: Date;
-}
-
-// ========== REPORT TYPES ==========
 
 export enum ReportType {
   POST = "post",
@@ -178,8 +69,131 @@ export enum ReportStatus {
   ORPHANED = "orphaned",
 }
 
-export interface Report {
+// ========== BASE ENTITIES ==========
+
+export interface BaseEntity {
   id: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface MediaAttachment {
+  url: string;
+  type: MessageType | "media";
+  thumbnailUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+}
+
+// ========== CORE INTERFACES ==========
+
+export interface User extends BaseEntity {
+  name: string;
+  avatar: string;
+  email: string;
+  location?: string;
+  gender?: Gender;
+  birthDate?: Date;
+  status: UserStatus;
+  bio?: string;
+  friendIds?: string[];
+  blockedUserIds?: string[];
+  coverImage?: string;
+  lastSeen?: Date;
+  fcmTokens?: string[];
+  role?: "user" | "admin";
+}
+
+export interface FriendRequest extends BaseEntity {
+  senderId: string;
+  receiverId: string;
+  status: FriendRequestStatus;
+  message?: string;
+}
+
+export interface Message extends BaseEntity {
+  conversationId: string;
+  senderId: string;
+  content: string;
+  type: MessageType;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  videoThumbnails?: Record<string, string>;
+  readBy?: string[];
+  deliveredTo?: string[];
+  deliveredAt?: Date;
+  mentions?: string[];
+  reactions?: Record<string, string>;
+  isRecalled?: boolean;
+  recalledAt?: Date;
+  deletedBy?: string[];
+  isForwarded?: boolean;
+  replyToId?: string;
+  replyToMessage?: Message;
+  isEdited?: boolean;
+  editedAt?: Date;
+}
+
+export interface Conversation extends BaseEntity {
+  participantIds: string[];
+  participants: User[];
+  lastMessage?: Message;
+  unreadCount: Record<string, number>;
+  isGroup: boolean;
+  groupName?: string;
+  groupAvatar?: string;
+  creatorId?: string;
+  adminIds?: string[];
+  pinned?: boolean;
+  muted?: boolean;
+  archived?: boolean;
+  markedUnread?: boolean;
+  typingUsers?: string[];
+  memberJoinedAt?: Record<string, Date>;
+  deletedBy?: string[];
+  deletedAt?: Record<string, Date>;
+}
+
+export interface Comment extends BaseEntity {
+  postId: string;
+  userId: string;
+  parentId?: string;
+  content: string;
+  likes?: string[];
+  image?: string;
+  replyCount?: number;
+  replyToUserId?: string;
+}
+
+export interface Post extends BaseEntity {
+  userId: string;
+  content: string;
+  images?: string[];
+  videos?: string[];
+  reactions?: Record<string, string>;
+  videoThumbnails?: Record<string, string>;
+  commentCount: number;
+  visibility: Visibility;
+  isEdited?: boolean;
+  editedAt?: Date;
+}
+
+export interface AppNotification extends BaseEntity {
+  receiverId: string;
+  senderId: string;
+  type: NotificationType;
+  data: {
+    postId?: string;
+    commentId?: string;
+    friendRequestId?: string;
+    contentSnippet?: string;
+    reportId?: string;
+  };
+  isRead: boolean;
+}
+
+export interface Report extends BaseEntity {
   reporterId: string;
   targetType: ReportType;
   targetId: string;
@@ -188,7 +202,6 @@ export interface Report {
   description?: string;
   images?: string[];
   status: ReportStatus;
-  createdAt: Date;
   resolvedAt?: Date;
   resolvedBy?: string;
   resolution?: string;

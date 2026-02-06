@@ -87,8 +87,8 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
             if (index !== -1) {
               updatedPosts[index] = npm;
             } else {
-              const firstPostTime = updatedPosts[0]?.timestamp?.getTime() || 0;
-              if (npm.timestamp.getTime() > firstPostTime) {
+              const firstPostTime = updatedPosts[0]?.createdAt?.getTime() || 0;
+              if (npm.createdAt.getTime() > firstPostTime) {
                 updatedPosts.unshift(npm);
               }
             }

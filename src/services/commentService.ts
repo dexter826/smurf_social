@@ -15,6 +15,8 @@ import {
   limit,
   startAfter,
   DocumentSnapshot,
+  QueryDocumentSnapshot,
+  DocumentData,
   increment,
   writeBatch,
   onSnapshot
@@ -33,7 +35,7 @@ export const commentService = {
         collection(db, 'comments'),
         where('postId', '==', postId),
         where('parentId', '==', null),
-        orderBy('timestamp', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(limitCount + 1)
       );
 
@@ -52,7 +54,7 @@ export const commentService = {
         .map(doc => ({
           ...doc.data(),
           id: doc.id,
-          timestamp: doc.data().timestamp?.toDate() || new Date(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
         }) as Comment)
         .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
 
@@ -73,7 +75,7 @@ export const commentService = {
       let q = query(
         collection(db, 'comments'),
         where('parentId', '==', commentId),
-        orderBy('timestamp', 'asc'),
+        orderBy('createdAt', 'asc'),
         limit(limitCount + 1)
       );
 
@@ -92,7 +94,7 @@ export const commentService = {
         .map(doc => ({
           ...doc.data(),
           id: doc.id,
-          timestamp: doc.data().timestamp?.toDate() || new Date(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
         }) as Comment)
         .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
 
@@ -124,7 +126,7 @@ export const commentService = {
         parentId,
         replyToUserId: replyToUserId || null,
         image: imageUrl || null,
-        timestamp: Timestamp.now(),
+        createdAt: Timestamp.now(),
         likes: [],
         replyCount: 0
       };
@@ -183,13 +185,14 @@ export const commentService = {
       
       const commentData = commentSnap.data() as Comment;
       
-      let repliesToDelete: any[] = [];
+      let repliesToDelete: QueryDocumentSnapshot<DocumentData>[] = [];
       try {
         const repliesQuery = query(collection(db, 'comments'), where('parentId', '==', commentId));
         const repliesSnapshot = await getDocs(repliesQuery);
         repliesToDelete = repliesSnapshot.docs;
-      } catch (err: any) {
-        if (err.code !== 'permission-denied') {
+      } catch (err: unknown) {
+        const firestoreError = err as { code?: string };
+        if (firestoreError.code !== 'permission-denied') {
           console.warn("Lỗi khi lấy phản hồi để xóa:", err);
         }
       }
@@ -244,9 +247,9 @@ export const commentService = {
   updateComment: async (commentId: string, content: string, imageUrl?: string | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
-      const updateData: any = { content };
+      const updateData: Partial<Comment> = { content };
       if (imageUrl !== undefined) updateData.image = imageUrl;
-      await updateDoc(commentRef, updateData);
+      await updateDoc(commentRef, updateData as DocumentData);
     } catch (error) {
       console.error("Lỗi cập nhật comment:", error);
       throw error;
@@ -292,7 +295,7 @@ export const commentService = {
       return {
         ...data,
         id: commentSnap.id,
-        timestamp: data.timestamp?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
       } as Comment;
     } catch (error) {
       console.error("Lỗi lấy comment:", error);
@@ -310,14 +313,14 @@ export const commentService = {
     const convertDocToComment = (docSnap: DocumentSnapshot): Comment => ({
       ...docSnap.data(),
       id: docSnap.id,
-      timestamp: docSnap.data()?.timestamp?.toDate() || new Date(),
+      createdAt: docSnap.data()?.createdAt?.toDate() || new Date(),
     } as Comment);
 
     const rootQuery = query(
       collection(db, 'comments'),
       where('postId', '==', postId),
       where('parentId', '==', null),
-      orderBy('timestamp', 'desc'),
+      orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
 
@@ -363,13 +366,13 @@ export const commentService = {
     const convertDocToComment = (docSnap: DocumentSnapshot): Comment => ({
       ...docSnap.data(),
       id: docSnap.id,
-      timestamp: docSnap.data()?.timestamp?.toDate() || new Date(),
+      createdAt: docSnap.data()?.createdAt?.toDate() || new Date(),
     } as Comment);
 
     const q = query(
       collection(db, 'comments'),
       where('parentId', '==', parentId),
-      orderBy('timestamp', 'asc'),
+      orderBy('createdAt', 'asc'),
       limit(limitCount)
     );
 

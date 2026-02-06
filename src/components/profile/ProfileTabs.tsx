@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui';
 
-type TabType = 'media' | 'posts' | 'friends';
+type TabType = 'posts' | 'media';
 
 interface ProfileTabsProps {
   activeTab: TabType;
@@ -26,7 +26,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
               key={tab.id}
               variant="ghost"
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-3 text-sm transition-all relative border-b-2 rounded-none focus:!ring-0 focus:!ring-offset-0 hover:bg-transparent !outline-none active:scale-100 border-b-2 ${
+              className={`px-4 py-3 text-sm transition-all relative rounded-none focus:!ring-0 focus:!ring-offset-0 hover:bg-transparent !outline-none active:scale-100 border-b-2 ${
                 activeTab === tab.id
                   ? 'text-primary border-primary font-bold'
                   : 'text-text-secondary border-transparent font-medium'

@@ -17,7 +17,7 @@ interface ChatInputProps {
   onTyping: (isTyping: boolean) => void;
   disabled?: boolean;
   blockedMessage?: string;
-  replyingTo?: any;
+  replyingTo?: Message;
   editingMessage: Message | null;
   onCancelAction: () => void;
   onEditMessage?: (text: string) => Promise<void>;
@@ -305,7 +305,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         preview = URL.createObjectURL(file);
       }
 
-      newFiles.push({ file, preview, type: fileType as any });
+      newFiles.push({ file, preview, type: fileType as 'image' | 'video' | 'file' });
     });
 
     setSelectedFiles(prev => [...prev, ...newFiles]);

@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, RefObject } from 'react';
-import { Post, User } from '../types';
+import { Post, User, Visibility } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
@@ -13,7 +13,7 @@ interface UseFeedReturn {
   usersMap: Record<string, User>;
   handleLoadMore: () => void;
   handleReact: (postId: string, reaction: string) => Promise<void>;
-  handleUpdate: (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => Promise<void>;
+  handleUpdate: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
   handleDelete: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   observerRef: RefObject<HTMLDivElement | null>;
 }
@@ -85,7 +85,7 @@ export const useFeed = (): UseFeedReturn => {
     content: string,
     images: string[],
     videos: string[],
-    visibility: 'public' | 'friends' | 'private',
+    visibility: Visibility,
     videoThumbnails?: Record<string, string>
   ) => {
     await updatePost(postId, content, images, videos, visibility, videoThumbnails);

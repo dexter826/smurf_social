@@ -115,7 +115,7 @@ export const conversationService = {
           }), {}) : undefined,
           lastMessage: data.lastMessage ? {
             ...data.lastMessage,
-            timestamp: data.lastMessage.timestamp?.toDate() || new Date()
+            createdAt: data.lastMessage.createdAt?.toDate() || new Date()
           } : undefined
         } as Conversation;
       }).filter(c => c !== null) as Conversation[];

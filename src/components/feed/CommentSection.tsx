@@ -337,7 +337,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
             {!isEditing && (
               <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
-                <span title={formatDateTime(comment.timestamp)}>{formatRelativeTime(comment.timestamp)}</span>
+                <span title={formatDateTime(comment.createdAt)}>{formatRelativeTime(comment.createdAt)}</span>
                 <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Trả lời</button>
                 {comment.userId === currentUser.id ? (
                   <>
