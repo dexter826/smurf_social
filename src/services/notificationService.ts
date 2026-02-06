@@ -137,10 +137,10 @@ export const notificationService = {
   deleteNotificationsByPostId: async (postId: string): Promise<void> => {
     try {
       const notificationTypes = [
-        'like_post',
-        'comment_post', 
-        'reply_comment',
-        'like_comment'
+        NotificationType.LIKE_POST,
+        NotificationType.COMMENT_POST,
+        NotificationType.REPLY_COMMENT,
+        NotificationType.LIKE_COMMENT
       ];
       
       for (const type of notificationTypes) {

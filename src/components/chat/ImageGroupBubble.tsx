@@ -239,7 +239,7 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
         {/* Thời gian & Trạng thái đọc */}
         <div className="flex flex-col items-end mt-1">
           <span className="text-[10px] text-text-tertiary">
-            {formatTimeOnly(lastMsg.timestamp)}
+            {formatTimeOnly(lastMsg.createdAt)}
           </span>
 
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (

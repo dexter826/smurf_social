@@ -284,11 +284,9 @@ const ChatPage: React.FC = () => {
           onLeaveGroup={() => {
             const result = handleLeaveGroup();
             if (result && 'then' in result) {
-               result.then((res: any) => {
-                 if (res?.needsAssignAdmin) setShowAssignAdmin(true);
+               (result as Promise<{ needAssignAdmin: boolean }>).then((res) => {
+                 if (res?.needAssignAdmin) setShowAssignAdmin(true);
                });
-            } else if ((result as any)?.needsAssignAdmin) {
-               setShowAssignAdmin(true);
             }
           }}
           onEditGroup={() => setShowEditGroup(true)}

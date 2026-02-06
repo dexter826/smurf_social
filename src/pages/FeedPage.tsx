@@ -3,6 +3,7 @@ import { PostItem, PostModal, PostViewModal, CreatePost, FeedSkeleton } from '..
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
+import { Visibility, UserStatus } from '../types';
 import { useFeed } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
 
@@ -25,7 +26,7 @@ const FeedPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  const handleEditPost = async (content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => {
+  const handleEditPost = async (content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => {
     if (!showEditModal) return;
     await handleUpdate(showEditModal, content, images, videos, visibility, videoThumbnails);
     setShowEditModal(null);
@@ -82,7 +83,7 @@ const FeedPage: React.FC = () => {
                 name: 'Người dùng',
                 avatar: '',
                 email: '',
-                status: 'offline' as const
+                status: UserStatus.OFFLINE
               };
 
               return (

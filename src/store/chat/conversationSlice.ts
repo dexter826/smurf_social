@@ -4,6 +4,7 @@ import { chatService } from '../../services/chatService';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../authStore';
 import NotificationSound from '../../assets/sounds/message-notification.mp3';
+import type { ChatState } from '../chatStore';
 
 let lastPlayedId = '';
 
@@ -37,7 +38,7 @@ export interface ConversationSlice {
   markAllAsRead: (userId: string) => Promise<void>;
 }
 
-export const createConversationSlice: StateCreator<ConversationSlice, [], [], ConversationSlice> = (set, get) => ({
+export const createConversationSlice: StateCreator<ChatState, [], [], ConversationSlice> = (set, get) => ({
   conversations: [],
   selectedConversationId: null,
   isLoading: false,
@@ -180,8 +181,8 @@ export const createConversationSlice: StateCreator<ConversationSlice, [], [], Co
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
     }));
     
-    if (typeof (get() as any).clearMessages === 'function') {
-      (get() as any).clearMessages(conversationId);
+    if (get().clearMessages) {
+      get().clearMessages(conversationId);
     }
     try {
       await chatService.deleteConversation(conversationId, useAuthStore.getState().user?.id || '');

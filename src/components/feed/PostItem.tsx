@@ -75,8 +75,8 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
               </h3>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
-              <span title={formatDateTime(post.timestamp)}>
-                {formatRelativeTime(post.timestamp)}
+              <span title={formatDateTime(post.createdAt)}>
+                {formatRelativeTime(post.createdAt)}
               </span>
               <span>•</span>
               {post.visibility === 'public' ? (

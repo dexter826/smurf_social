@@ -77,7 +77,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   }
 
   const lastMessage = (conversation.lastMessage && startTime)
-    ? (new Date(conversation.lastMessage.timestamp) >= startTime ? conversation.lastMessage : undefined)
+    ? (new Date(conversation.lastMessage.createdAt) >= startTime ? conversation.lastMessage : undefined)
     : conversation.lastMessage;
 
   const lastMessagePreview = lastMessage

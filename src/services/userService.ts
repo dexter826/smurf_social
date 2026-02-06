@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { User, UserStatus } from '../types';
+import { User, UserStatus, Visibility, Gender } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage, withRetry } from '../utils/imageUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
@@ -121,6 +121,7 @@ export const userService = {
           status: UserStatus.ONLINE,
           bio: data.bio || '',
           coverImage: data.coverImage || '',
+          createdAt: new Date(),
           ...data
         };
       }
@@ -227,11 +228,11 @@ export const userService = {
       // Đếm bài viết theo visibility mà người xem có thể thấy
       let visibilityFilter: string[];
       if (isOwner) {
-        visibilityFilter = ['public', 'friends', 'private'];
+        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
       } else if (isFriend) {
-        visibilityFilter = ['public', 'friends'];
+        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS];
       } else {
-        visibilityFilter = ['public'];
+        visibilityFilter = [Visibility.PUBLIC];
       }
 
       const postsQuery = query(
@@ -377,7 +378,7 @@ export const userService = {
   subscribeToAdminUsers: (
     limitCount: number = PAGINATION.ADMIN_USERS,
     callback: (users: User[]) => void,
-    onError?: (error: any) => void
+    onError?: (error: Error) => void
   ): (() => void) => {
     const usersRef = collection(db, 'users');
     const q = query(

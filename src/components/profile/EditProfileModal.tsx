@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User } from '../../types';
+import { User, Gender, Visibility } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 import { API_ENDPOINTS } from '../../constants/api';
@@ -60,7 +60,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     try {
       const response = await fetch(API_ENDPOINTS.PROVINCES);
       const data = await response.json();
-      setProvinces(data.map((p: any) => ({ value: p.name, label: p.name })));
+      setProvinces(data.map((p: { name: string }) => ({ value: p.name, label: p.name })));
     } catch (error) {
       console.error('Không thể tải danh sách tỉnh/thành phố', error);
     }
@@ -156,7 +156,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <Select
                 label="Giới tính"
                 value={formData.gender || 'male'}
-                onChange={(val) => setValue('gender', val as any, { shouldDirty: true })}
+                onChange={(val) => setValue('gender', val as Gender, { shouldDirty: true })}
                 options={[
                   { value: 'male', label: 'Nam' },
                   { value: 'female', label: 'Nữ' },

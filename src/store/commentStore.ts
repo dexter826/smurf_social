@@ -119,7 +119,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
                 const match = comments.find(c => 
                   c.userId === e.userId && 
                   c.content === e.content &&
-                  Math.abs(c.timestamp.getTime() - e.timestamp.getTime()) < 30000 // Trong vòng 30s
+                  Math.abs(c.createdAt.getTime() - e.createdAt.getTime()) < 30000
                 );
                 if (match) {
                   optimisticMatches.add(match.id);
@@ -139,7 +139,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
             return { 
               rootComments: { 
                 ...state.rootComments, 
-                [postId]: [...newComments, ...updatedExisting].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+                [postId]: [...newComments, ...updatedExisting].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
               } 
             };
           }
@@ -198,7 +198,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
                 const match = replies.find(r => 
                   r.userId === e.userId && 
                   r.content === e.content &&
-                  Math.abs(r.timestamp.getTime() - e.timestamp.getTime()) < 30000
+                  Math.abs(r.createdAt.getTime() - e.createdAt.getTime()) < 30000
                 );
                 if (match) {
                   optimisticMatches.add(match.id);
@@ -220,7 +220,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
                 ...state.replies,
                 [postId]: { 
                   ...postReplies, 
-                  [parentId]: [...updatedReplies, ...newReplies].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+                  [parentId]: [...updatedReplies, ...newReplies].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
                 }
               }
             };
@@ -270,7 +270,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       parentId: parentId || null,
       replyToUserId: replyToUserId || null,
       image: imageUrl || null,
-      timestamp: new Date(),
+      createdAt: new Date(),
       likes: [],
       replyCount: 0
     };

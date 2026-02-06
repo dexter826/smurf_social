@@ -228,8 +228,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   {author?.name || 'Unknown User'}
                 </h3>
                 <div className="flex items-center gap-2 text-[12px] text-text-tertiary mt-0.5">
-                  <span title={formatDateTime(post.timestamp)}>
-                    {formatRelativeTime(post.timestamp)}
+                  <span title={formatDateTime(post.createdAt)}>
+                    {formatRelativeTime(post.createdAt)}
                   </span>
                   <span className="opacity-40">•</span>
                   {post.visibility === 'public' ? (

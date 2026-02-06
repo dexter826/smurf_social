@@ -1,6 +1,8 @@
 import { StateCreator } from 'zustand';
+import { Conversation } from '../../types';
 import { chatService } from '../../services/chatService';
 import { useAuthStore } from '../authStore';
+import { ConversationSlice } from './conversationSlice';
 
 export interface GroupSlice {
   createGroup: (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => Promise<string>;
@@ -12,16 +14,13 @@ export interface GroupSlice {
   demoteFromAdmin: (conversationId: string, userId: string) => Promise<void>;
 }
 
-type GroupSliceWithConversation = GroupSlice & {
-  conversations: any[];
-  selectedConversationId: string | null;
-};
+type GroupSliceWithConversation = GroupSlice & ConversationSlice;
 
 export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], GroupSlice> = (set, get) => ({
   createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => {
     try {
       const conversationId = await chatService.createGroupConversation(creatorId, memberIds, groupName, groupAvatar);
-      set({ selectedConversationId: conversationId } as any);
+      set({ selectedConversationId: conversationId });
       return conversationId;
     } catch (error) {
       console.error("Lỗi tạo nhóm:", error);
@@ -34,8 +33,8 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
     if (!actorId) return;
 
     set((state) => ({
-      conversations: state.conversations.map((c: any) => c.id === conversationId ? { ...c, ...updates } : c)
-    } as any));
+      conversations: state.conversations.map((c: Conversation) => c.id === conversationId ? { ...c, ...updates } : c)
+    }));
     try {
       await chatService.updateGroupInfo(conversationId, actorId, updates);
     } catch (error) {
@@ -68,9 +67,9 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
 
   leaveGroup: async (conversationId: string, userId: string) => {
     set((state) => ({
-      conversations: state.conversations.filter((c: any) => c.id !== conversationId),
+      conversations: state.conversations.filter((c: Conversation) => c.id !== conversationId),
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
-    } as any));
+    }));
     try {
       await chatService.leaveGroup(conversationId, userId);
     } catch (error) {

@@ -29,7 +29,7 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
         const fileNameMatch = msg.type === 'file' && msg.fileName?.toLowerCase().includes(term);
         return contentMatch || fileNameMatch;
       })
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, PAGINATION.MESSAGES);
   }, [messages, searchTerm]);
 
@@ -95,7 +95,7 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
                         {sender?.name || 'Unknown'}
                       </span>
                       <span className="text-xs text-text-tertiary">
-                        {formatTimeOnly(msg.timestamp)}
+                        {formatTimeOnly(msg.createdAt)}
                       </span>
                     </div>
                     <p className="text-sm text-text-primary line-clamp-2">

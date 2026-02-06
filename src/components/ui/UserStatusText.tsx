@@ -19,7 +19,7 @@ export const UserStatusText: React.FC<UserStatusTextProps> = ({
   onlineText = 'Đang hoạt động',
   offlineText = 'Không hoạt động'
 }) => {
-  const [user, setUser] = useState<{ status: UserStatus; lastSeen?: any } | null>(
+  const [user, setUser] = useState<{ status: UserStatus; lastSeen?: Date | number } | null>(
     initialStatus ? { status: initialStatus } : null
   );
 

@@ -68,7 +68,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
             {tabs.map(tab => (
               <button
                 key={tab.value}
-                onClick={() => setStatusFilter(tab.value as any)}
+                onClick={() => setStatusFilter(tab.value as ReportStatus | 'all')}
                 className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                   statusFilter === tab.value 
                     ? `bg-bg-primary text-primary shadow-sm` 
@@ -84,7 +84,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
           <div className="flex items-center gap-2 w-full sm:w-auto min-w-[160px]">
              <Select
                value={typeFilter}
-               onChange={(val) => setTypeFilter(val as any)}
+              onChange={(val) => setTypeFilter(val as ReportType | 'all')}
                options={typeOptions}
                className="flex-1"
              />

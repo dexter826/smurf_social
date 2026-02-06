@@ -15,7 +15,11 @@ import {
   arrayRemove,
   limit,
   startAfter,
-  deleteField
+  deleteField,
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
+  DocumentData,
+  FieldValue
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { Message, MessageType } from "../../types";
@@ -28,13 +32,13 @@ export const messageService = {
   subscribeToMessages: (
     conversationId: string,
     limitCount: number,
-    callback: (messages: Message[], lastDoc: any) => void,
+    callback: (messages: Message[], lastDoc: DocumentSnapshot | null) => void,
     joinedAt?: Date,
   ) => {
     let q = query(
       collection(db, "messages"),
       where("conversationId", "==", conversationId),
-      orderBy("timestamp", "desc"),
+      orderBy("createdAt", "desc"),
       limit(limitCount),
     );
 
@@ -42,8 +46,8 @@ export const messageService = {
       q = query(
         collection(db, "messages"),
         where("conversationId", "==", conversationId),
-        where("timestamp", ">=", joinedAt),
-        orderBy("timestamp", "desc"),
+        where("createdAt", ">=", joinedAt),
+        orderBy("createdAt", "desc"),
         limit(limitCount),
       );
     }
@@ -57,7 +61,7 @@ export const messageService = {
             return {
               ...data,
               id: doc.id,
-              timestamp: data.timestamp?.toDate() || new Date(),
+              createdAt: data.createdAt?.toDate() || new Date(),
               deliveredAt: data.deliveredAt?.toDate(),
               readBy: data.readBy || [],
               deliveredTo: data.deliveredTo || [],
@@ -78,15 +82,15 @@ export const messageService = {
   // Lấy thêm tin nhắn cũ (Phân trang)
   getMoreMessages: async (
     conversationId: string,
-    lastVisibleDoc: any,
+    lastVisibleDoc: DocumentSnapshot,
     limitCount: number,
     joinedAt?: Date,
-  ): Promise<{ messages: Message[]; lastDoc: any }> => {
+  ): Promise<{ messages: Message[]; lastDoc: DocumentSnapshot | null }> => {
     try {
       let q = query(
         collection(db, "messages"),
         where("conversationId", "==", conversationId),
-        orderBy("timestamp", "desc"),
+        orderBy("createdAt", "desc"),
         startAfter(lastVisibleDoc),
         limit(limitCount),
       );
@@ -95,8 +99,8 @@ export const messageService = {
         q = query(
           collection(db, "messages"),
           where("conversationId", "==", conversationId),
-          where("timestamp", ">=", joinedAt),
-          orderBy("timestamp", "desc"),
+          where("createdAt", ">=", joinedAt),
+          orderBy("createdAt", "desc"),
           startAfter(lastVisibleDoc),
           limit(limitCount),
         );
@@ -109,7 +113,7 @@ export const messageService = {
           return {
             ...data,
             id: doc.id,
-            timestamp: data.timestamp?.toDate() || new Date(),
+            createdAt: data.createdAt?.toDate() || new Date(),
             deliveredAt: data.deliveredAt?.toDate(),
             readBy: data.readBy || [],
             deliveredTo: data.deliveredTo || [],
@@ -136,15 +140,15 @@ export const messageService = {
     mentions?: string[],
   ): Promise<void> => {
     try {
-      const messageData: any = {
+      const messageData: Omit<Message, 'id'> = {
         conversationId,
         senderId,
         content,
-        type: "text" as MessageType,
-        timestamp: serverTimestamp(),
+        type: MessageType.TEXT,
+        createdAt: serverTimestamp() as unknown as Date,
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp(),
+        deliveredAt: serverTimestamp() as unknown as Date,
         mentions: mentions || [],
       };
 
@@ -170,7 +174,7 @@ export const messageService = {
         await updateDoc(conversationRef, {
           lastMessage: {
             ...messageData,
-            timestamp: new Date(),
+            createdAt: new Date(),
             id: docRef.id,
           },
           unreadCount,
@@ -196,23 +200,23 @@ export const messageService = {
       // Compress ảnh trước khi upload
       const compressedFile = await compressImage(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1920 });
       
-      const timestamp = Date.now();
-      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      const createdAt = Date.now();
+      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
       
       const imageUrl = await withRetry(() => 
         uploadWithProgress(path, compressedFile, onProgress)
       );
 
-      const messageData: Record<string, any> = {
+      const messageData: Partial<Message> = {
         conversationId,
         senderId,
         content: imageUrl,
-        type: "image" as MessageType,
+        type: MessageType.IMAGE,
         fileUrl: imageUrl,
-        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp() as unknown as Date,
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp(),
+        deliveredAt: serverTimestamp() as unknown as Date,
       };
 
       if (replyToId) messageData.replyToId = replyToId;
@@ -235,7 +239,7 @@ export const messageService = {
         await updateDoc(conversationRef, {
           lastMessage: {
             ...messageData,
-            timestamp: new Date(),
+            createdAt: new Date(),
             content: "Hình ảnh",
           },
           unreadCount,
@@ -258,25 +262,25 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      const timestamp = Date.now();
-      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      const createdAt = Date.now();
+      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
       
       const fileUrl = await withRetry(() => 
         uploadWithProgress(path, file, onProgress)
       );
 
-      const messageData: Record<string, any> = {
+      const messageData: Partial<Message> = {
         conversationId,
         senderId,
         content: file.name,
-        type: "file" as MessageType,
+        type: MessageType.FILE,
         fileUrl,
         fileName: file.name,
         fileSize: file.size,
-        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp() as unknown as Date,
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp(),
+        deliveredAt: serverTimestamp() as unknown as Date,
       };
 
       if (replyToId) messageData.replyToId = replyToId;
@@ -299,7 +303,7 @@ export const messageService = {
         await updateDoc(conversationRef, {
           lastMessage: {
             ...messageData,
-            timestamp: new Date(),
+            createdAt: new Date(),
             content: file.name,
           },
           unreadCount,
@@ -322,8 +326,8 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      const timestamp = Date.now();
-      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      const createdAt = Date.now();
+      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
       
       const videoUrl = await withRetry(() => 
         uploadWithProgress(path, file, onProgress)
@@ -331,16 +335,16 @@ export const messageService = {
 
       const thumbnailUrl = videoUrl.replace(/\.[^/.]+$/, ".jpg");
 
-      const messageData: Record<string, any> = {
+      const messageData: Partial<Message> = {
         conversationId,
         senderId,
         content: videoUrl,
-        type: "video" as MessageType,
+        type: MessageType.VIDEO,
         fileUrl: videoUrl,
-        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp() as unknown as Date,
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp(),
+        deliveredAt: serverTimestamp() as unknown as Date,
       };
 
       if (thumbnailUrl) messageData.videoThumbnails = { [videoUrl]: thumbnailUrl };
@@ -364,7 +368,7 @@ export const messageService = {
         await updateDoc(conversationRef, {
           lastMessage: {
             ...messageData,
-            timestamp: new Date(),
+            createdAt: new Date(),
             content: "Video",
           },
           unreadCount,
@@ -387,23 +391,23 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      const timestamp = Date.now();
-      const path = `chats/${conversationId}/${timestamp}_${file.name}`;
+      const createdAt = Date.now();
+      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
       
       const voiceUrl = await withRetry(() => 
         uploadWithProgress(path, file, onProgress)
       );
 
-      const messageData: Record<string, any> = {
+      const messageData: Partial<Message> = {
         conversationId,
         senderId,
         content: voiceUrl,
-        type: "voice" as MessageType,
+        type: MessageType.VOICE,
         fileUrl: voiceUrl,
-        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp() as unknown as Date,
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp(),
+        deliveredAt: serverTimestamp() as unknown as Date,
       };
 
       if (replyToId) messageData.replyToId = replyToId;
@@ -426,7 +430,7 @@ export const messageService = {
         await updateDoc(conversationRef, {
           lastMessage: {
             ...messageData,
-            timestamp: new Date(),
+            createdAt: new Date(),
             content: "Tin nhắn thoại",
           },
           unreadCount,
@@ -461,7 +465,7 @@ export const messageService = {
         const deliveredTo = data.deliveredTo || [];
 
         if (!deliveredTo.includes(userId)) {
-          const updates: Record<string, any> = {
+          const updates: DocumentData = {
             deliveredTo: arrayUnion(userId),
           };
 
@@ -516,7 +520,7 @@ export const messageService = {
 
       if (conversationSnap.exists()) {
         const data = conversationSnap.data();
-        const updates: Record<string, any> = {
+        const updates: DocumentData = {
           [`unreadCount.${userId}`]: 0,
         };
 
@@ -588,11 +592,11 @@ export const messageService = {
       if (!messageSnap.exists()) throw new Error("Tin nhắn không tồn tại");
 
       const data = messageSnap.data();
-      const timestamp = data.timestamp?.toDate();
+      const createdAt = data.createdAt?.toDate();
 
-      if (timestamp) {
+      if (createdAt) {
         const now = new Date();
-        const diffInMinutes = now.getTime() - timestamp.getTime();
+        const diffInMinutes = now.getTime() - createdAt.getTime();
 
         if (diffInMinutes > TIME_LIMITS.MESSAGE_EDIT_WINDOW) {
           throw new Error(
@@ -619,15 +623,15 @@ export const messageService = {
     originalMessage: Message,
   ): Promise<void> => {
     try {
-      const messageData: Record<string, any> = {
+      const messageData: Partial<Message> = {
         conversationId: targetConversationId,
         senderId,
         content: originalMessage.content,
         type: originalMessage.type,
-        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp() as unknown as Date,
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp(),
+        deliveredAt: serverTimestamp() as unknown as Date,
         isForwarded: true,
       };
 
@@ -655,19 +659,19 @@ export const messageService = {
         });
 
         let lastMessageContent = originalMessage.content;
-        if (originalMessage.type === "image")
+        if (originalMessage.type === MessageType.IMAGE)
           lastMessageContent = "Hình ảnh";
-        else if (originalMessage.type === "file")
+        else if (originalMessage.type === MessageType.FILE)
           lastMessageContent = originalMessage.fileName || "Tài liệu";
-        else if (originalMessage.type === "video")
+        else if (originalMessage.type === MessageType.VIDEO)
           lastMessageContent = "Video";
-        else if (originalMessage.type === "voice")
+        else if (originalMessage.type === MessageType.VOICE)
           lastMessageContent = "Tin nhắn thoại";
 
         await updateDoc(conversationRef, {
           lastMessage: {
             ...messageData,
-            timestamp: new Date(),
+            createdAt: new Date(),
             content: lastMessageContent,
           },
           unreadCount,
@@ -693,8 +697,8 @@ export const messageService = {
         conversationId,
         senderId,
         content,
-        type: "text",
-        timestamp: serverTimestamp(),
+        type: MessageType.TEXT,
+        createdAt: serverTimestamp(),
         replyToId,
         readBy: [senderId],
         deliveredTo: [senderId],
@@ -708,7 +712,7 @@ export const messageService = {
         lastMessageId: docRef.id,
         lastMessageContent: content,
         lastMessageSenderId: senderId,
-        lastMessageTimestamp: serverTimestamp(),
+        lastMessageCreatedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
@@ -785,8 +789,8 @@ export const messageService = {
               id: messageId,
               senderId: data.senderId,
               content: `${emoji} ${lastName} đã bày tỏ cảm xúc`,
-              type: 'text',
-              timestamp: new Date()
+              type: MessageType.TEXT,
+              createdAt: new Date()
             },
             updatedAt: serverTimestamp()
           });
@@ -808,8 +812,8 @@ export const messageService = {
         conversationId,
         senderId: 'system',
         content,
-        type: 'system' as MessageType,
-        timestamp: serverTimestamp(),
+        type: MessageType.SYSTEM,
+        createdAt: serverTimestamp(),
       };
 
       const docRef = await addDoc(collection(db, 'messages'), messageData);
@@ -819,7 +823,7 @@ export const messageService = {
         lastMessage: {
           ...messageData,
           id: docRef.id,
-          timestamp: new Date(),
+          createdAt: new Date(),
         },
         updatedAt: serverTimestamp(),
       });

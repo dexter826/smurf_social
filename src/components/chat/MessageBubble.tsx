@@ -85,7 +85,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   // Giới hạn sửa tin nhắn (10 phút)
   const canEdit = isMe && !message.isRecalled && (
-    (new Date().getTime() - new Date(message.timestamp).getTime()) / (1000 * 60) <= 10
+    (new Date().getTime() - new Date(message.createdAt).getTime()) / (1000 * 60) <= 10
   );
   
   const hasReactions = message.reactions && Object.keys(message.reactions).length > 0;
@@ -372,7 +372,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
                   isMe ? 'text-white/80' : 'text-text-tertiary'
                 }`}>
-                  <span>{formatTimeOnly(message.timestamp)}</span>
+                  <span>{formatTimeOnly(message.createdAt)}</span>
                 </div>
               )}
 
@@ -500,7 +500,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* Thời gian cho file media */}
           {message.type !== 'text' && !message.isRecalled && (
             <span className="text-[10px] text-text-tertiary mt-1">
-              {formatTimeOnly(message.timestamp)}
+              {formatTimeOnly(message.createdAt)}
               {/* Status moved to separate line below */}
             </span>
           )}

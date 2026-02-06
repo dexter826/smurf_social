@@ -142,7 +142,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             {...register('content')}
             ref={(e) => {
               register('content').ref(e);
-              (textareaRef as any).current = e;
+              (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
             }}
             placeholder={placeholder}
             rows={1}

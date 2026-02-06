@@ -121,7 +121,7 @@ export const ReportModal: React.FC = () => {
         const error = useReportStore.getState().error;
         if (error) addToast(error, 'error');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Lỗi gửi báo cáo:", error);
       addToast('Có lỗi xảy ra khi gửi báo cáo', 'error');
     } finally {

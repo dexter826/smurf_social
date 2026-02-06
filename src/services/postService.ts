@@ -21,7 +21,7 @@ import {
   deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, Comment, NotificationType, ReportStatus, UserStatus } from '../types';
+import { Post, Comment, NotificationType, ReportStatus, UserStatus, Visibility } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, REACTIONS } from '../constants';
@@ -44,7 +44,7 @@ export const postService = {
       let ownerQuery = query(
         collection(db, 'posts'),
         where('userId', '==', currentUserId),
-        orderBy('timestamp', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(limitCount)
       );
       if (lastDoc) ownerQuery = query(ownerQuery, startAfter(lastDoc));
@@ -53,7 +53,7 @@ export const postService = {
       const ownerPosts = ownerSnapshot.docs.map(doc => ({
         ...doc.data(),
         id: doc.id,
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
         editedAt: doc.data().editedAt?.toDate(),
       })) as Post[];
       
@@ -69,8 +69,8 @@ export const postService = {
             let q = query(
               collection(db, 'posts'),
               where('userId', 'in', chunk),
-              where('visibility', 'in', ['friends', 'public']),
-              orderBy('timestamp', 'desc'),
+              where('visibility', 'in', [Visibility.FRIENDS, Visibility.PUBLIC]),
+              orderBy('createdAt', 'desc'),
               limit(limitCount)
             );
             if (lastDoc) q = query(q, startAfter(lastDoc));
@@ -81,7 +81,7 @@ export const postService = {
               posts: snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id,
-                timestamp: doc.data().timestamp?.toDate() || new Date(),
+                createdAt: doc.data().createdAt?.toDate() || new Date(),
                 editedAt: doc.data().editedAt?.toDate(),
               })) as Post[]
             };
@@ -94,7 +94,7 @@ export const postService = {
 
       // Merge và sort trước khi lọc
       const allPosts = [...ownerPosts, ...friendPosts];
-      allPosts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      allPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
       // Lấy thông tin user để lọc banned
       const authorIds = [...new Set(allPosts.map(p => p.userId))];
@@ -138,7 +138,7 @@ export const postService = {
     const convertDocToPost = (doc: DocumentSnapshot): Post => ({
       ...doc.data(),
       id: doc.id,
-      timestamp: doc.data()?.timestamp?.toDate() || new Date(),
+      createdAt: doc.data()?.createdAt?.toDate() || new Date(),
       editedAt: doc.data()?.editedAt?.toDate(),
     } as Post);
 
@@ -146,7 +146,7 @@ export const postService = {
     const ownerQuery = query(
       collection(db, 'posts'),
       where('userId', '==', currentUserId),
-      orderBy('timestamp', 'desc'),
+      orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
     
@@ -178,8 +178,8 @@ export const postService = {
         const friendQuery = query(
           collection(db, 'posts'),
           where('userId', 'in', chunk),
-          where('visibility', 'in', ['friends', 'public']),
-          orderBy('timestamp', 'desc'),
+          where('visibility', 'in', [Visibility.FRIENDS, Visibility.PUBLIC]),
+          orderBy('createdAt', 'desc'),
           limit(limitCount)
         );
         
@@ -228,18 +228,18 @@ export const postService = {
       // Owner xem tất cả, friend xem public+friends, stranger chỉ xem public
       let visibilityFilter: string[];
       if (isOwner) {
-        visibilityFilter = ['public', 'friends', 'private'];
+        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
       } else if (isFriend) {
-        visibilityFilter = ['public', 'friends'];
+        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS];
       } else {
-        visibilityFilter = ['public'];
+        visibilityFilter = [Visibility.PUBLIC];
       }
 
       let q = query(
         collection(db, 'posts'),
         where('userId', '==', userId),
         where('visibility', 'in', visibilityFilter),
-        orderBy('timestamp', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(limitCount)
       );
 
@@ -256,7 +256,7 @@ export const postService = {
       const posts = querySnapshot.docs.map(doc => ({
         ...doc.data(),
         id: doc.id,
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
         editedAt: doc.data().editedAt?.toDate(),
       })) as Post[];
 
@@ -276,18 +276,18 @@ export const postService = {
     // Owner xem tất cả, friend xem public+friends, stranger chỉ xem public
     let visibilityFilter: string[];
     if (isOwner) {
-      visibilityFilter = ['public', 'friends', 'private'];
+      visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
     } else if (isFriend) {
-      visibilityFilter = ['public', 'friends'];
+      visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS];
     } else {
-      visibilityFilter = ['public'];
+      visibilityFilter = [Visibility.PUBLIC];
     }
 
     const q = query(
       collection(db, 'posts'),
       where('userId', '==', userId),
       where('visibility', 'in', visibilityFilter),
-      orderBy('timestamp', 'desc'),
+      orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
 
@@ -304,7 +304,7 @@ export const postService = {
         const posts = snapshot.docs.map(doc => ({
           ...doc.data(),
           id: doc.id,
-          timestamp: doc.data().timestamp?.toDate() || new Date(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
           editedAt: doc.data().editedAt?.toDate(),
         })) as Post[];
 
@@ -321,13 +321,13 @@ export const postService = {
     };
   },
 
-  createPost: async (postData: Omit<Post, 'id' | 'timestamp' | 'commentCount'>): Promise<string> => {
+  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount'>): Promise<string> => {
     try {
       const docRef = await addDoc(collection(db, 'posts'), {
         ...postData,
         commentCount: 0,
-        timestamp: Timestamp.now(),
-        edited: false
+        createdAt: Timestamp.now(),
+        isEdited: false
       });
       return docRef.id;
     } catch (error) {
@@ -336,7 +336,7 @@ export const postService = {
     }
   },
 
-  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>): Promise<void> => {
+  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
@@ -345,7 +345,7 @@ export const postService = {
         videos: videos || [],
         videoThumbnails: videoThumbnails || {},
         visibility,
-        edited: true,
+        isEdited: true,
         editedAt: Timestamp.now()
       });
     } catch (error) {
@@ -437,7 +437,7 @@ export const postService = {
           await notificationService.createNotification({
             receiverId: data.userId,
             senderId: userId,
-            type: NotificationType.LIKE_POST, // Có thể cập nhật type Notification sau
+            type: NotificationType.LIKE_POST,
             data: { postId }
           });
         }
@@ -460,17 +460,17 @@ export const postService = {
       const isFriend = friendIds?.includes(data.userId) || false;
 
       // Kiểm tra quyền xem
-      if (data.visibility === 'private' && !isOwner) {
+      if (data.visibility === Visibility.PRIVATE && !isOwner) {
         return null;
       }
-      if (data.visibility === 'friends' && !isOwner && !isFriend) {
+      if (data.visibility === Visibility.FRIENDS && !isOwner && !isFriend) {
         return null;
       }
 
       return {
         ...data,
         id: postSnap.id,
-        timestamp: data.timestamp?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
         editedAt: data.editedAt?.toDate(),
       } as Post;
     } catch (error) {
@@ -491,7 +491,7 @@ export const postService = {
       return {
         ...data,
         id: postSnap.id,
-        timestamp: data.timestamp?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
         editedAt: data.editedAt?.toDate(),
       } as Post;
     } catch (error) {
@@ -515,8 +515,8 @@ export const postService = {
         let file = files[i];
         const isVideo = file.type.startsWith('video/');
         const typeFolder = isVideo ? 'videos' : 'images';
-        const timestamp = Date.now();
-        const fileName = `${timestamp}_${file.name}`;
+        const createdAt = Date.now();
+        const fileName = `${createdAt}_${file.name}`;
         const path = `posts/${userId}/${typeFolder}/${fileName}`;
 
         // Compress ảnh trước khi upload
@@ -558,8 +558,8 @@ export const postService = {
       // Compress ảnh
       const compressedFile = await compressImage(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1280 });
       
-      const timestamp = Date.now();
-      const fileName = `comment_img_${timestamp}_${file.name}`;
+      const createdAt = Date.now();
+      const fileName = `comment_img_${createdAt}_${file.name}`;
       const path = `comments/${userId}/images/${fileName}`;
       
       return await withRetry(() => uploadWithProgress(path, compressedFile, onProgress));

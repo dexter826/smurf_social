@@ -52,8 +52,9 @@ const LoginPage: React.FC = () => {
     }
   }, [loginForm]);
 
-  const handleAuthError = (error: any) => {
-    const errorCode = error.code;
+  const handleAuthError = (error: unknown) => {
+    const err = error as { code?: string; message?: string };
+    const errorCode = err.code;
     let message = "Đã có lỗi xảy ra. Vui lòng thử lại.";
     
     switch (errorCode) {
@@ -65,7 +66,7 @@ const LoginPage: React.FC = () => {
       case 'auth/email-already-in-use': message = "Email này đã được sử dụng."; break;
       case 'auth/weak-password': message = "Mật khẩu quá yếu."; break;
       case 'auth/email-not-verified': message = "Vui lòng xác thực email trước khi đăng nhập."; break;
-      default: message = error.message || "Thao tác thất bại.";
+      default: message = err.message || "Thao tác thất bại.";
     }
     
     setAuthError(message);
@@ -107,9 +108,10 @@ const LoginPage: React.FC = () => {
       await resetPassword(data.email);
       toast.success('Đã gửi email khôi phục!');
       setVerificationSent(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string };
       let message = "Có lỗi xảy ra khi gửi email.";
-      if (error.code === 'auth/user-not-found') message = "Email này chưa được đăng ký.";
+      if (err.code === 'auth/user-not-found') message = "Email này chưa được đăng ký.";
       toast.error(message);
     }
   };

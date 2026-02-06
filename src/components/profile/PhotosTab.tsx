@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Post } from '../../types';
+import { Post, MessageType } from '../../types';
 import { postService } from '../../services/postService';
 import { Spinner, Skeleton } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
@@ -10,9 +10,9 @@ interface PhotosTabProps {
 }
 
 export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ userId }) => {
-  const [media, setMedia] = useState<{ url: string, type: 'image' | 'video' }[]>([]);
+  const [media, setMedia] = useState<{ url: string, type: MessageType.IMAGE | MessageType.VIDEO }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMedia, setSelectedMedia] = useState<{ url: string, type: 'image' | 'video' } | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<{ url: string, type: MessageType.IMAGE | MessageType.VIDEO } | null>(null);
   const { user: currentUser } = useAuthStore();
 
   useEffect(() => {
@@ -30,13 +30,13 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
         50
       );
       
-      const allMedia: { url: string, type: 'image' | 'video' }[] = [];
+      const allMedia: { url: string, type: MessageType.IMAGE | MessageType.VIDEO }[] = [];
       posts.forEach(post => {
         if (post.images) {
-          post.images.forEach(url => allMedia.push({ url, type: 'image' }));
+          post.images.forEach(url => allMedia.push({ url, type: MessageType.IMAGE }));
         }
         if (post.videos) {
-          post.videos.forEach(url => allMedia.push({ url, type: 'video' }));
+          post.videos.forEach(url => allMedia.push({ url, type: MessageType.VIDEO }));
         }
       });
       
@@ -105,7 +105,7 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedMedia(null)}
         >
-          {selectedMedia.type === 'video' ? (
+          {selectedMedia.type === MessageType.VIDEO ? (
             <video 
               src={selectedMedia.url} 
               controls 

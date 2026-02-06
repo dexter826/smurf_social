@@ -110,7 +110,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
       {isOpen && createPortal(
         <div 
           className="fixed inset-0 z-[var(--z-overlay)] pointer-events-none"
-          style={{ zIndex: 'var(--z-overlay)' as any }}
+          style={{ zIndex: 'var(--z-overlay)' as string }}
         >
           {/* Mobile Overlay */}
           {showOverlay && (

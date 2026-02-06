@@ -60,7 +60,7 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
         }
         setReport(reportData);
 
-        const fetchTasks: Promise<any>[] = [
+        const fetchTasks: Promise<User | null>[] = [
           userService.getUserById(reportData.reporterId),
           userService.getUserById(reportData.targetOwnerId)
         ];

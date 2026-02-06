@@ -13,6 +13,7 @@ import { db } from '../../firebase/config';
 import { conversationService } from './conversationService';
 import { messageService } from './messageService';
 import { userService } from '../userService';
+import { Conversation } from '../../types';
 import { uploadWithProgress, UploadProgress } from '../../utils/uploadUtils';
 import { compressImage } from '../../utils/imageUtils';
 
@@ -155,14 +156,14 @@ export const groupService = {
         
         // Xóa nhóm nếu không còn thành viên
         if (newParticipantIds.length === 0) {
-          await conversationService.deleteConversation(conversationId);
+          await conversationService.deleteConversation(conversationId, userId);
         } else {
-          const updates: any = {
+          const updates: Partial<Omit<Conversation, 'id'>> = {
             participantIds: newParticipantIds,
             adminIds: newAdminIds,
             unreadCount: newUnreadCount,
             memberJoinedAt: newMemberJoinedAt,
-            updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp() as unknown as Date
           };
           
           // Chỉ định admin mới nếu trưởng nhóm cũ rời đi

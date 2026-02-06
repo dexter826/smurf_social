@@ -1,12 +1,12 @@
 import React from 'react';
 import { getInitials, getAvatarGradient } from '../../utils/avatarUtils';
-import { User } from '../../types';
+import { User, UserStatus } from '../../types';
 
 interface AvatarProps {
   src?: string;
   name?: string;
   size?: '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  status?: 'online' | 'offline' | 'busy';
+  status?: UserStatus;
   className?: string;
   isGroup?: boolean;
   members?: User[];
@@ -34,9 +34,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   const statusColor = {
-    online: 'bg-status-online border-bg-primary',
-    offline: 'bg-status-offline border-bg-primary',
-    busy: 'bg-status-away border-bg-primary'
+    [UserStatus.ONLINE]: 'bg-status-online border-bg-primary',
+    [UserStatus.OFFLINE]: 'bg-status-offline border-bg-primary',
   };
 
   const renderContent = () => {
