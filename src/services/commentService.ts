@@ -19,8 +19,7 @@ import {
   writeBatch,
   onSnapshot
 } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { db } from '../firebase/config';
 import { Comment, NotificationType, ReportStatus, UserStatus } from '../types';
 import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
@@ -195,23 +194,6 @@ export const commentService = {
         }
       }
 
-      // Xóa mọi ảnh/video đính kèm khỏi Storage
-      const mediaUrlsToDelele: string[] = [];
-      if (commentData.image) mediaUrlsToDelele.push(commentData.image);
-      
-      repliesToDelete.forEach(replyDoc => {
-        const data = replyDoc.data();
-        if (data.image) mediaUrlsToDelele.push(data.image);
-      });
-
-      for (const url of mediaUrlsToDelele) {
-        try {
-          const mediaRef = ref(storage, url);
-          await deleteObject(mediaRef);
-        } catch (err) {
-          console.error("Lỗi xóa media bình luận trên storage", err);
-        }
-      }
 
       const batch = writeBatch(db);
 

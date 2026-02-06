@@ -1,14 +1,15 @@
 /**
  * Utility functions cho upload với progress tracking
  */
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase/config';
+/**
+ * Utility functions cho upload với progress tracking
+ */
 
 export interface UploadProgress {
   progress: number;
   bytesTransferred: number;
   totalBytes: number;
-  state: 'running' | 'paused' | 'success' | 'error' | 'canceled';
+  state: "running" | "paused" | "success" | "error" | "canceled";
 }
 
 export type ProgressCallback = (progress: UploadProgress) => void;
@@ -19,43 +20,62 @@ export type ProgressCallback = (progress: UploadProgress) => void;
 export const uploadWithProgress = (
   path: string,
   file: File,
-  onProgress?: ProgressCallback
+  onProgress?: ProgressCallback,
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const storageRef = ref(storage, path);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    if (!cloudName || !uploadPreset) {
+      reject(new Error("Thiếu cấu hình Cloudinary trong .env"));
+      return;
+    }
+
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    const folder = path.substring(0, path.lastIndexOf("/"));
+    formData.append("folder", folder);
+
+    xhr.open("POST", url, true);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const progress = (event.loaded / event.total) * 100;
         onProgress?.({
           progress,
-          bytesTransferred: snapshot.bytesTransferred,
-          totalBytes: snapshot.totalBytes,
-          state: snapshot.state as UploadProgress['state'],
+          bytesTransferred: event.loaded,
+          totalBytes: event.total,
+          state: "running",
         });
-      },
-      (error) => {
-        onProgress?.({
-          progress: 0,
-          bytesTransferred: 0,
-          totalBytes: file.size,
-          state: 'error',
-        });
-        reject(error);
-      },
-      async () => {
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
         onProgress?.({
           progress: 100,
           bytesTransferred: file.size,
           totalBytes: file.size,
-          state: 'success',
+          state: "success",
         });
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        resolve(url);
+        resolve(response.secure_url);
+      } else {
+        const error = JSON.parse(xhr.responseText);
+        reject(new Error(error.error?.message || "Lỗi tải lên Cloudinary"));
       }
-    );
+    };
+
+    xhr.onerror = () => {
+      reject(new Error("Lỗi mạng khi tải lên Cloudinary"));
+    };
+
+    xhr.send(formData);
   });
 };
 
@@ -63,9 +83,9 @@ export const uploadWithProgress = (
  * Format bytes thành readable string
  */
 export const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
