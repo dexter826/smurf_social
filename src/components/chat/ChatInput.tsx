@@ -356,17 +356,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
     try {
       // Gửi danh sách file
-      for (const item of selectedFiles) {
+      selectedFiles.forEach(item => {
         if (item.type === 'image') {
-          await onSendImage(item.file);
+          onSendImage(item.file);
         } else if (item.type === 'video') {
-          await onSendVideo?.(item.file);
+          onSendVideo?.(item.file);
         } else if (item.type === 'voice') {
-          await onSendVoice?.(item.file);
+          onSendVoice?.(item.file);
         } else {
-          await onSendFile(item.file);
+          onSendFile(item.file);
         }
-      }
+      });
       clearAllFiles();
 
       // Xử lý gửi text

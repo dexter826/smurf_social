@@ -51,7 +51,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [showReactionSelector, setShowReactionSelector] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const { toggleReaction } = useChatStore();
+  const { toggleReaction, uploadProgress } = useChatStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -111,6 +111,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               alt="sent" 
               className="w-full h-auto"
             />
+            {isMe && uploadProgress[message.id] && (
+               <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
+                  <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-2">
+                     <div 
+                        className="bg-primary h-full transition-all duration-300"
+                        style={{ width: `${uploadProgress[message.id].progress}%` }}
+                     />
+                  </div>
+                  <span className="text-[10px] text-white font-medium">
+                    {uploadProgress[message.id].error ? 'Lỗi tải lên' : `Đang tải ${Math.round(uploadProgress[message.id].progress)}%`}
+                  </span>
+               </div>
+            )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
               <ImageIcon className="opacity-0 group-hover:opacity-100 text-white" size={32} />
             </div>
@@ -141,6 +154,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             >
               <Download size={18} />
             </a>
+            {isMe && uploadProgress[message.id] && (
+               <div className="absolute inset-0 bg-bg-primary/80 flex flex-col items-center justify-center p-2 rounded-lg">
+                  <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden mb-1">
+                     <div 
+                        className="bg-primary h-full transition-all duration-300"
+                        style={{ width: `${uploadProgress[message.id].progress}%` }}
+                     />
+                  </div>
+                  <span className="text-[10px] text-text-secondary">
+                    {uploadProgress[message.id].error ? 'Lỗi' : `${Math.round(uploadProgress[message.id].progress)}%`}
+                  </span>
+               </div>
+            )}
           </div>
         );
         
