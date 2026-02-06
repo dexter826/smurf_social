@@ -46,7 +46,7 @@ export const useContacts = (): UseContactsReturn => {
     sentRequests,
     isLoading, 
     isRevalidating,
-    fetchFriends,
+    subscribeToFriends, // Add subscribeToFriends
     subscribeToRequests,
     acceptFriendRequest,
     rejectFriendRequest,
@@ -63,13 +63,14 @@ export const useContacts = (): UseContactsReturn => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Đồng bộ bạn bè và yêu cầu
+  // Đồng bộ bạn bè và request
   const friendIdsString = JSON.stringify(currentUser?.friendIds || []);
 
   useEffect(() => {
     if (!currentUser) return;
-    fetchFriends(currentUser.id);
-  }, [currentUser?.id, friendIdsString, fetchFriends]);
+    const unsubscribe = subscribeToFriends(currentUser.id);
+    return () => unsubscribe();
+  }, [currentUser?.id, subscribeToFriends]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -77,7 +78,7 @@ export const useContacts = (): UseContactsReturn => {
     return () => unsubscribe();
   }, [currentUser?.id, subscribeToRequests]);
 
-  // Tải thông tin user cho yêu cầu kết bạn
+  // Tải info user cho friend request
   useEffect(() => {
     const userIds = [
       ...receivedRequests.map(r => r.senderId),
@@ -94,7 +95,7 @@ export const useContacts = (): UseContactsReturn => {
     friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Nhóm bạn bè theo chữ cái
+  // Group bạn bè theo chữ cái
   const groupedFriends = (() => {
     const groups: Record<string, User[]> = {};
     filteredFriends.forEach(friend => {

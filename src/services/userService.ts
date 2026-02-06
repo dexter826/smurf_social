@@ -40,7 +40,7 @@ export const userService = {
     }
   },
 
-  // Lấy danh sách toàn bộ bạn bè
+  // Lấy toàn bộ bạn bè
   getAllFriends: async (currentUserId: string): Promise<User[]> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', currentUserId));
@@ -59,7 +59,46 @@ export const userService = {
     }
   },
 
-  // Tìm kiếm người dùng theo email
+  // Đăng ký nhận cập nhật danh sách bạn bè
+  subscribeToFriends: (userId: string, callback: (friends: User[]) => void): (() => void) => {
+    const userRef = doc(db, 'users', userId);
+    let previousFriendIds: string[] = [];
+
+    return onSnapshot(userRef, async (snapshot) => {
+      if (!snapshot.exists()) {
+        callback([]);
+        return;
+      }
+
+      const userData = snapshot.data() as User;
+      const friendIds = userData.friendIds || [];
+
+      // Kiểm tra thay đổi ID
+      const isIdsChanged = friendIds.length !== previousFriendIds.length || 
+                           !friendIds.every((id, index) => id === previousFriendIds[index]);
+
+      if (!isIdsChanged && previousFriendIds.length > 0) {
+        // ID không đổi thì bỏ qua
+      }
+
+      previousFriendIds = friendIds;
+
+      if (friendIds.length === 0) {
+        callback([]);
+        return;
+      }
+
+      try {
+        const friendsMap = await batchGetUsers(friendIds);
+        const friends = Object.values(friendsMap).filter(u => u.status !== UserStatus.BANNED);
+        callback(friends);
+      } catch (error) {
+        console.error("Lỗi fetch friends realtime", error);
+      }
+    });
+  },
+
+  // Tìm kiếm user theo email
   searchUsers: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
       const usersRef = collection(db, 'users');

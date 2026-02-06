@@ -13,7 +13,7 @@ interface ContactState {
   isSearching: boolean;
   isRevalidating: boolean;
   
-  fetchFriends: (userId: string) => Promise<void>;
+  subscribeToFriends: (userId: string) => () => void;
   fetchReceivedRequests: (userId: string) => Promise<void>;
   fetchSentRequests: (userId: string) => Promise<void>;
   subscribeToRequests: (userId: string) => () => void;
@@ -57,23 +57,10 @@ export const useContactStore = create<ContactState>()(
         });
       },
 
-      fetchFriends: async (userId: string) => {
-        const { friends } = get();
-        const hasCache = friends.length > 0;
-        
-        // Dùng Revalidating nếu đã có cache
-        set({ 
-          isLoading: !hasCache,
-          isRevalidating: hasCache 
+      subscribeToFriends: (userId: string) => {
+        return userService.subscribeToFriends(userId, (friends) => {
+          set({ friends, isLoading: false });
         });
-
-        try {
-          const data = await userService.getAllFriends(userId);
-          set({ friends: data, isLoading: false, isRevalidating: false });
-        } catch (error) {
-          console.error("Lỗi tải danh sách bạn bè:", error);
-          set({ isLoading: false, isRevalidating: false });
-        }
       },
 
   fetchReceivedRequests: async (userId: string) => {
@@ -217,7 +204,6 @@ export const useContactStore = create<ContactState>()(
     {
   name: 'smurf_contact_cache',
   storage: createJSONStorage(() => localStorage),
-  // Cache bạn bè và lời mời
   partialize: (state) => ({ 
     friends: state.friends,
     receivedRequests: state.receivedRequests,
