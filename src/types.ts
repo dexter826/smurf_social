@@ -95,6 +95,7 @@ export interface Conversation {
   typingUsers?: string[];
   memberJoinedAt?: Record<string, Date>;
   deletedBy?: string[];
+  deletedAt?: Record<string, any>;
 }
 
 export interface Comment {

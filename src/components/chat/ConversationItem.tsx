@@ -65,8 +65,19 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   const isUnread = (unreadCount > 0 || conversation.markedUnread) && !isActive;
   
   const joinedAt = conversation.memberJoinedAt?.[currentUserId];
-  const lastMessage = conversation.isGroup && joinedAt && conversation.lastMessage
-    ? (new Date(conversation.lastMessage.timestamp) >= new Date(joinedAt) ? conversation.lastMessage : undefined)
+  const deletedAt = conversation.deletedAt?.[currentUserId];
+  
+  // Xác định mốc thời gian bắt đầu
+  let startTime = joinedAt ? new Date(joinedAt) : null;
+  if (deletedAt) {
+    const deletedTime = new Date(deletedAt.seconds ? deletedAt.seconds * 1000 : deletedAt);
+    if (!startTime || deletedTime > startTime) {
+      startTime = deletedTime;
+    }
+  }
+
+  const lastMessage = (conversation.lastMessage && startTime)
+    ? (new Date(conversation.lastMessage.timestamp) >= startTime ? conversation.lastMessage : undefined)
     : conversation.lastMessage;
 
   const lastMessagePreview = lastMessage
