@@ -332,6 +332,7 @@ const ChatPage: React.FC = () => {
         <EditGroupModal
           isOpen={showEditGroup}
           conversation={selectedConversation}
+          currentUserId={currentUser.id}
           onClose={() => setShowEditGroup(false)}
           onSave={handleEditGroup}
         />

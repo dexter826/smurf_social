@@ -20,3 +20,5 @@ export * from './UploadProgress';
 export * from './LazyMedia';
 export * from './ReactionSelector';
 export * from './ReactionDisplay';
+export * from './CircularProgress';
+export * from './ImageCropper';

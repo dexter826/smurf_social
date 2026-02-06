@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image as ImageIcon, Paperclip, Send, Smile, X, Video, Mic, Square, Trash2, Play, Pause, Plus, MoreHorizontal, Camera, Reply, Edit2 } from 'lucide-react';
-import { EmojiPicker, Loading, Button, IconButton, TextArea } from '../ui';
+import { EmojiPicker, Loading, Button, IconButton, TextArea, CircularProgressOverlay } from '../ui';
 import { MentionList } from './MentionList';
 import { toast } from '../../store/toastStore';
 import { FILE_LIMITS } from '../../constants/fileConfig';
@@ -520,9 +520,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 
                 <IconButton
                   onClick={() => removeFile(index)}
-                  className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100"
+                  className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 z-20"
                   icon={<X size={14} />}
                   size="sm"
+                />
+                
+                {/* Progress overlay khi đang gửi */}
+                <CircularProgressOverlay
+                  isVisible={isSending}
+                  progress={75}
+                  size={32}
+                  showPercentage={false}
                 />
               </div>
             ))}

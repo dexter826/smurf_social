@@ -1,9 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag, Ban, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
 import { FriendStatus } from '../../hooks/useProfile';
-import { Avatar, UserAvatar, Button, Dropdown, DropdownItem } from '../ui';
+import { Avatar, UserAvatar, Button, Dropdown, DropdownItem, ImageCropper } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 import { useReportStore } from '../../store/reportStore';
 
@@ -49,6 +49,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const coverCameraRef = useRef<HTMLInputElement>(null);
   const { openReportModal } = useReportStore();
 
+  // State cho crop modal
+  const [cropState, setCropState] = useState<{
+    isOpen: boolean;
+    type: 'avatar' | 'cover';
+    image: string;
+  } | null>(null);
+
   const handleAvatarClick = () => {
     if (isOwnProfile && !uploading) {
       avatarInputRef.current?.click();
@@ -75,21 +82,44 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && onAvatarChange) {
-      onAvatarChange(file);
+    if (file) {
+      const blobUrl = URL.createObjectURL(file);
+      setCropState({ isOpen: true, type: 'avatar', image: blobUrl });
     }
     e.target.value = '';
   };
 
   const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && onCoverChange) {
-      onCoverChange(file);
+    if (file) {
+      const blobUrl = URL.createObjectURL(file);
+      setCropState({ isOpen: true, type: 'cover', image: blobUrl });
     }
     e.target.value = '';
   };
 
+  const handleCropComplete = (croppedFile: File) => {
+    if (cropState?.type === 'avatar' && onAvatarChange) {
+      onAvatarChange(croppedFile);
+    } else if (cropState?.type === 'cover' && onCoverChange) {
+      onCoverChange(croppedFile);
+    }
+    // Cleanup blob URL
+    if (cropState?.image) {
+      URL.revokeObjectURL(cropState.image);
+    }
+    setCropState(null);
+  };
+
+  const handleCropCancel = () => {
+    if (cropState?.image) {
+      URL.revokeObjectURL(cropState.image);
+    }
+    setCropState(null);
+  };
+
   return (
+    <>
     <div className="max-w-5xl mx-auto">
       {/* Cover */}
       <div className="relative h-[200px] md:h-[320px] w-full md:rounded-b-2xl shadow-sm">
@@ -374,5 +404,18 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </div>
       </div>
     </div>
+
+      {/* Image Cropper Modal */}
+      {cropState && (
+        <ImageCropper
+          isOpen={cropState.isOpen}
+          image={cropState.image}
+          aspect={cropState.type === 'avatar' ? 1 : 16 / 9}
+          title={cropState.type === 'avatar' ? 'Cắt ảnh đại diện' : 'Cắt ảnh bìa'}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
+    </>
   );
 };

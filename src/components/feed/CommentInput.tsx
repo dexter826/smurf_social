@@ -52,6 +52,10 @@ export const CommentInput: React.FC<CommentInputProps> = ({
 
   const formData = watch();
   const [isUploading, setIsUploading] = React.useState(false);
+  
+  // State cho file pending (chưa upload) và preview blob URL
+  const [pendingImage, setPendingImage] = React.useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
@@ -67,7 +71,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     }
   }, [formData.content]);
 
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -75,29 +79,54 @@ export const CommentInput: React.FC<CommentInputProps> = ({
       return;
     }
 
-    setIsUploading(true);
-    try {
-      const url = await onUploadMedia(file);
-      setValue('image', url, { shouldDirty: true });
-    } catch (error) {
-      toast.error('Lỗi tải media lên');
-    } finally {
-      setIsUploading(false);
-      if (e.target) e.target.value = '';
+    // Chỉ lưu file và tạo preview, không upload ngay
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
     }
+    setPendingImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    if (e.target) e.target.value = '';
   };
 
   const handleFormSubmit = async (data: CommentFormValues) => {
     const submittedData = { ...data };
+    
+    // Upload pending image khi submit
+    let imageUrl = submittedData.image;
+    if (pendingImage) {
+      setIsUploading(true);
+      try {
+        imageUrl = await onUploadMedia(pendingImage);
+      } catch (error) {
+        toast.error('Lỗi tải ảnh lên');
+        setIsUploading(false);
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+    
+    // Cleanup
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPendingImage(null);
+    setPreviewUrl(null);
     reset();
+    
     try {
-      await onSubmit(submittedData.content || '', submittedData.image);
+      await onSubmit(submittedData.content || '', imageUrl);
     } catch (error) {
       console.error('Lỗi gửi bình luận:', error);
     }
   };
 
   const handleRemoveMedia = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPendingImage(null);
+    setPreviewUrl(null);
     setValue('image', undefined, { shouldDirty: true });
   };
 
@@ -129,15 +158,20 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             }}
           />
 
-          {(formData.image || isUploading) && (
+          {(formData.image || previewUrl || isUploading) && (
             <div className="mt-2 relative inline-block">
               {isUploading ? (
                 <div className="w-20 h-20 flex items-center justify-center bg-bg-third rounded-lg">
                   <Loading size="sm" />
                 </div>
-              ) : formData.image ? (
+              ) : (formData.image || previewUrl) ? (
                 <div className="relative group">
-                  <img src={formData.image} alt="Preview" className="h-20 w-auto rounded-lg object-cover" />
+                  <img src={previewUrl || formData.image} alt="Preview" className="h-20 w-auto rounded-lg object-cover" />
+                  {previewUrl && (
+                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 rounded text-[9px] text-white/80">
+                      Chưa tải
+                    </div>
+                  )}
                   <IconButton
                     type="button"
                     onClick={handleRemoveMedia}
@@ -191,7 +225,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
               <Button
                 type="submit"
                 variant="primary"
-                disabled={!isDirty || isSubmitting || isUploading}
+                disabled={(!isDirty && !pendingImage) || isSubmitting || isUploading}
                 isLoading={isSubmitting}
                 className="w-9 h-9 rounded-full shadow-sm active:scale-90 p-0 flex-shrink-0"
                 icon={<Send size={16} className="fill-current" />}

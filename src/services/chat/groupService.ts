@@ -13,6 +13,8 @@ import { db } from '../../firebase/config';
 import { conversationService } from './conversationService';
 import { messageService } from './messageService';
 import { userService } from '../userService';
+import { uploadWithProgress, UploadProgress } from '../../utils/uploadUtils';
+import { compressImage } from '../../utils/imageUtils';
 
 export const groupService = {
   // Tạo hội thoại nhóm mới
@@ -225,6 +227,30 @@ export const groupService = {
       await messageService.sendSystemMessage(conversationId, `${actor?.name || 'Ai đó'} đã xóa quyền quản trị viên của ${user?.name || 'thành viên'}`);
     } catch (error) {
       console.error("Lỗi hạ quyền quản trị viên:", error);
+      throw error;
+    }
+  },
+
+  // Upload ảnh đại diện nhóm
+  uploadGroupAvatar: async (
+    conversationId: string,
+    file: File,
+    onProgress?: (progress: UploadProgress) => void
+  ): Promise<string> => {
+    try {
+      const compressedFile = await compressImage(file, { 
+        maxSizeMB: 0.5, 
+        maxWidthOrHeight: 512 
+      });
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `group_${conversationId}_${Date.now()}.${fileExt}`;
+      const path = `group-avatars/${conversationId}/${fileName}`;
+
+      const downloadURL = await uploadWithProgress(path, compressedFile, onProgress);
+      return downloadURL;
+    } catch (error) {
+      console.error("Lỗi upload avatar nhóm:", error);
       throw error;
     }
   },
