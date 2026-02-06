@@ -58,6 +58,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   // State ghi âm
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isStartingRecording, setIsStartingRecording] = useState(false);
   const [playingPreview, setPlayingPreview] = useState<number | null>(null); // Index of playing audio
   const [showActions, setShowActions] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -125,6 +126,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   // ========== RECORDING LOGIC ==========
 
   const startRecording = async () => {
+    if (isStartingRecording || isRecording) return;
+    setIsStartingRecording(true);
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -141,9 +145,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioFile = new File([audioBlob], `voice_message_${Date.now()}.webm`, { type: 'audio/webm' });
         
-        // Add to selected files
         const url = URL.createObjectURL(audioFile);
-        setSelectedFiles(prev => [...prev, { file: audioFile, preview: url, type: 'voice' }]);
+        setSelectedFiles(prev => {
+          prev.forEach(f => {
+            if (f.type === 'voice' && f.preview) URL.revokeObjectURL(f.preview);
+          });
+          const filtered = prev.filter(f => f.type !== 'voice');
+          return [...filtered, { file: audioFile, preview: url, type: 'voice' }];
+        });
         
         // Stop tracks
         stream.getTracks().forEach(track => track.stop());
@@ -151,6 +160,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       mediaRecorder.start();
       setIsRecording(true);
+      setIsStartingRecording(false);
       setRecordingTime(0);
 
       // Start timer
@@ -160,6 +170,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
     } catch (error) {
       console.error("Error accessing microphone:", error);
+      setIsStartingRecording(false);
       toast.error('Không thể truy cập Microphone. Vui lòng kiểm tra quyền truy cập.');
     }
   };
@@ -174,11 +185,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const cancelRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      // Setup onstop to DO NOTHING (or just stop tracks) but here we just stop and clear chunks logic 
-      // Actually simpler: remove onstop handler or handle logic flag.
-      // But standard way: just stop, and don't add to selectedFiles.
-      
-      // Override onstop to just cleanup
       mediaRecorderRef.current.onstop = () => {
          mediaRecorderRef.current?.stream.getTracks().forEach(track => track.stop());
       };
@@ -616,7 +622,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   title="Ghi âm"
                   icon={<Mic size={16} />}
                   size="sm"
-                  disabled={disabled || isSending || isRecording} 
+                  disabled={disabled || isSending || isRecording || isStartingRecording} 
                />             </div>
            )}
         </div>
