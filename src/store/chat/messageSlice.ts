@@ -48,7 +48,12 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
     const { conversations } = (get() as any);
     const conversation = conversations.find((c: any) => c.id === conversationId);
     const currentUser = useAuthStore.getState().user;
-    const joinedAt = conversation?.memberJoinedAt?.[currentUser?.id || ''];
+    const joinedAtDate = conversation?.memberJoinedAt?.[currentUser?.id || ''];
+    const deletedAtDate = conversation?.deletedAt?.[currentUser?.id || ''];
+    let joinedAt = joinedAtDate;
+    if (deletedAtDate && (!joinedAt || deletedAtDate > joinedAt)) {
+      joinedAt = deletedAtDate;
+    }
 
     const unsubscribe = chatService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
       set((state) => ({
@@ -68,7 +73,12 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
 
     const conversation = conversations.find((c: any) => c.id === conversationId);
     const currentUser = useAuthStore.getState().user;
-    const joinedAt = conversation?.memberJoinedAt?.[currentUser?.id || ''];
+    const joinedAtDate = conversation?.memberJoinedAt?.[currentUser?.id || ''];
+    const deletedAtDate = conversation?.deletedAt?.[currentUser?.id || ''];
+    let joinedAt = joinedAtDate;
+    if (deletedAtDate && (!joinedAt || deletedAtDate > joinedAt)) {
+      joinedAt = deletedAtDate;
+    }
 
     set((state) => ({ isLoadingMore: { ...state.isLoadingMore, [conversationId]: true } }));
 

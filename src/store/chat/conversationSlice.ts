@@ -176,16 +176,16 @@ export const createConversationSlice: StateCreator<ConversationSlice, [], [], Co
   },
 
   deleteConversation: async (conversationId: string) => {
-    const previousConversations = get().conversations;
     set(state => ({
-      conversations: state.conversations.filter(c => c.id !== conversationId),
-      searchResults: { ...state.searchResults, conversations: state.searchResults.conversations.filter(c => c.id !== conversationId) },
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
     }));
+    
+    if (typeof (get() as any).clearMessages === 'function') {
+      (get() as any).clearMessages(conversationId);
+    }
     try {
       await chatService.deleteConversation(conversationId, useAuthStore.getState().user?.id || '');
     } catch (error) {
-      set({ conversations: previousConversations });
       console.error("Lỗi xóa hội thoại:", error);
       throw error;
     }

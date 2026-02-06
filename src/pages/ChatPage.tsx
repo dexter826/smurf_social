@@ -15,6 +15,7 @@ const ChatPage: React.FC = () => {
   const {
     currentUser,
     conversations,
+    filteredConversations,
     selectedConversationId,
     selectedConversation,
     currentMessages,
@@ -146,9 +147,6 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  const filteredConversations = conversations.filter(c => 
-    viewMode === 'archived' ? c.archived : !c.archived
-  );
 
   const handleBackToList = () => {
     handleSelectConversation(null);

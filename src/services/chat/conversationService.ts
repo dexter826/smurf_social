@@ -34,7 +34,14 @@ export const conversationService = {
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
-        return querySnapshot.docs[0].id;
+        const docSnap = querySnapshot.docs[0];
+        const data = docSnap.data();
+        if (data.deletedBy?.includes(user1Id)) {
+          const newDeletedBy = data.deletedBy.filter((id: string) => id !== user1Id);
+          await updateDoc(docSnap.ref, { deletedBy: newDeletedBy });
+        }
+        
+        return docSnap.id;
       }
       
       const conversationData = {
@@ -81,9 +88,6 @@ export const conversationService = {
 
       const conversations = snapshot.docs.map((d) => {
         const data = d.data();
-        
-        // Bỏ qua hội thoại đã bị người dùng xóa
-        if (data.deletedBy?.includes(userId)) return null;
         
         let participants;
         if (data.isGroup) {
@@ -166,12 +170,13 @@ export const conversationService = {
     }
   },
 
-  // Ẩn hội thoại khỏi danh sách (Soft delete)
+  // Ẩn hội thoại và lưu thời điểm xóa (Soft delete)
   deleteConversation: async (conversationId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, {
-        deletedBy: arrayUnion(userId)
+        deletedBy: arrayUnion(userId),
+        [`deletedAt.${userId}`]: serverTimestamp()
       });
     } catch (error) {
       console.error("Lỗi xóa hội thoại:", error);

@@ -192,10 +192,11 @@ export const useChat = (): UseChatReturn => {
     fetchUsers(userIds);
   }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
 
-  // Dữ liệu phụ trợ UI
-  const filteredConversations = conversations.filter(c => 
-    viewMode === 'archived' ? c.archived : !c.archived
-  );
+  const filteredConversations = conversations.filter(c => {
+    const isArchivedMatch = viewMode === 'archived' ? c.archived : !c.archived;
+    const isDeleted = c.deletedBy?.includes(currentUser?.id || '');
+    return isArchivedMatch && !isDeleted;
+  });
   const archivedCount = conversations.filter(c => c.archived).length;
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
@@ -324,7 +325,10 @@ export const useChat = (): UseChatReturn => {
 
   const handleDelete = useCallback(async (id: string) => {
     await deleteConversation(id);
-  }, [deleteConversation]);
+    if (selectedConversationId === id) {
+      handleBackToList();
+    }
+  }, [deleteConversation, selectedConversationId, handleBackToList]);
 
   const handleArchive = useCallback(async (id: string, archived: boolean) => {
     await toggleArchive(id, archived);
