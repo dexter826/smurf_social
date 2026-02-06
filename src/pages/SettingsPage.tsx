@@ -16,6 +16,7 @@ import { User } from '../types';
 import { UserAvatar, ConfirmDialog, Button, Skeleton } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
+import { userService } from '../services/userService';
 
 type SettingSection = 'appearance' | 'security' | 'blocked';
 
@@ -114,7 +115,6 @@ const SettingsPage: React.FC = () => {
     if (!unblockUserId || !currentUser) return;
     
     try {
-      const { userService } = await import('../services/userService');
       await userService.unblockUser(currentUser.id, unblockUserId);
       setBlockedUsers(prev => prev.filter(u => u.id !== unblockUserId));
     } catch (error) {
