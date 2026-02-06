@@ -43,12 +43,7 @@ export const useFeed = (): UseFeedReturn => {
     enabled: hasMore && !isLoading && !!currentUser
   });
 
-  const handleFetchPosts = useCallback(() => {
-    if (!currentUser) return;
-    const friendIds = currentUser.friendIds || [];
-    const blockedUserIds = currentUser.blockedUserIds || [];
-    fetchPosts(currentUser.id, friendIds, blockedUserIds);
-  }, [currentUser, fetchPosts]);
+
 
   const handleSubscribeToPosts = useCallback(() => {
     if (!currentUser) return;
@@ -59,13 +54,12 @@ export const useFeed = (): UseFeedReturn => {
 
   // Lấy dữ liệu ban đầu và theo dõi
   useEffect(() => {
-    handleFetchPosts();
     const unsubscribe = handleSubscribeToPosts();
     
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [handleFetchPosts, handleSubscribeToPosts]);
+  }, [handleSubscribeToPosts]);
 
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {
