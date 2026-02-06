@@ -175,6 +175,7 @@ export const messageService = {
           },
           unreadCount,
           updatedAt: serverTimestamp(),
+          deletedBy: []
         });
       }
     } catch (error) {
@@ -239,6 +240,7 @@ export const messageService = {
           },
           unreadCount,
           updatedAt: serverTimestamp(),
+          deletedBy: []
         });
       }
     } catch (error) {
@@ -302,6 +304,7 @@ export const messageService = {
           },
           unreadCount,
           updatedAt: serverTimestamp(),
+          deletedBy: []
         });
       }
     } catch (error) {
@@ -366,6 +369,7 @@ export const messageService = {
           },
           unreadCount,
           updatedAt: serverTimestamp(),
+          deletedBy: []
         });
       }
     } catch (error) {
@@ -427,6 +431,7 @@ export const messageService = {
           },
           unreadCount,
           updatedAt: serverTimestamp(),
+          deletedBy: []
         });
       }
     } catch (error) {
@@ -667,6 +672,7 @@ export const messageService = {
           },
           unreadCount,
           updatedAt: serverTimestamp(),
+          deletedBy: []
         });
       }
     } catch (error) {

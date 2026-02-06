@@ -12,7 +12,8 @@ import {
   onSnapshot,
   writeBatch,
   Timestamp,
-  limit
+  limit,
+  arrayUnion
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { Conversation, User } from '../../types';
@@ -81,6 +82,9 @@ export const conversationService = {
       const conversations = snapshot.docs.map((d) => {
         const data = d.data();
         
+        // Bỏ qua hội thoại đã bị người dùng xóa
+        if (data.deletedBy?.includes(userId)) return null;
+        
         let participants;
         if (data.isGroup) {
           // Lấy tất cả thành viên bao gồm cả người dùng hiện tại
@@ -110,7 +114,7 @@ export const conversationService = {
             timestamp: data.lastMessage.timestamp?.toDate() || new Date()
           } : undefined
         } as Conversation;
-      });
+      }).filter(c => c !== null) as Conversation[];
 
       callback(conversations);
     }, (error) => {
@@ -162,23 +166,13 @@ export const conversationService = {
     }
   },
 
-  // Xóa hội thoại và tất cả tin nhắn liên quan
-  deleteConversation: async (conversationId: string): Promise<void> => {
+  // Ẩn hội thoại khỏi danh sách (Soft delete)
+  deleteConversation: async (conversationId: string, userId: string): Promise<void> => {
     try {
-      const batch = writeBatch(db);
-      
-      const messagesQuery = query(
-        collection(db, 'messages'),
-        where('conversationId', '==', conversationId)
-      );
-      const messagesSnapshot = await getDocs(messagesQuery);
-      messagesSnapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        deletedBy: arrayUnion(userId)
       });
-      
-      batch.delete(doc(db, 'conversations', conversationId));
-      
-      await batch.commit();
     } catch (error) {
       console.error("Lỗi xóa hội thoại:", error);
       throw error;
