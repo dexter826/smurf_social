@@ -365,11 +365,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                                   sender={usersMap[msg.senderId]}
                                   showAvatar={showAvatar}
                                   showName={showName}
-                                  currentUserId={currentUserId}
                                   onRecall={onRecall}
                                   onDeleteForMe={onDeleteForMe}
                                   onForward={onForward}
                                   onReply={onReply}
+                                  usersMap={usersMap}
+                                  isGroup={conversation.isGroup}
+                                  isLastMessage={isLastMessage}
+                                  lastReadByUsers={lastReadByMap[lastMsgInGroup.id]}
                                 />
                               );
                               i = j;
