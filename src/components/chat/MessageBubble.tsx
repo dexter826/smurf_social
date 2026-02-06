@@ -102,12 +102,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     switch (message.type) {
       case 'image':
         return (
-          <div className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative">
+          <div 
+            className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative"
+            onClick={() => setShowFullImage(true)}
+          >
             <img 
               src={message.fileUrl || message.content} 
               alt="sent" 
               className="w-full h-auto"
-              onClick={() => setShowFullImage(true)}
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
               <ImageIcon className="opacity-0 group-hover:opacity-100 text-white" size={32} />
@@ -522,23 +524,26 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       </div>
 
-      {/* Modal xem ảnh full */}
+      {/* Lightbox xem ảnh full */}
       {showFullImage && message.type === 'image' && (
         <div
-          className="fixed inset-0 z-50 bg-bg-overlay backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 cursor-zoom-out"
           onClick={() => setShowFullImage(false)}
         >
-          <img
-            src={message.fileUrl || message.content}
-            alt="full"
-            className="max-w-full max-h-full object-contain"
-          />
-          <IconButton
-            className="absolute top-4 right-4 text-white hover:text-text-tertiary"
-            onClick={() => setShowFullImage(false)}
-            icon={<X size={24} />}
-            size="lg"
-          />
+          <div className="relative max-w-full max-h-full flex items-center justify-center">
+            <img
+              src={message.fileUrl || message.content}
+              alt="full"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <IconButton
+              className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full"
+              onClick={() => setShowFullImage(false)}
+              icon={<X size={24} />}
+              size="lg"
+            />
+          </div>
         </div>
       )}
 

@@ -235,7 +235,7 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: "📷 Hình ảnh",
+            content: "Hình ảnh",
           },
           unreadCount,
           updatedAt: serverTimestamp(),
@@ -298,7 +298,7 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: `📎 ${file.name}`,
+            content: file.name,
           },
           unreadCount,
           updatedAt: serverTimestamp(),
@@ -362,7 +362,7 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: "🎥 Video",
+            content: "Video",
           },
           unreadCount,
           updatedAt: serverTimestamp(),
@@ -423,7 +423,7 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             timestamp: new Date(),
-            content: "🎤 Tin nhắn thoại",
+            content: "Tin nhắn thoại",
           },
           unreadCount,
           updatedAt: serverTimestamp(),
@@ -651,13 +651,13 @@ export const messageService = {
 
         let lastMessageContent = originalMessage.content;
         if (originalMessage.type === "image")
-          lastMessageContent = "📷 Hình ảnh";
+          lastMessageContent = "Hình ảnh";
         else if (originalMessage.type === "file")
-          lastMessageContent = `📎 ${originalMessage.fileName}`;
+          lastMessageContent = originalMessage.fileName || "Tài liệu";
         else if (originalMessage.type === "video")
-          lastMessageContent = "🎥 Video";
+          lastMessageContent = "Video";
         else if (originalMessage.type === "voice")
-          lastMessageContent = "🎤 Tin nhắn thoại";
+          lastMessageContent = "Tin nhắn thoại";
 
         await updateDoc(conversationRef, {
           lastMessage: {
