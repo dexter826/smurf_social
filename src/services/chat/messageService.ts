@@ -763,20 +763,33 @@ export const messageService = {
   ): Promise<void> => {
     try {
       const messageRef = doc(db, "messages", messageId);
-      
       const messageSnap = await getDoc(messageRef);
+      
       if (messageSnap.exists()) {
         const data = messageSnap.data();
         const currentReaction = data.reactions?.[userId];
+        const isRemoving = emoji === 'REMOVE' || currentReaction === emoji;
         
-        if (emoji === 'REMOVE' || currentReaction === emoji) {
-           await updateDoc(messageRef, {
-             [`reactions.${userId}`]: deleteField()
-           });
-        } else {
-           await updateDoc(messageRef, {
-             [`reactions.${userId}`]: emoji
-           });
+        await updateDoc(messageRef, {
+          [`reactions.${userId}`]: isRemoving ? deleteField() : emoji
+        });
+
+        if (!isRemoving) {
+          const userSnap = await getDoc(doc(db, "users", userId));
+          const userName = userSnap.exists() ? userSnap.data().name : "Ai đó";
+          const lastName = userName.split(' ').pop();
+          
+          const conversationRef = doc(db, "conversations", data.conversationId);
+          await updateDoc(conversationRef, {
+            lastMessage: {
+              id: messageId,
+              senderId: data.senderId,
+              content: `${emoji} ${lastName} đã bày tỏ cảm xúc`,
+              type: 'text',
+              timestamp: new Date()
+            },
+            updatedAt: serverTimestamp()
+          });
         }
       }
     } catch (error) {

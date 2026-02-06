@@ -180,9 +180,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                 );
               }
 
+              const isReaction = lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u);
+
               return (
-                <span className={`truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
-                  {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
+                <span className={`truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : isReaction ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
+                  {isLastMessageMine && !isReaction ? 'Bạn: ' : ''}{lastMessagePreview}
                 </span>
               );
             })()}
