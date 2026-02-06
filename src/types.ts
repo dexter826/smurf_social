@@ -59,6 +59,7 @@ export interface Message {
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;
+  videoThumbnails?: Record<string, string>;
   readBy?: string[];
   deliveredTo?: string[];
   deliveredAt?: Date;
