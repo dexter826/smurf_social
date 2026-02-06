@@ -214,9 +214,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         );
         
       default:
-        // Format thẻ tag: @[Name]
         const renderTextWithMentions = (text: string) => {
-          const parts = text.split(/(@\[[^\]]+\])/g);
+          const combinedRegex = /(@\[[^\]]+\]|(?:https?:\/\/|www\.)[^\s]+)/g;
+          const parts = text.split(combinedRegex);
+          
           return parts.map((part, index) => {
             if (part.startsWith('@[') && part.endsWith(']')) {
               const name = part.slice(2, -1);
@@ -226,6 +227,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 </span>
               );
             }
+            
+            if (/^(https?:\/\/|www\.)/.test(part)) {
+              const href = part.startsWith('www.') ? `https://${part}` : part;
+              return (
+                <a 
+                  key={index} 
+                  href={href} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className={`underline break-all transition-opacity hover:opacity-80 ${isMe ? 'text-blue-200' : 'text-primary'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {part}
+                </a>
+              );
+            }
+
             return <span key={index}>{part}</span>;
           });
         };
