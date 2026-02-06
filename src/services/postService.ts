@@ -20,8 +20,7 @@ import {
   writeBatch,
   deleteField
 } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { db } from '../firebase/config';
 import { Post, Comment, NotificationType, ReportStatus, UserStatus } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
@@ -355,39 +354,12 @@ export const postService = {
     }
   },
 
-  deletePost: async (postId: string, images?: string[], videos?: string[]): Promise<void> => {
+  deletePost: async (postId: string, _images?: string[], _videos?: string[]): Promise<void> => {
     try {
-      const allMedia = [...(images || []), ...(videos || [])];
-      if (allMedia.length > 0) {
-        for (const url of allMedia) {
-          try {
-            const mediaRef = ref(storage, url);
-            await deleteObject(mediaRef);
-          } catch (err) {
-            console.error("Lỗi xóa media bài viết trên storage", err);
-          }
-        }
-      }
 
       const commentsQuery = query(collection(db, 'comments'), where('postId', '==', postId));
       const commentsSnapshot = await getDocs(commentsQuery);
       const allComments = commentsSnapshot.docs;
-
-      const commentMediaUrls: string[] = [];
-      allComments.forEach(cDoc => {
-        const data = cDoc.data();
-        if (data.image) commentMediaUrls.push(data.image);
-        if (data.video) commentMediaUrls.push(data.video);
-      });
-
-      for (const url of commentMediaUrls) {
-        try {
-          const mediaRef = ref(storage, url);
-          await deleteObject(mediaRef);
-        } catch (err) {
-          console.error("Lỗi xóa media bình luận khi xóa post", err);
-        }
-      }
 
       const batch = writeBatch(db);
 
