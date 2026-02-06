@@ -9,7 +9,8 @@ export interface MessageSlice {
   hasMoreMessages: Record<string, boolean>;
   isLoadingMore: Record<string, boolean>;
   typingUsers: Record<string, string[]>;
-  uploadProgress: Record<string, number>;
+  uploadProgress: Record<string, { progress: number; error?: boolean; localUrl?: string }>;
+
 
   subscribeToMessages: (conversationId: string) => () => void;
   loadMoreMessages: (conversationId: string) => Promise<void>;
@@ -29,7 +30,8 @@ export interface MessageSlice {
   subscribeToTyping: (conversationId: string) => () => void;
   toggleReaction: (messageId: string, userId: string, emoji: string) => Promise<void>;
   clearMessages: (conversationId: string) => void;
-  setUploadProgress: (conversationId: string, progress: number) => void;
+  setUploadProgress: (messageId: string, progress: number) => void;
+  setUploadError: (messageId: string, isError: boolean) => void;
 }
 
 const LIMIT_PER_PAGE = 20;
@@ -110,64 +112,148 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
         messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== tempId) }
       }));
       console.error("Lỗi gửi tin nhắn văn bản:", error);
-      throw error;
     }
   },
+
 
   sendImageMessage: async (conversationId: string, senderId: string, file: File) => {
-    try {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-      await chatService.sendImageMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
-        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
-      });
-    } catch (error) {
-      console.error("Lỗi gửi ảnh:", error);
-      throw error;
-    } finally {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-    }
-  },
+    const tempId = `temp-img-${Date.now()}`;
+    const localUrl = URL.createObjectURL(file);
+    
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversationId,
+      senderId,
+      content: localUrl,
+      fileUrl: localUrl,
+      timestamp: new Date(),
+      type: 'image',
+      readBy: [senderId],
+      deliveredTo: [senderId],
+    };
 
-  sendFileMessage: async (conversationId: string, senderId: string, file: File) => {
-    try {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-      await chatService.sendFileMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
-        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
+    set(state => ({
+      messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] },
+      uploadProgress: { ...state.uploadProgress, [tempId]: { progress: 0, localUrl } }
+    }));
+
+    chatService.sendImageMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+      get().setUploadProgress(tempId, p.progress);
+    }).then(() => {
+      set(state => {
+        const newProgress = { ...state.uploadProgress };
+        delete newProgress[tempId];
+        return { uploadProgress: newProgress };
       });
-    } catch (error) {
-      console.error("Lỗi gửi tệp:", error);
-      throw error;
-    } finally {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-    }
+    }).catch(error => {
+      console.error("Lỗi gửi ảnh:", error);
+      get().setUploadError(tempId, true);
+    });
   },
 
   sendVideoMessage: async (conversationId: string, senderId: string, file: File) => {
-    try {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-      await chatService.sendVideoMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
-        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
+    const tempId = `temp-video-${Date.now()}`;
+    const localUrl = URL.createObjectURL(file);
+    
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversationId,
+      senderId,
+      content: localUrl,
+      fileUrl: localUrl,
+      timestamp: new Date(),
+      type: 'video',
+      readBy: [senderId],
+      deliveredTo: [senderId],
+    };
+
+    set(state => ({
+      messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] },
+      uploadProgress: { ...state.uploadProgress, [tempId]: { progress: 0, localUrl } }
+    }));
+
+    chatService.sendVideoMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+      get().setUploadProgress(tempId, p.progress);
+    }).then(() => {
+      set(state => {
+        const newProgress = { ...state.uploadProgress };
+        delete newProgress[tempId];
+        return { uploadProgress: newProgress };
       });
-    } catch (error) {
+    }).catch(error => {
       console.error("Lỗi gửi video:", error);
-      throw error;
-    } finally {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-    }
+      get().setUploadError(tempId, true);
+    });
+  },
+
+  sendFileMessage: async (conversationId: string, senderId: string, file: File) => {
+    const tempId = `temp-file-${Date.now()}`;
+    
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversationId,
+      senderId,
+      content: file.name,
+      fileName: file.name,
+      fileSize: file.size,
+      timestamp: new Date(),
+      type: 'file',
+      readBy: [senderId],
+      deliveredTo: [senderId],
+    };
+
+    set(state => ({
+      messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] },
+      uploadProgress: { ...state.uploadProgress, [tempId]: { progress: 0 } }
+    }));
+
+    chatService.sendFileMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+      get().setUploadProgress(tempId, p.progress);
+    }).then(() => {
+      set(state => {
+        const newProgress = { ...state.uploadProgress };
+        delete newProgress[tempId];
+        return { uploadProgress: newProgress };
+      });
+    }).catch(error => {
+      console.error("Lỗi gửi tệp:", error);
+      get().setUploadError(tempId, true);
+    });
   },
 
   sendVoiceMessage: async (conversationId: string, senderId: string, file: File) => {
-    try {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-      await chatService.sendVoiceMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
-        set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: p.progress } }));
+    const tempId = `temp-voice-${Date.now()}`;
+    const localUrl = URL.createObjectURL(file);
+    
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversationId,
+      senderId,
+      content: localUrl,
+      fileUrl: localUrl,
+      timestamp: new Date(),
+      type: 'voice',
+      readBy: [senderId],
+      deliveredTo: [senderId],
+    };
+
+    set(state => ({
+      messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] },
+      uploadProgress: { ...state.uploadProgress, [tempId]: { progress: 0, localUrl } }
+    }));
+
+    chatService.sendVoiceMessage(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+      get().setUploadProgress(tempId, p.progress);
+    }).then(() => {
+      set(state => {
+        const newProgress = { ...state.uploadProgress };
+        delete newProgress[tempId];
+        return { uploadProgress: newProgress };
       });
-    } catch (error) {
-      console.error("Lỗi gửi tin nhắn thoại:", error);
-      throw error;
-    } finally {
-      set(state => ({ uploadProgress: { ...state.uploadProgress, [conversationId]: 0 } }));
-    }
+    }).catch(error => {
+      console.error("Lỗi gửi voice:", error);
+      get().setUploadError(tempId, true);
+    });
   },
 
   markAsRead: async (conversationId: string, userId: string) => {
@@ -263,9 +349,22 @@ export const createMessageSlice: StateCreator<MessageSlice, [], [], MessageSlice
     });
   },
 
-  setUploadProgress: (conversationId: string, progress: number) => {
+  setUploadProgress: (messageId: string, progress: number) => {
     set((state) => ({
-      uploadProgress: { ...state.uploadProgress, [conversationId]: progress }
+      uploadProgress: {
+        ...state.uploadProgress,
+        [messageId]: { ...state.uploadProgress[messageId], progress }
+      }
+    }));
+  },
+
+  setUploadError: (messageId: string, isError: boolean) => {
+    set((state) => ({
+      uploadProgress: {
+        ...state.uploadProgress,
+        [messageId]: { ...state.uploadProgress[messageId], error: isError }
+      }
     }));
   },
 });
+
