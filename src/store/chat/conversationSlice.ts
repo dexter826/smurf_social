@@ -183,7 +183,7 @@ export const createConversationSlice: StateCreator<ConversationSlice, [], [], Co
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
     }));
     try {
-      await chatService.deleteConversation(conversationId);
+      await chatService.deleteConversation(conversationId, useAuthStore.getState().user?.id || '');
     } catch (error) {
       set({ conversations: previousConversations });
       console.error("Lỗi xóa hội thoại:", error);

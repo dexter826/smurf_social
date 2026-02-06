@@ -94,6 +94,7 @@ export interface Conversation {
   markedUnread?: boolean;
   typingUsers?: string[];
   memberJoinedAt?: Record<string, Date>;
+  deletedBy?: string[];
 }
 
 export interface Comment {
