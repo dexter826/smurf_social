@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatTimeOnly } from '../../utils/dateUtils';
-import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile, Play, Pause, Mic, Video } from 'lucide-react';
+import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile, Play, Pause, Mic, Video, Check, CheckCheck } from 'lucide-react';
 import { Message, User } from '../../types';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText, ReactionDisplay, ReactionSelector, LazyVideo } from '../ui';
 import { chatService } from '../../services/chatService';
@@ -333,10 +333,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <div 
               className={`
                 relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
-                ${message.type === 'text' ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
+                ${(message.type === 'text' || message.isRecalled) ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe 
-                  ? (message.type === 'text' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '') 
-                  : (message.type === 'text' ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
+                  ? ((message.type === 'text' || message.isRecalled) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '') 
+                  : ((message.type === 'text' || message.isRecalled) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
                 }
               `}
             >
@@ -368,7 +368,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {renderContent()}
               
               {/* Thời gian & Trạng thái */}
-              {message.type === 'text' && (
+              {(message.type === 'text' || message.isRecalled) && (
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
                   isMe ? 'text-white/80' : 'text-text-tertiary'
                 }`}>
@@ -378,7 +378,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
               {/* Hiển thị cảm xúc & Bộ chọn Emoji */}
               {!message.isRecalled && (
-                <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'right-1' : 'left-1'}`}>
+                <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
                     {hasReactions ? (
                       <ReactionDisplay 
                         reactions={message.reactions} 
@@ -498,7 +498,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
 
           {/* Thời gian cho file media */}
-          {message.type !== 'text' && (
+          {message.type !== 'text' && !message.isRecalled && (
             <span className="text-[10px] text-text-tertiary mt-1">
               {formatTimeOnly(message.timestamp)}
               {/* Status moved to separate line below */}
@@ -508,8 +508,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <div className="flex flex-col items-end mt-0.5">
               {/* Hiển thị "Đã gửi/Đã nhận" nếu là tin nhắn cuối cùng và chưa ai đọc */}
               {isLastMessage && lastReadByUsers.length === 0 && (
-                <div className="text-[11px] font-medium text-text-tertiary select-none">
-                  {isDelivered ? 'Đã nhận' : 'Đã gửi'}
+                <div className={`mt-0.5 select-none ${isDelivered ? 'text-primary' : 'text-text-tertiary'}`}>
+                  {isDelivered ? <CheckCheck size={14} strokeWidth={2.5} /> : <Check size={14} strokeWidth={2.5} />}
                 </div>
               )}
 
