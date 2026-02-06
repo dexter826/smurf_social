@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatTimeOnly } from '../../utils/dateUtils';
-import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile } from 'lucide-react';
+import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile, Play, Pause, Mic, Video } from 'lucide-react';
 import { Message, User } from '../../types';
-import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText, ReactionDisplay, ReactionSelector } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText, ReactionDisplay, ReactionSelector, LazyVideo } from '../ui';
 import { chatService } from '../../services/chatService';
 import { useChatStore } from '../../store/chatStore';
 
@@ -52,6 +52,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { toggleReaction } = useChatStore();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const handleProfileClick = () => {
     if (sender?.id) {
@@ -142,6 +153,61 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <span className="bg-bg-secondary/50 px-3 py-1 rounded-full text-[11px] text-text-tertiary italic text-center max-w-[90%]">
               {message.content}
             </span>
+          </div>
+        );
+
+      case 'video':
+        const videoUrl = message.fileUrl || message.content;
+        return (
+          <div className="rounded-lg overflow-hidden max-w-[300px] border border-border-light shadow-sm">
+            <LazyVideo 
+              src={videoUrl} 
+              thumbnail={message.videoThumbnails?.[videoUrl]}
+              className="w-full h-auto max-h-[400px] object-contain"
+            />
+          </div>
+        );
+
+      case 'voice':
+        const handleToggleVoice = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          if (!audioRef.current) {
+            audioRef.current = new Audio(message.fileUrl || message.content);
+            audioRef.current.onended = () => setIsPlaying(false);
+          }
+
+          if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+          } else {
+            audioRef.current.play();
+            setIsPlaying(true);
+          }
+        };
+
+        return (
+          <div 
+            className={`flex items-center gap-3 p-3 rounded-2xl min-w-[200px] cursor-pointer transition-all active:scale-95 ${
+              isMe 
+                ? 'bg-bg-message-sent text-text-on-primary shadow-md' 
+                : 'bg-bg-message-received text-text-primary border border-border-light'
+            }`}
+            onClick={handleToggleVoice}
+          >
+            <div className={`p-2.5 rounded-full shadow-sm transition-colors ${
+              isMe ? 'bg-bg-primary text-primary' : 'bg-primary text-white'
+            }`}>
+              {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} className="ml-0.5" fill="currentColor" />}
+            </div>
+            <div className="flex-1">
+              <div className="text-[13px] font-bold mb-0.5">
+                Tin nhắn thoại
+              </div>
+              <div className={`flex items-center gap-1.5 opacity-80 ${isMe ? 'text-text-on-primary' : 'text-text-tertiary'}`}>
+                <Mic size={12} />
+                <span className="text-[11px]">Click để nghe</span>
+              </div>
+            </div>
           </div>
         );
         

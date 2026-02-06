@@ -20,7 +20,7 @@ import {
 import { db } from "../../firebase/config";
 import { Message, MessageType } from "../../types";
 import { TIME_LIMITS } from "../../constants";
-import { compressImage, generateVideoThumbnail, withRetry } from "../../utils/imageUtils";
+import { compressImage, withRetry } from "../../utils/imageUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
 
 export const messageService = {
@@ -319,20 +319,14 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      // Generate thumbnail từ video
-      let thumbnail: string | undefined;
-      try {
-        thumbnail = await generateVideoThumbnail(file);
-      } catch {
-        // Ignore thumbnail error
-      }
-
       const timestamp = Date.now();
       const path = `chats/${conversationId}/${timestamp}_${file.name}`;
       
       const videoUrl = await withRetry(() => 
         uploadWithProgress(path, file, onProgress)
       );
+
+      const thumbnailUrl = videoUrl.replace(/\.[^/.]+$/, ".jpg");
 
       const messageData: Record<string, any> = {
         conversationId,
@@ -346,7 +340,7 @@ export const messageService = {
         deliveredAt: serverTimestamp(),
       };
 
-      if (thumbnail) messageData.thumbnail = thumbnail;
+      if (thumbnailUrl) messageData.videoThumbnails = { [videoUrl]: thumbnailUrl };
       if (replyToId) messageData.replyToId = replyToId;
 
       await addDoc(collection(db, "messages"), messageData);

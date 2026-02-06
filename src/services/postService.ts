@@ -26,7 +26,7 @@ import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, REACTIONS } from '../constants';
 import { notificationService } from './notificationService';
-import { compressImage, isImageFile, withRetry, generateVideoThumbnail, dataURLToBlob } from '../utils/imageUtils';
+import { compressImage, isImageFile, withRetry } from '../utils/imageUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 
 export const postService = {
@@ -534,17 +534,9 @@ export const postService = {
         
         if (isVideo) {
           videos.push(url);
-          try {
-            const thumbDataUrl = await generateVideoThumbnail(file);
-            const thumbBlob = dataURLToBlob(thumbDataUrl);
-            const thumbFile = new File([thumbBlob], `thumb_${fileName}.jpg`, { type: 'image/jpeg' });
-            const thumbPath = `posts/${userId}/thumbnails/thumb_${timestamp}.jpg`;
-            
-            const thumbUrl = await withRetry(() => uploadWithProgress(thumbPath, thumbFile));
-            videoThumbnails[url] = thumbUrl;
-          } catch (thumbError) {
-            console.error("Không thể tạo thumbnail cho video:", thumbError);
-          }
+          // Cloudinary tự động tạo thumbnail khi đổi đuôi sang .jpg
+          const thumbnailUrl = url.replace(/\.[^/.]+$/, ".jpg");
+          videoThumbnails[url] = thumbnailUrl;
         } else {
           images.push(url);
         }
