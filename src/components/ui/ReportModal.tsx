@@ -68,8 +68,8 @@ export const ReportModal: React.FC = () => {
       const files = Array.from(e.target.files) as File[];
       const totalImages = selectedImages.length + files.length;
       
-      if (totalImages > 5) {
-        addToast('Chỉ được tải lên tối đa 5 ảnh', 'error');
+      if (totalImages > REPORT_CONFIG.MAX_IMAGES_PER_REPORT) {
+        addToast(`Chỉ được tải lên tối đa ${REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh`, 'error');
         return;
       }
 
@@ -208,9 +208,9 @@ export const ReportModal: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-text-primary">
-                    Hình ảnh bằng chứng (Tối đa 5 ảnh)
+                    Hình ảnh bằng chứng (Tối đa ${REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh)
                   </label>
-                  <span className="text-xs text-text-tertiary">{selectedImages.length}/5</span>
+                  <span className="text-xs text-text-tertiary">{selectedImages.length}/${REPORT_CONFIG.MAX_IMAGES_PER_REPORT}</span>
                 </div>
                 
                 <div className="grid grid-cols-4 gap-2">
@@ -227,7 +227,7 @@ export const ReportModal: React.FC = () => {
                     </div>
                   ))}
                   
-                  {selectedImages.length < 5 && (
+                  {selectedImages.length < REPORT_CONFIG.MAX_IMAGES_PER_REPORT && (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}

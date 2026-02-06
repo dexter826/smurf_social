@@ -34,6 +34,7 @@ export const TIME_LIMITS = {
 export const MEDIA_CONSTRAINTS = {
   MAX_IMAGES_PER_POST: 10,
   MAX_VIDEOS_PER_POST: 1,
+  MAX_IMAGES_PER_COMMENT: 1,
   PROFILE_MEDIA_PREVIEW: 6,
 } as const;
 
@@ -56,6 +57,7 @@ export const VALIDATION = {
 // Cấu hình báo cáo
 export const REPORT_CONFIG = {
   DESCRIPTION_MAX_LENGTH: 500,
+  MAX_IMAGES_PER_REPORT: 5,
   REASONS: {
     spam: { label: 'Spam', description: 'Tin rác, quảng cáo không mong muốn' },
     harassment_violence: { label: 'Quấy rối & Bạo lực', description: 'Bắt nạt, đe dọa hoặc nội dung bạo lực' },

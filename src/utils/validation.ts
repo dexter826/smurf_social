@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG } from '../constants/appConfig';
+import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG, MEDIA_CONSTRAINTS } from '../constants/appConfig';
 import { ReportReason } from '../types';
 
 // Schema cho Đăng nhập
@@ -74,8 +74,10 @@ export const postSchema = z.object({
     .optional()
     .or(z.literal('')),
   visibility: z.enum(['public', 'friends', 'private']),
-  images: z.array(z.string()),
-  videos: z.array(z.string()),
+  images: z.array(z.string())
+    .max(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST, `Chỉ được tải lên tối đa ${MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST} ảnh`),
+  videos: z.array(z.string())
+    .max(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST, `Chỉ được tải lên tối đa ${MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST} video`),
   videoThumbnails: z.record(z.string(), z.string()).optional(),
 }).refine(data => {
   const hasContent = data.content?.trim()?.length && data.content.trim().length > 0;
@@ -94,7 +96,9 @@ export const reportSchema = z.object({
     .max(REPORT_CONFIG.DESCRIPTION_MAX_LENGTH, `Mô tả không được quá ${REPORT_CONFIG.DESCRIPTION_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string())
+    .max(REPORT_CONFIG.MAX_IMAGES_PER_REPORT, `Chỉ được tải lên tối đa ${REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh bằng chứng`)
+    .optional(),
 }).refine(data => {
   if (data.reason === ReportReason.OTHER && !data.description?.trim()) return false;
   return true;
