@@ -268,7 +268,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file' | 'camera') => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file' | 'camera' | 'media') => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
@@ -281,12 +281,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const newFiles: { file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[] = [];
 
     files.forEach(file => {
+      // Xác định loại file thực tế
+      let fileType: 'image' | 'video' | 'file' = 'file';
+      
+      if (type === 'file') {
+        fileType = 'file';
+      } else if (type === 'image') {
+        fileType = 'image';
+      } else if (type === 'video') {
+        fileType = 'video';
+      } else if (type === 'media' || type === 'camera') {
+        if (file.type.startsWith('image/')) fileType = 'image';
+        else if (file.type.startsWith('video/')) fileType = 'video';
+      }
+
       // Validate theo loại file
-      const limitType = (type === 'image' || type === 'camera') ? 'IMAGE' : type === 'video' ? 'VIDEO' : 'FILE';
+      const limitType = fileType === 'image' ? 'IMAGE' : fileType === 'video' ? 'VIDEO' : 'FILE';
       if (!validateFileSize(file, limitType)) return;
 
       let preview: string | undefined;
-      const fileType = (type === 'camera' && file.type.startsWith('video')) ? 'video' : (type === 'camera' ? 'image' : type);
       
       if (fileType === 'image' || fileType === 'video') {
         preview = URL.createObjectURL(file);
@@ -592,7 +605,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
              size="md"
            />
 
-           {/* Popover Menu */}
+             {/* Popover Menu */}
            {showActions && (
              <div
                className="absolute bottom-full left-0 mb-2 flex items-center gap-2 p-2 bg-bg-secondary rounded-xl shadow-lg border border-border-light animate-fade-in z-50"
@@ -600,7 +613,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 <IconButton
                    type="button"
                    onClick={() => { imageInputRef.current?.click(); setShowActions(false); }}
-                   title="Gửi ảnh"
+                   title="Hình ảnh & Video"
                    icon={<ImageIcon size={16} />}
                    size="sm"
                 />
@@ -609,13 +622,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                    onClick={() => { cameraInputRef.current?.click(); setShowActions(false); }}
                    title="Chụp ảnh/Quay phim"
                    icon={<Camera size={16} />}
-                   size="sm"
-                />
-                <IconButton
-                   type="button"
-                   onClick={() => { videoInputRef.current?.click(); setShowActions(false); }}
-                   title="Gửi video"
-                   icon={<Video size={16} />}
                    size="sm"
                 />
                <IconButton
@@ -639,10 +645,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           <input
             ref={imageInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             className="hidden"
-            onChange={(e) => handleFileSelect(e, 'image')}
+            onChange={(e) => handleFileSelect(e, 'media')}
           />
           <input
             ref={videoInputRef}

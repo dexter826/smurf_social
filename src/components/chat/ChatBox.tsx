@@ -4,6 +4,7 @@ import { Message, User, Conversation, UserStatus } from '../../types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button, Spinner } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageBubble } from './MessageBubble';
+import { ImageGroupBubble } from './ImageGroupBubble';
 import { MessageRequestBanner } from './MessageRequestBanner';
 
 
@@ -314,34 +315,98 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     </div>
 
                     <div className="space-y-1">
-                      {group.messages.map((msg, msgIndex) => {
-                        const sender = usersMap[msg.senderId];
-                        const isMe = msg.senderId === currentUserId;
-                        const showAvatar = shouldShowAvatar(msg, msgIndex, group.messages);
-                        const showName = shouldShowName(msg, msgIndex, group.messages);
-                        const isLastMessage = msg.id === messages[messages.length - 1]?.id;
+                      {(() => {
+                        const renderedMessages: React.ReactNode[] = [];
+                        let i = 0;
+                        const dayMessages = group.messages;
 
-                        return (
-                          <MessageBubble
-                            key={msg.id}
-                            message={msg}
-                            isMe={isMe}
-                            sender={sender}
-                            showAvatar={showAvatar}
-                            showName={showName}
-                            isLastMessage={isLastMessage}
-                            lastReadByUsers={lastReadByMap[msg.id]}
-                            onRecall={onRecall}
-                            onDeleteForMe={onDeleteForMe}
-                            onForward={onForward}
-                            onReply={onReply}
-                            onEdit={onEdit}
-                            currentUserId={currentUserId}
-                            usersMap={usersMap}
-                            isGroup={conversation.isGroup}
-                          />
-                        );
-                      })}
+                        while (i < dayMessages.length) {
+                          const msg = dayMessages[i];
+                          const isMe = msg.senderId === currentUserId;
+                          if (msg.type === 'image' && !msg.isRecalled && !msg.replyToId) {
+                            const imageGroup = [msg];
+                            let j = i + 1;
+                            
+                            while (j < dayMessages.length) {
+                              const nextMsg = dayMessages[j];
+                              const prevMsgInGroup = imageGroup[imageGroup.length - 1];
+                              const nextMsgTime = new Date(nextMsg.timestamp).getTime();
+                              const prevMsgTime = new Date(prevMsgInGroup.timestamp).getTime();
+                              const timeDiff = nextMsgTime - prevMsgTime;
+                              const MAX_GROUP_TIME = 60 * 1000; 
+
+                              if (
+                                nextMsg.type === 'image' && 
+                                nextMsg.senderId === msg.senderId && 
+                                !nextMsg.isRecalled && 
+                                !nextMsg.replyToId &&
+                                !nextMsg.deletedBy?.includes(currentUserId) &&
+                                timeDiff < MAX_GROUP_TIME
+                              ) {
+                                imageGroup.push(nextMsg);
+                                j++;
+                              } else {
+                                break;
+                              }
+                            }
+
+                            if (imageGroup.length > 1) {
+                              // Render Group
+                              const lastMsgInGroup = imageGroup[imageGroup.length - 1];
+                              const showAvatar = shouldShowAvatar(lastMsgInGroup, j - 1, dayMessages);
+                              const showName = shouldShowName(imageGroup[0], i, dayMessages);
+                              const isLastMessage = lastMsgInGroup.id === messages[messages.length - 1]?.id;
+
+                              renderedMessages.push(
+                                <ImageGroupBubble
+                                  key={`group-${msg.id}`}
+                                  messages={imageGroup}
+                                  isMe={isMe}
+                                  sender={usersMap[msg.senderId]}
+                                  showAvatar={showAvatar}
+                                  showName={showName}
+                                  currentUserId={currentUserId}
+                                  onRecall={onRecall}
+                                  onDeleteForMe={onDeleteForMe}
+                                  onForward={onForward}
+                                  onReply={onReply}
+                                />
+                              );
+                              i = j;
+                              continue;
+                            }
+                          }
+
+                          // Render Single Message
+                          const sender = usersMap[msg.senderId];
+                          const showAvatar = shouldShowAvatar(msg, i, dayMessages);
+                          const showName = shouldShowName(msg, i, dayMessages);
+                          const isLastMessage = msg.id === messages[messages.length - 1]?.id;
+
+                          renderedMessages.push(
+                            <MessageBubble
+                              key={msg.id}
+                              message={msg}
+                              isMe={isMe}
+                              sender={sender}
+                              showAvatar={showAvatar}
+                              showName={showName}
+                              isLastMessage={isLastMessage}
+                              lastReadByUsers={lastReadByMap[msg.id]}
+                              onRecall={onRecall}
+                              onDeleteForMe={onDeleteForMe}
+                              onForward={onForward}
+                              onReply={onReply}
+                              onEdit={onEdit}
+                              currentUserId={currentUserId}
+                              usersMap={usersMap}
+                              isGroup={conversation.isGroup}
+                            />
+                          );
+                          i++;
+                        }
+                        return renderedMessages;
+                      })()}
                     </div>
                   </div>
                 ))}

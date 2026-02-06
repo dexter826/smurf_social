@@ -22,3 +22,4 @@ export * from './ReactionSelector';
 export * from './ReactionDisplay';
 export * from './CircularProgress';
 export * from './ImageCropper';
+export * from './ImageViewer';
