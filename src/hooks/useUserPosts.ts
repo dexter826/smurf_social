@@ -73,7 +73,6 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   }, [userId, currentUser.id, currentUser.friendIds, fetchUsers]);
 
   useEffect(() => {
-    loadPosts(true);
     
     const unsubscribe = postService.subscribeToUserPosts(
       userId,
