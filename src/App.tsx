@@ -3,7 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { useChatStore } from './store/chatStore';
 import { AppLayout } from './components/layout/AppLayout';
-import { Loading, ScreenLoader, ToastContainer } from './components/ui';
+import { Loading, ScreenLoader, ToastContainer, ConnectionStatus } from './components/ui';
 import { ReportModal } from './components/ui/ReportModal';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
@@ -83,7 +83,7 @@ const App: React.FC = () => {
       <React.Suspense fallback={<ScreenLoader />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          
+
           {/* Main App Routes */}
           <Route path="/" element={
             <ProtectedRoute>
@@ -122,6 +122,7 @@ const App: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </React.Suspense>
+      <ConnectionStatus />
       <ToastContainer />
       <ReportModal />
     </HashRouter>
