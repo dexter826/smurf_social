@@ -23,3 +23,5 @@ export * from './ReactionDisplay';
 export * from './CircularProgress';
 export * from './ImageCropper';
 export * from './ImageViewer';
+export * from './ReportModal';
+export * from './ConnectionStatus';

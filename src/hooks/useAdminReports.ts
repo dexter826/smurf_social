@@ -18,7 +18,7 @@ export function useAdminReports() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const { users: userCache, fetchUsers } = useUserCache();
-  
+
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -36,47 +36,52 @@ export function useAdminReports() {
     }
   }, [user, navigate]);
 
-  // Realtime subscription cho reports
   useEffect(() => {
     if (user?.role !== 'admin') return;
-    
+
     setIsLoading(true);
-    
-    const unsubscribe = reportService.subscribeToReports(
-      (allReports) => {
-        // Tính stats từ tất cả reports
-        setStats({
-          pending: allReports.filter(r => r.status === ReportStatus.PENDING).length,
-          resolved: allReports.filter(r => r.status === ReportStatus.RESOLVED).length,
-          rejected: allReports.filter(r => r.status === ReportStatus.REJECTED).length,
-          orphaned: allReports.filter(r => r.status === ReportStatus.ORPHANED).length
-        });
 
-        // Lọc theo status filter
-        let filtered = statusFilter === 'pending'
-          ? allReports.filter(r => r.status === ReportStatus.PENDING)
-          : allReports.filter(r => r.status === statusFilter);
+    try {
+      const unsubscribe = reportService.subscribeToReports(
+        (allReports) => {
+          // Tính stats từ tất cả reports
+          setStats({
+            pending: allReports.filter(r => r.status === ReportStatus.PENDING).length,
+            resolved: allReports.filter(r => r.status === ReportStatus.RESOLVED).length,
+            rejected: allReports.filter(r => r.status === ReportStatus.REJECTED).length,
+            orphaned: allReports.filter(r => r.status === ReportStatus.ORPHANED).length
+          });
 
-        // Lọc theo type filter
-        if (typeFilter !== 'all') {
-          filtered = filtered.filter(r => r.targetType === typeFilter);
-        }
+          // Lọc theo status filter
+          let filtered = statusFilter === 'pending'
+            ? allReports.filter(r => r.status === ReportStatus.PENDING)
+            : allReports.filter(r => r.status === statusFilter);
 
-        setReports(filtered);
-        setIsLoading(false);
+          // Lọc theo type filter
+          if (typeFilter !== 'all') {
+            filtered = filtered.filter(r => r.targetType === typeFilter);
+          }
 
-        // Fetch user info từ cache
-        const userIds = [...new Set([
-          ...filtered.map(r => r.reporterId),
-          ...filtered.map(r => r.targetOwnerId)
-        ])];
-        fetchUsers(userIds);
-      },
-      undefined,
-      PAGINATION.ADMIN_REPORTS
-    );
+          setReports(filtered);
+          setIsLoading(false);
 
-    return () => unsubscribe();
+          // Fetch user info từ cache
+          const userIds = [...new Set([
+            ...filtered.map(r => r.reporterId),
+            ...filtered.map(r => r.targetOwnerId)
+          ])];
+          fetchUsers(userIds);
+        },
+        undefined,
+        PAGINATION.ADMIN_REPORTS
+      );
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Lỗi subscription reports:', error);
+      setIsLoading(false);
+      toast.error('Không thể tải báo cáo');
+    }
   }, [user, statusFilter, typeFilter, fetchUsers]);
 
   // Lấy user info từ cache
@@ -87,7 +92,7 @@ export function useAdminReports() {
   // Xử lý action (resolve/reject)
   const handleAction = useCallback(async () => {
     if (!selectedReport || !actionType || !user) return;
-    
+
     setIsProcessing(true);
     try {
       if (actionType === 'resolve') {
@@ -129,7 +134,7 @@ export function useAdminReports() {
     selectedReport,
     actionType,
     isAdmin: user?.role === 'admin',
-    
+
     // Actions
     setStatusFilter,
     setTypeFilter,

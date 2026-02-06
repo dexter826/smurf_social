@@ -60,6 +60,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
   const prevMessagesLength = useRef(messages.length);
   const scrollHeightBeforeLoad = useRef(0);
+  const loadMoreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cuộn xuống cuối khi mới vào hoặc đổi hội thoại
   useEffect(() => {
@@ -75,37 +76,51 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   // Cuộn xuống cuối khi có tin nhắn mới (nếu đang ở gần cuối)
   useEffect(() => {
     if (messages.length > 0 && prevMessagesLength.current > 0) {
-        if (messages.length > prevMessagesLength.current) {
-            const lastMsg = messages[messages.length - 1];
-            const prevLastMsg = messages[prevMessagesLength.current - 1];
-            const isNewMessage = !prevLastMsg || lastMsg.createdAt > prevLastMsg.createdAt;
-            
-            if (isNewMessage && shouldAutoScroll) {
-                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-            } else if (!isNewMessage && messagesContainerRef.current) {
-                const currentScrollHeight = messagesContainerRef.current.scrollHeight;
-                messagesContainerRef.current.scrollTop = currentScrollHeight - scrollHeightBeforeLoad.current;
-            }
+      if (messages.length > prevMessagesLength.current) {
+        const lastMsg = messages[messages.length - 1];
+        const prevLastMsg = messages[prevMessagesLength.current - 1];
+        const isNewMessage = !prevLastMsg || lastMsg.createdAt > prevLastMsg.createdAt;
+
+        if (isNewMessage && shouldAutoScroll) {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        } else if (!isNewMessage && messagesContainerRef.current) {
+          const currentScrollHeight = messagesContainerRef.current.scrollHeight;
+          messagesContainerRef.current.scrollTop = currentScrollHeight - scrollHeightBeforeLoad.current;
         }
+      }
     }
     prevMessagesLength.current = messages.length;
   }, [messages, shouldAutoScroll]);
 
-  const handleScroll = () => {
+  const handleScroll = React.useCallback(() => {
     if (!messagesContainerRef.current) return;
-    
+
     const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-    
+
     // Kiểm tra xem có nên tự động cuộn không
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
     setShouldAutoScroll(isAtBottom);
 
-    // Trigger tải thêm khi cuộn lên gần đỉnh
     if (scrollTop < 50 && hasMoreMessages && !isLoadingMore && onLoadMore) {
-      scrollHeightBeforeLoad.current = scrollHeight;
-      onLoadMore();
+      if (loadMoreTimeoutRef.current) {
+        clearTimeout(loadMoreTimeoutRef.current);
+      }
+
+      loadMoreTimeoutRef.current = setTimeout(() => {
+        scrollHeightBeforeLoad.current = scrollHeight;
+        onLoadMore();
+      }, 150); // Debounce 150ms
     }
-  };
+  }, [hasMoreMessages, isLoadingMore, onLoadMore]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (loadMoreTimeoutRef.current) {
+        clearTimeout(loadMoreTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const partner = conversation.isGroup
     ? null
@@ -120,7 +135,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     : partner?.avatar;
 
   // Kiểm tra xem đây có phải tin nhắn từ người lạ không
-  const isMessageRequest = !conversation.isGroup && partner && 
+  const isMessageRequest = !conversation.isGroup && partner &&
     !currentUserFriendIds.includes(partner.id);
 
   const groupedMessages: { date: string; messages: Message[] }[] = [];
@@ -167,40 +182,40 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   const lastReadByMap = React.useMemo(() => {
     const map: Record<string, User[]> = {};
     if (!conversation.isGroup && messages.length > 0) {
-        const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
-        // Chỉ hiển thị "Đã xem" nếu là bạn bè
-        const isFriend = partnerId && currentUserFriendIds.includes(partnerId);
-        if (partnerId && isFriend) {
-            const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(partnerId));
-            if (lastReadMsg) {
-                map[lastReadMsg.id] = [usersMap[partnerId]].filter(Boolean);
-            }
+      const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
+      // Chỉ hiển thị "Đã xem" nếu là bạn bè
+      const isFriend = partnerId && currentUserFriendIds.includes(partnerId);
+      if (partnerId && isFriend) {
+        const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(partnerId));
+        if (lastReadMsg) {
+          map[lastReadMsg.id] = [usersMap[partnerId]].filter(Boolean);
         }
+      }
     } else if (conversation.isGroup) {
-        // Group chat: tìm tin nhắn cuối cùng mỗi thành viên đã đọc
-        conversation.participantIds.forEach(uid => {
-            if (uid === currentUserId) return;
-            const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(uid));
-            if (lastReadMsg) {
-                if (!map[lastReadMsg.id]) map[lastReadMsg.id] = [];
-                if (usersMap[uid]) {
-                    // Để đảm bảo thứ tự "sớm nhất", chúng ta sẽ dựa vào vị trí của uid trong mảng readBy của tin nhắn đó
-                    map[lastReadMsg.id].push(usersMap[uid]);
-                }
-            }
-        });
+      // Group chat: tìm tin nhắn cuối cùng mỗi thành viên đã đọc
+      conversation.participantIds.forEach(uid => {
+        if (uid === currentUserId) return;
+        const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(uid));
+        if (lastReadMsg) {
+          if (!map[lastReadMsg.id]) map[lastReadMsg.id] = [];
+          if (usersMap[uid]) {
+            // Để đảm bảo thứ tự "sớm nhất", chúng ta sẽ dựa vào vị trí của uid trong mảng readBy của tin nhắn đó
+            map[lastReadMsg.id].push(usersMap[uid]);
+          }
+        }
+      });
 
-        // Sắp xếp lại User trong mỗi tin nhắn theo thứ tự họ xuất hiện trong readBy (người xem sớm nhất đứng trước)
-        Object.keys(map).forEach(msgId => {
-            const msg = messages.find(m => m.id === msgId);
-            if (msg?.readBy) {
-                map[msgId].sort((a, b) => {
-                    const idxA = msg.readBy!.indexOf(a.id);
-                    const idxB = msg.readBy!.indexOf(b.id);
-                    return idxA - idxB;
-                });
-            }
-        });
+      // Sắp xếp lại User trong mỗi tin nhắn theo thứ tự họ xuất hiện trong readBy (người xem sớm nhất đứng trước)
+      Object.keys(map).forEach(msgId => {
+        const msg = messages.find(m => m.id === msgId);
+        if (msg?.readBy) {
+          map[msgId].sort((a, b) => {
+            const idxA = msg.readBy!.indexOf(a.id);
+            const idxB = msg.readBy!.indexOf(b.id);
+            return idxA - idxB;
+          });
+        }
+      });
     }
     return map;
   }, [messages, conversation, usersMap, currentUserId]);
@@ -217,24 +232,24 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               onClick={onBack}
               className="md:hidden -ml-2 text-text-secondary hover:text-text-primary h-10 w-10 p-0 rounded-full"
             >
-                <ChevronLeft size={24} />
+              <ChevronLeft size={24} />
             </Button>
           )}
-          
+
           <div className="flex-shrink-0">
             {conversation.isGroup ? (
-              <Avatar 
-                src={avatarSrc} 
-                name={chatName} 
-                size="md" 
-                isGroup 
-                members={conversation.participants} 
+              <Avatar
+                src={avatarSrc}
+                name={chatName}
+                size="md"
+                isGroup
+                members={conversation.participants}
               />
             ) : (
               <UserAvatar userId={partner?.id!} src={avatarSrc} name={chatName} size="md" initialStatus={partner?.status} showStatus={false} />
             )}
           </div>
-          
+
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <div className="flex items-center gap-1.5">
               <h2 className="text-sm font-bold text-text-primary truncate leading-tight">{chatName}</h2>
@@ -249,14 +264,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               <UserStatusText userId={partner?.id!} className="text-xs text-text-tertiary truncate leading-tight" initialStatus={partner?.status} />
             )}
             {conversation.isGroup && (
-               <span className="text-xs text-text-tertiary truncate leading-tight">{conversation.participants.length} thành viên</span>
+              <span className="text-xs text-text-tertiary truncate leading-tight">{conversation.participants.length} thành viên</span>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-0.5 md:gap-1">
-          <IconButton onClick={() => {}} title="Cuộc gọi âm thanh" variant="ghost" className="text-primary hover:bg-primary-light" icon={<Phone size={20} />} size="md" />
-          <IconButton onClick={() => {}} title="Cuộc gọi video" variant="ghost" className="text-primary hover:bg-primary-light" icon={<Video size={20} />} size="md" />
+          <IconButton onClick={() => { }} title="Cuộc gọi âm thanh" variant="ghost" className="text-primary hover:bg-primary-light" icon={<Phone size={20} />} size="md" />
+          <IconButton onClick={() => { }} title="Cuộc gọi video" variant="ghost" className="text-primary hover:bg-primary-light" icon={<Video size={20} />} size="md" />
           <IconButton onClick={onInfoClick} title="Thông tin hội thoại" variant="ghost" className="text-text-secondary hover:text-primary" icon={<Info size={20} />} size="md" />
         </div>
       </div>
@@ -286,17 +301,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                 <Spinner size="sm" />
               </div>
             )}
-            
+
             {groupedMessages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="mb-4">
-                  <UserAvatar 
-                    userId={conversation.isGroup ? '' : partner?.id!} 
-                    src={avatarSrc} 
+                  <UserAvatar
+                    userId={conversation.isGroup ? '' : partner?.id!}
+                    src={avatarSrc}
                     name={chatName}
-                    size="xl" 
-                    isGroup={conversation.isGroup} 
-                    members={conversation.participants} 
+                    size="xl"
+                    isGroup={conversation.isGroup}
+                    members={conversation.participants}
                     initialStatus={partner?.status}
                     showStatus={false}
                   />
@@ -326,19 +341,19 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                           if (msg.type === 'image' && !msg.isRecalled && !msg.replyToId) {
                             const imageGroup = [msg];
                             let j = i + 1;
-                            
+
                             while (j < dayMessages.length) {
                               const nextMsg = dayMessages[j];
                               const prevMsgInGroup = imageGroup[imageGroup.length - 1];
-                               const nextMsgTime = new Date(nextMsg.createdAt).getTime();
-                               const prevMsgTime = new Date(prevMsgInGroup.createdAt).getTime();
+                              const nextMsgTime = new Date(nextMsg.createdAt).getTime();
+                              const prevMsgTime = new Date(prevMsgInGroup.createdAt).getTime();
                               const timeDiff = nextMsgTime - prevMsgTime;
-                              const MAX_GROUP_TIME = 60 * 1000; 
+                              const MAX_GROUP_TIME = 60 * 1000;
 
                               if (
-                                nextMsg.type === 'image' && 
-                                nextMsg.senderId === msg.senderId && 
-                                !nextMsg.isRecalled && 
+                                nextMsg.type === 'image' &&
+                                nextMsg.senderId === msg.senderId &&
+                                !nextMsg.isRecalled &&
                                 !nextMsg.replyToId &&
                                 !nextMsg.deletedBy?.includes(currentUserId) &&
                                 timeDiff < MAX_GROUP_TIME

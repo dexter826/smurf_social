@@ -32,7 +32,7 @@ export const useFeed = (): UseFeedReturn => {
     deletePost,
   } = usePostStore();
   const { users: usersMap, fetchUsers } = useUserCache();
-  
+
   const handleLoadMore = useCallback(() => {
     if (!currentUser || isLoading || !hasMore) return;
     const blockedUserIds = currentUser.blockedUserIds || [];
@@ -52,14 +52,22 @@ export const useFeed = (): UseFeedReturn => {
     return subscribeToPosts(currentUser.id, friendIds, blockedUserIds);
   }, [currentUser, subscribeToPosts]);
 
-  // Lấy dữ liệu ban đầu và theo dõi
   useEffect(() => {
+    if (!currentUser) return;
+
+    const friendIds = currentUser.friendIds || [];
+    const blockedUserIds = currentUser.blockedUserIds || [];
+
+    if (posts.length === 0 || !isLoading) {
+      fetchPosts(currentUser.id, friendIds, blockedUserIds, false);
+    }
+
     const unsubscribe = handleSubscribeToPosts();
-    
+
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [handleSubscribeToPosts]);
+  }, [currentUser?.id]);
 
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {

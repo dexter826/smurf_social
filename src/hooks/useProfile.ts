@@ -32,17 +32,17 @@ interface UseProfileReturn {
   loading: boolean;
   uploading: boolean;
   uploadProgress: number;
-  
+
   profileUserId: string | undefined;
   isOwnProfile: boolean;
   friendStatus: FriendStatus;
   pendingRequestId?: string;
   isBlockedByMe: boolean;
   canViewContent: boolean;
-  
+
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
-  
+
   loadProfile: () => Promise<void>;
   handleMessage: () => Promise<void>;
   handleFriendAction: () => Promise<{ needConfirm: boolean }>;
@@ -60,7 +60,7 @@ export const useProfile = (): UseProfileReturn => {
   const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-  
+
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<ProfileStats>({ friendCount: 0, postCount: 0 });
   const [loading, setLoading] = useState(true);
@@ -73,14 +73,14 @@ export const useProfile = (): UseProfileReturn => {
   const isOwnProfile = currentUser?.id === profileUserId;
   const isBlockedByMe = currentUser?.blockedUserIds?.includes(profileUserId || '') || false;
   const isBannedProfile = profile?.status === UserStatus.BANNED;
-  const canViewContent = !isBlockedByMe; 
+  const canViewContent = !isBlockedByMe;
 
   const [friendStatus, setFriendStatus] = useState<FriendStatus>(FriendStatus.NOT_FRIEND);
   const [pendingRequestId, setPendingRequestId] = useState<string | undefined>();
 
   const loadProfile = useCallback(async () => {
     if (!profileUserId) return;
-    
+
     setLoading(true);
     try {
       const [userData, userStats, userPosts] = await Promise.all([
@@ -88,7 +88,7 @@ export const useProfile = (): UseProfileReturn => {
         userService.getUserStats(profileUserId, currentUser?.id, currentUser?.friendIds || []),
         postService.getUserPosts(profileUserId, currentUser?.id || '', currentUser?.friendIds || [], 20)
       ]);
-      
+
       setProfile(userData || null);
       setStats(userStats);
 
@@ -110,6 +110,23 @@ export const useProfile = (): UseProfileReturn => {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => {
+    if (!profileUserId) return;
+
+    const unsubscribeProfile = userService.subscribeToUser(profileUserId, (updatedUser) => {
+      setProfile(prev => {
+        if (!prev) return updatedUser;
+        return { ...prev, ...updatedUser };
+      });
+
+      useUserCache.getState().setUser(updatedUser);
+    });
+
+    return () => {
+      unsubscribeProfile();
+    };
+  }, [profileUserId]);
 
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) return;
@@ -155,12 +172,12 @@ export const useProfile = (): UseProfileReturn => {
 
   const handleMessage = useCallback(async () => {
     if (!currentUser || !profile) return;
-    
+
     if (profile.status === UserStatus.BANNED) {
       toast.error('Không thể nhắn tin cho người dùng đã bị khóa');
       return;
     }
-    
+
     try {
       const conversationId = await chatService.getOrCreateConversation(currentUser.id, profile.id);
       navigate(`/?conv=${conversationId}`);
@@ -171,17 +188,17 @@ export const useProfile = (): UseProfileReturn => {
 
   const handleFriendAction = useCallback(async (): Promise<{ needConfirm: boolean }> => {
     if (!currentUser || !profile || isOwnProfile) return { needConfirm: false };
-    
+
     if (profile.status === UserStatus.BANNED) {
       toast.error('Không thể tương tác với người dùng đã bị khóa');
       return { needConfirm: false };
     }
-    
+
     try {
       if (friendStatus === FriendStatus.FRIEND) {
         return { needConfirm: true };
-      } 
-      
+      }
+
       if (friendStatus === FriendStatus.PENDING_RECEIVED && pendingRequestId) {
         await friendService.acceptFriendRequest(pendingRequestId, currentUser.id, profile.id);
         toast.success('Đã trở thành bạn bè');
@@ -202,7 +219,7 @@ export const useProfile = (): UseProfileReturn => {
       const err = error as { message?: string };
       toast.error(err.message || 'Thao tác thất bại');
     }
-    
+
     return { needConfirm: false };
   }, [currentUser, profile, isOwnProfile, friendStatus, pendingRequestId]);
 
@@ -219,12 +236,12 @@ export const useProfile = (): UseProfileReturn => {
 
   const handleSaveProfile = useCallback(async (data: Partial<User>) => {
     if (!profile) return;
-    
+
     try {
       const updated = await userService.updateProfile(profile.id, data);
       setProfile(updated);
       useUserCache.getState().setUser(updated);
-      
+
       if (isOwnProfile && currentUser) {
         useAuthStore.setState({ user: updated });
       }
@@ -241,7 +258,7 @@ export const useProfile = (): UseProfileReturn => {
       return;
     }
     if (!validateFileSize(file, 'AVATAR')) return;
-    
+
     setUploading(true);
     setUploadProgress(0);
     try {
@@ -251,7 +268,7 @@ export const useProfile = (): UseProfileReturn => {
       const updatedProfile = { ...profile, avatar: newAvatarUrl };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
-      
+
       if (currentUser) {
         useAuthStore.setState({ user: { ...currentUser, avatar: newAvatarUrl } });
       }
@@ -271,7 +288,7 @@ export const useProfile = (): UseProfileReturn => {
       return;
     }
     if (!validateFileSize(file, 'COVER')) return;
-    
+
     setUploading(true);
     setUploadProgress(0);
     try {
@@ -298,7 +315,7 @@ export const useProfile = (): UseProfileReturn => {
       const updatedProfile = { ...profile, avatar: '' };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
-      
+
       if (currentUser) {
         useAuthStore.setState({ user: { ...currentUser, avatar: '' } });
       }
@@ -332,13 +349,13 @@ export const useProfile = (): UseProfileReturn => {
       if (friendStatus === FriendStatus.FRIEND) {
         await friendService.unfriend(currentUser.id, profile.id);
       }
-      
+
       if (pendingRequestId) {
         await friendService.cancelFriendRequest(pendingRequestId);
       }
 
       await userService.blockUser(currentUser.id, profile.id);
-      
+
       // Cập nhật state local
       useAuthStore.setState({
         user: {
@@ -347,7 +364,7 @@ export const useProfile = (): UseProfileReturn => {
           friendIds: currentUser.friendIds?.filter(id => id !== profile.id) || []
         }
       });
-      
+
       toast.success('Đã chặn người dùng');
     } catch (error) {
       toast.error('Không thể chặn người dùng');
@@ -358,7 +375,7 @@ export const useProfile = (): UseProfileReturn => {
     if (!currentUser || !profile || isOwnProfile) return;
     try {
       await userService.unblockUser(currentUser.id, profile.id);
-      
+
       // Cập nhật state local
       useAuthStore.setState({
         user: {
@@ -366,7 +383,7 @@ export const useProfile = (): UseProfileReturn => {
           blockedUserIds: currentUser.blockedUserIds?.filter(id => id !== profile.id) || []
         }
       });
-      
+
       toast.success('Đã bỏ chặn người dùng');
     } catch (error) {
       toast.error('Không thể bỏ chặn người dùng');
