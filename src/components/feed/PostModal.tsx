@@ -54,6 +54,10 @@ export const PostModal: React.FC<PostModalProps> = ({
   const formData = watch();
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<number>(0);
+  
+  // State cho file pending (chưa upload) và preview blob URLs
+  const [pendingFiles, setPendingFiles] = React.useState<File[]>([]);
+  const [previews, setPreviews] = React.useState<{ url: string; type: 'image' | 'video' }[]>([]);
 
   // Khởi tạo dữ liệu
   useEffect(() => {
@@ -79,6 +83,10 @@ export const PostModal: React.FC<PostModalProps> = ({
           processFiles(initialFiles);
         }
       }
+      // Cleanup blob URLs khi đóng modal
+      return () => {
+        previews.forEach(p => URL.revokeObjectURL(p.url));
+      };
     }
   }, [isOpen, isEdit, initialPost, initialFiles, reset]);
   
@@ -90,15 +98,23 @@ export const PostModal: React.FC<PostModalProps> = ({
     }
   }, [formData.content, isOpen]);
 
-  const processFiles = async (files: File[]) => {
+  const processFiles = (files: File[]) => {
     if (files.length === 0) return;
 
     const validFiles: File[] = [];
+    const newPreviews: { url: string; type: 'image' | 'video' }[] = [];
+    
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
-        if (validateFileSize(file, 'IMAGE')) validFiles.push(file);
+        if (validateFileSize(file, 'IMAGE')) {
+          validFiles.push(file);
+          newPreviews.push({ url: URL.createObjectURL(file), type: 'image' });
+        }
       } else if (file.type.startsWith('video/')) {
-        if (validateFileSize(file, 'VIDEO')) validFiles.push(file);
+        if (validateFileSize(file, 'VIDEO')) {
+          validFiles.push(file);
+          newPreviews.push({ url: URL.createObjectURL(file), type: 'video' });
+        }
       } else {
         toast.error(`Không hỗ trợ định dạng file của "${file.name}"`);
       }
@@ -106,24 +122,12 @@ export const PostModal: React.FC<PostModalProps> = ({
 
     if (validFiles.length === 0) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
-    try {
-      const result = await onUploadImages(validFiles, (progress) => {
-        setUploadProgress(progress);
-      });
-      setValue('images', [...formData.images, ...result.images], { shouldDirty: true });
-      setValue('videos', [...formData.videos, ...result.videos], { shouldDirty: true });
-      setValue('videoThumbnails', { ...formData.videoThumbnails, ...result.videoThumbnails }, { shouldDirty: true });
-    } catch (error) {
-      console.error('Lỗi upload media:', error);
-      toast.error('Lỗi upload media. Vui lòng thử lại.');
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      if (videoInputRef.current) videoInputRef.current.value = '';
-    }
+    // Chỉ lưu file vào state, không upload ngay
+    setPendingFiles(prev => [...prev, ...validFiles]);
+    setPreviews(prev => [...prev, ...newPreviews]);
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,9 +143,42 @@ export const PostModal: React.FC<PostModalProps> = ({
     setValue('videos', formData.videos.filter((_, i) => i !== index), { shouldDirty: true });
   };
 
+  // Xóa pending file (chưa upload)
+  const handleRemovePending = (index: number) => {
+    URL.revokeObjectURL(previews[index].url);
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const onFormSubmit = async (data: PostFormValues) => {
     try {
-      await onSubmit(data.content || '', data.images, data.videos, data.visibility, data.videoThumbnails);
+      let allImages = [...data.images];
+      let allVideos = [...data.videos];
+      let allThumbnails = { ...data.videoThumbnails };
+
+      // Upload pending files khi submit
+      if (pendingFiles.length > 0) {
+        setIsUploading(true);
+        setUploadProgress(0);
+        try {
+          const result = await onUploadImages(pendingFiles, (progress) => {
+            setUploadProgress(progress);
+          });
+          allImages = [...allImages, ...result.images];
+          allVideos = [...allVideos, ...result.videos];
+          allThumbnails = { ...allThumbnails, ...result.videoThumbnails };
+        } finally {
+          setIsUploading(false);
+          setUploadProgress(0);
+        }
+      }
+
+      await onSubmit(data.content || '', allImages, allVideos, data.visibility, allThumbnails);
+      
+      // Cleanup
+      previews.forEach(p => URL.revokeObjectURL(p.url));
+      setPendingFiles([]);
+      setPreviews([]);
       onClose();
     } catch (error) {
       console.error('Lỗi xử lý bài viết:', error);
@@ -251,7 +288,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               }}
               placeholder="Hãy viết gì đó..."
               className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 ${
-                (formData.content?.length || 0) < 85 && formData.images.length === 0 && formData.videos.length === 0
+                (formData.content?.length || 0) < 85 && formData.images.length === 0 && formData.videos.length === 0 && previews.length === 0
                   ? 'text-xl md:text-2xl font-medium min-h-[120px]'
                   : 'text-base md:text-lg min-h-[100px]'
               }`}
@@ -260,8 +297,9 @@ export const PostModal: React.FC<PostModalProps> = ({
             />
           </div>
 
-        {(formData.images.length > 0 || formData.videos.length > 0) && (
+        {(formData.images.length > 0 || formData.videos.length > 0 || previews.length > 0) && (
           <div className="grid grid-cols-2 gap-2 mt-4">
+            {/* Media đã upload */}
             {formData.images.map((img, idx) => (
               <div key={`img-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -283,6 +321,31 @@ export const PostModal: React.FC<PostModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveVideo(idx)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+            {/* Pending files (chưa upload) */}
+            {previews.map((preview, idx) => (
+              <div key={`pending-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light border-dashed">
+                {preview.type === 'image' ? (
+                  <img src={preview.url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <video src={preview.url} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <Video className="text-white/80" size={32} />
+                    </div>
+                  </>
+                )}
+                <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-[10px] text-white/80">
+                  Chưa tải lên
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemovePending(idx)}
                   className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
                 >
                   <X size={16} />

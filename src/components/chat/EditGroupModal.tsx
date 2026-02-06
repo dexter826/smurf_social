@@ -1,11 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, Loader2, Users } from 'lucide-react';
 import { Conversation } from '../../types';
-import { Modal, Input, Button, Avatar, IconButton } from '../ui';
+import { Modal, Input, Button, Avatar, IconButton, ImageCropper } from '../ui';
+import { chatService } from '../../services/chatService';
+import { toast } from '../../store/toastStore';
 
 interface EditGroupModalProps {
   isOpen: boolean;
   conversation: Conversation;
+  currentUserId: string;
   onClose: () => void;
   onSave: (updates: { groupName?: string; groupAvatar?: string }) => Promise<void>;
 }
@@ -13,21 +16,27 @@ interface EditGroupModalProps {
 export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   isOpen,
   conversation,
+  currentUserId,
   onClose,
   onSave
 }) => {
   const [groupName, setGroupName] = useState(conversation.groupName || '');
   const [groupAvatar, setGroupAvatar] = useState(conversation.groupAvatar || '');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset state khi mở modal
   React.useEffect(() => {
     if (isOpen) {
       setGroupName(conversation.groupName || '');
       setGroupAvatar(conversation.groupAvatar || '');
       setPreviewUrl(null);
+      setPendingFile(null);
+      setShowCropper(false);
+      setCropImage(null);
     }
   }, [isOpen, conversation]);
 
@@ -35,8 +44,29 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setCropImage(url);
+      setShowCropper(true);
     }
+    e.target.value = '';
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    const url = URL.createObjectURL(croppedFile);
+    setPreviewUrl(url);
+    setPendingFile(croppedFile);
+    setShowCropper(false);
+    if (cropImage) {
+      URL.revokeObjectURL(cropImage);
+    }
+    setCropImage(null);
+  };
+
+  const handleCropCancel = () => {
+    if (cropImage) {
+      URL.revokeObjectURL(cropImage);
+    }
+    setCropImage(null);
+    setShowCropper(false);
   };
 
   const handleSave = async () => {
@@ -51,13 +81,22 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
         updates.groupName = trimmedName;
       }
       
-      // TODO: Upload avatar nếu có file mới
-      // Hiện tại chỉ support đổi tên
+      // Upload avatar nếu có file mới
+      if (pendingFile) {
+        const avatarUrl = await chatService.uploadGroupAvatar(conversation.id, pendingFile);
+        updates.groupAvatar = avatarUrl;
+      }
       
       await onSave(updates);
+      
+      // Cleanup
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
       onClose();
     } catch (error) {
       console.error('Lỗi cập nhật group', error);
+      toast.error('Không thể cập nhật nhóm. Vui lòng thử lại.');
     } finally {
       setIsSaving(false);
     }
@@ -66,6 +105,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   const hasChanges = groupName.trim() !== conversation.groupName || previewUrl !== null;
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -140,5 +180,18 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
         </div>
       </div>
     </Modal>
+
+      {/* Image Cropper Modal */}
+      {showCropper && cropImage && (
+        <ImageCropper
+          isOpen={showCropper}
+          image={cropImage}
+          aspect={1}
+          title="Cắt ảnh nhóm"
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
+    </>
   );
 };
