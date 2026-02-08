@@ -1,11 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { formatTimeOnly } from '../../utils/dateUtils';
-import { FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile, Play, Pause, Mic, Video, Check, CheckCheck } from 'lucide-react';
+import { 
+  FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, 
+  Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile, 
+  Play, Pause, Mic, Video, Check, CheckCheck 
+} from 'lucide-react';
+
 import { Message, User } from '../../types';
-import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, Modal, UserStatusText, ReactionDisplay, ReactionSelector, LazyVideo } from '../ui';
+import { 
+  Avatar, UserAvatar, ConfirmDialog, Button, IconButton, 
+  Modal, UserStatusText, ReactionDisplay, ReactionSelector, LazyVideo 
+} from '../ui';
 import { chatService } from '../../services/chatService';
 import { useChatStore } from '../../store/chatStore';
+import { TIME_LIMITS } from '../../constants/appConfig';
+import { formatTimeOnly } from '../../utils/dateUtils';
+import { scrollToMessage } from '../../utils';
+import { MessageContent, MessageActions } from './bubbles';
 
 
 interface MessageBubbleProps {
@@ -83,214 +94,37 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const isRead = otherReaders.length > 0;
   const isDelivered = !!message.deliveredAt;
 
-  // Giới hạn sửa tin nhắn (10 phút)
+  // Sử dụng hằng số từ appConfig
   const canEdit = isMe && !message.isRecalled && (
-    (new Date().getTime() - new Date(message.createdAt).getTime()) / (1000 * 60) <= 10
+    (new Date().getTime() - new Date(message.createdAt).getTime()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
   );
   
   const hasReactions = message.reactions && Object.keys(message.reactions).length > 0;
 
-  const renderContent = () => {
-    if (message.isRecalled) {
-      return (
-        <div className={`italic text-sm ${isMe ? 'text-white/80' : 'text-text-tertiary'}`}>
-          Tin nhắn đã được thu hồi
-        </div>
-      );
+  const handleToggleVoice = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!audioRef.current) {
+      audioRef.current = new Audio(message.fileUrl || message.content);
+      audioRef.current.onended = () => setIsPlaying(false);
     }
 
-    switch (message.type) {
-      case 'image':
-        return (
-          <div 
-            className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative"
-            onClick={() => setShowFullImage(true)}
-          >
-            <img 
-              src={message.fileUrl || message.content} 
-              alt="sent" 
-              className="w-full h-auto"
-            />
-            {isMe && uploadProgress[message.id] && (
-               <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
-                  <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-2">
-                     <div 
-                        className="bg-primary h-full transition-all duration-300"
-                        style={{ width: `${uploadProgress[message.id].progress}%` }}
-                     />
-                  </div>
-                  <span className="text-[10px] text-white font-medium">
-                    {uploadProgress[message.id].error ? 'Lỗi tải lên' : `Đang tải ${Math.round(uploadProgress[message.id].progress)}%`}
-                  </span>
-               </div>
-            )}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-              <ImageIcon className="opacity-0 group-hover:opacity-100 text-white" size={32} />
-            </div>
-          </div>
-        );
-        
-      case 'file':
-        const fileSize = message.fileSize 
-          ? `${(message.fileSize / 1024).toFixed(1)} KB`
-          : 'N/A';
-          
-        return (
-          <div className={`flex items-center gap-3 p-3 rounded-lg border min-w-[220px] ${
-            isMe ? 'bg-primary-light border-primary' : 'bg-bg-primary border-border-light'
-          }`}>
-            <div className={`p-2 rounded ${isMe ? 'bg-primary-light' : 'bg-secondary'}`}>
-              <FileText size={24} className={isMe ? 'text-primary' : 'text-text-secondary'} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium truncate text-sm">{message.fileName || 'Tài liệu'}</div>
-              <div className="text-xs opacity-70">{fileSize}</div>
-            </div>
-            <a
-              href={message.fileUrl}
-              download={message.fileName}
-              className="p-1 hover:bg-black/10 rounded-full transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Download size={18} />
-            </a>
-            {isMe && uploadProgress[message.id] && (
-               <div className="absolute inset-0 bg-bg-primary/80 flex flex-col items-center justify-center p-2 rounded-lg">
-                  <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden mb-1">
-                     <div 
-                        className="bg-primary h-full transition-all duration-300"
-                        style={{ width: `${uploadProgress[message.id].progress}%` }}
-                     />
-                  </div>
-                  <span className="text-[10px] text-text-secondary">
-                    {uploadProgress[message.id].error ? 'Lỗi' : `${Math.round(uploadProgress[message.id].progress)}%`}
-                  </span>
-               </div>
-            )}
-          </div>
-        );
-        
-      case 'sticker':
-        return (
-          <img src={message.content} alt="sticker" className="w-24 h-24 object-contain" />
-        );
-        
-      case 'system':
-        return (
-          <div className="flex flex-col items-center w-full my-1">
-            <span className="bg-bg-secondary/50 px-3 py-1 rounded-full text-[11px] text-text-tertiary italic text-center max-w-[90%]">
-              {message.content}
-            </span>
-          </div>
-        );
-
-      case 'video':
-        const videoUrl = message.fileUrl || message.content;
-        return (
-          <div className="rounded-lg overflow-hidden max-w-[300px] border border-border-light shadow-sm">
-            <LazyVideo 
-              src={videoUrl} 
-              thumbnail={message.videoThumbnails?.[videoUrl]}
-              className="w-full h-auto max-h-[400px] object-contain"
-            />
-          </div>
-        );
-
-      case 'voice':
-        const handleToggleVoice = (e: React.MouseEvent) => {
-          e.stopPropagation();
-          if (!audioRef.current) {
-            audioRef.current = new Audio(message.fileUrl || message.content);
-            audioRef.current.onended = () => setIsPlaying(false);
-          }
-
-          if (isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-          } else {
-            audioRef.current.play();
-            setIsPlaying(true);
-          }
-        };
-
-        return (
-          <div 
-            className={`flex items-center gap-3 p-3 rounded-2xl min-w-[200px] cursor-pointer transition-all active:scale-95 ${
-              isMe 
-                ? 'bg-bg-message-sent text-text-on-primary shadow-md' 
-                : 'bg-bg-message-received text-text-primary border border-border-light'
-            }`}
-            onClick={handleToggleVoice}
-          >
-            <div className={`p-2.5 rounded-full shadow-sm transition-colors ${
-              isMe ? 'bg-bg-primary text-primary' : 'bg-primary text-white'
-            }`}>
-              {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} className="ml-0.5" fill="currentColor" />}
-            </div>
-            <div className="flex-1">
-              <div className="text-[13px] font-bold mb-0.5">
-                Tin nhắn thoại
-              </div>
-              <div className={`flex items-center gap-1.5 opacity-80 ${isMe ? 'text-text-on-primary' : 'text-text-tertiary'}`}>
-                <Mic size={12} />
-                <span className="text-[11px]">Click để nghe</span>
-              </div>
-            </div>
-          </div>
-        );
-        
-      default:
-        const renderTextWithMentions = (text: string) => {
-          const combinedRegex = /(@\[[^\]]+\]|(?:https?:\/\/|www\.)[^\s]+)/g;
-          const parts = text.split(combinedRegex);
-          
-          return parts.map((part, index) => {
-            if (part.startsWith('@[') && part.endsWith(']')) {
-              const name = part.slice(2, -1);
-              return (
-                <span key={index} className={`font-bold ${isMe ? 'text-white' : 'text-primary'}`}>
-                  @{name}
-                </span>
-              );
-            }
-            
-            if (/^(https?:\/\/|www\.)/.test(part)) {
-              const href = part.startsWith('www.') ? `https://${part}` : part;
-              return (
-                <a 
-                  key={index} 
-                  href={href} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className={`underline break-all transition-opacity hover:opacity-80 ${isMe ? 'text-blue-200' : 'text-primary'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {part}
-                </a>
-              );
-            }
-
-            return <span key={index}>{part}</span>;
-          });
-        };
-
-        return (
-          <div className="flex flex-col">
-            <div className="whitespace-pre-wrap break-all">
-              {renderTextWithMentions(message.content)}
-            </div>
-            {message.isEdited && !message.isRecalled && (
-              <span className="text-[10px] opacity-70 mt-0.5">(đã chỉnh sửa)</span>
-            )}
-          </div>
-        );
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
     }
   };
 
   if (message.type === 'system') {
     return (
       <div className="w-full flex justify-center mb-3">
-        {renderContent()}
+        <div className="flex flex-col items-center w-full my-1">
+          <span className="bg-bg-secondary/50 px-3 py-1 rounded-full text-[11px] text-text-tertiary italic text-center max-w-[90%]">
+            {message.content}
+          </span>
+        </div>
       </div>
     );
   }
@@ -346,12 +180,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     ? 'bg-white/10 border-white/50 text-white/90' 
                     : 'bg-bg-secondary border-primary text-text-secondary'
                 } max-w-full overflow-hidden truncate opacity-90 cursor-pointer`}
-                onClick={() => {
-                  const element = document.getElementById(`msg-${message.replyToId}`);
-                  element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  element?.classList.add('animate-highlight');
-                  setTimeout(() => element?.classList.remove('animate-highlight'), 2000);
-                }}
+                onClick={() => scrollToMessage(message.replyToId!)}
                 >
                   <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
                     {message.replyToMessage.senderId === currentUserId 
@@ -365,7 +194,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   </div>
                 </div>
               )}
-              {renderContent()}
+              
+              <MessageContent 
+                message={message}
+                isMe={isMe}
+                uploadProgress={uploadProgress}
+                isPlaying={isPlaying}
+                onToggleVoice={handleToggleVoice}
+                setShowFullImage={setShowFullImage}
+              />
               
               {/* Thời gian & Trạng thái */}
               {(message.type === 'text' || message.isRecalled) && (
@@ -419,89 +256,27 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               )}
             </div>
 
-             {/* Menu chức năng (đã bỏ nút Emoji) */}
-            {!message.isRecalled && (
-              <div 
-                className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}
-              >
-
-                <IconButton
-                  ref={menuButtonRef}
-                  onClick={toggleMenu}
-                  icon={<MoreVertical size={14} />}
-                  size="sm"
-                />
-
-                {showMenu && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowMenu(false)}
-                    />
-                    <div className={`absolute z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40 ${isMe ? 'right-0' : 'left-0'} ${
-                      menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-8'
-                    }`}>
-                      <button
-                        onClick={() => {
-                          onReply?.(message);
-                          setShowMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
-                      >
-                        <Reply size={14} /> Trả lời
-                      </button>
-                      <button
-                        onClick={() => {
-                          onForward?.(message);
-                          setShowMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
-                      >
-                        <Forward size={14} /> Chuyển tiếp
-                      </button>
-                      {canEdit && (
-                        <button
-                          onClick={() => {
-                            onEdit?.(message);
-                            setShowMenu(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
-                        >
-                          <Edit2 size={14} /> Chỉnh sửa
-                        </button>
-                      )}
-                      {isMe && (
-                        <button
-                          onClick={() => {
-                            setShowRecallConfirm(true);
-                            setShowMenu(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-warning"
-                        >
-                          <RotateCcw size={14} /> Thu hồi
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          onDeleteForMe?.(message.id);
-                          setShowMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-error"
-                      >
-                        <Trash2 size={14} /> Xóa phía tôi
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+            <MessageActions 
+              message={message}
+              isMe={isMe}
+              canEdit={canEdit}
+              showMenu={showMenu}
+              setShowMenu={setShowMenu}
+              menuPlacement={menuPlacement}
+              menuButtonRef={menuButtonRef}
+              toggleMenu={toggleMenu}
+              onReply={onReply}
+              onForward={onForward}
+              onEdit={onEdit}
+              setShowRecallConfirm={setShowRecallConfirm}
+              onDeleteForMe={onDeleteForMe}
+            />
           </div>
 
           {/* Thời gian cho file media */}
           {message.type !== 'text' && !message.isRecalled && (
             <span className="text-[10px] text-text-tertiary mt-1">
               {formatTimeOnly(message.createdAt)}
-              {/* Status moved to separate line below */}
             </span>
           )}
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (

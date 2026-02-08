@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MessageSquare } from 'lucide-react';
 import { useChat, useProfile } from '../hooks';
 import { friendService } from '../services/friendService';
 import { FriendRequest } from '../types';
@@ -9,6 +9,7 @@ import {
   CreateGroupModal, AddMemberModal, EditGroupModal, 
   TransferAdminModal, ForwardModal, MessengerSkeleton 
 } from '../components/chat';
+import { scrollToMessage } from '../utils';
 
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
@@ -295,14 +296,7 @@ const ChatPage: React.FC = () => {
           onPromoteToAdmin={handlePromoteToAdmin}
           onDemoteFromAdmin={handleDemoteFromAdmin}
           onMemberClick={(userId) => navigate(`/profile/${userId}`)}
-          onMessageClick={(messageId) => {
-            const element = document.getElementById(`msg-${messageId}`);
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              element.classList.add('animate-highlight');
-              setTimeout(() => element.classList.remove('animate-highlight'), 2000);
-            }
-          }}
+          onMessageClick={(messageId) => scrollToMessage(messageId)}
         />
       )}
 

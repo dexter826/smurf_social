@@ -7,3 +7,4 @@ export * from './fileUtils';
 export * from './dateUtils';
 export * from './batchUtils';
 export * from './avatarUtils';
+export * from './uiUtils';
