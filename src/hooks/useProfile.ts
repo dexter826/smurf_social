@@ -18,7 +18,6 @@ export enum FriendStatus {
   PENDING_RECEIVED = 'pending_received',
   FRIEND = 'friend'
 }
-
 interface ProfileStats {
   friendCount: number;
   postCount: number;

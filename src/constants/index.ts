@@ -1,11 +1,8 @@
 // App configuration
-export * from './appConfig';
-
-// App configuration
-export * from './appConfig';
+export * from "./appConfig";
 
 // Reaction constants
-export * from './reactions';
+export * from "./reactions";
 
 // Confirm dialog messages
-export * from './confirmMessages';
+export * from "./confirmMessages";
