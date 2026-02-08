@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
-import { formatChatTime } from '../../../utils/dateUtils';
-import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail, Lock } from 'lucide-react';
-import { Conversation, User, UserStatus } from '../../../types';
-import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton, Avatar } from '../../ui';
+import { Pin, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail, Lock, Volume2 } from 'lucide-react';
+import { Conversation, UserStatus } from '../../../types';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar } from '../../ui';
+import { useConversationItem } from '../../../hooks/useConversationItem';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -38,70 +36,31 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
-  
-  const partner = conversation.isGroup 
-    ? null 
-    : conversation.participants.find(p => p.id !== currentUserId);
 
-  const isDataMissing = !conversation.isGroup && (!partner || !partner.name);
+  const {
+    partner,
+    isDataMissing,
+    chatInfo,
+    isMessageRequest,
+    isUnread,
+    unreadCount,
+    lastMessagePreview,
+    isLastMessageMine,
+    typingText,
+    readers,
+    isLastMessageRead,
+    isLastMessageDelivered,
+    displayTime
+  } = useConversationItem({
+    conversation,
+    currentUserId,
+    isActive,
+    currentUserFriendIds
+  });
 
   if (isDataMissing) {
     return <ConversationItem.Skeleton />;
   }
-
-  const chatName = conversation.isGroup 
-    ? conversation.groupName || 'Nhóm chưa đặt tên' 
-    : partner.name;
-
-  const avatar = conversation.isGroup 
-    ? conversation.groupAvatar 
-    : partner?.avatar;
-
-  // Tin nhắn từ người lạ (không phải bạn bè)
-  const isMessageRequest = !conversation.isGroup && partner && 
-    !currentUserFriendIds.includes(partner.id);
-
-  const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
-  const isUnread = (unreadCount > 0 || conversation.markedUnread) && !isActive;
-  
-  const joinedAt = conversation.memberJoinedAt?.[currentUserId];
-  const deletedAt = conversation.deletedAt?.[currentUserId];
-  
-  // Xác định mốc thời gian bắt đầu
-  let startTime = joinedAt ? new Date(joinedAt) : null;
-  if (deletedAt) {
-    const deletedTime = new Date(deletedAt.seconds ? deletedAt.seconds * 1000 : deletedAt);
-    if (!startTime || deletedTime > startTime) {
-      startTime = deletedTime;
-    }
-  }
-
-  const lastMessage = (conversation.lastMessage && startTime)
-    ? (new Date(conversation.lastMessage.createdAt) >= startTime ? conversation.lastMessage : undefined)
-    : conversation.lastMessage;
-
-  const lastMessagePreview = lastMessage
-    ? lastMessage.type === 'text'
-      ? lastMessage.content.replace(/@\[([^\]]+)\]/g, '@$1')
-      : lastMessage.content
-    : 'Chưa có tin nhắn';
-
-  const isLastMessageMine = lastMessage?.senderId === currentUserId;
-  
-  // Lấy danh sách những người đã xem tin nhắn cuối cùng (không bao gồm chính mình)
-  const readers = (lastMessage?.readBy || [])
-    .filter(uid => uid !== currentUserId)
-    .map(uid => conversation.participants.find(p => p.id === uid))
-    .filter((u): u is User => !!u);
-
-  const isLastMessageRead = readers.length > 0;
-  const isLastMessageDelivered = !!lastMessage?.deliveredAt;
-
-  const displayTime = (!lastMessage && conversation.isGroup && joinedAt) 
-    ? joinedAt 
-    : conversation.updatedAt;
-
-  const timeAgo = displayTime ? formatChatTime(displayTime) : '';
 
   return (
     <div
@@ -113,25 +72,23 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
       `}
     >
-      {/* Avatar */}
       <div className="relative flex-shrink-0">
         <UserAvatar 
           userId={conversation.isGroup ? '' : partner?.id} 
-          src={avatar} 
-          name={chatName} 
+          src={chatInfo.avatar} 
+          name={chatInfo.name} 
           size="md" 
-          initialStatus={partner?.status}
+          initialStatus={chatInfo.status}
           isGroup={conversation.isGroup}
           members={conversation.participants}
         />
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-2">
             <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
-              {chatName}
+              {chatInfo.name}
             </h3>
             {!conversation.isGroup && partner?.status === UserStatus.BANNED && (
               <span className="text-[10px] text-error bg-error/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0">
@@ -151,58 +108,25 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             )}
           </div>
           <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'md:hidden' : 'md:group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
-            {timeAgo}
+            {displayTime}
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className={`text-sm truncate flex-1 ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
-            {(() => {
-              const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
-              
-              if (typingUserIds.length > 0) {
-                // Helper lấy tên
-                const getLastName = (fullName?: string) => {
-                  if (!fullName) return '';
-                  const parts = fullName.trim().split(' ');
-                  return parts[parts.length - 1];
-                };
-
-                let typingText = '';
-                const typingUsers = typingUserIds.map(uid => conversation.participants.find(p => p.id === uid)).filter(Boolean);
-
-                if (typingUsers.length === 1) {
-                  const name = getLastName(typingUsers[0]?.name) || 'Ai đó';
-                  typingText = `${name} đang soạn tin...`;
-                } else if (typingUsers.length === 2) {
-                  const name1 = getLastName(typingUsers[0]?.name) || 'Người dùng';
-                  const name2 = getLastName(typingUsers[1]?.name) || 'người dùng';
-                  typingText = `${name1} và ${name2} đang soạn tin...`;
-                } else {
-                   const name1 = getLastName(typingUsers[0]?.name) || 'Người dùng';
-                   const others = typingUsers.length - 1;
-                   typingText = `${name1} và ${others} người khác đang soạn tin...`;
-                }
-
-                return (
-                  <span className="text-primary italic text-[13px] truncate block">
-                    {typingText}
-                  </span>
-                );
-              }
-
-              const isReaction = lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u);
-
-              return (
-                <span className={`truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : isReaction ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
-                  {isLastMessageMine && !isReaction ? 'Bạn: ' : ''}{lastMessagePreview}
-                </span>
-              );
-            })()}
-          </p>
+          <div className={`text-sm truncate flex-1 ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+            {typingText ? (
+              <span className="text-primary italic text-[13px] truncate block">
+                {typingText}
+              </span>
+            ) : (
+              <span className={`truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u) ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
+                {isLastMessageMine ? 'Bạn: ' : ''}{lastMessagePreview}
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {isLastMessageMine && !isUnread && (conversation.typingUsers || []).filter(id => id !== currentUserId).length === 0 && (
+            {isLastMessageMine && !isUnread && !typingText && (
               <div className="flex items-center">
                 {isLastMessageRead ? (
                   <div className="flex items-center gap-1">
@@ -230,7 +154,6 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                 )}
               </div>
             )}
-            
             {isUnread && unreadCount > 0 ? (
               <span className="flex-shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
@@ -242,7 +165,6 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         </div>
       </div>
 
-      {/* Menu */}
       <div className={`md:absolute md:top-2 md:right-2 transition-opacity flex-shrink-0 ${isMenuOpen ? 'opacity-100 md:z-10' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
         <Dropdown
           isOpen={isMenuOpen}
@@ -306,7 +228,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       <ConfirmDialog
         isOpen={showBlockConfirm}
         onClose={() => setShowBlockConfirm(false)}
-        onConfirm={() => onBlock?.()}
+        onConfirm={() => { onBlock?.(); setShowBlockConfirm(false); }}
         title="Chặn người dùng"
         message="Bạn có chắc chắn muốn chặn người này? Cả hai bên sẽ không thể nhắn tin cho nhau."
         confirmLabel="Chặn ngay"
@@ -316,7 +238,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => onDelete?.()}
+        onConfirm={() => { onDelete?.(); setShowDeleteConfirm(false); }}
         title="Xóa cuộc trò chuyện"
         message="Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác."
         confirmLabel="Xóa ngay"

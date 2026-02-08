@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Users, X, UserPlus, ChevronDown, MessageCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, ChevronDown, MessageCircle, Archive } from 'lucide-react';
 import { Conversation, User } from '../../../types';
-import { Input, Button, IconButton, Dropdown } from '../../ui';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
-import { MoreVertical, Archive, CheckCircle2 } from 'lucide-react';
+import { useConversationGroups } from '../../../hooks/useConversationGroups';
+import { ConversationHeader } from './ConversationHeader';
+import { ConversationFilters } from './ConversationFilters';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -49,7 +50,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   currentUserFriendIds = [],
   blockedUserIds = [],
   isLoading,
-  isRevalidating = false,
   onSelectConversation,
   onSearch,
   onPin,
@@ -76,208 +76,90 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [requestsExpanded, setRequestsExpanded] = useState(true);
 
+  // Phân nhóm và lọc hội thoại
+  const { 
+    friendConversations, 
+    requestConversations, 
+    displayConversations 
+  } = useConversationGroups({
+    conversations,
+    currentUserId,
+    currentUserFriendIds,
+    blockedUserIds,
+    viewMode: (viewMode || 'normal') as 'normal' | 'archived',
+    activeFilter
+  });
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     onSearch(value);
   };
 
-  const handleBack = () => {
+  const handleCancelSearch = () => {
     setSearchTerm('');
     onSearch('');
     onSearchFocus?.(false);
   };
 
-  // Phân loại conversations: bạn bè vs người lạ
-  const { friendConversations, requestConversations, sortedConversations } = useMemo(() => {
-    const filtered = conversations.filter(conv => {
-      if (conv.isGroup) return true;
-      const partnerId = conv.participantIds.find(id => id !== currentUserId);
-      return !partnerId || !blockedUserIds.includes(partnerId);
-    });
+  const renderConversationItem = (conversation: Conversation) => {
+    const partnerId = conversation.isGroup 
+      ? null 
+      : conversation.participantIds.find(id => id !== currentUserId);
 
-    const friends: Conversation[] = [];
-    const requests: Conversation[] = [];
-
-    filtered.forEach(conv => {
-      if (conv.isGroup) {
-        friends.push(conv);
-      } else {
-        const partnerId = conv.participantIds.find(id => id !== currentUserId);
-        if (partnerId && currentUserFriendIds.includes(partnerId)) {
-          friends.push(conv);
-        } else {
-          requests.push(conv);
-        }
-      }
-    });
-
-    const sortFn = (a: Conversation, b: Conversation) => {
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    };
-
-    return {
-      friendConversations: friends.sort(sortFn),
-      requestConversations: requests.sort(sortFn),
-      sortedConversations: filtered.sort(sortFn)
-    };
-  }, [conversations, currentUserId, currentUserFriendIds, blockedUserIds]);
-
-  // Lấy danh sách hiển thị theo viewMode và Filter
-  const displayConversations = useMemo(() => {
-    let list = viewMode === 'archived' ? conversations.filter(c => c.archived) : sortedConversations;
-    
-    // Nếu đang xem danh sách chính, áp dụng thêm Filter Nhóm
-    if (viewMode === 'normal' && activeFilter === 'group') {
-      list = list.filter(c => c.isGroup);
-    }
-    
-    return list;
-  }, [viewMode, sortedConversations, conversations, activeFilter, currentUserId]);
-
-  const filters: { id: FilterType; label: string }[] = [
-    { id: 'all', label: 'Tất cả' },
-    { id: 'group', label: 'Nhóm' },
-  ];
+    return (
+      <ConversationItem
+        key={conversation.id}
+        conversation={conversation}
+        isActive={conversation.id === selectedId}
+        currentUserId={currentUserId}
+        currentUserFriendIds={currentUserFriendIds}
+        showMessageRequestBadge={false}
+        onClick={() => onSelectConversation(conversation.id)}
+        onPin={() => onPin(conversation.id, !conversation.pinned)}
+        onMute={() => onMute(conversation.id, !conversation.muted)}
+        onDelete={() => onDelete(conversation.id)}
+        onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
+        onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archived) : undefined}
+        onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
+      />
+    );
+  };
 
   return (
     <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
-      {/* Header danh sách */}
-      <div className="flex-shrink-0 px-3 h-[72px] flex items-center border-b border-border-light gap-1.5">
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <div className="relative flex-1 flex items-center">
-            <Input
-              icon={<Search size={16} />}
-              placeholder="Tìm kiếm..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onFocus={() => onSearchFocus?.(true)}
-              className="bg-bg-secondary text-sm pr-10"
-              containerClassName="flex-1"
-            />
-            {searchTerm && (
-              <IconButton
-                onClick={() => {
-                  setSearchTerm('');
-                  onSearch('');
-                }}
-                className="absolute right-3"
-                icon={<X size={16} />}
-                size="sm"
-              />
-            )}
-          </div>
-            {isSearchFocused && (
-              <Button
-                onClick={handleBack}
-                variant="ghost"
-                size="md"
-                className="text-primary flex-shrink-0"
-              >
-                Hủy
-              </Button>
-            )}
-          </div>
+      <ConversationHeader
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        onClearSearch={() => { setSearchTerm(''); onSearch(''); }}
+        isSearchFocused={isSearchFocused}
+        onSearchFocus={(focused) => onSearchFocus?.(focused)}
+        onCancelSearch={handleCancelSearch}
+        onNewGroup={onNewGroup}
+        onNewChat={onNewChat}
+        viewMode={viewMode || 'normal'}
+        onViewModeChange={onViewModeChange}
+        archivedCount={archivedCount}
+        onMarkAllRead={onMarkAllRead}
+      />
 
-        <div className="flex items-center">
-          {!isSearchFocused && !searchTerm && (
-            <>
-              {onNewGroup && (
-                <IconButton
-                  onClick={onNewGroup}
-                  variant="ghost"
-                  size="md"
-                  icon={<Users size={20} />}
-                  title="Tạo nhóm mới"
-                  className="text-primary hover:bg-primary-light"
-                />
-              )}
-              {onNewChat && (
-                <IconButton
-                  onClick={onNewChat}
-                  variant="ghost"
-                  size="md"
-                  icon={<UserPlus size={20} />}
-                  title="Tạo cuộc trò chuyện mới"
-                  className="text-primary hover:bg-primary-light"
-                />
-              )}
-            </>
-          )}
-
-        {/* Menu ba chấm cho các hành động bổ sung */}
-        <Dropdown
-          align="right"
-          trigger={
-            <IconButton 
-              icon={<MoreVertical size={20} />} 
-              variant="ghost" 
-              className="text-text-secondary hover:bg-bg-secondary"
-            />
-          }
-        >
-          <div className="py-1">
-            <button
-              onClick={() => onViewModeChange?.(viewMode === 'archived' ? 'normal' : 'archived')}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
-            >
-              <Archive size={18} className="text-text-tertiary" />
-              {viewMode === 'archived' ? 'Quay lại tin nhắn' : 'Tin nhắn đã lưu trữ'}
-              {archivedCount > 0 && (
-                <span className="ml-auto text-xs bg-bg-tertiary px-1.5 py-0.5 rounded text-text-secondary">
-                  {archivedCount}
-                </span>
-              )}
-            </button>
-            {onMarkAllRead && (
-              <button
-                onClick={onMarkAllRead}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
-              >
-                <CheckCircle2 size={18} className="text-text-tertiary" />
-                Đánh dấu tất cả đã đọc
-              </button>
-            )}
+      {!isSearchFocused && !searchTerm && (
+        viewMode === 'normal' ? (
+          <ConversationFilters 
+            activeFilter={activeFilter} 
+            onFilterChange={setActiveFilter} 
+          />
+        ) : (
+          <div className="flex-shrink-0 flex items-center px-4 h-12 bg-bg-secondary border-b border-border-light">
+            <span className="text-sm font-bold text-text-secondary flex items-center gap-2">
+              <Archive size={16} />
+              Hội thoại đã lưu trữ
+            </span>
           </div>
-        </Dropdown>
-      </div>
-    </div>
-
-      {/* Tabs điều hướng theo Filter */}
-      {!isSearchFocused && !searchTerm && viewMode === 'normal' && (
-        <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
-          {filters.map((filter) => (
-            <Button
-              key={filter.id}
-              variant="ghost"
-              onClick={() => setActiveFilter(filter.id)}
-              className={`flex-1 h-full relative hover:!bg-transparent hover:!text-current transition-colors ${
-                activeFilter === filter.id ? 'text-primary' : 'text-text-tertiary'
-              }`}
-            >
-              {filter.label}
-              {activeFilter === filter.id && (
-                <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
-              )}
-            </Button>
-          ))}
-        </div>
+        )
       )}
 
-      {/* Header cho chế độ xem Lưu trữ */}
-      {viewMode === 'archived' && (
-        <div className="flex-shrink-0 flex items-center px-4 h-12 bg-bg-secondary border-b border-border-light">
-          <span className="text-sm font-bold text-text-secondary flex items-center gap-2">
-            <Archive size={16} />
-            Hội thoại đã lưu trữ
-          </span>
-        </div>
-      )}
-
-
-      {/* Danh sách hội thoại / Kết quả tìm kiếm */}
+      {/* List Content */}
       <div className="flex-1 overflow-y-auto">
         {isLoading && conversations.length === 0 ? (
           <div className="p-2">
@@ -314,14 +196,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               {searchTerm ? 'Không tìm thấy' : 'Chưa có cuộc trò chuyện'}
             </h3>
             <p className="text-sm text-text-secondary">
-              {searchTerm 
-                ? 'Thử tìm kiếm với từ khóa khác' 
-                : 'Bắt đầu trò chuyện với bạn bè của bạn'}
+              {searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Bắt đầu trò chuyện với bạn bè'}
             </p>
           </div>
         ) : (
           <div>
-            {/* Section Tin nhắn chờ (chỉ hiện khi viewMode = normal và đang ở filter Tất cả) */}
+            {/* Tin nhắn chờ Section */}
             {viewMode === 'normal' && activeFilter === 'all' && requestConversations.length > 0 && (
               <>
                 <button
@@ -340,64 +220,22 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     className={`text-text-secondary transition-transform duration-200 ${requestsExpanded ? 'rotate-180' : ''}`} 
                   />
                 </button>
-                
                 {requestsExpanded && (
-                  <div>
-                    {requestConversations.map((conversation) => {
-                      const partnerId = conversation.participantIds.find(id => id !== currentUserId);
-                      return (
-                        <ConversationItem
-                          key={conversation.id}
-                          conversation={conversation}
-                          isActive={conversation.id === selectedId}
-                          currentUserId={currentUserId}
-                          currentUserFriendIds={currentUserFriendIds}
-                          showMessageRequestBadge={false}
-                          onClick={() => onSelectConversation(conversation.id)}
-                          onPin={() => onPin(conversation.id, !conversation.pinned)}
-                          onMute={() => onMute(conversation.id, !conversation.muted)}
-                          onDelete={() => onDelete(conversation.id)}
-                          onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
-                          onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archived) : undefined}
-                          onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
-                        />
-                      );
-                    })}
-                  </div>
+                  <div>{requestConversations.map(renderConversationItem)}</div>
                 )}
               </>
             )}
 
-            {/* Danh sách conversations chính */}
+            {/* Main List */}
             {displayConversations.map((conversation) => {
-              // Nếu đang ở filter Tất cả và viewMode normal, bỏ qua các tin nhắn chờ đã hiện ở trên
+              // Lọc bỏ tin nhắn chờ nếu đang ở tab Tất cả
               if (viewMode === 'normal' && activeFilter === 'all') {
                 const partnerId = conversation.participantIds.find(id => id !== currentUserId);
-                const isRequest = !conversation.isGroup && partnerId && !currentUserFriendIds.includes(partnerId);
-                if (isRequest) return null;
+                if (!conversation.isGroup && partnerId && !currentUserFriendIds.includes(partnerId)) {
+                  return null;
+                }
               }
-
-              const partnerId = conversation.isGroup 
-                ? null 
-                : conversation.participantIds.find(id => id !== currentUserId);
-              
-              return (
-                <ConversationItem
-                  key={conversation.id}
-                  conversation={conversation}
-                  isActive={conversation.id === selectedId}
-                  currentUserId={currentUserId}
-                  currentUserFriendIds={currentUserFriendIds}
-                  showMessageRequestBadge={false}
-                  onClick={() => onSelectConversation(conversation.id)}
-                  onPin={() => onPin(conversation.id, !conversation.pinned)}
-                  onMute={() => onMute(conversation.id, !conversation.muted)}
-                  onDelete={() => onDelete(conversation.id)}
-                  onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
-                  onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archived) : undefined}
-                  onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
-                />
-              );
+              return renderConversationItem(conversation);
             })}
           </div>
         )}
