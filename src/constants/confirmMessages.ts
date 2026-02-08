@@ -80,5 +80,17 @@ export const CONFIRM_MESSAGES = {
       MESSAGE: 'Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc này?',
       CONFIRM: 'Đăng xuất',
     }
+  },
+  CHAT: {
+    DELETE_CONVERSATION: {
+      TITLE: 'Xóa cuộc trò chuyện',
+      MESSAGE: 'Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác.',
+      CONFIRM: 'Xóa ngay',
+    },
+    BLOCK_USER: {
+      TITLE: 'Chặn người dùng',
+      MESSAGE: 'Bạn có chắc chắn muốn chặn người này? Cả hai bên sẽ không thể nhắn tin cho nhau.',
+      CONFIRM: 'Chặn ngay',
+    }
   }
 };

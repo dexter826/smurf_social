@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Users, ChevronDown, MessageCircle, Archive } from 'lucide-react';
 import { Conversation, User } from '../../../types';
 import { ConversationItem } from './ConversationItem';
@@ -14,7 +14,6 @@ interface ConversationListProps {
   currentUserFriendIds?: string[];
   blockedUserIds?: string[];
   isLoading: boolean;
-  isRevalidating?: boolean;
   onSelectConversation: (id: string) => void;
   onSearch: (term: string) => void;
   onPin: (id: string, pinned: boolean) => void;
@@ -102,7 +101,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     onSearchFocus?.(false);
   };
 
-  const renderConversationItem = (conversation: Conversation) => {
+  const renderConversationItem = useCallback((conversation: Conversation) => {
     const partnerId = conversation.isGroup 
       ? null 
       : conversation.participantIds.find(id => id !== currentUserId);
@@ -124,7 +123,18 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
       />
     );
-  };
+  }, [
+    currentUserId, 
+    selectedId, 
+    currentUserFriendIds, 
+    onSelectConversation, 
+    onPin, 
+    onMute, 
+    onDelete, 
+    onBlock, 
+    onArchive, 
+    onMarkUnread
+  ]);
 
   return (
     <div className="flex flex-col h-full w-full bg-bg-primary border-r border-border-light transition-theme">
@@ -227,16 +237,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             )}
 
             {/* Main List */}
-            {displayConversations.map((conversation) => {
-              // Lọc bỏ tin nhắn chờ nếu đang ở tab Tất cả
-              if (viewMode === 'normal' && activeFilter === 'all') {
-                const partnerId = conversation.participantIds.find(id => id !== currentUserId);
-                if (!conversation.isGroup && partnerId && !currentUserFriendIds.includes(partnerId)) {
-                  return null;
-                }
-              }
-              return renderConversationItem(conversation);
-            })}
+            {displayConversations.map(renderConversationItem)}
           </div>
         )}
       </div>
