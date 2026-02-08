@@ -25,4 +25,8 @@ export { ForwardModal } from './modals/ForwardModal';
 export * from './MessengerSkeleton';
 export * from './ChatBoxSkeleton';
 
+export { ChatBoxHeader } from './ChatBoxHeader';
+export { MessageList } from './MessageList';
+export { TypingIndicator } from './TypingIndicator';
+
 export { MentionList } from './input/MentionList';
