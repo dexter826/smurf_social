@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Users, X, UserPlus, ChevronDown, MessageCircle } from 'lucide-react';
-import { Conversation, User } from '../../types';
-import { Input, Button, IconButton } from '../ui';
+import { Conversation, User } from '../../../types';
+import { Input, Button, IconButton, Dropdown } from '../../ui';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
-import { Dropdown } from '../ui/Dropdown';
 import { MoreVertical, Archive, CheckCircle2 } from 'lucide-react';
 
 interface ConversationListProps {

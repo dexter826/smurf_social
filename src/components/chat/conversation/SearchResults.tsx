@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, X, Clock, Lock } from 'lucide-react';
-import { Button, Skeleton, Avatar, UserAvatar } from '../ui';
-import { Conversation, User, UserStatus } from '../../types';
+import { Button, Skeleton, Avatar, UserAvatar } from '../../ui';
+import { Conversation, User, UserStatus } from '../../../types';
 
 interface SearchResultsProps {
   searchTerm: string;

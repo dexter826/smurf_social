@@ -6,17 +6,27 @@ import {
   Play, Pause, Mic, Video, Check, CheckCheck 
 } from 'lucide-react';
 
-import { Message, User } from '../../types';
+import { Message, User } from '../../../types';
 import { 
-  Avatar, UserAvatar, ConfirmDialog, Button, IconButton, 
-  Modal, UserStatusText, ReactionDisplay, ReactionSelector, LazyVideo 
-} from '../ui';
-import { chatService } from '../../services/chatService';
-import { useChatStore } from '../../store/chatStore';
-import { TIME_LIMITS } from '../../constants/appConfig';
-import { formatTimeOnly } from '../../utils/dateUtils';
-import { scrollToMessage } from '../../utils';
-import { MessageContent, MessageActions } from './bubbles';
+  Avatar, 
+  UserAvatar, 
+  IconButton, 
+  ReactionDisplay, 
+  ReactionSelector, 
+  Spinner,
+  TextArea,
+  Button,
+  Modal,
+  UserStatusText,
+  ConfirmDialog
+} from '../../ui';
+import { chatService } from '../../../services/chatService';
+import { useChatStore } from '../../../store/chatStore';
+import { TIME_LIMITS } from '../../../constants/appConfig';
+import { formatTimeOnly } from '../../../utils/dateUtils';
+import { scrollToMessage } from '../../../utils';
+import { MessageContent } from './MessageContent';
+import { MessageActions } from './MessageActions';
 
 
 interface MessageBubbleProps {

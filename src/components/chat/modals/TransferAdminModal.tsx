@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LogOut, Loader2, Users } from 'lucide-react';
-import { User, Conversation } from '../../types';
-import { Modal, Button, UserAvatar, Select } from '../ui';
+import { User, Conversation } from '../../../types';
+import { Modal, Button, UserAvatar, Select } from '../../ui';
 
 interface TransferAdminModalProps {
   isOpen: boolean;

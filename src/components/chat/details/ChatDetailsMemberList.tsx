@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Conversation, UserStatus } from '../../types';
-import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button, IconButton } from '../ui';
+import { User, Conversation, UserStatus } from '../../../types';
+import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button, IconButton } from '../../ui';
 import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMinus, LogOut, Lock } from 'lucide-react';
 
 interface ChatDetailsMemberListProps {

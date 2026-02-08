@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Info, Users, Image, Search } from 'lucide-react';
-import { Conversation, Message, User } from '../../types';
-import { IconButton } from '../ui';
+import { Conversation, Message, User, UserStatus } from '../../../types';
+import { IconButton, UserAvatar, Avatar, UserStatusText } from '../../ui';
 import { ChatDetailsHeader } from './ChatDetailsHeader';
 import { ChatDetailsMemberList } from './ChatDetailsMemberList';
 import { ChatDetailsMedia } from './ChatDetailsMedia';

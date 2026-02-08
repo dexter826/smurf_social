@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { MoreVertical, Reply, Forward, RotateCcw, Trash2, Smile, X, Edit2, Check, CheckCheck } from 'lucide-react';
-import { Message, User } from '../../types';
-import { formatTimeOnly } from '../../utils/dateUtils';
-import { Avatar, UserAvatar, ImageViewer, IconButton, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog } from '../ui';
-import { useChatStore } from '../../store/chatStore';
+import { Message, User } from '../../../types';
+import { formatTimeOnly } from '../../../utils/dateUtils';
+import { Avatar, UserAvatar, ImageViewer, IconButton, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog } from '../../ui';
+import { useChatStore } from '../../../store/chatStore';
 
 interface ImageGroupBubbleProps {
   messages: Message[];

@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, Loader2, Users } from 'lucide-react';
-import { Conversation } from '../../types';
-import { Modal, Input, Button, Avatar, IconButton, ImageCropper } from '../ui';
-import { chatService } from '../../services/chatService';
-import { toast } from '../../store/toastStore';
+import { Conversation } from '../../../types';
+import { Modal, Input, Button, Avatar, IconButton, ImageCropper } from '../../ui';
+import { chatService } from '../../../services/chatService';
+import { toast } from '../../../store/toastStore';
 
 interface EditGroupModalProps {
   isOpen: boolean;

@@ -1,21 +1,28 @@
-export { MessageBubble } from './MessageBubble';
-export { ConversationItem } from './ConversationItem';
-export { ConversationList } from './ConversationList';
+export { MessageBubble } from './message/MessageBubble';
+export { ImageGroupBubble } from './message/ImageGroupBubble';
+export { MessageRequestBanner } from './message/MessageRequestBanner';
+
+export { ConversationItem } from './conversation/ConversationItem';
+export { ConversationList } from './conversation/ConversationList';
+
 export { ChatBox } from './ChatBox';
-export { ChatInput } from './ChatInput';
-export { ChatDetailsPanel } from './ChatDetailsPanel';
-export { SearchResults } from './SearchResults';
-export { ChatDetailsHeader } from './ChatDetailsHeader';
-export { ChatDetailsMemberList } from './ChatDetailsMemberList';
-export { ChatDetailsMedia } from './ChatDetailsMedia';
-export { ChatDetailsSearch } from './ChatDetailsSearch';
-export { ChatDetailsActions } from './ChatDetailsActions';
-export { CreateGroupModal } from './CreateGroupModal';
-export { AddMemberModal } from './AddMemberModal';
-export { EditGroupModal } from './EditGroupModal';
-export { TransferAdminModal } from './TransferAdminModal';
+export { ChatInput } from './input/ChatInput';
+
+export { ChatDetailsPanel } from './details/ChatDetailsPanel';
+export { SearchResults } from './conversation/SearchResults';
+export { ChatDetailsHeader } from './details/ChatDetailsHeader';
+export { ChatDetailsMemberList } from './details/ChatDetailsMemberList';
+export { ChatDetailsMedia } from './details/ChatDetailsMedia';
+export { ChatDetailsSearch } from './details/ChatDetailsSearch';
+export { ChatDetailsActions } from './details/ChatDetailsActions';
+
+export { CreateGroupModal } from './modals/CreateGroupModal';
+export { AddMemberModal } from './modals/AddMemberModal';
+export { EditGroupModal } from './modals/EditGroupModal';
+export { TransferAdminModal } from './modals/TransferAdminModal';
+export { ForwardModal } from './modals/ForwardModal';
+
 export * from './MessengerSkeleton';
 export * from './ChatBoxSkeleton';
-export { ForwardModal } from './ForwardModal';
-export { MentionList } from './MentionList';
-export { MessageRequestBanner } from './MessageRequestBanner';
+
+export { MentionList } from './input/MentionList';

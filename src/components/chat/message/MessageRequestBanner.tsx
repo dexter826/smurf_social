@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserPlus, Ban, MessageCircle, Clock, UserCheck } from 'lucide-react';
-import { Button } from '../ui';
+import { Button } from '../../ui';
 
 type FriendRequestStatus = 'none' | 'sent' | 'received';
 

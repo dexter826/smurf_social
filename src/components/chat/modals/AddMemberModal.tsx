@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Check, Loader2, UserPlus } from 'lucide-react';
-import { User, Conversation } from '../../types';
-import { userService } from '../../services/userService';
-import { Modal, Input, Button, Avatar, UserAvatar } from '../ui';
+import { User, Conversation } from '../../../types';
+import { userService } from '../../../services/userService';
+import { Modal, Input, Button, Avatar, UserAvatar } from '../../ui';
 
 interface AddMemberModalProps {
   isOpen: boolean;

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Conversation } from '../../types';
+import { Conversation } from '../../../types';
 import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User, Flag } from 'lucide-react';
-import { ConfirmDialog, Button } from '../ui';
-import { useReportStore } from '../../store/reportStore';
-import { ReportType } from '../../types';
+import { ConfirmDialog, Button } from '../../ui';
+import { useReportStore } from '../../../store/reportStore';
+import { ReportType } from '../../../types';
 
 interface ChatDetailsActionsProps {
   conversation: Conversation;
