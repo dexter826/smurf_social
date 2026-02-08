@@ -20,7 +20,7 @@ export const useConversationGroups = ({
   activeFilter
 }: UseConversationGroupsProps) => {
 
-  const { friendConversations, requestConversations, sortedConversations } = useMemo(() => {
+  const { friendConversations, requestConversations } = useMemo(() => {
     // Loại bỏ hội thoại với người bị chặn
     const filtered = conversations.filter(conv => {
       if (conv.isGroup) return true;
@@ -54,24 +54,24 @@ export const useConversationGroups = ({
 
     return {
       friendConversations: friends.sort(sortFn),
-      requestConversations: requests.sort(sortFn),
-      sortedConversations: filtered.sort(sortFn)
+      requestConversations: requests.sort(sortFn)
     };
   }, [conversations, currentUserId, currentUserFriendIds, blockedUserIds]);
 
   // Danh sách hiển thị dựa trên chế độ xem và bộ lọc
   const displayConversations = useMemo(() => {
-    let list = viewMode === 'archived' 
-      ? conversations.filter(c => c.archived) 
-      : sortedConversations;
-    
-    // Áp dụng bộ lọc Nhóm nếu đang ở chế độ xem chính
-    if (viewMode === 'normal' && activeFilter === 'group') {
+    if (viewMode === 'archived') {
+      return conversations.filter(c => c.archived).sort((a, b) => 
+        new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+      );
+    }
+
+    let list = friendConversations;
+    if (activeFilter === 'group') {
       list = list.filter(c => c.isGroup);
     }
-    
     return list;
-  }, [viewMode, sortedConversations, conversations, activeFilter]);
+  }, [viewMode, friendConversations, conversations, activeFilter]);
 
   return {
     friendConversations,

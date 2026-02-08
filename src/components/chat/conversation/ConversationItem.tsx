@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Pin, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail, Lock, Volume2 } from 'lucide-react';
+import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Lock, Volume2 } from 'lucide-react';
 import { Conversation, UserStatus } from '../../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar } from '../../ui';
 import { useConversationItem } from '../../../hooks/useConversationItem';
+import { MessageStatus } from '../message/MessageStatus';
+import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -126,34 +128,12 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {isLastMessageMine && !isUnread && !typingText && (
-              <div className="flex items-center">
-                {isLastMessageRead ? (
-                  <div className="flex items-center gap-1">
-                    <div className="flex -space-x-1">
-                      {readers.slice(0, 3).map(user => (
-                        <Avatar 
-                          key={user.id}
-                          src={user.avatar} 
-                          name={user.name} 
-                          size="2xs" 
-                          className="ring-1 ring-bg-primary"
-                        />
-                      ))}
-                    </div>
-                    {readers.length > 3 && (
-                      <span className="text-[9px] text-text-tertiary font-bold">
-                        +{readers.length - 3}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <div className={isLastMessageDelivered ? "text-primary" : "text-text-tertiary"}>
-                    {isLastMessageDelivered ? <CheckCheck size={14} strokeWidth={2.5} /> : <Check size={14} strokeWidth={2.5} />}
-                  </div>
-                )}
-              </div>
-            )}
+            <MessageStatus 
+              isMine={isLastMessageMine && !isUnread && !typingText}
+              isRead={isLastMessageRead}
+              isDelivered={isLastMessageDelivered}
+              readers={readers}
+            />
             {isUnread && unreadCount > 0 ? (
               <span className="flex-shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
@@ -229,9 +209,9 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         isOpen={showBlockConfirm}
         onClose={() => setShowBlockConfirm(false)}
         onConfirm={() => { onBlock?.(); setShowBlockConfirm(false); }}
-        title="Chặn người dùng"
-        message="Bạn có chắc chắn muốn chặn người này? Cả hai bên sẽ không thể nhắn tin cho nhau."
-        confirmLabel="Chặn ngay"
+        title={CONFIRM_MESSAGES.CHAT.BLOCK_USER.TITLE}
+        message={CONFIRM_MESSAGES.CHAT.BLOCK_USER.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.CHAT.BLOCK_USER.CONFIRM}
         variant="danger"
       />
 
@@ -239,9 +219,9 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => { onDelete?.(); setShowDeleteConfirm(false); }}
-        title="Xóa cuộc trò chuyện"
-        message="Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác."
-        confirmLabel="Xóa ngay"
+        title={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
+        message={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
         variant="danger"
       />
     </div>

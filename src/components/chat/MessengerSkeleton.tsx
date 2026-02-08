@@ -1,5 +1,6 @@
 import React from 'react';
 import { Skeleton } from '../ui/Skeleton';
+import { ConversationItem } from './conversation/ConversationItem';
 
 export const MessengerSkeleton: React.FC = () => {
   return (
@@ -17,15 +18,9 @@ export const MessengerSkeleton: React.FC = () => {
             <Skeleton width={60} height={24} className="rounded-full" />
           </div>
         </div>
-        <div className="flex-1 p-2 space-y-4">
+        <div className="flex-1 p-2">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3 p-3">
-              <Skeleton variant="circle" width={48} height={48} />
-              <div className="flex-1 space-y-2">
-                <Skeleton width="40%" height={16} />
-                <Skeleton width="25%" height={12} />
-              </div>
-            </div>
+            <ConversationItem.Skeleton key={i} />
           ))}
         </div>
       </div>
