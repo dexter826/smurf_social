@@ -1,6 +1,6 @@
 import React from 'react';
-import { User } from '../../types';
-import { UserAvatar } from '../ui';
+import { User } from '../../../types';
+import { UserAvatar } from '../../ui';
 
 interface MentionListProps {
   users: User[];

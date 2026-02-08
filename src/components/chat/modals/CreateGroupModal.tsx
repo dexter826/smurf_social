@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, Users, Camera, Check, Loader2, Crown } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User } from '../../types';
-import { userService } from '../../services/userService';
-import { useAuthStore } from '../../store/authStore';
-import { Modal, Input, Button, Avatar, UserAvatar, IconButton } from '../ui';
-import { groupSchema, GroupFormValues } from '../../utils/validation';
+import { User } from '../../../types';
+import { userService } from '../../../services/userService';
+import { useAuthStore } from '../../../store/authStore';
+import { Modal, Input, Button, Avatar, UserAvatar, IconButton } from '../../ui';
+import { groupSchema, GroupFormValues } from '../../../utils/validation';
 
 interface CreateGroupModalProps {
   isOpen: boolean;

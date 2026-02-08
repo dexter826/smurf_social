@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { formatChatTime } from '../../utils/dateUtils';
+import { db } from '../../../firebase/config';
+import { formatChatTime } from '../../../utils/dateUtils';
 import { Pin, Volume2, VolumeX, Trash2, MoreVertical, CheckCheck, Check, Ban, Archive, MailCheck, Mail, Lock } from 'lucide-react';
-import { Conversation, User, UserStatus } from '../../types';
-import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton, Avatar } from '../ui';
+import { Conversation, User, UserStatus } from '../../../types';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, Button, IconButton, Avatar } from '../../ui';
 
 interface ConversationItemProps {
   conversation: Conversation;

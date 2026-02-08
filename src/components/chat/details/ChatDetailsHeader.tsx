@@ -1,7 +1,7 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
-import { User, Conversation, UserStatus } from '../../types';
-import { UserAvatar, Avatar, UserStatusText } from '../ui';
+import { User, Conversation, UserStatus } from '../../../types';
+import { UserAvatar, Avatar, UserStatusText } from '../../ui';
 
 interface ChatDetailsHeaderProps {
   conversation: Conversation;

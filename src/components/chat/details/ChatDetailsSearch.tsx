@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Message, User } from '../../types';
+import { Message, User } from '../../../types';
 import { Search, X, MessageCircle } from 'lucide-react';
-import { formatTimeOnly } from '../../utils/dateUtils';
-import { Input, IconButton } from '../ui';
-import { PAGINATION } from '../../constants';
+import { formatTimeOnly } from '../../../utils/dateUtils';
+import { Input, IconButton } from '../../ui';
+import { PAGINATION } from '../../../constants';
 
 interface ChatDetailsSearchProps {
   messages: Message[];

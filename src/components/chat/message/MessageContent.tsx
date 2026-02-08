@@ -2,7 +2,7 @@ import React from 'react';
 import { FileText, Download, Image as ImageIcon, Play, Pause, Mic } from 'lucide-react';
 
 import { Message } from '../../../types';
-import { LazyVideo } from '../../ui';
+import { IconButton, LazyVideo } from '../../ui';
 
 interface MessageContentProps {
   message: Message;

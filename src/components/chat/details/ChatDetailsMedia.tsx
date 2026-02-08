@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Message } from '../../types';
+import { Message } from '../../../types';
 import { Image, Film, FileText, Download, ExternalLink } from 'lucide-react';
 
 interface ChatDetailsMediaProps {

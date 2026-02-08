@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Search, Send } from 'lucide-react';
-import { Modal, Avatar, UserAvatar, Input, Button } from '../ui';
-import { Message, Conversation, User } from '../../types';
-import { useChatStore } from '../../store/chatStore';
+import { Modal, Avatar, UserAvatar, Input, Button } from '../../ui';
+import { Message, Conversation, User } from '../../../types';
+import { useChatStore } from '../../../store/chatStore';
 
 interface ForwardModalProps {
   isOpen: boolean;

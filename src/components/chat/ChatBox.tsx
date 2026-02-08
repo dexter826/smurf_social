@@ -3,9 +3,9 @@ import { Phone, Video, Info, ChevronLeft, Lock } from 'lucide-react';
 import { Message, User, Conversation, UserStatus } from '../../types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Skeleton, Button, Spinner } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
-import { MessageBubble } from './MessageBubble';
-import { ImageGroupBubble } from './ImageGroupBubble';
-import { MessageRequestBanner } from './MessageRequestBanner';
+import { MessageBubble } from './message/MessageBubble';
+import { ImageGroupBubble } from './message/ImageGroupBubble';
+import { MessageRequestBanner } from './message/MessageRequestBanner';
 
 
 interface ChatBoxProps {
