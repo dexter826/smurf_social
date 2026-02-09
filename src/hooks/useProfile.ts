@@ -37,6 +37,7 @@ interface UseProfileReturn {
   friendStatus: FriendStatus;
   pendingRequestId?: string;
   isBlockedByMe: boolean;
+  isBannedProfile: boolean;
   canViewContent: boolean;
 
   activeTab: TabType;
@@ -390,6 +391,7 @@ export const useProfile = (): UseProfileReturn => {
     isOwnProfile,
     friendStatus,
     pendingRequestId,
+    isBannedProfile,
     canViewContent,
     activeTab,
     setActiveTab,

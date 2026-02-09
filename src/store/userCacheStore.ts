@@ -9,6 +9,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 interface UserCacheState {
   users: Record<string, User>;
   loadingIds: Set<string>;
+  accessOrder: string[];
   
   fetchUsers: (ids: string[]) => Promise<void>;
   fetchUser: (id: string) => Promise<User | undefined>;
@@ -18,13 +19,12 @@ interface UserCacheState {
   clear: () => void;
 }
 
-// Hằng số này đã được chuyển vào PAGINATION.USER_CACHE_LIMIT
-
 export const useUserCache = create<UserCacheState>()(
   persist(
     (set, get) => ({
       users: {},
       loadingIds: new Set(),
+      accessOrder: [],
 
   // Tải thông tin user theo lô
   fetchUsers: async (ids: string[]) => {
@@ -92,16 +92,18 @@ export const useUserCache = create<UserCacheState>()(
   },
 
   setUser: (user: User) => {
-    const { users } = get();
+    const { users, accessOrder } = get();
     let newUsers = { ...users, [user.id]: user };
     
-    // Giới hạn cache user
-    const keys = Object.keys(newUsers);
-    if (keys.length > PAGINATION.USER_CACHE_LIMIT) {
-      delete newUsers[keys[0]];
+    let newOrder = accessOrder.filter(id => id !== user.id);
+    newOrder.push(user.id);
+    
+    if (newOrder.length > PAGINATION.USER_CACHE_LIMIT) {
+      const evictId = newOrder.shift()!;
+      delete newUsers[evictId];
     }
 
-    set({ users: newUsers });
+    set({ users: newUsers, accessOrder: newOrder });
   },
 
   invalidateUser: (id: string) => {
@@ -111,7 +113,7 @@ export const useUserCache = create<UserCacheState>()(
   },
 
   clear: () => {
-    set({ users: {}, loadingIds: new Set() });
+    set({ users: {}, loadingIds: new Set(), accessOrder: [] });
   }
 }), {
   name: 'smurf_user_cache',

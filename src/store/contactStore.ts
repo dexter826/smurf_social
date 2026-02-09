@@ -165,12 +165,15 @@ export const useContactStore = create<ContactState>()(
       },
 
       unfriend: async (userId: string, friendId: string) => {
+        const previousFriends = get().friends;
+        set((state) => ({
+          friends: state.friends.filter(f => f.id !== friendId)
+        }));
+
         try {
           await friendService.unfriend(userId, friendId);
-          set((state) => ({
-            friends: state.friends.filter(f => f.id !== friendId)
-          }));
         } catch (error) {
+          set({ friends: previousFriends });
           console.error("Lỗi hủy kết bạn:", error);
           throw error;
         }

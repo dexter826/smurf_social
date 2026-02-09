@@ -65,16 +65,27 @@ export const useNotificationStore = create<NotificationState>()(
       },
 
   markAsRead: async (id) => {
-    await notificationService.markAsRead(id);
-    set((state) => {
-      const newNotifications = state.notifications.map(n => 
+    const notification = get().notifications.find(n => n.id === id);
+    const wasUnread = notification && !notification.isRead;
+    
+    set((state) => ({
+      notifications: state.notifications.map(n => 
         n.id === id ? { ...n, isRead: true } : n
-      );
-      return {
-        notifications: newNotifications,
-        unreadCount: Math.max(0, state.unreadCount - 1)
-      };
-    });
+      ),
+      unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount
+    }));
+
+    try {
+      await notificationService.markAsRead(id);
+    } catch (error) {
+      console.error("Lỗi đánh dấu đã đọc:", error);
+      set((state) => ({
+        notifications: state.notifications.map(n => 
+          n.id === id ? { ...n, isRead: false } : n
+        ),
+        unreadCount: wasUnread ? state.unreadCount + 1 : state.unreadCount
+      }));
+    }
   },
 
   markAllAsRead: async (userId) => {

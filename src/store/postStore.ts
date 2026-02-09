@@ -203,7 +203,9 @@ export const usePostStore = create<PostState>()(
         const post = get().posts.find(p => p.id === postId);
         if (!post) return;
 
-        // Cập nhật giao diện ngay lập tức
+        const previousReactions = { ...(post.reactions || {}) };
+        const previousSelectedPost = get().selectedPost;
+
         set((state) => {
           const updateReactions = (p: Post) => {
             const newReactions = { ...(p.reactions || {}) };
@@ -231,11 +233,10 @@ export const usePostStore = create<PostState>()(
           await postService.reactToPost(postId, userId, reaction);
         } catch (error) {
           console.error("Lỗi react bài viết:", error);
-          // Revert logic (simplest is to fetch fresh)
-          const { fetchPosts } = get();
-          // Assuming we can just re-fetch to sync
-          // fetchPosts(...) - arguments missing, tricky to revert exact state easily without storing it
-          // For now, logging error. In production, we should revert local state manually.
+          set((state) => ({
+            posts: state.posts.map(p => p.id === postId ? { ...p, reactions: previousReactions } : p),
+            selectedPost: previousSelectedPost
+          }));
         }
       },
 
