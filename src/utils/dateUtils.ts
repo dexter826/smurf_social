@@ -1,6 +1,17 @@
 import { format, formatDistanceToNow, isYesterday, isToday, differenceInDays, getYear } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
+/**
+ * Chuyển đổi các định dạng thời gian (Date, Timestamp, ISO) sang Date object.
+ */
+export const toDate = (val: any): Date | null => {
+  if (!val) return null;
+  if (val instanceof Date) return val;
+  if (val.seconds) return new Date(val.seconds * 1000);
+  const date = new Date(val);
+  return isNaN(date.getTime()) ? null : date;
+};
+
 // Hiển thị thời gian thu gọn kiểu Facebook
 export const formatRelativeTime = (date: Date | number | string): string => {
   const d = new Date(date);

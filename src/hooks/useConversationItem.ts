@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Conversation, User, UserStatus } from '../types';
-import { formatChatTime } from '../utils/dateUtils';
+import { formatChatTime, toDate } from '../utils/dateUtils';
 
 interface UseConversationItemProps {
   conversation: Conversation;
@@ -45,13 +45,6 @@ export const useConversationItem = ({
     const joinedAt = conversation.memberJoinedAt?.[currentUserId];
     const deletedAt = conversation.deletedAt?.[currentUserId];
     
-    const toDate = (val: any): Date | null => {
-      if (!val) return null;
-      if (val instanceof Date) return val;
-      if (val.seconds) return new Date(val.seconds * 1000);
-      return new Date(val);
-    };
-
     let startTime = toDate(joinedAt);
     const delDate = toDate(deletedAt);
     if (delDate && (!startTime || delDate > startTime)) {
