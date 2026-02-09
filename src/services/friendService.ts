@@ -27,6 +27,18 @@ export const friendService = {
         throw new Error("Không thể gửi lời mời kết bạn cho chính mình");
       }
 
+      // Kiểm tra block lẫn nhau
+      const receiverSnap = await getDoc(doc(db, 'users', receiverId));
+      if (!receiverSnap.exists()) throw new Error("Người dùng không tồn tại");
+      const receiverData = receiverSnap.data();
+      if (receiverData.blockedUserIds?.includes(senderId)) {
+        throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
+      }
+      const senderSnap = await getDoc(doc(db, 'users', senderId));
+      if (senderSnap.exists() && senderSnap.data().blockedUserIds?.includes(receiverId)) {
+        throw new Error("Bạn đã chặn người dùng này");
+      }
+
       // Tránh gửi trùng lời mời
       const q = query(
         collection(db, 'friendRequests'),

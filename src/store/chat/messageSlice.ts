@@ -227,7 +227,9 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   recallMessage: async (messageId: string, conversationId: string) => {
     try {
-      await chatService.recallMessage(messageId, conversationId);
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (!currentUserId) throw new Error("Chưa đăng nhập");
+      await chatService.recallMessage(messageId, conversationId, currentUserId);
     } catch (error) {
       console.error("Lỗi thu hồi tin nhắn:", error);
       throw error;
@@ -263,7 +265,9 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   editMessage: async (messageId: string, content: string) => {
     try {
-      await chatService.editMessage(messageId, content);
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (!currentUserId) throw new Error("Chưa đăng nhập");
+      await chatService.editMessage(messageId, content, currentUserId);
     } catch (error) {
       console.error("Lỗi chỉnh sửa tin nhắn:", error);
       throw error;

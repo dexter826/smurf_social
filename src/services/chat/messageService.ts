@@ -472,9 +472,16 @@ export const messageService = {
   recallMessage: async (
     messageId: string,
     conversationId: string,
+    currentUserId: string,
   ): Promise<void> => {
     try {
       const messageRef = doc(db, "messages", messageId);
+      const messageSnap = await getDoc(messageRef);
+      if (!messageSnap.exists()) throw new Error("Tin nhắn không tồn tại");
+      if (messageSnap.data().senderId !== currentUserId) {
+        throw new Error("Chỉ người gửi mới được thu hồi tin nhắn");
+      }
+
       await updateDoc(messageRef, {
         isRecalled: true,
         recalledAt: serverTimestamp(),
@@ -509,7 +516,7 @@ export const messageService = {
   },
 
   // Chỉnh sửa tin nhắn trong thời gian cho phép
-  editMessage: async (messageId: string, newContent: string): Promise<void> => {
+  editMessage: async (messageId: string, newContent: string, currentUserId: string): Promise<void> => {
     try {
       const messageRef = doc(db, "messages", messageId);
       const messageSnap = await getDoc(messageRef);
@@ -517,6 +524,10 @@ export const messageService = {
       if (!messageSnap.exists()) throw new Error("Tin nhắn không tồn tại");
 
       const data = messageSnap.data();
+      if (data.senderId !== currentUserId) {
+        throw new Error("Chỉ người gửi mới được chỉnh sửa tin nhắn");
+      }
+
       const createdAt = data.createdAt?.toDate();
 
       if (createdAt) {

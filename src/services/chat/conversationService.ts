@@ -20,9 +20,20 @@ import { Conversation, User } from '../../types';
 import { batchGetUsers } from '../../utils/batchUtils';
 
 export const conversationService = {
-  // Lấy hoặc tạo hội thoại 1-1 giữa hai người dùng
   getOrCreateConversation: async (user1Id: string, user2Id: string): Promise<string> => {
     try {
+      // Kiểm tra block lẫn nhau
+      const [user1Snap, user2Snap] = await Promise.all([
+        getDoc(doc(db, 'users', user1Id)),
+        getDoc(doc(db, 'users', user2Id)),
+      ]);
+      if (user1Snap.exists() && user1Snap.data().blockedUserIds?.includes(user2Id)) {
+        throw new Error('Bạn đã chặn người dùng này');
+      }
+      if (user2Snap.exists() && user2Snap.data().blockedUserIds?.includes(user1Id)) {
+        throw new Error('Không thể nhắn tin cho người dùng này');
+      }
+
       const participantIds = [user1Id, user2Id].sort();
       
       const q = query(
