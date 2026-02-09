@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
-import { useChat, useProfile } from '../hooks';
+import { useChat } from '../hooks';
 import { friendService } from '../services/friendService';
 import { FriendRequest } from '../types';
 import { 

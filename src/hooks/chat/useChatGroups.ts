@@ -1,10 +1,11 @@
 import { useCallback } from 'react';
+import { Conversation } from '../../types';
 import { useChatStore } from '../../store/chatStore';
 
 interface UseChatGroupsProps {
   selectedConversationId: string | null;
   currentUserId: string | null;
-  conversations: any[];
+  conversations: Conversation[];
 }
 
 // Quản lý nhóm chat

@@ -1,6 +1,8 @@
 export const REACTIONS = ['👍', '❤️', '😆', '😮', '😢', '😡'] as const;
 
-export const REACTION_LABELS: Record<string, string> = {
+export type ReactionType = typeof REACTIONS[number];
+
+export const REACTION_LABELS: Record<ReactionType, string> = {
   '👍': 'Thích',
   '❤️': 'Yêu thích',
   '😆': 'Haha',
@@ -8,5 +10,3 @@ export const REACTION_LABELS: Record<string, string> = {
   '😢': 'Buồn',
   '😡': 'Phẫn nộ'
 };
-
-export type ReactionType = typeof REACTIONS[number];

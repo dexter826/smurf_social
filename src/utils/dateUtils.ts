@@ -1,13 +1,14 @@
 import { format, formatDistanceToNow, isYesterday, isToday, differenceInDays, getYear } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
-/**
- * Chuyển đổi các định dạng thời gian (Date, Timestamp, ISO) sang Date object.
- */
-export const toDate = (val: any): Date | null => {
+type DateLike = Date | Timestamp | string | number | null | undefined;
+
+export const toDate = (val: DateLike): Date | null => {
   if (!val) return null;
   if (val instanceof Date) return val;
-  if (val.seconds) return new Date(val.seconds * 1000);
+  if (val instanceof Timestamp) return val.toDate();
+  if (typeof val === 'object' && 'seconds' in val) return new Date((val as Timestamp).seconds * 1000);
   const date = new Date(val);
   return isNaN(date.getTime()) ? null : date;
 };

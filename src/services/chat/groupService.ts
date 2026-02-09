@@ -16,6 +16,7 @@ import { userService } from '../userService';
 import { Conversation } from '../../types';
 import { uploadWithProgress, UploadProgress } from '../../utils/uploadUtils';
 import { compressImage } from '../../utils/imageUtils';
+import { IMAGE_COMPRESSION } from '../../constants';
 
 export const groupService = {
   // Tạo hội thoại nhóm mới
@@ -239,10 +240,7 @@ export const groupService = {
     onProgress?: (progress: UploadProgress) => void
   ): Promise<string> => {
     try {
-      const compressedFile = await compressImage(file, { 
-        maxSizeMB: 0.5, 
-        maxWidthOrHeight: 512 
-      });
+      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.AVATAR);
       
       const fileExt = file.name.split('.').pop();
       const fileName = `group_${conversationId}_${Date.now()}.${fileExt}`;

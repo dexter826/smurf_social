@@ -52,8 +52,7 @@ export const useContacts = (): UseContactsReturn => {
     rejectFriendRequest,
     cancelFriendRequest,
     unfriend,
-    blockUser,
-    addFriend
+    blockUser
   } = useContactStore();
 
   const { users: userCache, fetchUsers } = useUserCache();

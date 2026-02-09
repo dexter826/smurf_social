@@ -6,7 +6,7 @@ import { useUserCache } from '../../store/userCacheStore';
 interface UseChatBlockProps {
   partnerId: string | null;
   currentUser: User | null;
-  partner: any;
+  partner: User | null;
   isGroup: boolean;
   usersMap: Record<string, User>;
 }

@@ -16,7 +16,7 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   name: z.string()
     .min(1, 'Vui lòng nhập họ tên')
-    .max(GROUP_LIMITS.NAME_MAX_LENGTH, `Họ tên không được quá ${GROUP_LIMITS.NAME_MAX_LENGTH} ký tự`),
+    .max(VALIDATION.USER_NAME_MAX_LENGTH, `Họ tên không được quá ${VALIDATION.USER_NAME_MAX_LENGTH} ký tự`),
   email: z.string()
     .min(1, 'Vui lòng nhập email')
     .email('Email không hợp lệ'),
@@ -41,7 +41,7 @@ export const forgotPasswordSchema = z.object({
 export const profileSchema = z.object({
   name: z.string()
     .min(1, 'Tên không được để trống')
-    .max(GROUP_LIMITS.NAME_MAX_LENGTH, `Tên không được quá ${GROUP_LIMITS.NAME_MAX_LENGTH} ký tự`),
+    .max(VALIDATION.USER_NAME_MAX_LENGTH, `Tên không được quá ${VALIDATION.USER_NAME_MAX_LENGTH} ký tự`),
   bio: z.string()
     .max(VALIDATION.BIO_MAX_LENGTH, `Giới thiệu không được quá ${VALIDATION.BIO_MAX_LENGTH} ký tự`)
     .optional(),

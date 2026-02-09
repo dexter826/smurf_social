@@ -1,4 +1,4 @@
-import { getDocs, query, collection, where, documentId, QueryConstraint } from 'firebase/firestore';
+import { getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { User } from '../types';
 import { FIREBASE_LIMITS } from '../constants/appConfig';

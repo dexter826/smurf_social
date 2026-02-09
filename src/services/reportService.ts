@@ -17,7 +17,7 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Report, ReportType, ReportReason, ReportStatus, NotificationType, Post, Comment } from '../types';
+import { Report, ReportType, ReportStatus, NotificationType, Post, Comment } from '../types';
 import { REPORT_CONFIG, PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 import { postService } from './postService';

@@ -1,91 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Message, User, Conversation, UserStatus } from '../types';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Message, User, Conversation } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
 import { useUserCache } from '../store/userCacheStore';
-import { userService } from '../services/userService';
+import { useChatActions } from './chat/useChatActions';
+import { useChatMessages } from './chat/useChatMessages';
+import { useChatBlock } from './chat/useChatBlock';
+import { useChatGroups } from './chat/useChatGroups';
 
-interface UseChatReturn {
-  currentUser: User | null;
-  conversations: Conversation[];
-  filteredConversations: Conversation[];
-  selectedConversationId: string | null;
-  selectedConversation: Conversation | undefined;
-  currentMessages: Message[];
-  currentTypingUsers: string[];
-  usersMap: Record<string, User>;
-  archivedCount: number;
-  isLoading: boolean;
-  isRevalidating: boolean;
-  isLoadingMore: boolean;
-  hasMoreMessages: boolean;
-  blockedMessage: string | undefined;
-  
-  isSearchFocused: boolean;
-  searchResults: { conversations: Conversation[]; users: User[] };
-  searchHistory: (Conversation | User)[];
-  
-  forwardingMessage: Message | null;
-  setForwardingMessage: (msg: Message | null) => void;
-  replyingTo: Message | null;
-  setReplyingTo: (msg: Message | null) => void;
-  editingMessage: Message | null;
-  setEditingMessage: (msg: Message | null) => void;
-  
-  isBlocked: boolean;
-  isBlockedByMe: boolean;
-  partnerId: string | null;
-  
-  viewMode: 'normal' | 'archived';
-  setViewMode: (mode: 'normal' | 'archived') => void;
-
-  handleSelectConversation: (id: string) => void;
-  handleBackToList: () => void;
-  handleLoadMoreMessages: () => Promise<void>;
-  handlePin: (id: string, pinned: boolean) => Promise<void>;
-  handleMute: (id: string, muted: boolean) => Promise<void>;
-  handleDelete: (id: string) => Promise<void>;
-  handleArchive: (id: string, archived: boolean) => Promise<void>;
-  handleMarkUnread: (id: string, markedUnread: boolean) => Promise<void>;
-  
-  handleSendText: (text: string, mentions?: string[], replyToId?: string) => Promise<void>;
-  handleForwardMessage: (message: Message) => void;
-  handleSendImage: (file: File) => Promise<void>;
-  handleSendFile: (file: File) => Promise<void>;
-  handleSendVideo: (file: File) => Promise<void>;
-  handleSendVoice: (file: File) => Promise<void>;
-  handleEditMessage: (messageId: string, text: string) => Promise<void>;
-  handleRecallMessage: (messageId: string) => Promise<void>;
-  handleDeleteForMe: (messageId: string) => Promise<void>;
-  handleTyping: (isTyping: boolean) => Promise<void>;
-  
-  handleSearch: (term: string) => Promise<void>;
-  handleMarkAllRead: () => Promise<void>;
-  setSearchFocused: (focused: boolean) => void;
-  addToSearchHistory: (item: Conversation | User) => void;
-  removeFromSearchHistory: (id: string) => void;
-  clearSearchHistory: () => void;
-  getOrCreateConversation: (userId1: string, userId2: string) => Promise<string>;
-  
-  handleToggleBlock: () => Promise<void>;
-  
-  handleCreateGroup: (memberIds: string[], groupName: string, groupAvatar?: string) => Promise<void>;
-  handleAddMembers: (userIds: string[]) => Promise<void>;
-  handleRemoveMember: (userId: string) => Promise<void>;
-  handleLeaveGroup: () => Promise<{ needAssignAdmin: boolean }>;
-  handleAssignAdminAndLeave: (newAdminId: string) => Promise<void>;
-  handlePromoteToAdmin: (userId: string) => Promise<void>;
-  handleDemoteFromAdmin: (userId: string) => Promise<void>;
-  handleEditGroup: (updates: { groupName?: string; groupAvatar?: string }) => Promise<void>;
-  
-  forwardMessage: (conversationId: string, message: Message) => Promise<void>;
-  replyToMessage: (text: string, replyToId: string) => Promise<void>;
-
-  getBlockedMessage: () => string | undefined;
-  setIsChatVisible: (visible: boolean) => void;
-}
-
-export const useChat = (): UseChatReturn => {
+export const useChat = () => {
   const { user: currentUser } = useAuthStore();
   const {
     conversations,
@@ -94,23 +17,12 @@ export const useChat = (): UseChatReturn => {
     typingUsers,
     isLoading,
     isRevalidating,
-    subscribeToConversations,
     selectConversation,
     subscribeToMessages,
-    sendTextMessage,
-    sendImageMessage,
-    sendFileMessage,
-    sendVideoMessage,
-    sendVoiceMessage,
     markAsRead,
     markAsDelivered,
     setTyping,
     subscribeToTyping,
-    togglePin,
-    toggleMute,
-    toggleArchive,
-    toggleMarkUnread,
-    deleteConversation,
     searchConversations,
     isSearchFocused,
     searchResults,
@@ -120,23 +32,10 @@ export const useChat = (): UseChatReturn => {
     addToSearchHistory,
     removeFromSearchHistory,
     clearSearchHistory,
-    createGroup,
-    updateGroupInfo,
-    addMember,
-    removeMember,
-    leaveGroup,
-    promoteToAdmin,
-    demoteFromAdmin,
-    recallMessage,
-    deleteMessageForMe,
-    forwardMessage: storeForwardMessage,
-    replyToMessage: storeReplyToMessage,
-    editMessage,
     setIsChatVisible,
     isLoadingMore: storeIsLoadingMore,
     hasMoreMessages: storeHasMoreMessages,
     loadMoreMessages,
-    markAllAsRead
   } = useChatStore();
 
   const { users: usersMap, fetchUsers } = useUserCache();
@@ -145,165 +44,97 @@ export const useChat = (): UseChatReturn => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
 
-  // Đồng bộ tin nhắn và trạng thái soạn tin
-  useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
+  const selectedConversation = useMemo(
+    () => conversations.find(c => c.id === selectedConversationId),
+    [conversations, selectedConversationId]
+  );
 
-    const unsubscribeMessages = subscribeToMessages(selectedConversationId);
-    const unsubscribeTyping = subscribeToTyping(selectedConversationId);
-    markAsDelivered(selectedConversationId, currentUser.id);
+  const filteredConversations = useMemo(() =>
+    conversations.filter(c => {
+      const isArchivedMatch = viewMode === 'archived' ? c.archived : !c.archived;
+      return isArchivedMatch && !c.deletedBy?.includes(currentUser?.id || '');
+    }),
+    [conversations, viewMode, currentUser?.id]
+  );
 
-    return () => {
-      unsubscribeMessages();
-      unsubscribeTyping();
-    };
-  }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsDelivered]);
+  const archivedCount = useMemo(
+    () => conversations.filter(c => c.archived).length,
+    [conversations]
+  );
 
-  // Tự động đánh dấu đã đọc
-  useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
-
-    const currentMessages = messages[selectedConversationId] || [];
-    if (currentMessages.length === 0) return;
-
-    const hasUnread = currentMessages.some(m => 
-      m.senderId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id))
-    );
-
-    if (hasUnread) {
-      markAsRead(selectedConversationId, currentUser.id);
-    }
-  }, [messages, selectedConversationId, currentUser, markAsRead]);
-
-  // Tải thông tin user trong hội thoại
-  useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
-
-    const currentMsgs = messages[selectedConversationId] || [];
-    if (currentMsgs.length === 0) return;
-
-    const userIds = [...new Set(currentMsgs.map(m => m.senderId))];
-    const conv = conversations.find(c => c.id === selectedConversationId);
-    
-    if (conv) {
-      conv.participants.forEach(p => userIds.push(p.id));
-    }
-
-    fetchUsers(userIds);
-  }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
-
-  const filteredConversations = conversations.filter(c => {
-    const isArchivedMatch = viewMode === 'archived' ? c.archived : !c.archived;
-    const isDeleted = c.deletedBy?.includes(currentUser?.id || '');
-    return isArchivedMatch && !isDeleted;
-  });
-  const archivedCount = conversations.filter(c => c.archived).length;
-  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
   const isLoadingMore = selectedConversationId ? (storeIsLoadingMore[selectedConversationId] || false) : false;
   const hasMoreMessages = selectedConversationId ? (storeHasMoreMessages[selectedConversationId] || false) : false;
 
-  // Kiểm tra trạng thái chặn
   const partner = selectedConversation && !selectedConversation.isGroup
-    ? selectedConversation.participants.find(p => p.id !== currentUser?.id)
+    ? selectedConversation.participants.find(p => p.id !== currentUser?.id) ?? null
     : null;
   const partnerId = partner?.id || null;
-  const isBlockedByMe = partnerId ? currentUser?.blockedUserIds?.includes(partnerId) ?? false : false;
-  const isBlockedByPartner = partner?.blockedUserIds?.includes(currentUser?.id || '') ?? false;
-  const isBlocked = isBlockedByMe || isBlockedByPartner;
-  const isFriend = partnerId ? currentUser?.friendIds?.includes(partnerId) ?? false : false;
 
-  const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
+  // Sub-hooks composition
+  const actions = useChatActions({
+    selectedConversationId,
+    currentUserId: currentUser?.id ?? null,
+    selectConversation,
+  });
 
+  const chatMessages = useChatMessages({
+    selectedConversationId,
+    currentUserId: currentUser?.id ?? null,
+  });
+
+  const block = useChatBlock({
+    partnerId,
+    currentUser: currentUser ?? null,
+    partner,
+    isGroup: selectedConversation?.isGroup ?? false,
+    usersMap,
+  });
+
+  const groups = useChatGroups({
+    selectedConversationId,
+    currentUserId: currentUser?.id ?? null,
+    conversations,
+  });
+
+  // Đồng bộ tin nhắn và typing
   useEffect(() => {
-    if (!partnerId) {
-      setPartnerStatus(undefined);
-      return;
-    }
+    if (!selectedConversationId || !currentUser) return;
+    const unsubMessages = subscribeToMessages(selectedConversationId);
+    const unsubTyping = subscribeToTyping(selectedConversationId);
+    markAsDelivered(selectedConversationId, currentUser.id);
+    return () => { unsubMessages(); unsubTyping(); };
+  }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsDelivered]);
 
-    const unsub = userService.subscribeToUser(partnerId, (u) => {
-      setPartnerStatus(u.status);
-      useUserCache.getState().setUser(u);
-    });
-    return () => unsub();
-  }, [partnerId]);
+  // Tự động đánh dấu đã đọc
+  useEffect(() => {
+    if (!selectedConversationId || !currentUser) return;
+    const msgs = messages[selectedConversationId] || [];
+    const hasUnread = msgs.some(m =>
+      m.senderId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id))
+    );
+    if (hasUnread) markAsRead(selectedConversationId, currentUser.id);
+  }, [messages, selectedConversationId, currentUser, markAsRead]);
 
-  // Cho phép nhắn tin người lạ, chỉ chặn khi bị block hoặc banned
-  const getBlockedMessage = (): string | undefined => {
-    if (!selectedConversation?.isGroup && partnerId) {
-      const currentStatus = partnerStatus || partner?.status || usersMap[partnerId]?.status;
-      
-      if (currentStatus === UserStatus.BANNED) {
-        return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
-      }
-      if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
-      if (isBlockedByPartner) return 'Bạn không thể gửi tin nhắn cho người này.';
-    }
-    return undefined;
-  };
+  // Tải thông tin user
+  useEffect(() => {
+    if (!selectedConversationId || !currentUser) return;
+    const msgs = messages[selectedConversationId] || [];
+    if (msgs.length === 0) return;
+    const userIds = [...new Set(msgs.map(m => m.senderId))];
+    const conv = conversations.find(c => c.id === selectedConversationId);
+    if (conv) conv.participants.forEach(p => userIds.push(p.id));
+    fetchUsers(userIds);
+  }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
 
-  const handleSelectConversation = useCallback((id: string) => {
-    selectConversation(id);
-  }, [selectConversation]);
-
-  const handleBackToList = useCallback(() => {
-    selectConversation(null);
-  }, [selectConversation]);
+  const handleSelectConversation = useCallback((id: string) => selectConversation(id), [selectConversation]);
 
   const handleLoadMoreMessages = useCallback(async () => {
-    if (selectedConversationId) {
-      await loadMoreMessages(selectedConversationId);
-    }
+    if (selectedConversationId) await loadMoreMessages(selectedConversationId);
   }, [selectedConversationId, loadMoreMessages]);
 
-  const handleSendText = useCallback(async (text: string, mentions?: string[], replyToId?: string) => {
-    if (!selectedConversationId || !currentUser) return;
-    
-    if (replyToId) {
-      await storeReplyToMessage(selectedConversationId, currentUser.id, text, replyToId);
-    } else {
-      await sendTextMessage(selectedConversationId, currentUser.id, text, mentions);
-    }
-  }, [selectedConversationId, currentUser, sendTextMessage, storeReplyToMessage]);
-
-  const handleEditMessage = useCallback(async (messageId: string, text: string) => {
-    await editMessage(messageId, text);
-  }, [editMessage]);
-
-  const handleRecallMessage = useCallback(async (messageId: string) => {
-    if (!selectedConversationId) return;
-    await recallMessage(messageId, selectedConversationId);
-  }, [selectedConversationId, recallMessage]);
-
-  const handleDeleteForMe = useCallback(async (messageId: string) => {
-    if (!currentUser) return;
-    await deleteMessageForMe(messageId, currentUser.id);
-  }, [currentUser, deleteMessageForMe]);
-
-  const handleForwardMessage = useCallback((message: Message) => {
-    setForwardingMessage(message);
-  }, []);
-
-  const handleSendImage = useCallback(async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendImageMessage(selectedConversationId, currentUser.id, file);
-  }, [selectedConversationId, currentUser, sendImageMessage]);
-
-  const handleSendFile = useCallback(async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendFileMessage(selectedConversationId, currentUser.id, file);
-  }, [selectedConversationId, currentUser, sendFileMessage]);
-
-  const handleSendVideo = useCallback(async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendVideoMessage(selectedConversationId, currentUser.id, file);
-  }, [selectedConversationId, currentUser, sendVideoMessage]);
-
-  const handleSendVoice = useCallback(async (file: File) => {
-    if (!selectedConversationId || !currentUser) return;
-    await sendVoiceMessage(selectedConversationId, currentUser.id, file);
-  }, [selectedConversationId, currentUser, sendVoiceMessage]);
+  const handleForwardMessage = useCallback((message: Message) => setForwardingMessage(message), []);
 
   const handleTyping = useCallback(async (isTyping: boolean) => {
     if (!selectedConversationId || !currentUser) return;
@@ -315,174 +146,62 @@ export const useChat = (): UseChatReturn => {
     await searchConversations(currentUser.id, term);
   }, [currentUser, searchConversations]);
 
-  const handlePin = useCallback(async (id: string, pinned: boolean) => {
-    await togglePin(id, pinned);
-  }, [togglePin]);
-
-  const handleMute = useCallback(async (id: string, muted: boolean) => {
-    await toggleMute(id, muted);
-  }, [toggleMute]);
-
-  const handleDelete = useCallback(async (id: string) => {
-    await deleteConversation(id);
-    if (selectedConversationId === id) {
-      handleBackToList();
-    }
-  }, [deleteConversation, selectedConversationId, handleBackToList]);
-
-  const handleArchive = useCallback(async (id: string, archived: boolean) => {
-    await toggleArchive(id, archived);
-    if (archived && selectedConversationId === id) {
-      selectConversation(null);
-    }
-  }, [toggleArchive, selectedConversationId, selectConversation]);
-
-  const handleMarkUnread = useCallback(async (id: string, markedUnread: boolean) => {
-    await toggleMarkUnread(id, markedUnread);
-  }, [toggleMarkUnread]);
-
   const handleToggleBlock = useCallback(async () => {
-    if (!partnerId || !currentUser) return;
-    
-    if (isBlockedByMe) {
-      await userService.unblockUser(currentUser.id, partnerId);
-    } else {
-      await userService.blockUser(currentUser.id, partnerId);
-      selectConversation(null);
-    }
-  }, [partnerId, currentUser, isBlockedByMe, selectConversation]);
-
-  const handleCreateGroup = useCallback(async (memberIds: string[], groupName: string, groupAvatar?: string) => {
-    if (!currentUser) return;
-    await createGroup(currentUser.id, memberIds, groupName, groupAvatar);
-  }, [currentUser, createGroup]);
-
-  const handleAddMembers = useCallback(async (userIds: string[]) => {
-    if (!selectedConversationId) return;
-    for (const userId of userIds) {
-      await addMember(selectedConversationId, userId);
-    }
-  }, [selectedConversationId, addMember]);
-
-  const handleRemoveMember = useCallback(async (userId: string) => {
-    if (!selectedConversationId) return;
-    await removeMember(selectedConversationId, userId);
-  }, [selectedConversationId, removeMember]);
-
-  const handleLeaveGroup = useCallback(async (): Promise<{ needAssignAdmin: boolean }> => {
-    if (!selectedConversationId || !currentUser) return { needAssignAdmin: false };
-    
-    const conv = conversations.find(c => c.id === selectedConversationId);
-    
-    // Yêu cầu chỉ định admin khi chủ nhóm rời đi
-    if (conv?.isGroup && conv.creatorId === currentUser.id && conv.participantIds.length > 1) {
-      return { needAssignAdmin: true };
-    }
-
-    await leaveGroup(selectedConversationId, currentUser.id);
-    return { needAssignAdmin: false };
-  }, [selectedConversationId, currentUser, conversations, leaveGroup]);
-
-  const handleAssignAdminAndLeave = useCallback(async (newAdminId: string) => {
-    if (!selectedConversationId || !currentUser) return;
-    
-    await promoteToAdmin(selectedConversationId, newAdminId);
-    await leaveGroup(selectedConversationId, currentUser.id);
-  }, [selectedConversationId, currentUser, promoteToAdmin, leaveGroup]);
-
-  const handlePromoteToAdmin = useCallback(async (userId: string) => {
-    if (!selectedConversationId) return;
-    await promoteToAdmin(selectedConversationId, userId);
-  }, [selectedConversationId, promoteToAdmin]);
-
-  const handleDemoteFromAdmin = useCallback(async (userId: string) => {
-    if (!selectedConversationId) return;
-    await demoteFromAdmin(selectedConversationId, userId);
-  }, [selectedConversationId, demoteFromAdmin]);
-
-  const handleEditGroup = useCallback(async (updates: { groupName?: string; groupAvatar?: string }) => {
-    if (!selectedConversationId) return;
-    await updateGroupInfo(selectedConversationId, updates);
-  }, [selectedConversationId, updateGroupInfo]);
-
-  const forwardMessage = useCallback(async (conversationId: string, message: Message) => {
-    if (!currentUser) return;
-    await storeForwardMessage(conversationId, currentUser.id, message);
-  }, [currentUser, storeForwardMessage]);
-
-  const replyToMessage = useCallback(async (text: string, replyToId: string) => {
-    if (!selectedConversationId || !currentUser) return;
-    await storeReplyToMessage(selectedConversationId, currentUser.id, text, replyToId);
-  }, [selectedConversationId, currentUser, storeReplyToMessage]);
+    block.handleToggleBlock(selectConversation);
+  }, [block.handleToggleBlock, selectConversation]);
 
   return {
     currentUser,
     conversations,
     filteredConversations,
     selectedConversation,
+    selectedConversationId,
     currentMessages,
     currentTypingUsers,
     usersMap,
     archivedCount,
     isLoading,
     isRevalidating,
+    isLoadingMore,
+    hasMoreMessages,
     isSearchFocused,
     searchResults,
     searchHistory,
-    isBlocked,
-    isBlockedByMe,
-    partnerId,
     viewMode,
     setViewMode,
-    selectedConversationId,
-    handleSelectConversation,
-    handleBackToList,
-    handleLoadMoreMessages,
-    handlePin,
-    handleMute,
-    handleDelete,
-    handleArchive,
-    handleMarkUnread,
-    handleSendText,
-    handleSendImage,
-    handleSendFile,
-    handleSendVideo,
-    handleSendVoice,
-    handleEditMessage,
-    handleRecallMessage,
-    handleDeleteForMe,
-    handleForwardMessage,
-    handleTyping,
-    handleSearch,
-    handleMarkAllRead: async () => {
-      if (currentUser) await markAllAsRead(currentUser.id);
-    },
-    setSearchFocused,
-    addToSearchHistory,
-    removeFromSearchHistory,
-    clearSearchHistory,
-    getOrCreateConversation,
-    handleToggleBlock,
-    handleCreateGroup,
-    handleAddMembers,
-    handleRemoveMember,
-    handleLeaveGroup,
-    handleAssignAdminAndLeave,
-    handlePromoteToAdmin,
-    handleDemoteFromAdmin,
-    handleEditGroup,
-    forwardMessage,
-    replyToMessage,
-    getBlockedMessage,
-    blockedMessage: getBlockedMessage(),
     forwardingMessage,
     setForwardingMessage,
     replyingTo,
     setReplyingTo,
     editingMessage,
     setEditingMessage,
+    handleSelectConversation,
+    handleLoadMoreMessages,
+    handleForwardMessage,
+    handleTyping,
+    handleSearch,
+    handleToggleBlock,
+    setSearchFocused,
+    addToSearchHistory,
+    removeFromSearchHistory,
+    clearSearchHistory,
+    getOrCreateConversation,
     setIsChatVisible,
-    isLoadingMore,
-    hasMoreMessages
+
+    // Block
+    isBlocked: block.isBlocked,
+    isBlockedByMe: block.isBlockedByMe,
+    partnerId,
+    blockedMessage: block.blockedMessage,
+    getBlockedMessage: block.getBlockedMessage,
+
+    // Actions
+    ...actions,
+
+    // Messages
+    ...chatMessages,
+
+    // Groups
+    ...groups,
   };
 };

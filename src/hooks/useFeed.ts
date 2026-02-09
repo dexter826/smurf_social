@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, RefObject } from 'react';
+import { useEffect, useCallback, RefObject } from 'react';
 import { Post, User, Visibility } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';

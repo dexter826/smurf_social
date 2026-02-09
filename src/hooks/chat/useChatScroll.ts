@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Conversation, Message } from '../../types';
+import { Message } from '../../types';
 
 interface UseChatScrollProps {
   messages: Message[];
