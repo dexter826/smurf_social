@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { db } from '../../firebase/config';
-import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Globe, Users, Lock, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { Avatar, UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, Button, ReactionDisplay, ReactionSelector } from '../ui';
 import { Post, User, UserStatus, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { REACTION_LABELS, REACTIONS } from '../../constants';
+import { VisibilityBadge, TruncatedText } from './shared';
 
 interface PostItemProps {
   post: Post;
@@ -46,11 +47,6 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   };
 
   const threshold = 300;
-  const shouldTruncate = post.content.length > threshold;
-  
-  const displayContent = !shouldTruncate || isExpanded 
-    ? post.content 
-    : post.content.slice(0, threshold) + '...';
 
   return (
     <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-theme">
@@ -79,13 +75,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
                 {formatRelativeTime(post.createdAt)}
               </span>
               <span>•</span>
-              {post.visibility === 'public' ? (
-                <Globe size={12} title="Công khai" />
-              ) : post.visibility === 'friends' ? (
-                <Users size={12} title="Bạn bè" />
-              ) : (
-                <Lock size={12} title="Chỉ mình tôi" />
-              )}
+              <VisibilityBadge visibility={post.visibility} size={12} />
             </div>
           </div>
         </div>
@@ -120,20 +110,11 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         )}
       </div>
 
-      {/* Content */}
       <div 
         className="px-4 pb-3"
       >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
-          {displayContent}
-          {shouldTruncate && (
-            <span 
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm tracking-wider"
-            >
-              {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-            </span>
-          )}
+          <TruncatedText content={post.content} threshold={threshold} />
         </p>
       </div>
 

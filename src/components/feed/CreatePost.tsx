@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Image as ImageIcon, Video, Camera } from 'lucide-react';
-import { PostModal } from './PostModal';
-import { User } from '../../types';
+import { PostModal } from './modals/PostModal';
+import { User, Visibility } from '../../types';
 import { Avatar, Button, Skeleton } from '../ui';
 import { usePostStore } from '../../store/postStore';
 import { postService } from '../../services/postService';
@@ -33,7 +33,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
     content: string,
     images: string[],
     videos: string[],
-    visibility: 'public' | 'friends' | 'private',
+    visibility: Visibility,
     videoThumbnails?: Record<string, string>
   ) => {
     await createPost(currentUser.id, content, images, videos, visibility, videoThumbnails);
