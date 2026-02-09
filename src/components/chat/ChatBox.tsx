@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Message, User, Conversation } from '../../types';
-import { Spinner } from '../ui';
+import { Loading } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageRequestBanner } from './message/MessageRequestBanner';
 import { useChatScroll } from '../../hooks/chat/useChatScroll';
@@ -82,11 +82,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   // Tính toán tin nhắn cuối cùng mỗi người đã đọc
   const lastReadByMap = useMemo(() => {
     const map: Record<string, User[]> = {};
+    const reversed = [...messages].reverse();
     if (!conversation.isGroup && messages.length > 0) {
       const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
       const isFriend = partnerId && currentUserFriendIds.includes(partnerId);
       if (partnerId && isFriend) {
-        const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(partnerId));
+        const lastReadMsg = reversed.find(m => m.readBy?.includes(partnerId));
         if (lastReadMsg) {
           map[lastReadMsg.id] = [usersMap[partnerId]].filter(Boolean);
         }
@@ -94,7 +95,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     } else if (conversation.isGroup) {
       conversation.participantIds.forEach(uid => {
         if (uid === currentUserId) return;
-        const lastReadMsg = [...messages].reverse().find(m => m.readBy?.includes(uid));
+        const lastReadMsg = reversed.find(m => m.readBy?.includes(uid));
         if (lastReadMsg) {
           if (!map[lastReadMsg.id]) map[lastReadMsg.id] = [];
           if (usersMap[uid]) map[lastReadMsg.id].push(usersMap[uid]);
@@ -144,7 +145,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           <div className="space-y-4 px-4 py-4 min-h-full">
             {isLoadingMore && (
               <div className="flex justify-center py-2">
-                <Spinner size="sm" />
+                <Loading size="sm" />
               </div>
             )}
 

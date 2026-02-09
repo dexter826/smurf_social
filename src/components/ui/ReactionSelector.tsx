@@ -1,6 +1,6 @@
 import React from 'react';
 import { Ban } from 'lucide-react';
-import { REACTIONS, REACTION_LABELS } from '../../constants';
+import { REACTIONS } from '../../constants';
 
 interface ReactionSelectorProps {
   onSelect: (emoji: string) => void;

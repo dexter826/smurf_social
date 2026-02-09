@@ -13,6 +13,21 @@ interface AvatarProps {
   onClick?: () => void;
 }
 
+const sizeClasses = {
+  '2xs': 'w-[14px] h-[14px] text-[8px]',
+  xs: 'w-6 h-6 text-[10px]',
+  sm: 'w-8 h-8 text-xs',
+  md: 'w-10 h-10 text-sm',
+  lg: 'w-14 h-14 text-base',
+  xl: 'w-24 h-24 text-xl',
+  '2xl': 'w-32 h-32 text-2xl'
+};
+
+const statusColor = {
+  [UserStatus.ONLINE]: 'bg-status-online border-bg-primary',
+  [UserStatus.OFFLINE]: 'bg-status-offline border-bg-primary',
+};
+
 export const Avatar: React.FC<AvatarProps> = ({ 
   src, 
   name, 
@@ -23,21 +38,6 @@ export const Avatar: React.FC<AvatarProps> = ({
   members = [],
   onClick
 }) => {
-  const sizeClasses = {
-    '2xs': 'w-[14px] h-[14px] text-[8px]',
-    xs: 'w-6 h-6 text-[10px]',
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-14 h-14 text-base',
-    xl: 'w-24 h-24 text-xl',
-    '2xl': 'w-32 h-32 text-2xl'
-  };
-
-  const statusColor = {
-    [UserStatus.ONLINE]: 'bg-status-online border-bg-primary',
-    [UserStatus.OFFLINE]: 'bg-status-offline border-bg-primary',
-  };
-
   const renderContent = () => {
     // Ưu tiên ảnh
     if (src && src !== '/blank-avatar.png') {

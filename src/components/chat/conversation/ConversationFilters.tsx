@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../../ui';
 
-type FilterType = 'all' | 'group';
+export type FilterType = 'all' | 'group';
 
 interface ConversationFiltersProps {
   activeFilter: FilterType;

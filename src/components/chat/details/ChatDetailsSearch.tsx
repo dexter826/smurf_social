@@ -36,7 +36,8 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
   const highlightText = (text: string, term: string) => {
     if (!term.trim()) return text;
     
-    const parts = text.split(new RegExp(`(${term})`, 'gi'));
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
     return parts.map((part, i) => 
       part.toLowerCase() === term.toLowerCase() 
         ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-600/50 rounded px-0.5">{part}</mark>

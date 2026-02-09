@@ -5,7 +5,7 @@ import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
 import { useConversationGroups } from '../../../hooks/chat/useConversationGroups';
 import { ConversationHeader } from './ConversationHeader';
-import { ConversationFilters } from './ConversationFilters';
+import { ConversationFilters, FilterType } from './ConversationFilters';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -39,8 +39,6 @@ interface ConversationListProps {
   onClearHistory?: () => void;
   onMarkAllRead?: () => void;
 }
-
-type FilterType = 'all' | 'group';
 
 export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,

@@ -84,14 +84,14 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm flex items-center justify-center select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-[var(--z-overlay)] bg-black/95 backdrop-blur-sm flex items-center justify-center select-none animate-in fade-in duration-200"
       onClick={onClose}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {/* Controls */}
-      <div className="absolute top-4 right-4 z-[202]">
+      <div className="absolute top-4 right-4 z-[var(--z-dialog)]">
         <button 
            className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md border border-white/5"
            onClick={(e) => {
@@ -106,14 +106,14 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       {images.length > 1 && (
         <>
           <button
-            className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[201] transition-all active:scale-95"
+            className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all active:scale-95"
             onClick={handlePrev}
           >
             <ChevronLeft size={32} />
           </button>
           
           <button
-            className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[201] transition-all active:scale-95"
+            className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all active:scale-95"
             onClick={handleNext}
           >
             <ChevronRight size={32} />

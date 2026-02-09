@@ -87,13 +87,6 @@ const ChatPage: React.FC = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
-
-  // Skeleton khi chưa tải xong user
-  if (!currentUser) {
-    return <MessengerSkeleton />;
-  }
-
-  // Track friend request status
   const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
 
@@ -109,25 +102,26 @@ const ChatPage: React.FC = () => {
     };
   }, [currentUser?.id]);
 
-  // Tính trạng thái friend request cho partner hiện tại
   const friendRequestStatus = useMemo(() => {
-    if (!selectedConversation || selectedConversation.isGroup) return 'none';
+    if (!selectedConversation || selectedConversation.isGroup || !currentUser) return 'none';
     const partnerId = selectedConversation.participantIds.find(id => id !== currentUser.id);
     if (!partnerId) return 'none';
 
     if (sentRequests.some(r => r.receiverId === partnerId)) return 'sent';
     if (receivedRequests.some(r => r.senderId === partnerId)) return 'received';
     return 'none';
-  }, [selectedConversation, currentUser.id, sentRequests, receivedRequests]) as 'none' | 'sent' | 'received';
+  }, [selectedConversation, currentUser, sentRequests, receivedRequests]) as 'none' | 'sent' | 'received';
 
-  // Tìm request ID cho accept/reject
   const currentReceivedRequest = useMemo(() => {
-    if (!selectedConversation || selectedConversation.isGroup) return null;
+    if (!selectedConversation || selectedConversation.isGroup || !currentUser) return null;
     const partnerId = selectedConversation.participantIds.find(id => id !== currentUser.id);
     return receivedRequests.find(r => r.senderId === partnerId);
-  }, [selectedConversation, currentUser.id, receivedRequests]);
+  }, [selectedConversation, currentUser, receivedRequests]);
 
-  // Gửi lời mời kết bạn
+  if (!currentUser) {
+    return <MessengerSkeleton />;
+  }
+
   const handleSendFriendRequest = async (userId: string) => {
     try {
       await friendService.sendFriendRequest(currentUser.id, userId);
@@ -136,7 +130,6 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  // Chấp nhận lời mời kết bạn
   const handleAcceptFriendRequest = async (userId: string) => {
     const request = receivedRequests.find(r => r.senderId === userId);
     if (request) {
@@ -147,7 +140,6 @@ const ChatPage: React.FC = () => {
       }
     }
   };
-
 
   const handleBackToList = () => {
     handleSelectConversation(null);

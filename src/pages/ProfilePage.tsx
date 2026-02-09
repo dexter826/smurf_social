@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, Gender } from '../types';
 import { useAuthStore } from '../store/authStore';
-import { Spinner, Button, ConfirmDialog } from '../components/ui';
+import { Button, ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import { PostViewModal } from '../components/feed';
 import { usePostStore } from '../store/postStore';
@@ -12,8 +12,10 @@ import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { PostsTab } from '../components/profile/PostsTab';
 import { PhotosTab } from '../components/profile/PhotosTab';
 import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
-import { Video, User as UserIcon, Lock, AlertTriangle } from 'lucide-react';
+import { User as UserIcon, Lock } from 'lucide-react';
 import { useProfile } from '../hooks';
+
+type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover' | 'block';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -45,31 +47,18 @@ const ProfilePage: React.FC = () => {
   const { selectedPost, setSelectedPost } = usePostStore();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isConfirmUnfriendOpen, setIsConfirmUnfriendOpen] = useState(false);
-  const [isConfirmDeleteAvatarOpen, setIsConfirmDeleteAvatarOpen] = useState(false);
-  const [isConfirmDeleteCoverOpen, setIsConfirmDeleteCoverOpen] = useState(false);
-  const [isConfirmBlockOpen, setIsConfirmBlockOpen] = useState(false);
+  const [confirmType, setConfirmType] = useState<ConfirmType | null>(null);
 
   const onFriendActionClick = async () => {
     const { needConfirm } = await handleFriendAction();
-    if (needConfirm) {
-      setIsConfirmUnfriendOpen(true);
-    }
+    if (needConfirm) setConfirmType('unfriend');
   };
 
-  const onUnfriendConfirm = async () => {
-    await confirmUnfriend();
-    setIsConfirmUnfriendOpen(false);
-  };
-
-  const onAvatarDeleteClick = async () => {
-    await handleAvatarDelete();
-    setIsConfirmDeleteAvatarOpen(false);
-  };
-
-  const onCoverDeleteClick = async () => {
-    await handleCoverDelete();
-    setIsConfirmDeleteCoverOpen(false);
+  const confirmActions: Record<ConfirmType, () => Promise<void>> = {
+    unfriend: confirmUnfriend,
+    deleteAvatar: handleAvatarDelete,
+    deleteCover: handleCoverDelete,
+    block: handleBlockUser,
   };
 
   if (loading || !profile || !currentUser) {
@@ -77,6 +66,29 @@ const ProfilePage: React.FC = () => {
   }
 
   const isBannedProfile = profile.status === UserStatus.BANNED;
+
+  const confirmConfig: Record<ConfirmType, { title: string; message: string; confirmLabel: string }> = {
+    unfriend: {
+      title: CONFIRM_MESSAGES.FRIEND.UNFRIEND.TITLE,
+      message: CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(profile?.name || ''),
+      confirmLabel: CONFIRM_MESSAGES.FRIEND.UNFRIEND.CONFIRM,
+    },
+    deleteAvatar: {
+      title: CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.TITLE,
+      message: CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.MESSAGE,
+      confirmLabel: CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.CONFIRM,
+    },
+    deleteCover: {
+      title: CONFIRM_MESSAGES.MEDIA.DELETE_COVER.TITLE,
+      message: CONFIRM_MESSAGES.MEDIA.DELETE_COVER.MESSAGE,
+      confirmLabel: CONFIRM_MESSAGES.MEDIA.DELETE_COVER.CONFIRM,
+    },
+    block: {
+      title: CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE,
+      message: CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(profile?.name || ''),
+      confirmLabel: CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM,
+    },
+  };
 
   // Nếu là profile bị ban (và không phải chính mình), ẩn hoàn toàn
   if (isBannedProfile && !isOwnProfile) {
@@ -115,9 +127,9 @@ const ProfilePage: React.FC = () => {
           onFriendClick={onFriendActionClick}
           onAvatarChange={handleAvatarChange}
           onCoverChange={handleCoverChange}
-          onAvatarDelete={() => setIsConfirmDeleteAvatarOpen(true)}
-          onCoverDelete={() => setIsConfirmDeleteCoverOpen(true)}
-          onBlockClick={() => setIsConfirmBlockOpen(true)}
+          onAvatarDelete={() => setConfirmType('deleteAvatar')}
+          onCoverDelete={() => setConfirmType('deleteCover')}
+          onBlockClick={() => setConfirmType('block')}
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
           uploading={uploading}
@@ -249,48 +261,20 @@ const ProfilePage: React.FC = () => {
         onSave={handleSaveProfile}
       />
 
-      <ConfirmDialog
-        isOpen={isConfirmUnfriendOpen}
-        onClose={() => setIsConfirmUnfriendOpen(false)}
-        onConfirm={onUnfriendConfirm}
-        title={CONFIRM_MESSAGES.FRIEND.UNFRIEND.TITLE}
-        message={CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(profile?.name || '')}
-        confirmLabel={CONFIRM_MESSAGES.FRIEND.UNFRIEND.CONFIRM}
-        variant="danger"
-      />
-
-      <ConfirmDialog
-        isOpen={isConfirmDeleteAvatarOpen}
-        onClose={() => setIsConfirmDeleteAvatarOpen(false)}
-        onConfirm={onAvatarDeleteClick}
-        title={CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.TITLE}
-        message={CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.MESSAGE}
-        confirmLabel={CONFIRM_MESSAGES.MEDIA.DELETE_AVATAR.CONFIRM}
-        variant="danger"
-      />
-
-      <ConfirmDialog
-        isOpen={isConfirmDeleteCoverOpen}
-        onClose={() => setIsConfirmDeleteCoverOpen(false)}
-        onConfirm={onCoverDeleteClick}
-        title={CONFIRM_MESSAGES.MEDIA.DELETE_COVER.TITLE}
-        message={CONFIRM_MESSAGES.MEDIA.DELETE_COVER.MESSAGE}
-        confirmLabel={CONFIRM_MESSAGES.MEDIA.DELETE_COVER.CONFIRM}
-        variant="danger"
-      />
-
-      <ConfirmDialog
-        isOpen={isConfirmBlockOpen}
-        onClose={() => setIsConfirmBlockOpen(false)}
-        onConfirm={async () => {
-          await handleBlockUser();
-          setIsConfirmBlockOpen(false);
-        }}
-        title={CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE}
-        message={CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(profile?.name || '')}
-        confirmLabel={CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM}
-        variant="danger"
-      />
+      {confirmType && (
+        <ConfirmDialog
+          isOpen
+          onClose={() => setConfirmType(null)}
+          onConfirm={async () => {
+            await confirmActions[confirmType]();
+            setConfirmType(null);
+          }}
+          title={confirmConfig[confirmType].title}
+          message={confirmConfig[confirmType].message}
+          confirmLabel={confirmConfig[confirmType].confirmLabel}
+          variant="danger"
+        />
+      )}
 
       <PostViewModal
         isOpen={!!selectedPost}

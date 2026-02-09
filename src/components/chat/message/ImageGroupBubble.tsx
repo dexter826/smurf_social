@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { MoreVertical, Reply, Forward, RotateCcw, Trash2, Smile, X, Edit2, Check, CheckCheck } from 'lucide-react';
+import { Smile, Check, CheckCheck } from 'lucide-react';
 import { Message, User } from '../../../types';
 import { formatTimeOnly } from '../../../utils/dateUtils';
-import { Avatar, UserAvatar, ImageViewer, IconButton, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog } from '../../ui';
+import { Avatar, UserAvatar, ImageViewer, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog } from '../../ui';
 import { useChatStore } from '../../../store/chatStore';
+import { MessageActions } from './MessageActions';
 
 interface ImageGroupBubbleProps {
   messages: Message[];
@@ -111,7 +112,7 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
         <div className="w-8 flex-shrink-0 flex items-end">
           {showAvatar && (
             <UserAvatar 
-              userId={sender?.id!} 
+              userId={sender?.id ?? ''} 
               src={sender?.avatar} 
               size="sm" 
               showStatus={false} 
@@ -172,68 +173,21 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
             )}
           </div>
 
-          {/* Menu chức năng */}
-          <div 
-            className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}
-          >
-            <IconButton
-              ref={menuButtonRef}
-              onClick={toggleMenu}
-              icon={<MoreVertical size={14} />}
-              size="sm"
-            />
-
-            {showMenu && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowMenu(false)}
-                />
-                <div className={`absolute z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40 ${isMe ? 'right-0' : 'left-0'} ${
-                  menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-8'
-                }`}>
-                  <button
-                    onClick={() => {
-                      onReply?.(lastMsg);
-                      setShowMenu(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
-                  >
-                    <Reply size={14} /> Trả lời
-                  </button>
-                  <button
-                    onClick={() => {
-                      onForward?.(lastMsg);
-                      setShowMenu(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
-                  >
-                    <Forward size={14} /> Chuyển tiếp
-                  </button>
-                  {isMe && (
-                    <button
-                      onClick={() => {
-                        setShowRecallConfirm(true);
-                        setShowMenu(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-warning"
-                    >
-                      <RotateCcw size={14} /> Thu hồi
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      onDeleteForMe?.(lastMsg.id);
-                      setShowMenu(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-error"
-                  >
-                    <Trash2 size={14} /> Xóa phía tôi
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <MessageActions
+            message={lastMsg}
+            isMe={isMe}
+            canEdit={false}
+            showMenu={showMenu}
+            setShowMenu={setShowMenu}
+            menuPlacement={menuPlacement}
+            menuButtonRef={menuButtonRef}
+            toggleMenu={toggleMenu}
+            onReply={onReply}
+            onForward={onForward}
+            onEdit={onEdit}
+            setShowRecallConfirm={setShowRecallConfirm}
+            onDeleteForMe={onDeleteForMe}
+          />
         </div>
         
         {/* Thời gian & Trạng thái đọc */}

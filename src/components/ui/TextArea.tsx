@@ -27,6 +27,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
   ...props 
 }, ref) => {
   const innerRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
   useImperativeHandle(ref, () => innerRef.current!);
 
@@ -91,11 +92,11 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
               paddingRight: `calc(${rightElement ? '2rem' : '1rem'} + ${scrollbarWidth}px)`,
             }}
             ref={(el) => {
+              overlayRef.current = el;
               if (el && innerRef.current) {
                  el.scrollTop = innerRef.current.scrollTop;
               }
             }}
-            id={`${inputId}-overlay`}
           >
             {renderOverlay(value as string || '')}
           </div>
@@ -124,9 +125,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           value={value}
           onScroll={(e) => {
              const target = e.target as HTMLTextAreaElement;
-             const overlay = document.getElementById(`${inputId}-overlay`);
-             if (overlay) {
-               overlay.scrollTop = target.scrollTop;
+             if (overlayRef.current) {
+               overlayRef.current.scrollTop = target.scrollTop;
              }
              props.onScroll?.(e);
           }}

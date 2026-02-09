@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Lock, Volume2 } from 'lucide-react';
+import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2 } from 'lucide-react';
 import { Conversation, UserStatus } from '../../../types';
-import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar } from '../../ui';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
 import { MessageStatus } from '../message/MessageStatus';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
@@ -92,11 +92,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatInfo.name}
             </h3>
-            {!conversation.isGroup && partner?.status === UserStatus.BANNED && (
-              <span className="text-[10px] text-error bg-error/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0">
-                <Lock size={10} />
-              </span>
-            )}
+            {!conversation.isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="sm" />}
             {showMessageRequestBadge && isMessageRequest && (
               <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200 flex-shrink-0">
                 Tin nhắn chờ

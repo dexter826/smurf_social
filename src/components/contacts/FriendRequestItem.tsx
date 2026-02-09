@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, X, Clock } from 'lucide-react';
-import { Avatar, UserAvatar, Button } from '../ui';
+import { UserAvatar, Button } from '../ui';
 import { FriendRequest, User, UserStatus } from '../../types';
+import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface FriendRequestItemProps {
   request: FriendRequest;
@@ -31,18 +32,6 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
     }
   };
 
-  const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 60) return `${minutes} phút trước`;
-    if (hours < 24) return `${hours} giờ trước`;
-    return `${days} ngày trước`;
-  };
-
   return (
     <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
       <div className="flex items-center gap-3 flex-1">
@@ -66,7 +55,7 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
           )}
           <p className="text-xs text-text-tertiary mt-1 flex items-center gap-1">
             <Clock size={12} />
-            {formatTime(request.createdAt)}
+            {formatRelativeTime(request.createdAt)}
           </p>
         </div>
       </div>

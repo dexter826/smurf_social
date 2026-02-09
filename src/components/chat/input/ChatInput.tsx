@@ -8,6 +8,7 @@ import { ActionsMenu } from './ActionsMenu';
 import { useAudioRecorder } from '../../../hooks/chat/useAudioRecorder';
 import { useMentions } from '../../../hooks/chat/useMentions';
 import { toast } from '../../../store/toastStore';
+import { insertTextAtCursor } from '../../../utils/uiUtils';
 import { FILE_LIMITS } from '../../../constants/fileConfig';
 import { validateFileSize } from '../../../utils/fileUtils';
 import { Message, User } from '../../../types';
@@ -353,17 +354,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             rightElement={
               <EmojiPicker
                 onEmojiSelect={(emoji) => {
-                  const start = inputRef.current?.selectionStart || 0;
-                  const end = inputRef.current?.selectionEnd || 0;
-                  const newText = inputText.substring(0, start) + emoji + inputText.substring(end);
-                  setInputText(newText);
-                  setTimeout(() => {
-                    if (inputRef.current) {
-                      const newPos = start + emoji.length;
-                      inputRef.current.focus();
-                      inputRef.current.setSelectionRange(newPos, newPos);
-                    }
-                  }, 0);
+                  insertTextAtCursor(inputRef, inputText, emoji, setInputText);
                 }}
                 disabled={disabled || isSending}
                 buttonClassName="p-1.5 text-text-secondary hover:text-primary"

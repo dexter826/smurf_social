@@ -13,17 +13,14 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { ConfirmDialog, UserAvatar } from '../ui';
+import { useLogout } from '../../hooks/utils/useLogout';
 
 export const AdminLayout: React.FC = () => {
-  const { user, logout } = useAuthStore();
-  const { mode, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
+  const handleConfirmLogout = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
-  const handleConfirmLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const navItems = [
     { to: '/admin/reports', icon: Flag, label: 'Báo cáo vi phạm' },

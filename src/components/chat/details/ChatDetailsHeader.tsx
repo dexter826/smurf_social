@@ -1,7 +1,6 @@
 import React from 'react';
-import { Lock } from 'lucide-react';
 import { User, Conversation, UserStatus } from '../../../types';
-import { UserAvatar, Avatar, UserStatusText } from '../../ui';
+import { UserAvatar, Avatar, UserStatusText, BannedBadge } from '../../ui';
 
 interface ChatDetailsHeaderProps {
   conversation: Conversation;
@@ -24,7 +23,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
         <Avatar src={avatarSrc} name={displayName} size="xl" isGroup members={conversation.participants} />
       ) : (
         <UserAvatar 
-          userId={partner?.id!} 
+          userId={partner?.id ?? ''} 
           src={avatarSrc} 
           name={displayName} 
           size="xl" 
@@ -35,12 +34,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
       
       <h2 className="mt-4 text-lg font-bold text-text-primary text-center flex items-center gap-2">
         {displayName}
-        {!isGroup && partner?.status === UserStatus.BANNED && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-error/10 text-error">
-            <Lock size={12} />
-            Đã khóa
-          </span>
-        )}
+        {!isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="lg" />}
       </h2>
       
       {!isGroup && partner && (

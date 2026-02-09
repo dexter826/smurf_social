@@ -82,7 +82,7 @@ export const MessageList: React.FC<MessageListProps> = ({
       <div className="flex flex-col items-center justify-center h-full text-center">
         <div className="mb-4">
           <UserAvatar
-            userId={conversation.isGroup ? '' : partner?.id!}
+            userId={conversation.isGroup ? '' : partner?.id ?? ''}
             src={avatarSrc}
             name={chatName}
             size="xl"

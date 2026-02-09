@@ -9,10 +9,16 @@ import { useConnectionStatus } from '../../hooks/utils/useConnectionStatus';
 export const ConnectionStatus: React.FC = () => {
     const { isFullyConnected, isOnline, isConnected } = useConnectionStatus();
     const [showReconnected, setShowReconnected] = React.useState(false);
+    const wasDisconnected = React.useRef(false);
 
     React.useEffect(() => {
-        if (isFullyConnected && !showReconnected) {
-            // Hiển thị thông báo "Đã kết nối lại" trong 3 giây
+        if (!isFullyConnected) {
+            wasDisconnected.current = true;
+            setShowReconnected(false);
+            return;
+        }
+        if (wasDisconnected.current) {
+            wasDisconnected.current = false;
             setShowReconnected(true);
             const timer = setTimeout(() => setShowReconnected(false), 3000);
             return () => clearTimeout(timer);

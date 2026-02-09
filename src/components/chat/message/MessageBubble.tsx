@@ -1,10 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FileText, Download, MoreVertical, Trash2, Image as ImageIcon, X, 
-  Reply, Forward, RotateCcw, Edit2, CornerUpRight, Smile, 
-  Play, Pause, Mic, Video, Check, CheckCheck 
-} from 'lucide-react';
+import { X, Smile, Check, CheckCheck } from 'lucide-react';
 
 import { Message, User } from '../../../types';
 import { 
@@ -13,14 +9,10 @@ import {
   IconButton, 
   ReactionDisplay, 
   ReactionSelector, 
-  Spinner,
-  TextArea,
-  Button,
   Modal,
   UserStatusText,
   ConfirmDialog
 } from '../../ui';
-import { chatService } from '../../../services/chatService';
 import { useChatStore } from '../../../store/chatStore';
 import { TIME_LIMITS } from '../../../constants/appConfig';
 import { formatTimeOnly } from '../../../utils/dateUtils';
@@ -150,7 +142,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           <div className="w-8 flex-shrink-0 flex items-end">
             {showAvatar && (
               <UserAvatar 
-                userId={sender?.id!} 
+                userId={sender?.id ?? ''} 
                 src={sender?.avatar} 
                 size="sm" 
                 initialStatus={sender?.status} 

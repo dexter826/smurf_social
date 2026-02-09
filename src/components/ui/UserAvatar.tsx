@@ -8,7 +8,7 @@ interface UserAvatarProps {
   userId: string;
   src?: string;
   name?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   initialStatus?: UserStatus;
   className?: string;
   isGroup?: boolean;

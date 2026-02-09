@@ -6,6 +6,8 @@ import { UserAvatar, IconButton, Button, EmojiPicker, Loading } from '../../ui';
 import { validateFileSize } from '../../../utils/fileUtils';
 import { toast } from '../../../store/toastStore';
 import { commentSchema, CommentFormValues } from '../../../utils/validation';
+import { insertTextAtCursor } from '../../../utils/uiUtils';
+import { useAutoResizeTextarea } from '../../../hooks/utils';
 
 interface CommentInputProps {
   user: {
@@ -64,12 +66,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   }, [autoFocus]);
 
   // Adjust textarea height
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [formData.content]);
+  useAutoResizeTextarea(textareaRef, formData.content || '');
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -197,15 +194,9 @@ export const CommentInput: React.FC<CommentInputProps> = ({
               />
               <EmojiPicker
                 onEmojiSelect={(emoji) => {
-                  const start = textareaRef.current?.selectionStart || 0;
-                  const end = textareaRef.current?.selectionEnd || 0;
-                  const currentContent = formData.content || '';
-                  const newText = currentContent.substring(0, start) + emoji + currentContent.substring(end);
-                  setValue('content', newText, { shouldDirty: true });
-                  setTimeout(() => {
-                    textareaRef.current?.focus();
-                    textareaRef.current?.setSelectionRange(start + emoji.length, start + emoji.length);
-                  }, 0);
+                  insertTextAtCursor(textareaRef, formData.content || '', emoji, (newText) => {
+                    setValue('content', newText, { shouldDirty: true });
+                  });
                 }}
                 size={16}
                 disabled={isSubmitting || isUploading}
