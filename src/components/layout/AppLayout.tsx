@@ -12,17 +12,20 @@ import { useUserCache } from '../../store/userCacheStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationDropdown } from '../notifications/NotificationDropdown';
 import { CONFIRM_MESSAGES } from '../../constants';
+import { useUnreadCount } from '../../hooks/utils/useUnreadCount';
+import { useLogout } from '../../hooks/utils/useLogout';
 
 export const AppLayout: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
-  const { conversations, subscribeToConversations } = useChatStore();
+  const { subscribeToConversations } = useChatStore();
   const { receivedRequests, subscribeToRequests } = useContactStore();
-  const { initialize: initNotifications } = useNotificationStore();
+  const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
   
   const { selectedPost, setSelectedPost, isModalLoading, reactToPost } = usePostStore();
   const { users: usersMap, fetchUsers } = useUserCache();
 
+  const handleConfirmLogout = useLogout();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -46,17 +49,9 @@ export const AppLayout: React.FC = () => {
     }
   }, [selectedPost, usersMap, fetchUsers]);
 
-  const totalUnread = user ? conversations.reduce((total, conv) => {
-    const count = conv.unreadCount?.[user.id] || 0;
-    return total + (count > 0 || conv.markedUnread ? (count || 1) : 0);
-  }, 0) : 0;
+  const totalUnread = useUnreadCount();
 
   const hasNewRequests = receivedRequests.length > 0;
-
-  const handleConfirmLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const handlePostLike = async (postId: string) => {
     if (user) {
@@ -215,7 +210,7 @@ export const AppLayout: React.FC = () => {
           >
             <div className="relative">
               <Bell size={24} />
-              {useNotificationStore.getState().unreadCount > 0 && (
+              {unreadNotifications > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
               )}
             </div>

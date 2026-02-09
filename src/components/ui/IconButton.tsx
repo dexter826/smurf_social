@@ -13,6 +13,20 @@ interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
   size?: "sm" | "md" | "lg";
 }
 
+const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover outline-none focus:outline-none focus:ring-0 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
+
+const iconVariants = {
+  default: "text-text-secondary hover:text-text-primary",
+  primary: "text-primary hover:text-primary-hover",
+  danger: "text-error hover:text-error",
+};
+
+const iconButtonSizes = {
+  sm: "w-8 h-8",
+  md: "w-9 h-9",
+  lg: "w-10 h-10",
+};
+
 export const IconButton: React.FC<IconButtonProps> = ({
   icon,
   variant = "default",
@@ -21,23 +35,9 @@ export const IconButton: React.FC<IconButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover outline-none focus:outline-none focus:ring-0 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
-
-  const variants = {
-    default: "text-text-secondary hover:text-text-primary",
-    primary: "text-primary hover:text-primary-hover",
-    danger: "text-error hover:text-error",
-  };
-
-  const sizes = {
-    sm: "w-8 h-8",
-    md: "w-9 h-9",
-    lg: "w-10 h-10",
-  };
-
   return (
     <button
-      className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseStyle} ${iconVariants[variant]} ${iconButtonSizes[size]} ${className}`}
       disabled={disabled}
       {...props}
     >

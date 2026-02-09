@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Post, MessageType } from '../../types';
 import { postService } from '../../services/postService';
-import { Spinner, Skeleton } from '../ui';
+import { Skeleton } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Phone, Video, Info, ChevronLeft, Lock } from 'lucide-react';
+import { Phone, Video, Info, ChevronLeft } from 'lucide-react';
 import { Conversation, User, UserStatus } from '../../types';
-import { Avatar, UserAvatar, UserStatusText, IconButton, Button } from '../ui';
+import { Avatar, UserAvatar, UserStatusText, IconButton, Button, BannedBadge } from '../ui';
 
 interface ChatBoxHeaderProps {
   conversation: Conversation;
@@ -47,7 +47,7 @@ export const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({
             />
           ) : (
             <UserAvatar 
-              userId={partner?.id!} 
+              userId={partner?.id ?? ''} 
               src={avatarSrc} 
               name={chatName} 
               size="md" 
@@ -60,12 +60,7 @@ export const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <div className="flex items-center gap-1.5">
             <h2 className="text-sm font-bold text-text-primary truncate leading-tight">{chatName}</h2>
-            {!conversation.isGroup && partner && usersMap[partner.id]?.status === UserStatus.BANNED && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-error/10 text-error">
-                <Lock size={10} />
-                Đã khóa
-              </span>
-            )}
+            {!conversation.isGroup && partner && usersMap[partner.id]?.status === UserStatus.BANNED && <BannedBadge />}
           </div>
           {!conversation.isGroup && partner && (
             <UserStatusText 

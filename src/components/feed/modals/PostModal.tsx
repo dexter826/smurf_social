@@ -7,6 +7,8 @@ import { toast } from '../../../store/toastStore';
 import { validateFileSize } from '../../../utils/fileUtils';
 import { User, Post, Visibility } from '../../../types';
 import { postSchema, PostFormValues } from '../../../utils/validation';
+import { insertTextAtCursor } from '../../../utils/uiUtils';
+import { useAutoResizeTextarea } from '../../../hooks/utils';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -90,13 +92,7 @@ export const PostModal: React.FC<PostModalProps> = ({
     }
   }, [isOpen, isEdit, initialPost, initialFiles, reset]);
   
-  // Tự động điều chỉnh chiều cao textarea khi nội dung thay đổi
-  useEffect(() => {
-    if (isOpen && textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [formData.content, isOpen]);
+  useAutoResizeTextarea(textareaRef, formData.content || '', isOpen);
 
   const processFiles = (files: File[]) => {
     if (files.length === 0) return;
@@ -224,15 +220,9 @@ export const PostModal: React.FC<PostModalProps> = ({
                 <EmojiPicker
                   buttonClassName="hover:bg-bg-hover rounded-full group w-9 h-9 md:w-10 md:h-10 flex items-center justify-center"
                   onEmojiSelect={(emoji) => {
-                    const start = textareaRef.current?.selectionStart || 0;
-                    const end = textareaRef.current?.selectionEnd || 0;
-                    const currentContent = formData.content || '';
-                    const newText = currentContent.substring(0, start) + emoji + currentContent.substring(end);
-                    setValue('content', newText, { shouldDirty: true });
-                    setTimeout(() => {
-                      textareaRef.current?.focus();
-                      textareaRef.current?.setSelectionRange(start + emoji.length, start + emoji.length);
-                    }, 0);
+                    insertTextAtCursor(textareaRef, formData.content || '', emoji, (newText) => {
+                      setValue('content', newText, { shouldDirty: true });
+                    });
                   }}
                   disabled={isSubmitting || isUploading}
                   size={20}

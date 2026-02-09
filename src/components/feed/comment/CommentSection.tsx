@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { X, Lock } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button, ConfirmDialog, UploadProgress } from '../../ui';
 import { CONFIRM_MESSAGES } from '../../../constants';
 import { toast } from '../../../store/toastStore';
@@ -66,8 +65,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const replySubscriptionsRef = useRef<Record<string, () => void>>({});
   const commentRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  const navigate = useNavigate();
 
   const currentRootComments = rootComments[postId] || [];
   const currentHasMoreRoot = hasMoreRoot[postId] ?? false;

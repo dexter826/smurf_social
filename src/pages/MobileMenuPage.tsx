@@ -5,7 +5,6 @@ import {
   Settings, 
   Moon, 
   Sun, 
-  Flag, 
   LogOut, 
   ChevronRight,
   MessageCircle,
@@ -17,33 +16,25 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
-import { useChatStore } from '../store/chatStore';
 import { useContactStore } from '../store/contactStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { UserAvatar, ConfirmDialog, Button } from '../components/ui';
+import { useUnreadCount } from '../hooks/utils/useUnreadCount';
+import { useLogout } from '../hooks/utils/useLogout';
 
 export const MobileMenuPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
-  const { conversations } = useChatStore();
   const { receivedRequests } = useContactStore();
+  const handleConfirmLogout = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
   const isAdmin = user?.role === 'admin';
 
-  // Tính unread count 
-  const totalUnread = user ? conversations.reduce((total, conv) => {
-    const count = conv.unreadCount?.[user.id] || 0;
-    return total + (count > 0 || conv.markedUnread ? (count || 1) : 0);
-  }, 0) : 0;
+  const totalUnread = useUnreadCount();
   const hasNewRequests = receivedRequests.length > 0;
-  const unreadNotifications = useNotificationStore.getState().unreadCount;
-
-  const handleConfirmLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const unreadNotifications = useNotificationStore(state => state.unreadCount);
 
   // Bottom nav items
   const navItems = [

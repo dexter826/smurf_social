@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useClickOutside } from '../../hooks/utils';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -42,23 +43,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const isInsideContainer = containerRef.current?.contains(event.target as Node);
-      const isInsideDropdown = dropdownRef.current?.contains(event.target as Node);
-      
-      if (!isInsideContainer && !isInsideDropdown) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+  useClickOutside([containerRef, dropdownRef], () => setIsOpen(false), isOpen);
 
   const toggleOpen = () => {
     if (!disabled) setIsOpen(!isOpen);
@@ -341,7 +326,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       </div>
 
       {error && (
-        <p className="mt-0.5 ml-1 text-[11px] font-medium text-error animate-fade-in">
+        <p className="mt-0.5 ml-1 text-[11px] font-medium text-error flex items-center gap-1 animate-fade-in">
           {error}
         </p>
       )}

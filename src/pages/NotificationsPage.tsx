@@ -9,7 +9,7 @@ import { Button } from '../components/ui';
 const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { notifications, unreadCount, markAllAsRead, clearAllNotifications } = useNotificationStore();
+  const { notifications, unreadCount, markAllAsRead, clearAllNotifications, currentLimit, loadMore } = useNotificationStore();
 
   const handleMarkAllRead = () => {
     if (user) {
@@ -74,12 +74,12 @@ const NotificationsPage: React.FC = () => {
           <div className="bg-bg-primary md:rounded-2xl md:shadow-sm md:border md:border-border-light overflow-hidden">
             <NotificationList maxHeight="100%" />
             
-            {notifications.length >= useNotificationStore.getState().currentLimit && (
+            {notifications.length >= currentLimit && (
               <div className="p-4 border-t border-border-light flex justify-center bg-bg-primary">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => user && useNotificationStore.getState().loadMore(user.id)}
+                  onClick={() => user && loadMore(user.id)}
                   className="text-primary hover:bg-primary/5 font-bold py-2 px-6 tracking-widest"
                 >
                   Xem thêm thông báo cũ hơn

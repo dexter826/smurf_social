@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { useIsMobile } from '../../hooks/utils/useMediaQuery';
+import React, { useState, useRef } from 'react';
+import { useClickOutside } from '../../hooks/utils';
 
 interface DropdownItemProps {
   icon?: React.ReactNode;
@@ -69,18 +68,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     onOpenChange?.(newOpen);
   };
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        handleOpenChange(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  useClickOutside(containerRef, () => handleOpenChange(false), isOpen);
 
   return (
     <div className={`relative inline-block ${className}`} ref={containerRef}>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useClickOutside } from '../../hooks/utils';
 import { ChevronDown, Check } from 'lucide-react';
 
 interface SelectOption {
@@ -46,23 +47,7 @@ export const Select: React.FC<SelectProps> = ({
     }
   }, [isOpen, forceOpenUp]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const isInsideContainer = containerRef.current?.contains(event.target as Node);
-      const isInsideDropdown = dropdownRef.current?.contains(event.target as Node);
-      
-      if (!isInsideContainer && !isInsideDropdown) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+  useClickOutside([containerRef, dropdownRef], () => setIsOpen(false), isOpen);
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
@@ -136,7 +121,7 @@ export const Select: React.FC<SelectProps> = ({
       </div>
       
       {error && (
-        <p className="mt-0.5 ml-1 text-[11px] font-medium text-error animate-fade-in">
+        <p className="mt-0.5 ml-1 text-[11px] font-medium text-error flex items-center gap-1 animate-fade-in">
           {error}
         </p>
       )}
