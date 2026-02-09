@@ -41,8 +41,6 @@ export const usePostStore = create<PostState>()(
       lastDoc: null,
       abortController: null,
 
-      // ... (giữ nguyên các hàm khác)
-
       reset: () => {
         const { abortController } = get();
         if (abortController) abortController.abort();

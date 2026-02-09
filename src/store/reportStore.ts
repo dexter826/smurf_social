@@ -3,20 +3,17 @@ import { ReportType, ReportReason, Report } from '../types';
 import { reportService } from '../services/reportService';
 
 interface ReportState {
-  // Modal state
   isOpen: boolean;
-  targetType: ReportType | null;
-  targetId: string | null;
-  targetOwnerId: string | null;
-  
-  // Submission state
   isSubmitting: boolean;
   error: string | null;
-
-  // Admin state
   pendingCount: number;
   
-  // Actions
+  data: {
+    type: ReportType | null;
+    id: string | null;
+    ownerId: string | null;
+  };
+
   openReportModal: (type: ReportType, id: string, ownerId: string) => void;
   closeReportModal: () => void;
   submitReport: (
@@ -27,29 +24,20 @@ interface ReportState {
   ) => Promise<boolean>;
   resetState: () => void;
   fetchPendingCount: () => Promise<void>;
-  
-  data: {
-    type: ReportType | null;
-    id: string | null;
-    ownerId: string | null;
-  }
 }
+
+const initialData = { type: null, id: null, ownerId: null };
 
 export const useReportStore = create<ReportState>((set, get) => ({
   isOpen: false,
-  targetType: null,
-  targetId: null,
-  targetOwnerId: null,
   isSubmitting: false,
   error: null,
   pendingCount: 0,
+  data: initialData,
 
   openReportModal: (type, id, ownerId) => {
     set({
       isOpen: true,
-      targetType: type,
-      targetId: id,
-      targetOwnerId: ownerId,
       error: null,
       data: { type, id, ownerId }
     });
@@ -58,29 +46,20 @@ export const useReportStore = create<ReportState>((set, get) => ({
   closeReportModal: () => {
     set({
       isOpen: false,
-      targetType: null,
-      targetId: null,
-      targetOwnerId: null,
       error: null,
-      data: { type: null, id: null, ownerId: null }
+      data: initialData
     });
   },
 
-  data: {
-    type: null,
-    id: null,
-    ownerId: null
-  },
-
   submitReport: async (reporterId, reason, description, images) => {
-    const { targetType, targetId, targetOwnerId } = get();
+    const { data } = get();
+    const { type: targetType, id: targetId, ownerId: targetOwnerId } = data;
     
     if (!targetType || !targetId || !targetOwnerId) {
       set({ error: 'Thiếu thông tin báo cáo' });
       return false;
     }
 
-    // Không cho tự báo cáo chính mình
     if (reporterId === targetOwnerId) {
       set({ error: 'Không thể báo cáo chính mình' });
       return false;
@@ -89,7 +68,6 @@ export const useReportStore = create<ReportState>((set, get) => ({
     set({ isSubmitting: true, error: null });
 
     try {
-      // Kiểm tra đã báo cáo chưa
       const hasReported = await reportService.hasUserReported(
         reporterId, 
         targetType, 
@@ -101,7 +79,6 @@ export const useReportStore = create<ReportState>((set, get) => ({
         return false;
       }
 
-      // Tạo báo cáo mới
       await reportService.createReport({
         reporterId,
         targetType,
@@ -123,12 +100,9 @@ export const useReportStore = create<ReportState>((set, get) => ({
   resetState: () => {
     set({
       isOpen: false,
-      targetType: null,
-      targetId: null,
-      targetOwnerId: null,
       isSubmitting: false,
       error: null,
-      data: { type: null, id: null, ownerId: null }
+      data: initialData
     });
   },
 

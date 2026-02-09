@@ -2,6 +2,49 @@ import { create } from 'zustand';
 import { Comment } from '../types';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { commentService } from '../services/commentService';
+import { PAGINATION } from '../constants';
+
+type SortOrder = 'asc' | 'desc';
+
+const mergeOptimisticComments = (
+  existing: Comment[],
+  incoming: Comment[],
+  sortOrder: SortOrder
+): { merged: Comment[]; hasChanges: boolean } => {
+  const optimisticMatches = new Set<string>();
+  
+  const updated = existing.map(e => {
+    if (e.id.startsWith('temp-')) {
+      const match = incoming.find(c => 
+        c.userId === e.userId && 
+        c.content === e.content &&
+        Math.abs(c.createdAt.getTime() - e.createdAt.getTime()) < 30000
+      );
+      if (match) {
+        optimisticMatches.add(match.id);
+        return match;
+      }
+    }
+    return e;
+  });
+
+  const newItems = incoming.filter(c => 
+    !optimisticMatches.has(c.id) && 
+    !existing.some(e => e.id === c.id)
+  );
+
+  if (newItems.length === 0 && optimisticMatches.size === 0) {
+    return { merged: existing, hasChanges: false };
+  }
+
+  const merged = [...updated, ...newItems].sort((a, b) => 
+    sortOrder === 'desc' 
+      ? b.createdAt.getTime() - a.createdAt.getTime()
+      : a.createdAt.getTime() - b.createdAt.getTime()
+  );
+  
+  return { merged, hasChanges: true };
+};
 
 interface CommentState {
   rootComments: Record<string, Comment[]>;
@@ -64,7 +107,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
       const lastDoc = loadMore ? lastRootDoc[postId] : undefined;
-      const result = await commentService.getRootComments(postId, blockedUserIds, 5, lastDoc || undefined);
+      const result = await commentService.getRootComments(postId, blockedUserIds, PAGINATION.COMMENTS, lastDoc || undefined);
       
       if (loadMore) {
         get().addRootComments(postId, result.comments, result.lastDoc, result.hasMore);
@@ -85,7 +128,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
       const lastDoc = loadMore ? lastReplyDoc[postId]?.[parentId] : undefined;
-      const result = await commentService.getReplies(parentId, blockedUserIds, 3, lastDoc || undefined);
+      const result = await commentService.getReplies(parentId, blockedUserIds, PAGINATION.REPLIES, lastDoc || undefined);
       
       if (loadMore) {
         get().addReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
@@ -111,37 +154,9 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           
           if (action === 'add') {
             const existing = state.rootComments[postId] || [];
-            
-            // Xử lý trùng lặp với Optimistic UI
-            const optimisticMatches = new Set<string>();
-            const updatedExisting = existing.map(e => {
-              if (e.id.startsWith('temp-')) {
-                const match = comments.find(c => 
-                  c.userId === e.userId && 
-                  c.content === e.content &&
-                  Math.abs(c.createdAt.getTime() - e.createdAt.getTime()) < 30000
-                );
-                if (match) {
-                  optimisticMatches.add(match.id);
-                  return match;
-                }
-              }
-              return e;
-            });
-
-            const newComments = comments.filter(c => 
-              !optimisticMatches.has(c.id) && 
-              !existing.some(e => e.id === c.id)
-            );
-
-            if (newComments.length === 0 && optimisticMatches.size === 0) return {};
-
-            return { 
-              rootComments: { 
-                ...state.rootComments, 
-                [postId]: [...newComments, ...updatedExisting].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-              } 
-            };
+            const { merged, hasChanges } = mergeOptimisticComments(existing, comments, 'desc');
+            if (!hasChanges) return {};
+            return { rootComments: { ...state.rootComments, [postId]: merged } };
           }
           
           if (action === 'update') {
@@ -191,37 +206,12 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           }
 
           if (action === 'add') {
-            // Xử lý trùng lặp với Optimistic UI cho replies
-            const optimisticMatches = new Set<string>();
-            const updatedReplies = currentReplies.map(e => {
-              if (e.id.startsWith('temp-')) {
-                const match = replies.find(r => 
-                  r.userId === e.userId && 
-                  r.content === e.content &&
-                  Math.abs(r.createdAt.getTime() - e.createdAt.getTime()) < 30000
-                );
-                if (match) {
-                  optimisticMatches.add(match.id);
-                  return match;
-                }
-              }
-              return e;
-            });
-
-            const newReplies = replies.filter(r => 
-              !optimisticMatches.has(r.id) && 
-              !currentReplies.some(e => e.id === r.id)
-            );
-
-            if (newReplies.length === 0 && optimisticMatches.size === 0) return {};
-
+            const { merged, hasChanges } = mergeOptimisticComments(currentReplies, replies, 'asc');
+            if (!hasChanges) return {};
             return {
               replies: {
                 ...state.replies,
-                [postId]: { 
-                  ...postReplies, 
-                  [parentId]: [...updatedReplies, ...newReplies].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-                }
+                [postId]: { ...postReplies, [parentId]: merged }
               }
             };
           }
