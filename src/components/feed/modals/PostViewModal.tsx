@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Globe, Users, Lock, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
-import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton, ReactionSelector, ReactionDisplay } from '../ui';
-import { Post, User, ReportType } from '../../types';
-import { CommentSection } from './CommentSection';
-import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
-import { useReportStore } from '../../store/reportStore';
-import { REACTION_LABELS } from '../../constants';
+import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
+import { UserAvatar, IconButton, Button, Spinner, Modal, Dropdown, DropdownItem, Skeleton, ReactionSelector, ReactionDisplay } from '../../ui';
+import { Post, User, ReportType } from '../../../types';
+import { CommentSection } from '../comment/CommentSection';
+import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
+import { useReportStore } from '../../../store/reportStore';
+import { REACTION_LABELS } from '../../../constants';
+import { VisibilityBadge, TruncatedText } from '../shared';
 
 interface PostViewModalProps {
   post: Post | null;
@@ -232,13 +233,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     {formatRelativeTime(post.createdAt)}
                   </span>
                   <span className="opacity-40">•</span>
-                  {post.visibility === 'public' ? (
-                    <Globe size={13} title="Công khai" />
-                  ) : post.visibility === 'friends' ? (
-                    <Users size={13} title="Bạn bè" />
-                  ) : (
-                    <Lock size={13} title="Chỉ mình tôi" />
-                  )}
+                  <VisibilityBadge visibility={post.visibility} size={13} />
                 </div>
               </div>
             </div>
@@ -319,27 +314,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 {/* Noi dung van ban */}
                 <div className="px-5 md:px-6 py-4 pb-3">
                   <p className="text-text-primary whitespace-pre-line text-[15px] md:text-[16px] leading-[1.6]">
-                    {(() => {
-                      const threshold = 300;
-                      const shouldTruncate = post.content.length > threshold;
-                      const displayContent = !shouldTruncate || isExpanded 
-                        ? post.content 
-                        : post.content.slice(0, threshold) + '...';
-                      
-                      return (
-                        <>
-                          {displayContent}
-                      {shouldTruncate && (
-                        <span 
-                          onClick={() => setIsExpanded(!isExpanded)}
-                          className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-sm tracking-wider"
-                        >
-                          {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-                        </span>
-                      )}
-                        </>
-                      );
-                    })()}
+                    <TruncatedText content={post.content} threshold={300} />
                   </p>
                 </div>
 

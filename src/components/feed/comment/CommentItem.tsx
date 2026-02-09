@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Flag, PenTool } from 'lucide-react';
-import { UserAvatar } from '../ui';
+import { UserAvatar } from '../../ui';
 import { CommentInput } from './CommentInput';
-import { Comment, User, ReportType } from '../../types';
-import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
+import { Comment, User, ReportType } from '../../../types';
+import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
+import { TruncatedText } from '../shared';
 
 interface CommentItemProps {
   comment: Comment;
@@ -55,7 +56,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   onProfileClick,
   openReportModal
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   
   const author = users[comment.userId];
@@ -71,12 +71,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       navigate(`/profile/${comment.userId}`);
     }
   };
-
-  const threshold = 200;
-  const shouldTruncate = comment.content.length > threshold;
-  const displayContent = !shouldTruncate || isExpanded 
-    ? comment.content 
-    : comment.content.slice(0, threshold) + '...';
 
   return (
     <div className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
@@ -131,15 +125,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             ) : (
               <>
                 <div className="text-sm text-text-primary mt-1 break-words break-all leading-relaxed">
-                  {displayContent}
-                  {shouldTruncate && (
-                    <span 
-                      onClick={() => setIsExpanded(!isExpanded)}
-                      className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-[11px] tracking-wider"
-                    >
-                      {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-                    </span>
-                  )}
+                  <TruncatedText 
+                    content={comment.content} 
+                    threshold={200} 
+                    expandClassName="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-[11px] tracking-wider"
+                  />
                 </div>
                 {comment.image && (
                   <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
