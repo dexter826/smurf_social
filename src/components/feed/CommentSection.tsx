@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Flag, X, Lock, PenTool } from 'lucide-react';
-import { UserAvatar, Button, ConfirmDialog, UploadProgress } from '../ui';
+import { X, Lock } from 'lucide-react';
+import { Button, ConfirmDialog, UploadProgress } from '../ui';
 import { CONFIRM_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
-import { Comment, User, ReportType, UserStatus } from '../../types';
+import { Comment, User, ReportType } from '../../types';
 import { postService } from '../../services/postService';
 import { useCommentStore } from '../../store/commentStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { useReportStore } from '../../store/reportStore';
 import { CommentSkeleton } from './CommentSkeleton';
-import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { CommentInput } from './CommentInput';
-
+import { CommentItem } from './CommentItem';
 
 interface CommentSectionProps {
   postId: string;
@@ -49,8 +48,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     subscribeToReplies,
     addComment,
     updateComment,
-    deleteComment,
-    clearComments
+    deleteComment
   } = useCommentStore();
 
   const { users, fetchUsers } = useUserCache();
@@ -69,6 +67,22 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const replySubscriptionsRef = useRef<Record<string, () => void>>({});
   const commentRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const navigate = useNavigate();
+
+  const currentRootComments = rootComments[postId] || [];
+  const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
+  const isLoading = isLoadingPost(postId);
+  const blockedUserIds = currentUser.blockedUserIds || [];
+
+  // Lọc bình luận theo quyền riêng tư (chỉ xem của mình, tác giả, hoặc bạn bè)
+  const filteredRootComments = useMemo(() => 
+    currentRootComments.filter(c => 
+      c.userId === currentUser.id || 
+      c.userId === postOwnerId || 
+      currentUser.friendIds?.includes(c.userId)
+    ), [currentRootComments, currentUser.id, currentUser.friendIds, postOwnerId]
+  );
+
   // Cuộn tới ô nhập liệu khi active
   useEffect(() => {
     if (activeInputId && activeInputId !== 'root' && commentRefs.current[activeInputId]) {
@@ -81,18 +95,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }, [activeInputId]);
 
-  const navigate = useNavigate();
-
-  const currentRootComments = rootComments[postId] || [];
-  const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
-  const isLoading = isLoadingPost(postId);
-  const blockedUserIds = currentUser.blockedUserIds || [];
-
   // Reset input khi đổi bài viết
   useEffect(() => {
     resetInput();
     return () => {
-      // Dọn dẹp subscriptions khi unmount hoặc đổi post
       Object.values(replySubscriptionsRef.current).forEach(unsub => {
         if (typeof unsub === 'function') unsub();
       });
@@ -100,7 +106,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     };
   }, [postId]);
 
-  // Theo dõi bình luận gốc
   useEffect(() => {
     const unsubscribe = subscribeToComments(postId, blockedUserIds);
     return () => {
@@ -108,7 +113,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     };
   }, [postId, blockedUserIds.join(','), subscribeToComments]);
 
-  // Tải thông tin người dùng
   useEffect(() => {
     if (currentRootComments.length > 0) {
       const userIds = [...new Set(currentRootComments.map(c => c.userId))];
@@ -125,20 +129,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     
     setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
     try {
-      // Dùng subscription
       const unsubscribe = subscribeToReplies(postId, parentId, blockedUserIds);
       replySubscriptionsRef.current[parentId] = unsubscribe;
-
-      // Fetch user data sẽ được trigger bởi useEffect theo dõi replies store
     } finally {
       setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: false }));
     }
   };
 
-  // Tải thông tin người dùng cho phản hồi
   useEffect(() => {
     const postReplies = replies[postId] || {};
-    // Chúng ta lặp qua replies để fetch user info cho bất kỳ reply mới nào
     Object.keys(postReplies).forEach(async (parentId) => {
       const parentReplies = postReplies[parentId] || [];
       if (parentReplies.length > 0) {
@@ -209,16 +208,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  const formatSimplifiedTime = (date: Date) => {
-    return formatRelativeTime(date);
-  };
-
-
   const handleUploadMedia = async (file: File) => {
     setUploadProgress(0);
     try {
       const onProgress = (p: { progress: number }) => setUploadProgress(p.progress);
-      
       if (file.type.startsWith('image/')) {
         return await postService.uploadCommentImage(file, currentUser.id, onProgress);
       }
@@ -228,249 +221,65 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  interface CommentItemProps {
-    comment: Comment;
-    isReply?: boolean;
-    rootAuthorId?: string;
-  }
-
-  const CommentItem: React.FC<CommentItemProps> = ({ 
-    comment, 
-    isReply = false, 
-    rootAuthorId 
-  }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const author = users[comment.userId];
-    const commentReplies = replies[postId]?.[comment.id] || [];
-    const hasMoreR = hasMoreReply[postId]?.[comment.id];
-    const isLoadingR = isLoadingReplyMap[comment.id];
-    const isEditing = activeInputId === comment.id && inputMode === 'edit';
-    const isReplying = activeInputId === comment.id && inputMode === 'reply';
-
-    const handleProfileClick = () => {
-      if (comment.userId) {
-        onProfileClick?.();
-        navigate(`/profile/${comment.userId}`);
-      }
-    };
-
-    const threshold = 200;
-    const shouldTruncate = comment.content.length > threshold;
-    const displayContent = !shouldTruncate || isExpanded 
-      ? comment.content 
-      : comment.content.slice(0, threshold) + '...';
-
-    return (
-      <div 
-        ref={el => commentRefs.current[comment.id] = el}
-        className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}
-      >
-        <div className="flex gap-3">
-          <UserAvatar userId={comment.userId} src={author?.avatar} name={author?.name} size={isReply ? 'xs' : 'sm'} onClick={handleProfileClick} />
-          <div className="flex-1 min-w-0">
-            <div className={`
-              rounded-2xl px-4 py-2 inline-block max-w-full shadow-sm transition-all group
-              ${variant === 'cinema' ? 'bg-bg-secondary py-2.5' : 'bg-bg-secondary'}
-            `}>
-              <div className="flex items-center gap-1.5 mb-1.5 flex-nowrap overflow-hidden">
-                <h4
-                  className="font-bold text-[13px] text-text-primary whitespace-nowrap cursor-pointer hover:underline leading-none"
-                  onClick={handleProfileClick}
-                >
-                  {author?.name || 'Người dùng'}
-                </h4>
-                {comment.userId === postOwnerId && (
-                  <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 leading-none mt-[1px] flex items-center gap-0.5">
-                    <PenTool size={10} className="stroke-[2.5px]" />
-                    Tác giả
-                  </span>
-                )}
-                {isReply && comment.replyToUserId && users[comment.replyToUserId] && (comment.replyToUserId !== rootAuthorId || comment.replyToUserId === comment.userId) && (
-                  <>
-                    <ChevronRight size={12} className="text-text-tertiary flex-shrink-0 mx-0.5" />
-                    <h4
-                      className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline"
-                      onClick={() => {
-                        onProfileClick?.();
-                        navigate(`/profile/${comment.replyToUserId}`);
-                      }}
-                    >
-                      {users[comment.replyToUserId].name}
-                    </h4>
-                  </>
-                )}
-              </div>
-
-              {isEditing ? (
-                 <div className="mt-2 min-w-[200px] md:min-w-[300px]">
-                   <CommentInput
-                     user={currentUser}
-                     initialValue={comment.content}
-                     initialImage={comment.image}
-                     onSubmit={handleCommentSubmit}
-                     onCancel={resetInput}
-                     onUploadMedia={handleUploadMedia}
-                     autoFocus
-                   />
-                 </div>
-              ) : (
-                <>
-                  <div className="text-sm text-text-primary mt-1 break-words break-all leading-relaxed">
-                    {displayContent}
-                    {shouldTruncate && (
-                      <span 
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-[11px] tracking-wider"
-                      >
-                        {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-                      </span>
-                    )}
-                  </div>
-                  {comment.image && (
-                    <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
-                      <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {!isEditing && (
-              <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
-                <span title={formatDateTime(comment.createdAt)}>{formatRelativeTime(comment.createdAt)}</span>
-                <button onClick={() => handleReplyClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Trả lời</button>
-                {comment.userId === currentUser.id ? (
-                  <>
-                    <button onClick={() => handleEditClick(comment)} className="hover:text-primary transition-colors cursor-pointer">Chỉnh sửa</button>
-                    <button onClick={() => setCommentToDelete(comment)} className="text-error/70 hover:text-error transition-colors cursor-pointer">Xóa</button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.userId)}
-                    className="text-text-tertiary hover:text-error transition-colors cursor-pointer flex items-center gap-0.5"
-                  >
-                    <Flag size={10} /> Báo cáo
-                  </button>
-                )}
-              </div>
-            )}
-
-            {isReplying && (
-              <div className="mt-3 pl-2">
-                <CommentInput
-                  user={currentUser}
-                  placeholder={`Trả lời ${author?.name}...`}
-                  onSubmit={handleCommentSubmit}
-                  onCancel={resetInput}
-                  onUploadMedia={handleUploadMedia}
-                  autoFocus
-                />
-              </div>
-            )}
-
-            {!isReply && ((comment.replyCount || 0) > 0 || commentReplies.length > 0) && (
-              <div className="mt-2 pl-2 border-l-2 border-border-light ml-2">
-                {commentReplies.length === 0 ? (
-                  (comment.replyCount || 0) > 0 && (
-                    <button onClick={() => loadReplies(comment.id)} className="flex items-center gap-1.5 text-text-secondary hover:text-primary text-[12px] font-bold py-1 px-2">
-                      <ChevronDown size={14} className="stroke-[3px]" /> Xem {comment.replyCount} trả lời
-                    </button>
-                  )
-                ) : (
-                  (() => {
-                    const filteredReplies = commentReplies.filter(r => 
-                      r.userId === currentUser.id || 
-                      r.userId === postOwnerId || 
-                      currentUser.friendIds?.includes(r.userId)
-                    );
-                    return (
-                      <>
-                        <div className="space-y-1">
-                          {filteredReplies.map(reply => (
-                            <CommentItem 
-                              key={reply.id} 
-                              comment={reply} 
-                              isReply 
-                              rootAuthorId={comment.userId} 
-                            />
-                          ))}
-                        </div>
-                        {hasMoreR && (
-                          <button 
-                            onClick={() => loadReplies(comment.id)} 
-                            className="text-primary hover:underline text-[10px] font-bold ml-10 mt-2 tracking-wider transition-all" 
-                            disabled={isLoadingR}
-                          >
-                            {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}
-                          </button>
-                        )}
-                      </>
-                    );
-                  })()
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className={`flex flex-col min-h-0 transition-all duration-300 ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {header && <div className="bg-bg-primary">{header}</div>}
 
         <div className="pb-4">
-          {(() => {
-            const filteredRootComments = currentRootComments.filter(c => 
-              c.userId === currentUser.id || 
-              c.userId === postOwnerId || 
-              currentUser.friendIds?.includes(c.userId)
-            );
-
-            if (isLoading && filteredRootComments.length === 0) {
-              return <div className="px-4 py-4"><CommentSkeleton /></div>;
-            }
-
-            if (filteredRootComments.length === 0) {
-              return (
-                <div className="text-center py-10 px-6">
-                  <p className="text-text-secondary text-sm italic">
-                    {totalCommentCount > 0 
-                      ? `Có ${totalCommentCount} bình luận. Bạn chỉ xem được bình luận của bạn bè.`
-                      : 'Hãy là người đầu tiên bình luận!'}
-                  </p>
-                </div>
-              );
-            }
-
-            return (
-              <div className="flex flex-col">
-                {filteredRootComments.map(comment => (
+          {isLoading && filteredRootComments.length === 0 ? (
+            <div className="px-4 py-4"><CommentSkeleton /></div>
+          ) : filteredRootComments.length === 0 ? (
+            <div className="text-center py-10 px-6">
+              <p className="text-text-secondary text-sm italic">
+                {totalCommentCount > 0 
+                  ? `Có ${totalCommentCount} bình luận. Bạn chỉ xem được bình luận của bạn bè.`
+                  : 'Hãy là người đầu tiên bình luận!'}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {filteredRootComments.map(comment => (
+                <div key={comment.id} ref={el => commentRefs.current[comment.id] = el}>
                   <CommentItem 
-                    key={comment.id} 
-                    comment={comment} 
-                    isReply={false} 
-                    rootAuthorId={comment.userId} 
+                    comment={comment}
+                    postId={postId}
+                    currentUser={currentUser}
+                    users={users}
+                    replies={replies[postId] || {}}
+                    hasMoreReply={hasMoreReply[postId] || {}}
+                    isLoadingReplyMap={isLoadingReplyMap}
+                    variant={variant}
+                    postOwnerId={postOwnerId}
+                    activeInputId={activeInputId}
+                    inputMode={inputMode}
+                    handleReplyClick={handleReplyClick}
+                    handleEditClick={handleEditClick}
+                    handleCommentSubmit={handleCommentSubmit}
+                    handleDeleteClick={setCommentToDelete}
+                    handleUploadMedia={handleUploadMedia}
+                    loadReplies={loadReplies}
+                    resetInput={resetInput}
+                    onProfileClick={onProfileClick}
+                    openReportModal={openReportModal}
                   />
-                ))}
-                {currentHasMoreRoot && (
-                  <div className="px-6 py-4">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={loadMoreRootComments} 
-                      isLoading={isLoading} 
-                      className="text-primary w-full justify-start font-bold text-xs h-10 border-border-light hover:bg-bg-primary tracking-widest"
-                    >
-                      Xem thêm bình luận cũ...
-                    </Button>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+                </div>
+              ))}
+              {currentHasMoreRoot && (
+                <div className="px-6 py-4">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={loadMoreRootComments} 
+                    isLoading={isLoading} 
+                    className="text-primary w-full justify-start font-bold text-xs h-10 border-border-light hover:bg-bg-primary tracking-widest"
+                  >
+                    Xem thêm bình luận cũ...
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -515,7 +324,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         onClose={() => setCommentToDelete(null)}
         onConfirm={handleDeleteConfirm}
         title={CONFIRM_MESSAGES.FEED.DELETE_COMMENT.TITLE}
-        message={CONFIRM_MESSAGES.FEED.DELETE_COMMENT.MESSAGE(!!commentToDelete?.replyCount || !!replies[postId]?.[commentToDelete?.id || '']?.length)}
+        message={CONFIRM_MESSAGES.FEED.DELETE_COMMENT.MESSAGE(!!commentToDelete?.replyCount || !!(replies[postId]?.[commentToDelete?.id || '']?.length))}
         confirmLabel={CONFIRM_MESSAGES.FEED.DELETE_COMMENT.CONFIRM}
         variant="danger"
       />
