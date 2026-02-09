@@ -76,20 +76,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     const { user } = get();
-    if (user) {
-      await userService.updateUserStatus(user.id, UserStatus.OFFLINE);
+
+    try {
+      if (user) {
+        await userService.updateUserStatus(user.id, UserStatus.OFFLINE);
+      }
+
+      // Reset tất cả các store dữ liệu
+      useChatStore.getState().reset();
+      usePostStore.getState().reset();
+      useContactStore.getState().reset();
+      useNotificationStore.getState().reset();
+      useCommentStore.getState().reset();
+      useUserCache.getState().clear();
+
+      await authService.logout();
+      set({ user: null });
+    } catch (error) {
+      console.error("Lỗi logout:", error);
+      set({ user: null });
     }
-
-    // Reset tất cả các store dữ liệu
-    useChatStore.getState().reset();
-    usePostStore.getState().reset();
-    useContactStore.getState().reset();
-    useNotificationStore.getState().reset();
-    useCommentStore.getState().reset();
-    useUserCache.getState().clear();
-
-    await authService.logout();
-    set({ user: null });
   },
 
   resetPassword: async (email) => {

@@ -67,7 +67,7 @@ export const useFeed = (): UseFeedReturn => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.blockedUserIds?.length]);
 
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {

@@ -257,9 +257,9 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       postId,
       userId,
       content,
-      parentId: parentId || null,
-      replyToUserId: replyToUserId || null,
-      image: imageUrl || null,
+      parentId: parentId || undefined,
+      replyToUserId: replyToUserId || undefined,
+      image: imageUrl || undefined,
       createdAt: new Date(),
       likes: [],
       replyCount: 0

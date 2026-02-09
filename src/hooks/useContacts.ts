@@ -63,8 +63,6 @@ export const useContacts = (): UseContactsReturn => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Đồng bộ bạn bè và request
-  const friendIdsString = JSON.stringify(currentUser?.friendIds || []);
 
   useEffect(() => {
     if (!currentUser) return;
