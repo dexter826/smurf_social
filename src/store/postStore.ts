@@ -12,6 +12,7 @@ interface PostState {
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
+  isError: boolean;
 
   fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
@@ -40,6 +41,9 @@ export const usePostStore = create<PostState>()(
       hasMore: true,
       lastDoc: null,
       abortController: null,
+      isError: false,
+      selectedPost: null,
+      isModalLoading: false,
 
       reset: () => {
         const { abortController } = get();
@@ -52,32 +56,44 @@ export const usePostStore = create<PostState>()(
           hasMore: true,
           lastDoc: null,
           abortController: null,
+          isError: false,
           selectedPost: null,
           isModalLoading: false,
         });
       },
 
       fetchPosts: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], loadMore = false) => {
-        const { abortController: currentController, posts } = get();
+        const { abortController: currentController, posts, isLoading, isRevalidating } = get();
+        
+        // Chống race conditions
+        if (isLoading || isRevalidating) return;
+
         if (currentController) {
           currentController.abort();
         }
 
         const newController = new AbortController();
 
-        // Dùng Revalidating nếu đã có cache
+        // Dùng skeleton khi chưa có data
         const shouldRevalidate = posts.length > 0 && !loadMore;
 
         set({
           abortController: newController,
           isLoading: !shouldRevalidate,
-          isRevalidating: shouldRevalidate
+          isRevalidating: shouldRevalidate,
+          isError: false
         });
 
         const { lastDoc } = get();
 
         try {
-          const result = await postService.getFeed(currentUserId, friendIds, blockedUserIds, PAGINATION.FEED_POSTS, loadMore ? lastDoc || undefined : undefined);
+          const result = await postService.getFeed(
+            currentUserId, 
+            friendIds, 
+            blockedUserIds, 
+            PAGINATION.FEED_POSTS, 
+            loadMore ? lastDoc || undefined : undefined
+          );
 
           if (newController.signal.aborted) return;
 
@@ -87,13 +103,19 @@ export const usePostStore = create<PostState>()(
             hasMore: result.hasMore,
             isLoading: false,
             isRevalidating: false,
-            abortController: null
+            abortController: null,
+            isError: false
           });
         } catch (error: unknown) {
           const err = error as { name?: string };
           if (err.name === 'AbortError') return;
           console.error("Lỗi tải bài viết:", error);
-          set({ isLoading: false, isRevalidating: false, abortController: null });
+          set({ 
+            isLoading: false, 
+            isRevalidating: false, 
+            abortController: null,
+            isError: true 
+          });
         }
       },
 
@@ -252,9 +274,6 @@ export const usePostStore = create<PostState>()(
       setLoading: (loading: boolean) => set({ isLoading: loading }),
 
       clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true }),
-
-      selectedPost: null,
-      isModalLoading: false,
 
       setSelectedPost: (post: Post | null) => set({ selectedPost: post }),
 

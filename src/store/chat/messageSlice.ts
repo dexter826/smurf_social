@@ -150,12 +150,12 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     set((state) => ({ isLoadingMore: { ...state.isLoadingMore, [conversationId]: true } }));
 
     try {
-      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt);
+      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt) as any;
       
       set((state) => ({
         messages: { ...state.messages, [conversationId]: [...result.messages, ...(state.messages[conversationId] || [])] },
         lastMessageDocs: { ...state.lastMessageDocs, [conversationId]: result.lastDoc },
-        hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: result.messages.length >= LIMIT_PER_PAGE },
+        hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: result.hasMore },
         isLoadingMore: { ...state.isLoadingMore, [conversationId]: false }
       }));
     } catch (error) {

@@ -58,22 +58,20 @@ export const postService = {
         return { posts: [], lastDoc: null, hasMore: false };
       }
 
-      // Lọc blocked users khỏi danh sách bạn bè
+      // Loại bỏ người bị chặn
       const validFriendIds = friendIds.filter(id => !!id && !blockedUserIds.includes(id));
       
-      // Query 1: Lấy TẤT CẢ bài viết của owner
       let ownerQuery = query(
         collection(db, 'posts'),
         where('userId', '==', currentUserId),
         orderBy('createdAt', 'desc'),
-        limit(limitCount)
+        limit(limitCount + 1) 
       );
       if (lastDoc) ownerQuery = query(ownerQuery, startAfter(lastDoc));
       
       const ownerSnapshot = await getDocs(ownerQuery);
       const ownerPosts = ownerSnapshot.docs.map(convertDocToPost);
       
-      // Query 2: Lấy bài viết của bạn bè (CHỈ visibility='friends')
       let friendPosts: Post[] = [];
       let friendDocs: DocumentSnapshot[] = [];
       
@@ -87,7 +85,7 @@ export const postService = {
               where('userId', 'in', chunk),
               where('visibility', 'in', [Visibility.FRIENDS, Visibility.PUBLIC]),
               orderBy('createdAt', 'desc'),
-              limit(limitCount)
+              limit(limitCount + 1)
             );
             if (lastDoc) q = query(q, startAfter(lastDoc));
             
@@ -103,22 +101,20 @@ export const postService = {
         friendDocs = friendResults.flatMap(r => r.docs);
       }
 
-      // Merge và sort trước khi lọc
       const allPosts = [...ownerPosts, ...friendPosts];
       allPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-      // Lấy thông tin user để lọc banned
       const authorIds = [...new Set(allPosts.map(p => p.userId))];
       const usersMap = await batchGetUsers(authorIds);
       
       const filteredPosts = allPosts.filter(p => usersMap[p.userId]?.status !== UserStatus.BANNED);
       
+      const hasMore = filteredPosts.length > limitCount;
       const finalPosts = filteredPosts.slice(0, limitCount);
-      const allDocs = [...ownerSnapshot.docs, ...friendDocs];
       
+      const allDocs = [...ownerSnapshot.docs, ...friendDocs];
       const lastPost = finalPosts[finalPosts.length - 1];
       const lastVisible = lastPost ? allDocs.find(d => d.id === lastPost.id) || null : null;
-      const hasMore = allPosts.length > limitCount;
 
       return { posts: finalPosts, lastDoc: lastVisible, hasMore };
     } catch (error) {

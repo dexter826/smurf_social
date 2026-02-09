@@ -177,20 +177,19 @@ export const messageService = {
     );
   },
 
-  // Lấy thêm tin nhắn cũ (Phân trang)
   getMoreMessages: async (
     conversationId: string,
     lastVisibleDoc: DocumentSnapshot,
     limitCount: number,
     joinedAt?: Date,
-  ): Promise<{ messages: Message[]; lastDoc: DocumentSnapshot | null }> => {
+  ): Promise<{ messages: Message[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }> => {
     try {
       let q = query(
         collection(db, "messages"),
         where("conversationId", "==", conversationId),
         orderBy("createdAt", "desc"),
         startAfter(lastVisibleDoc),
-        limit(limitCount),
+        limit(limitCount + 1),
       );
 
       if (joinedAt) {
@@ -200,12 +199,15 @@ export const messageService = {
           where("createdAt", ">=", joinedAt),
           orderBy("createdAt", "desc"),
           startAfter(lastVisibleDoc),
-          limit(limitCount),
+          limit(limitCount + 1),
         );
       }
 
       const snapshot = await getDocs(q);
-      const messages = snapshot.docs
+      const hasMore = snapshot.docs.length > limitCount;
+      const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+
+      const messages = docsToProcess
         .map((doc) => {
           const data = doc.data();
           return {
@@ -220,8 +222,8 @@ export const messageService = {
         })
         .reverse() as Message[];
 
-      const lastDoc = snapshot.docs[snapshot.docs.length - 1];
-      return { messages, lastDoc };
+      const lastDoc = docsToProcess[docsToProcess.length - 1] || null;
+      return { messages, lastDoc, hasMore };
     } catch (error) {
       console.error("Lỗi lấy thêm tin nhắn", error);
       throw error;
