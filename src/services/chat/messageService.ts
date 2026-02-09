@@ -27,6 +27,104 @@ import { TIME_LIMITS } from "../../constants";
 import { compressImage, withRetry } from "../../utils/imageUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
 
+// Đồng bộ trạng thái hội thoại và đếm tin nhắn mới.
+async function updateConversationAfterMessage(
+  conversationId: string,
+  senderId: string,
+  messageData: Partial<Message>,
+  displayContent: string,
+  messageId?: string,
+): Promise<void> {
+  const conversationRef = doc(db, "conversations", conversationId);
+  const conversationSnap = await getDoc(conversationRef);
+
+  if (conversationSnap.exists()) {
+    const participantIds = conversationSnap.data().participantIds || [];
+    const unreadCount = conversationSnap.data().unreadCount || {};
+
+    participantIds.forEach((pid: string) => {
+      if (pid !== senderId) {
+        unreadCount[pid] = (unreadCount[pid] || 0) + 1;
+      }
+    });
+
+    await updateDoc(conversationRef, {
+      lastMessage: {
+        ...messageData,
+        id: messageId,
+        createdAt: new Date(),
+        content: displayContent,
+      },
+      unreadCount,
+      updatedAt: serverTimestamp(),
+      deletedBy: []
+    });
+  }
+}
+
+// Xử lý tải lên và gửi tin nhắn đa phương tiện.
+async function createAndSendMediaMessage(
+  conversationId: string,
+  senderId: string,
+  file: File,
+  type: MessageType,
+  options: {
+    replyToId?: string;
+    onProgress?: ProgressCallback;
+    compress?: boolean;
+    displayContent: string;
+  }
+): Promise<void> {
+  let uploadFile: File = file;
+  
+  // Compress ảnh nếu cần
+  if (options.compress && type === MessageType.IMAGE) {
+    uploadFile = await compressImage(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1920 });
+  }
+  
+  const createdAt = Date.now();
+  const path = `chats/${conversationId}/${createdAt}_${file.name}`;
+  
+  const fileUrl = await withRetry(() => 
+    uploadWithProgress(path, uploadFile, options.onProgress)
+  );
+
+  const messageData: Partial<Message> = {
+    conversationId,
+    senderId,
+    content: type === MessageType.FILE ? file.name : fileUrl,
+    type,
+    fileUrl,
+    createdAt: serverTimestamp() as unknown as Date,
+    readBy: [senderId],
+    deliveredTo: [senderId],
+    deliveredAt: serverTimestamp() as unknown as Date,
+  };
+
+  // Thêm metadata theo loại
+  if (type === MessageType.FILE) {
+    messageData.fileName = file.name;
+    messageData.fileSize = file.size;
+  }
+  if (type === MessageType.VIDEO) {
+    const thumbnailUrl = fileUrl.replace(/\.[^/.]+$/, ".jpg");
+    messageData.videoThumbnails = { [fileUrl]: thumbnailUrl };
+  }
+  if (options.replyToId) {
+    messageData.replyToId = options.replyToId;
+  }
+
+  const docRef = await addDoc(collection(db, "messages"), messageData);
+  
+  await updateConversationAfterMessage(
+    conversationId,
+    senderId,
+    messageData,
+    options.displayContent,
+    docRef.id
+  );
+}
+
 export const messageService = {
   // Đăng ký nhận tin nhắn thời gian thực với giới hạn số lượng
   subscribeToMessages: (
@@ -197,56 +295,12 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      // Compress ảnh trước khi upload
-      const compressedFile = await compressImage(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1920 });
-      
-      const createdAt = Date.now();
-      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
-      
-      const imageUrl = await withRetry(() => 
-        uploadWithProgress(path, compressedFile, onProgress)
-      );
-
-      const messageData: Partial<Message> = {
-        conversationId,
-        senderId,
-        content: imageUrl,
-        type: MessageType.IMAGE,
-        fileUrl: imageUrl,
-        createdAt: serverTimestamp() as unknown as Date,
-        readBy: [senderId],
-        deliveredTo: [senderId],
-        deliveredAt: serverTimestamp() as unknown as Date,
-      };
-
-      if (replyToId) messageData.replyToId = replyToId;
-
-      await addDoc(collection(db, "messages"), messageData);
-
-      const conversationRef = doc(db, "conversations", conversationId);
-      const conversationSnap = await getDoc(conversationRef);
-
-      if (conversationSnap.exists()) {
-        const participantIds = conversationSnap.data().participantIds || [];
-        const unreadCount = conversationSnap.data().unreadCount || {};
-
-        participantIds.forEach((pid: string) => {
-          if (pid !== senderId) {
-            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
-          }
-        });
-
-        await updateDoc(conversationRef, {
-          lastMessage: {
-            ...messageData,
-            createdAt: new Date(),
-            content: "Hình ảnh",
-          },
-          unreadCount,
-          updatedAt: serverTimestamp(),
-          deletedBy: []
-        });
-      }
+      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.IMAGE, {
+        replyToId,
+        onProgress,
+        compress: true,
+        displayContent: "Hình ảnh"
+      });
     } catch (error) {
       console.error("Lỗi gửi ảnh", error);
       throw error;
@@ -262,55 +316,11 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      const createdAt = Date.now();
-      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
-      
-      const fileUrl = await withRetry(() => 
-        uploadWithProgress(path, file, onProgress)
-      );
-
-      const messageData: Partial<Message> = {
-        conversationId,
-        senderId,
-        content: file.name,
-        type: MessageType.FILE,
-        fileUrl,
-        fileName: file.name,
-        fileSize: file.size,
-        createdAt: serverTimestamp() as unknown as Date,
-        readBy: [senderId],
-        deliveredTo: [senderId],
-        deliveredAt: serverTimestamp() as unknown as Date,
-      };
-
-      if (replyToId) messageData.replyToId = replyToId;
-
-      await addDoc(collection(db, "messages"), messageData);
-
-      const conversationRef = doc(db, "conversations", conversationId);
-      const conversationSnap = await getDoc(conversationRef);
-
-      if (conversationSnap.exists()) {
-        const participantIds = conversationSnap.data().participantIds || [];
-        const unreadCount = conversationSnap.data().unreadCount || {};
-
-        participantIds.forEach((pid: string) => {
-          if (pid !== senderId) {
-            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
-          }
-        });
-
-        await updateDoc(conversationRef, {
-          lastMessage: {
-            ...messageData,
-            createdAt: new Date(),
-            content: file.name,
-          },
-          unreadCount,
-          updatedAt: serverTimestamp(),
-          deletedBy: []
-        });
-      }
+      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.FILE, {
+        replyToId,
+        onProgress,
+        displayContent: file.name
+      });
     } catch (error) {
       console.error("Lỗi gửi file", error);
       throw error;
@@ -326,56 +336,11 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      const createdAt = Date.now();
-      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
-      
-      const videoUrl = await withRetry(() => 
-        uploadWithProgress(path, file, onProgress)
-      );
-
-      const thumbnailUrl = videoUrl.replace(/\.[^/.]+$/, ".jpg");
-
-      const messageData: Partial<Message> = {
-        conversationId,
-        senderId,
-        content: videoUrl,
-        type: MessageType.VIDEO,
-        fileUrl: videoUrl,
-        createdAt: serverTimestamp() as unknown as Date,
-        readBy: [senderId],
-        deliveredTo: [senderId],
-        deliveredAt: serverTimestamp() as unknown as Date,
-      };
-
-      if (thumbnailUrl) messageData.videoThumbnails = { [videoUrl]: thumbnailUrl };
-      if (replyToId) messageData.replyToId = replyToId;
-
-      await addDoc(collection(db, "messages"), messageData);
-
-      const conversationRef = doc(db, "conversations", conversationId);
-      const conversationSnap = await getDoc(conversationRef);
-
-      if (conversationSnap.exists()) {
-        const participantIds = conversationSnap.data().participantIds || [];
-        const unreadCount = conversationSnap.data().unreadCount || {};
-
-        participantIds.forEach((pid: string) => {
-          if (pid !== senderId) {
-            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
-          }
-        });
-
-        await updateDoc(conversationRef, {
-          lastMessage: {
-            ...messageData,
-            createdAt: new Date(),
-            content: "Video",
-          },
-          unreadCount,
-          updatedAt: serverTimestamp(),
-          deletedBy: []
-        });
-      }
+      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VIDEO, {
+        replyToId,
+        onProgress,
+        displayContent: "Video"
+      });
     } catch (error) {
       console.error("Lỗi gửi video", error);
       throw error;
@@ -391,53 +356,11 @@ export const messageService = {
     onProgress?: ProgressCallback,
   ): Promise<void> => {
     try {
-      const createdAt = Date.now();
-      const path = `chats/${conversationId}/${createdAt}_${file.name}`;
-      
-      const voiceUrl = await withRetry(() => 
-        uploadWithProgress(path, file, onProgress)
-      );
-
-      const messageData: Partial<Message> = {
-        conversationId,
-        senderId,
-        content: voiceUrl,
-        type: MessageType.VOICE,
-        fileUrl: voiceUrl,
-        createdAt: serverTimestamp() as unknown as Date,
-        readBy: [senderId],
-        deliveredTo: [senderId],
-        deliveredAt: serverTimestamp() as unknown as Date,
-      };
-
-      if (replyToId) messageData.replyToId = replyToId;
-
-      await addDoc(collection(db, "messages"), messageData);
-
-      const conversationRef = doc(db, "conversations", conversationId);
-      const conversationSnap = await getDoc(conversationRef);
-
-      if (conversationSnap.exists()) {
-        const participantIds = conversationSnap.data().participantIds || [];
-        const unreadCount = conversationSnap.data().unreadCount || {};
-
-        participantIds.forEach((pid: string) => {
-          if (pid !== senderId) {
-            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
-          }
-        });
-
-        await updateDoc(conversationRef, {
-          lastMessage: {
-            ...messageData,
-            createdAt: new Date(),
-            content: "Tin nhắn thoại",
-          },
-          unreadCount,
-          updatedAt: serverTimestamp(),
-          deletedBy: []
-        });
-      }
+      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VOICE, {
+        replyToId,
+        onProgress,
+        displayContent: "Tin nhắn thoại"
+      });
     } catch (error) {
       console.error("Lỗi gửi voice", error);
       throw error;

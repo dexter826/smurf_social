@@ -29,6 +29,27 @@ import { notificationService } from './notificationService';
 import { compressImage, isImageFile, withRetry } from '../utils/imageUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 
+// Định dạng dữ liệu Firestore thành Post object.
+function convertDocToPost(doc: DocumentSnapshot): Post {
+  const data = doc.data();
+  return {
+    ...data,
+    id: doc.id,
+    createdAt: data?.createdAt?.toDate() || new Date(),
+    editedAt: data?.editedAt?.toDate(),
+  } as Post;
+}
+
+// Tính toán quyền xem dựa trên quan hệ người dùng.
+function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] {
+  if (isOwner) {
+    return [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
+  } else if (isFriend) {
+    return [Visibility.PUBLIC, Visibility.FRIENDS];
+  }
+  return [Visibility.PUBLIC];
+}
+
 export const postService = {
   getFeed: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
     try {
@@ -50,12 +71,7 @@ export const postService = {
       if (lastDoc) ownerQuery = query(ownerQuery, startAfter(lastDoc));
       
       const ownerSnapshot = await getDocs(ownerQuery);
-      const ownerPosts = ownerSnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        editedAt: doc.data().editedAt?.toDate(),
-      })) as Post[];
+      const ownerPosts = ownerSnapshot.docs.map(convertDocToPost);
       
       // Query 2: Lấy bài viết của bạn bè (CHỈ visibility='friends')
       let friendPosts: Post[] = [];
@@ -78,12 +94,7 @@ export const postService = {
             const snapshot = await getDocs(q);
             return {
               docs: snapshot.docs,
-              posts: snapshot.docs.map(doc => ({
-                ...doc.data(),
-                id: doc.id,
-                createdAt: doc.data().createdAt?.toDate() || new Date(),
-                editedAt: doc.data().editedAt?.toDate(),
-              })) as Post[]
+              posts: snapshot.docs.map(convertDocToPost)
             };
           })
         );
@@ -135,12 +146,7 @@ export const postService = {
     let isInitialLoad = true;
     let allCurrentPosts: Post[] = [];
 
-    const convertDocToPost = (doc: DocumentSnapshot): Post => ({
-      ...doc.data(),
-      id: doc.id,
-      createdAt: doc.data()?.createdAt?.toDate() || new Date(),
-      editedAt: doc.data()?.editedAt?.toDate(),
-    } as Post);
+    // Sử dụng helper convertDocToPost đã định nghĩa ở đầu file
 
     // Query 1: Posts của owner
     const ownerQuery = query(
@@ -224,16 +230,7 @@ export const postService = {
     try {
       const isOwner = userId === currentUserId;
       const isFriend = friendIds?.includes(userId) || false;
-
-      // Owner xem tất cả, friend xem public+friends, stranger chỉ xem public
-      let visibilityFilter: string[];
-      if (isOwner) {
-        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
-      } else if (isFriend) {
-        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS];
-      } else {
-        visibilityFilter = [Visibility.PUBLIC];
-      }
+      const visibilityFilter = getVisibilityFilter(isOwner, isFriend);
 
       let q = query(
         collection(db, 'posts'),
@@ -253,12 +250,7 @@ export const postService = {
       }
 
       const querySnapshot = await getDocs(q);
-      const posts = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        editedAt: doc.data().editedAt?.toDate(),
-      })) as Post[];
+      const posts = querySnapshot.docs.map(convertDocToPost);
 
       const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
 
@@ -272,16 +264,7 @@ export const postService = {
   subscribeToUserPosts: (userId: string, currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.USER_POSTS) => {
     const isOwner = userId === currentUserId;
     const isFriend = friendIds?.includes(userId) || false;
-
-    // Owner xem tất cả, friend xem public+friends, stranger chỉ xem public
-    let visibilityFilter: string[];
-    if (isOwner) {
-      visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
-    } else if (isFriend) {
-      visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS];
-    } else {
-      visibilityFilter = [Visibility.PUBLIC];
-    }
+    const visibilityFilter = getVisibilityFilter(isOwner, isFriend);
 
     const q = query(
       collection(db, 'posts'),
@@ -301,12 +284,7 @@ export const postService = {
       }
 
       unsubscribe = onSnapshot(q, (snapshot) => {
-        const posts = snapshot.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id,
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-          editedAt: doc.data().editedAt?.toDate(),
-        })) as Post[];
+        const posts = snapshot.docs.map(convertDocToPost);
 
         callback(posts);
       }, (error) => {

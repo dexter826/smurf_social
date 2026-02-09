@@ -27,6 +27,16 @@ import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 import { batchGetUsers } from '../utils/batchUtils';
 
+// Định dạng dữ liệu Firestore thành Comment object.
+function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<DocumentData>): Comment {
+  const data = docSnap.data();
+  return {
+    ...data,
+    id: docSnap.id,
+    createdAt: data?.createdAt?.toDate() || new Date(),
+  } as Comment;
+}
+
 export const commentService = {
   // Lấy bình luận gốc
   getRootComments: async (postId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
@@ -51,11 +61,7 @@ export const commentService = {
       const usersMap = await batchGetUsers(authorIds);
 
       const comments = docsToProcess
-        .map(doc => ({
-          ...doc.data(),
-          id: doc.id,
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        }) as Comment)
+        .map(convertDocToComment)
         .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
 
       return {
@@ -91,11 +97,7 @@ export const commentService = {
       const usersMap = await batchGetUsers(authorIds);
 
       const replies = docsToProcess
-        .map(doc => ({
-          ...doc.data(),
-          id: doc.id,
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        }) as Comment)
+        .map(convertDocToComment)
         .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
 
       return {
@@ -310,11 +312,7 @@ export const commentService = {
     callback: (action: 'initial' | 'add' | 'update' | 'remove', comments: Comment[]) => void,
     limitCount: number = PAGINATION.COMMENTS
   ) => {
-    const convertDocToComment = (docSnap: DocumentSnapshot): Comment => ({
-      ...docSnap.data(),
-      id: docSnap.id,
-      createdAt: docSnap.data()?.createdAt?.toDate() || new Date(),
-    } as Comment);
+    // Sử dụng helper convertDocToComment đã định nghĩa ở đầu file
 
     const rootQuery = query(
       collection(db, 'comments'),
@@ -363,11 +361,7 @@ export const commentService = {
     callback: (action: 'initial' | 'add' | 'update' | 'remove', replies: Comment[]) => void,
     limitCount: number = PAGINATION.REPLIES
   ) => {
-    const convertDocToComment = (docSnap: DocumentSnapshot): Comment => ({
-      ...docSnap.data(),
-      id: docSnap.id,
-      createdAt: docSnap.data()?.createdAt?.toDate() || new Date(),
-    } as Comment);
+    // Sử dụng helper convertDocToComment đã định nghĩa ở đầu file
 
     const q = query(
       collection(db, 'comments'),
