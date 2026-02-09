@@ -42,7 +42,7 @@ export const useProfileMedia = ({
       useUserCache.getState().setUser(updatedProfile);
 
       if (currentUser) {
-        useAuthStore.setState({ user: { ...currentUser, avatar: newAvatarUrl } });
+        useAuthStore.getState().updateAvatar(newAvatarUrl);
       }
     } catch (error) {
       console.error("Lỗi upload avatar", error);
@@ -89,7 +89,7 @@ export const useProfileMedia = ({
       useUserCache.getState().setUser(updatedProfile);
 
       if (currentUser) {
-        useAuthStore.setState({ user: { ...currentUser, avatar: '' } });
+        useAuthStore.getState().updateAvatar('');
       }
       toast.success('Đã xóa ảnh đại diện');
     } catch (error) {
