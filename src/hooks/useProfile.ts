@@ -242,7 +242,7 @@ export const useProfile = (): UseProfileReturn => {
       useUserCache.getState().setUser(updated);
 
       if (isOwnProfile && currentUser) {
-        useAuthStore.setState({ user: updated });
+        useAuthStore.getState().updateUserProfile(data);
       }
     } catch (error) {
       console.error("Lỗi cập nhật profile", error);
@@ -269,7 +269,7 @@ export const useProfile = (): UseProfileReturn => {
       useUserCache.getState().setUser(updatedProfile);
 
       if (currentUser) {
-        useAuthStore.setState({ user: { ...currentUser, avatar: newAvatarUrl } });
+        useAuthStore.getState().updateAvatar(newAvatarUrl);
       }
     } catch (error) {
       console.error("Lỗi upload avatar", error);
@@ -316,7 +316,7 @@ export const useProfile = (): UseProfileReturn => {
       useUserCache.getState().setUser(updatedProfile);
 
       if (currentUser) {
-        useAuthStore.setState({ user: { ...currentUser, avatar: '' } });
+        useAuthStore.getState().updateAvatar('');
       }
       toast.success('Đã xóa ảnh đại diện');
     } catch (error) {
@@ -356,13 +356,7 @@ export const useProfile = (): UseProfileReturn => {
       await userService.blockUser(currentUser.id, profile.id);
 
       // Cập nhật state local
-      useAuthStore.setState({
-        user: {
-          ...currentUser,
-          blockedUserIds: [...(currentUser.blockedUserIds || []), profile.id],
-          friendIds: currentUser.friendIds?.filter(id => id !== profile.id) || []
-        }
-      });
+      useAuthStore.getState().updateBlockList('add', profile.id);
 
       toast.success('Đã chặn người dùng');
     } catch (error) {
@@ -376,12 +370,7 @@ export const useProfile = (): UseProfileReturn => {
       await userService.unblockUser(currentUser.id, profile.id);
 
       // Cập nhật state local
-      useAuthStore.setState({
-        user: {
-          ...currentUser,
-          blockedUserIds: currentUser.blockedUserIds?.filter(id => id !== profile.id) || []
-        }
-      });
+      useAuthStore.getState().updateBlockList('remove', profile.id);
 
       toast.success('Đã bỏ chặn người dùng');
     } catch (error) {

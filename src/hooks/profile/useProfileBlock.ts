@@ -44,13 +44,7 @@ export const useProfileBlock = ({
 
       await userService.blockUser(currentUser.id, profile.id);
 
-      useAuthStore.setState({
-        user: {
-          ...currentUser,
-          blockedUserIds: [...(currentUser.blockedUserIds || []), profile.id],
-          friendIds: currentUser.friendIds?.filter(id => id !== profile.id) || []
-        }
-      });
+      useAuthStore.getState().updateBlockList('add', profile.id);
 
       toast.success('Đã chặn người dùng');
     } catch (error) {
@@ -63,12 +57,7 @@ export const useProfileBlock = ({
     try {
       await userService.unblockUser(currentUser.id, profile.id);
 
-      useAuthStore.setState({
-        user: {
-          ...currentUser,
-          blockedUserIds: currentUser.blockedUserIds?.filter(id => id !== profile.id) || []
-        }
-      });
+      useAuthStore.getState().updateBlockList('remove', profile.id);
 
       toast.success('Đã bỏ chặn người dùng');
     } catch (error) {
