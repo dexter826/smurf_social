@@ -10,6 +10,7 @@ import { usePostStore } from "./postStore";
 import { useContactStore } from "./contactStore";
 import { useNotificationStore } from "./notificationStore";
 import { useCommentStore } from "./commentStore";
+import { useReportStore } from "./reportStore";
 
 interface AuthState {
   user: User | null;
@@ -88,6 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useContactStore.getState().reset();
       useNotificationStore.getState().reset();
       useCommentStore.getState().reset();
+      useReportStore.getState().resetState();
       useUserCache.getState().clear();
 
       await authService.logout();
