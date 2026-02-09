@@ -1,6 +1,6 @@
 import React from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
-import { useConnectionStatus } from '../../hooks/useConnectionStatus';
+import { useConnectionStatus } from '../../hooks/utils/useConnectionStatus';
 
 /**
  * Component hiển thị trạng thái kết nối

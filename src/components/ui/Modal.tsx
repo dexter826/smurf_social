@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
-import { useScrollLock } from '../../hooks/useScrollLock';
+import { useScrollLock } from '../../hooks/utils/useScrollLock';
 
 interface ModalProps {
   isOpen: boolean;

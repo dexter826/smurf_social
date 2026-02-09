@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Conversation, User, UserStatus } from '../types';
-import { formatChatTime, toDate } from '../utils/dateUtils';
+import { Conversation, User, UserStatus } from '../../types';
+import { formatChatTime, toDate } from '../../utils/dateUtils';
 
 interface UseConversationItemProps {
   conversation: Conversation;

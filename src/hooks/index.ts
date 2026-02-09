@@ -1,10 +1,16 @@
+// Utils hooks
+export * from './utils';
+
+// Chat hooks  
+export * from './chat';
+
+// Profile hooks
+export * from './profile';
+
+// Feature hooks
 export { useFeed } from './useFeed';
-export { useIntersectionObserver } from './useIntersectionObserver';
 export { useChat } from './useChat';
 export { useContacts } from './useContacts';
 export { useProfile } from './useProfile';
 export { useUserPosts } from './useUserPosts';
-export { useMediaQuery } from './useMediaQuery';
-export { useScrollLock } from './useScrollLock';
 export { useAdminReports } from './useAdminReports';
-export { useConnectionStatus } from './useConnectionStatus';

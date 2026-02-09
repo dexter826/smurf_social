@@ -4,7 +4,7 @@ import EmojiPickerReact, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { useThemeStore } from '../../store/themeStore';
-import { useIsMobile } from '../../hooks/useMediaQuery';
+import { useIsMobile } from '../../hooks/utils/useMediaQuery';
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
