@@ -6,16 +6,30 @@ type DateLike = Date | Timestamp | string | number | null | undefined;
 
 export const toDate = (val: DateLike): Date | null => {
   if (!val) return null;
-  if (val instanceof Date) return val;
+  
+  if (val instanceof Date) {
+    return isNaN(val.getTime()) ? null : val;
+  }
+  
   if (val instanceof Timestamp) return val.toDate();
-  if (typeof val === 'object' && 'seconds' in val) return new Date((val as Timestamp).seconds * 1000);
-  const date = new Date(val);
-  return isNaN(date.getTime()) ? null : date;
+  
+  if (typeof val === 'object' && val !== null && 'seconds' in (val as object)) {
+    return new Date((val as { seconds: number }).seconds * 1000);
+  }
+
+  if (typeof val === 'string' || typeof val === 'number') {
+    const date = new Date(val);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
 };
 
 // Hiển thị thời gian thu gọn kiểu Facebook
-export const formatRelativeTime = (date: Date | number | string): string => {
-  const d = new Date(date);
+export const formatRelativeTime = (date: DateLike): string => {
+  const d = toDate(date);
+  if (!d) return '';
+
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000);
 
@@ -38,8 +52,10 @@ export const formatRelativeTime = (date: Date | number | string): string => {
 };
 
 // Định dạng thời gian hội thoại
-export const formatChatTime = (date: Date | number | string): string => {
-  const d = new Date(date);
+export const formatChatTime = (date: DateLike): string => {
+  const d = toDate(date);
+  if (!d) return '';
+
   if (isToday(d)) return format(d, 'HH:mm');
   if (isYesterday(d)) return 'Hôm qua';
   
@@ -51,8 +67,10 @@ export const formatChatTime = (date: Date | number | string): string => {
 };
 
 // Trạng thái hoạt động người dùng
-export const formatStatusTime = (date: Date | number | string): string => {
-  const d = new Date(date);
+export const formatStatusTime = (date: DateLike): string => {
+  const d = toDate(date);
+  if (!d) return '';
+
   const now = new Date();
   
   if (differenceInDays(now, d) >= 7) {
@@ -64,11 +82,15 @@ export const formatStatusTime = (date: Date | number | string): string => {
 };
 
 // Định dạng đầy đủ cho tooltip
-export const formatDateTime = (date: Date | number | string): string => {
-  return format(new Date(date), 'HH:mm dd/MM/yyyy');
+export const formatDateTime = (date: DateLike): string => {
+  const d = toDate(date);
+  if (!d) return '';
+  return format(d, 'HH:mm dd/MM/yyyy');
 };
 
 // Chỉ hiển thị giờ và phút
-export const formatTimeOnly = (date: Date | number | string): string => {
-  return format(new Date(date), 'HH:mm');
+export const formatTimeOnly = (date: DateLike): string => {
+  const d = toDate(date);
+  if (!d) return '';
+  return format(d, 'HH:mm');
 };
