@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Lock, Volume2 } from 'lucide-react';
 import { Conversation, UserStatus } from '../../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar } from '../../ui';
-import { useConversationItem } from '../../../hooks/useConversationItem';
+import { useConversationItem } from '../../../hooks/chat/useConversationItem';
 import { MessageStatus } from '../message/MessageStatus';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 

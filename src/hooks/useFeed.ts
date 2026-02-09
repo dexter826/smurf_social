@@ -3,7 +3,7 @@ import { Post, User, Visibility } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
-import { useIntersectionObserver } from './useIntersectionObserver';
+import { useIntersectionObserver } from './utils/useIntersectionObserver';
 
 interface UseFeedReturn {
   posts: Post[];

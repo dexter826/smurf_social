@@ -3,7 +3,7 @@ import { Users, ChevronDown, MessageCircle, Archive } from 'lucide-react';
 import { Conversation, User } from '../../../types';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
-import { useConversationGroups } from '../../../hooks/useConversationGroups';
+import { useConversationGroups } from '../../../hooks/chat/useConversationGroups';
 import { ConversationHeader } from './ConversationHeader';
 import { ConversationFilters } from './ConversationFilters';
 
