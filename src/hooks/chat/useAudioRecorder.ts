@@ -11,6 +11,7 @@ export const useAudioRecorder = ({ onRecordingComplete, onError }: UseAudioRecor
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const durationRef = useRef(0);
 
   const startRecording = useCallback(async () => {
     try {
@@ -27,24 +28,24 @@ export const useAudioRecorder = ({ onRecordingComplete, onError }: UseAudioRecor
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        onRecordingComplete(audioBlob, recordingDuration);
-        
-        // Stop all tracks to release microphone
+        onRecordingComplete(audioBlob, durationRef.current);
         stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingDuration(0);
+      durationRef.current = 0;
 
       timerRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
+        durationRef.current += 1;
+        setRecordingDuration(durationRef.current);
       }, 1000);
     } catch (err) {
       console.error('Lỗi khi bắt đầu ghi âm:', err);
       onError?.(err instanceof Error ? err : new Error('Không thể truy cập microphone'));
     }
-  }, [onRecordingComplete, recordingDuration, onError]);
+  }, [onRecordingComplete, onError]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {

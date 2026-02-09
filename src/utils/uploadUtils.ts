@@ -66,8 +66,12 @@ export const uploadWithProgress = (
         });
         resolve(response.secure_url);
       } else {
-        const error = JSON.parse(xhr.responseText);
-        reject(new Error(error.error?.message || "Lỗi tải lên Cloudinary"));
+        try {
+          const error = JSON.parse(xhr.responseText);
+          reject(new Error(error.error?.message || "Lỗi tải lên Cloudinary"));
+        } catch {
+          reject(new Error(`Lỗi tải lên Cloudinary (status: ${xhr.status})`));
+        }
       }
     };
 

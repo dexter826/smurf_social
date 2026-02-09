@@ -2,9 +2,10 @@ import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serv
 import { db } from '../firebase/config';
 import { User, UserStatus, Visibility, Gender } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
-import { compressImage, withRetry } from '../utils/imageUtils';
+import { compressImage } from '../utils/imageUtils';
+import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
-import { PAGINATION } from '../constants';
+import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
 
 export const userService = {
   // Lấy thông tin người dùng theo ID
@@ -185,10 +186,7 @@ export const userService = {
   ): Promise<string> => {
     try {
       // Compress ảnh avatar
-      const compressedFile = await compressImage(file, { 
-        maxSizeMB: 0.5, 
-        maxWidthOrHeight: 512 
-      });
+      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.AVATAR);
       
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
@@ -214,10 +212,7 @@ export const userService = {
   ): Promise<string> => {
     try {
       // Compress ảnh cover
-      const compressedFile = await compressImage(file, { 
-        maxSizeMB: 1, 
-        maxWidthOrHeight: 1920 
-      });
+      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COVER);
       
       const fileExt = file.name.split('.').pop();
       const fileName = `cover_${userId}_${Date.now()}.${fileExt}`;

@@ -14,7 +14,7 @@ interface PostModalProps {
   currentUser: User;
   initialPost?: Post; 
   initialFiles?: File[]; 
-  onSubmit: (content: string, images: string[], videos: string[], visibility: 'public' | 'friends' | 'private', videoThumbnails?: Record<string, string>) => Promise<void>;
+  onSubmit: (content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
   onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
 }
 
@@ -268,9 +268,9 @@ export const PostModal: React.FC<PostModalProps> = ({
             value={formData.visibility}
             onChange={(v) => setValue('visibility', v as Visibility, { shouldDirty: true })}
             options={[
-              { value: 'public', label: 'Công khai', icon: <Globe size={14} /> },
-              { value: 'friends', label: 'Bạn bè', icon: <Users size={14} /> },
-              { value: 'private', label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
+              { value: Visibility.PUBLIC, label: 'Công khai', icon: <Globe size={14} /> },
+              { value: Visibility.FRIENDS, label: 'Bạn bè', icon: <Users size={14} /> },
+              { value: Visibility.PRIVATE, label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
             ]}
             variant="ghost"
             size="sm"

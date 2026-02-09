@@ -1,4 +1,4 @@
-import { Post, Comment, Visibility } from '../types';
+import { Post, Visibility } from '../types';
 import { postService } from '../services/postService';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { create } from 'zustand';

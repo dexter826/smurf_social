@@ -27,11 +27,12 @@ export const compressImage = async (
     const img = new Image();
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
+    const objectUrl = URL.createObjectURL(file);
 
     img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
       let { width, height } = img;
 
-      // Scale down nếu quá lớn
       if (width > maxWidthOrHeight || height > maxWidthOrHeight) {
         const ratio = Math.min(maxWidthOrHeight / width, maxWidthOrHeight / height);
         width = Math.round(width * ratio);
@@ -59,36 +60,14 @@ export const compressImage = async (
       );
     };
 
-    img.onerror = () => reject(new Error('Lỗi load ảnh'));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Lỗi load ảnh'));
+    };
+    img.src = objectUrl;
   });
 };
 
-
-/**
- * Upload với retry logic (3 lần với exponential backoff)
- */
-export const withRetry = async <T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
-): Promise<T> => {
-  let lastError: Error = new Error('Unknown error');
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error as Error;
-      if (attempt < maxRetries - 1) {
-        const delay = baseDelay * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-  }
-  
-  throw lastError;
-};
 
 /**
  * Kiểm tra file có phải là ảnh không

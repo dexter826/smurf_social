@@ -48,7 +48,8 @@ service cloud.firestore {
       allow read: if request.auth != null && (
         resource.data.visibility == 'public' ||
         resource.data.userId == request.auth.uid || 
-        request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.userId)).data.friendIds ||
+        (resource.data.visibility == 'friends' &&
+         request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.userId)).data.friendIds) ||
         isAdmin()
       );
       allow create: if request.auth != null && 

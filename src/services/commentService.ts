@@ -337,11 +337,13 @@ export const commentService = {
         return;
       }
 
-      snapshot.docChanges().forEach(async (change) => {
-        const comment = convertDocToComment(change.doc);
-        const user = await batchGetUsers([comment.userId]);
+      const changes = snapshot.docChanges();
+      const changeUserIds = [...new Set(changes.map(c => c.doc.data().userId))];
+      const changeUsersMap = await batchGetUsers(changeUserIds);
 
-        if (blockedUserIds.includes(comment.userId) || user[comment.userId]?.status === UserStatus.BANNED) return;
+      for (const change of changes) {
+        const comment = convertDocToComment(change.doc);
+        if (blockedUserIds.includes(comment.userId) || changeUsersMap[comment.userId]?.status === UserStatus.BANNED) continue;
 
         if (change.type === 'added') {
           callback('add', [comment]);
@@ -350,7 +352,7 @@ export const commentService = {
         } else if (change.type === 'removed') {
           callback('remove', [comment]);
         }
-      });
+      }
     }, (error) => console.error("Lỗi subscribe comments:", error));
   },
 

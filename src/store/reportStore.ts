@@ -22,7 +22,7 @@ interface ReportState {
     description?: string,
     images?: string[]
   ) => Promise<boolean>;
-  resetState: () => void;
+  reset: () => void;
   fetchPendingCount: () => Promise<void>;
 }
 
@@ -97,7 +97,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     }
   },
 
-  resetState: () => {
+  reset: () => {
     set({
       isOpen: false,
       isSubmitting: false,

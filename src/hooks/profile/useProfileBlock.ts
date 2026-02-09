@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { friendService } from '../../services/friendService';
 import { toast } from '../../store/toastStore';
-import { FriendStatus } from './useProfileFriend';
+import { FriendStatus } from '../../types';
 
 interface UseProfileBlockProps {
   currentUser: User | null;

@@ -9,7 +9,7 @@ import { ReportReason, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
-import { REPORT_CONFIG } from '../../constants';
+import { REPORT_CONFIG, IMAGE_COMPRESSION } from '../../constants';
 import { reportSchema, ReportFormValues } from '../../utils/validation';
 import { compressImage } from '../../utils/imageUtils';
 import { uploadWithProgress } from '../../utils/uploadUtils';
@@ -100,7 +100,7 @@ export const ReportModal: React.FC = () => {
       // Upload images if any
       if (selectedImages.length > 0) {
         const uploadPromises = selectedImages.map(async (file) => {
-          const compressed = await compressImage(file, { maxSizeMB: 1, maxWidthOrHeight: 1280 });
+          const compressed = await compressImage(file, IMAGE_COMPRESSION.REPORT);
           const path = `reports/${user.id}/${Date.now()}_${file.name}`;
           return await uploadWithProgress(path, compressed);
         });

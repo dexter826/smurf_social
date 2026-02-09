@@ -18,13 +18,13 @@ import {
   deleteField,
   DocumentSnapshot,
   QueryDocumentSnapshot,
-  DocumentData,
-  FieldValue
+  DocumentData
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { Message, MessageType } from "../../types";
-import { TIME_LIMITS } from "../../constants";
-import { compressImage, withRetry } from "../../utils/imageUtils";
+import { TIME_LIMITS, IMAGE_COMPRESSION } from "../../constants";
+import { compressImage } from "../../utils/imageUtils";
+import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
 
 // Đồng bộ trạng thái hội thoại và đếm tin nhắn mới.
@@ -79,7 +79,7 @@ async function createAndSendMediaMessage(
   
   // Compress ảnh nếu cần
   if (options.compress && type === MessageType.IMAGE) {
-    uploadFile = await compressImage(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1920 });
+    uploadFile = await compressImage(file, IMAGE_COMPRESSION.CHAT);
   }
   
   const createdAt = Date.now();
@@ -483,7 +483,7 @@ export const messageService = {
 
       const conversationRef = doc(db, "conversations", conversationId);
       await updateDoc(conversationRef, {
-        lastMessageContent: "Tin nhắn đã được thu hồi",
+        "lastMessage.content": "Tin nhắn đã được thu hồi",
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
@@ -632,14 +632,13 @@ export const messageService = {
 
       const docRef = await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, "conversations", conversationId);
-      await updateDoc(conversationRef, {
-        lastMessageId: docRef.id,
-        lastMessageContent: content,
-        lastMessageSenderId: senderId,
-        lastMessageCreatedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      await updateConversationAfterMessage(
+        conversationId,
+        senderId,
+        { content, type: MessageType.TEXT, replyToId },
+        content,
+        docRef.id,
+      );
     } catch (error) {
       console.error("Lỗi trả lời tin nhắn", error);
       throw error;

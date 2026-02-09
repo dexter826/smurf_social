@@ -1,14 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User, UserStatus, FriendRequest } from '../../types';
+import { User, UserStatus, FriendRequest, FriendStatus } from '../../types';
 import { friendService } from '../../services/friendService';
 import { toast } from '../../store/toastStore';
-
-export enum FriendStatus {
-  NOT_FRIEND = 'not_friend',
-  PENDING_SENT = 'pending_sent',
-  PENDING_RECEIVED = 'pending_received',
-  FRIEND = 'friend'
-}
 
 interface UseProfileFriendProps {
   currentUser: User | null;

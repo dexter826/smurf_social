@@ -53,6 +53,17 @@ export const VALIDATION = {
   POST_CONTENT_MAX_LENGTH: 5000,
   COMMENT_MAX_LENGTH: 2000,
   MESSAGE_MAX_LENGTH: 5000,
+  USER_NAME_MAX_LENGTH: 50,
+} as const;
+
+// Cấu hình nén ảnh
+export const IMAGE_COMPRESSION = {
+  AVATAR: { maxSizeMB: 0.5, maxWidthOrHeight: 512 },
+  COVER: { maxSizeMB: 1, maxWidthOrHeight: 1920 },
+  POST: { maxSizeMB: 1, maxWidthOrHeight: 1920 },
+  COMMENT: { maxSizeMB: 0.5, maxWidthOrHeight: 1280 },
+  CHAT: { maxSizeMB: 0.8, maxWidthOrHeight: 1920 },
+  REPORT: { maxSizeMB: 1, maxWidthOrHeight: 1280 },
 } as const;
 
 // Cấu hình báo cáo
@@ -62,7 +73,7 @@ export const REPORT_CONFIG = {
   REASONS: {
     spam: { label: 'Spam', description: 'Tin rác, quảng cáo không mong muốn' },
     harassment_violence: { label: 'Quấy rối & Bạo lực', description: 'Bắt nạt, đe dọa hoặc nội dung bạo lực' },
-    hate_speech: { label: 'Ngôn từ thù ghét', description: 'Phân biệt chủng tộc, giới tính, thù thị' },
+    hate_speech: { label: 'Ngôn từ thù ghét', description: 'Phân biệt chủng tộc, giới tính, thù địch' },
     sensitive: { label: 'Nội dung nhạy cảm', description: 'Hình ảnh/video khiêu dâm, người lớn' },
     scam_impersonation: { label: 'Lừa đảo & Giả mạo', description: 'Chiếm đoạt tài sản hoặc mạo danh người khác' },
     other: { label: 'Khác', description: 'Lý do khác' }
@@ -73,9 +84,3 @@ export const REPORT_CONFIG = {
     user: 'Người dùng'
   }
 } as const;
-
-// Re-export file limits từ fileConfig
-export { FILE_LIMITS, type FileLimitType } from './fileConfig';
-
-// Re-export API endpoints
-export { API_ENDPOINTS } from './api';

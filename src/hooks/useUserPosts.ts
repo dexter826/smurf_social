@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
-import { usePostStore } from '../store/postStore';
+
 import { useUserCache } from '../store/userCacheStore';
 import { DocumentSnapshot } from 'firebase/firestore';
 
@@ -27,7 +27,6 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   const lastDocRef = useRef<DocumentSnapshot | null>(null);
   const hasMoreRef = useRef(true);
   
-  const { setSelectedPost, reactToPost: storeReactToPost } = usePostStore();
   const { users, fetchUsers } = useUserCache();
 
   const loadPosts = useCallback(async (isFirstPage: boolean = false) => {

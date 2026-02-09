@@ -89,7 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useContactStore.getState().reset();
       useNotificationStore.getState().reset();
       useCommentStore.getState().reset();
-      useReportStore.getState().resetState();
+      useReportStore.getState().reset();
       useUserCache.getState().clear();
 
       await authService.logout();

@@ -1,247 +1,74 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { User, UserStatus, FriendRequest } from '../types';
+import { User, UserStatus } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
 import { chatService } from '../services/chatService';
-import { friendService } from '../services/friendService';
-import { postService } from '../services/postService';
 import { toast } from '../store/toastStore';
 import { useUserCache } from '../store/userCacheStore';
-import { validateFileSize } from '../utils/fileUtils';
+import { useProfileData } from './profile/useProfileData';
+import { useProfileFriend } from './profile/useProfileFriend';
+import { useProfileMedia } from './profile/useProfileMedia';
+import { useProfileBlock } from './profile/useProfileBlock';
 
 type TabType = 'posts' | 'media';
 
-export enum FriendStatus {
-  NOT_FRIEND = 'not_friend',
-  PENDING_SENT = 'pending_sent',
-  PENDING_RECEIVED = 'pending_received',
-  FRIEND = 'friend'
-}
-interface ProfileStats {
-  friendCount: number;
-  postCount: number;
-}
-
-interface UseProfileReturn {
-  currentUser: User | null;
-  profile: User | null;
-  stats: ProfileStats;
-  latestMedia: string[];
-  loading: boolean;
-  uploading: boolean;
-  uploadProgress: number;
-
-  profileUserId: string | undefined;
-  isOwnProfile: boolean;
-  friendStatus: FriendStatus;
-  pendingRequestId?: string;
-  isBlockedByMe: boolean;
-  isBannedProfile: boolean;
-  canViewContent: boolean;
-
-  activeTab: TabType;
-  setActiveTab: (tab: TabType) => void;
-
-  loadProfile: () => Promise<void>;
-  handleMessage: () => Promise<void>;
-  handleFriendAction: () => Promise<{ needConfirm: boolean }>;
-  confirmUnfriend: () => Promise<void>;
-  handleSaveProfile: (data: Partial<User>) => Promise<void>;
-  handleAvatarChange: (file: File) => Promise<void>;
-  handleCoverChange: (file: File) => Promise<void>;
-  handleAvatarDelete: () => Promise<void>;
-  handleCoverDelete: () => Promise<void>;
-  handleBlockUser: () => Promise<void>;
-  handleUnblockUser: () => Promise<void>;
-}
-
-export const useProfile = (): UseProfileReturn => {
+export const useProfile = () => {
   const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-
-  const [profile, setProfile] = useState<User | null>(null);
-  const [stats, setStats] = useState<ProfileStats>({ friendCount: 0, postCount: 0 });
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>('posts');
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [latestMedia, setLatestMedia] = useState<string[]>([]);
-
   const profileUserId = userId || currentUser?.id;
-  const isOwnProfile = currentUser?.id === profileUserId;
-  const isBlockedByMe = currentUser?.blockedUserIds?.includes(profileUserId || '') || false;
+  const [activeTab, setActiveTab] = useState<TabType>('posts');
+
+  const data = useProfileData({ profileUserId, currentUser: currentUser ?? null });
+  const { profile, setProfile, isOwnProfile, loadProfile } = data;
+
+  const friend = useProfileFriend({
+    currentUser: currentUser ?? null,
+    profile,
+    profileUserId,
+    isOwnProfile,
+    loadProfile,
+  });
+
+  const media = useProfileMedia({
+    profile,
+    setProfile,
+    isOwnProfile,
+    currentUser: currentUser ?? null,
+  });
+
+  const block = useProfileBlock({
+    currentUser: currentUser ?? null,
+    profile,
+    profileUserId,
+    isOwnProfile,
+    friendStatus: friend.friendStatus,
+    pendingRequestId: friend.pendingRequestId,
+  });
+
   const isBannedProfile = profile?.status === UserStatus.BANNED;
-  const canViewContent = !isBlockedByMe;
-
-  const [friendStatus, setFriendStatus] = useState<FriendStatus>(FriendStatus.NOT_FRIEND);
-  const [pendingRequestId, setPendingRequestId] = useState<string | undefined>();
-
-  const loadProfile = useCallback(async () => {
-    if (!profileUserId) return;
-
-    setLoading(true);
-    try {
-      const [userData, userStats, userPosts] = await Promise.all([
-        userService.getUserById(profileUserId),
-        userService.getUserStats(profileUserId, currentUser?.id, currentUser?.friendIds || []),
-        postService.getUserPosts(profileUserId, currentUser?.id || '', currentUser?.friendIds || [], 20)
-      ]);
-
-      setProfile(userData || null);
-      setStats(userStats);
-
-      // Lấy 6 media mới nhất
-      const media: string[] = [];
-      userPosts.posts.forEach(post => {
-        if (post.images) media.push(...post.images);
-        if (post.videos) media.push(...post.videos);
-      });
-      setLatestMedia(media.slice(0, 6));
-
-    } catch (error) {
-      console.error("Lỗi load profile", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [profileUserId, currentUser?.id, currentUser?.friendIds]);
-
-  useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
-
-  useEffect(() => {
-    if (!profileUserId) return;
-
-    const unsubscribeProfile = userService.subscribeToUser(profileUserId, (updatedUser) => {
-      setProfile(prev => {
-        if (!prev) return updatedUser;
-        return { ...prev, ...updatedUser };
-      });
-
-      useUserCache.getState().setUser(updatedUser);
-    });
-
-    return () => {
-      unsubscribeProfile();
-    };
-  }, [profileUserId]);
-
-  useEffect(() => {
-    if (!currentUser || !profileUserId || isOwnProfile) return;
-
-    // Đồng bộ trạng thái bạn bè và lời mời
-    if (currentUser.friendIds?.includes(profileUserId)) {
-      setFriendStatus(FriendStatus.FRIEND);
-      setPendingRequestId(null);
-      return;
-    }
-
-    let sentRequest: FriendRequest | null = null;
-    let receivedRequest: FriendRequest | null = null;
-
-    const updateStatus = () => {
-      if (sentRequest) {
-        setFriendStatus(FriendStatus.PENDING_SENT);
-        setPendingRequestId(sentRequest.id);
-      } else if (receivedRequest) {
-        setFriendStatus(FriendStatus.PENDING_RECEIVED);
-        setPendingRequestId(receivedRequest.id);
-      } else {
-        setFriendStatus(FriendStatus.NOT_FRIEND);
-        setPendingRequestId(null);
-      }
-    };
-
-    const unsubscribeSent = friendService.subscribeToSentRequests(currentUser.id, (requests) => {
-      sentRequest = requests.find(r => r.receiverId === profileUserId);
-      updateStatus();
-    });
-
-    const unsubscribeReceived = friendService.subscribeToReceivedRequests(currentUser.id, (requests) => {
-      receivedRequest = requests.find(r => r.senderId === profileUserId);
-      updateStatus();
-    });
-
-    return () => {
-      unsubscribeSent();
-      unsubscribeReceived();
-    };
-  }, [currentUser, profileUserId, isOwnProfile]);
 
   const handleMessage = useCallback(async () => {
     if (!currentUser || !profile) return;
-
     if (profile.status === UserStatus.BANNED) {
       toast.error('Không thể nhắn tin cho người dùng đã bị khóa');
       return;
     }
-
     try {
       const conversationId = await chatService.getOrCreateConversation(currentUser.id, profile.id);
       navigate(`/?conv=${conversationId}`);
-    } catch (error) {
+    } catch {
       toast.error('Không thể mở cuộc hội thoại');
     }
   }, [currentUser, profile, navigate]);
 
-  const handleFriendAction = useCallback(async (): Promise<{ needConfirm: boolean }> => {
-    if (!currentUser || !profile || isOwnProfile) return { needConfirm: false };
-
-    if (profile.status === UserStatus.BANNED) {
-      toast.error('Không thể tương tác với người dùng đã bị khóa');
-      return { needConfirm: false };
-    }
-
-    try {
-      if (friendStatus === FriendStatus.FRIEND) {
-        return { needConfirm: true };
-      }
-
-      if (friendStatus === FriendStatus.PENDING_RECEIVED && pendingRequestId) {
-        await friendService.acceptFriendRequest(pendingRequestId, currentUser.id, profile.id);
-        toast.success('Đã trở thành bạn bè');
-        return { needConfirm: false };
-      }
-
-      if (friendStatus === FriendStatus.PENDING_SENT && pendingRequestId) {
-        await friendService.cancelFriendRequest(pendingRequestId);
-        toast.success('Đã hủy lời mời kết bạn');
-        return { needConfirm: false };
-      }
-
-      if (friendStatus === FriendStatus.NOT_FRIEND) {
-        await friendService.sendFriendRequest(currentUser.id, profile.id);
-        toast.success('Đã gửi lời mời kết bạn');
-      }
-    } catch (error: unknown) {
-      const err = error as { message?: string };
-      toast.error(err.message || 'Thao tác thất bại');
-    }
-
-    return { needConfirm: false };
-  }, [currentUser, profile, isOwnProfile, friendStatus, pendingRequestId]);
-
-  const confirmUnfriend = useCallback(async () => {
-    if (!currentUser || !profile) return;
-    try {
-      await friendService.unfriend(currentUser.id, profile.id);
-      toast.success('Đã hủy kết bạn');
-      await loadProfile();
-    } catch (error) {
-      toast.error('Không thể hủy kết bạn');
-    }
-  }, [currentUser, profile, loadProfile]);
-
   const handleSaveProfile = useCallback(async (data: Partial<User>) => {
     if (!profile) return;
-
     try {
       const updated = await userService.updateProfile(profile.id, data);
       setProfile(updated);
       useUserCache.getState().setUser(updated);
-
       if (isOwnProfile && currentUser) {
         useAuthStore.getState().updateUserProfile(data);
       }
@@ -249,163 +76,41 @@ export const useProfile = (): UseProfileReturn => {
       console.error("Lỗi cập nhật profile", error);
       throw error;
     }
-  }, [profile, isOwnProfile, currentUser]);
-
-  const handleAvatarChange = useCallback(async (file: File) => {
-    if (!profile || !isOwnProfile) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn file ảnh');
-      return;
-    }
-    if (!validateFileSize(file, 'AVATAR')) return;
-
-    setUploading(true);
-    setUploadProgress(0);
-    try {
-      const newAvatarUrl = await userService.uploadAvatar(profile.id, file, (p) => {
-        setUploadProgress(p.progress);
-      });
-      const updatedProfile = { ...profile, avatar: newAvatarUrl };
-      setProfile(updatedProfile);
-      useUserCache.getState().setUser(updatedProfile);
-
-      if (currentUser) {
-        useAuthStore.getState().updateAvatar(newAvatarUrl);
-      }
-    } catch (error) {
-      console.error("Lỗi upload avatar", error);
-      toast.error('Không thể tải lên ảnh đại diện');
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  }, [profile, isOwnProfile, currentUser]);
-
-  const handleCoverChange = useCallback(async (file: File) => {
-    if (!profile || !isOwnProfile) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn file ảnh');
-      return;
-    }
-    if (!validateFileSize(file, 'COVER')) return;
-
-    setUploading(true);
-    setUploadProgress(0);
-    try {
-      const newCoverUrl = await userService.uploadCoverImage(profile.id, file, (p) => {
-        setUploadProgress(p.progress);
-      });
-      const updatedProfile = { ...profile, coverImage: newCoverUrl };
-      setProfile(updatedProfile);
-      useUserCache.getState().setUser(updatedProfile);
-    } catch (error) {
-      console.error("Lỗi upload cover", error);
-      toast.error('Không thể tải lên ảnh bìa');
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  }, [profile, isOwnProfile]);
-
-  const handleAvatarDelete = useCallback(async () => {
-    if (!profile || !isOwnProfile) return;
-    setUploading(true);
-    try {
-      await userService.deleteAvatar(profile.id);
-      const updatedProfile = { ...profile, avatar: '' };
-      setProfile(updatedProfile);
-      useUserCache.getState().setUser(updatedProfile);
-
-      if (currentUser) {
-        useAuthStore.getState().updateAvatar('');
-      }
-      toast.success('Đã xóa ảnh đại diện');
-    } catch (error) {
-      toast.error('Không thể xóa ảnh đại diện');
-    } finally {
-      setUploading(false);
-    }
-  }, [profile, isOwnProfile, currentUser]);
-
-  const handleCoverDelete = useCallback(async () => {
-    if (!profile || !isOwnProfile) return;
-    setUploading(true);
-    try {
-      await userService.deleteCoverImage(profile.id);
-      const updatedProfile = { ...profile, coverImage: '' };
-      setProfile(updatedProfile);
-      useUserCache.getState().setUser(updatedProfile);
-      toast.success('Đã xóa ảnh bìa');
-    } catch (error) {
-      toast.error('Không thể xóa ảnh bìa');
-    } finally {
-      setUploading(false);
-    }
-  }, [profile, isOwnProfile]);
-
-  const handleBlockUser = useCallback(async () => {
-    if (!currentUser || !profile || isOwnProfile) return;
-    try {
-      if (friendStatus === FriendStatus.FRIEND) {
-        await friendService.unfriend(currentUser.id, profile.id);
-      }
-
-      if (pendingRequestId) {
-        await friendService.cancelFriendRequest(pendingRequestId);
-      }
-
-      await userService.blockUser(currentUser.id, profile.id);
-
-      // Cập nhật state local
-      useAuthStore.getState().updateBlockList('add', profile.id);
-
-      toast.success('Đã chặn người dùng');
-    } catch (error) {
-      toast.error('Không thể chặn người dùng');
-    }
-  }, [currentUser, profile, isOwnProfile, friendStatus, pendingRequestId]);
-
-  const handleUnblockUser = useCallback(async () => {
-    if (!currentUser || !profile || isOwnProfile) return;
-    try {
-      await userService.unblockUser(currentUser.id, profile.id);
-
-      // Cập nhật state local
-      useAuthStore.getState().updateBlockList('remove', profile.id);
-
-      toast.success('Đã bỏ chặn người dùng');
-    } catch (error) {
-      toast.error('Không thể bỏ chặn người dùng');
-    }
-  }, [currentUser, profile, isOwnProfile]);
+  }, [profile, isOwnProfile, currentUser, setProfile]);
 
   return {
     currentUser,
-    profile,
-    stats,
-    latestMedia,
-    loading,
-    uploading,
-    uploadProgress,
+    profile: data.profile,
+    stats: data.stats,
+    latestMedia: data.latestMedia,
+    loading: data.loading,
     profileUserId,
     isOwnProfile,
-    friendStatus,
-    pendingRequestId,
     isBannedProfile,
-    canViewContent,
     activeTab,
     setActiveTab,
     loadProfile,
     handleMessage,
-    handleFriendAction,
-    confirmUnfriend,
     handleSaveProfile,
-    handleAvatarChange,
-    handleCoverChange,
-    handleAvatarDelete,
-    handleCoverDelete,
-    isBlockedByMe,
-    handleBlockUser,
-    handleUnblockUser,
+
+    // Friend
+    friendStatus: friend.friendStatus,
+    pendingRequestId: friend.pendingRequestId,
+    handleFriendAction: friend.handleFriendAction,
+    confirmUnfriend: friend.confirmUnfriend,
+
+    // Media
+    uploading: media.uploading,
+    uploadProgress: media.uploadProgress,
+    handleAvatarChange: media.handleAvatarChange,
+    handleCoverChange: media.handleCoverChange,
+    handleAvatarDelete: media.handleAvatarDelete,
+    handleCoverDelete: media.handleCoverDelete,
+
+    // Block
+    isBlockedByMe: block.isBlockedByMe,
+    canViewContent: block.canViewContent,
+    handleBlockUser: block.handleBlockUser,
+    handleUnblockUser: block.handleUnblockUser,
   };
 };

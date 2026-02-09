@@ -150,7 +150,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     set((state) => ({ isLoadingMore: { ...state.isLoadingMore, [conversationId]: true } }));
 
     try {
-      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt) as any;
+      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt);
       
       set((state) => ({
         messages: { ...state.messages, [conversationId]: [...result.messages, ...(state.messages[conversationId] || [])] },

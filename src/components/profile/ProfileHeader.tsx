@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Camera, Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag, Ban, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
-import { FriendStatus } from '../../hooks/useProfile';
+import { FriendStatus } from '../../types';
 import { Avatar, UserAvatar, Button, Dropdown, DropdownItem, ImageCropper } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 import { useReportStore } from '../../store/reportStore';

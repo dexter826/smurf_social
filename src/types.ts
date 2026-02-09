@@ -26,6 +26,13 @@ export enum FriendRequestStatus {
   REJECTED = "rejected",
 }
 
+export enum FriendStatus {
+  NOT_FRIEND = "not_friend",
+  PENDING_SENT = "pending_sent",
+  PENDING_RECEIVED = "pending_received",
+  FRIEND = "friend",
+}
+
 export enum MessageType {
   TEXT = "text",
   IMAGE = "image",

@@ -21,12 +21,13 @@ import {
   deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, Comment, NotificationType, ReportStatus, UserStatus, Visibility } from '../types';
+import { Post, NotificationType, ReportStatus, UserStatus, Visibility } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
-import { PAGINATION, FIREBASE_LIMITS, REACTIONS } from '../constants';
+import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
 import { notificationService } from './notificationService';
-import { compressImage, isImageFile, withRetry } from '../utils/imageUtils';
+import { compressImage, isImageFile } from '../utils/imageUtils';
+import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 
 // Định dạng dữ liệu Firestore thành Post object.
@@ -406,8 +407,7 @@ export const postService = {
           });
         }
 
-        // Gửi thông báo nếu có cảm xúc mới (và không phải là thao tác xóa)
-        if (reaction !== 'REMOVE' && !currentReaction && reactions[userId] && data.userId !== userId) {
+        if (reaction !== 'REMOVE' && !currentReaction && data.userId !== userId) {
           await notificationService.createNotification({
             receiverId: data.userId,
             senderId: userId,
@@ -495,7 +495,7 @@ export const postService = {
 
         // Compress ảnh trước khi upload
         if (isImageFile(file)) {
-          file = await compressImage(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 });
+          file = await compressImage(file, IMAGE_COMPRESSION.POST);
         }
 
         const url = await withRetry(() => 
@@ -530,7 +530,7 @@ export const postService = {
   ): Promise<string> => {
     try {
       // Compress ảnh
-      const compressedFile = await compressImage(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1280 });
+      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COMMENT);
       
       const createdAt = Date.now();
       const fileName = `comment_img_${createdAt}_${file.name}`;
