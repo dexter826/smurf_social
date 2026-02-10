@@ -4,6 +4,7 @@ import {
   getDoc, 
   doc, 
   updateDoc, 
+  deleteDoc,
   serverTimestamp,
   arrayUnion,
   arrayRemove,
@@ -250,6 +251,17 @@ export const groupService = {
       return downloadURL;
     } catch (error) {
       console.error("Lỗi upload avatar nhóm:", error);
+      throw error;
+    }
+  },
+  
+  // Giải tán nhóm (Xóa toàn bộ hội thoại cho tất cả thành viên)
+  disbandGroup: async (conversationId: string): Promise<void> => {
+    try {
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await deleteDoc(conversationRef);
+    } catch (error) {
+      console.error("Lỗi giải tán nhóm:", error);
       throw error;
     }
   },

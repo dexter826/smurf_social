@@ -67,6 +67,7 @@ const ChatPage: React.FC = () => {
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleEditGroup,
+    handleDisbandGroup,
     addToSearchHistory,
     removeFromSearchHistory,
     clearSearchHistory,
@@ -273,7 +274,13 @@ const ChatPage: React.FC = () => {
           onToggleMute={() => handleMute(selectedConversation.id, !selectedConversation.muted)}
           onTogglePin={() => handlePin(selectedConversation.id, !selectedConversation.pinned)}
           onToggleBlock={handleToggleBlock}
-          onDelete={() => handleDelete(selectedConversation.id)}
+          onDelete={() => {
+            if (selectedConversation.isGroup && selectedConversation.creatorId === currentUser.id) {
+              handleDisbandGroup();
+            } else {
+              handleDelete(selectedConversation.id);
+            }
+          }}
           onLeaveGroup={() => {
             const result = handleLeaveGroup();
             if (result && 'then' in result) {
