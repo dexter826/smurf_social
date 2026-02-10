@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Globe, Users, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, UploadProgress } from '../../ui';
+import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, UploadProgress, ConfirmDialog } from '../../ui';
 import { toast } from '../../../store/toastStore';
 import { validateFileSize } from '../../../utils/fileUtils';
 import { User, Post, Visibility } from '../../../types';
@@ -49,6 +49,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       images: [],
       videos: [],
       videoThumbnails: {},
+      hasPendingFiles: false,
       visibility: Visibility.PUBLIC
     }
   });
@@ -56,8 +57,8 @@ export const PostModal: React.FC<PostModalProps> = ({
   const formData = watch();
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<number>(0);
+  const [showDiscardConfirm, setShowDiscardConfirm] = React.useState(false);
   
-  // State cho file pending (chưa upload) và preview blob URLs
   const [pendingFiles, setPendingFiles] = React.useState<File[]>([]);
   const [previews, setPreviews] = React.useState<{ url: string; type: 'image' | 'video' }[]>([]);
 
@@ -70,6 +71,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           images: initialPost.images || [],
           videos: initialPost.videos || [],
           videoThumbnails: initialPost.videoThumbnails || {},
+          hasPendingFiles: false,
           visibility: initialPost.visibility
         });
       } else {
@@ -78,6 +80,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           images: [],
           videos: [],
           videoThumbnails: {},
+          hasPendingFiles: initialFiles?.length > 0,
           visibility: Visibility.PUBLIC
         });
         // Xử lý file ban đầu
@@ -119,8 +122,10 @@ export const PostModal: React.FC<PostModalProps> = ({
     if (validFiles.length === 0) return;
 
     // Chỉ lưu file vào state, không upload ngay
-    setPendingFiles(prev => [...prev, ...validFiles]);
+    const allFiles = [...pendingFiles, ...validFiles];
+    setPendingFiles(allFiles);
     setPreviews(prev => [...prev, ...newPreviews]);
+    setValue('hasPendingFiles', allFiles.length > 0, { shouldValidate: true });
     
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (videoInputRef.current) videoInputRef.current.value = '';
@@ -144,8 +149,10 @@ export const PostModal: React.FC<PostModalProps> = ({
     if (previews[index]) {
       URL.revokeObjectURL(previews[index].url);
     }
-    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+    const newFiles = pendingFiles.filter((_, i) => i !== index);
+    setPendingFiles(newFiles);
     setPreviews(prev => prev.filter((_, i) => i !== index));
+    setValue('hasPendingFiles', newFiles.length > 0, { shouldValidate: true });
   };
 
   const onFormSubmit = async (data: PostFormValues) => {
@@ -172,12 +179,24 @@ export const PostModal: React.FC<PostModalProps> = ({
     }
   };
 
+  const handleCloseAttempt = () => {
+    const hasContent = !!formData.content?.trim();
+    const hasMedia = formData.images.length > 0 || formData.videos.length > 0 || pendingFiles.length > 0;
+    
+    if (hasContent || hasMedia) {
+      setShowDiscardConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleCloseAttempt}
       title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
       maxWidth="2xl"
       padding="none"
@@ -230,7 +249,7 @@ export const PostModal: React.FC<PostModalProps> = ({
             variant="primary"
             className="w-full h-10 md:h-11 text-[15px] font-bold shadow-sm"
             onClick={handleSubmit(onFormSubmit)}
-            disabled={!isDirty || isSubmitting || isUploading}
+            disabled={isSubmitting || isUploading || !isValid}
             isLoading={isSubmitting}
           >
             {isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
@@ -346,5 +365,20 @@ export const PostModal: React.FC<PostModalProps> = ({
       </div>
     </div>
     </Modal>
+
+    <ConfirmDialog
+      isOpen={showDiscardConfirm}
+      onClose={() => setShowDiscardConfirm(false)}
+      onConfirm={() => {
+        setShowDiscardConfirm(false);
+        onClose();
+      }}
+      title="Hủy bỏ bài viết?"
+      message="Nội dung bạn đang soạn sẽ bị mất. Bạn có chắc chắn muốn thoát?"
+      confirmLabel="Hủy bỏ"
+      cancelLabel="Tiếp tục soạn"
+      variant="primary"
+    />
+    </>
   );
 };

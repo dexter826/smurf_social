@@ -79,11 +79,13 @@ export const postSchema = z.object({
   videos: z.array(z.string())
     .max(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST, `Chỉ được tải lên tối đa ${MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST} video`),
   videoThumbnails: z.record(z.string(), z.string()).optional(),
+  hasPendingFiles: z.boolean().optional(),
 }).refine(data => {
   const hasContent = data.content?.trim()?.length && data.content.trim().length > 0;
   const hasImages = data.images && data.images.length > 0;
   const hasVideos = data.videos && data.videos.length > 0;
-  return hasContent || hasImages || hasVideos;
+  const hasPending = !!data.hasPendingFiles;
+  return hasContent || hasImages || hasVideos || hasPending;
 }, {
   message: "Bài viết không được để trống",
   path: ["content"],
