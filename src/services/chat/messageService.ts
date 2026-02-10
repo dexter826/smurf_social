@@ -18,7 +18,8 @@ import {
   deleteField,
   DocumentSnapshot,
   QueryDocumentSnapshot,
-  DocumentData
+  DocumentData,
+  setDoc
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { Message, MessageType } from "../../types";
@@ -27,13 +28,14 @@ import { compressImage } from "../../utils/imageUtils";
 import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
 
-// Đồng bộ trạng thái hội thoại và đếm tin nhắn mới.
+// Cập nhật trạng thái hội thoại và đếm số tin chưa đọc.
 async function updateConversationAfterMessage(
   conversationId: string,
   senderId: string,
   messageData: Partial<Message>,
   displayContent: string,
   messageId?: string,
+  preGeneratedId?: string
 ): Promise<void> {
   const conversationRef = doc(db, "conversations", conversationId);
   const conversationSnap = await getDoc(conversationRef);
@@ -62,7 +64,7 @@ async function updateConversationAfterMessage(
   }
 }
 
-// Xử lý tải lên và gửi tin nhắn đa phương tiện.
+// Tải lên và gửi tin nhắn multimedia.
 async function createAndSendMediaMessage(
   conversationId: string,
   senderId: string,
@@ -73,11 +75,12 @@ async function createAndSendMediaMessage(
     onProgress?: ProgressCallback;
     compress?: boolean;
     displayContent: string;
+    preGeneratedId?: string;
   }
-): Promise<void> {
+): Promise<string> {
   let uploadFile: File = file;
   
-  // Compress ảnh nếu cần
+  // Giảm dung lượng ảnh trước khi tải.
   if (options.compress && type === MessageType.IMAGE) {
     uploadFile = await compressImage(file, IMAGE_COMPRESSION.CHAT);
   }
@@ -101,7 +104,7 @@ async function createAndSendMediaMessage(
     deliveredAt: serverTimestamp() as unknown as Date,
   };
 
-  // Thêm metadata theo loại
+  // Lưu thông tin bổ sung tùy loại tin nhắn.
   if (type === MessageType.FILE) {
     messageData.fileName = file.name;
     messageData.fileSize = file.size;
@@ -114,19 +117,32 @@ async function createAndSendMediaMessage(
     messageData.replyToId = options.replyToId;
   }
 
-  const docRef = await addDoc(collection(db, "messages"), messageData);
+  let finalId = options.preGeneratedId;
+  if (options.preGeneratedId) {
+    await setDoc(doc(db, "messages", options.preGeneratedId), messageData);
+  } else {
+    const docRef = await addDoc(collection(db, "messages"), messageData);
+    finalId = docRef.id;
+  }
   
   await updateConversationAfterMessage(
     conversationId,
     senderId,
     messageData,
     options.displayContent,
-    docRef.id
+    finalId
   );
+
+  return finalId!;
 }
 
 export const messageService = {
-  // Đăng ký nhận tin nhắn thời gian thực với giới hạn số lượng
+  // Tạo ID trước khi lưu để đồng bộ UI.
+  generateMessageId: () => {
+    return doc(collection(db, "messages")).id;
+  },
+
+  // Theo dõi tin nhắn thời gian thực.
   subscribeToMessages: (
     conversationId: string,
     limitCount: number,
@@ -152,7 +168,10 @@ export const messageService = {
 
     return onSnapshot(
       q,
+      { includeMetadataChanges: true },
       (snapshot) => {
+        if (snapshot.metadata.hasPendingWrites && snapshot.docs.length === 0) return;
+        
         const messages = snapshot.docs
           .map((doc) => {
             const data = doc.data();
@@ -166,7 +185,7 @@ export const messageService = {
               mentions: data.mentions || [],
             };
           })
-          .reverse() as Message[]; // Reverse để hiển thị đúng thứ tự thời gian
+          .reverse() as Message[]; // Hiển thị tin mới ở cuối danh sách.
 
         const lastDoc = snapshot.docs[snapshot.docs.length - 1];
         callback(messages, lastDoc);
@@ -230,7 +249,7 @@ export const messageService = {
     }
   },
 
-  // Gửi tin nhắn văn bản kèm tag người dùng
+  // Gửi tin nhắn văn bản.
   sendTextMessage: async (
     conversationId: string,
     senderId: string,
@@ -238,7 +257,8 @@ export const messageService = {
     replyToId?: string,
     isForwarded?: boolean,
     mentions?: string[],
-  ): Promise<void> => {
+    preGeneratedId?: string,
+  ): Promise<string> => {
     try {
       const messageData: Omit<Message, 'id'> = {
         conversationId,
@@ -255,7 +275,13 @@ export const messageService = {
       if (replyToId) messageData.replyToId = replyToId;
       if (isForwarded) messageData.isForwarded = isForwarded;
 
-      const docRef = await addDoc(collection(db, "messages"), messageData);
+      let finalId = preGeneratedId;
+      if (preGeneratedId) {
+        await setDoc(doc(db, "messages", preGeneratedId), messageData);
+      } else {
+        const docRef = await addDoc(collection(db, "messages"), messageData);
+        finalId = docRef.id;
+      }
 
       const conversationRef = doc(db, "conversations", conversationId);
       const conversationSnap = await getDoc(conversationRef);
@@ -264,7 +290,7 @@ export const messageService = {
         const participantIds = conversationSnap.data().participantIds || [];
         const unreadCount = conversationSnap.data().unreadCount || {};
 
-        // Cập nhật số tin chưa đọc cho các thành viên khác
+        // Tăng số tin chưa đọc cho người nhận.
         participantIds.forEach((pid: string) => {
           if (pid !== senderId) {
             unreadCount[pid] = (unreadCount[pid] || 0) + 1;
@@ -275,33 +301,36 @@ export const messageService = {
           lastMessage: {
             ...messageData,
             createdAt: new Date(),
-            id: docRef.id,
+            id: finalId!,
           },
           unreadCount,
           updatedAt: serverTimestamp(),
           deletedBy: []
         });
       }
+      return finalId!;
     } catch (error) {
       console.error("Lỗi gửi tin nhắn", error);
       throw error;
     }
   },
 
-  // Tải lên và gửi tin nhắn hình ảnh
+  // Gửi tin nhắn hình ảnh.
   sendImageMessage: async (
     conversationId: string,
     senderId: string,
     file: File,
     replyToId?: string,
     onProgress?: ProgressCallback,
-  ): Promise<void> => {
+    preGeneratedId?: string,
+  ): Promise<string> => {
     try {
-      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.IMAGE, {
+      return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.IMAGE, {
         replyToId,
         onProgress,
         compress: true,
-        displayContent: "Hình ảnh"
+        displayContent: "Hình ảnh",
+        preGeneratedId
       });
     } catch (error) {
       console.error("Lỗi gửi ảnh", error);
@@ -309,19 +338,21 @@ export const messageService = {
     }
   },
 
-  // Tải lên và gửi tin nhắn tệp đính kèm
+  // Gửi tin nhắn đính kèm tệp.
   sendFileMessage: async (
     conversationId: string,
     senderId: string,
     file: File,
     replyToId?: string,
     onProgress?: ProgressCallback,
-  ): Promise<void> => {
+    preGeneratedId?: string,
+  ): Promise<string> => {
     try {
-      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.FILE, {
+      return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.FILE, {
         replyToId,
         onProgress,
-        displayContent: file.name
+        displayContent: file.name,
+        preGeneratedId
       });
     } catch (error) {
       console.error("Lỗi gửi file", error);
@@ -329,19 +360,21 @@ export const messageService = {
     }
   },
 
-  // Tải lên và gửi tin nhắn video
+  // Gửi tin nhắn video.
   sendVideoMessage: async (
     conversationId: string,
     senderId: string,
     file: File,
     replyToId?: string,
     onProgress?: ProgressCallback,
-  ): Promise<void> => {
+    preGeneratedId?: string,
+  ): Promise<string> => {
     try {
-      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VIDEO, {
+      return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VIDEO, {
         replyToId,
         onProgress,
-        displayContent: "Video"
+        displayContent: "Video",
+        preGeneratedId
       });
     } catch (error) {
       console.error("Lỗi gửi video", error);
@@ -349,19 +382,21 @@ export const messageService = {
     }
   },
 
-  // Tải lên và gửi tin nhắn thoại
+  // Gửi tin nhắn thoại.
   sendVoiceMessage: async (
     conversationId: string,
     senderId: string,
     file: File,
     replyToId?: string,
     onProgress?: ProgressCallback,
-  ): Promise<void> => {
+    preGeneratedId?: string,
+  ): Promise<string> => {
     try {
-      await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VOICE, {
+      return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VOICE, {
         replyToId,
         onProgress,
-        displayContent: "Tin nhắn thoại"
+        displayContent: "Tin nhắn thoại",
+        preGeneratedId
       });
     } catch (error) {
       console.error("Lỗi gửi voice", error);
@@ -369,7 +404,7 @@ export const messageService = {
     }
   },
 
-  // Đánh dấu người dùng đã nhận tin nhắn
+  // Xác nhận người dùng đã nhận tin.
   markMessagesAsDelivered: async (
     conversationId: string,
     userId: string,
@@ -409,7 +444,7 @@ export const messageService = {
     }
   },
 
-  // Đánh dấu người dùng đã xem tin nhắn
+  // Xác nhận người dùng đã xem tin.
   markMessagesAsRead: async (
     conversationId: string,
     userId: string,
@@ -468,7 +503,7 @@ export const messageService = {
     }
   },
 
-  // Thu hồi tin nhắn đối với tất cả người dùng
+  // Thu hồi tin nhắn với mọi người.
   recallMessage: async (
     messageId: string,
     conversationId: string,
@@ -499,7 +534,7 @@ export const messageService = {
     }
   },
 
-  // Ẩn tin nhắn đối với người xóa
+  // Xóa tin nhắn ở phía người dùng.
   deleteMessageForMe: async (
     messageId: string,
     userId: string,
@@ -515,7 +550,7 @@ export const messageService = {
     }
   },
 
-  // Chỉnh sửa tin nhắn trong thời gian cho phép
+  // Sửa tin nhắn nếu còn trong hạn.
   editMessage: async (messageId: string, newContent: string, currentUserId: string): Promise<void> => {
     try {
       const messageRef = doc(db, "messages", messageId);
@@ -552,7 +587,7 @@ export const messageService = {
     }
   },
 
-  // Chuyển tiếp tin nhắn sang hội thoại khác
+  // Chuyển tiếp tin nhắn sang chat khác.
   forwardMessage: async (
     targetConversationId: string,
     senderId: string,
@@ -621,13 +656,14 @@ export const messageService = {
     }
   },
 
-  // Gửi tin nhắn phản hồi tin nhắn khác
+  // Gửi phản hồi cho tin nhắn khác.
   replyToMessage: async (
     conversationId: string,
     senderId: string,
     content: string,
     replyToId: string,
-  ): Promise<void> => {
+    preGeneratedId?: string,
+  ): Promise<string> => {
     try {
       const messageData = {
         conversationId,
@@ -641,22 +677,30 @@ export const messageService = {
         deliveredAt: null,
       };
 
-      const docRef = await addDoc(collection(db, "messages"), messageData);
+      let finalId = preGeneratedId;
+      if (preGeneratedId) {
+        await setDoc(doc(db, "messages", preGeneratedId), messageData);
+      } else {
+        const docRef = await addDoc(collection(db, "messages"), messageData);
+        finalId = docRef.id;
+      }
 
       await updateConversationAfterMessage(
         conversationId,
         senderId,
         { content, type: MessageType.TEXT, replyToId },
         content,
-        docRef.id,
+        finalId!
       );
+
+      return finalId!;
     } catch (error) {
       console.error("Lỗi trả lời tin nhắn", error);
       throw error;
     }
   },
 
-  // Cập nhật trạng thái đang soạn tin nhắn
+  // Cập nhật trạng thái đang soạn bài.
   setTypingStatus: async (
     conversationId: string,
     userId: string,
@@ -679,7 +723,7 @@ export const messageService = {
     }
   },
 
-  // Theo dõi danh sách người dùng đang soạn tin nhắn
+  // Theo dõi trạng thái đang soạn bài.
   subscribeToTypingStatus: (
     conversationId: string,
     callback: (typingUsers: string[]) => void,
@@ -694,7 +738,7 @@ export const messageService = {
     });
   },
 
-  // Bật/tắt cảm xúc tin nhắn
+  // Cập nhật cảm xúc cho tin nhắn.
   toggleReaction: async (
     messageId: string,
     userId: string,
@@ -737,7 +781,7 @@ export const messageService = {
     }
   },
 
-  // Gửi tin nhắn hệ thống (không tăng unread count)
+  // Gửi tin nhắn từ hệ thống.
   sendSystemMessage: async (
     conversationId: string,
     content: string,
