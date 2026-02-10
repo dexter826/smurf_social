@@ -14,10 +14,11 @@ interface UserStatusTextProps {
 export const UserStatusText: React.FC<UserStatusTextProps> = ({
   userId,
   className = '',
+  initialStatus,
   onlineText = 'Đang hoạt động',
   offlineText = 'Không hoạt động'
 }) => {
-  const presence = usePresence(userId);
+  const presence = usePresence(userId, initialStatus);
 
   if (presence?.status === UserStatus.BANNED) {
     return null;

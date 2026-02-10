@@ -28,10 +28,11 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   className,
   isGroup,
   members,
+  initialStatus,
   showStatus = true,
   onClick
 }) => {
-  const presence = usePresence(isGroup ? undefined : userId);
+  const presence = usePresence(isGroup ? undefined : userId, initialStatus);
   const [fetchedName, setFetchedName] = useState<string | undefined>(name);
   const currentUser = useAuthStore(state => state.user);
 
