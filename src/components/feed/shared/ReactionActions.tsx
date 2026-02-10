@@ -10,6 +10,7 @@ interface ReactionActionsProps {
   commentCount?: number;
   onReact: (postId: string, reaction: string) => void;
   onCommentClick?: () => void;
+  onViewReactions?: () => void;
   showStats?: boolean;
   showEmptyDivider?: boolean;
   statsClassName?: string;
@@ -19,7 +20,7 @@ interface ReactionActionsProps {
 
 export const ReactionActions: React.FC<ReactionActionsProps> = ({
   postId, reactions, myReaction, commentCount = 0,
-  onReact, onCommentClick, showStats = true,
+  onReact, onCommentClick, onViewReactions, showStats = true,
   showEmptyDivider = false, statsClassName, actionClassName, selectorClassName
 }) => {
   const [showReactions, setShowReactions] = useState(false);
@@ -30,7 +31,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
       {showStats && (hasStats ? (
         <div className={statsClassName || "px-4 py-1 flex justify-between items-center border-b border-border-light min-h-[40px]"}>
           <div className="flex items-center gap-1.5">
-            <ReactionDisplay reactions={reactions} variant="minimal" />
+            <ReactionDisplay reactions={reactions} variant="minimal" onClick={onViewReactions} />
           </div>
           {commentCount > 0 && (
             onCommentClick ? (
