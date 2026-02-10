@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Clock } from 'lucide-react';
 import { Button, Skeleton, Avatar, UserAvatar } from '../../ui';
 import { Conversation, User, UserStatus } from '../../../types';
 
@@ -55,8 +55,9 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
 
     return (
       <div className="flex flex-col p-2">
-        <div className="flex items-center justify-between px-2 py-2 mb-1">
-          <span className="text-xs font-bold text-text-tertiary uppercase tracking-wider">
+        <div className="flex items-center justify-between px-3 py-2.5 mb-1">
+          <span className="text-[11px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1.5">
+            <Clock size={12} />
             Tìm kiếm gần đây
           </span>
           <Button 
@@ -143,14 +144,15 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
     );
   }
 
-  if (results.users.length === 0) {
+  // Kết quả tìm kiếm thực tế
+  if (searchTerm && results.users.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-10">
+      <div className="flex flex-col items-center justify-center min-h-[200px] text-center p-8">
         <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4">
           <Search size={24} className="text-text-tertiary" />
         </div>
         <p className="text-sm text-text-secondary">
-          {searchTerm ? 'Không tìm thấy bạn bè phù hợp' : 'Nhập tên hoặc email bạn bè'}
+          Không tìm thấy bạn bè phù hợp
         </p>
       </div>
     );
@@ -158,7 +160,13 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
 
   return (
     <div className="flex flex-col pb-4">
-      <div className="mt-2">
+      <div className="flex items-center px-4 py-2.5 mb-1">
+        <span className="text-[11px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1.5">
+          <Search size={12} />
+          Kết quả tìm kiếm
+        </span>
+      </div>
+      <div className="space-y-0.5">
         {results.users.map((user) => (
           <div
             key={user.id}

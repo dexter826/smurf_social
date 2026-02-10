@@ -37,7 +37,7 @@ export const useChatStore = create<ChatState>()(
           searchTerm: '',
           isSearchFocused: false,
           searchResults: { conversations: [], users: [] },
-          searchHistory: [],
+          searchHistory: {},
           isChatVisible: false,
         });
       },
