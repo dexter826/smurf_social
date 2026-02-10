@@ -6,18 +6,21 @@ import { ChevronDown, Check } from 'lucide-react';
 interface SelectOption {
   value: string;
   label: string;
+  icon?: React.ReactNode;
 }
 
 interface SelectProps {
   label?: string;
   options: SelectOption[];
   value?: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | any) => void;
   error?: string;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
   openUp?: boolean;
+  variant?: 'default' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export const Select: React.FC<SelectProps> = ({
@@ -29,7 +32,9 @@ export const Select: React.FC<SelectProps> = ({
   placeholder = 'Chọn một tùy chọn',
   disabled = false,
   className = '',
-  openUp: forceOpenUp
+  openUp: forceOpenUp,
+  variant = 'default',
+  size = 'md'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
@@ -54,6 +59,17 @@ export const Select: React.FC<SelectProps> = ({
     setIsOpen(false);
   };
 
+  const sizeClasses = {
+    sm: 'h-8 px-2 text-xs',
+    md: 'h-11 px-4 text-sm',
+    lg: 'h-14 px-6 text-base'
+  };
+
+  const variantClasses = {
+    default: `bg-bg-primary border ${isOpen ? 'border-primary ring-4 ring-primary-light/30' : 'border-border-light hover:border-primary'}`,
+    ghost: `bg-transparent border-none hover:bg-bg-hover`
+  };
+
   return (
     <div className={`flex flex-col gap-1.5 ${className}`} ref={containerRef}>
       {label && (
@@ -66,18 +82,21 @@ export const Select: React.FC<SelectProps> = ({
         <div
           onClick={() => !disabled && setIsOpen(!isOpen)}
           className={`
-            w-full h-11 px-4 flex items-center justify-between border outline-none transition-all rounded-xl
-            bg-bg-primary text-sm font-normal
-            ${isOpen ? 'border-primary ring-4 ring-primary-light/30' : 'border-border-light hover:border-primary'}
-            ${error ? 'border-error ring-4 ring-error/10' : ''}
+            w-full flex items-center justify-between outline-none transition-all rounded-xl font-normal
+            ${sizeClasses[size]}
+            ${variantClasses[variant]}
+            ${error ? 'border-error ring-4 ring-error/10' : 'border-border-light'}
             ${disabled ? 'opacity-50 cursor-not-allowed bg-bg-secondary' : 'cursor-pointer'}
           `}
         >
-          <span className={`truncate ${!selectedOption ? 'text-text-tertiary' : 'text-text-primary'}`}>
-            {selectedOption ? selectedOption.label : placeholder}
-          </span>
+          <div className="flex items-center gap-2 overflow-hidden">
+            {selectedOption?.icon && <span className="flex-shrink-0 text-text-secondary">{selectedOption.icon}</span>}
+            <span className={`whitespace-nowrap ${!selectedOption ? 'text-text-tertiary' : 'text-text-primary'}`}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+          </div>
           <ChevronDown 
-            size={18} 
+            size={size === 'sm' ? 14 : 18} 
             className={`text-text-tertiary transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} 
           />
         </div>
@@ -89,7 +108,9 @@ export const Select: React.FC<SelectProps> = ({
               top: openUp ? 'auto' : `calc(${containerRef.current?.getBoundingClientRect().bottom ?? 0}px + 6px)`,
               bottom: openUp ? `calc(${window.innerHeight - (containerRef.current?.getBoundingClientRect().top ?? 0)}px + 6px)` : 'auto',
               left: `${containerRef.current?.getBoundingClientRect().left ?? 0}px`,
-              width: `${containerRef.current?.getBoundingClientRect().width ?? 0}px`,
+              minWidth: `${containerRef.current?.getBoundingClientRect().width ?? 0}px`,
+              width: 'max-content',
+              maxWidth: 'calc(100vw - 32px)',
               position: 'fixed'
             }}
             className={`
@@ -110,7 +131,10 @@ export const Select: React.FC<SelectProps> = ({
                     }
                   `}
                 >
-                  <span className="whitespace-nowrap">{option.label}</span>
+                  <div className="flex items-center gap-2">
+                    {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
+                    <span className="whitespace-nowrap">{option.label}</span>
+                  </div>
                   {option.value === value && <Check size={16} className="ml-2 flex-shrink-0" />}
                 </button>
               ))}
