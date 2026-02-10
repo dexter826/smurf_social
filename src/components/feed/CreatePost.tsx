@@ -34,9 +34,10 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
     images: string[],
     videos: string[],
     visibility: Visibility,
-    videoThumbnails?: Record<string, string>
+    videoThumbnails?: Record<string, string>,
+    pendingFiles?: File[]
   ) => {
-    await createPost(currentUser.id, content, images, videos, visibility, videoThumbnails);
+    await createPost(currentUser.id, content, images, videos, visibility, videoThumbnails, pendingFiles);
     setPendingFiles([]);
   };
 

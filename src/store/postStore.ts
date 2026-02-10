@@ -12,11 +12,12 @@ interface PostState {
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
+  uploadingStates: Record<string, { progress: number; error?: string }>;
   isError: boolean;
 
   fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
-  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
+  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
   updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
   deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
@@ -42,6 +43,7 @@ export const usePostStore = create<PostState>()(
       lastDoc: null,
       abortController: null,
       isError: false,
+      uploadingStates: {},
       selectedPost: null,
       isModalLoading: false,
 
@@ -59,6 +61,7 @@ export const usePostStore = create<PostState>()(
           isError: false,
           selectedPost: null,
           isModalLoading: false,
+          uploadingStates: {}
         });
       },
 
@@ -139,11 +142,20 @@ export const usePostStore = create<PostState>()(
               if (action === 'add') {
                 const existingIds = new Set(state.posts.map(p => p.id));
                 const newPosts = changedPosts.filter(p => !existingIds.has(p.id));
+                const duplicates = changedPosts.filter(p => existingIds.has(p.id));
 
-                if (newPosts.length === 0) return {};
+                let currentPosts = state.posts;
+                if (duplicates.length > 0) {
+                  currentPosts = currentPosts.map(p => {
+                    const match = duplicates.find(d => d.id === p.id);
+                    return match || p;
+                  });
+                }
+
+                if (newPosts.length === 0 && duplicates.length === 0) return {};
 
                 return {
-                  posts: [...newPosts, ...state.posts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                  posts: [...newPosts, ...currentPosts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
                 };
               }
 
@@ -176,21 +188,73 @@ export const usePostStore = create<PostState>()(
         return unsubscribe;
       },
 
-      createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: Visibility = Visibility.PUBLIC, videoThumbnails?: Record<string, string>) => {
-        try {
-          await postService.createPost({
-            userId,
-            content,
-            images,
-            videos,
-            videoThumbnails,
-            reactions: {},
-            visibility
-          });
-        } catch (error) {
-          console.error("Lỗi tạo bài viết:", error);
-          throw error;
-        }
+      createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: Visibility = Visibility.PUBLIC, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => {
+        const postId = postService.generatePostId();
+        const newPost: Post = {
+          id: postId,
+          userId,
+          content,
+          images: images || [],
+          videos: videos || [],
+          videoThumbnails: videoThumbnails || {},
+          reactions: {},
+          visibility,
+          commentCount: 0,
+          createdAt: new Date()
+        };
+
+        set(state => ({
+          posts: [newPost, ...state.posts],
+          uploadingStates: { ...state.uploadingStates, [postId]: { progress: 0 } }
+        }));
+
+        const processUpload = async () => {
+          try {
+            let finalImages = [...images];
+            let finalVideos = [...videos];
+            let finalThumbnails = { ...videoThumbnails };
+
+            if (pendingFiles && pendingFiles.length > 0) {
+              const result = await postService.uploadPostMedia(pendingFiles, userId, (progress) => {
+                set(state => ({
+                  uploadingStates: { 
+                    ...state.uploadingStates, 
+                    [postId]: { ...state.uploadingStates[postId], progress } 
+                  }
+                }));
+              });
+              finalImages = [...finalImages, ...result.images];
+              finalVideos = [...finalVideos, ...result.videos];
+              finalThumbnails = { ...finalThumbnails, ...result.videoThumbnails };
+            }
+
+            await postService.createPost({
+              userId,
+              content,
+              images: finalImages,
+              videos: finalVideos,
+              videoThumbnails: finalThumbnails,
+              reactions: {},
+              visibility
+            }, postId); 
+
+            set(state => {
+              const newUploadingStates = { ...state.uploadingStates };
+              delete newUploadingStates[postId];
+              return { uploadingStates: newUploadingStates };
+            });
+          } catch (error) {
+            console.error("Lỗi đăng bài:", error);
+            set(state => ({
+              uploadingStates: { 
+                ...state.uploadingStates, 
+                [postId]: { ...state.uploadingStates[postId], error: 'Lỗi tải lên' } 
+              }
+            }));
+          }
+        };
+
+        processUpload();
       },
 
       updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => {
@@ -230,7 +294,7 @@ export const usePostStore = create<PostState>()(
 
         set((state) => {
           const updateReactions = (p: Post) => {
-            const newReactions = { ...(p.reactions || {}) };
+            const newReactions = { ...(p.reactions ?? {}) };
             if (reaction === 'REMOVE' || newReactions[userId] === reaction) {
               delete newReactions[userId];
             } else {

@@ -9,6 +9,7 @@ import {
   updateDoc, 
   deleteDoc,
   doc, 
+  setDoc,
   arrayUnion, 
   arrayRemove,
   Timestamp,
@@ -296,20 +297,23 @@ export const postService = {
     };
   },
 
-  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount'>): Promise<string> => {
+  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount'>, customId?: string): Promise<string> => {
     try {
-      const docRef = await addDoc(collection(db, 'posts'), {
+      const postRef = customId ? doc(db, 'posts', customId) : doc(collection(db, 'posts'));
+      await setDoc(postRef, {
         ...postData,
         commentCount: 0,
         createdAt: Timestamp.now(),
         isEdited: false
       });
-      return docRef.id;
+      return postRef.id;
     } catch (error) {
       console.error("Lỗi tạo bài viết", error);
       throw error;
     }
   },
+
+  generatePostId: () => doc(collection(db, 'posts')).id,
 
   updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>): Promise<void> => {
     try {

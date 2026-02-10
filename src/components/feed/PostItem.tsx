@@ -1,11 +1,13 @@
 import React from 'react';
-import { MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Flag, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
 import { Post, User, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
+import { usePostStore } from '../../store/postStore';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
+import { toast } from '../../store/toastStore';
 
 interface PostItemProps {
   post: Post;
@@ -31,6 +33,12 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   const navigate = useNavigate();
   const { openReportModal } = useReportStore();
 
+  const { uploadingStates } = usePostStore();
+  const uploadState = uploadingStates[post.id];
+  const isUploading = !!uploadState && !uploadState.error;
+  const error = uploadState?.error;
+  const progress = uploadState?.progress || 0;
+
   const myReaction = post.reactions?.[currentUser.id];
   const isOwner = post.userId === currentUser.id;
 
@@ -44,7 +52,17 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   const threshold = 300;
 
   return (
-    <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-theme">
+    <div className={`bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-300 relative ${isUploading ? 'opacity-85' : 'opacity-100'}`}>
+      {/* Thanh tiến trình mỏng ở đỉnh card */}
+      {isUploading && (
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-bg-secondary z-20">
+          <div 
+            className="h-full bg-info transition-all duration-500 ease-out shadow-[0_0_8px_var(--color-info)]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
@@ -64,6 +82,12 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
               >
                 {author?.name || 'Unknown User'}
               </h3>
+              {isUploading && (
+                <span className="flex items-center gap-1.5 px-2 py-0.5 bg-info-light dark:bg-info/10 text-[10px] font-bold text-info rounded-full uppercase tracking-wider animate-pulse">
+                  <Loader2 size={10} className="animate-spin" />
+                  Đang đăng...
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
               <span title={formatDateTime(post.createdAt)}>
@@ -106,11 +130,18 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
       </div>
 
       <div 
-        className="px-4 pb-3"
+        className="px-4 pb-3 relative"
       >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
           <TruncatedText content={post.content} threshold={threshold} />
         </p>
+
+        {/* Hiển thị lỗi tải lên */}
+        {error && (
+          <div className="mt-2 p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
+            <span className="text-xs text-error font-medium">{error}</span>
+          </div>
+        )}
       </div>
 
       <PostMediaGrid
