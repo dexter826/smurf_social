@@ -1,6 +1,7 @@
 import { Post, Visibility } from '../types';
 import { postService } from '../services/postService';
 import { DocumentSnapshot } from 'firebase/firestore';
+import { toast } from './toastStore';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { PAGINATION } from '../constants';
@@ -243,14 +244,18 @@ export const usePostStore = create<PostState>()(
               delete newUploadingStates[postId];
               return { uploadingStates: newUploadingStates };
             });
+
+            toast.success('Đã đăng bài viết mới thành công!');
           } catch (error) {
             console.error("Lỗi đăng bài:", error);
+            const errorMessage = (error as any)?.message || 'Lỗi tải lên';
             set(state => ({
               uploadingStates: { 
                 ...state.uploadingStates, 
-                [postId]: { ...state.uploadingStates[postId], error: 'Lỗi tải lên' } 
+                [postId]: { ...state.uploadingStates[postId], error: errorMessage } 
               }
             }));
+            toast.error(`Không thể đăng bài viết: ${errorMessage}`);
           }
         };
 
@@ -308,15 +313,18 @@ export const usePostStore = create<PostState>()(
                 )
               };
             });
+
+            toast.success('Đã cập nhật bài viết thành công!');
           } catch (error) {
             console.error("Lỗi cập nhật bài viết:", error);
+            const errorMessage = (error as any)?.message || 'Lỗi tải lên';
             set(state => ({
               uploadingStates: { 
                 ...state.uploadingStates, 
-                [postId]: { ...state.uploadingStates[postId], error: 'Lỗi tải lên' } 
+                [postId]: { ...state.uploadingStates[postId], error: errorMessage } 
               }
             }));
-            throw error;
+            toast.error(`Không thể cập nhật bài viết: ${errorMessage}`);
           }
         };
 
@@ -329,8 +337,10 @@ export const usePostStore = create<PostState>()(
           set((state) => ({
             posts: state.posts.filter(p => p.id !== postId)
           }));
+          toast.success('Đã xóa bài viết thành công!');
         } catch (error) {
           console.error("Lỗi xóa bài viết:", error);
+          toast.error('Không thể xóa bài viết. Vui lòng thử lại.');
           throw error;
         }
       },
