@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { ReportType, ReportReason, Report } from '../types';
 import { reportService } from '../services/reportService';
+import { userService } from '../services/userService';
+import { useAuthStore } from './authStore';
 
 interface ReportState {
   isOpen: boolean;
@@ -20,7 +22,8 @@ interface ReportState {
     reporterId: string, 
     reason: ReportReason, 
     description?: string,
-    images?: string[]
+    images?: string[],
+    blockUser?: boolean
   ) => Promise<boolean>;
   reset: () => void;
   fetchPendingCount: () => Promise<void>;
@@ -51,7 +54,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     });
   },
 
-  submitReport: async (reporterId, reason, description, images) => {
+  submitReport: async (reporterId, reason, description, images, blockUser = false) => {
     const { data } = get();
     const { type: targetType, id: targetId, ownerId: targetOwnerId } = data;
     
@@ -76,6 +79,10 @@ export const useReportStore = create<ReportState>((set, get) => ({
       
       if (hasReported) {
         set({ error: 'Bạn đã báo cáo nội dung này trước đó', isSubmitting: false });
+        if (blockUser && targetOwnerId) {
+          await userService.blockUser(reporterId, targetOwnerId);
+          useAuthStore.getState().updateBlockList('add', targetOwnerId);
+        }
         return false;
       }
 
@@ -88,6 +95,11 @@ export const useReportStore = create<ReportState>((set, get) => ({
         description,
         images
       });
+
+      if (blockUser && targetOwnerId) {
+        await userService.blockUser(reporterId, targetOwnerId);
+        useAuthStore.getState().updateBlockList('add', targetOwnerId);
+      }
 
       set({ isOpen: false, isSubmitting: false });
       return true;
