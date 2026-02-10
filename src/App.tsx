@@ -49,24 +49,50 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
   return <>{children}</>;
 };
 
+import { ref, onValue, onDisconnect, set, serverTimestamp } from 'firebase/database';
+import { rtdb } from './firebase/config';
+
 const App: React.FC = () => {
   const { user } = useAuthStore();
   const initializeAuth = useAuthStore(state => state.initialize);
 
   useEffect(() => {
-    const unsubscribe = initializeAuth();
-    return () => unsubscribe();
+    const unsubscribeAuth = initializeAuth();
+    return () => unsubscribeAuth();
   }, [initializeAuth]);
 
+  // Thiết lập hệ thống Presence (Trạng thái hoạt động)
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (user) {
-        userService.updateUserStatus(user.id, UserStatus.OFFLINE);
-      }
-    };
+    if (!user) return;
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    const userStatusRef = ref(rtdb, `/status/${user.id}`);
+    const connectedRef = ref(rtdb, '.info/connected');
+
+    // Lắng nghe trạng thái kết nối của Firebase
+    const unsubscribeConnected = onValue(connectedRef, (snap) => {
+      if (snap.val() === true) {
+        // Khi kết nối thành công, thiết lập "di chúc" onDisconnect
+        onDisconnect(userStatusRef).set({
+          status: UserStatus.OFFLINE,
+          lastSeen: serverTimestamp()
+        }).then(() => {
+          // Sau khi thiết lập di chúc, mới set trạng thái online
+          set(userStatusRef, {
+            status: UserStatus.ONLINE,
+            lastSeen: serverTimestamp()
+          });
+        });
+      }
+    });
+
+    return () => {
+      unsubscribeConnected();
+      // Khi component unmount (ví dụ đổi user), cập nhật offline
+      set(userStatusRef, {
+        status: UserStatus.OFFLINE,
+        lastSeen: serverTimestamp()
+      });
+    };
   }, [user]);
 
   return (
