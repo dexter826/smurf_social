@@ -76,10 +76,11 @@ export const commentService = {
   },
 
   // Lấy phản hồi mục
-  getReplies: async (commentId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
+  getReplies: async (postId: string, commentId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
         collection(db, 'comments'),
+        where('postId', '==', postId),
         where('parentId', '==', commentId),
         orderBy('createdAt', 'asc'),
         limit(limitCount + 1)
@@ -309,17 +310,16 @@ export const commentService = {
   subscribeToComments: (
     postId: string,
     blockedUserIds: string[] = [],
-    callback: (action: 'initial' | 'add' | 'update' | 'remove', comments: Comment[]) => void,
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', data: Comment[] | { comments: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }) => void,
     limitCount: number = PAGINATION.COMMENTS
   ) => {
-    // Sử dụng helper convertDocToComment đã định nghĩa ở đầu file
 
     const rootQuery = query(
       collection(db, 'comments'),
       where('postId', '==', postId),
       where('parentId', '==', null),
       orderBy('createdAt', 'desc'),
-      limit(limitCount)
+      limit(limitCount + 1)
     );
 
     let isInitialLoad = true;
@@ -329,10 +329,18 @@ export const commentService = {
       const usersMap = await batchGetUsers(authorIds);
 
       if (isInitialLoad) {
-        const comments = snapshot.docs
+        const hasMore = snapshot.docs.length > limitCount;
+        const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+
+        const comments = docsToProcess
           .map(convertDocToComment)
           .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
-        callback('initial', comments);
+        
+        callback('initial', { 
+          comments, 
+          lastDoc: docsToProcess[docsToProcess.length - 1] || null, 
+          hasMore 
+        });
         isInitialLoad = false;
         return;
       }
@@ -358,18 +366,20 @@ export const commentService = {
 
   // Theo dõi phản hồi realtime
   subscribeToReplies: (
+    postId: string,
     parentId: string,
     blockedUserIds: string[] = [],
-    callback: (action: 'initial' | 'add' | 'update' | 'remove', replies: Comment[]) => void,
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', data: Comment[] | { replies: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }) => void,
     limitCount: number = PAGINATION.REPLIES
   ) => {
     // Sử dụng helper convertDocToComment đã định nghĩa ở đầu file
 
     const q = query(
       collection(db, 'comments'),
+      where('postId', '==', postId),
       where('parentId', '==', parentId),
       orderBy('createdAt', 'asc'),
-      limit(limitCount)
+      limit(limitCount + 1)
     );
 
     let isInitialLoad = true;
@@ -379,10 +389,18 @@ export const commentService = {
       const usersMap = await batchGetUsers(authorIds);
 
       if (isInitialLoad) {
-        const replies = snapshot.docs
+        const hasMore = snapshot.docs.length > limitCount;
+        const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+
+        const replies = docsToProcess
           .map(convertDocToComment)
           .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
-        callback('initial', replies);
+        
+        callback('initial', {
+          replies,
+          lastDoc: docsToProcess[docsToProcess.length - 1] || null,
+          hasMore
+        });
         isInitialLoad = false;
         return;
       }
