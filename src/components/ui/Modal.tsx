@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, AlertTriangle } from 'lucide-react';
+import { X, AlertTriangle, Info } from 'lucide-react';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { useScrollLock } from '../../hooks/utils/useScrollLock';
@@ -119,7 +119,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'danger' | 'primary' | 'success' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'danger' | 'primary' | 'success';
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -163,10 +163,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <div className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className={`
-          fixed inset-0 bg-bg-overlay backdrop-blur-sm transition-opacity duration-200
-          ${isAnimating ? 'opacity-100' : 'opacity-0'}
-        `}
+        className={`fixed inset-0 bg-bg-overlay backdrop-blur-sm transition-opacity duration-200 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
       
@@ -178,31 +175,36 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         {/* Icon + Title + Message */}
         <div className="flex flex-col items-center text-center mb-5">
           {variant === 'danger' && (
-            <div className="w-11 h-11 bg-error/10 text-error rounded-full flex items-center justify-center mb-3">
-              <AlertTriangle size={22} />
+            <div className="w-12 h-12 bg-error-light text-error rounded-full flex items-center justify-center mb-3">
+              <AlertTriangle size={24} />
             </div>
           )}
-          <h3 className="text-base font-bold text-text-primary mb-1.5">
+          {variant === 'primary' && (
+            <div className="w-12 h-12 bg-primary-light text-primary rounded-full flex items-center justify-center mb-3">
+              <Info size={24} />
+            </div>
+          )}
+          <h3 className="text-lg font-bold text-text-primary mb-2">
             {title}
           </h3>
-          <p className="text-sm text-text-secondary leading-relaxed">
+          <p className="text-[15px] text-text-secondary leading-relaxed">
             {message}
           </p>
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-2.5">
+        <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={onClose}
             variant="secondary"
-            className="flex-1"
+            className="w-full text-text-secondary font-medium"
           >
             {cancelLabel}
           </Button>
           <Button
             onClick={handleConfirm}
             variant={variant}
-            className="flex-1"
+            className="w-full font-bold shadow-sm"
           >
             {confirmLabel}
           </Button>
