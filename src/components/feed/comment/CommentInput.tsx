@@ -95,7 +95,6 @@ export const CommentInput: React.FC<CommentInputProps> = ({
       try {
         imageUrl = await onUploadMedia(pendingImage);
       } catch (error) {
-        toast.error('Lỗi tải ảnh lên');
         setIsUploading(false);
         return;
       } finally {

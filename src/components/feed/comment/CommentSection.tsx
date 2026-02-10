@@ -174,7 +174,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       if (inputMode === 'edit' && editingComment) {
         await updateComment(postId, editingComment.id, content, editingComment.parentId, image);
-        toast.success('Đã cập nhật bình luận');
       } else {
         const parentId = replyingTo ? (replyingTo.parentId || replyingTo.id) : null;
         await addComment(
@@ -185,11 +184,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           replyingTo?.userId,
           image
         );
-        toast.success('Đã gửi bình luận');
       }
       resetInput();
     } catch (error) {
-      toast.error(inputMode === 'edit' ? "Lỗi cập nhật" : "Lỗi khi gửi");
       throw error;
     }
   };
@@ -199,9 +196,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       await deleteComment(postId, commentToDelete.id, commentToDelete.parentId);
       setCommentToDelete(null);
-      toast.success('Đã xóa bình luận');
     } catch (error) {
-      toast.error("Lỗi xóa bình luận");
     }
   };
 
