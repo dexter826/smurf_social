@@ -7,6 +7,7 @@ import { Post, User, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
+import { PostReactionsModal } from './modals';
 import { toast } from '../../store/toastStore';
 
 interface PostItemProps {
@@ -30,6 +31,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   onViewDetail,
   onProfileClick
 }) => {
+  const [isReactionsModalOpen, setIsReactionsModalOpen] = React.useState(false);
   const navigate = useNavigate();
   const { openReportModal } = useReportStore();
 
@@ -158,7 +160,16 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         commentCount={post.commentCount}
         onReact={onReact}
         onCommentClick={() => onViewDetail?.(post)}
+        onViewReactions={() => setIsReactionsModalOpen(true)}
         showEmptyDivider
+      />
+
+      <PostReactionsModal
+        isOpen={isReactionsModalOpen}
+        onClose={() => setIsReactionsModalOpen(false)}
+        reactions={post.reactions || {}}
+        currentUser={currentUser}
+        postAuthorId={post.userId}
       />
 
 

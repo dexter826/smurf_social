@@ -33,23 +33,31 @@ export const ReactionDisplay: React.FC<ReactionDisplayProps> = ({
     <div 
       className={`flex items-center gap-1 select-none transition-all duration-200 ${
         isMinimal 
-          ? 'cursor-default' 
+          ? (onClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default') 
           : 'px-1 py-[1px] bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm cursor-pointer hover:bg-bg-hover hover:ring-primary hover:shadow-md'
       } ${className}`}
       onClick={(e) => {
-        if (isMinimal) return;
+        if (!onClick) return;
         e.stopPropagation();
         onClick?.();
       }}
     >
-      <div className={`flex items-center ${isMinimal ? 'gap-1' : '-space-x-1 mr-0.5'}`}>
-        {sortedEmojis.map(emoji => (
-          <span key={emoji} className={isMinimal ? 'text-sm sm:text-base flex items-center' : 'text-[11px] sm:text-xs flex items-center'}>
+      <div className={`flex items-center ${isMinimal ? '-space-x-1.5' : '-space-x-1 mr-0.5'}`}>
+        {sortedEmojis.map((emoji, index) => (
+          <div 
+            key={emoji} 
+            className={`
+              flex items-center justify-center rounded-full 
+              ${isMinimal ? 'w-6 h-6 text-base bg-bg-primary border border-border-light' : 'text-[11px] sm:text-xs'}
+              transition-transform
+            `}
+            style={{ zIndex: 10 - index }}
+          >
             {emoji}
-          </span>
+          </div>
         ))}
       </div>
-      <span className={`${isMinimal ? 'text-sm sm:text-[14px]' : 'text-[9px] sm:text-[10px]'} text-text-secondary font-bold flex items-center h-full translate-y-[0.5px]`}>
+      <span className={`${isMinimal ? 'text-xs sm:text-[13px] ml-1.5' : 'text-[9px] sm:text-[10px]'} text-text-secondary font-bold flex items-center h-full translate-y-[0.5px]`}>
         {total}
       </span>
     </div>
