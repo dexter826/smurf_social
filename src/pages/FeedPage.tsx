@@ -35,7 +35,7 @@ const FeedPage: React.FC = () => {
     pendingFiles?: File[]
   ) => {
     if (!showEditModal) return;
-    await handleUpdate(showEditModal, content, images, videos, visibility, videoThumbnails);
+    await handleUpdate(showEditModal, content, images, videos, visibility, videoThumbnails, pendingFiles);
     setShowEditModal(null);
   };
 
