@@ -268,9 +268,9 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   },
 
   addComment: async (postId, userId, content, parentId, replyToUserId, imageUrl) => {
-    const tempId = `temp-${Date.now()}`;
+    const realId = commentService.generateCommentId();
     const optimisticComment: Comment = {
-      id: tempId,
+      id: realId,
       postId,
       userId,
       content,
@@ -282,13 +282,10 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       replyCount: 0
     };
 
-    // Lưu trạng thái để rollback
     const previousState = { 
       rootComments: { ...get().rootComments },
       replies: { ...get().replies }
     };
-
-    // Thêm ngay vào Store
     if (parentId) {
       set(state => {
         const postReplies = state.replies[postId] || {};
@@ -313,43 +310,10 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
 
     try {
-      const realId = await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl);
-      
-      // Ghi đè ID thật
-      set(state => {
-        if (parentId) {
-          const postReplies = state.replies[postId] || {};
-          const parentReplies = postReplies[parentId] || [];
-          
-          const exists = parentReplies.some(c => c.id === realId);
-          return {
-            replies: {
-              ...state.replies,
-              [postId]: { 
-                ...postReplies, 
-                [parentId]: exists 
-                  ? parentReplies.filter(c => c.id !== tempId)
-                  : parentReplies.map(c => c.id === tempId ? { ...c, id: realId } : c)
-              }
-            }
-          };
-        } else {
-          const currentRoots = state.rootComments[postId] || [];
-          const exists = currentRoots.some(c => c.id === realId);
-          return {
-            rootComments: {
-              ...state.rootComments,
-              [postId]: exists
-                ? currentRoots.filter(c => c.id !== tempId)
-                : currentRoots.map(c => c.id === tempId ? { ...c, id: realId } : c)
-            }
-          };
-        }
-      });
+      await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, realId);
       
       return realId;
     } catch (error) {
-      // Phục hồi khi lỗi
       set(previousState);
       console.error('Lỗi thêm bình luận:', error);
       throw error;
@@ -372,7 +336,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       replies: { ...get().replies }
     };
 
-    // Xóa ngay lập tức (Optimistic)
     set(state => {
       if (parentId) {
         const postReplies = state.replies[postId] || {};
@@ -411,7 +374,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   likeComment: async (postId, commentId, userId, parentId) => {
     const { rootComments, replies } = get();
     
-    // Kiểm tra trạng thái like hiện tại
     let isLiked = false;
     if (parentId) {
       const comment = replies[postId]?.[parentId]?.find(c => c.id === commentId);
@@ -421,7 +383,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       isLiked = comment?.likes?.includes(userId) || false;
     }
 
-    // Cập nhật giao diện ngay lập tức
     set((state) => {
       if (parentId) {
         const postReplies = state.replies[postId] || {};
@@ -465,7 +426,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       await commentService.likeComment(commentId, userId, isLiked);
     } catch (error) {
       console.error('Lỗi thích bình luận:', error);
-      // Khôi phục dữ liệu nếu lỗi
       if (parentId) {
         await get().fetchReplies(postId, parentId);
       } else {

@@ -9,6 +9,7 @@ import {
   updateDoc, 
   deleteDoc,
   doc, 
+  setDoc,
   arrayUnion, 
   arrayRemove,
   Timestamp,
@@ -27,7 +28,6 @@ import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 import { batchGetUsers } from '../utils/batchUtils';
 
-// Định dạng dữ liệu Firestore thành Comment object.
 function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<DocumentData>): Comment {
   const data = docSnap.data();
   return {
@@ -38,7 +38,10 @@ function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<D
 }
 
 export const commentService = {
-  // Lấy bình luận gốc
+  generateCommentId: () => {
+    return doc(collection(db, 'comments')).id;
+  },
+
   getRootComments: async (postId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -119,7 +122,8 @@ export const commentService = {
     content: string, 
     parentId: string | null = null,
     replyToUserId?: string,
-    imageUrl?: string
+    imageUrl?: string,
+    preGeneratedId?: string
   ): Promise<string> => {
     try {
       const commentData = {
@@ -134,7 +138,13 @@ export const commentService = {
         replyCount: 0
       };
 
-      const docRef = await addDoc(collection(db, 'comments'), commentData);
+      let docRefId = preGeneratedId;
+      if (preGeneratedId) {
+        await setDoc(doc(db, 'comments', preGeneratedId), commentData);
+      } else {
+        const docRef = await addDoc(collection(db, 'comments'), commentData);
+        docRefId = docRef.id;
+      }
 
       if (parentId) {
         const parentRef = doc(db, 'comments', parentId);
@@ -159,7 +169,7 @@ export const commentService = {
             receiverId: replyToUserId,
             senderId: userId,
             type: NotificationType.REPLY_COMMENT,
-            data: { postId, commentId: docRef.id, contentSnippet: content.substring(0, 50) }
+            data: { postId, commentId: docRefId!, contentSnippet: content.substring(0, 50) }
           });
         }
       } else if (postData && postData.userId !== userId) {
@@ -168,11 +178,11 @@ export const commentService = {
           receiverId: postData.userId,
           senderId: userId,
           type: NotificationType.COMMENT_POST,
-          data: { postId, commentId: docRef.id, contentSnippet: content.substring(0, 50) }
+          data: { postId, commentId: docRefId!, contentSnippet: content.substring(0, 50) }
         });
       }
 
-      return docRef.id;
+      return docRefId!;
     } catch (error) {
       console.error("Lỗi thêm comment:", error);
       throw error;
@@ -246,7 +256,7 @@ export const commentService = {
     }
   },
 
-  // Cập nhật nội dung bình luận
+  // Chỉnh sửa nội dung bình luận hiện có.
   updateComment: async (commentId: string, content: string, imageUrl?: string | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -259,7 +269,7 @@ export const commentService = {
     }
   },
 
-  // Thích bình luận
+  // Cập nhật trạng thái Thích cho bình luận.
   likeComment: async (commentId: string, userId: string, isLiked: boolean) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -324,7 +334,9 @@ export const commentService = {
 
     let isInitialLoad = true;
 
-    return onSnapshot(rootQuery, async (snapshot) => {
+    return onSnapshot(rootQuery, { includeMetadataChanges: true }, async (snapshot) => {
+      if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
+      
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
       const usersMap = await batchGetUsers(authorIds);
 
@@ -384,7 +396,9 @@ export const commentService = {
 
     let isInitialLoad = true;
 
-    return onSnapshot(q, async (snapshot) => {
+    return onSnapshot(q, { includeMetadataChanges: true }, async (snapshot) => {
+      if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
+      
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
       const usersMap = await batchGetUsers(authorIds);
 

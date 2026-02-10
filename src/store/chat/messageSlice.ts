@@ -70,12 +70,12 @@ const sendMediaMessage = (
   get: () => ChatState
 ) => {
   const config = mediaConfig[type];
-  const tempId = `temp-${config.prefix}-${Date.now()}`;
+  const realId = chatService.generateMessageId();
   const isFile = type === 'file';
   const localUrl = isFile ? undefined : URL.createObjectURL(file);
 
   const optimisticMessage: Message = {
-    id: tempId,
+    id: realId,
     conversationId,
     senderId,
     content: isFile ? file.name : localUrl!,
@@ -88,7 +88,7 @@ const sendMediaMessage = (
 
   set(state => ({
     messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] },
-    uploadProgress: { ...state.uploadProgress, [tempId]: { progress: 0, ...(localUrl && { localUrl }) } }
+    uploadProgress: { ...state.uploadProgress, [realId]: { progress: 0, ...(localUrl && { localUrl }) } }
   }));
 
   const serviceFn = chatService[config.serviceFn] as (
@@ -96,20 +96,21 @@ const sendMediaMessage = (
     senderId: string, 
     file: File, 
     replyToId: string | undefined, 
-    onProgress: (p: { progress: number }) => void
-  ) => Promise<void>;
+    onProgress: (p: { progress: number }) => void,
+    preGeneratedId?: string
+  ) => Promise<string>;
 
   serviceFn(conversationId, senderId, file, undefined, (p: { progress: number }) => {
-    get().setUploadProgress(tempId, p.progress);
-  }).then(() => {
+    get().setUploadProgress(realId, p.progress);
+  }, realId).then(() => {
     set(state => {
       const newProgress = { ...state.uploadProgress };
-      delete newProgress[tempId];
+      delete newProgress[realId];
       return { uploadProgress: newProgress };
     });
   }).catch(error => {
     console.error(config.errorMsg, error);
-    get().setUploadError(tempId, true);
+    get().setUploadError(realId, true);
   });
 };
 
@@ -165,9 +166,9 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   },
 
   sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[]) => {
-    const tempId = `temp-${Date.now()}`;
+    const realId = chatService.generateMessageId();
     const optimisticMessage: Message = {
-      id: tempId,
+      id: realId,
       conversationId,
       senderId,
       content,
@@ -183,10 +184,10 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }));
 
     try {
-      await chatService.sendTextMessage(conversationId, senderId, content, undefined, false, mentions);
+      await chatService.sendTextMessage(conversationId, senderId, content, undefined, false, mentions, realId);
     } catch (error) {
       set(state => ({
-        messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== tempId) }
+        messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }
       }));
       console.error("Lỗi gửi tin nhắn văn bản:", error);
     }
@@ -255,9 +256,29 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   },
 
   replyToMessage: async (conversationId: string, senderId: string, content: string, replyToId: string) => {
+    const realId = chatService.generateMessageId();
+    const optimisticMessage: Message = {
+      id: realId,
+      conversationId,
+      senderId,
+      content,
+      createdAt: new Date(),
+      type: MessageType.TEXT,
+      replyToId,
+      readBy: [],
+      deliveredTo: [],
+    };
+
+    set(state => ({
+      messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] }
+    }));
+
     try {
-      await chatService.replyToMessage(conversationId, senderId, content, replyToId);
+      await chatService.replyToMessage(conversationId, senderId, content, replyToId, realId);
     } catch (error) {
+      set(state => ({
+        messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }
+      }));
       console.error("Lỗi phản hồi tin nhắn:", error);
       throw error;
     }
