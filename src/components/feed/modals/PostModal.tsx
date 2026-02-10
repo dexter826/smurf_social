@@ -62,9 +62,10 @@ export const PostModal: React.FC<PostModalProps> = ({
   const [pendingFiles, setPendingFiles] = React.useState<File[]>([]);
   const [previews, setPreviews] = React.useState<{ url: string; type: 'image' | 'video' }[]>([]);
 
-  // Khởi tạo dữ liệu
+  const initializedRef = React.useRef(false);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !initializedRef.current) {
       if (isEdit && initialPost) {
         reset({
           content: initialPost.content,
@@ -83,17 +84,18 @@ export const PostModal: React.FC<PostModalProps> = ({
           hasPendingFiles: initialFiles?.length > 0,
           visibility: Visibility.PUBLIC
         });
-        // Xử lý file ban đầu
-        if (initialFiles?.length > 0) {
-          processFiles(initialFiles);
-        }
+        if (initialFiles?.length > 0) processFiles(initialFiles);
       }
-      // Cleanup blob URLs khi đóng modal
-      return () => {
-        previews.forEach(p => URL.revokeObjectURL(p.url));
-      };
+      initializedRef.current = true;
     }
-  }, [isOpen, isEdit, initialPost, initialFiles, reset]);
+
+    if (!isOpen) {
+      initializedRef.current = false;
+      previews.forEach(p => URL.revokeObjectURL(p.url));
+      setPendingFiles([]);
+      setPreviews([]);
+    }
+  }, [isOpen, isEdit, initialPost?.id, initialPost?.updatedAt, initialFiles, reset]);
   
   useAutoResizeTextarea(textareaRef, formData.content || '', isOpen);
 
@@ -271,9 +273,8 @@ export const PostModal: React.FC<PostModalProps> = ({
               { value: Visibility.FRIENDS, label: 'Bạn bè', icon: <Users size={14} /> },
               { value: Visibility.PRIVATE, label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
             ]}
-            variant="ghost"
             size="sm"
-            className="px-0 py-0 h-auto font-medium text-text-secondary hover:bg-transparent min-w-[110px] md:min-w-[130px]"
+            className="flex-none min-w-[150px]"
           />
         </div>
 
