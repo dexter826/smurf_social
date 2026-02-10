@@ -30,6 +30,7 @@ interface ChatBoxProps {
   isLoadingMore?: boolean;
   hasMoreMessages?: boolean;
   onLoadMore?: () => void;
+  isBlocked?: boolean;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -53,7 +54,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   isLoading,
   isLoadingMore,
   hasMoreMessages,
-  onLoadMore
+  onLoadMore,
+  isBlocked = false
 }) => {
   const {
     messagesEndRef,
@@ -163,6 +165,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               chatName={chatName}
               avatarSrc={avatarSrc}
               partner={partner || undefined}
+              isBlocked={isBlocked}
             />
             
             <div ref={messagesEndRef} />

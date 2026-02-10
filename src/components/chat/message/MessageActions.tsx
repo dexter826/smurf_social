@@ -18,6 +18,7 @@ interface MessageActionsProps {
   onEdit?: (message: Message) => void;
   setShowRecallConfirm: (show: boolean) => void;
   onDeleteForMe?: (messageId: string) => void;
+  isBlocked: boolean;
 }
 
 export const MessageActions: React.FC<MessageActionsProps> = ({
@@ -34,6 +35,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   onEdit,
   setShowRecallConfirm,
   onDeleteForMe,
+  isBlocked,
 }) => {
   return (
     <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
@@ -55,19 +57,31 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           }`}>
             <button
               onClick={() => {
-                onReply?.(message);
-                setShowMenu(false);
+                if (!isBlocked) {
+                  onReply?.(message);
+                  setShowMenu(false);
+                }
               }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
+              disabled={isBlocked}
+              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                isBlocked ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bg-hover'
+              }`}
+              title={isBlocked ? 'Không thể trả lời khi bị chặn' : ''}
             >
               <Reply size={14} /> Trả lời
             </button>
             <button
               onClick={() => {
-                onForward?.(message);
-                setShowMenu(false);
+                if (!isBlocked) {
+                  onForward?.(message);
+                  setShowMenu(false);
+                }
               }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
+              disabled={isBlocked}
+              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                isBlocked ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bg-hover'
+              }`}
+              title={isBlocked ? 'Không thể chuyển tiếp khi bị chặn' : ''}
             >
               <Forward size={14} /> Chuyển tiếp
             </button>

@@ -223,6 +223,7 @@ const ChatPage: React.FC = () => {
               isLoadingMore={isLoadingMore}
               hasMoreMessages={hasMoreMessages}
               onLoadMore={handleLoadMoreMessages}
+              isBlocked={isBlocked}
             />
             <ChatInput
               key={selectedConversationId}

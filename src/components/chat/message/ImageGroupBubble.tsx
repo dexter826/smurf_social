@@ -22,6 +22,7 @@ interface ImageGroupBubbleProps {
   onForward?: (message: Message) => void;
   onReply?: (message: Message) => void;
   onEdit?: (message: Message) => void;
+  isBlocked?: boolean;
 }
 
 export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
@@ -38,7 +39,8 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
   onDeleteForMe,
   onForward,
   onReply,
-  onEdit
+  onEdit,
+  isBlocked = false
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [showMenu, setShowMenu] = useState(false);
@@ -187,6 +189,7 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
             onEdit={onEdit}
             setShowRecallConfirm={setShowRecallConfirm}
             onDeleteForMe={onDeleteForMe}
+            isBlocked={isBlocked}
           />
         </div>
         
