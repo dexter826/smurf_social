@@ -72,6 +72,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   }, [userId, currentUser.id, currentUser.friendIds, fetchUsers]);
 
   useEffect(() => {
+    loadPosts(true);
     
     const unsubscribe = postService.subscribeToUserPosts(
       userId,
@@ -99,7 +100,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     );
 
     return () => unsubscribe();
-  }, [userId, currentUser.id, currentUser.friendIds, loadPosts]);
+  }, [userId, currentUser.id, currentUser.friendIds, loadPosts, fetchUsers]);
 
   const handleLoadMore = useCallback(() => {
     if (!loading && !loadingMore && hasMore) {
