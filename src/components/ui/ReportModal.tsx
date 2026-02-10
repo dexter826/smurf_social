@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { TextArea } from './TextArea';
+import { Checkbox } from './Checkbox';
 import { ReportReason, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { useAuthStore } from '../../store/authStore';
@@ -211,9 +212,9 @@ export const ReportModal: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-text-primary">
-                    Hình ảnh bằng chứng (Tối đa ${REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh)
+                    Hình ảnh bằng chứng (Tối đa {REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh)
                   </label>
-                  <span className="text-xs text-text-tertiary">{selectedImages.length}/${REPORT_CONFIG.MAX_IMAGES_PER_REPORT}</span>
+                  <span className="text-xs text-text-tertiary">{selectedImages.length}/{REPORT_CONFIG.MAX_IMAGES_PER_REPORT}</span>
                 </div>
                 
                 <div className="grid grid-cols-4 gap-2">
@@ -256,17 +257,11 @@ export const ReportModal: React.FC = () => {
           {/* Tùy chọn chặn người dùng */}
           {(formData.reason !== '') && (
             <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={shouldBlock}
-                  onChange={(e) => setShouldBlock(e.target.checked)}
-                  className="w-4 h-4 rounded border-border-medium text-primary focus:ring-primary"
-                />
-                <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                  Chặn người dùng này để tránh các tương tác tiêu cực
-                </span>
-              </label>
+              <Checkbox
+                label="Chặn người dùng này để tránh các tương tác tiêu cực"
+                checked={shouldBlock}
+                onChange={(e) => setShouldBlock(e.target.checked)}
+              />
             </div>
           )}
 
