@@ -22,6 +22,7 @@ export const ReportModal: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [shouldBlock, setShouldBlock] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isSubmitting = isStoreSubmitting || isUploading;
@@ -53,8 +54,9 @@ export const ReportModal: React.FC = () => {
       });
       setSelectedImages([]);
       setPreviewUrls([]);
+      setShouldBlock(reportContext?.type === ReportType.USER);
     }
-  }, [isOpen, reset]);
+  }, [isOpen, reset, reportContext?.type]);
 
   // Clean up preview URLs
   useEffect(() => {
@@ -111,7 +113,8 @@ export const ReportModal: React.FC = () => {
         user.id, 
         data.reason as ReportReason, 
         data.description || undefined,
-        imageUrls
+        imageUrls,
+        shouldBlock
       );
       
       if (success) {
@@ -247,6 +250,23 @@ export const ReportModal: React.FC = () => {
                   className="hidden"
                 />
               </div>
+            </div>
+          )}
+
+          {/* Tùy chọn chặn người dùng */}
+          {(formData.reason !== '') && (
+            <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={shouldBlock}
+                  onChange={(e) => setShouldBlock(e.target.checked)}
+                  className="w-4 h-4 rounded border-border-medium text-primary focus:ring-primary"
+                />
+                <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                  Chặn người dùng này để tránh các tương tác tiêu cực
+                </span>
+              </label>
             </div>
           )}
 
