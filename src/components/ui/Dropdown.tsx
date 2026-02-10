@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useClickOutside } from '../../hooks/utils';
 
 interface DropdownItemProps {
@@ -57,6 +58,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isControlled = controlledIsOpen !== undefined;
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
@@ -68,7 +70,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
     onOpenChange?.(newOpen);
   };
 
-  useClickOutside(containerRef, () => handleOpenChange(false), isOpen);
+  useClickOutside([containerRef, dropdownRef], () => handleOpenChange(false), isOpen);
+
+  // Tính toán vị trí khi render
+  const rect = containerRef.current?.getBoundingClientRect();
+  const top = rect ? rect.bottom : 0;
+  const left = rect ? rect.left : 0;
+  const width = rect ? rect.width : 0;
 
   return (
     <div className={`relative inline-block ${className}`} ref={containerRef}>
@@ -82,21 +90,28 @@ export const Dropdown: React.FC<DropdownProps> = ({
         {trigger}
       </div>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div 
+          ref={dropdownRef}
           className={`
-            absolute z-[var(--z-dropdown)] mt-1.5
+            fixed z-[var(--z-dropdown)] mt-1.5
             min-w-[180px] w-max max-w-[calc(100vw-32px)]
             bg-bg-primary border border-border-light rounded-xl 
             shadow-dropdown overflow-hidden
             animate-in fade-in zoom-in-95 duration-200
-            ${align === 'right' ? 'right-0' : 'left-0'}
-            origin-top-${align}
+            ${align === 'right' ? 'origin-top-right' : 'origin-top-left'}
           `}
+          style={{
+            top: `${top}px`,
+            left: align === 'right' 
+              ? `${left + width - (dropdownRef.current?.offsetWidth || 180)}px` 
+              : `${left}px`,
+          }}
           onClick={() => handleOpenChange(false)}
         >
           {children}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

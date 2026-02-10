@@ -93,7 +93,7 @@ export const Select: React.FC<SelectProps> = ({
               position: 'fixed'
             }}
             className={`
-              z-[var(--z-dropdown)] bg-bg-primary border border-border-light rounded-xl shadow-dropdown py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200
+              z-[var(--z-popover)] bg-bg-primary border border-border-light rounded-xl shadow-dropdown py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200
             `}
           >
             <div className="max-h-60 overflow-y-auto custom-scrollbar">
