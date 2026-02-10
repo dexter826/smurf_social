@@ -24,12 +24,19 @@ export const useProfileBlock = ({
   friendStatus,
   pendingRequestId
 }: UseProfileBlockProps) => {
+  const blockedUserIds = useAuthStore(state => state.user?.blockedUserIds || []);
+  
   const isBlockedByMe = useMemo(() => 
-    currentUser?.blockedUserIds?.includes(profileUserId || '') || false,
-    [currentUser?.blockedUserIds, profileUserId]
+    blockedUserIds.includes(profileUserId || ''),
+    [blockedUserIds, profileUserId]
   );
 
-  const canViewContent = !isBlockedByMe;
+  const isBlockedByThem = useMemo(() => 
+    profile?.blockedUserIds?.includes(currentUser?.id || '') || false,
+    [profile?.blockedUserIds, currentUser?.id]
+  );
+
+  const canViewContent = !isBlockedByMe && !isBlockedByThem;
 
   const handleBlockUser = useCallback(async () => {
     if (!currentUser || !profile || isOwnProfile) return;
