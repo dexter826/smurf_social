@@ -1,6 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager 
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,15 +19,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
 
-// Hỗ trợ truy cập tin nhắn khi không có mạng
-enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-        console.warn("Firestore Persistence failed: Multiple tabs open");
-    } else if (err.code === 'unimplemented') {
-        console.warn("Firestore Persistence failed: Browser not supported");
-    }
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
 });
 
 export default app;
