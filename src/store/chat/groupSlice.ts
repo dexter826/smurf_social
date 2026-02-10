@@ -12,6 +12,7 @@ export interface GroupSlice {
   leaveGroup: (conversationId: string, userId: string) => Promise<void>;
   promoteToAdmin: (conversationId: string, userId: string) => Promise<void>;
   demoteFromAdmin: (conversationId: string, userId: string) => Promise<void>;
+  disbandGroup: (conversationId: string) => Promise<void>;
 }
 
 type GroupSliceWithConversation = GroupSlice & ConversationSlice;
@@ -96,6 +97,19 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
       await chatService.demoteFromAdmin(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi gỡ quyền admin:", error);
+      throw error;
+    }
+  },
+
+  disbandGroup: async (conversationId: string) => {
+    set((state) => ({
+      conversations: state.conversations.filter((c: Conversation) => c.id !== conversationId),
+      selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
+    }));
+    try {
+      await chatService.disbandGroup(conversationId);
+    } catch (error) {
+      console.error("Lỗi giải tán nhóm:", error);
       throw error;
     }
   },

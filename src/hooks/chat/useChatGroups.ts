@@ -22,6 +22,7 @@ export const useChatGroups = ({
     leaveGroup,
     promoteToAdmin,
     demoteFromAdmin,
+    disbandGroup,
   } = useChatStore();
 
   const handleCreateGroup = useCallback(async (
@@ -80,6 +81,11 @@ export const useChatGroups = ({
     await updateGroupInfo(selectedConversationId, updates);
   }, [selectedConversationId, updateGroupInfo]);
 
+  const handleDisbandGroup = useCallback(async () => {
+    if (!selectedConversationId) return;
+    await disbandGroup(selectedConversationId);
+  }, [selectedConversationId, disbandGroup]);
+
   return {
     handleCreateGroup,
     handleAddMembers,
@@ -89,5 +95,6 @@ export const useChatGroups = ({
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleEditGroup,
+    handleDisbandGroup,
   };
 };
