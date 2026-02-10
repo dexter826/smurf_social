@@ -20,12 +20,14 @@ interface PostModalProps {
   onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
 }
 
+const EMPTY_FILES: File[] = [];
+
 export const PostModal: React.FC<PostModalProps> = ({
   isOpen,
   onClose,
   currentUser,
   initialPost,
-  initialFiles = [],
+  initialFiles = EMPTY_FILES,
   onSubmit,
   onUploadImages
 }) => {
@@ -81,19 +83,23 @@ export const PostModal: React.FC<PostModalProps> = ({
           images: [],
           videos: [],
           videoThumbnails: {},
-          hasPendingFiles: initialFiles?.length > 0,
+          hasPendingFiles: initialFiles.length > 0,
           visibility: Visibility.PUBLIC
         });
-        if (initialFiles?.length > 0) processFiles(initialFiles);
+        if (initialFiles.length > 0) processFiles(initialFiles);
       }
       initializedRef.current = true;
     }
 
-    if (!isOpen) {
+    if (!isOpen && initializedRef.current) {
       initializedRef.current = false;
-      previews.forEach(p => URL.revokeObjectURL(p.url));
-      setPendingFiles([]);
-      setPreviews([]);
+      if (previews.length > 0) {
+        previews.forEach(p => URL.revokeObjectURL(p.url));
+        setPreviews([]);
+      }
+      if (pendingFiles.length > 0) {
+        setPendingFiles([]);
+      }
     }
   }, [isOpen, isEdit, initialPost?.id, initialPost?.updatedAt, initialFiles, reset]);
   

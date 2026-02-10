@@ -18,7 +18,7 @@ interface PostState {
   fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
   createPost: (userId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
-  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
+  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
   deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
@@ -257,20 +257,70 @@ export const usePostStore = create<PostState>()(
         processUpload();
       },
 
-      updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => {
-        try {
-          await postService.updatePost(postId, content, images, videos, visibility, videoThumbnails);
-          set((state) => ({
-            posts: state.posts.map(p =>
-              p.id === postId
-                ? { ...p, content, images, videos, visibility, videoThumbnails, isEdited: true, editedAt: new Date() }
-                : p
-            )
-          }));
-        } catch (error) {
-          console.error("Lỗi cập nhật bài viết:", error);
-          throw error;
-        }
+      updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => {
+        const { posts } = get();
+        const post = posts.find(p => p.id === postId);
+        if (!post) return;
+
+        // Trạng thái edit tạm thời
+        set(state => ({
+          posts: state.posts.map(p =>
+            p.id === postId
+              ? { ...p, content, images, videos, visibility, videoThumbnails, isEdited: true, editedAt: new Date() }
+              : p
+          ),
+          uploadingStates: pendingFiles && pendingFiles.length > 0 
+            ? { ...state.uploadingStates, [postId]: { progress: 0 } }
+            : state.uploadingStates
+        }));
+
+        const processUpdate = async () => {
+          try {
+            let finalImages = [...images];
+            let finalVideos = [...videos];
+            let finalThumbnails = { ...videoThumbnails };
+
+            if (pendingFiles && pendingFiles.length > 0) {
+              const result = await postService.uploadPostMedia(pendingFiles, post.userId, (progress) => {
+                set(state => ({
+                  uploadingStates: { 
+                    ...state.uploadingStates, 
+                    [postId]: { ...state.uploadingStates[postId], progress } 
+                  }
+                }));
+              });
+              finalImages = [...finalImages, ...result.images];
+              finalVideos = [...finalVideos, ...result.videos];
+              finalThumbnails = { ...finalThumbnails, ...result.videoThumbnails };
+            }
+
+            await postService.updatePost(postId, content, finalImages, finalVideos, visibility, finalThumbnails);
+
+            set(state => {
+              const newUploadingStates = { ...state.uploadingStates };
+              delete newUploadingStates[postId];
+              return { 
+                uploadingStates: newUploadingStates,
+                posts: state.posts.map(p =>
+                  p.id === postId
+                    ? { ...p, images: finalImages, videos: finalVideos, videoThumbnails: finalThumbnails }
+                    : p
+                )
+              };
+            });
+          } catch (error) {
+            console.error("Lỗi cập nhật bài viết:", error);
+            set(state => ({
+              uploadingStates: { 
+                ...state.uploadingStates, 
+                [postId]: { ...state.uploadingStates[postId], error: 'Lỗi tải lên' } 
+              }
+            }));
+            throw error;
+          }
+        };
+
+        processUpdate();
       },
 
       deletePost: async (postId: string, images?: string[], videos?: string[]) => {
