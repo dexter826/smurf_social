@@ -37,6 +37,7 @@ interface MessageBubbleProps {
   usersMap: Record<string, User>;
   isGroup?: boolean;
   lastReadByUsers?: User[];
+  isBlocked?: boolean;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
@@ -54,7 +55,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   currentUserId,
   usersMap,
   isGroup = false,
-  lastReadByUsers = []
+  lastReadByUsers = [],
+  isBlocked = false
 }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -272,6 +274,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               onEdit={onEdit}
               setShowRecallConfirm={setShowRecallConfirm}
               onDeleteForMe={onDeleteForMe}
+              isBlocked={isBlocked}
             />
           </div>
 

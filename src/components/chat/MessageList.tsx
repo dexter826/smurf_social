@@ -18,6 +18,7 @@ interface MessageListProps {
   chatName: string;
   avatarSrc?: string;
   partner?: User;
+  isBlocked?: boolean;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -33,7 +34,8 @@ export const MessageList: React.FC<MessageListProps> = ({
   onEdit,
   chatName,
   avatarSrc,
-  partner
+  partner,
+  isBlocked = false
 }) => {
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
@@ -166,6 +168,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                         isGroup={conversation.isGroup}
                         isLastMessage={isLastMessage}
                         lastReadByUsers={lastReadByMap[lastMsgInGroup.id]}
+                        isBlocked={isBlocked}
                       />
                     );
                     i = j;
@@ -196,6 +199,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                     currentUserId={currentUserId}
                     usersMap={usersMap}
                     isGroup={conversation.isGroup}
+                    isBlocked={isBlocked}
                   />
                 );
                 i++;
