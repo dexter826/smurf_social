@@ -4,8 +4,10 @@ import { rtdb } from '../firebase/config';
 import { UserStatus } from '../types';
 
 // Lắng nghe trạng thái hoạt động của một người dùng theo thời gian thực
-export const usePresence = (userId: string | undefined) => {
-  const [presence, setPresence] = useState<{ status: UserStatus; lastSeen?: number } | null>(null);
+export const usePresence = (userId: string | undefined, initialStatus?: UserStatus) => {
+  const [presence, setPresence] = useState<{ status: UserStatus; lastSeen?: number } | null>(
+    initialStatus ? { status: initialStatus } : null
+  );
 
   useEffect(() => {
     if (!userId) return;
