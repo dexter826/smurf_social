@@ -16,7 +16,7 @@ export interface ConversationSlice {
   searchTerm: string;
   isSearchFocused: boolean;
   searchResults: { conversations: Conversation[]; users: User[] };
-  searchHistory: (Conversation | User)[];
+  searchHistory: Record<string, (Conversation | User)[]>;
   isChatVisible: boolean;
 
   subscribeToConversations: (userId: string) => () => void;
@@ -29,9 +29,9 @@ export interface ConversationSlice {
   toggleMarkUnread: (conversationId: string, markedUnread: boolean) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
   setSearchFocused: (focused: boolean) => void;
-  addToSearchHistory: (item: Conversation | User) => void;
-  removeFromSearchHistory: (itemId: string) => void;
-  clearSearchHistory: () => void;
+  addToSearchHistory: (item: Conversation | User, userId: string) => void;
+  removeFromSearchHistory: (itemId: string, userId: string) => void;
+  clearSearchHistory: (userId: string) => void;
   setSearchTerm: (term: string) => void;
   setLoading: (loading: boolean) => void;
   setIsChatVisible: (visible: boolean) => void;
@@ -46,7 +46,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   searchTerm: '',
   isSearchFocused: false,
   searchResults: { conversations: [], users: [] },
-  searchHistory: [],
+  searchHistory: {},
   isChatVisible: false,
 
   subscribeToConversations: (userId: string) => {
@@ -199,20 +199,36 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     }
   },
 
-  addToSearchHistory: (item: Conversation | User) => {
+  addToSearchHistory: (item: Conversation | User, userId: string) => {
     set((state) => {
-      const filtered = state.searchHistory.filter(h => h.id !== item.id);
+      const userHistory = state.searchHistory[userId] || [];
+      const filtered = userHistory.filter(h => h.id !== item.id);
       const newHistory = [item, ...filtered].slice(0, 10);
-      return { searchHistory: newHistory };
+      return { 
+        searchHistory: {
+          ...state.searchHistory,
+          [userId]: newHistory
+        }
+      };
     });
   },
 
-  removeFromSearchHistory: (itemId: string) => {
-    set((state) => ({ searchHistory: state.searchHistory.filter(h => h.id !== itemId) }));
+  removeFromSearchHistory: (itemId: string, userId: string) => {
+    set((state) => ({ 
+      searchHistory: {
+        ...state.searchHistory,
+        [userId]: (state.searchHistory[userId] || []).filter(h => h.id !== itemId)
+      }
+    }));
   },
 
-  clearSearchHistory: () => {
-    set({ searchHistory: [] });
+  clearSearchHistory: (userId: string) => {
+    set((state) => ({
+      searchHistory: {
+        ...state.searchHistory,
+        [userId]: []
+      }
+    }));
   },
 
   setSearchTerm: (term: string) => {

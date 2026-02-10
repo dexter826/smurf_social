@@ -166,7 +166,7 @@ export const useChat = () => {
     hasMoreMessages,
     isSearchFocused,
     searchResults,
-    searchHistory,
+    searchHistory: currentUser?.id ? (searchHistory[currentUser.id] || []) : [],
     viewMode,
     setViewMode,
     forwardingMessage,
@@ -182,9 +182,15 @@ export const useChat = () => {
     handleSearch,
     handleToggleBlock,
     setSearchFocused,
-    addToSearchHistory,
-    removeFromSearchHistory,
-    clearSearchHistory,
+    addToSearchHistory: (item: Conversation | User) => {
+      if (currentUser?.id) addToSearchHistory(item, currentUser.id);
+    },
+    removeFromSearchHistory: (id: string) => {
+      if (currentUser?.id) removeFromSearchHistory(id, currentUser.id);
+    },
+    clearSearchHistory: () => {
+      if (currentUser?.id) clearSearchHistory(currentUser.id);
+    },
     getOrCreateConversation,
     setIsChatVisible,
 
