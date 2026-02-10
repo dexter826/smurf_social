@@ -313,7 +313,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               left: `${containerRef.current?.getBoundingClientRect().left ?? 0}px`,
               position: 'fixed'
             }}
-            className="z-[var(--z-dropdown)] w-72 bg-bg-primary border border-border-light rounded-2xl shadow-xl overflow-hidden"
+            className="z-[var(--z-popover)] w-72 bg-bg-primary border border-border-light rounded-2xl shadow-xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {renderHeader()}

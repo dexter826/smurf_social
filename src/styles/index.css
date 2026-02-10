@@ -63,12 +63,14 @@
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
 
   /* === Z-Index System === */
-  --z-dropdown: 1350;
-  --z-sticky: 1100;
-  --z-modal: 1200;
-  --z-overlay: 1300;
-  --z-dialog: 1400;
-  --z-toast: 1500;
+  --z-header: 100;
+  --z-sticky: 110;
+  --z-dropdown: 500;
+  --z-overlay: 600;
+  --z-modal: 700;
+  --z-popover: 800;
+  --z-dialog: 900;
+  --z-toast: 1000;
 }
 
 .dark {
