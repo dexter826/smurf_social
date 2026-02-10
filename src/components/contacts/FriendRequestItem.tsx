@@ -33,7 +33,7 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg transition-colors border-b border-divider last:border-0">
+    <div className="flex items-center justify-between p-4 hover:bg-bg-hover rounded-lg first:rounded-t-xl last:rounded-b-xl transition-colors border-b border-divider last:border-0">
       <div className="flex items-center gap-3 flex-1">
         <UserAvatar 
           userId={user.id} 
