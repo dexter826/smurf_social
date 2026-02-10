@@ -16,7 +16,7 @@ interface PostModalProps {
   currentUser: User;
   initialPost?: Post; 
   initialFiles?: File[]; 
-  onSubmit: (content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>) => Promise<void>;
+  onSubmit: (content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
   onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
 }
 
@@ -141,44 +141,34 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   // Xóa pending file (chưa upload)
   const handleRemovePending = (index: number) => {
-    URL.revokeObjectURL(previews[index].url);
+    if (previews[index]) {
+      URL.revokeObjectURL(previews[index].url);
+    }
     setPendingFiles(prev => prev.filter((_, i) => i !== index));
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const onFormSubmit = async (data: PostFormValues) => {
     try {
-      let allImages = [...data.images];
-      let allVideos = [...data.videos];
-      let allThumbnails = { ...data.videoThumbnails };
+      // Đóng modal và gửi dữ liệu qua store
+      onClose();
 
-      // Upload pending files khi submit
-      if (pendingFiles.length > 0) {
-        setIsUploading(true);
-        setUploadProgress(0);
-        try {
-          const result = await onUploadImages(pendingFiles, (progress) => {
-            setUploadProgress(progress);
-          });
-          allImages = [...allImages, ...result.images];
-          allVideos = [...allVideos, ...result.videos];
-          allThumbnails = { ...allThumbnails, ...result.videoThumbnails };
-        } finally {
-          setIsUploading(false);
-          setUploadProgress(0);
-        }
-      }
-
-      await onSubmit(data.content || '', allImages, allVideos, data.visibility, allThumbnails);
+      await onSubmit(
+        data.content || '', 
+        data.images, 
+        data.videos, 
+        data.visibility, 
+        data.videoThumbnails,
+        pendingFiles
+      );
       
-      // Cleanup
+      // Thu hồi bộ nhớ blob
       previews.forEach(p => URL.revokeObjectURL(p.url));
       setPendingFiles([]);
       setPreviews([]);
-      onClose();
     } catch (error) {
-      console.error('Lỗi xử lý bài viết:', error);
-      toast.error(`Lỗi ${isEdit ? 'cập nhật' : 'tạo'} bài viết. Vui lòng thử lại.`);
+      console.error('Lỗi khởi tạo bài viết:', error);
+      toast.error(`Không thể bắt đầu tạo bài viết. Vui lòng thử lại.`);
     }
   };
 
