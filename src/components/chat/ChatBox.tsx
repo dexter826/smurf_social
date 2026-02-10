@@ -3,6 +3,7 @@ import { Message, User, Conversation } from '../../types';
 import { Loading } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageRequestBanner } from './message/MessageRequestBanner';
+import { BlockedUserBanner } from './BlockedUserBanner';
 import { useChatScroll } from '../../hooks/chat/useChatScroll';
 import { ChatBoxHeader } from './ChatBoxHeader';
 import { MessageList } from './MessageList';
@@ -31,6 +32,8 @@ interface ChatBoxProps {
   hasMoreMessages?: boolean;
   onLoadMore?: () => void;
   isBlocked?: boolean;
+  isBlockedByMe?: boolean;
+  onUnblock?: () => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -55,7 +58,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   isLoadingMore,
   hasMoreMessages,
   onLoadMore,
-  isBlocked = false
+  isBlocked = false,
+  isBlockedByMe = false,
+  onUnblock
 }) => {
   const {
     messagesEndRef,
@@ -115,7 +120,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   }, [messages, conversation, usersMap, currentUserId, currentUserFriendIds]);
 
   return (
-    <div className="relative flex-1 flex flex-col min-h-0 bg-bg-secondary transition-theme">
+    <div className="relative flex-1 flex flex-col min-h-0 bg-secondary transition-theme">
       <ChatBoxHeader
         conversation={conversation}
         chatName={chatName}
@@ -139,7 +144,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-0 bg-bg-secondary custom-scrollbar"
+        className="flex-1 overflow-y-auto p-0 bg-secondary custom-scrollbar"
       >
         {isLoading ? (
           <ChatBoxSkeleton />
@@ -172,6 +177,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           </div>
         )}
       </div>
+
+      {isBlockedByMe && partner && onUnblock && !conversation.isGroup && (
+        <BlockedUserBanner
+          partnerName={partner.name || 'Người dùng'}
+          onUnblock={onUnblock}
+        />
+      )}
 
       <TypingIndicator
         typingUsers={typingUsers}

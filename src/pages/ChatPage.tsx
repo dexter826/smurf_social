@@ -32,6 +32,7 @@ const ChatPage: React.FC = () => {
     archivedCount,
     usersMap,
     isBlocked,
+    isBlockedByMe,
     blockedMessage,
     forwardingMessage,
     setForwardingMessage,
@@ -224,6 +225,8 @@ const ChatPage: React.FC = () => {
               hasMoreMessages={hasMoreMessages}
               onLoadMore={handleLoadMoreMessages}
               isBlocked={isBlocked}
+              isBlockedByMe={isBlockedByMe}
+              onUnblock={handleToggleBlock}
             />
             <ChatInput
               key={selectedConversationId}

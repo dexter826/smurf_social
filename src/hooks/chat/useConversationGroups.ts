@@ -21,18 +21,11 @@ export const useConversationGroups = ({
 }: UseConversationGroupsProps) => {
 
   const { friendConversations, requestConversations } = useMemo(() => {
-    // Loại bỏ hội thoại với người bị chặn
-    const filtered = conversations.filter(conv => {
-      if (conv.isGroup) return true;
-      const partnerId = conv.participantIds.find(id => id !== currentUserId);
-      return !partnerId || !blockedUserIds.includes(partnerId);
-    });
-
     const friends: Conversation[] = [];
     const requests: Conversation[] = [];
 
     // Phân loại: Bạn bè/Nhóm vs Người lạ (Tin nhắn chờ)
-    filtered.forEach(conv => {
+    conversations.forEach(conv => {
       if (conv.isGroup) {
         friends.push(conv);
       } else {
@@ -45,7 +38,7 @@ export const useConversationGroups = ({
       }
     });
 
-    // Hàm sắp xếp chung: Ghim ưu tiên, sau đó theo thời gian cập nhật
+    // Sắp xếp: Ghim ưu tiên, sau đó theo thời gian cập nhật
     const sortFn = (a: Conversation, b: Conversation) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
@@ -56,7 +49,7 @@ export const useConversationGroups = ({
       friendConversations: friends.sort(sortFn),
       requestConversations: requests.sort(sortFn)
     };
-  }, [conversations, currentUserId, currentUserFriendIds, blockedUserIds]);
+  }, [conversations, currentUserId, currentUserFriendIds]);
 
   // Danh sách hiển thị dựa trên chế độ xem và bộ lọc
   const displayConversations = useMemo(() => {
