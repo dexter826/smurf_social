@@ -17,17 +17,18 @@ import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { commentService } from '../../services/commentService';
 import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, ImageViewer } from '../ui';
-import { REPORT_CONFIG, CONFIRM_MESSAGES } from '../../constants';
+import { PostMediaGrid } from '../feed/shared/PostMediaGrid';
+import { REPORT_CONFIG } from '../../constants';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 
-interface ReportDetailOverlayProps {
+interface ReportDetailModalProps {
   reportId: string;
   onClose: () => void;
 }
 
-export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ reportId, onClose }) => {
+export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, onClose }) => {
   const { user: currentUser } = useAuthStore();
   const [report, setReport] = useState<Report | null>(null);
   const [reporter, setReporter] = useState<User | null>(null);
@@ -46,7 +47,6 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState<'resolve' | 'reject' | 'warn' | 'ban' | 'unban' | null>(null);
-  const [mediaIndex, setMediaIndex] = useState(0);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -290,17 +290,33 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
                   {content ? (
                     <div className="bg-bg-primary p-5 rounded-2xl border border-border-light shadow-sm">
                       <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{content.content}</p>
+                      
                       {/* Media if any */}
-                      {((content as Post).images?.length || 0) > 0 && (
+                      {report?.targetType === ReportType.POST && content && (
+                        <div className="mt-4">
+                          <PostMediaGrid
+                            images={(content as Post).images}
+                            videos={(content as Post).videos}
+                            videoThumbnails={(content as Post).videoThumbnails}
+                            onClick={() => setViewerState({
+                              isOpen: true,
+                              images: (content as Post).images || [],
+                              index: 0
+                            })}
+                          />
+                        </div>
+                      )}
+
+                      {report?.targetType === ReportType.COMMENT && content && (content as Comment).image && (
                         <div 
                           className="mt-4 aspect-video rounded-xl bg-black overflow-hidden cursor-pointer group relative"
                           onClick={() => setViewerState({
                             isOpen: true,
-                            images: (content as Post).images || [],
+                            images: [(content as Comment).image!],
                             index: 0
                           })}
                         >
-                          <img src={(content as Post).images?.[0]} className="w-full h-full object-contain transition-transform group-hover:scale-105" />
+                          <img src={(content as Comment).image} className="w-full h-full object-contain transition-transform group-hover:scale-105" />
                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">Xem ảnh cỡ lớn</div>
                         </div>
                       )}
@@ -321,15 +337,15 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
         <div className="p-6 bg-bg-secondary/30 border-t border-border-light flex gap-3">
           {isLoading ? (
             <>
-              <Skeleton className="flex-1 h-10 rounded-2xl" />
-              <Skeleton className="flex-1 h-10 rounded-2xl" />
-              <Skeleton className="flex-1 h-10 rounded-2xl" />
+              <Skeleton className="flex-1 h-10 rounded-xl" />
+              <Skeleton className="flex-1 h-10 rounded-xl" />
+              <Skeleton className="flex-1 h-10 rounded-xl" />
             </>
           ) : report && report.status === ReportStatus.PENDING ? (
             <>
               <Button
-                variant="ghost"
-                className="flex-1 !rounded-2xl font-bold"
+                variant="secondary"
+                className="flex-1 rounded-xl font-bold"
                 onClick={() => { setActionType('reject'); setShowConfirm(true); }}
               >
                 Bỏ qua
@@ -338,14 +354,14 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
                 <>
                   <Button
                     variant="warning"
-                    className="flex-1 !rounded-2xl font-bold"
+                    className="flex-1 rounded-xl font-bold"
                     onClick={() => { setActionType('warn'); setShowConfirm(true); }}
                   >
                     Cảnh báo
                   </Button>
                   <Button
                     variant="danger"
-                    className="flex-1 !rounded-2xl font-bold text-white shadow-lg shadow-error/20"
+                    className="flex-1 rounded-xl font-bold text-white shadow-lg shadow-error/20"
                     onClick={() => { setActionType('ban'); setShowConfirm(true); }}
                   >
                     Khóa TK
@@ -354,7 +370,7 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
               ) : (
                 <Button
                   variant="primary"
-                  className="flex-[2] !rounded-2xl font-bold text-white shadow-lg shadow-primary/20"
+                  className="flex-[2] rounded-xl font-bold text-white shadow-lg shadow-primary/20"
                   onClick={() => { setActionType('resolve'); setShowConfirm(true); }}
                 >
                   Xử lý & Xóa nội dung
@@ -364,7 +380,7 @@ export const ReportDetailOverlay: React.FC<ReportDetailOverlayProps> = ({ report
           ) : (
             <Button
               variant="secondary"
-              className="flex-1 !rounded-2xl font-bold"
+              className="flex-1 rounded-xl font-bold"
               onClick={onClose}
             >
               Đóng

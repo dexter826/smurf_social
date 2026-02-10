@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ReportsView } from '../components/admin/ReportsView';
-import { ReportDetailOverlay } from '../components/admin/ReportDetailOverlay';
+import { ReportDetailModal } from '../components/admin/ReportDetailModal';
 
 const AdminReportsPage: React.FC = () => {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -10,7 +10,7 @@ const AdminReportsPage: React.FC = () => {
       <ReportsView onSelectReport={setSelectedReportId} />
       
       {selectedReportId && (
-        <ReportDetailOverlay 
+        <ReportDetailModal 
           reportId={selectedReportId} 
           onClose={() => setSelectedReportId(null)} 
         />
