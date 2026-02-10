@@ -67,10 +67,11 @@ export const useChat = () => {
   const isLoadingMore = selectedConversationId ? (storeIsLoadingMore[selectedConversationId] || false) : false;
   const hasMoreMessages = selectedConversationId ? (storeHasMoreMessages[selectedConversationId] || false) : false;
 
-  const partner = selectedConversation && !selectedConversation.isGroup
-    ? selectedConversation.participants.find(p => p.id !== currentUser?.id) ?? null
+  const partnerId = selectedConversation && !selectedConversation.isGroup
+    ? selectedConversation.participants.find(p => p.id !== currentUser?.id)?.id ?? null
     : null;
-  const partnerId = partner?.id || null;
+
+  const partner = partnerId ? (usersMap[partnerId] ?? null) : null;
 
   // Sub-hooks composition
   const actions = useChatActions({

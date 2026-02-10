@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, UserStatus } from '../../types';
 import { userService } from '../../services/userService';
 import { useUserCache } from '../../store/userCacheStore';
+import { useAuthStore } from '../../store/authStore';
 
 interface UseChatBlockProps {
   partnerId: string | null;
@@ -20,10 +21,12 @@ export const useChatBlock = ({
   usersMap 
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
+  
+  const myBlockedUserIds = useAuthStore(state => state.user?.blockedUserIds || []);
 
   const isBlockedByMe = useMemo(() => 
-    partnerId ? currentUser?.blockedUserIds?.includes(partnerId) ?? false : false, 
-    [partnerId, currentUser?.blockedUserIds]
+    partnerId ? myBlockedUserIds.includes(partnerId) : false, 
+    [partnerId, myBlockedUserIds]
   );
   
   const isBlockedByPartner = useMemo(() => 
