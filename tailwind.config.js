@@ -26,7 +26,9 @@ export default {
         bg: {
           primary: 'var(--bg-primary)',
           secondary: 'var(--bg-secondary)',
+          tertiary: 'var(--bg-tertiary)',
           hover: 'var(--bg-hover)',
+          active: 'var(--bg-active)',
           'message-sent': 'var(--bg-message-sent)',
           'message-received': 'var(--bg-message-received)',
           overlay: 'var(--bg-overlay)',
