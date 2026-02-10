@@ -122,8 +122,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const loadReplies = async (parentId: string) => {
-    if (isLoadingReplyMap[parentId] || replySubscriptionsRef.current[parentId]) return;
+    if (isLoadingReplyMap[parentId]) return;
     
+    if (replySubscriptionsRef.current[parentId]) {
+      setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
+      try {
+        await fetchReplies(postId, parentId, blockedUserIds, true);
+      } finally {
+        setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: false }));
+      }
+      return;
+    }
+
     setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
     try {
       const unsubscribe = subscribeToReplies(postId, parentId, blockedUserIds);

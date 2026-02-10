@@ -128,7 +128,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
       const lastDoc = loadMore ? lastReplyDoc[postId]?.[parentId] : undefined;
-      const result = await commentService.getReplies(parentId, blockedUserIds, PAGINATION.REPLIES, lastDoc || undefined);
+      const result = await commentService.getReplies(postId, parentId, blockedUserIds, PAGINATION.REPLIES, lastDoc || undefined);
       
       if (loadMore) {
         get().addReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
@@ -146,12 +146,17 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     return commentService.subscribeToComments(
       postId,
       blockedUserIds,
-      (action, comments) => {
+      (action, data) => {
         set(state => {
           if (action === 'initial') {
-            return { rootComments: { ...state.rootComments, [postId]: comments } };
+            const { comments, lastDoc, hasMore } = data as { comments: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean };
+            return { 
+              rootComments: { ...state.rootComments, [postId]: comments },
+              lastRootDoc: { ...state.lastRootDoc, [postId]: lastDoc },
+              hasMoreRoot: { ...state.hasMoreRoot, [postId]: hasMore }
+            };
           }
-          
+          const comments = data as Comment[];
           if (action === 'add') {
             const existing = state.rootComments[postId] || [];
             const { merged, hasChanges } = mergeOptimisticComments(existing, comments, 'desc');
@@ -189,21 +194,33 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
   subscribeToReplies: (postId: string, parentId: string, blockedUserIds: string[] = []) => {
     return commentService.subscribeToReplies(
+      postId,
       parentId,
       blockedUserIds,
-      (action, replies) => {
+      (action, data) => {
         set(state => {
           const postReplies = state.replies[postId] || {};
           const currentReplies = postReplies[parentId] || [];
 
           if (action === 'initial') {
+            const { replies, lastDoc, hasMore } = data as { replies: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean };
             return {
               replies: {
                 ...state.replies,
                 [postId]: { ...postReplies, [parentId]: replies }
+              },
+              lastReplyDoc: {
+                ...state.lastReplyDoc,
+                [postId]: { ...(state.lastReplyDoc[postId] || {}), [parentId]: lastDoc }
+              },
+              hasMoreReply: {
+                ...state.hasMoreReply,
+                [postId]: { ...(state.hasMoreReply[postId] || {}), [parentId]: hasMore }
               }
             };
           }
+
+          const replies = data as Comment[];
 
           if (action === 'add') {
             const { merged, hasChanges } = mergeOptimisticComments(currentReplies, replies, 'asc');
