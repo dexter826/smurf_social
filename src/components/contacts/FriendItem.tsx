@@ -27,7 +27,7 @@ export const FriendItem: React.FC<FriendItemProps> = ({
 
   return (
     <div 
-      className="relative flex items-center justify-between p-3 hover:bg-bg-hover rounded-lg transition-colors group border-b border-divider last:border-0 cursor-pointer"
+      className="relative flex items-center justify-between p-3 hover:bg-bg-hover rounded-lg first:rounded-t-xl last:rounded-b-xl transition-colors group border-b border-divider last:border-0 cursor-pointer"
       onClick={handleMessage}
     >
       <div className="flex items-center gap-4 flex-1">

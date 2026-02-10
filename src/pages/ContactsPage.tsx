@@ -213,7 +213,7 @@ const ContactsPage: React.FC = () => {
                           <div className="text-sm font-bold text-primary mb-2 px-2 uppercase tracking-wider">
                             {group.letter}
                           </div>
-                          <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden">
+                          <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light">
                             {group.friends.map(friend => (
                               <FriendItem
                                 key={friend.id}
@@ -231,7 +231,7 @@ const ContactsPage: React.FC = () => {
               )}
 
               {activeTab === 'requests' && (
-                <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden">
+                <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light text-text-primary">
                   {receivedRequests.length === 0 ? (
                     <div className="text-center py-20 text-text-tertiary">
                       <Bell size={48} className="mx-auto mb-4 opacity-20" />
@@ -256,7 +256,7 @@ const ContactsPage: React.FC = () => {
               )}
 
               {activeTab === 'sent' && (
-                <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden">
+                <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light text-text-primary">
                   {sentRequests.length === 0 ? (
                     <div className="text-center py-20 text-text-tertiary">
                       <UserPlus size={48} className="mx-auto mb-4 opacity-20" />
