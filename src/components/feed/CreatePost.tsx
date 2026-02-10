@@ -5,7 +5,6 @@ import { User, Visibility } from '../../types';
 import { Avatar, Button, Skeleton } from '../ui';
 import { usePostStore } from '../../store/postStore';
 import { postService } from '../../services/postService';
-import { toast } from '../../store/toastStore';
 
 interface CreatePostProps {
   currentUser: User;
@@ -40,7 +39,6 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
   ) => {
     await createPost(currentUser.id, content, images, videos, visibility, videoThumbnails, pendingFiles);
     setPendingFiles([]);
-    toast.success('Đã đăng bài viết mới thành công!');
   };
 
   const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {

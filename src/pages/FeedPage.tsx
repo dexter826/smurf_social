@@ -6,7 +6,6 @@ import { usePostStore } from '../store/postStore';
 import { Visibility, UserStatus } from '../types';
 import { useFeed } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
-import { toast } from '../store/toastStore';
 
 const FeedPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
@@ -38,14 +37,13 @@ const FeedPage: React.FC = () => {
     if (!showEditModal) return;
     await handleUpdate(showEditModal, content, images, videos, visibility, videoThumbnails, pendingFiles);
     setShowEditModal(null);
-    toast.success('Đã cập nhật bài viết thành công!');
   };
 
   const handleDeletePost = async () => {
+    if (!postToDelete) return;
     const post = posts.find(p => p.id === postToDelete);
     await handleDelete(postToDelete, post?.images, post?.videos);
     setPostToDelete(null);
-    toast.success('Đã xóa bài viết thành công!');
   };
 
   const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
