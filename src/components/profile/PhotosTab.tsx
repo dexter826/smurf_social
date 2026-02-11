@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Post, MessageType } from '../../types';
 import { postService } from '../../services/postService';
-import { Skeleton } from '../ui';
+import { Skeleton, MediaViewer } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -12,7 +12,7 @@ interface PhotosTabProps {
 export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ userId }) => {
   const [media, setMedia] = useState<{ url: string, type: MessageType.IMAGE | MessageType.VIDEO }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMedia, setSelectedMedia] = useState<{ url: string, type: MessageType.IMAGE | MessageType.VIDEO } | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const { user: currentUser } = useAuthStore();
 
   useEffect(() => {
@@ -24,12 +24,12 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
     setLoading(true);
     try {
       const { posts } = await postService.getUserPosts(
-        userId, 
-        currentUser.id, 
-        currentUser.friendIds || [], 
+        userId,
+        currentUser.id,
+        currentUser.friendIds || [],
         50
       );
-      
+
       const allMedia: { url: string, type: MessageType.IMAGE | MessageType.VIDEO }[] = [];
       posts.forEach(post => {
         if (post.images) {
@@ -39,7 +39,7 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
           post.videos.forEach(url => allMedia.push({ url, type: MessageType.VIDEO }));
         }
       });
-      
+
       setMedia(allMedia);
     } catch (error) {
       console.error("Lỗi load media", error);
@@ -64,63 +64,50 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
   return (
     <>
       <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 sm:p-6 transition-theme">
-          <h3 className="font-bold text-lg mb-4 text-text-primary">
-            Ảnh/Video <span className="text-text-secondary font-normal">({media.length})</span>
-          </h3>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {media.map((item, index) => (
-              <div
-                key={index}
-                className="aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative group"
-                onClick={() => setSelectedMedia(item)}
-              >
-                {item.type === 'video' ? (
-                  <video 
-                    src={item.url} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <img 
-                    src={item.url} 
-                    alt={`Media ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                {item.type === 'video' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                      <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <h3 className="font-bold text-lg mb-4 text-text-primary">
+          Ảnh/Video <span className="text-text-secondary font-normal">({media.length})</span>
+        </h3>
 
-      {/* Lightbox */}
-      {selectedMedia && (
-        <div 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedMedia(null)}
-        >
-          {selectedMedia.type === MessageType.VIDEO ? (
-            <video 
-              src={selectedMedia.url} 
-              controls 
-              autoPlay
-              className="max-w-full max-h-full"
-            />
-          ) : (
-            <img 
-              src={selectedMedia.url} 
-              alt="Preview"
-              className="max-w-full max-h-full object-contain"
-            />
-          )}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          {media.map((item, index) => (
+            <div
+              key={index}
+              className="aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative group"
+              onClick={() => setSelectedIndex(index)}
+            >
+              {item.type === 'video' ? (
+                <video
+                  src={item.url}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={item.url}
+                  alt={`Media ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              {item.type === 'video' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                    <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
-      )}
+      </div>
+
+      <MediaViewer
+        media={media.map(m => ({
+          type: m.type === MessageType.VIDEO ? 'video' : 'image',
+          url: m.url
+        }))}
+        initialIndex={selectedIndex}
+        isOpen={selectedIndex >= 0}
+        onClose={() => setSelectedIndex(-1)}
+      />
     </>
   );
 };

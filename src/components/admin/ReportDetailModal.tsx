@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
-  User as UserIcon, 
+import {
+  X,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  User as UserIcon,
   Trash2,
   Lock,
   Unlock,
@@ -16,7 +16,7 @@ import { reportService } from '../../services/reportService';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { commentService } from '../../services/commentService';
-import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, ImageViewer } from '../ui';
+import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, MediaViewer } from '../ui';
 import { PostMediaGrid } from '../feed/shared/PostMediaGrid';
 import { REPORT_CONFIG } from '../../constants';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
@@ -35,11 +35,11 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
   const [targetOwner, setTargetOwner] = useState<User | null>(null);
   const [content, setContent] = useState<Post | Comment | null>(null);
   const [resolver, setResolver] = useState<User | null>(null);
-  
+
   // Viewer State replacing previewImage
   const [viewerState, setViewerState] = useState({
     isOpen: false,
-    images: [] as string[],
+    media: [] as { type: 'image' | 'video'; url: string }[],
     index: 0
   });
 
@@ -122,7 +122,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-      <div 
+      <div
         className="bg-bg-primary w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl border border-border-light flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -130,17 +130,17 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
         <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-error/5 rounded-lg text-error">
-               <AlertTriangle size={20} />
+              <AlertTriangle size={20} />
             </div>
             <div>
               <h2 className="text-base font-bold text-text-primary">Chi tiết vi phạm</h2>
               {!report && isLoading && <Skeleton className="h-3 w-20 mt-1" />}
             </div>
           </div>
-          <IconButton 
-            icon={<X size={20} />} 
-            onClick={onClose} 
-            variant="ghost" 
+          <IconButton
+            icon={<X size={20} />}
+            onClick={onClose}
+            variant="ghost"
             className="hover:bg-bg-secondary rounded-full"
           />
         </div>
@@ -221,12 +221,12 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                   <h4 className="text-xs font-black text-text-tertiary uppercase tracking-widest">Hình ảnh bằng chứng</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {report.images.map((img, idx) => (
-                      <div 
-                        key={idx} 
+                      <div
+                        key={idx}
                         className="aspect-square rounded-xl overflow-hidden border border-border-light bg-bg-secondary group cursor-pointer relative"
                         onClick={() => setViewerState({
                           isOpen: true,
-                          images: report.images || [],
+                          media: (report.images || []).map(url => ({ type: 'image' as const, url })),
                           index: idx
                         })}
                       >
@@ -240,23 +240,21 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
 
               {/* Resolution Info if processed */}
               {report && report.status !== ReportStatus.PENDING && (
-                <div className={`p-5 rounded-2xl border ${
-                  report.status === ReportStatus.RESOLVED 
-                    ? 'bg-success/5 border-success/20' 
-                    : 'bg-text-secondary/5 border-border-light'
-                } space-y-4`}>
+                <div className={`p-5 rounded-2xl border ${report.status === ReportStatus.RESOLVED
+                  ? 'bg-success/5 border-success/20'
+                  : 'bg-text-secondary/5 border-border-light'
+                  } space-y-4`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                       {report.status === ReportStatus.RESOLVED ? (
-                         <CheckCircle className="text-success" size={18} />
-                       ) : (
-                         <XCircle className="text-text-secondary" size={18} />
-                       )}
-                       <span className={`text-sm font-bold ${
-                         report.status === ReportStatus.RESOLVED ? 'text-success' : 'text-text-secondary'
-                       }`}>
-                         {report.status === ReportStatus.RESOLVED ? 'Đã xử lý' : 'Đã từ chối'}
-                       </span>
+                      {report.status === ReportStatus.RESOLVED ? (
+                        <CheckCircle className="text-success" size={18} />
+                      ) : (
+                        <XCircle className="text-text-secondary" size={18} />
+                      )}
+                      <span className={`text-sm font-bold ${report.status === ReportStatus.RESOLVED ? 'text-success' : 'text-text-secondary'
+                        }`}>
+                        {report.status === ReportStatus.RESOLVED ? 'Đã xử lý' : 'Đã từ chối'}
+                      </span>
                     </div>
                     {report.resolvedAt && (
                       <span className="text-[10px] text-text-tertiary font-medium">
@@ -290,7 +288,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                   {content ? (
                     <div className="bg-bg-primary p-5 rounded-2xl border border-border-light shadow-sm">
                       <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{content.content}</p>
-                      
+
                       {/* Media if any */}
                       {report?.targetType === ReportType.POST && content && (
                         <div className="mt-4">
@@ -300,7 +298,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                             videoThumbnails={(content as Post).videoThumbnails}
                             onClick={() => setViewerState({
                               isOpen: true,
-                              images: (content as Post).images || [],
+                              media: (content as Post).images?.map(url => ({ type: 'image' as const, url })) || [],
                               index: 0
                             })}
                           />
@@ -308,11 +306,11 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                       )}
 
                       {report?.targetType === ReportType.COMMENT && content && (content as Comment).image && (
-                        <div 
+                        <div
                           className="mt-4 aspect-video rounded-xl bg-black overflow-hidden cursor-pointer group relative"
                           onClick={() => setViewerState({
                             isOpen: true,
-                            images: [(content as Comment).image!],
+                            media: [{ type: 'image' as const, url: (content as Comment).image! }],
                             index: 0
                           })}
                         >
@@ -399,8 +397,8 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
       />
 
       {/* Lightbox - Image Viewer */}
-      <ImageViewer 
-        images={viewerState.images}
+      <MediaViewer
+        media={viewerState.media}
         initialIndex={viewerState.index}
         isOpen={viewerState.isOpen}
         onClose={() => setViewerState(prev => ({ ...prev, isOpen: false }))}
