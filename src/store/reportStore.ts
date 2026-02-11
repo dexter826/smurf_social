@@ -114,7 +114,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
       isOpen: false,
       isSubmitting: false,
       error: null,
-      data: initialData
+      data: initialData,
+      pendingCount: 0
     });
   },
 
