@@ -36,6 +36,8 @@ export const useChatStore = create<ChatState>()(
           searchResults: { conversations: [], users: [] },
           searchHistory: {},
           isChatVisible: false,
+          isLoadingMore: {},
+          uploadProgress: {},
         });
       },
     }),

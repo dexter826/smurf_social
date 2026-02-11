@@ -12,6 +12,7 @@ import { useNotificationStore } from "./notificationStore";
 import { useCommentStore } from "./commentStore";
 import { useReportStore } from "./reportStore";
 import { useLoadingStore } from "./loadingStore";
+import { usePresenceStore } from "./presenceStore";
 
 interface AuthState {
   user: User | null;
@@ -82,8 +83,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (user) {
         await userService.updateUserStatus(user.id, UserStatus.OFFLINE);
       }
+    } catch (error) {
+      console.error("Lỗi cập nhật trạng thái offline:", error);
+    }
 
+    try {
       // Reset tất cả các store dữ liệu
+      usePresenceStore.getState().reset();
       useChatStore.getState().reset();
       usePostStore.getState().reset();
       useContactStore.getState().reset();
@@ -91,12 +97,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useCommentStore.getState().reset();
       useReportStore.getState().reset();
       useUserCache.getState().reset();
+      useLoadingStore.getState().reset();
 
       await authService.logout();
-      set({ user: null });
     } catch (error) {
       console.error("Lỗi logout:", error);
-      set({ user: null });
+    } finally {
+      set({ user: null, isPendingVerification: false });
     }
   },
 
