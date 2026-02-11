@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { IconButton } from '../../ui';
+import { IconButton, LazyImage } from '../../ui';
 
 interface MediaItem {
   url: string;
@@ -14,13 +14,13 @@ interface PostMediaGridProps {
   onClick?: () => void;
 }
 
-export const PostMediaGrid: React.FC<PostMediaGridProps> = ({
+const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
   images, videos, videoThumbnails, onClick
 }) => {
-  const allMedia: MediaItem[] = [
+  const allMedia = useMemo<MediaItem[]>(() => [
     ...(images || []).map(url => ({ url, type: 'image' })),
     ...(videos || []).map(url => ({ url, type: 'video' }))
-  ];
+  ], [images, videos]);
 
   if (allMedia.length === 0) return null;
 
@@ -46,7 +46,7 @@ export const PostMediaGrid: React.FC<PostMediaGridProps> = ({
               className="relative z-10 w-full h-auto max-h-[600px] object-contain"
             />
           ) : (
-            <img src={item.url} alt="" className="relative z-10 w-full h-auto max-h-[600px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
+            <LazyImage src={item.url} alt="" className="relative z-10 w-full h-auto max-h-[600px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" />
           )}
         </div>
       </div>
@@ -77,7 +77,7 @@ export const PostMediaGrid: React.FC<PostMediaGridProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <img src={item.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
+                <LazyImage src={item.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
               )}
 
               {idx === 3 && count > 4 && (
@@ -98,3 +98,5 @@ export const PostMediaGrid: React.FC<PostMediaGridProps> = ({
     </div>
   );
 };
+
+export const PostMediaGrid = React.memo(PostMediaGridInner);

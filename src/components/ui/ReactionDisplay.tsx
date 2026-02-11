@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface ReactionDisplayProps {
   reactions?: Record<string, string>;
@@ -7,23 +7,26 @@ interface ReactionDisplayProps {
   variant?: 'default' | 'minimal';
 }
 
-export const ReactionDisplay: React.FC<ReactionDisplayProps> = ({ 
+const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({ 
   reactions = {}, 
   className = '', 
   onClick,
   variant = 'default'
 }) => {
-  const reactionCounts = Object.values(reactions).reduce((acc: Record<string, number>, emoji: string) => {
-    acc[emoji] = (acc[emoji] || 0) + 1;
-    return acc;
-  }, {});
+  const { sortedEmojis, total } = useMemo(() => {
+    const counts = Object.values(reactions).reduce((acc: Record<string, number>, emoji: string) => {
+      acc[emoji] = (acc[emoji] || 0) + 1;
+      return acc;
+    }, {});
 
-  const sortedEmojis = Object.entries(reactionCounts)
-    .sort(([, a], [, b]) => b - a)
-    .map(([emoji]) => emoji)
-    .slice(0, 3);
+    const sorted = Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([emoji]) => emoji)
+      .slice(0, 3);
 
-  const total = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
+    const sum = Object.values(counts).reduce((a, b) => a + b, 0);
+    return { sortedEmojis: sorted, total: sum };
+  }, [reactions]);
 
   if (total === 0) return null;
   
@@ -63,3 +66,5 @@ export const ReactionDisplay: React.FC<ReactionDisplayProps> = ({
     </div>
   );
 };
+
+export const ReactionDisplay = React.memo(ReactionDisplayInner);

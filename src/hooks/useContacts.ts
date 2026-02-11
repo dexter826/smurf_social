@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, FriendRequest } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
@@ -86,13 +86,12 @@ export const useContacts = (): UseContactsReturn => {
     }
   }, [receivedRequests, sentRequests, fetchUsers]);
 
-  const filteredFriends = friends.filter(friend =>
+  const filteredFriends = useMemo(() => friends.filter(friend =>
     friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [friends, searchTerm]);
 
-  // Group bạn bè theo chữ cái
-  const groupedFriends = (() => {
+  const groupedFriends = useMemo(() => {
     const groups: Record<string, User[]> = {};
     filteredFriends.forEach(friend => {
       const firstLetter = friend.name.charAt(0).toUpperCase();
@@ -111,7 +110,7 @@ export const useContacts = (): UseContactsReturn => {
           : b.name.localeCompare(a.name);
       })
     }));
-  })();
+  }, [filteredFriends, sortOrder]);
 
   const toggleSortOrder = useCallback(() => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');

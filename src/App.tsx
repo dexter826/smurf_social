@@ -22,10 +22,9 @@ const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ children, requireAdmin }) => {
-  const { user, isPendingVerification } = useAuthStore();
-  const isLoading = useLoadingStore(state => state.isLoading('auth'));
+  const { user, isPendingVerification, isInitialized } = useAuthStore();
 
-  if (isLoading) {
+  if (!isInitialized) {
     return <ScreenLoader />;
   }
 

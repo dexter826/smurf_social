@@ -28,7 +28,7 @@ const statusColor = {
   [UserStatus.OFFLINE]: 'bg-status-offline border-bg-primary',
 };
 
-export const Avatar: React.FC<AvatarProps> = ({ 
+const AvatarInner: React.FC<AvatarProps> = ({ 
   src, 
   name, 
   size = 'md', 
@@ -136,4 +136,4 @@ export const Avatar: React.FC<AvatarProps> = ({
   );
 };
 
-
+export const Avatar = React.memo(AvatarInner);

@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 import { Message, MessageType, Conversation } from '../../types';
-import { chatService } from '../../services/chatService';
+import { messageService } from '../../services/chat/messageService';
 import { useAuthStore } from '../authStore';
 import { DocumentSnapshot } from 'firebase/firestore';
 import type { ChatState } from '../chatStore';
@@ -52,7 +52,7 @@ type MediaType = 'image' | 'video' | 'file' | 'voice';
 const mediaConfig: Record<MediaType, { 
   prefix: string; 
   messageType: MessageType; 
-  serviceFn: keyof typeof chatService;
+  serviceFn: keyof typeof messageService;
   errorMsg: string;
 }> = {
   image: { prefix: 'img', messageType: MessageType.IMAGE, serviceFn: 'sendImageMessage', errorMsg: 'Lỗi gửi ảnh:' },
@@ -70,7 +70,7 @@ const sendMediaMessage = (
   get: () => ChatState
 ) => {
   const config = mediaConfig[type];
-  const realId = chatService.generateMessageId();
+  const realId = messageService.generateMessageId();
   const isFile = type === 'file';
   const localUrl = isFile ? undefined : URL.createObjectURL(file);
 
@@ -91,14 +91,7 @@ const sendMediaMessage = (
     uploadProgress: { ...state.uploadProgress, [realId]: { progress: 0, ...(localUrl && { localUrl }) } }
   }));
 
-  const serviceFn = chatService[config.serviceFn] as (
-    conversationId: string, 
-    senderId: string, 
-    file: File, 
-    replyToId: string | undefined, 
-    onProgress: (p: { progress: number }) => void,
-    preGeneratedId?: string
-  ) => Promise<string>;
+  const serviceFn = messageService[config.serviceFn] as any;
 
   serviceFn(conversationId, senderId, file, undefined, (p: { progress: number }) => {
     get().setUploadProgress(realId, p.progress);
@@ -128,7 +121,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     const currentUserId = useAuthStore.getState().user?.id || '';
     const joinedAt = getEffectiveJoinedAt(conversation, currentUserId);
 
-    const unsubscribe = chatService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
+    const unsubscribe = messageService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
       set((state) => ({
         messages: { ...state.messages, [conversationId]: messages },
         lastMessageDocs: { ...state.lastMessageDocs, [conversationId]: lastDoc },
@@ -151,7 +144,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     set((state) => ({ isLoadingMore: { ...state.isLoadingMore, [conversationId]: true } }));
 
     try {
-      const result = await chatService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt);
+      const result = await messageService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt);
       
       set((state) => ({
         messages: { ...state.messages, [conversationId]: [...result.messages, ...(state.messages[conversationId] || [])] },
@@ -166,7 +159,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   },
 
   sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[]) => {
-    const realId = chatService.generateMessageId();
+    const realId = messageService.generateMessageId();
     const optimisticMessage: Message = {
       id: realId,
       conversationId,
@@ -184,7 +177,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }));
 
     try {
-      await chatService.sendTextMessage(conversationId, senderId, content, undefined, false, mentions, realId);
+      await messageService.sendTextMessage(conversationId, senderId, content, undefined, false, mentions, realId);
     } catch (error) {
       set(state => ({
         messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }
@@ -212,7 +205,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   markAsRead: async (conversationId: string, userId: string) => {
     try {
-      await chatService.markAsRead(conversationId, userId);
+      await messageService.markAsRead(conversationId, userId);
     } catch (error) {
       console.error("Lỗi đánh dấu đã đọc:", error);
     }
@@ -220,7 +213,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   markAsDelivered: async (conversationId: string, userId: string) => {
     try {
-      await chatService.markAsDelivered(conversationId, userId);
+      await messageService.markAsDelivered(conversationId, userId);
     } catch (error) {
       console.error("Lỗi đánh dấu đã nhận:", error);
     }
@@ -230,7 +223,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     try {
       const currentUserId = useAuthStore.getState().user?.id;
       if (!currentUserId) throw new Error("Chưa đăng nhập");
-      await chatService.recallMessage(messageId, conversationId, currentUserId);
+      await messageService.recallMessage(messageId, conversationId, currentUserId);
     } catch (error) {
       console.error("Lỗi thu hồi tin nhắn:", error);
       throw error;
@@ -239,7 +232,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   deleteMessageForMe: async (messageId: string, userId: string) => {
     try {
-      await chatService.deleteMessageForMe(messageId, userId);
+      await messageService.deleteMessageForMe(messageId, userId);
     } catch (error) {
       console.error("Lỗi xóa tin nhắn cá nhân:", error);
       throw error;
@@ -248,7 +241,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   forwardMessage: async (conversationId: string, senderId: string, message: Message) => {
     try {
-      await chatService.forwardMessage(conversationId, senderId, message);
+      await messageService.forwardMessage(conversationId, senderId, message);
     } catch (error) {
       console.error("Lỗi chuyển tiếp tin nhắn:", error);
       throw error;
@@ -256,7 +249,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   },
 
   replyToMessage: async (conversationId: string, senderId: string, content: string, replyToId: string) => {
-    const realId = chatService.generateMessageId();
+    const realId = messageService.generateMessageId();
     const optimisticMessage: Message = {
       id: realId,
       conversationId,
@@ -274,7 +267,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }));
 
     try {
-      await chatService.replyToMessage(conversationId, senderId, content, replyToId, realId);
+      await messageService.replyToMessage(conversationId, senderId, content, replyToId, realId);
     } catch (error) {
       set(state => ({
         messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }
@@ -288,7 +281,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     try {
       const currentUserId = useAuthStore.getState().user?.id;
       if (!currentUserId) throw new Error("Chưa đăng nhập");
-      await chatService.editMessage(messageId, content, currentUserId);
+      await messageService.editMessage(messageId, content, currentUserId);
     } catch (error) {
       console.error("Lỗi chỉnh sửa tin nhắn:", error);
       throw error;
@@ -297,14 +290,14 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   setTyping: async (conversationId: string, userId: string, isTyping: boolean) => {
     try {
-      await chatService.setTypingStatus(conversationId, userId, isTyping);
+      await messageService.setTypingStatus(conversationId, userId, isTyping);
     } catch (error) {
       console.error("Lỗi cập nhật trạng thái soạn tin:", error);
     }
   },
 
   subscribeToTyping: (conversationId: string) => {
-    const unsubscribe = chatService.subscribeToTypingStatus(conversationId, (typingUsers) => {
+    const unsubscribe = messageService.subscribeToTypingStatus(conversationId, (typingUsers) => {
       set((state) => ({ typingUsers: { ...state.typingUsers, [conversationId]: typingUsers } }));
     });
     return unsubscribe;
@@ -312,7 +305,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   toggleReaction: async (messageId: string, userId: string, emoji: string) => {
     try {
-      await chatService.toggleReaction(messageId, userId, emoji);
+      await messageService.toggleReaction(messageId, userId, emoji);
     } catch (error) {
       console.error("Lỗi thả cảm xúc:", error);
       throw error;

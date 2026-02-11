@@ -107,6 +107,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
               <input
                 type={showPasswords ? "text" : "password"}
                 {...register('currentPassword')}
+                autoComplete="current-password"
                 className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
                   errors.currentPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
                 }`}
@@ -130,6 +131,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
               <input
                 type={showPasswords ? "text" : "password"}
                 {...register('newPassword')}
+                autoComplete="new-password"
                 className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
                   errors.newPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
                 }`}
@@ -153,6 +155,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
               <input
                 type={showPasswords ? "text" : "password"}
                 {...register('confirmPassword')}
+                autoComplete="new-password"
                 className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
                   errors.confirmPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
                 }`}

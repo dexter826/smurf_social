@@ -1,56 +1,96 @@
-import React, { useEffect, useState } from 'react';
-import { Post, MessageType } from '../../types';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { MessageType } from '../../types';
 import { postService } from '../../services/postService';
-import { Skeleton, MediaViewer } from '../ui';
-import { Image as ImageIcon } from 'lucide-react';
+import { Skeleton, MediaViewer, LazyImage } from '../ui';
+import { Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { DocumentSnapshot } from 'firebase/firestore';
+
+const MEDIA_PAGE_SIZE = 15;
 
 interface PhotosTabProps {
   userId: string;
 }
 
-export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ userId }) => {
-  const [media, setMedia] = useState<{ url: string, type: MessageType.IMAGE | MessageType.VIDEO }[]>([]);
+type MediaItem = { url: string; type: MessageType.IMAGE | MessageType.VIDEO };
+
+const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const { user: currentUser } = useAuthStore();
+  const lastDocRef = useRef<DocumentSnapshot | null>(null);
+  const observerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadMedia();
-  }, [userId]);
+  const extractMedia = useCallback((posts: any[]): MediaItem[] => {
+    const items: MediaItem[] = [];
+    posts.forEach(post => {
+      post.images?.forEach((url: string) => items.push({ url, type: MessageType.IMAGE }));
+      post.videos?.forEach((url: string) => items.push({ url, type: MessageType.VIDEO }));
+    });
+    return items;
+  }, []);
 
-  const loadMedia = async () => {
+  const loadMedia = useCallback(async (isLoadMore = false) => {
     if (!currentUser) return;
-    setLoading(true);
+    if (isLoadMore) setLoadingMore(true);
+    else setLoading(true);
+
     try {
-      const { posts } = await postService.getUserPosts(
+      const { posts, lastDoc } = await postService.getUserPosts(
         userId,
         currentUser.id,
         currentUser.friendIds || [],
-        50
+        MEDIA_PAGE_SIZE,
+        isLoadMore ? lastDocRef.current ?? undefined : undefined
       );
 
-      const allMedia: { url: string, type: MessageType.IMAGE | MessageType.VIDEO }[] = [];
-      posts.forEach(post => {
-        if (post.images) {
-          post.images.forEach(url => allMedia.push({ url, type: MessageType.IMAGE }));
-        }
-        if (post.videos) {
-          post.videos.forEach(url => allMedia.push({ url, type: MessageType.VIDEO }));
-        }
-      });
+      lastDocRef.current = lastDoc;
+      setHasMore(posts.length === MEDIA_PAGE_SIZE && !!lastDoc);
 
-      setMedia(allMedia);
+      const newMedia = extractMedia(posts);
+      setMedia(prev => isLoadMore ? [...prev, ...newMedia] : newMedia);
     } catch (error) {
       console.error("Lỗi load media", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [userId, currentUser, extractMedia]);
 
-  if (loading) {
-    return <PhotosTab.Skeleton />;
-  }
+  useEffect(() => {
+    lastDocRef.current = null;
+    setMedia([]);
+    setHasMore(true);
+    loadMedia(false);
+  }, [userId]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!observerRef.current || !hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !loadingMore && hasMore) {
+          loadMedia(true);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, loadMedia]);
+
+  const mediaViewerItems = useMemo(() =>
+    media.map(m => ({
+      type: m.type === MessageType.VIDEO ? 'video' as const : 'image' as const,
+      url: m.url
+    })),
+    [media]
+  );
+
+  if (loading) return <PhotosTabSkeleton />;
 
   if (media.length === 0) {
     return (
@@ -65,23 +105,20 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
     <>
       <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 sm:p-6 transition-theme">
         <h3 className="font-bold text-lg mb-4 text-text-primary">
-          Ảnh/Video <span className="text-text-secondary font-normal">({media.length})</span>
+          Ảnh/Video <span className="text-text-secondary font-normal">({media.length}{hasMore ? '+' : ''})</span>
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
           {media.map((item, index) => (
             <div
-              key={index}
+              key={`${item.url}-${index}`}
               className="aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative group"
               onClick={() => setSelectedIndex(index)}
             >
               {item.type === 'video' ? (
-                <video
-                  src={item.url}
-                  className="w-full h-full object-cover"
-                />
+                <video src={item.url} className="w-full h-full object-cover" />
               ) : (
-                <img
+                <LazyImage
                   src={item.url}
                   alt={`Media ${index + 1}`}
                   className="w-full h-full object-cover"
@@ -97,13 +134,18 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
             </div>
           ))}
         </div>
+
+        {/* Infinite scroll sentinel */}
+        <div ref={observerRef} className="h-4" />
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <Loader2 size={24} className="animate-spin text-primary" />
+          </div>
+        )}
       </div>
 
       <MediaViewer
-        media={media.map(m => ({
-          type: m.type === MessageType.VIDEO ? 'video' : 'image',
-          url: m.url
-        }))}
+        media={mediaViewerItems}
         initialIndex={selectedIndex}
         isOpen={selectedIndex >= 0}
         onClose={() => setSelectedIndex(-1)}
@@ -112,7 +154,7 @@ export const PhotosTab: React.FC<PhotosTabProps> & { Skeleton: React.FC } = ({ u
   );
 };
 
-PhotosTab.Skeleton = () => (
+const PhotosTabSkeleton: React.FC = () => (
   <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 sm:p-6 transition-theme">
     <h3 className="font-bold text-lg mb-4 text-text-primary">
       Ảnh/Video <Skeleton width={40} height={20} className="inline-block" />
@@ -124,3 +166,5 @@ PhotosTab.Skeleton = () => (
     </div>
   </div>
 );
+
+export const PhotosTab = Object.assign(React.memo(PhotosTabInner), { Skeleton: PhotosTabSkeleton });

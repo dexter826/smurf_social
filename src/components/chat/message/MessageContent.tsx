@@ -2,7 +2,7 @@ import React from 'react';
 import { FileText, Download, Image as ImageIcon, Play, Pause, Mic } from 'lucide-react';
 
 import { Message } from '../../../types';
-import { IconButton, LazyVideo } from '../../ui';
+import { IconButton, LazyVideo, LazyImage } from '../../ui';
 
 interface MessageContentProps {
   message: Message;
@@ -13,7 +13,7 @@ interface MessageContentProps {
   setShowFullImage: (show: boolean) => void;
 }
 
-export const MessageContent: React.FC<MessageContentProps> = ({
+const MessageContentInner: React.FC<MessageContentProps> = ({
   message,
   isMe,
   uploadProgress,
@@ -36,7 +36,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({
           className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative"
           onClick={() => setShowFullImage(true)}
         >
-          <img 
+          <LazyImage 
             src={message.fileUrl || message.content} 
             alt="sent" 
             className="w-full h-auto"
@@ -98,11 +98,6 @@ export const MessageContent: React.FC<MessageContentProps> = ({
              </div>
           )}
         </div>
-      );
-      
-    case 'sticker':
-      return (
-        <img src={message.content} alt="sticker" className="w-24 h-24 object-contain" />
       );
       
     case 'video':
@@ -189,3 +184,5 @@ export const MessageContent: React.FC<MessageContentProps> = ({
       );
   }
 };
+
+export const MessageContent = React.memo(MessageContentInner);

@@ -3,7 +3,7 @@ import { Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Penc
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
 import { FriendStatus } from '../../types';
-import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper } from '../ui';
+import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 import { useReportStore } from '../../store/reportStore';
 
@@ -125,7 +125,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       <div className="relative h-[200px] md:h-[320px] w-full md:rounded-b-2xl shadow-sm">
         {/* Background Image Layer */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-primary-600 md:rounded-b-2xl overflow-hidden">
-          <img 
+          <LazyImage
             src={user.coverImage || '/cover-image.jpg'} 
             className="w-full h-full object-cover" 
             alt="Cover"

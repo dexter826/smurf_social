@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button, ConfirmDialog, UploadProgress } from '../../ui';
 import { CONFIRM_MESSAGES } from '../../../constants';
@@ -159,28 +159,28 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     });
   }, [replies, postId, fetchUsers]);
 
-  const handleReplyClick = (comment: Comment) => {
+  const handleReplyClick = useCallback((comment: Comment) => {
     setReplyingTo(comment);
     setEditingComment(null);
     setActiveInputId(comment.id);
     setInputMode('reply');
-  };
+  }, []);
 
-  const handleEditClick = (comment: Comment) => {
+  const handleEditClick = useCallback((comment: Comment) => {
     setEditingComment(comment);
     setReplyingTo(null);
     setActiveInputId(comment.id);
     setInputMode('edit');
-  };
+  }, []);
 
-  const resetInput = () => {
+  const resetInput = useCallback(() => {
     setReplyingTo(null);
     setEditingComment(null);
     setActiveInputId('root');
     setInputMode('comment');
-  };
+  }, []);
 
-  const handleCommentSubmit = async (content: string, image?: string) => {
+  const handleCommentSubmit = useCallback(async (content: string, image?: string) => {
     try {
       if (inputMode === 'edit' && editingComment) {
         await updateComment(postId, editingComment.id, content, editingComment.parentId, image);
@@ -199,18 +199,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     } catch (error) {
       throw error;
     }
-  };
+  }, [inputMode, editingComment, replyingTo, postId, currentUser.id, updateComment, createComment, resetInput]);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!commentToDelete) return;
     try {
       await deleteComment(postId, commentToDelete.id, commentToDelete.parentId);
       setCommentToDelete(null);
     } catch (error) {
     }
-  };
+  }, [commentToDelete, postId, deleteComment]);
 
-  const handleUploadMedia = async (file: File) => {
+  const handleUploadMedia = useCallback(async (file: File) => {
     setUploadProgress(0);
     try {
       const onProgress = (p: { progress: number }) => setUploadProgress(p.progress);
@@ -221,7 +221,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     } finally {
       setUploadProgress(null);
     }
-  };
+  }, [currentUser.id]);
 
   return (
     <div className={`flex flex-col min-h-0 transition-all duration-300 ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>

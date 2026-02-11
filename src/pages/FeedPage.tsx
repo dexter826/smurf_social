@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { PostItem, PostModal, PostViewModal, CreatePost, FeedSkeleton } from '../components/feed';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
@@ -27,7 +27,7 @@ const FeedPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  const handleEditPost = async (
+  const handleEditPost = useCallback(async (
     content: string,
     images: string[],
     videos: string[],
@@ -38,21 +38,21 @@ const FeedPage: React.FC = () => {
     if (!showEditModal) return;
     await handleUpdate(showEditModal, content, images, videos, visibility, videoThumbnails, pendingFiles);
     setShowEditModal(null);
-  };
+  }, [showEditModal, handleUpdate]);
 
-  const handleDeletePost = async () => {
+  const handleDeletePost = useCallback(async () => {
     if (!postToDelete) return;
     const post = posts.find(p => p.id === postToDelete);
     await handleDelete(postToDelete, post?.images, post?.videos);
     setPostToDelete(null);
-  };
+  }, [postToDelete, posts, handleDelete]);
 
-  const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
+  const handleUploadImages = useCallback(async (files: File[], onProgress?: (progress: number) => void) => {
     if (!currentUser) throw new Error('Not authenticated');
     return await postService.uploadPostMedia(files, currentUser.id, (progress) => {
       onProgress?.(progress);
     });
-  };
+  }, [currentUser]);
 
   if (!currentUser) {
     return (
