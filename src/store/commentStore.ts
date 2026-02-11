@@ -62,7 +62,7 @@ interface CommentState {
   fetchReplies: (postId: string, parentId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToComments: (postId: string, blockedUserIds?: string[]) => () => void;
   subscribeToReplies: (postId: string, parentId: string, blockedUserIds?: string[]) => () => void;
-  addComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string) => Promise<string>;
+  createComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string) => Promise<string>;
   updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null) => Promise<void>;
   deleteComment: (postId: string, commentId: string, parentId?: string | null) => Promise<void>;
   likeComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
@@ -267,7 +267,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     );
   },
 
-  addComment: async (postId, userId, content, parentId, replyToUserId, imageUrl) => {
+  createComment: async (postId, userId, content, parentId, replyToUserId, imageUrl) => {
     const realId = commentService.generateCommentId();
     const optimisticComment: Comment = {
       id: realId,
@@ -310,7 +310,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
 
     try {
-      await commentService.addComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, realId);
+      await commentService.createComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, realId);
       
       return realId;
     } catch (error) {

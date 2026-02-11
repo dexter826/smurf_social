@@ -17,6 +17,9 @@ export const scrollToMessage = (messageId: string) => {
   }
 };
 
+export const getLastName = (fullName?: string) =>
+  fullName?.trim().split(' ').pop() || '';
+
 export const insertTextAtCursor = (
   ref: RefObject<HTMLTextAreaElement | HTMLInputElement | null>,
   currentText: string,

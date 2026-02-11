@@ -45,7 +45,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     fetchReplies,
     subscribeToComments,
     subscribeToReplies,
-    addComment,
+    createComment,
     updateComment,
     deleteComment
   } = useCommentStore();
@@ -186,7 +186,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         await updateComment(postId, editingComment.id, content, editingComment.parentId, image);
       } else {
         const parentId = replyingTo ? (replyingTo.parentId || replyingTo.id) : null;
-        await addComment(
+        await createComment(
           postId,
           currentUser.id,
           content,
@@ -242,7 +242,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           ) : (
             <div className="flex flex-col">
               {filteredRootComments.map(comment => (
-                <div key={comment.id} ref={el => commentRefs.current[comment.id] = el}>
+                <div key={comment.id} ref={el => { commentRefs.current[comment.id] = el; }}>
                   <CommentItem 
                     comment={comment}
                     postId={postId}

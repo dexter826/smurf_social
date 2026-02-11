@@ -132,7 +132,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   togglePin: async (conversationId: string, pinned: boolean) => {
     set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, pinned } : c) }));
     try {
-      await chatService.togglePinConversation(conversationId, pinned);
+      await chatService.togglePin(conversationId, pinned);
     } catch (error) {
       set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, pinned: !pinned } : c) }));
       console.error("Lỗi ghim hội thoại:", error);
@@ -143,7 +143,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   toggleMute: async (conversationId: string, muted: boolean) => {
     set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, muted } : c) }));
     try {
-      await chatService.toggleMuteConversation(conversationId, muted);
+      await chatService.toggleMute(conversationId, muted);
     } catch (error) {
       set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, muted: !muted } : c) }));
       console.error("Lỗi tắt thông báo:", error);
@@ -154,7 +154,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   toggleArchive: async (conversationId: string, archived: boolean) => {
     set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, archived } : c) }));
     try {
-      await chatService.toggleArchiveConversation(conversationId, archived);
+      await chatService.toggleArchive(conversationId, archived);
     } catch (error) {
       set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, archived: !archived } : c) }));
       console.error("Lỗi lưu trữ hội thoại:", error);
@@ -165,7 +165,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   toggleMarkUnread: async (conversationId: string, markedUnread: boolean) => {
     set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, markedUnread } : c) }));
     try {
-      await chatService.toggleMarkUnreadConversation(conversationId, markedUnread);
+      await chatService.toggleMarkUnread(conversationId, markedUnread);
     } catch (error) {
       set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, markedUnread: !markedUnread } : c) }));
       console.error("Lỗi đánh dấu chưa đọc:", error);
@@ -246,7 +246,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     }));
 
     try {
-      await chatService.markAllAsRead(userId);
+      await chatService.markAllConversationsAsRead(userId);
     } catch (error) {
       console.error("Lỗi đánh dấu tất cả đã đọc:", error);
     }

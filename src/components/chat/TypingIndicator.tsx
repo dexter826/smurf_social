@@ -1,5 +1,6 @@
 import React from 'react';
 import { User } from '../../types';
+import { getLastName } from '../../utils/uiUtils';
 
 interface TypingIndicatorProps {
   typingUsers: string[];
@@ -14,12 +15,6 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
 }) => {
   const activeTypingUsers = typingUsers.filter(uid => uid !== currentUserId);
   if (activeTypingUsers.length === 0) return null;
-
-  const getLastName = (fullName?: string) => {
-    if (!fullName) return '';
-    const parts = fullName.trim().split(' ');
-    return parts[parts.length - 1];
-  };
 
   let typingText = '';
   if (activeTypingUsers.length === 1) {

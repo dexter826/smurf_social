@@ -14,7 +14,7 @@ interface UserCacheState {
   getUser: (id: string) => User | undefined;
   setUser: (user: User) => void;
   invalidateUser: (id: string) => void;
-  clear: () => void;
+  reset: () => void;
 }
 
 export const useUserCache = create<UserCacheState>()(
@@ -86,7 +86,7 @@ export const useUserCache = create<UserCacheState>()(
     set({ users: rest });
   },
 
-  clear: () => {
+  reset: () => {
     set({ users: {}, loadingIds: new Set(), accessOrder: [] });
   }
 }), {

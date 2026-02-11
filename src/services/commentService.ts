@@ -117,7 +117,7 @@ export const commentService = {
   },
 
   // Tạo bình luận mới
-  addComment: async (
+  createComment: async (
     postId: string, 
     userId: string, 
     content: string, 
