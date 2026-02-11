@@ -39,7 +39,7 @@ interface LoadingState {
 }
 
 const initialLoadingStates: Record<LoadingKey, boolean> = {
-    'auth': false,
+    'auth': true,
     'auth.login': false,
     'auth.register': false,
     'auth.logout': false,
