@@ -22,7 +22,7 @@ export * from './ReactionDisplay';
 export * from './CircularProgress';
 export * from './ImageCropper';
 export * from './MediaViewer';
-export { MediaViewer as ImageViewer } from './MediaViewer';
 export * from './ReportModal';
 export * from './ConnectionStatus';
 export * from './BannedBadge';
+export * from './ErrorBoundary';

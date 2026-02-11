@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { AppLayout } from './components/layout/AppLayout';
-import { Loading, ScreenLoader, ToastContainer, ConnectionStatus } from './components/ui';
+import { ScreenLoader, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
 import { ReportModal } from './components/ui/ReportModal';
 import LoginPage from './pages/LoginPage';
 import ChatPage from './pages/ChatPage';
@@ -11,11 +11,9 @@ import ContactsPage from './pages/ContactsPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
-// Admins pages are now lazy loaded below
 import BannedPage from './pages/BannedPage';
 import EmailVerificationPage from './pages/EmailVerificationPage';
 import { MobileMenuPage } from './pages/MobileMenuPage';
-import { userService } from './services/userService';
 import { UserStatus } from './types';
 import { AdminLayout } from './components/layout/AdminLayout';
 
@@ -96,53 +94,55 @@ const App: React.FC = () => {
   }, [user]);
 
   return (
-    <HashRouter>
-      <React.Suspense fallback={<ScreenLoader />}>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
+    <ErrorBoundary>
+      <HashRouter>
+        <React.Suspense fallback={<ScreenLoader />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* Main App Routes */}
-          <Route path="/" element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<ChatPage />} />
-            <Route path="feed" element={<FeedPage />} />
-            <Route path="contacts" element={<ContactsPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="profile/:userId" element={<ProfilePage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-          </Route>
+            {/* Main App Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<ChatPage />} />
+              <Route path="feed" element={<FeedPage />} />
+              <Route path="contacts" element={<ContactsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="profile/:userId" element={<ProfilePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+            </Route>
 
-          {/* Admin Routes with Sidebar in Layout */}
-          <Route path="/admin" element={
-            <ProtectedRoute requireAdmin>
-              <AdminLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/admin/reports" replace />} />
-            <Route path="reports" element={<AdminReportsPage />} />
-            <Route path="users" element={<AdminUsersPage />} />
-          </Route>
+            {/* Admin Routes with Sidebar in Layout */}
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/admin/reports" replace />} />
+              <Route path="reports" element={<AdminReportsPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+            </Route>
 
-          <Route path="/menu" element={
-            <ProtectedRoute>
-              <MobileMenuPage />
-            </ProtectedRoute>
-          } />
+            <Route path="/menu" element={
+              <ProtectedRoute>
+                <MobileMenuPage />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/verify-email" element={<EmailVerificationPage />} />
-          <Route path="/banned" element={<BannedPage />} />
+            <Route path="/verify-email" element={<EmailVerificationPage />} />
+            <Route path="/banned" element={<BannedPage />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </React.Suspense>
-      <ConnectionStatus />
-      <ToastContainer />
-      <ReportModal />
-    </HashRouter>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </React.Suspense>
+        <ConnectionStatus />
+        <ToastContainer />
+        <ReportModal />
+      </HashRouter>
+    </ErrorBoundary>
   );
 };
 
