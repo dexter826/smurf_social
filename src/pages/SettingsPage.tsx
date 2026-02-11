@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { useUserCache } from '../store/userCacheStore';
+import { useLoadingStore } from '../store/loadingStore';
 import { User } from '../types';
 import { UserAvatar, ConfirmDialog, Button, Skeleton } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
@@ -78,7 +79,8 @@ const SettingsPage: React.FC = () => {
   
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance');
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { setLoading } = useLoadingStore();
+  const isLoading = useLoadingStore(state => state.isLoading('settings'));
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
@@ -90,14 +92,14 @@ const SettingsPage: React.FC = () => {
       const blockedIds = currentUser?.blockedUserIds || [];
       if (blockedIds.length === 0) {
         setBlockedUsers([]);
-        setIsLoading(false);
+        setLoading('settings', false);
         return;
       }
 
       try {
         await fetchUsers(blockedIds);
       } finally {
-        setIsLoading(false);
+        setLoading('settings', false);
       }
     };
 

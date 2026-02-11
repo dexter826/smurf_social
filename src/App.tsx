@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
+import { useLoadingStore } from './store/loadingStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { ScreenLoader, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
 import { ReportModal } from './components/ui/ReportModal';
@@ -17,12 +18,12 @@ import { MobileMenuPage } from './pages/MobileMenuPage';
 import { UserStatus } from './types';
 import { AdminLayout } from './components/layout/AdminLayout';
 
-// Lazy load admin pages
 const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ children, requireAdmin }) => {
-  const { user, isPendingVerification, isLoading } = useAuthStore();
+  const { user, isPendingVerification } = useAuthStore();
+  const isLoading = useLoadingStore(state => state.isLoading('auth'));
 
   if (isLoading) {
     return <ScreenLoader />;

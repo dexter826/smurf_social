@@ -140,7 +140,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
           <IconButton
             icon={<X size={20} />}
             onClick={onClose}
-            variant="ghost"
+            variant="default"
             className="hover:bg-bg-secondary rounded-full"
           />
         </div>
@@ -196,7 +196,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                 <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
                   <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block">Người báo cáo</span>
                   <div className="flex items-center gap-3">
-                    <UserAvatar src={reporter?.avatar} name={reporter?.name} size="sm" />
+                    <UserAvatar userId={reporter?.id || ''} src={reporter?.avatar} name={reporter?.name} size="sm" />
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-text-primary truncate">{reporter?.name}</div>
                       <div className="text-[10px] text-text-tertiary truncate">{reporter?.email}</div>
@@ -206,7 +206,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                 <div className="p-4 bg-bg-secondary/30 rounded-2xl border border-border-light space-y-3">
                   <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block">Bị khiếu nại</span>
                   <div className="flex items-center gap-3">
-                    <UserAvatar src={targetOwner?.avatar} name={targetOwner?.name} size="sm" />
+                    <UserAvatar userId={targetOwner?.id || ''} src={targetOwner?.avatar} name={targetOwner?.name} size="sm" />
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-text-primary truncate">{targetOwner?.name}</div>
                       <div className="text-[10px] text-text-tertiary truncate">{targetOwner?.email}</div>
@@ -267,7 +267,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                     <div className="flex items-center gap-2 pt-3 border-t border-border-light/50">
                       <span className="text-[10px] text-text-tertiary font-bold uppercase tracking-wider">Người xử lý:</span>
                       <div className="flex items-center gap-2">
-                        <UserAvatar src={resolver.avatar} name={resolver.name} size="xs" />
+                        <UserAvatar userId={resolver.id} src={resolver.avatar} name={resolver.name} size="xs" />
                         <span className="text-xs font-bold text-text-primary">{resolver.name}</span>
                       </div>
                     </div>
@@ -393,7 +393,6 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
         onConfirm={handleAction}
         title="Xác nhận xử lý"
         message="Hành động này sẽ thay đổi trạng thái và thực hiện các biện pháp kỷ luật tương ứng."
-        isLoading={isProcessing}
       />
 
       {/* Lightbox - Image Viewer */}

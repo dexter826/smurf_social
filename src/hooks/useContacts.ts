@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useChatStore } from '../store/chatStore';
+import { useLoading } from './useLoading';
 
 type TabType = 'all' | 'requests' | 'sent';
 
@@ -21,15 +22,14 @@ interface UseContactsReturn {
   groupedFriends: FriendGroup[];
   userCache: Record<string, User>;
   isLoading: boolean;
-  isRevalidating: boolean;
-  
+
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   sortOrder: 'asc' | 'desc';
   toggleSortOrder: () => void;
-  
+
   handleAcceptRequest: (requestId: string, friendId: string) => Promise<void>;
   handleRejectRequest: (requestId: string) => Promise<void>;
   handleCancelRequest: (requestId: string) => Promise<void>;
@@ -40,13 +40,11 @@ interface UseContactsReturn {
 
 export const useContacts = (): UseContactsReturn => {
   const { user: currentUser } = useAuthStore();
-  const { 
-    friends, 
-    receivedRequests, 
+  const {
+    friends,
+    receivedRequests,
     sentRequests,
-    isLoading, 
-    isRevalidating,
-    subscribeToFriends, // Add subscribeToFriends
+    subscribeToFriends,
     subscribeToRequests,
     acceptFriendRequest,
     rejectFriendRequest,
@@ -57,6 +55,7 @@ export const useContacts = (): UseContactsReturn => {
 
   const { users: userCache, fetchUsers } = useUserCache();
   const { getOrCreateConversation } = useChatStore();
+  const { checkLoading } = useLoading();
 
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,7 +106,7 @@ export const useContacts = (): UseContactsReturn => {
     return sortedGroups.map(letter => ({
       letter,
       friends: groups[letter].sort((a, b) => {
-        return sortOrder === 'asc' 
+        return sortOrder === 'asc'
           ? a.name.localeCompare(b.name)
           : b.name.localeCompare(a.name);
       })
@@ -154,8 +153,7 @@ export const useContacts = (): UseContactsReturn => {
     filteredFriends,
     groupedFriends,
     userCache,
-    isLoading,
-    isRevalidating,
+    isLoading: checkLoading('contacts.friends'),
     activeTab,
     setActiveTab,
     searchTerm,

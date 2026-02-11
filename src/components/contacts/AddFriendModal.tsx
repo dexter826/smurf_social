@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { Button, Input, Loading, Modal } from '../ui';
 import { useContactStore } from '../../store/contactStore';
 import { useAuthStore } from '../../store/authStore';
+import { useLoadingStore } from '../../store/loadingStore';
 
 interface AddFriendModalProps {
   isOpen: boolean;
@@ -13,7 +14,8 @@ interface AddFriendModalProps {
 export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-  const { isLoading, searchUsers, clearSearchResults } = useContactStore();
+  const { searchUsers, clearSearchResults } = useContactStore();
+  const isLoading = useLoadingStore(state => state.isLoading('contacts.search'));
   const [searchTerm, setSearchTerm] = useState('');
   const [notFound, setNotFound] = useState(false);
 

@@ -2,9 +2,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Message } from '../types';
 import { PAGINATION } from '../constants';
-import { 
-  createMessageSlice, 
-  createConversationSlice, 
+import {
+  createMessageSlice,
+  createConversationSlice,
   createGroupSlice,
   MessageSlice,
   ConversationSlice,
@@ -31,9 +31,6 @@ export const useChatStore = create<ChatState>()(
           lastMessageDocs: {},
           hasMoreMessages: {},
           typingUsers: {},
-          isLoading: false,
-          isRevalidating: false,
-          isLoadingMore: {},
           searchTerm: '',
           isSearchFocused: false,
           searchResults: { conversations: [], users: [] },
@@ -50,7 +47,7 @@ export const useChatStore = create<ChatState>()(
         Object.keys(state.messages).forEach(convId => {
           cachedMessages[convId] = (state.messages[convId] || []).slice(-PAGINATION.CHAT_CACHE_LIMIT);
         });
-        return { 
+        return {
           conversations: state.conversations,
           searchHistory: state.searchHistory,
           messages: cachedMessages

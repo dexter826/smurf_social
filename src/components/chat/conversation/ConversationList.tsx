@@ -3,6 +3,7 @@ import { Users, ChevronDown, MessageCircle, Archive } from 'lucide-react';
 import { Conversation, User } from '../../../types';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
+import { Skeleton } from '../../ui/Skeleton';
 import { useConversationGroups } from '../../../hooks/chat/useConversationGroups';
 import { ConversationHeader } from './ConversationHeader';
 import { ConversationFilters, FilterType } from './ConversationFilters';
@@ -14,6 +15,7 @@ interface ConversationListProps {
   currentUserFriendIds?: string[];
   blockedUserIds?: string[];
   isLoading: boolean;
+  isSearching?: boolean;
   onSelectConversation: (id: string) => void;
   onSearch: (term: string) => void;
   onPin: (id: string, pinned: boolean) => void;
@@ -74,10 +76,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   const [requestsExpanded, setRequestsExpanded] = useState(true);
 
   // Phân nhóm và lọc hội thoại
-  const { 
-    friendConversations, 
-    requestConversations, 
-    displayConversations 
+  const {
+    friendConversations,
+    requestConversations,
+    displayConversations
   } = useConversationGroups({
     conversations,
     currentUserId,
@@ -100,8 +102,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   };
 
   const renderConversationItem = useCallback((conversation: Conversation) => {
-    const partnerId = conversation.isGroup 
-      ? null 
+    const partnerId = conversation.isGroup
+      ? null
       : conversation.participantIds.find(id => id !== currentUserId);
 
     return (
@@ -122,15 +124,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       />
     );
   }, [
-    currentUserId, 
-    selectedId, 
-    currentUserFriendIds, 
-    onSelectConversation, 
-    onPin, 
-    onMute, 
-    onDelete, 
-    onBlock, 
-    onArchive, 
+    currentUserId,
+    selectedId,
+    currentUserFriendIds,
+    onSelectConversation,
+    onPin,
+    onMute,
+    onDelete,
+    onBlock,
+    onArchive,
     onMarkUnread
   ]);
 
@@ -153,9 +155,9 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
       {!isSearchFocused && !searchTerm && (
         viewMode === 'normal' ? (
-          <ConversationFilters 
-            activeFilter={activeFilter} 
-            onFilterChange={setActiveFilter} 
+          <ConversationFilters
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
           />
         ) : (
           <div className="flex-shrink-0 flex items-center px-4 h-12 bg-bg-secondary border-b border-border-light">
@@ -170,9 +172,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       {/* List Content */}
       <div className="flex-1 overflow-y-auto">
         {isLoading && conversations.length === 0 ? (
-          <div className="p-2">
+          <div className="p-2 space-y-2">
             {[...Array(5)].map((_, i) => (
-              <ConversationItem.Skeleton key={i} />
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl">
+                <Skeleton variant="circle" width={48} height={48} />
+                <div className="flex-1 space-y-2">
+                  <Skeleton width="60%" height={16} />
+                  <Skeleton width="80%" height={14} />
+                </div>
+              </div>
             ))}
           </div>
         ) : isSearchFocused ? (
@@ -190,8 +198,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               onSelectUser?.(user);
               onSearchFocus?.(false);
             }}
-            onRemoveFromHistory={onRemoveFromHistory || (() => {})}
-            onClearHistory={onClearHistory || (() => {})}
+            onRemoveFromHistory={onRemoveFromHistory || (() => { })}
+            onClearHistory={onClearHistory || (() => { })}
             isLoading={isLoading && searchTerm !== ''}
             conversations={conversations}
           />
@@ -223,9 +231,9 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                       {requestConversations.length}
                     </span>
                   </span>
-                  <ChevronDown 
-                    size={16} 
-                    className={`text-text-secondary transition-transform duration-200 ${requestsExpanded ? 'rotate-180' : ''}`} 
+                  <ChevronDown
+                    size={16}
+                    className={`text-text-secondary transition-transform duration-200 ${requestsExpanded ? 'rotate-180' : ''}`}
                   />
                 </button>
                 {requestsExpanded && (

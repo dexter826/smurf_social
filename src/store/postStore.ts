@@ -5,11 +5,10 @@ import { toast } from './toastStore';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { PAGINATION } from '../constants';
+import { useLoadingStore } from './loadingStore';
 
 interface PostState {
   posts: Post[];
-  isLoading: boolean;
-  isRevalidating: boolean;
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
@@ -24,11 +23,9 @@ interface PostState {
   reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
 
-  setLoading: (loading: boolean) => void;
   clearPosts: () => void;
 
   selectedPost: Post | null;
-  isModalLoading: boolean;
   setSelectedPost: (post: Post | null) => void;
   fetchPostById: (postId: string, currentUserId: string, friendIds: string[]) => Promise<void>;
   reset: () => void;
@@ -38,15 +35,12 @@ export const usePostStore = create<PostState>()(
   persist(
     (set, get) => ({
       posts: [],
-      isLoading: false,
-      isRevalidating: false,
       hasMore: true,
       lastDoc: null,
       abortController: null,
       isError: false,
       uploadingStates: {},
       selectedPost: null,
-      isModalLoading: false,
 
       reset: () => {
         const { abortController } = get();
@@ -54,23 +48,20 @@ export const usePostStore = create<PostState>()(
 
         set({
           posts: [],
-          isLoading: false,
-          isRevalidating: false,
           hasMore: true,
           lastDoc: null,
           abortController: null,
           isError: false,
           selectedPost: null,
-          isModalLoading: false,
           uploadingStates: {}
         });
       },
 
       fetchPosts: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], loadMore = false) => {
-        const { abortController: currentController, posts, isLoading, isRevalidating } = get();
-        
-        // Chống race conditions
-        if (isLoading || isRevalidating) return;
+        const { abortController: currentController, posts } = get();
+        const loadingStore = useLoadingStore.getState();
+
+        if (loadingStore.isLoading('feed.posts') || loadingStore.isLoading('feed.loadMore')) return;
 
         if (currentController) {
           currentController.abort();
@@ -78,24 +69,21 @@ export const usePostStore = create<PostState>()(
 
         const newController = new AbortController();
 
-        // Dùng skeleton khi chưa có data
-        const shouldRevalidate = posts.length > 0 && !loadMore;
-
         set({
           abortController: newController,
-          isLoading: !shouldRevalidate,
-          isRevalidating: shouldRevalidate,
           isError: false
         });
+
+        loadingStore.setLoading(loadMore ? 'feed.loadMore' : 'feed.posts', true);
 
         const { lastDoc } = get();
 
         try {
           const result = await postService.getFeed(
-            currentUserId, 
-            friendIds, 
-            blockedUserIds, 
-            PAGINATION.FEED_POSTS, 
+            currentUserId,
+            friendIds,
+            blockedUserIds,
+            PAGINATION.FEED_POSTS,
             loadMore ? lastDoc || undefined : undefined
           );
 
@@ -105,8 +93,6 @@ export const usePostStore = create<PostState>()(
             posts: loadMore ? [...posts, ...result.posts] : result.posts,
             lastDoc: result.lastDoc,
             hasMore: result.hasMore,
-            isLoading: false,
-            isRevalidating: false,
             abortController: null,
             isError: false
           });
@@ -114,12 +100,12 @@ export const usePostStore = create<PostState>()(
           const err = error as { name?: string };
           if (err.name === 'AbortError') return;
           console.error("Lỗi tải bài viết:", error);
-          set({ 
-            isLoading: false, 
-            isRevalidating: false, 
+          set({
             abortController: null,
-            isError: true 
+            isError: true
           });
+        } finally {
+          loadingStore.setLoading(loadMore ? 'feed.loadMore' : 'feed.posts', false);
         }
       },
 
@@ -134,9 +120,7 @@ export const usePostStore = create<PostState>()(
             set((state) => {
               if (action === 'initial') {
                 return {
-                  posts: changedPosts,
-                  isLoading: false,
-                  isRevalidating: false
+                  posts: changedPosts
                 };
               }
 
@@ -218,9 +202,9 @@ export const usePostStore = create<PostState>()(
             if (pendingFiles && pendingFiles.length > 0) {
               const result = await postService.uploadPostMedia(pendingFiles, userId, (progress) => {
                 set(state => ({
-                  uploadingStates: { 
-                    ...state.uploadingStates, 
-                    [postId]: { ...state.uploadingStates[postId], progress } 
+                  uploadingStates: {
+                    ...state.uploadingStates,
+                    [postId]: { ...state.uploadingStates[postId], progress }
                   }
                 }));
               });
@@ -237,7 +221,7 @@ export const usePostStore = create<PostState>()(
               videoThumbnails: finalThumbnails,
               reactions: {},
               visibility
-            }, postId); 
+            }, postId);
 
             set(state => {
               const newUploadingStates = { ...state.uploadingStates };
@@ -250,9 +234,9 @@ export const usePostStore = create<PostState>()(
             console.error("Lỗi đăng bài:", error);
             const errorMessage = (error as any)?.message || 'Lỗi tải lên';
             set(state => ({
-              uploadingStates: { 
-                ...state.uploadingStates, 
-                [postId]: { ...state.uploadingStates[postId], error: errorMessage } 
+              uploadingStates: {
+                ...state.uploadingStates,
+                [postId]: { ...state.uploadingStates[postId], error: errorMessage }
               }
             }));
             toast.error(`Không thể đăng bài viết: ${errorMessage}`);
@@ -267,14 +251,13 @@ export const usePostStore = create<PostState>()(
         const post = posts.find(p => p.id === postId);
         if (!post) return;
 
-        // Trạng thái edit tạm thời
         set(state => ({
           posts: state.posts.map(p =>
             p.id === postId
               ? { ...p, content, images, videos, visibility, videoThumbnails, isEdited: true, editedAt: new Date() }
               : p
           ),
-          uploadingStates: pendingFiles && pendingFiles.length > 0 
+          uploadingStates: pendingFiles && pendingFiles.length > 0
             ? { ...state.uploadingStates, [postId]: { progress: 0 } }
             : state.uploadingStates
         }));
@@ -288,9 +271,9 @@ export const usePostStore = create<PostState>()(
             if (pendingFiles && pendingFiles.length > 0) {
               const result = await postService.uploadPostMedia(pendingFiles, post.userId, (progress) => {
                 set(state => ({
-                  uploadingStates: { 
-                    ...state.uploadingStates, 
-                    [postId]: { ...state.uploadingStates[postId], progress } 
+                  uploadingStates: {
+                    ...state.uploadingStates,
+                    [postId]: { ...state.uploadingStates[postId], progress }
                   }
                 }));
               });
@@ -304,7 +287,7 @@ export const usePostStore = create<PostState>()(
             set(state => {
               const newUploadingStates = { ...state.uploadingStates };
               delete newUploadingStates[postId];
-              return { 
+              return {
                 uploadingStates: newUploadingStates,
                 posts: state.posts.map(p =>
                   p.id === postId
@@ -319,9 +302,9 @@ export const usePostStore = create<PostState>()(
             console.error("Lỗi cập nhật bài viết:", error);
             const errorMessage = (error as any)?.message || 'Lỗi tải lên';
             set(state => ({
-              uploadingStates: { 
-                ...state.uploadingStates, 
-                [postId]: { ...state.uploadingStates[postId], error: errorMessage } 
+              uploadingStates: {
+                ...state.uploadingStates,
+                [postId]: { ...state.uploadingStates[postId], error: errorMessage }
               }
             }));
             toast.error(`Không thể cập nhật bài viết: ${errorMessage}`);
@@ -395,20 +378,19 @@ export const usePostStore = create<PostState>()(
         }
       },
 
-      setLoading: (loading: boolean) => set({ isLoading: loading }),
-
       clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true }),
 
       setSelectedPost: (post: Post | null) => set({ selectedPost: post }),
 
       fetchPostById: async (postId: string, currentUserId: string, friendIds: string[]) => {
-        set({ isModalLoading: true });
+        useLoadingStore.getState().setLoading('feed', true);
         try {
           const post = await postService.getPostById(postId, currentUserId, friendIds);
-          set({ selectedPost: post, isModalLoading: false });
+          set({ selectedPost: post });
         } catch (error) {
           console.error("Lỗi lấy chi tiết bài viết:", error);
-          set({ isModalLoading: false });
+        } finally {
+          useLoadingStore.getState().setLoading('feed', false);
         }
       },
     }),

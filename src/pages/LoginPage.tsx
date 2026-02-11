@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '../store/authStore';
+import { useLoadingStore } from '../store/loadingStore';
 import { Button, Input, Checkbox } from '../components/ui';
 import { toast } from '../store/toastStore';
 import { Mail, Lock, Eye, EyeOff, User, AlertCircle } from 'lucide-react';
-import { 
-  loginSchema, 
-  registerSchema, 
+import {
+  loginSchema,
+  registerSchema,
   forgotPasswordSchema,
   LoginFormValues,
   RegisterFormValues,
@@ -16,7 +17,8 @@ import {
 } from '../utils/validation';
 
 const LoginPage: React.FC = () => {
-  const { login, register, resetPassword, sendVerificationEmail, isLoading } = useAuthStore();
+  const { login, register, resetPassword, sendVerificationEmail } = useAuthStore();
+  const isLoading = useLoadingStore(state => state.isAnyLoading('auth.login', 'auth.register', 'auth'));
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [rememberMe, setRememberMe] = useState(false);
@@ -56,7 +58,7 @@ const LoginPage: React.FC = () => {
     const err = error as { code?: string; message?: string };
     const errorCode = err.code;
     let message = "Đã có lỗi xảy ra. Vui lòng thử lại.";
-    
+
     switch (errorCode) {
       case 'auth/invalid-email': message = "Email không hợp lệ."; break;
       case 'auth/user-disabled': message = "Tài khoản này đã bị khóa."; break;
@@ -68,7 +70,7 @@ const LoginPage: React.FC = () => {
       case 'auth/email-not-verified': message = "Vui lòng xác thực email trước khi đăng nhập."; break;
       default: message = err.message || "Thao tác thất bại.";
     }
-    
+
     setAuthError(message);
     toast.error(message);
   };
@@ -77,13 +79,13 @@ const LoginPage: React.FC = () => {
     try {
       setAuthError(null);
       await login(data.email, data.password);
-      
+
       if (rememberMe) {
         localStorage.setItem('remembered_email', data.email);
       } else {
         localStorage.removeItem('remembered_email');
       }
-      
+
       navigate('/');
     } catch (error) {
       handleAuthError(error);
@@ -139,7 +141,7 @@ const LoginPage: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#4b8df8] to-[#0047b3] relative overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-[#000]/10 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative z-10 flex items-center">
           <img src="/logo_text_white.png" alt="Smurfy" className="h-12 object-contain" />
         </div>
@@ -179,7 +181,7 @@ const LoginPage: React.FC = () => {
                   Email đặt lại mật khẩu đã được gửi!
                 </div>
               )}
-              
+
               <Input
                 label="Địa chỉ Email"
                 icon={<Mail size={18} />}
@@ -208,8 +210,8 @@ const LoginPage: React.FC = () => {
             </form>
           ) : (
             <div className="space-y-6">
-              <form 
-                onSubmit={activeTab === 'login' ? loginForm.handleSubmit(onLoginSubmit) : registerForm.handleSubmit(onRegisterSubmit)} 
+              <form
+                onSubmit={activeTab === 'login' ? loginForm.handleSubmit(onLoginSubmit) : registerForm.handleSubmit(onRegisterSubmit)}
                 className="space-y-4"
               >
                 {authError && (
@@ -234,7 +236,7 @@ const LoginPage: React.FC = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {activeTab === 'register' && (
                   <Input
                     label="Họ và Tên"
@@ -245,7 +247,7 @@ const LoginPage: React.FC = () => {
                     className="rounded-xl h-12"
                   />
                 )}
-                
+
                 <Input
                   label="Email"
                   icon={<Mail size={18} />}
@@ -256,7 +258,7 @@ const LoginPage: React.FC = () => {
                   autoComplete="email"
                   className="rounded-xl h-12"
                 />
-                
+
                 <div className="space-y-1.5">
                   <Input
                     label="Mật khẩu"
@@ -279,8 +281,8 @@ const LoginPage: React.FC = () => {
                   />
                   {activeTab === 'login' && (
                     <div className="flex items-center justify-between mt-1">
-                      <Checkbox 
-                        label="Ghi nhớ đăng nhập" 
+                      <Checkbox
+                        label="Ghi nhớ đăng nhập"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
                       />

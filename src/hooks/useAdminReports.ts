@@ -4,6 +4,7 @@ import { Report, ReportStatus, ReportType, User } from '../types';
 import { reportService } from '../services/reportService';
 import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
+import { useLoadingStore } from '../store/loadingStore';
 import { toast } from '../store/toastStore';
 import { PAGINATION } from '../constants';
 
@@ -20,7 +21,8 @@ export function useAdminReports() {
   const { users: userCache, fetchUsers } = useUserCache();
 
   const [reports, setReports] = useState<Report[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { setLoading } = useLoadingStore();
+  const isLoading = useLoadingStore(state => state.isLoading('admin.reports'));
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<ReportStatus | 'pending'>('pending');
   const [typeFilter, setTypeFilter] = useState<ReportType | 'all'>('all');
@@ -39,7 +41,7 @@ export function useAdminReports() {
   useEffect(() => {
     if (user?.role !== 'admin') return;
 
-    setIsLoading(true);
+    setLoading('admin.reports', true);
 
     try {
       const unsubscribe = reportService.subscribeToReports(
@@ -63,7 +65,7 @@ export function useAdminReports() {
           }
 
           setReports(filtered);
-          setIsLoading(false);
+          setLoading('admin.reports', false);
 
           // Fetch user info từ cache
           const userIds = [...new Set([
@@ -79,7 +81,7 @@ export function useAdminReports() {
       return () => unsubscribe();
     } catch (error) {
       console.error('Lỗi subscription reports:', error);
-      setIsLoading(false);
+      setLoading('admin.reports', false);
       toast.error('Không thể tải báo cáo');
     }
   }, [user, statusFilter, typeFilter, fetchUsers]);

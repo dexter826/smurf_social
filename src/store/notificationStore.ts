@@ -3,12 +3,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { AppNotification } from '../types';
 import { notificationService } from '../services/notificationService';
 import { PAGINATION } from '../constants/appConfig';
+import { useLoadingStore } from './loadingStore';
 
 interface NotificationState {
   notifications: AppNotification[];
   unreadCount: number;
-  isLoading: boolean;
-  isRevalidating: boolean;
   currentLimit: number;
   setNotifications: (notifications: AppNotification[]) => void;
   addNotification: (notification: AppNotification) => void;
@@ -27,20 +26,16 @@ export const useNotificationStore = create<NotificationState>()(
     (set, get) => ({
       notifications: [],
       unreadCount: 0,
-      isLoading: false,
-      isRevalidating: false,
       currentLimit: PAGINATION.NOTIFICATIONS,
       _unsubscribe: null as (() => void) | null,
 
       reset: () => {
         const { _unsubscribe } = get();
         if (_unsubscribe) _unsubscribe();
-        
+
         set({
           notifications: [],
           unreadCount: 0,
-          isLoading: false,
-          isRevalidating: false,
           currentLimit: PAGINATION.NOTIFICATIONS,
           _unsubscribe: null,
         });
@@ -64,83 +59,84 @@ export const useNotificationStore = create<NotificationState>()(
         });
       },
 
-  markAsRead: async (id) => {
-    const notification = get().notifications.find(n => n.id === id);
-    const wasUnread = notification && !notification.isRead;
-    
-    set((state) => ({
-      notifications: state.notifications.map(n => 
-        n.id === id ? { ...n, isRead: true } : n
-      ),
-      unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount
-    }));
+      markAsRead: async (id) => {
+        const notification = get().notifications.find(n => n.id === id);
+        const wasUnread = notification && !notification.isRead;
 
-    try {
-      await notificationService.markAsRead(id);
-    } catch (error) {
-      console.error("Lỗi đánh dấu đã đọc:", error);
-      set((state) => ({
-        notifications: state.notifications.map(n => 
-          n.id === id ? { ...n, isRead: false } : n
-        ),
-        unreadCount: wasUnread ? state.unreadCount + 1 : state.unreadCount
-      }));
-    }
-  },
+        set((state) => ({
+          notifications: state.notifications.map(n =>
+            n.id === id ? { ...n, isRead: true } : n
+          ),
+          unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount
+        }));
 
-  markAllAsRead: async (userId) => {
-    await notificationService.markAllAsRead(userId);
-    set((state) => ({
-      notifications: state.notifications.map(n => ({ ...n, isRead: true })),
-      unreadCount: 0
-    }));
-  },
+        try {
+          await notificationService.markAsRead(id);
+        } catch (error) {
+          console.error("Lỗi đánh dấu đã đọc:", error);
+          set((state) => ({
+            notifications: state.notifications.map(n =>
+              n.id === id ? { ...n, isRead: false } : n
+            ),
+            unreadCount: wasUnread ? state.unreadCount + 1 : state.unreadCount
+          }));
+        }
+      },
 
-  deleteNotification: async (id) => {
-    const notification = get().notifications.find(n => n.id === id);
-    if (!notification) return;
+      markAllAsRead: async (userId) => {
+        await notificationService.markAllAsRead(userId);
+        set((state) => ({
+          notifications: state.notifications.map(n => ({ ...n, isRead: true })),
+          unreadCount: 0
+        }));
+      },
 
-    await notificationService.deleteNotification(id);
-    set((state) => ({
-      notifications: state.notifications.filter(n => n.id !== id),
-      unreadCount: notification.isRead ? state.unreadCount : Math.max(0, state.unreadCount - 1)
-    }));
-  },
+      deleteNotification: async (id) => {
+        const notification = get().notifications.find(n => n.id === id);
+        if (!notification) return;
 
-  clearAllNotifications: async (userId) => {
-    await notificationService.deleteAllNotifications(userId);
-    set({ notifications: [], unreadCount: 0 });
-  },
+        await notificationService.deleteNotification(id);
+        set((state) => ({
+          notifications: state.notifications.filter(n => n.id !== id),
+          unreadCount: notification.isRead ? state.unreadCount : Math.max(0, state.unreadCount - 1)
+        }));
+      },
 
-  initialize: (userId, limit = PAGINATION.NOTIFICATIONS) => {
-    const { _unsubscribe } = get();
-    if (_unsubscribe) _unsubscribe();
+      clearAllNotifications: async (userId) => {
+        await notificationService.deleteAllNotifications(userId);
+        set({ notifications: [], unreadCount: 0 });
+      },
 
-    set({ isLoading: true, currentLimit: limit });
-    
-    const unsubscribe = notificationService.subscribeToNotifications(userId, (notifications) => {
-      get().setNotifications(notifications);
-      set({ isLoading: false });
-    }, limit);
+      initialize: (userId, limit = PAGINATION.NOTIFICATIONS) => {
+        const { _unsubscribe } = get();
+        if (_unsubscribe) _unsubscribe();
 
-    set({ _unsubscribe: unsubscribe });
+        useLoadingStore.getState().setLoading('notifications', true);
+        set({ currentLimit: limit });
 
-    notificationService.requestPushPermission(userId).catch(err => {
-      console.warn("Lỗi push permission:", err);
-    });
+        const unsubscribe = notificationService.subscribeToNotifications(userId, (notifications) => {
+          get().setNotifications(notifications);
+          useLoadingStore.getState().setLoading('notifications', false);
+        }, limit);
 
-    return unsubscribe;
-  },
+        set({ _unsubscribe: unsubscribe });
 
-  loadMore: (userId) => {
-    const newLimit = get().currentLimit + PAGINATION.NOTIFICATIONS;
-    get().initialize(userId, newLimit);
-  }
-}), {
-  name: 'smurf_notify_cache',
-  storage: createJSONStorage(() => localStorage),
-  partialize: (state) => ({ 
-    notifications: state.notifications.slice(0, PAGINATION.NOTIFY_CACHE_LIMIT),
-    unreadCount: state.unreadCount
-  }),
-}));
+        notificationService.requestPushPermission(userId).catch(err => {
+          console.warn("Lỗi push permission:", err);
+        });
+
+        return unsubscribe;
+      },
+
+      loadMore: (userId) => {
+        const newLimit = get().currentLimit + PAGINATION.NOTIFICATIONS;
+        get().initialize(userId, newLimit);
+      }
+    }), {
+    name: 'smurf_notify_cache',
+    storage: createJSONStorage(() => localStorage),
+    partialize: (state) => ({
+      notifications: state.notifications.slice(0, PAGINATION.NOTIFY_CACHE_LIMIT),
+      unreadCount: state.unreadCount
+    }),
+  }));

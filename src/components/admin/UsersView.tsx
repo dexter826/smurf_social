@@ -124,7 +124,7 @@ export const UsersView: React.FC = () => {
           <div className="flex-1 sm:flex-initial min-w-[160px]">
             <Select
               value={statusFilter}
-              onChange={(val) => setStatusFilter(val as UserStatus | 'all')}
+              onChange={(val) => setStatusFilter(val as 'all' | 'active' | 'banned')}
               options={statusOptions}
             />
           </div>
@@ -157,6 +157,7 @@ export const UsersView: React.FC = () => {
               >
                 <div className="flex items-center gap-4 overflow-hidden">
                   <UserAvatar 
+                    userId={user.id}
                     src={user.avatar} 
                     name={user.name} 
                     size="md" 
@@ -185,14 +186,14 @@ export const UsersView: React.FC = () => {
                   <IconButton
                     icon={<Eye size={18} />}
                     onClick={() => navigate(`/profile/${user.id}`)}
-                    variant="ghost"
+                    variant="default"
                     title="Xem chi tiết"
                   />
                   {user.status === UserStatus.BANNED ? (
                     <IconButton
                       icon={<Unlock size={18} />}
                       onClick={() => handleUnbanClick(user.id, user.name)}
-                      variant="ghost"
+                      variant="default"
                       className="text-error hover:bg-error/10"
                       title="Mở khóa tài khoản"
                     />
@@ -200,7 +201,7 @@ export const UsersView: React.FC = () => {
                     <IconButton
                       icon={<Lock size={18} />}
                       onClick={() => handleBanClick(user.id, user.name)}
-                      variant="ghost"
+                      variant="default"
                       className="text-text-tertiary hover:text-error hover:bg-error/10"
                       title="Khóa tài khoản"
                     />

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useLoadingStore } from '../store/loadingStore';
 import { Button } from '../components/ui';
 import { Mail, RefreshCw, LogOut, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '../store/toastStore';
 import { useNavigate } from 'react-router-dom';
 
 const EmailVerificationPage: React.FC = () => {
-  const { checkVerificationStatus, sendVerificationEmail, logout, isLoading } = useAuthStore();
+  const { checkVerificationStatus, sendVerificationEmail, logout } = useAuthStore();
+  const isLoading = useLoadingStore(state => state.isLoading('auth.verification'));
   const [isChecking, setIsChecking] = useState(false);
   const navigate = useNavigate();
 
@@ -14,7 +16,7 @@ const EmailVerificationPage: React.FC = () => {
     setIsChecking(true);
     try {
       await checkVerificationStatus();
-      
+
       const currentStore = useAuthStore.getState();
       if (!currentStore.isPendingVerification) {
         toast.success("Xác thực email thành công!");
@@ -49,7 +51,7 @@ const EmailVerificationPage: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#4b8df8] to-[#0047b3] relative overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-[#000]/10 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative z-10 flex items-center">
           <img src="/logo_text_white.png" alt="Smurfy" className="h-12 object-contain" />
         </div>
@@ -86,7 +88,7 @@ const EmailVerificationPage: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <Button 
+            <Button
               className="w-full h-12 text-sm font-bold rounded-xl shadow-md"
               onClick={handleCheckStatus}
               isLoading={isChecking || isLoading}
@@ -95,7 +97,7 @@ const EmailVerificationPage: React.FC = () => {
               Đã xác thực email
             </Button>
 
-            <Button 
+            <Button
               variant="secondary"
               className="w-full h-12 text-sm font-bold rounded-xl text-text-secondary hover:bg-bg-secondary"
               onClick={handleResend}
@@ -106,7 +108,7 @@ const EmailVerificationPage: React.FC = () => {
             </Button>
 
             <div className="pt-6 border-t border-border-light mt-8">
-              <button 
+              <button
                 onClick={handleLogout}
                 className="group flex items-center gap-2 text-sm font-bold text-text-tertiary hover:text-error transition-colors mx-auto sm:mx-0"
               >

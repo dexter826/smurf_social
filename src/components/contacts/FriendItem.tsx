@@ -10,7 +10,7 @@ interface FriendItemProps {
   onMessage?: (friendId: string) => void;
 }
 
-export const FriendItem: React.FC<FriendItemProps> = ({
+export const FriendItem: React.FC<FriendItemProps> & { Skeleton: React.FC } = ({
   friend,
   onUnfriend,
   onMessage
