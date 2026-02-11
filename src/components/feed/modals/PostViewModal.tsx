@@ -322,7 +322,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   onReact={onReact}
                   statsClassName="px-5 md:px-6 py-4 flex justify-between items-center border-b border-border-light/60"
                   actionClassName="flex px-2 py-1 border-b border-border-light relative"
-                  selectorClassName="z-50"
+                  selectorClassName="z-[var(--z-popover)]"
                 />
               </div>
             }

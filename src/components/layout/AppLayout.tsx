@@ -53,9 +53,9 @@ export const AppLayout: React.FC = () => {
 
   const hasNewRequests = receivedRequests.length > 0;
 
-  const handlePostLike = async (postId: string) => {
+  const handlePostReact = async (postId: string, reaction: string) => {
     if (user) {
-      await reactToPost(postId, user.id, '👍');
+      await reactToPost(postId, user.id, reaction);
     }
   };
 
@@ -247,7 +247,7 @@ export const AppLayout: React.FC = () => {
           post={selectedPost}
           author={selectedPost ? usersMap[selectedPost.userId] : null}
           currentUser={user}
-          onLike={handlePostLike}
+          onReact={handlePostReact}
           isLoading={isModalLoading}
         />
       )}
