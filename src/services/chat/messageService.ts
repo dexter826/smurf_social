@@ -16,6 +16,7 @@ import {
   limit,
   startAfter,
   deleteField,
+  increment,
   DocumentSnapshot,
   QueryDocumentSnapshot,
   DocumentData,
@@ -29,39 +30,37 @@ import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
 import { convertTimestamp } from "../../utils/dateUtils";
 
-// Cập nhật trạng thái hội thoại và đếm số tin chưa đọc.
+// Cập nhật trạng thái hội thoại — dùng increment() tránh race condition
 async function updateConversationAfterMessage(
   conversationId: string,
   senderId: string,
   messageData: Partial<Message>,
   displayContent: string,
   messageId?: string,
-  preGeneratedId?: string
 ): Promise<void> {
   const conversationRef = doc(db, "conversations", conversationId);
   const conversationSnap = await getDoc(conversationRef);
 
   if (conversationSnap.exists()) {
     const participantIds = conversationSnap.data().participantIds || [];
-    const unreadCount = conversationSnap.data().unreadCount || {};
-
-    participantIds.forEach((pid: string) => {
-      if (pid !== senderId) {
-        unreadCount[pid] = (unreadCount[pid] || 0) + 1;
-      }
-    });
-
-    await updateDoc(conversationRef, {
+    const updates: Record<string, unknown> = {
       lastMessage: {
         ...messageData,
         id: messageId,
         createdAt: new Date(),
         content: displayContent,
       },
-      unreadCount,
       updatedAt: serverTimestamp(),
       deletedBy: []
+    };
+
+    participantIds.forEach((pid: string) => {
+      if (pid !== senderId) {
+        updates[`unreadCount.${pid}`] = increment(1);
+      }
     });
+
+    await updateDoc(conversationRef, updates);
   }
 }
 
@@ -284,31 +283,14 @@ export const messageService = {
         finalId = docRef.id;
       }
 
-      const conversationRef = doc(db, "conversations", conversationId);
-      const conversationSnap = await getDoc(conversationRef);
+      await updateConversationAfterMessage(
+        conversationId,
+        senderId,
+        messageData as Partial<Message>,
+        content,
+        finalId!
+      );
 
-      if (conversationSnap.exists()) {
-        const participantIds = conversationSnap.data().participantIds || [];
-        const unreadCount = conversationSnap.data().unreadCount || {};
-
-        // Tăng số tin chưa đọc cho người nhận.
-        participantIds.forEach((pid: string) => {
-          if (pid !== senderId) {
-            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
-          }
-        });
-
-        await updateDoc(conversationRef, {
-          lastMessage: {
-            ...messageData,
-            createdAt: new Date(),
-            id: finalId!,
-          },
-          unreadCount,
-          updatedAt: serverTimestamp(),
-          deletedBy: []
-        });
-      }
       return finalId!;
     } catch (error) {
       console.error("Lỗi gửi tin nhắn", error);
@@ -614,43 +596,25 @@ export const messageService = {
       if (originalMessage.fileSize)
         messageData.fileSize = originalMessage.fileSize;
 
-      await addDoc(collection(db, "messages"), messageData);
+      const docRef = await addDoc(collection(db, "messages"), messageData);
 
-      const conversationRef = doc(db, "conversations", targetConversationId);
-      const conversationSnap = await getDoc(conversationRef);
+      let lastMessageContent = originalMessage.content;
+      if (originalMessage.type === MessageType.IMAGE)
+        lastMessageContent = "Hình ảnh";
+      else if (originalMessage.type === MessageType.FILE)
+        lastMessageContent = originalMessage.fileName || "Tài liệu";
+      else if (originalMessage.type === MessageType.VIDEO)
+        lastMessageContent = "Video";
+      else if (originalMessage.type === MessageType.VOICE)
+        lastMessageContent = "Tin nhắn thoại";
 
-      if (conversationSnap.exists()) {
-        const conversationData = conversationSnap.data();
-        const participantIds = conversationData.participantIds || [];
-        const unreadCount = conversationData.unreadCount || {};
-
-        participantIds.forEach((pid: string) => {
-          if (pid !== senderId) {
-            unreadCount[pid] = (unreadCount[pid] || 0) + 1;
-          }
-        });
-
-        let lastMessageContent = originalMessage.content;
-        if (originalMessage.type === MessageType.IMAGE)
-          lastMessageContent = "Hình ảnh";
-        else if (originalMessage.type === MessageType.FILE)
-          lastMessageContent = originalMessage.fileName || "Tài liệu";
-        else if (originalMessage.type === MessageType.VIDEO)
-          lastMessageContent = "Video";
-        else if (originalMessage.type === MessageType.VOICE)
-          lastMessageContent = "Tin nhắn thoại";
-
-        await updateDoc(conversationRef, {
-          lastMessage: {
-            ...messageData,
-            createdAt: new Date(),
-            content: lastMessageContent,
-          },
-          unreadCount,
-          updatedAt: serverTimestamp(),
-          deletedBy: []
-        });
-      }
+      await updateConversationAfterMessage(
+        targetConversationId,
+        senderId,
+        messageData as Partial<Message>,
+        lastMessageContent,
+        docRef.id
+      );
     } catch (error) {
       console.error("Lỗi chuyển tiếp tin nhắn", error);
       throw error;

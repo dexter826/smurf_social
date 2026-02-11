@@ -5,6 +5,7 @@ import {
   doc, 
   updateDoc, 
   deleteDoc,
+  deleteField,
   serverTimestamp,
   arrayUnion,
   arrayRemove,
@@ -14,7 +15,6 @@ import { db } from '../../firebase/config';
 import { conversationService } from './conversationService';
 import { messageService } from './messageService';
 import { userService } from '../userService';
-import { Conversation } from '../../types';
 import { uploadWithProgress, UploadProgress } from '../../utils/uploadUtils';
 import { compressImage } from '../../utils/imageUtils';
 import { IMAGE_COMPRESSION } from '../../constants';
@@ -112,27 +112,20 @@ export const groupService = {
   removeGroupMember: async (conversationId: string, actorId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
-      const conversationSnap = await getDoc(conversationRef);
       
-      if (conversationSnap.exists()) {
-        const data = conversationSnap.data();
-        const newUnreadCount = { ...data.unreadCount };
-        delete newUnreadCount[userId];
-        
-        await updateDoc(conversationRef, {
-          participantIds: arrayRemove(userId),
-          adminIds: arrayRemove(userId),
-          unreadCount: newUnreadCount,
-          updatedAt: serverTimestamp()
-        });
+      await updateDoc(conversationRef, {
+        participantIds: arrayRemove(userId),
+        adminIds: arrayRemove(userId),
+        [`unreadCount.${userId}`]: deleteField(),
+        [`memberJoinedAt.${userId}`]: deleteField(),
+        updatedAt: serverTimestamp()
+      });
 
-        // Thông báo mời ra khỏi nhóm
-        const [actor, user] = await Promise.all([
-          userService.getUserById(actorId),
-          userService.getUserById(userId)
-        ]);
-        await messageService.sendSystemMessage(conversationId, `${actor?.name || 'Ai đó'} đã xóa ${user?.name || 'thành viên'} ra khỏi nhóm`);
-      }
+      const [actor, user] = await Promise.all([
+        userService.getUserById(actorId),
+        userService.getUserById(userId)
+      ]);
+      await messageService.sendSystemMessage(conversationId, `${actor?.name || 'Ai đó'} đã xóa ${user?.name || 'thành viên'} ra khỏi nhóm`);
     } catch (error) {
       console.error("Lỗi xóa thành viên:", error);
       throw error;
@@ -147,25 +140,18 @@ export const groupService = {
       
       if (conversationSnap.exists()) {
         const data = conversationSnap.data();
-        const newUnreadCount = { ...data.unreadCount };
-        delete newUnreadCount[userId];
-        
-        const newMemberJoinedAt = { ...data.memberJoinedAt || {} };
-        delete newMemberJoinedAt[userId];
-        
         const newParticipantIds = data.participantIds.filter((id: string) => id !== userId);
         const newAdminIds = (data.adminIds || []).filter((id: string) => id !== userId);
         
-        // Xóa nhóm nếu không còn thành viên
         if (newParticipantIds.length === 0) {
           await conversationService.deleteConversation(conversationId, userId);
         } else {
-          const updates: Partial<Omit<Conversation, 'id'>> = {
+          const updates: Record<string, unknown> = {
             participantIds: newParticipantIds,
             adminIds: newAdminIds,
-            unreadCount: newUnreadCount,
-            memberJoinedAt: newMemberJoinedAt,
-            updatedAt: serverTimestamp() as unknown as Date
+            [`unreadCount.${userId}`]: deleteField(),
+            [`memberJoinedAt.${userId}`]: deleteField(),
+            updatedAt: serverTimestamp()
           };
           
           // Chỉ định admin mới nếu trưởng nhóm cũ rời đi
@@ -178,12 +164,11 @@ export const groupService = {
           
           await updateDoc(conversationRef, updates);
 
-          // Thông báo rời nhóm hoặc chuyển chủ nhóm
           const user = await userService.getUserById(userId);
           await messageService.sendSystemMessage(conversationId, `${user?.name || 'Ai đó'} đã rời khỏi nhóm`);
           
           if (updates.creatorId && updates.creatorId !== data.creatorId) {
-            const newOwner = await userService.getUserById(updates.creatorId);
+            const newOwner = await userService.getUserById(updates.creatorId as string);
             await messageService.sendSystemMessage(conversationId, `${newOwner?.name || 'Ai đó'} đã trở thành chủ nhóm mới`);
           }
         }
