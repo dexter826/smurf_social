@@ -6,6 +6,7 @@ import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
+import { API_ENDPOINTS } from '../constants/api';
 
 export const userService = {
   // Lấy thông tin người dùng theo ID
@@ -32,7 +33,7 @@ export const userService = {
   updateUserStatus: async (userId: string, status: UserStatus): Promise<void> => {
     try {
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { 
+      await updateDoc(userRef, {
         status,
         lastSeen: serverTimestamp()
       });
@@ -46,10 +47,10 @@ export const userService = {
     try {
       const userDoc = await getDoc(doc(db, 'users', currentUserId));
       if (!userDoc.exists()) return [];
-      
+
       const userData = userDoc.data() as User;
       const friendIds = userData.friendIds || [];
-      
+
       if (friendIds.length === 0) return [];
 
       const friendsMap = await batchGetUsers(friendIds);
@@ -75,8 +76,8 @@ export const userService = {
       const friendIds = userData.friendIds || [];
 
       // Kiểm tra thay đổi ID
-      const isIdsChanged = friendIds.length !== previousFriendIds.length || 
-                           !friendIds.every((id, index) => id === previousFriendIds[index]);
+      const isIdsChanged = friendIds.length !== previousFriendIds.length ||
+        !friendIds.every((id, index) => id === previousFriendIds[index]);
 
       if (!isIdsChanged && previousFriendIds.length > 0) {
         // ID không đổi thì bỏ qua
@@ -104,15 +105,15 @@ export const userService = {
     try {
       const usersRef = collection(db, 'users');
       const querySnapshot = await getDocs(usersRef);
-      
+
       const users = querySnapshot.docs
         .map(doc => doc.data() as User)
-        .filter(user => 
+        .filter(user =>
           user.id !== currentUserId &&
           user.status !== UserStatus.BANNED &&
           user.email?.toLowerCase() === searchTerm.toLowerCase()
         );
-      
+
       return users;
     } catch (error) {
       console.error("Lỗi tìm kiếm người dùng", error);
@@ -125,17 +126,17 @@ export const userService = {
     try {
       const userDoc = await getDoc(doc(db, 'users', currentUserId));
       if (!userDoc.exists()) return [];
-      
+
       const friendIds = (userDoc.data() as User).friendIds || [];
       if (friendIds.length === 0) return [];
 
       const friendsMap = await batchGetUsers(friendIds);
       const friends = Object.values(friendsMap);
-      
-      return friends.filter(friend => 
+
+      return friends.filter(friend =>
         friend.status !== UserStatus.BANNED &&
         (friend.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         friend.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+          friend.email?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     } catch (error) {
       console.error("Lỗi tìm kiếm bạn bè", error);
@@ -148,7 +149,7 @@ export const userService = {
     try {
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
-      
+
       let updatedData: User;
       if (userDoc.exists()) {
         updatedData = { ...userDoc.data() as User, ...data };
@@ -156,7 +157,7 @@ export const userService = {
         updatedData = {
           id: userId,
           name: data.name || 'Người dùng mới',
-          avatar: data.avatar || `https://i.pravatar.cc/150?u=${userId}`,
+          avatar: data.avatar || '',
           email: data.email || '',
           status: UserStatus.ONLINE,
           bio: data.bio || '',
@@ -165,11 +166,11 @@ export const userService = {
           ...data
         };
       }
-      
+
       const cleanData = Object.fromEntries(
         Object.entries(updatedData).filter(([_, v]) => v !== undefined)
       );
-      
+
       await setDoc(userRef, cleanData, { merge: true });
       return updatedData;
     } catch (error) {
@@ -180,23 +181,23 @@ export const userService = {
 
   // Tải lên ảnh đại diện
   uploadAvatar: async (
-    userId: string, 
+    userId: string,
     file: File,
     onProgress?: ProgressCallback
   ): Promise<string> => {
     try {
       // Compress ảnh avatar
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.AVATAR);
-      
+
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
       const path = `avatars/${userId}/${fileName}`;
 
-      const downloadURL = await withRetry(() => 
+      const downloadURL = await withRetry(() =>
         uploadWithProgress(path, compressedFile, onProgress)
       );
       await userService.updateProfile(userId, { avatar: downloadURL });
-      
+
       return downloadURL;
     } catch (error) {
       console.error("Lỗi upload avatar", error);
@@ -206,23 +207,23 @@ export const userService = {
 
   // Tải lên ảnh bìa
   uploadCoverImage: async (
-    userId: string, 
+    userId: string,
     file: File,
     onProgress?: ProgressCallback
   ): Promise<string> => {
     try {
       // Compress ảnh cover
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COVER);
-      
+
       const fileExt = file.name.split('.').pop();
       const fileName = `cover_${userId}_${Date.now()}.${fileExt}`;
       const path = `covers/${userId}/${fileName}`;
 
-      const downloadURL = await withRetry(() => 
+      const downloadURL = await withRetry(() =>
         uploadWithProgress(path, compressedFile, onProgress)
       );
       await userService.updateProfile(userId, { coverImage: downloadURL });
-      
+
       return downloadURL;
     } catch (error) {
       console.error("Lỗi upload cover image", error);
@@ -252,10 +253,10 @@ export const userService = {
   getUserStats: async (userId: string, currentUserId?: string, friendIds?: string[]): Promise<{ friendCount: number, postCount: number }> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', userId));
-      const friendCount = userId === currentUserId 
-        ? (userDoc.data()?.friendIds || []).length 
+      const friendCount = userId === currentUserId
+        ? (userDoc.data()?.friendIds || []).length
         : 0;
-      
+
       const isOwner = userId === currentUserId;
       const isFriend = friendIds?.includes(userId) || false;
 
@@ -270,13 +271,13 @@ export const userService = {
       }
 
       const postsQuery = query(
-        collection(db, 'posts'), 
+        collection(db, 'posts'),
         where('userId', '==', userId),
         where('visibility', 'in', visibilityFilter)
       );
       const postsSnapshot = await getDocs(postsQuery);
       const postCount = postsSnapshot.size;
-      
+
       return { friendCount, postCount };
     } catch (error) {
       console.error("Lỗi lấy thông kê user", error);
@@ -354,13 +355,13 @@ export const userService = {
 
   // API dành riêng cho Admin - Lấy danh sách users có phân trang
   getAdminUsers: async (
-    limitCount: number = PAGINATION.ADMIN_USERS, 
+    limitCount: number = PAGINATION.ADMIN_USERS,
     lastVisibleDoc?: DocumentSnapshot
   ): Promise<{ users: User[], lastDoc: DocumentSnapshot | null }> => {
     try {
       const usersRef = collection(db, 'users');
       let q = query(
-        usersRef, 
+        usersRef,
         limit(limitCount)
       );
 
@@ -392,11 +393,11 @@ export const userService = {
     try {
       const usersRef = collection(db, 'users');
       const snapshot = await getDocs(usersRef);
-      
+
       const users = snapshot.docs.map(doc => doc.data() as User);
       const total = users.length;
       const banned = users.filter(u => u.status === UserStatus.BANNED).length;
-      
+
       return {
         total,
         banned,
@@ -416,7 +417,7 @@ export const userService = {
   ): (() => void) => {
     const usersRef = collection(db, 'users');
     const q = query(
-      usersRef, 
+      usersRef,
       limit(limitCount)
     );
 
