@@ -6,7 +6,6 @@ import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
-import { API_ENDPOINTS } from '../constants/api';
 
 export const userService = {
   // Lấy thông tin người dùng theo ID

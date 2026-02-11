@@ -1,9 +1,4 @@
-/**
- * Utility functions cho upload với progress tracking
- */
-/**
- * Utility functions cho upload với progress tracking
- */
+import { API_ENDPOINTS } from '../constants/api';
 
 export interface UploadProgress {
   progress: number;
@@ -14,29 +9,20 @@ export interface UploadProgress {
 
 export type ProgressCallback = (progress: UploadProgress) => void;
 
-/**
- * Upload file với progress tracking
- */
 export const uploadWithProgress = (
   path: string,
   file: File,
   onProgress?: ProgressCallback,
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+    const { CLOUD_NAME, UPLOAD_PRESET, UPLOAD_URL } = API_ENDPOINTS.CLOUDINARY;
 
-    if (!cloudName || !uploadPreset) {
-      reject(new Error("Thiếu cấu hình Cloudinary trong .env"));
-      return;
-    }
-
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+    const url = UPLOAD_URL;
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
 
     formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
+    formData.append("upload_preset", UPLOAD_PRESET);
 
     const folder = path.substring(0, path.lastIndexOf("/"));
     formData.append("folder", folder);
