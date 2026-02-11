@@ -32,6 +32,8 @@ dist-ssr
 
 # Agent Skill
 /.agent
+/.kiro
+/docs
 
 # Firebase
 .firebase/
