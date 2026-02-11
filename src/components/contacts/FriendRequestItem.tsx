@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, X, Clock } from 'lucide-react';
 import { UserAvatar, Button } from '../ui';
-import { FriendRequest, User, UserStatus } from '../../types';
+import { FriendRequest, User } from '../../types';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface FriendRequestItemProps {
@@ -15,7 +15,7 @@ interface FriendRequestItemProps {
   isLoading?: boolean;
 }
 
-export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
+const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
   request,
   user,
   type,
@@ -97,3 +97,5 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
     </div>
   );
 };
+
+export const FriendRequestItem = React.memo(FriendRequestItemInner);

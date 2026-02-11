@@ -1,6 +1,6 @@
-import React from 'react';
-import { MessageCircle, MoreVertical, UserMinus, User as UserIcon, Lock } from 'lucide-react';
-import { Avatar, UserAvatar, UserStatusText, IconButton, Dropdown, DropdownItem, Skeleton } from '../ui';
+import React, { useCallback } from 'react';
+import { MoreVertical, UserMinus, User as UserIcon, Lock } from 'lucide-react';
+import { UserAvatar, UserStatusText, IconButton, Dropdown, DropdownItem, Skeleton } from '../ui';
 import { User, UserStatus } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,20 +10,20 @@ interface FriendItemProps {
   onMessage?: (friendId: string) => void;
 }
 
-export const FriendItem: React.FC<FriendItemProps> & { Skeleton: React.FC } = ({
+const FriendItemInner: React.FC<FriendItemProps> = ({
   friend,
   onUnfriend,
   onMessage
 }) => {
   const navigate = useNavigate();
 
-  const handleMessage = () => {
+  const handleMessage = useCallback(() => {
     if (onMessage) {
       onMessage(friend.id);
     } else {
       navigate('/');
     }
-  };
+  }, [onMessage, friend.id, navigate]);
 
   return (
     <div 
@@ -79,7 +79,7 @@ export const FriendItem: React.FC<FriendItemProps> & { Skeleton: React.FC } = ({
   );
 };
 
-FriendItem.Skeleton = () => (
+const FriendItemSkeleton: React.FC = () => (
   <div className="flex items-center justify-between p-3 border-b border-divider last:border-0">
     <div className="flex items-center gap-4 flex-1">
       <Skeleton variant="circle" width={40} height={40} />
@@ -91,3 +91,8 @@ FriendItem.Skeleton = () => (
     <Skeleton variant="rect" width={32} height={32} className="rounded-lg" />
   </div>
 );
+
+export const FriendItem = Object.assign(
+  React.memo(FriendItemInner),
+  { Skeleton: FriendItemSkeleton }
+) as React.FC<FriendItemProps> & { Skeleton: React.FC };

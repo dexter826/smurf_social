@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import React, { useEffect, useMemo } from 'react';
 import { User, UserStatus } from '../../types';
 import { Avatar } from './Avatar';
 import { usePresence } from '../../hooks/usePresence';
+import { useAuthStore } from '../../store/authStore';
+import { useUserCache } from '../../store/userCacheStore';
 
 interface UserAvatarProps {
   userId: string;
@@ -18,9 +18,7 @@ interface UserAvatarProps {
   onClick?: () => void;
 }
 
-import { useAuthStore } from '../../store/authStore';
-
-export const UserAvatar: React.FC<UserAvatarProps> = ({
+const UserAvatarInner: React.FC<UserAvatarProps> = ({
   userId,
   src,
   name,
@@ -33,44 +31,33 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   onClick
 }) => {
   const presence = usePresence(isGroup ? undefined : userId, initialStatus);
-  const [fetchedName, setFetchedName] = useState<string | undefined>(name);
   const currentUser = useAuthStore(state => state.user);
+  const cachedUser = useUserCache(state => userId ? state.users[userId] : undefined);
+  const fetchUsers = useUserCache(state => state.fetchUsers);
 
   useEffect(() => {
-    if (!userId) return;
+    if (userId && !name && !cachedUser) {
+      fetchUsers([userId]);
+    }
+  }, [userId, name, cachedUser, fetchUsers]);
 
-    // Lấy thông tin cơ bản từ Firestore
-    const userRef = doc(db, 'users', userId);
-    const unsubscribeFirestore = onSnapshot(userRef, (doc) => {
-      if (doc.exists()) {
-        const userData = doc.data() as User;
-        if (!name) {
-          setFetchedName(userData.name);
-        }
-      }
-    });
+  const displayName = name || cachedUser?.name;
 
-    return () => unsubscribeFirestore();
-  }, [userId, name]);
-
-  // Kiểm tra quyền xem trạng thái bảo mật
-  const canShowStatus = () => {
+  const statusToDisplay = useMemo(() => {
     const status = presence?.status;
-    if (!showStatus || !status || status === UserStatus.BANNED) return false;
-    if (userId === currentUser?.id) return true;
+    if (!showStatus || !status || status === UserStatus.BANNED) return undefined;
+    if (userId === currentUser?.id) return status;
     
     const isFriend = currentUser?.friendIds?.includes(userId);
     const isBlocked = currentUser?.blockedUserIds?.includes(userId);
     
-    return isFriend && !isBlocked;
-  };
-
-  const statusToDisplay = canShowStatus() ? presence?.status : undefined;
+    return (isFriend && !isBlocked) ? status : undefined;
+  }, [presence?.status, showStatus, userId, currentUser?.id, currentUser?.friendIds, currentUser?.blockedUserIds]);
 
   return (
     <Avatar
       src={src}
-      name={name || fetchedName}
+      name={displayName}
       size={size}
       status={statusToDisplay}
       className={className}
@@ -80,3 +67,5 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     />
   );
 };
+
+export const UserAvatar = React.memo(UserAvatarInner);

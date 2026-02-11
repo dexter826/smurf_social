@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Flag, PenTool } from 'lucide-react';
-import { UserAvatar } from '../../ui';
+import { UserAvatar, LazyImage } from '../../ui';
 import { CommentInput } from './CommentInput';
 import { Comment, User, ReportType } from '../../../types';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
@@ -32,7 +32,7 @@ interface CommentItemProps {
   openReportModal: (type: ReportType, id: string, userId: string) => void;
 }
 
-export const CommentItem: React.FC<CommentItemProps> = ({
+const CommentItemInner: React.FC<CommentItemProps> = ({
   comment,
   postId,
   currentUser,
@@ -65,12 +65,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const isEditing = activeInputId === comment.id && inputMode === 'edit';
   const isReplying = activeInputId === comment.id && inputMode === 'reply';
 
-  const onProfileNavigate = () => {
+  const onProfileNavigate = useCallback(() => {
     if (comment.userId) {
       onProfileClick?.();
       navigate(`/profile/${comment.userId}`);
     }
-  };
+  }, [comment.userId, onProfileClick, navigate]);
 
   return (
     <div className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
@@ -133,7 +133,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 </div>
                 {comment.image && (
                   <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
-                    <img src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />
+                    <LazyImage src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />
                   </div>
                 )}
               </>
@@ -230,3 +230,5 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     </div>
   );
 };
+
+export const CommentItem = React.memo(CommentItemInner);

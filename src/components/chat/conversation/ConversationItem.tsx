@@ -6,6 +6,19 @@ import { useConversationItem } from '../../../hooks/chat/useConversationItem';
 import { MessageStatus } from '../message/MessageStatus';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 
+const ConversationItemSkeleton: React.FC = () => (
+  <div className="flex items-center gap-3 p-3.5 mx-2.5 my-1.5 rounded-xl animate-pulse">
+    <div className="w-12 h-12 rounded-full bg-bg-tertiary flex-shrink-0" />
+    <div className="flex-1 min-w-0">
+      <div className="flex justify-between mb-2">
+        <div className="h-4 bg-bg-tertiary rounded w-24" />
+        <div className="h-3 bg-bg-tertiary rounded w-10" />
+      </div>
+      <div className="h-3 bg-bg-tertiary rounded w-40" />
+    </div>
+  </div>
+);
+
 interface ConversationItemProps {
   conversation: Conversation;
   isActive: boolean;
@@ -21,7 +34,7 @@ interface ConversationItemProps {
   onMarkUnread?: () => void;
 }
 
-export const ConversationItem: React.FC<ConversationItemProps> = ({
+const ConversationItemInner: React.FC<ConversationItemProps> = ({
   conversation,
   isActive,
   currentUserId,
@@ -61,7 +74,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   });
 
   if (isDataMissing) {
-    return <ConversationItem.Skeleton />;
+    return <ConversationItemSkeleton />;
   }
 
   return (
@@ -224,15 +237,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   );
 };
 
-ConversationItem.Skeleton = () => (
-  <div className="flex items-center gap-3 p-3.5 mx-2.5 my-1.5 rounded-xl animate-pulse">
-    <div className="w-12 h-12 rounded-full bg-bg-tertiary flex-shrink-0" />
-    <div className="flex-1 min-w-0">
-      <div className="flex justify-between mb-2">
-        <div className="h-4 bg-bg-tertiary rounded w-24" />
-        <div className="h-3 bg-bg-tertiary rounded w-10" />
-      </div>
-      <div className="h-3 bg-bg-tertiary rounded w-40" />
-    </div>
-  </div>
+export const ConversationItem = Object.assign(
+  React.memo(ConversationItemInner),
+  { Skeleton: ConversationItemSkeleton }
 );

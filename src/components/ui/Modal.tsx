@@ -119,7 +119,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'danger' | 'primary' | 'success';
+  variant?: 'danger' | 'primary' | 'success' | 'warning';
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -176,6 +176,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <div className="flex flex-col items-center text-center mb-5">
           {variant === 'danger' && (
             <div className="w-12 h-12 bg-error-light text-error rounded-full flex items-center justify-center mb-3">
+              <AlertTriangle size={24} />
+            </div>
+          )}
+          {variant === 'warning' && (
+            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3">
               <AlertTriangle size={24} />
             </div>
           )}

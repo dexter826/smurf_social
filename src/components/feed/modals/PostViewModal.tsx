@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { UserAvatar, IconButton, Modal, Dropdown, DropdownItem, Skeleton } from '../../ui';
@@ -35,12 +35,12 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const { openReportModal } = useReportStore();
   const [mediaIndex, setMediaIndex] = useState(0);
 
-  const handleProfileClick = () => {
+  const handleProfileClick = useCallback(() => {
     if (author?.id) {
       onClose();
       navigate(`/profile/${author.id}`);
     }
-  };
+  }, [author?.id, onClose, navigate]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -48,12 +48,12 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   // Min swipe distance (pixels)
   const minSwipeDistance = 50;
 
-  const onTouchStart = (e: React.TouchEvent) => {
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
-  };
+  }, []);
 
-  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchMove = useCallback((e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX), []);
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
@@ -75,6 +75,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       setMediaIndex(0);
     }
   }, [isOpen, post?.id]);
+
+  const allMedia = useMemo(() => {
+    if (!post) return [];
+    return [
+      ...(post.images || []).map(url => ({ url, type: 'image' })),
+      ...(post.videos || []).map(url => ({ url, type: 'video' }))
+    ];
+  }, [post?.images, post?.videos]);
 
   if (!isOpen) return null;
 
@@ -117,12 +125,6 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     );
   }
 
-
-  const allMedia = [
-    ...(post.images || []).map(url => ({ url, type: 'image' })),
-    ...(post.videos || []).map(url => ({ url, type: 'video' }))
-  ];
-  
   const myReaction = post.reactions?.[currentUser.id];
   const isOwner = post.userId === currentUser.id;
   const hasMedia = allMedia.length > 0;
@@ -238,7 +240,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               {isOwner ? (
                 <Dropdown
                   trigger={<IconButton icon={<MoreHorizontal size={20} />} size="md" variant="ghost" />}
-                  menuClassName="w-52"
+                  className="w-52"
                 >
                   <DropdownItem icon={<Edit size={18} />} label="Chỉnh sửa bài viết" onClick={() => onEdit?.(post.id)} />
                   <DropdownItem icon={<Trash2 size={18} />} label="Xóa bài viết" variant="danger" onClick={() => onDelete?.(post.id)} />
@@ -246,7 +248,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               ) : (
                 <Dropdown
                   trigger={<IconButton icon={<MoreHorizontal size={20} />} size="md" variant="ghost" />}
-                  menuClassName="w-52"
+                  className="w-52"
                 >
                   <DropdownItem 
                     icon={<Flag size={18} />} 

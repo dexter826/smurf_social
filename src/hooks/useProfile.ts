@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { User, UserStatus } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
-import { chatService } from '../services/chatService';
+import { conversationService } from '../services/chat/conversationService';
 import { toast } from '../store/toastStore';
 import { useUserCache } from '../store/userCacheStore';
 import { TOAST_MESSAGES } from '../constants';
@@ -57,7 +57,7 @@ export const useProfile = () => {
       return;
     }
     try {
-      const conversationId = await chatService.getOrCreateConversation(currentUser.id, profile.id);
+      const conversationId = await conversationService.getOrCreateConversation(currentUser.id, profile.id);
       navigate(`/?conv=${conversationId}`);
     } catch {
       toast.error(TOAST_MESSAGES.CHAT.OPEN_FAILED);

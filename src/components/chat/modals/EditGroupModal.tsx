@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Camera, Loader2, Users } from 'lucide-react';
 import { Conversation } from '../../../types';
 import { Modal, Input, Button, Avatar, IconButton, ImageCropper } from '../../ui';
-import { chatService } from '../../../services/chatService';
+import { groupService } from '../../../services/chat/groupService';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES } from '../../../constants';
 
@@ -84,7 +84,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
       
       // Upload avatar nếu có file mới
       if (pendingFile) {
-        const avatarUrl = await chatService.uploadGroupAvatar(conversation.id, pendingFile);
+        const avatarUrl = await groupService.uploadGroupAvatar(conversation.id, pendingFile);
         updates.groupAvatar = avatarUrl;
       }
       

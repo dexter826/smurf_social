@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { Smile, Check, CheckCheck } from 'lucide-react';
 import { Message, User } from '../../../types';
 import { formatTimeOnly } from '../../../utils/dateUtils';
-import { Avatar, UserAvatar, MediaViewer, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog } from '../../ui';
+import { Avatar, UserAvatar, MediaViewer, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog, LazyImage } from '../../ui';
 import { useChatStore } from '../../../store/chatStore';
 import { MessageActions } from './MessageActions';
 
 interface ImageGroupBubbleProps {
   messages: Message[];
-  isMe: boolean;
   sender?: User;
   showAvatar: boolean;
   showName: boolean;
@@ -25,7 +24,7 @@ interface ImageGroupBubbleProps {
   isBlocked?: boolean;
 }
 
-export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
+const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
   messages,
   sender,
   showAvatar,
@@ -89,11 +88,10 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
             }`}
           onClick={() => setSelectedIndex(index)}
         >
-          <img
+          <LazyImage
             src={imageUrl}
             alt="sent"
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            loading="lazy"
           />
           {isOverlay && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold">
@@ -279,8 +277,10 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
         title="Thu hồi tin nhắn"
         message="Album ảnh này sẽ bị thu hồi đối với tất cả mọi người trong cuộc trò chuyện."
         confirmLabel="Thu hồi"
-        variant="warning"
+        variant="primary"
       />
     </div>
   );
 };
+
+export const ImageGroupBubble = React.memo(ImageGroupBubbleInner);

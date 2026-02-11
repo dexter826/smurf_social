@@ -1,5 +1,5 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
@@ -15,13 +15,20 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
-        chunkSizeWarningLimit: 1000,
+        chunkSizeWarningLimit: 500,
+        target: 'es2020',
+        minify: 'esbuild',
+        cssMinify: true,
+        sourcemap: false,
         rollupOptions: {
           output: {
             manualChunks: {
-              'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage', 'firebase/messaging'],
-              'vendor-ui': ['lucide-react', 'date-fns', 'styled-components', 'react-loading-skeleton', 'react-easy-crop'],
-              'vendor-react': ['react', 'react-dom', 'react-router-dom', 'zustand', 'react-hook-form', 'zod', '@hookform/resolvers/zod'],
+              'vendor-react': ['react', 'react-dom', 'react-router-dom', 'zustand'],
+              'vendor-firebase-core': ['firebase/app', 'firebase/auth'],
+              'vendor-firebase-data': ['firebase/firestore', 'firebase/storage', 'firebase/messaging'],
+              'vendor-form': ['react-hook-form', 'zod', '@hookform/resolvers/zod'],
+              'vendor-ui': ['lucide-react', 'date-fns', 'react-loading-skeleton'],
+              'vendor-media': ['styled-components', 'react-easy-crop'],
               'vendor-emoji': ['emoji-picker-react'],
             }
           }

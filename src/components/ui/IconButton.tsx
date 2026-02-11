@@ -9,7 +9,7 @@ export const iconSizes = {
 
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: React.ReactNode;
-  variant?: "default" | "primary" | "danger";
+  variant?: "default" | "primary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
 }
 
@@ -19,6 +19,7 @@ const iconVariants = {
   default: "text-text-secondary hover:text-text-primary",
   primary: "text-primary hover:text-primary-hover",
   danger: "text-error hover:text-error",
+  ghost: "text-text-tertiary hover:text-text-primary hover:bg-bg-hover",
 };
 
 const iconButtonSizes = {

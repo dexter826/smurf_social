@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Smile, Check, CheckCheck } from 'lucide-react';
 
@@ -41,7 +41,7 @@ interface MessageBubbleProps {
   isBlocked?: boolean;
 }
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({
+const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   message,
   isMe,
   sender,
@@ -80,20 +80,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     };
   }, []);
 
-  const handleProfileClick = () => {
+  const handleProfileClick = useCallback(() => {
     if (sender?.id) {
       navigate(`/profile/${sender.id}`);
     }
-  };
+  }, [sender?.id, navigate]);
 
-  const toggleMenu = () => {
+  const toggleMenu = useCallback(() => {
     if (!showMenu && menuButtonRef.current) {
       const rect = menuButtonRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
     }
     setShowMenu(!showMenu);
-  };
+  }, [showMenu]);
 
   const otherReaders = (message.readBy || []).filter(uid => uid !== currentUserId);
   const isRead = otherReaders.length > 0;
@@ -368,3 +368,5 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     </>
   );
 };
+
+export const MessageBubble = React.memo(MessageBubbleInner);

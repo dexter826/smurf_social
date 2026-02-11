@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { MoreHorizontal, Edit, Trash2, Flag, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
@@ -8,7 +8,6 @@ import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
 import { PostReactionsModal } from './modals';
-import { toast } from '../../store/toastStore';
 
 interface PostItemProps {
   post: Post;
@@ -21,7 +20,7 @@ interface PostItemProps {
   onProfileClick?: () => void;
 }
 
-export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
+const PostItemInner: React.FC<PostItemProps> = ({
   post,
   author,
   currentUser,
@@ -44,14 +43,16 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   const myReaction = post.reactions?.[currentUser.id];
   const isOwner = post.userId === currentUser.id;
 
-  const handleProfileClick = () => {
+  const handleProfileClick = useCallback(() => {
     if (author?.id) {
       onProfileClick?.();
       navigate(`/profile/${author.id}`);
     }
-  };
+  }, [author?.id, onProfileClick, navigate]);
 
-  const threshold = 300;
+  const handleViewDetail = useCallback(() => onViewDetail?.(post), [onViewDetail, post]);
+  const handleOpenReactions = useCallback(() => setIsReactionsModalOpen(true), []);
+  const handleCloseReactions = useCallback(() => setIsReactionsModalOpen(false), []);
 
   return (
     <div className={`bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-300 relative ${isUploading ? 'opacity-85' : 'opacity-100'}`}>
@@ -135,7 +136,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         className="px-4 pb-3 relative"
       >
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
-          <TruncatedText content={post.content} threshold={threshold} />
+          <TruncatedText content={post.content} threshold={300} />
         </p>
 
         {/* Hiển thị lỗi tải lên */}
@@ -150,7 +151,7 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         images={post.images}
         videos={post.videos}
         videoThumbnails={post.videoThumbnails}
-        onClick={() => onViewDetail?.(post)}
+        onClick={handleViewDetail}
       />
 
       <ReactionActions
@@ -159,14 +160,14 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
         myReaction={myReaction}
         commentCount={post.commentCount}
         onReact={onReact}
-        onCommentClick={() => onViewDetail?.(post)}
-        onViewReactions={() => setIsReactionsModalOpen(true)}
+        onCommentClick={handleViewDetail}
+        onViewReactions={handleOpenReactions}
         showEmptyDivider
       />
 
       <PostReactionsModal
         isOpen={isReactionsModalOpen}
-        onClose={() => setIsReactionsModalOpen(false)}
+        onClose={handleCloseReactions}
         reactions={post.reactions || {}}
         currentUser={currentUser}
         postAuthorId={post.userId}
@@ -177,7 +178,6 @@ export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = ({
   );
 };
 
-// Skeleton loading
 const PostSkeleton: React.FC = () => (
   <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light mb-4 transition-theme">
     <div className="p-3 sm:p-4 flex items-start justify-between">
@@ -207,4 +207,7 @@ const PostSkeleton: React.FC = () => (
   </div>
 );
 
-PostItem.Skeleton = PostSkeleton;
+export const PostItem: React.FC<PostItemProps> & { Skeleton: React.FC } = Object.assign(
+  React.memo(PostItemInner),
+  { Skeleton: PostSkeleton }
+);

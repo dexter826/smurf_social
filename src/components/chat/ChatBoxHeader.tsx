@@ -13,7 +13,7 @@ interface ChatBoxHeaderProps {
   onInfoClick?: () => void;
 }
 
-export const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({
+const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
   conversation,
   chatName,
   avatarSrc,
@@ -106,3 +106,5 @@ export const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({
     </div>
   );
 };
+
+export const ChatBoxHeader = React.memo(ChatBoxHeaderInner);

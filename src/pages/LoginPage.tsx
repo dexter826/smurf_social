@@ -266,6 +266,7 @@ const LoginPage: React.FC = () => {
                     icon={<Lock size={18} />}
                     type={showPassword ? "text" : "password"}
                     placeholder="Nhập mật khẩu"
+                    autoComplete={activeTab === 'login' ? 'current-password' : 'new-password'}
                     {...(activeTab === 'login' ? loginForm.register('password') : registerForm.register('password'))}
                     error={activeTab === 'login' ? loginForm.formState.errors.password?.message : registerForm.formState.errors.password?.message}
                     className="rounded-xl"
@@ -300,6 +301,7 @@ const LoginPage: React.FC = () => {
                     icon={<Lock size={18} />}
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Xác nhận mật khẩu"
+                    autoComplete="new-password"
                     {...registerForm.register('confirmPassword')}
                     error={registerForm.formState.errors.confirmPassword?.message}
                     className="rounded-xl h-12"

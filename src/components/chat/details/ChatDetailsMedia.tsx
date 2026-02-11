@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Message } from '../../../types';
 import { Image, Film, FileText, Download, ExternalLink } from 'lucide-react';
+import { LazyImage } from '../../ui';
 
 interface ChatDetailsMediaProps {
   messages: Message[];
@@ -8,7 +9,14 @@ interface ChatDetailsMediaProps {
 
 type MediaTab = 'images' | 'videos' | 'files';
 
-export const ChatDetailsMedia: React.FC<ChatDetailsMediaProps> = ({ messages }) => {
+const formatFileSize = (bytes?: number) => {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) => {
   const [activeTab, setActiveTab] = useState<MediaTab>('images');
 
   const mediaItems = useMemo(() => {
@@ -35,13 +43,6 @@ export const ChatDetailsMedia: React.FC<ChatDetailsMediaProps> = ({ messages }) 
     { id: 'files', label: 'File', icon: <FileText size={16} />, count: mediaItems.files.length },
   ];
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   const renderContent = () => {
     switch (activeTab) {
       case 'images':
@@ -58,8 +59,8 @@ export const ChatDetailsMedia: React.FC<ChatDetailsMediaProps> = ({ messages }) 
                 rel="noopener noreferrer"
                 className="aspect-square rounded-md overflow-hidden hover:opacity-80 transition-opacity"
               >
-                <img
-                  src={msg.fileUrl}
+                <LazyImage
+                  src={msg.fileUrl!}
                   alt=""
                   className="w-full h-full object-cover"
                 />
@@ -169,3 +170,5 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
     <p className="text-sm">{message}</p>
   </div>
 );
+
+export const ChatDetailsMedia = React.memo(ChatDetailsMediaInner);

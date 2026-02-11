@@ -21,7 +21,7 @@ interface MessageListProps {
   isBlocked?: boolean;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({
+const MessageListInner: React.FC<MessageListProps> = ({
   messages,
   currentUserId,
   usersMap,
@@ -156,8 +156,8 @@ export const MessageList: React.FC<MessageListProps> = ({
                       <ImageGroupBubble
                         key={`group-${msg.id}`}
                         messages={imageGroup}
-                        isMe={isMe}
                         sender={usersMap[msg.senderId]}
+                        currentUserId={currentUserId}
                         showAvatar={showAvatar}
                         showName={showName}
                         onRecall={onRecall}
@@ -212,3 +212,5 @@ export const MessageList: React.FC<MessageListProps> = ({
     </div>
   );
 };
+
+export const MessageList = React.memo(MessageListInner);

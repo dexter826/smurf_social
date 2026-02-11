@@ -2,23 +2,29 @@ import React from 'react';
 import { Globe, Users, Lock } from 'lucide-react';
 import { Visibility } from '../../../types';
 
+const VISIBILITY_ICONS: Record<Visibility, { Icon: typeof Globe; title: string }> = {
+  [Visibility.PUBLIC]: { Icon: Globe, title: 'Công khai' },
+  [Visibility.FRIENDS]: { Icon: Users, title: 'Bạn bè' },
+  [Visibility.PRIVATE]: { Icon: Lock, title: 'Chỉ mình tôi' }
+};
+
 interface VisibilityBadgeProps {
   visibility: Visibility;
   size?: number;
   className?: string;
 }
 
-export const VisibilityBadge: React.FC<VisibilityBadgeProps> = ({
+const VisibilityBadgeInner: React.FC<VisibilityBadgeProps> = ({
   visibility,
   size = 12,
   className = ''
 }) => {
-  const icons: Record<Visibility, { Icon: typeof Globe; title: string }> = {
-    [Visibility.PUBLIC]: { Icon: Globe, title: 'Công khai' },
-    [Visibility.FRIENDS]: { Icon: Users, title: 'Bạn bè' },
-    [Visibility.PRIVATE]: { Icon: Lock, title: 'Chỉ mình tôi' }
-  };
-
-  const { Icon, title } = icons[visibility];
-  return <Icon size={size} title={title} className={className} />;
+  const { Icon, title } = VISIBILITY_ICONS[visibility];
+  return (
+    <span title={title}>
+      <Icon size={size} className={className} />
+    </span>
+  );
 };
+
+export const VisibilityBadge = React.memo(VisibilityBadgeInner);

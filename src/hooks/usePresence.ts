@@ -1,24 +1,18 @@
-import { useState, useEffect } from 'react';
-import { ref, onValue } from 'firebase/database';
-import { rtdb } from '../firebase/config';
+import { useEffect } from 'react';
+import { usePresenceStore } from '../store/presenceStore';
 import { UserStatus } from '../types';
 
-// Lắng nghe trạng thái hoạt động của một người dùng theo thời gian thực
+// Dùng store tập trung, chỉ 1 listener per userId dù nhiều component subscribe
 export const usePresence = (userId: string | undefined, initialStatus?: UserStatus) => {
-  const [presence, setPresence] = useState<{ status: UserStatus; lastSeen?: number } | null>(
-    initialStatus ? { status: initialStatus } : null
-  );
+  const subscribe = usePresenceStore(state => state.subscribe);
+  const unsubscribe = usePresenceStore(state => state.unsubscribe);
+  const presence = usePresenceStore(state => userId ? state.presenceMap[userId] || null : null);
 
   useEffect(() => {
     if (!userId) return;
+    subscribe(userId, initialStatus);
+    return () => unsubscribe(userId);
+  }, [userId, subscribe, unsubscribe]);
 
-    const statusRef = ref(rtdb, `/status/${userId}`);
-    return onValue(statusRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setPresence(snapshot.val());
-      }
-    });
-  }, [userId]);
-
-  return presence;
+  return presence || (initialStatus ? { status: initialStatus } : null);
 };

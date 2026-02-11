@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 import { Conversation } from '../../types';
-import { chatService } from '../../services/chatService';
+import { groupService } from '../../services/chat/groupService';
 import { useAuthStore } from '../authStore';
 import { ConversationSlice } from './conversationSlice';
 
@@ -20,7 +20,7 @@ type GroupSliceWithConversation = GroupSlice & ConversationSlice;
 export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], GroupSlice> = (set, get) => ({
   createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => {
     try {
-      const conversationId = await chatService.createGroupConversation(creatorId, memberIds, groupName, groupAvatar);
+      const conversationId = await groupService.createGroupConversation(creatorId, memberIds, groupName, groupAvatar);
       set({ selectedConversationId: conversationId });
       return conversationId;
     } catch (error) {
@@ -37,7 +37,7 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
       conversations: state.conversations.map((c: Conversation) => c.id === conversationId ? { ...c, ...updates } : c)
     }));
     try {
-      await chatService.updateGroupInfo(conversationId, actorId, updates);
+      await groupService.updateGroupInfo(conversationId, actorId, updates);
     } catch (error) {
       console.error("Lỗi cập nhật thông tin nhóm:", error);
       throw error;
@@ -48,7 +48,7 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
     const actorId = useAuthStore.getState().user?.id;
     if (!actorId) return;
     try {
-      await chatService.addGroupMember(conversationId, actorId, userId);
+      await groupService.addGroupMember(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi thêm thành viên:", error);
       throw error;
@@ -59,7 +59,7 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
     const actorId = useAuthStore.getState().user?.id;
     if (!actorId) return;
     try {
-      await chatService.removeGroupMember(conversationId, actorId, userId);
+      await groupService.removeGroupMember(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi xóa thành viên:", error);
       throw error;
@@ -72,7 +72,7 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
     }));
     try {
-      await chatService.leaveGroup(conversationId, userId);
+      await groupService.leaveGroup(conversationId, userId);
     } catch (error) {
       console.error("Lỗi rời nhóm:", error);
       throw error;
@@ -83,7 +83,7 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
     const actorId = useAuthStore.getState().user?.id;
     if (!actorId) return;
     try {
-      await chatService.promoteToAdmin(conversationId, actorId, userId);
+      await groupService.promoteToAdmin(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi chỉ định admin:", error);
       throw error;
@@ -94,7 +94,7 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
     const actorId = useAuthStore.getState().user?.id;
     if (!actorId) return;
     try {
-      await chatService.demoteFromAdmin(conversationId, actorId, userId);
+      await groupService.demoteFromAdmin(conversationId, actorId, userId);
     } catch (error) {
       console.error("Lỗi gỡ quyền admin:", error);
       throw error;
@@ -107,7 +107,7 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
     }));
     try {
-      await chatService.disbandGroup(conversationId);
+      await groupService.disbandGroup(conversationId);
     } catch (error) {
       console.error("Lỗi giải tán nhóm:", error);
       throw error;
