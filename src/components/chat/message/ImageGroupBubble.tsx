@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Smile, Check, CheckCheck } from 'lucide-react';
 import { Message, User } from '../../../types';
 import { formatTimeOnly } from '../../../utils/dateUtils';
-import { Avatar, UserAvatar, ImageViewer, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog } from '../../ui';
+import { Avatar, UserAvatar, MediaViewer, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog } from '../../ui';
 import { useChatStore } from '../../../store/chatStore';
 import { MessageActions } from './MessageActions';
 
@@ -69,37 +69,36 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
   const isMe = lastMsg.senderId === currentUserId;
   const isDelivered = !!lastMsg.deliveredAt;
 
-  const gridClass = validMessages.length === 1 
-    ? 'grid-cols-1' 
-    : validMessages.length === 2 
-      ? 'grid-cols-2' 
+  const gridClass = validMessages.length === 1
+    ? 'grid-cols-1'
+    : validMessages.length === 2
+      ? 'grid-cols-2'
       : 'grid-cols-2';
 
   const renderImages = () => {
     const count = validMessages.length;
-    
+
     return validMessages.slice(0, 4).map((msg, index) => {
       const isOverlay = index === 3 && count > 4;
       const imageUrl = msg.fileUrl || msg.content;
-      
+
       return (
-        <div 
-          key={msg.id} 
-          className={`relative overflow-hidden cursor-pointer ${
-            count === 3 && index === 0 ? 'col-span-2 row-span-2 aspect-video' : 'aspect-square'
-          }`}
+        <div
+          key={msg.id}
+          className={`relative overflow-hidden cursor-pointer ${count === 3 && index === 0 ? 'col-span-2 row-span-2 aspect-video' : 'aspect-square'
+            }`}
           onClick={() => setSelectedIndex(index)}
         >
-          <img 
-            src={imageUrl} 
-            alt="sent" 
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" 
+          <img
+            src={imageUrl}
+            alt="sent"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
           {isOverlay && (
-             <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold">
-               +{count - 3}
-             </div>
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold">
+              +{count - 3}
+            </div>
           )}
         </div>
       );
@@ -113,11 +112,11 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
       {!isMe && (
         <div className="w-8 flex-shrink-0 flex items-end">
           {showAvatar && (
-            <UserAvatar 
-              userId={sender?.id ?? ''} 
-              src={sender?.avatar} 
-              size="sm" 
-              showStatus={false} 
+            <UserAvatar
+              userId={sender?.id ?? ''}
+              src={sender?.avatar}
+              size="sm"
+              showStatus={false}
             />
           )}
         </div>
@@ -129,7 +128,7 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
             {sender?.name}
           </span>
         )}
-        
+
         <div className="relative group/message">
           <div className={`rounded-xl overflow-hidden grid gap-0.5 ${gridClass} border border-border-light shadow-sm bg-bg-secondary w-full max-w-[320px]`}>
             {renderImages()}
@@ -138,8 +137,8 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
           {/* Cảm xúc & Emoji */}
           <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
             {hasReactions ? (
-              <ReactionDisplay 
-                reactions={lastMsg.reactions} 
+              <ReactionDisplay
+                reactions={lastMsg.reactions}
                 onClick={() => setShowReactionSelector(!showReactionSelector)}
               />
             ) : (
@@ -158,14 +157,14 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
 
             {showReactionSelector && (
               <>
-                <div 
-                  className="fixed inset-0 z-40 bg-transparent" 
+                <div
+                  className="fixed inset-0 z-40 bg-transparent"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowReactionSelector(false);
                   }}
                 />
-                <ReactionSelector 
+                <ReactionSelector
                   onSelect={(emoji) => toggleReaction(lastMsg.id, currentUserId, emoji)}
                   onClose={() => setShowReactionSelector(false)}
                   className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
@@ -192,7 +191,7 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
             isBlocked={isBlocked}
           />
         </div>
-        
+
         {/* Thời gian & Trạng thái đọc */}
         <div className="flex flex-col items-end mt-1">
           <span className="text-[10px] text-text-tertiary">
@@ -208,17 +207,17 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
               )}
 
               {lastReadByUsers.length > 0 && (
-                <div 
+                <div
                   className="flex items-center gap-1 mt-1 cursor-pointer"
                   onClick={() => isGroup && setShowReaders(!showReaders)}
                 >
                   <div className="flex -space-x-1.5 overflow-hidden">
                     {lastReadByUsers.slice(0, 3).map(user => (
-                      <Avatar 
+                      <Avatar
                         key={user.id}
-                        src={user.avatar} 
-                        name={user.name} 
-                        size="2xs" 
+                        src={user.avatar}
+                        name={user.name}
+                        size="2xs"
                         className="ring-1 ring-bg-primary"
                       />
                     ))}
@@ -236,8 +235,11 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
       </div>
 
       {/* Lightbox Viewer */}
-      <ImageViewer
-        images={validMessages.map(m => m.fileUrl || m.content)}
+      <MediaViewer
+        media={validMessages.map(m => ({
+          type: 'image' as const,
+          url: m.fileUrl || m.content
+        }))}
         initialIndex={selectedIndex}
         isOpen={selectedIndex !== -1}
         onClose={() => setSelectedIndex(-1)}
@@ -257,9 +259,9 @@ export const ImageGroupBubble: React.FC<ImageGroupBubbleProps> = ({
                 <UserAvatar userId={reader.id} src={reader.avatar} size="md" initialStatus={reader.status} showStatus={true} />
                 <div className="flex-1">
                   <div className="text-sm font-bold text-text-primary">{reader.name}</div>
-                  <UserStatusText 
-                    userId={reader.id} 
-                    initialStatus={reader.status} 
+                  <UserStatusText
+                    userId={reader.id}
+                    initialStatus={reader.status}
                     className="text-xs text-text-tertiary"
                   />
                 </div>

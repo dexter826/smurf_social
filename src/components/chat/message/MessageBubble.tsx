@@ -3,15 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { X, Smile, Check, CheckCheck } from 'lucide-react';
 
 import { Message, User } from '../../../types';
-import { 
-  Avatar, 
-  UserAvatar, 
-  IconButton, 
-  ReactionDisplay, 
-  ReactionSelector, 
+import {
+  Avatar,
+  UserAvatar,
+  IconButton,
+  ReactionDisplay,
+  ReactionSelector,
   Modal,
   UserStatusText,
-  ConfirmDialog
+  ConfirmDialog,
+  MediaViewer
 } from '../../ui';
 import { useChatStore } from '../../../store/chatStore';
 import { TIME_LIMITS } from '../../../constants/appConfig';
@@ -40,11 +41,11 @@ interface MessageBubbleProps {
   isBlocked?: boolean;
 }
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
-  message, 
-  isMe, 
-  sender, 
-  showAvatar, 
+export const MessageBubble: React.FC<MessageBubbleProps> = ({
+  message,
+  isMe,
+  sender,
+  showAvatar,
   showName,
   isLastMessage,
   onRecall,
@@ -102,7 +103,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const canEdit = isMe && !message.isRecalled && (
     (new Date().getTime() - new Date(message.createdAt).getTime()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
   );
-  
+
   const hasReactions = message.reactions && Object.keys(message.reactions).length > 0;
 
   const handleToggleVoice = (e: React.MouseEvent) => {
@@ -135,7 +136,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <>
-      <div 
+      <div
         id={`msg-${message.id}`}
         className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start gap-3'}`}
       >
@@ -143,12 +144,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {!isMe && (
           <div className="w-8 flex-shrink-0 flex items-end">
             {showAvatar && (
-              <UserAvatar 
-                userId={sender?.id ?? ''} 
-                src={sender?.avatar} 
-                size="sm" 
-                initialStatus={sender?.status} 
-                showStatus={false} 
+              <UserAvatar
+                userId={sender?.id ?? ''}
+                src={sender?.avatar}
+                size="sm"
+                initialStatus={sender?.status}
+                showStatus={false}
                 onClick={handleProfileClick}
               />
             )}
@@ -158,7 +159,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative ${hasReactions ? 'mb-4' : 'mb-1'}`}>
           {/* Tên người gửi trong nhóm */}
           {!isMe && showName && (
-            <span 
+            <span
               className="text-[11px] text-text-secondary ml-1 mb-1 font-medium cursor-pointer hover:underline"
               onClick={handleProfileClick}
             >
@@ -168,38 +169,37 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
           <div className="relative group/message">
             {/* Nội dung tin nhắn */}
-            <div 
+            <div
               className={`
                 relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
                 ${(message.type === 'text' || message.isRecalled) ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
-                ${isMe 
-                  ? ((message.type === 'text' || message.isRecalled) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '') 
+                ${isMe
+                  ? ((message.type === 'text' || message.isRecalled) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '')
                   : ((message.type === 'text' || message.isRecalled) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
                 }
               `}
             >
-                {message.replyToId && message.replyToMessage && (
-                <div className={`mb-2 p-2 rounded border-l-4 text-xs ${
-                  isMe 
-                    ? 'bg-white/10 border-white/50 text-white/90' 
-                    : 'bg-bg-secondary border-primary text-text-secondary'
-                } max-w-full overflow-hidden truncate opacity-90 cursor-pointer`}
-                onClick={() => scrollToMessage(message.replyToId!)}
+              {message.replyToId && message.replyToMessage && (
+                <div className={`mb-2 p-2 rounded border-l-4 text-xs ${isMe
+                  ? 'bg-white/10 border-white/50 text-white/90'
+                  : 'bg-bg-secondary border-primary text-text-secondary'
+                  } max-w-full overflow-hidden truncate opacity-90 cursor-pointer`}
+                  onClick={() => scrollToMessage(message.replyToId!)}
                 >
                   <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
-                    {message.replyToMessage.senderId === currentUserId 
-                      ? 'Bạn' 
+                    {message.replyToMessage.senderId === currentUserId
+                      ? 'Bạn'
                       : usersMap[message.replyToMessage.senderId]?.name || 'Người dùng'}
                   </div>
                   <div className="truncate">
-                    {message.replyToMessage.type === 'text' 
+                    {message.replyToMessage.type === 'text'
                       ? message.replyToMessage.content.replace(/@\[([^\]]+)\]/g, '@$1')
                       : `[${message.replyToMessage.type}]`}
                   </div>
                 </div>
               )}
-              
-              <MessageContent 
+
+              <MessageContent
                 message={message}
                 isMe={isMe}
                 uploadProgress={uploadProgress}
@@ -207,12 +207,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 onToggleVoice={handleToggleVoice}
                 setShowFullImage={setShowFullImage}
               />
-              
+
               {/* Thời gian & Trạng thái */}
               {(message.type === 'text' || message.isRecalled) && (
-                <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
-                  isMe ? 'text-white/80' : 'text-text-tertiary'
-                }`}>
+                <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMe ? 'text-white/80' : 'text-text-tertiary'
+                  }`}>
                   <span>{formatTimeOnly(message.createdAt)}</span>
                 </div>
               )}
@@ -220,47 +219,47 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               {/* Hiển thị cảm xúc & Bộ chọn Emoji */}
               {!message.isRecalled && (
                 <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
-                    {hasReactions ? (
-                      <ReactionDisplay 
-                        reactions={message.reactions} 
-                        onClick={() => setShowReactionSelector(!showReactionSelector)}
-                      />
-                    ) : (
-                      <div className="opacity-0 group-hover/message:opacity-100 transition-opacity">
-                         <button
-                            className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-200"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowReactionSelector(!showReactionSelector);
-                            }}
-                         >
-                            <Smile size={12} />
-                         </button>
-                      </div>
-                    )}
+                  {hasReactions ? (
+                    <ReactionDisplay
+                      reactions={message.reactions}
+                      onClick={() => setShowReactionSelector(!showReactionSelector)}
+                    />
+                  ) : (
+                    <div className="opacity-0 group-hover/message:opacity-100 transition-opacity">
+                      <button
+                        className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowReactionSelector(!showReactionSelector);
+                        }}
+                      >
+                        <Smile size={12} />
+                      </button>
+                    </div>
+                  )}
 
-                    {showReactionSelector && (
-                      <>
-                        <div 
-                          className="fixed inset-0 z-40 bg-transparent" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowReactionSelector(false);
-                          }}
-                        />
-                        <ReactionSelector 
-                          onSelect={(emoji) => toggleReaction(message.id, currentUserId, emoji)}
-                          onClose={() => setShowReactionSelector(false)}
-                          className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
-                          currentReaction={message.reactions?.[currentUserId]}
-                        />
-                      </>
-                    )}
+                  {showReactionSelector && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40 bg-transparent"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowReactionSelector(false);
+                        }}
+                      />
+                      <ReactionSelector
+                        onSelect={(emoji) => toggleReaction(message.id, currentUserId, emoji)}
+                        onClose={() => setShowReactionSelector(false)}
+                        className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
+                        currentReaction={message.reactions?.[currentUserId]}
+                      />
+                    </>
+                  )}
                 </div>
               )}
             </div>
 
-            <MessageActions 
+            <MessageActions
               message={message}
               isMe={isMe}
               canEdit={canEdit}
@@ -295,17 +294,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
               {/* Danh sách avatar người đã đọc tin nhắn này (đây là tin cuối cùng họ xem) */}
               {lastReadByUsers.length > 0 && (
-                <div 
+                <div
                   className="flex items-center gap-1 mt-1 cursor-pointer"
                   onClick={() => isGroup && setShowReaders(!showReaders)}
                 >
                   <div className="flex -space-x-1.5 overflow-hidden">
                     {lastReadByUsers.slice(0, 3).map(user => (
-                      <Avatar 
+                      <Avatar
                         key={user.id}
-                        src={user.avatar} 
-                        name={user.name} 
-                        size="2xs" 
+                        src={user.avatar}
+                        name={user.name}
+                        size="2xs"
                         className="ring-1 ring-bg-primary"
                       />
                     ))}
@@ -317,7 +316,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   )}
                 </div>
               )}
-              
+
               {/* Danh sách người xem chi tiết khi click (chỉ cho group) */}
               {isGroup && lastReadByUsers.length > 0 && (
                 <Modal
@@ -332,9 +331,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                         <UserAvatar userId={reader.id} src={reader.avatar} size="md" initialStatus={reader.status} showStatus={true} />
                         <div className="flex-1">
                           <div className="text-sm font-bold text-text-primary">{reader.name}</div>
-                          <UserStatusText 
-                            userId={reader.id} 
-                            initialStatus={reader.status} 
+                          <UserStatusText
+                            userId={reader.id}
+                            initialStatus={reader.status}
                             className="text-xs text-text-tertiary"
                           />
                         </div>
@@ -348,28 +347,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       </div>
 
-      {/* Lightbox xem ảnh full */}
-      {showFullImage && message.type === 'image' && (
-        <div
-          className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 cursor-zoom-out"
-          onClick={() => setShowFullImage(false)}
-        >
-          <div className="relative max-w-full max-h-full flex items-center justify-center">
-            <img
-              src={message.fileUrl || message.content}
-              alt="full"
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <IconButton
-              className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full"
-              onClick={() => setShowFullImage(false)}
-              icon={<X size={24} />}
-              size="lg"
-            />
-          </div>
-        </div>
-      )}
+      <MediaViewer
+        media={[{ type: 'image', url: message.fileUrl || message.content }]}
+        initialIndex={0}
+        isOpen={showFullImage}
+        onClose={() => setShowFullImage(false)}
+      />
 
 
 
