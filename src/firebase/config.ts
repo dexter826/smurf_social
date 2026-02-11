@@ -1,21 +1,24 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { 
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager 
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
 } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+import { getValidatedEnvConfig } from "../utils/validateEnv";
+
+const envConfig = getValidatedEnvConfig();
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
+  apiKey: envConfig.firebase.apiKey,
+  authDomain: envConfig.firebase.authDomain,
+  projectId: envConfig.firebase.projectId,
+  storageBucket: envConfig.firebase.storageBucket,
+  messagingSenderId: envConfig.firebase.messagingSenderId,
+  appId: envConfig.firebase.appId,
+  measurementId: envConfig.firebase.measurementId,
+  databaseURL: envConfig.firebase.databaseURL,
 };
 
 const app = initializeApp(firebaseConfig);

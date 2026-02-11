@@ -1,14 +1,14 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  Timestamp, 
-  doc, 
-  updateDoc, 
-  onSnapshot, 
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+  doc,
+  updateDoc,
+  onSnapshot,
   writeBatch,
   limit,
   arrayUnion,
@@ -18,6 +18,7 @@ import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
 import { AppNotification, NotificationType, ReportReason } from '../types';
 import { REPORT_CONFIG } from '../constants/appConfig';
+import { getValidatedEnvConfig } from '../utils/validateEnv';
 
 export const notificationService = {
   // Tạo thông báo mới và lưu vào Firestore
@@ -142,7 +143,7 @@ export const notificationService = {
         NotificationType.REPLY_COMMENT,
         NotificationType.LIKE_COMMENT
       ];
-      
+
       for (const type of notificationTypes) {
         const q = query(
           collection(db, 'notifications'),
@@ -150,7 +151,7 @@ export const notificationService = {
           where('data.postId', '==', postId)
         );
         const snapshot = await getDocs(q);
-        
+
         if (!snapshot.empty) {
           const batch = writeBatch(db);
           snapshot.docs.forEach(docSnap => {
@@ -169,12 +170,13 @@ export const notificationService = {
     try {
       const messaging = getMessaging();
       const permission = await Notification.requestPermission();
-      
+
       if (permission === 'granted') {
+        const { firebase } = getValidatedEnvConfig();
         const token = await getToken(messaging, {
-          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY // Lấy từ Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
+          vapidKey: firebase.vapidKey
         });
-        
+
         if (token) {
           const userRef = doc(db, 'users', userId);
           await updateDoc(userRef, {
@@ -225,8 +227,8 @@ export const notificationService = {
       case NotificationType.CONTENT_VIOLATION:
         const reasonKey = notification.data.contentSnippet as ReportReason;
         const reasonLabel = REPORT_CONFIG.REASONS[reasonKey]?.label || notification.data.contentSnippet;
-        
-        return notification.data.contentSnippet 
+
+        return notification.data.contentSnippet
           ? `Nội dung bị báo cáo: ${reasonLabel}. Vui lòng tuân thủ quy tắc cộng đồng.`
           : 'Nội dung của bạn đã bị xóa do vi phạm quy tắc cộng đồng.';
       default:

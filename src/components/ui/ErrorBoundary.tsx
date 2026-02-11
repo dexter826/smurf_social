@@ -35,6 +35,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 return fallback;
             }
 
+            const isEnvError = error?.message.includes('environment');
+
             return (
                 <div className="flex items-center justify-center min-h-screen bg-gray-50">
                     <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
@@ -54,11 +56,25 @@ export class ErrorBoundary extends React.Component<Props, State> {
                             </svg>
                         </div>
                         <h3 className="mt-4 text-lg font-medium text-gray-900 text-center">
-                            Có lỗi xảy ra
+                            {isEnvError ? 'Lỗi Cấu Hình' : 'Có lỗi xảy ra'}
                         </h3>
                         <p className="mt-2 text-sm text-gray-500 text-center">
-                            Đã xảy ra lỗi không mong muốn. Vui lòng tải lại trang.
+                            {isEnvError
+                                ? 'Ứng dụng chưa được cấu hình đúng. Vui lòng kiểm tra file .env'
+                                : 'Đã xảy ra lỗi không mong muốn. Vui lòng tải lại trang.'}
                         </p>
+                        {isEnvError && (
+                            <div className="mt-4 bg-gray-50 rounded-md p-4">
+                                <p className="text-sm text-gray-700 font-medium mb-2">
+                                    Các bước khắc phục:
+                                </p>
+                                <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                                    <li>Tạo file .env từ .env.example</li>
+                                    <li>Điền đầy đủ thông tin Firebase</li>
+                                    <li>Khởi động lại ứng dụng</li>
+                                </ol>
+                            </div>
+                        )}
                         {error && (
                             <details className="mt-4 text-xs text-gray-400">
                                 <summary className="cursor-pointer">Chi tiết lỗi</summary>
