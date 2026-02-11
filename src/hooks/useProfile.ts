@@ -6,6 +6,7 @@ import { userService } from '../services/userService';
 import { chatService } from '../services/chatService';
 import { toast } from '../store/toastStore';
 import { useUserCache } from '../store/userCacheStore';
+import { TOAST_MESSAGES } from '../constants';
 import { useProfileData } from './profile/useProfileData';
 import { useProfileFriend } from './profile/useProfileFriend';
 import { useProfileMedia } from './profile/useProfileMedia';
@@ -52,14 +53,14 @@ export const useProfile = () => {
   const handleMessage = useCallback(async () => {
     if (!currentUser || !profile) return;
     if (profile.status === UserStatus.BANNED) {
-      toast.error('Không thể nhắn tin cho người dùng đã bị khóa');
+      toast.error(TOAST_MESSAGES.CHAT.BLOCKED_USER);
       return;
     }
     try {
       const conversationId = await chatService.getOrCreateConversation(currentUser.id, profile.id);
       navigate(`/?conv=${conversationId}`);
     } catch {
-      toast.error('Không thể mở cuộc hội thoại');
+      toast.error(TOAST_MESSAGES.CHAT.OPEN_FAILED);
     }
   }, [currentUser, profile, navigate]);
 

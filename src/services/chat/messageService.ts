@@ -27,6 +27,7 @@ import { TIME_LIMITS, IMAGE_COMPRESSION } from "../../constants";
 import { compressImage } from "../../utils/imageUtils";
 import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
+import { convertTimestamp } from "../../utils/dateUtils";
 
 // Cập nhật trạng thái hội thoại và đếm số tin chưa đọc.
 async function updateConversationAfterMessage(
@@ -178,8 +179,8 @@ export const messageService = {
             return {
               ...data,
               id: doc.id,
-              createdAt: data.createdAt?.toDate() || new Date(),
-              deliveredAt: data.deliveredAt?.toDate(),
+              createdAt: convertTimestamp(data.createdAt, new Date())!,
+              deliveredAt: convertTimestamp(data.deliveredAt),
               readBy: data.readBy || [],
               deliveredTo: data.deliveredTo || [],
               mentions: data.mentions || [],
@@ -232,8 +233,8 @@ export const messageService = {
           return {
             ...data,
             id: doc.id,
-            createdAt: data.createdAt?.toDate() || new Date(),
-            deliveredAt: data.deliveredAt?.toDate(),
+            createdAt: convertTimestamp(data.createdAt, new Date())!,
+            deliveredAt: convertTimestamp(data.deliveredAt),
             readBy: data.readBy || [],
             deliveredTo: data.deliveredTo || [],
             mentions: data.mentions || [],
@@ -563,7 +564,7 @@ export const messageService = {
         throw new Error("Chỉ người gửi mới được chỉnh sửa tin nhắn");
       }
 
-      const createdAt = data.createdAt?.toDate();
+      const createdAt = convertTimestamp(data.createdAt);
 
       if (createdAt) {
         const now = new Date();

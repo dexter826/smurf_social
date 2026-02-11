@@ -5,6 +5,7 @@ import { User, Gender } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
 import { API_ENDPOINTS } from '../../constants/api';
+import { TOAST_MESSAGES } from '../../constants';
 import { profileSchema, ProfileFormValues } from '../../utils/validation';
 
 interface EditProfileModalProps {
@@ -36,8 +37,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       name: user.name,
       bio: user.bio || '',
       location: user.location || '',
-      gender: user.gender || 'male',
-      birthDate: user.birthDate
+      gender: user.gender || Gender.MALE,
+      birthDate: user.birthDate?.getTime()
     }
   });
 
@@ -49,8 +50,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         name: user.name,
         bio: user.bio || '',
         location: user.location || '',
-        gender: user.gender || 'male',
-        birthDate: user.birthDate
+        gender: user.gender || Gender.MALE,
+        birthDate: user.birthDate?.getTime()
       });
       fetchProvinces();
     }
@@ -69,11 +70,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const handleSave = async (data: ProfileFormValues) => {
     setSaving(true);
     try {
-      await onSave(data);
-      toast.success('Cập nhật thông tin thành công!');
+      await onSave({
+        ...data,
+        birthDate: data.birthDate ? new Date(data.birthDate) : undefined
+      });
+      toast.success(TOAST_MESSAGES.PROFILE.UPDATE_SUCCESS);
       onClose();
     } catch (error) {
-      toast.error('Không thể cập nhật thông tin');
+      toast.error(TOAST_MESSAGES.PROFILE.UPDATE_FAILED);
     } finally {
       setSaving(false);
     }

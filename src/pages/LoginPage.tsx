@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore';
 import { useLoadingStore } from '../store/loadingStore';
 import { Button, Input, Checkbox } from '../components/ui';
 import { toast } from '../store/toastStore';
+import { TOAST_MESSAGES } from '../constants';
 import { Mail, Lock, Eye, EyeOff, User, AlertCircle } from 'lucide-react';
 import {
   loginSchema,
@@ -97,7 +98,7 @@ const LoginPage: React.FC = () => {
       setAuthError(null);
       await register(data.email, data.password, data.name);
       setVerificationSent(true);
-      toast.success("Đăng ký thành công! Vui lòng kiểm tra email.");
+      toast.success(TOAST_MESSAGES.AUTH.REGISTER_SUCCESS);
       navigate('/');
     } catch (error) {
       handleAuthError(error);
@@ -108,7 +109,7 @@ const LoginPage: React.FC = () => {
     try {
       setAuthError(null);
       await resetPassword(data.email);
-      toast.success('Đã gửi email khôi phục!');
+      toast.success(TOAST_MESSAGES.AUTH.RESET_PASSWORD_SUCCESS);
       setVerificationSent(true);
     } catch (error: unknown) {
       const err = error as { code?: string };
@@ -123,9 +124,9 @@ const LoginPage: React.FC = () => {
       await sendVerificationEmail();
       setAuthError(null);
       setVerificationSent(true);
-      toast.success("Đã gửi lại email xác thực!");
+      toast.success(TOAST_MESSAGES.AUTH.RESEND_VERIFY_SUCCESS);
     } catch (error) {
-      toast.error("Không thể gửi email lúc này.");
+      toast.error(TOAST_MESSAGES.AUTH.SEND_EMAIL_FAILED);
     }
   };
 

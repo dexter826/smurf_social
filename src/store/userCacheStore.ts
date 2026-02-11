@@ -1,10 +1,8 @@
 import { User } from '../types';
-import { getDocs, query, collection, where, documentId } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { chunkArray } from '../utils/batchUtils';
-import { FIREBASE_LIMITS, PAGINATION } from '../constants';
+import { PAGINATION } from '../constants';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { batchGetUsers } from '../utils/batchUtils';
 
 interface UserCacheState {
   users: Record<string, User>;
@@ -26,42 +24,18 @@ export const useUserCache = create<UserCacheState>()(
       loadingIds: new Set(),
       accessOrder: [],
 
-  // Tải thông tin user theo lô
+  // Tải thông tin user theo lô, delegate cho batchGetUsers
   fetchUsers: async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
 
     const { users, loadingIds } = get();
-    
     const missingIds = ids.filter(id => !users[id] && !loadingIds.has(id));
-    
     if (missingIds.length === 0) return;
 
     set({ loadingIds: new Set([...loadingIds, ...missingIds]) });
 
     try {
-      // Chia nhỏ ID tránh giới hạn Firestore
-      const chunks = chunkArray(missingIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
-      
-      const results = await Promise.all(
-        chunks.map(async (chunk) => {
-          const q = query(
-            collection(db, 'users'),
-            where(documentId(), 'in', chunk)
-          );
-          const snapshot = await getDocs(q);
-          return snapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id,
-            createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt,
-            lastSeen: doc.data().lastSeen?.toDate ? doc.data().lastSeen.toDate() : doc.data().lastSeen,
-          })) as User[];
-        })
-      );
-
-      const newUsers = results.flat().reduce((acc, user) => {
-        acc[user.id] = user;
-        return acc;
-      }, {} as Record<string, User>);
+      const newUsers = await batchGetUsers(missingIds);
 
       set({ 
         users: { ...users, ...newUsers },

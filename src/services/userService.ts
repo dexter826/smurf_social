@@ -6,6 +6,7 @@ import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
+import { convertTimestamp } from '../utils/dateUtils';
 
 export const userService = {
   // Lấy thông tin người dùng theo ID
@@ -17,8 +18,8 @@ export const userService = {
         return {
           ...data,
           id: userDoc.id,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
-          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+          createdAt: convertTimestamp(data.createdAt),
+          lastSeen: convertTimestamp(data.lastSeen),
         } as User;
       }
       return undefined;
@@ -319,8 +320,8 @@ export const userService = {
         callback({
           ...data,
           id: snapshot.id,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
-          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+          createdAt: convertTimestamp(data.createdAt),
+          lastSeen: convertTimestamp(data.lastSeen),
         } as User);
       }
     });
@@ -374,8 +375,8 @@ export const userService = {
         return {
           ...data,
           id: doc.id,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
-          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+          createdAt: convertTimestamp(data.createdAt),
+          lastSeen: convertTimestamp(data.lastSeen),
         } as User;
       });
 
@@ -426,8 +427,8 @@ export const userService = {
         return {
           ...data,
           id: doc.id,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
-          lastSeen: data.lastSeen?.toDate ? data.lastSeen.toDate() : data.lastSeen,
+          createdAt: convertTimestamp(data.createdAt),
+          lastSeen: convertTimestamp(data.lastSeen),
         } as User;
       });
       callback(users);

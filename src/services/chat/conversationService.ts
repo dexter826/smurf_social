@@ -18,6 +18,7 @@ import {
 import { db } from '../../firebase/config';
 import { Conversation, User } from '../../types';
 import { batchGetUsers } from '../../utils/batchUtils';
+import { convertTimestamp } from '../../utils/dateUtils';
 
 export const conversationService = {
   getOrCreateConversation: async (user1Id: string, user2Id: string): Promise<string> => {
@@ -118,15 +119,15 @@ export const conversationService = {
           ...data,
           id: d.id,
           participants,
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: convertTimestamp(data.updatedAt, new Date())!,
+          createdAt: convertTimestamp(data.createdAt, new Date())!,
           memberJoinedAt: data.memberJoinedAt ? Object.keys(data.memberJoinedAt).reduce((acc, uid) => ({
             ...acc,
-            [uid]: data.memberJoinedAt[uid]?.toDate() || new Date()
+            [uid]: convertTimestamp(data.memberJoinedAt[uid], new Date())!
           }), {}) : undefined,
           lastMessage: data.lastMessage ? {
             ...data.lastMessage,
-            createdAt: data.lastMessage.createdAt?.toDate() || new Date()
+            createdAt: convertTimestamp(data.lastMessage.createdAt, new Date())!
           } : undefined
         } as Conversation;
       }).filter(c => c !== null) as Conversation[];

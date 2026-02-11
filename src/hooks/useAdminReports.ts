@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
 import { toast } from '../store/toastStore';
-import { PAGINATION } from '../constants';
+import { PAGINATION, TOAST_MESSAGES } from '../constants';
 
 interface Stats {
   pending: number;
@@ -33,7 +33,7 @@ export function useAdminReports() {
   // Chặn truy cập phi admin
   useEffect(() => {
     if (user && user.role !== 'admin') {
-      toast.error('Bạn không có quyền truy cập trang này');
+      toast.error(TOAST_MESSAGES.ADMIN.NO_PERMISSION);
       navigate('/');
     }
   }, [user, navigate]);
@@ -82,7 +82,7 @@ export function useAdminReports() {
     } catch (error) {
       console.error('Lỗi subscription reports:', error);
       setLoading('admin.reports', false);
-      toast.error('Không thể tải báo cáo');
+      toast.error(TOAST_MESSAGES.REPORT.LOAD_FAILED);
     }
   }, [user, statusFilter, typeFilter, fetchUsers]);
 
@@ -99,13 +99,13 @@ export function useAdminReports() {
     try {
       if (actionType === 'resolve') {
         await reportService.resolveReport(selectedReport.id, user.id);
-        toast.success('Đã xử lý báo cáo và xóa nội dung vi phạm');
+        toast.success(TOAST_MESSAGES.REPORT.REPORT_RESOLVED_SUCCESS);
       } else {
         await reportService.rejectReport(selectedReport.id, user.id);
-        toast.success('Đã từ chối báo cáo');
+        toast.success(TOAST_MESSAGES.REPORT.REPORT_REJECTED_SUCCESS);
       }
     } catch (error) {
-      toast.error('Lỗi xử lý báo cáo');
+      toast.error(TOAST_MESSAGES.REPORT.PROCESS_FAILED);
     } finally {
       setIsProcessing(false);
       setSelectedReport(null);

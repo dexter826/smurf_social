@@ -23,6 +23,7 @@ import { notificationService } from './notificationService';
 import { postService } from './postService';
 import { commentService } from './commentService';
 import { userService } from './userService';
+import { convertTimestamp } from '../utils/dateUtils';
 
 export const reportService = {
   // Tạo báo cáo mới
@@ -102,7 +103,7 @@ export const reportService = {
       return snapshot.docs.map(docSnap => ({
         id: docSnap.id,
         ...docSnap.data(),
-        createdAt: docSnap.data().createdAt?.toDate()
+        createdAt: convertTimestamp(docSnap.data().createdAt)
       })) as Report[];
     } catch (error) {
       console.error("Lỗi lấy báo cáo:", error);
@@ -122,8 +123,8 @@ export const reportService = {
       return snapshot.docs.map(docSnap => ({
         id: docSnap.id,
         ...docSnap.data(),
-        createdAt: docSnap.data().createdAt?.toDate(),
-        resolvedAt: docSnap.data().resolvedAt?.toDate()
+        createdAt: convertTimestamp(docSnap.data().createdAt),
+        resolvedAt: convertTimestamp(docSnap.data().resolvedAt)
       })) as Report[];
     } catch (error) {
       console.error("Lỗi lấy báo cáo:", error);
@@ -152,8 +153,8 @@ export const reportService = {
       const reports = snapshot.docs.map(docSnap => ({
         id: docSnap.id,
         ...docSnap.data(),
-        createdAt: docSnap.data().createdAt?.toDate(),
-        resolvedAt: docSnap.data().resolvedAt?.toDate()
+        createdAt: convertTimestamp(docSnap.data().createdAt),
+        resolvedAt: convertTimestamp(docSnap.data().resolvedAt)
       })) as Report[];
       callback(reports);
     });
@@ -294,8 +295,8 @@ export const reportService = {
       return {
         id: reportSnap.id,
         ...reportSnap.data(),
-        createdAt: reportSnap.data().createdAt?.toDate(),
-        resolvedAt: reportSnap.data().resolvedAt?.toDate()
+        createdAt: convertTimestamp(reportSnap.data().createdAt),
+        resolvedAt: convertTimestamp(reportSnap.data().resolvedAt)
       } as Report;
     } catch (error) {
       console.error("Lỗi lấy báo cáo:", error);
