@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 const EmailVerificationPage: React.FC = () => {
   const { checkVerificationStatus, sendVerificationEmail, logout } = useAuthStore();
-  const isLoading = useLoadingStore(state => state.isLoading('auth.verification'));
+  const isLoading = useLoadingStore(state => state.loadingStates['auth.verification']);
   const [isChecking, setIsChecking] = useState(false);
   const navigate = useNavigate();
 

@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useChatStore } from '../store/chatStore';
-import { useLoading } from './useLoading';
+import { useLoadingStore } from '../store/loadingStore';
 
 type TabType = 'all' | 'requests' | 'sent';
 
@@ -55,7 +55,7 @@ export const useContacts = (): UseContactsReturn => {
 
   const { users: userCache, fetchUsers } = useUserCache();
   const { getOrCreateConversation } = useChatStore();
-  const { checkLoading } = useLoading();
+  const contactsLoading = useLoadingStore(state => state.loadingStates['contacts.friends'] ?? false);
 
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -152,7 +152,7 @@ export const useContacts = (): UseContactsReturn => {
     filteredFriends,
     groupedFriends,
     userCache,
-    isLoading: checkLoading('contacts.friends'),
+    isLoading: contactsLoading,
     activeTab,
     setActiveTab,
     searchTerm,

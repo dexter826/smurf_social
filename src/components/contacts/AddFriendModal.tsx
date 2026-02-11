@@ -15,7 +15,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const { searchUsers, clearSearchResults } = useContactStore();
-  const isLoading = useLoadingStore(state => state.isLoading('contacts.search'));
+  const isLoading = useLoadingStore(state => state.loadingStates['contacts.search']);
   const [searchTerm, setSearchTerm] = useState('');
   const [notFound, setNotFound] = useState(false);
 

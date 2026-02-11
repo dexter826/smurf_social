@@ -4,6 +4,8 @@ import { userService } from '../../services/userService';
 import { useUserCache } from '../../store/userCacheStore';
 import { useAuthStore } from '../../store/authStore';
 
+const EMPTY_IDS: string[] = [];
+
 interface UseChatBlockProps {
   partnerId: string | null;
   currentUser: User | null;
@@ -22,7 +24,7 @@ export const useChatBlock = ({
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
   
-  const myBlockedUserIds = useAuthStore(state => state.user?.blockedUserIds || []);
+  const myBlockedUserIds = useAuthStore(state => state.user?.blockedUserIds ?? EMPTY_IDS);
 
   const isBlockedByMe = useMemo(() => 
     partnerId ? myBlockedUserIds.includes(partnerId) : false, 

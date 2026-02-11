@@ -24,7 +24,7 @@ export const AppLayout: React.FC = () => {
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
   
   const { selectedPost, setSelectedPost, reactToPost } = usePostStore();
-  const isModalLoading = useLoadingStore(state => state.isLoading('feed'));
+  const isModalLoading = useLoadingStore(state => state.loadingStates['feed']);
   const { users: usersMap, fetchUsers } = useUserCache();
 
   const handleConfirmLogout = useLogout();

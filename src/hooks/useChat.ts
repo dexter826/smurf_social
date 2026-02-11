@@ -3,11 +3,15 @@ import { Message, User, Conversation } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
 import { useUserCache } from '../store/userCacheStore';
+import { useLoadingStore } from '../store/loadingStore';
 import { useChatActions } from './chat/useChatActions';
 import { useChatMessages } from './chat/useChatMessages';
 import { useChatBlock } from './chat/useChatBlock';
 import { useChatGroups } from './chat/useChatGroups';
-import { useLoading } from './useLoading';
+
+const EMPTY_MESSAGES: Message[] = [];
+const EMPTY_TYPING: string[] = [];
+const EMPTY_SEARCH_HISTORY: (Conversation | User)[] = [];
 
 export const useChat = () => {
   const { user: currentUser } = useAuthStore();
@@ -36,7 +40,7 @@ export const useChat = () => {
   } = useChatStore();
 
   const { users: usersMap, fetchUsers } = useUserCache();
-  const { isLoading, checkLoading } = useLoading();
+  const chatIsLoading = useLoadingStore(state => state.loadingStates['chat'] ?? false);
   const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -60,8 +64,8 @@ export const useChat = () => {
     [conversations]
   );
 
-  const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
-  const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
+  const currentMessages = selectedConversationId ? (messages[selectedConversationId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES;
+  const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] ?? EMPTY_TYPING) : EMPTY_TYPING;
 
   const { isLoadingMore: storeIsLoadingMore, hasMoreMessages: storeHasMoreMessages } = useChatStore();
   const isLoadingMore = selectedConversationId ? (storeIsLoadingMore[selectedConversationId] || false) : false;
@@ -161,7 +165,7 @@ export const useChat = () => {
     currentTypingUsers,
     usersMap,
     archivedCount,
-    isLoading: checkLoading('chat'),
+    isLoading: chatIsLoading,
     isLoadingMore,
     hasMoreMessages,
     isSearchFocused,

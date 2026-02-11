@@ -79,8 +79,8 @@ const SettingsPage: React.FC = () => {
   
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance');
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
-  const { setLoading } = useLoadingStore();
-  const isLoading = useLoadingStore(state => state.isLoading('settings'));
+  const setLoading = useLoadingStore(state => state.setLoading);
+  const isLoading = useLoadingStore(state => state.loadingStates['settings']);
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 

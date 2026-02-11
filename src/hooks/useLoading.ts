@@ -2,7 +2,9 @@ import { useCallback } from 'react';
 import { useLoadingStore, LoadingKey } from '../store/loadingStore';
 
 export const useLoading = (key?: LoadingKey) => {
-    const { loadingStates, setLoading, setMultipleLoading, isLoading, isAnyLoading } = useLoadingStore();
+    const isLoadingValue = useLoadingStore(state => key ? (state.loadingStates[key] ?? false) : false);
+    const setLoading = useLoadingStore(state => state.setLoading);
+    const setMultipleLoading = useLoadingStore(state => state.setMultipleLoading);
 
     const startLoading = useCallback((customKey?: LoadingKey) => {
         const targetKey = customKey || key;
@@ -39,15 +41,25 @@ export const useLoading = (key?: LoadingKey) => {
         [key, setLoading]
     );
 
+    // checkLoading dùng getState() cho callbacks, không reactive
+    const checkLoading = useCallback((k: LoadingKey) => {
+        return useLoadingStore.getState().loadingStates[k] ?? false;
+    }, []);
+
+    const checkAnyLoading = useCallback((...keys: LoadingKey[]) => {
+        const states = useLoadingStore.getState().loadingStates;
+        return keys.some(k => states[k]);
+    }, []);
+
     return {
-        isLoading: key ? loadingStates[key] : false,
+        isLoading: isLoadingValue,
         startLoading,
         stopLoading,
         withLoading,
         setLoading,
         setMultipleLoading,
-        checkLoading: isLoading,
-        checkAnyLoading: isAnyLoading,
-        allLoadingStates: loadingStates,
+        checkLoading,
+        checkAnyLoading,
+        allLoadingStates: useLoadingStore.getState().loadingStates,
     };
 };

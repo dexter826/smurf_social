@@ -191,3 +191,5 @@ export const MobileMenuPage: React.FC = () => {
     </div>
   );
 };
+
+export default MobileMenuPage;
