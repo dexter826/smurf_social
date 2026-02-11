@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User, UserStatus, FriendRequest, FriendStatus } from '../../types';
 import { friendService } from '../../services/friendService';
 import { toast } from '../../store/toastStore';
+import { TOAST_MESSAGES } from '../../constants';
 
 interface UseProfileFriendProps {
   currentUser: User | null;
@@ -67,7 +68,7 @@ export const useProfileFriend = ({
     if (!currentUser || !profile || isOwnProfile) return { needConfirm: false };
 
     if (profile.status === UserStatus.BANNED) {
-      toast.error('Không thể tương tác với người dùng đã bị khóa');
+      toast.error(TOAST_MESSAGES.FRIEND.BLOCKED_USER);
       return { needConfirm: false };
     }
 
@@ -78,23 +79,23 @@ export const useProfileFriend = ({
 
       if (friendStatus === FriendStatus.PENDING_RECEIVED && pendingRequestId) {
         await friendService.acceptFriendRequest(pendingRequestId, currentUser.id, profile.id);
-        toast.success('Đã trở thành bạn bè');
+        toast.success(TOAST_MESSAGES.FRIEND.ACCEPT_SUCCESS);
         return { needConfirm: false };
       }
 
       if (friendStatus === FriendStatus.PENDING_SENT && pendingRequestId) {
         await friendService.cancelFriendRequest(pendingRequestId);
-        toast.success('Đã hủy lời mời kết bạn');
+        toast.success(TOAST_MESSAGES.FRIEND.CANCEL_SUCCESS);
         return { needConfirm: false };
       }
 
       if (friendStatus === FriendStatus.NOT_FRIEND) {
         await friendService.sendFriendRequest(currentUser.id, profile.id);
-        toast.success('Đã gửi lời mời kết bạn');
+        toast.success(TOAST_MESSAGES.FRIEND.SEND_SUCCESS);
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
-      toast.error(err.message || 'Thao tác thất bại');
+      toast.error(TOAST_MESSAGES.FRIEND.ACTION_FAILED(err.message));
     }
 
     return { needConfirm: false };
@@ -104,10 +105,10 @@ export const useProfileFriend = ({
     if (!currentUser || !profile) return;
     try {
       await friendService.unfriend(currentUser.id, profile.id);
-      toast.success('Đã hủy kết bạn');
+      toast.success(TOAST_MESSAGES.FRIEND.UNFRIEND_SUCCESS);
       await loadProfile();
     } catch (error) {
-      toast.error('Không thể hủy kết bạn');
+      toast.error(TOAST_MESSAGES.FRIEND.UNFRIEND_FAILED);
     }
   }, [currentUser, profile, loadProfile]);
 

@@ -9,8 +9,8 @@ import { Checkbox } from './Checkbox';
 import { ReportReason, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { useAuthStore } from '../../store/authStore';
-import { useToastStore } from '../../store/toastStore';
-import { REPORT_CONFIG, IMAGE_COMPRESSION } from '../../constants';
+import { toast } from '../../store/toastStore';
+import { REPORT_CONFIG, IMAGE_COMPRESSION, TOAST_MESSAGES } from '../../constants';
 import { reportSchema, ReportFormValues } from '../../utils/validation';
 import { compressImage } from '../../utils/imageUtils';
 import { uploadWithProgress } from '../../utils/uploadUtils';
@@ -18,7 +18,6 @@ import { uploadWithProgress } from '../../utils/uploadUtils';
 export const ReportModal: React.FC = () => {
   const { user } = useAuthStore();
   const { isOpen, data: reportContext, isSubmitting: isStoreSubmitting, closeReportModal, submitReport, error } = useReportStore();
-  const { addToast } = useToastStore();
   
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -72,7 +71,7 @@ export const ReportModal: React.FC = () => {
       const totalImages = selectedImages.length + files.length;
       
       if (totalImages > REPORT_CONFIG.MAX_IMAGES_PER_REPORT) {
-        addToast(`Chỉ được tải lên tối đa ${REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh`, 'error');
+        toast.error(TOAST_MESSAGES.REPORT.IMAGE_LIMIT(REPORT_CONFIG.MAX_IMAGES_PER_REPORT));
         return;
       }
 
@@ -119,15 +118,15 @@ export const ReportModal: React.FC = () => {
       );
       
       if (success) {
-        addToast('Đã gửi báo cáo thành công. Chúng tôi sẽ xem xét trong thời gian sớm nhất.', 'success');
+        toast.success(TOAST_MESSAGES.REPORT.SUBMIT_SUCCESS);
         handleClose();
       } else {
         const error = useReportStore.getState().error;
-        if (error) addToast(error, 'error');
+        if (error) toast.error(error);
       }
     } catch (error: unknown) {
       console.error("Lỗi gửi báo cáo:", error);
-      addToast('Có lỗi xảy ra khi gửi báo cáo', 'error');
+      toast.error(TOAST_MESSAGES.REPORT.SUBMIT_FAILED);
     } finally {
       setIsUploading(false);
     }

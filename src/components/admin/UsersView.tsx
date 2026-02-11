@@ -12,7 +12,7 @@ import {
 import { User, UserStatus } from '../../types';
 import { userService } from '../../services/userService';
 import { Button, UserAvatar, Skeleton, IconButton, Select, Input, ConfirmDialog } from '../ui';
-import { CONFIRM_MESSAGES } from '../../constants';
+import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -51,7 +51,7 @@ export const UsersView: React.FC = () => {
       },
       (error) => {
         setIsLoading(false);
-        toast.error("Không thể tải danh sách người dùng. Vui lòng thử lại sau.");
+        toast.error(TOAST_MESSAGES.ADMIN.LOAD_USERS_FAILED);
       }
     );
 
@@ -81,13 +81,13 @@ export const UsersView: React.FC = () => {
     try {
       if (type === 'ban') {
         await userService.banUser(userId);
-        toast.success(`Đã khóa tài khoản ${userName}`);
+        toast.success(TOAST_MESSAGES.ADMIN.BAN_SUCCESS(userName));
       } else {
         await userService.unbanUser(userId);
-        toast.success(`Đã mở khóa tài khoản ${userName}`);
+        toast.success(TOAST_MESSAGES.ADMIN.UNBAN_SUCCESS(userName));
       }
     } catch (error) {
-      toast.error(type === 'ban' ? "Lỗi khi khóa tài khoản" : "Lỗi khi mở khóa tài khoản");
+      toast.error(type === 'ban' ? TOAST_MESSAGES.ADMIN.BAN_FAILED : TOAST_MESSAGES.ADMIN.UNBAN_FAILED);
     } finally {
       setConfirmDialog(prev => ({ ...prev, isOpen: false }));
     }

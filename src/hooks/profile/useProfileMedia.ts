@@ -5,6 +5,7 @@ import { userService } from '../../services/userService';
 import { useUserCache } from '../../store/userCacheStore';
 import { toast } from '../../store/toastStore';
 import { validateFileSize } from '../../utils/fileUtils';
+import { TOAST_MESSAGES } from '../../constants';
 
 interface UseProfileMediaProps {
   profile: User | null;
@@ -26,7 +27,7 @@ export const useProfileMedia = ({
   const handleAvatarChange = useCallback(async (file: File) => {
     if (!profile || !isOwnProfile) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn file ảnh');
+      toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
       return;
     }
     if (!validateFileSize(file, 'AVATAR')) return;
@@ -46,7 +47,7 @@ export const useProfileMedia = ({
       }
     } catch (error) {
       console.error("Lỗi upload avatar", error);
-      toast.error('Không thể tải lên ảnh đại diện');
+      toast.error(TOAST_MESSAGES.MEDIA.UPLOAD_AVATAR_FAILED);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -56,7 +57,7 @@ export const useProfileMedia = ({
   const handleCoverChange = useCallback(async (file: File) => {
     if (!profile || !isOwnProfile) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn file ảnh');
+      toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
       return;
     }
     if (!validateFileSize(file, 'COVER')) return;
@@ -72,7 +73,7 @@ export const useProfileMedia = ({
       useUserCache.getState().setUser(updatedProfile);
     } catch (error) {
       console.error("Lỗi upload cover", error);
-      toast.error('Không thể tải lên ảnh bìa');
+      toast.error(TOAST_MESSAGES.MEDIA.UPLOAD_COVER_FAILED);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -91,9 +92,9 @@ export const useProfileMedia = ({
       if (currentUser) {
         useAuthStore.getState().updateAvatar('');
       }
-      toast.success('Đã xóa ảnh đại diện');
+      toast.success(TOAST_MESSAGES.MEDIA.DELETE_AVATAR_SUCCESS);
     } catch (error) {
-      toast.error('Không thể xóa ảnh đại diện');
+      toast.error(TOAST_MESSAGES.MEDIA.DELETE_AVATAR_FAILED);
     } finally {
       setUploading(false);
     }
@@ -107,9 +108,9 @@ export const useProfileMedia = ({
       const updatedProfile = { ...profile, coverImage: '' };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
-      toast.success('Đã xóa ảnh bìa');
+      toast.success(TOAST_MESSAGES.MEDIA.DELETE_COVER_SUCCESS);
     } catch (error) {
-      toast.error('Không thể xóa ảnh bìa');
+      toast.error(TOAST_MESSAGES.MEDIA.DELETE_COVER_FAILED);
     } finally {
       setUploading(false);
     }

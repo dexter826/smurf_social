@@ -27,13 +27,14 @@ import { Comment, NotificationType, ReportStatus, UserStatus } from '../types';
 import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 import { batchGetUsers } from '../utils/batchUtils';
+import { convertTimestamp } from '../utils/dateUtils';
 
 function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<DocumentData>): Comment {
   const data = docSnap.data();
   return {
     ...data,
     id: docSnap.id,
-    createdAt: data?.createdAt?.toDate() || new Date(),
+    createdAt: convertTimestamp(data?.createdAt, new Date())!,
   } as Comment;
 }
 
@@ -308,7 +309,7 @@ export const commentService = {
       return {
         ...data,
         id: commentSnap.id,
-        createdAt: data.createdAt?.toDate() || new Date(),
+        createdAt: convertTimestamp(data.createdAt, new Date())!,
       } as Comment;
     } catch (error) {
       console.error("Lỗi lấy comment:", error);

@@ -19,6 +19,7 @@ import { db } from '../firebase/config';
 import { AppNotification, NotificationType, ReportReason } from '../types';
 import { REPORT_CONFIG } from '../constants/appConfig';
 import { getValidatedEnvConfig } from '../utils/validateEnv';
+import { convertTimestamp } from '../utils/dateUtils';
 
 export const notificationService = {
   // Tạo thông báo mới và lưu vào Firestore
@@ -49,7 +50,7 @@ export const notificationService = {
       return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: (doc.data().createdAt as Timestamp).toDate(),
+        createdAt: convertTimestamp(doc.data().createdAt, new Date()),
       } as AppNotification));
     } catch (error) {
       console.error("Lỗi lấy danh sách thông báo:", error);
@@ -70,7 +71,7 @@ export const notificationService = {
       const notifications = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: (doc.data().createdAt as Timestamp).toDate(),
+        createdAt: convertTimestamp(doc.data().createdAt, new Date()),
       } as AppNotification));
       callback(notifications);
     });

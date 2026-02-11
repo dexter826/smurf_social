@@ -4,6 +4,7 @@ import { Conversation } from '../../../types';
 import { Modal, Input, Button, Avatar, IconButton, ImageCropper } from '../../ui';
 import { chatService } from '../../../services/chatService';
 import { toast } from '../../../store/toastStore';
+import { TOAST_MESSAGES } from '../../../constants';
 
 interface EditGroupModalProps {
   isOpen: boolean;
@@ -96,7 +97,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Lỗi cập nhật group', error);
-      toast.error('Không thể cập nhật nhóm. Vui lòng thử lại.');
+      toast.error(TOAST_MESSAGES.CHAT.UPDATE_GROUP_FAILED);
     } finally {
       setIsSaving(false);
     }

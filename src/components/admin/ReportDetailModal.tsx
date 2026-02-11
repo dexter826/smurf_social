@@ -18,7 +18,7 @@ import { postService } from '../../services/postService';
 import { commentService } from '../../services/commentService';
 import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, MediaViewer } from '../ui';
 import { PostMediaGrid } from '../feed/shared/PostMediaGrid';
-import { REPORT_CONFIG } from '../../constants';
+import { REPORT_CONFIG, TOAST_MESSAGES } from '../../constants';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
@@ -54,7 +54,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
       try {
         const reportData = await reportService.getReportById(reportId);
         if (!reportData) {
-          toast.error('Không tìm thấy báo cáo');
+          toast.error(TOAST_MESSAGES.REPORT.NOT_FOUND);
           onClose();
           return;
         }
@@ -82,7 +82,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
           setContent(commentData);
         }
       } catch (error) {
-        toast.error('Lỗi tải chi tiết báo cáo');
+        toast.error(TOAST_MESSAGES.REPORT.LOAD_DETAIL_FAILED);
       } finally {
         setIsLoading(false);
       }
@@ -97,20 +97,20 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
     try {
       if (actionType === 'resolve') {
         await reportService.resolveReport(report.id, currentUser.id, 'Đã xử lý xóa nội dung', 'delete_content');
-        toast.success('Đã xóa nội dung vi phạm');
+        toast.success(TOAST_MESSAGES.REPORT.RESOLVE_SUCCESS);
       } else if (actionType === 'warn') {
         await reportService.resolveReport(report.id, currentUser.id, 'Đã gửi cảnh báo', 'warn_user');
-        toast.success('Đã gửi cảnh báo');
+        toast.success(TOAST_MESSAGES.REPORT.WARN_SUCCESS);
       } else if (actionType === 'ban') {
         await reportService.resolveReport(report.id, currentUser.id, 'Đã khóa tài khoản', 'ban_user');
-        toast.success('Đã khóa tài khoản');
+        toast.success(TOAST_MESSAGES.REPORT.BAN_SUCCESS);
       } else if (actionType === 'reject') {
         await reportService.rejectReport(report.id, currentUser.id);
-        toast.success('Đã từ chối báo cáo');
+        toast.success(TOAST_MESSAGES.REPORT.REJECT_SUCCESS);
       }
       onClose();
     } catch (error) {
-      toast.error('Lỗi thực hiện thao tác');
+      toast.error(TOAST_MESSAGES.REPORT.PROCESS_FAILED);
     } finally {
       setIsProcessing(false);
       setShowConfirm(false);

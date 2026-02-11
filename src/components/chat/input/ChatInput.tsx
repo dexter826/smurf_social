@@ -8,6 +8,7 @@ import { ActionsMenu } from './ActionsMenu';
 import { useAudioRecorder } from '../../../hooks/chat/useAudioRecorder';
 import { useMentions } from '../../../hooks/chat/useMentions';
 import { toast } from '../../../store/toastStore';
+import { TOAST_MESSAGES } from '../../../constants';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
 import { FILE_LIMITS } from '../../../constants/fileConfig';
 import { validateFileSize } from '../../../utils/fileUtils';
@@ -62,7 +63,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const videoInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
   const {
     isRecording,
@@ -138,7 +139,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     if (files.length === 0) return;
 
     if (selectedFiles.length + files.length > FILE_LIMITS.CHAT_MAX_FILES) {
-      toast.error(`Chỉ được gửi tối đa ${FILE_LIMITS.CHAT_MAX_FILES} file cùng lúc.`);
+      toast.error(TOAST_MESSAGES.CHAT.FILE_LIMIT(FILE_LIMITS.CHAT_MAX_FILES));
       return;
     }
 
@@ -211,7 +212,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       onCancelAction();
     } catch (error) {
       console.error("Lỗi gửi tin nhắn", error);
-      toast.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
+      toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
     } finally {
       setIsSending(false);
       setTimeout(() => inputRef.current?.focus(), 0);
@@ -256,7 +257,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       audioRef.current?.pause();
       const audio = new Audio(url);
       audio.onended = () => setPlayingPreview(null);
-      audio.play().catch(() => toast.error('Không thể phát file âm thanh này'));
+      audio.play().catch(() => toast.error(TOAST_MESSAGES.CHAT.AUDIO_PLAY_FAILED));
       audioRef.current = audio;
       setPlayingPreview(index);
     }
@@ -297,7 +298,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               </div>
             </div>
           </div>
-          <IconButton onClick={onCancelAction} icon={<X size={14} />} size="sm" variant="ghost" />
+          <IconButton onClick={onCancelAction} icon={<X size={14} />} size="sm" variant="default" />
         </div>
       )}
 

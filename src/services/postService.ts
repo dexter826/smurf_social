@@ -30,6 +30,7 @@ import { notificationService } from './notificationService';
 import { compressImage, isImageFile } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
+import { convertTimestamp } from '../utils/dateUtils';
 
 // Định dạng dữ liệu Firestore thành Post object.
 function convertDocToPost(doc: DocumentSnapshot): Post {
@@ -37,8 +38,8 @@ function convertDocToPost(doc: DocumentSnapshot): Post {
   return {
     ...data,
     id: doc.id,
-    createdAt: data?.createdAt?.toDate() || new Date(),
-    editedAt: data?.editedAt?.toDate(),
+    createdAt: convertTimestamp(data?.createdAt, new Date())!,
+    editedAt: convertTimestamp(data?.editedAt),
   } as Post;
 }
 
@@ -448,8 +449,8 @@ export const postService = {
       return {
         ...data,
         id: postSnap.id,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        editedAt: data.editedAt?.toDate(),
+        createdAt: convertTimestamp(data.createdAt, new Date())!,
+        editedAt: convertTimestamp(data.editedAt),
       } as Post;
     } catch (error) {
       console.error("Lỗi lấy chi tiết bài viết", error);
@@ -469,8 +470,8 @@ export const postService = {
       return {
         ...data,
         id: postSnap.id,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        editedAt: data.editedAt?.toDate(),
+        createdAt: convertTimestamp(data.createdAt, new Date())!,
+        editedAt: convertTimestamp(data.editedAt),
       } as Post;
     } catch (error) {
       console.error("Lỗi lấy chi tiết bài viết", error);

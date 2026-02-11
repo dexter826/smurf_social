@@ -7,6 +7,7 @@ import { Button } from '../ui';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
+import { TOAST_MESSAGES } from '../../constants';
 import { changePasswordSchema, ChangePasswordFormValues } from '../../utils/validation';
 
 interface ChangePasswordModalProps {
@@ -49,7 +50,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
       await authService.changePassword(data.newPassword);
       
       setSuccess(true);
-      toast.success("Mật khẩu đã được đổi. Vui lòng đăng nhập lại!");
+      toast.success(TOAST_MESSAGES.AUTH.CHANGE_PASSWORD_SUCCESS);
       
       setTimeout(async () => {
         await logout();

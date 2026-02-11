@@ -2,6 +2,7 @@ import { getDocs, query, collection, where, documentId } from 'firebase/firestor
 import { db } from '../firebase/config';
 import { User } from '../types';
 import { FIREBASE_LIMITS } from '../constants/appConfig';
+import { convertTimestamp } from './dateUtils';
 
 export const chunkArray = <T,>(array: T[], size: number): T[][] => {
   const chunks: T[][] = [];
@@ -28,8 +29,8 @@ export const batchGetUsers = async (userIds: string[]): Promise<Record<string, U
         return snapshot.docs.map(doc => ({
           ...doc.data(),
           id: doc.id,
-          createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt,
-          lastSeen: doc.data().lastSeen?.toDate ? doc.data().lastSeen.toDate() : doc.data().lastSeen,
+          createdAt: convertTimestamp(doc.data().createdAt),
+          lastSeen: convertTimestamp(doc.data().lastSeen),
         })) as User[];
       })
     );

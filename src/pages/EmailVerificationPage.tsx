@@ -4,6 +4,7 @@ import { useLoadingStore } from '../store/loadingStore';
 import { Button } from '../components/ui';
 import { Mail, RefreshCw, LogOut, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '../store/toastStore';
+import { TOAST_MESSAGES } from '../constants';
 import { useNavigate } from 'react-router-dom';
 
 const EmailVerificationPage: React.FC = () => {
@@ -19,13 +20,13 @@ const EmailVerificationPage: React.FC = () => {
 
       const currentStore = useAuthStore.getState();
       if (!currentStore.isPendingVerification) {
-        toast.success("Xác thực email thành công!");
+        toast.success(TOAST_MESSAGES.AUTH.VERIFY_EMAIL_SUCCESS);
         navigate('/');
       } else {
-        toast.info("Email vẫn chưa được xác thực. Vui lòng kiểm tra lại.");
+        toast.info(TOAST_MESSAGES.AUTH.VERIFY_EMAIL_PENDING);
       }
     } catch (error) {
-      toast.error("Không thể kiểm tra trạng thái lúc này.");
+      toast.error(TOAST_MESSAGES.AUTH.CHECK_STATUS_FAILED);
     } finally {
       setIsChecking(false);
     }
@@ -34,9 +35,9 @@ const EmailVerificationPage: React.FC = () => {
   const handleResend = async () => {
     try {
       await sendVerificationEmail();
-      toast.success("Đã gửi lại email xác thực!");
+      toast.success(TOAST_MESSAGES.AUTH.RESEND_VERIFY_SUCCESS);
     } catch (error) {
-      toast.error("Không thể gửi email lúc này.");
+      toast.error(TOAST_MESSAGES.AUTH.SEND_EMAIL_FAILED);
     }
   };
 

@@ -1,8 +1,7 @@
 import React from 'react';
 import { Mail, MapPin, Calendar, User as UserIcon } from 'lucide-react';
 import { User } from '../../types';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatBirthDate } from '../../utils/dateUtils';
 
 interface AboutTabProps {
   user: User;
@@ -58,7 +57,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => {
                 <div className="flex-1">
                   <p className="text-xs text-text-secondary">Ngày sinh</p>
                   <p className="text-text-primary">
-                    {format(user.birthDate, 'dd MMMM yyyy', { locale: vi })}
+                    {formatBirthDate(user.birthDate)}
                   </p>
                 </div>
               </div>

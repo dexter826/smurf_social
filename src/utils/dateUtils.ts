@@ -2,7 +2,7 @@ import { format, formatDistanceToNow, isYesterday, isToday, differenceInDays, ge
 import { vi } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 
-type DateLike = Date | Timestamp | string | number | null | undefined;
+export type DateLike = Date | Timestamp | string | number | null | undefined;
 
 export const toDate = (val: DateLike): Date | null => {
   if (!val) return null;
@@ -23,6 +23,14 @@ export const toDate = (val: DateLike): Date | null => {
   }
 
   return null;
+};
+
+// Firestore Timestamp → Date, fallback về giá trị gốc nếu không hợp lệ
+export const convertTimestamp = (val: DateLike, fallback?: Date): Date | undefined => {
+  const result = toDate(val);
+  if (result) return result;
+  if (fallback) return fallback;
+  return undefined;
 };
 
 // Hiển thị thời gian thu gọn kiểu Facebook
@@ -93,4 +101,11 @@ export const formatTimeOnly = (date: DateLike): string => {
   const d = toDate(date);
   if (!d) return '';
   return format(d, 'HH:mm');
+};
+
+// Ngày sinh dạng "01 tháng 1 2000"
+export const formatBirthDate = (date: DateLike): string => {
+  const d = toDate(date);
+  if (!d) return '';
+  return format(d, 'dd MMMM yyyy', { locale: vi });
 };

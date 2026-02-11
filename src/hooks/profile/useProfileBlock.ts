@@ -5,6 +5,7 @@ import { userService } from '../../services/userService';
 import { friendService } from '../../services/friendService';
 import { toast } from '../../store/toastStore';
 import { FriendStatus } from '../../types';
+import { TOAST_MESSAGES } from '../../constants';
 
 interface UseProfileBlockProps {
   currentUser: User | null;
@@ -53,9 +54,9 @@ export const useProfileBlock = ({
 
       useAuthStore.getState().updateBlockList('add', profile.id);
 
-      toast.success('Đã chặn người dùng');
+      toast.success(TOAST_MESSAGES.BLOCK.BLOCK_SUCCESS);
     } catch (error) {
-      toast.error('Không thể chặn người dùng');
+      toast.error(TOAST_MESSAGES.BLOCK.BLOCK_FAILED);
     }
   }, [currentUser, profile, isOwnProfile, friendStatus, pendingRequestId]);
 
@@ -66,9 +67,9 @@ export const useProfileBlock = ({
 
       useAuthStore.getState().updateBlockList('remove', profile.id);
 
-      toast.success('Đã bỏ chặn người dùng');
+      toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
     } catch (error) {
-      toast.error('Không thể bỏ chặn người dùng');
+      toast.error(TOAST_MESSAGES.BLOCK.UNBLOCK_FAILED);
     }
   }, [currentUser, profile, isOwnProfile]);
 

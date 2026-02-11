@@ -19,6 +19,7 @@ import {
 import { db } from '../firebase/config';
 import { FriendRequest, FriendRequestStatus, User, NotificationType } from '../types';
 import { notificationService } from './notificationService';
+import { convertTimestamp } from '../utils/dateUtils';
 
 export const friendService = {
   sendFriendRequest: async (senderId: string, receiverId: string, message?: string): Promise<FriendRequest> => {
@@ -73,8 +74,8 @@ export const friendService = {
       return {
         id: docRef.id,
         ...requestData,
-        createdAt: requestData.createdAt.toDate(),
-        updatedAt: requestData.updatedAt.toDate()
+        createdAt: convertTimestamp(requestData.createdAt),
+        updatedAt: convertTimestamp(requestData.updatedAt)
       } as FriendRequest;
     } catch (error) {
       console.error("Lỗi gửi lời mời kết bạn", error);
@@ -95,8 +96,8 @@ export const friendService = {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
+        createdAt: convertTimestamp(doc.data().createdAt),
+        updatedAt: convertTimestamp(doc.data().updatedAt)
       } as FriendRequest));
     } catch (error) {
       console.error("Lỗi lấy lời mời kết bạn", error);
@@ -116,8 +117,8 @@ export const friendService = {
       const requests = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
+        createdAt: convertTimestamp(doc.data().createdAt),
+        updatedAt: convertTimestamp(doc.data().updatedAt)
       } as FriendRequest));
       callback(requests);
     }, (error) => {
@@ -138,8 +139,8 @@ export const friendService = {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
+        createdAt: convertTimestamp(doc.data().createdAt),
+        updatedAt: convertTimestamp(doc.data().updatedAt)
       } as FriendRequest));
     } catch (error) {
       console.error("Lỗi lấy lời mời đã gửi", error);
@@ -159,8 +160,8 @@ export const friendService = {
       const requests = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
+        createdAt: convertTimestamp(doc.data().createdAt),
+        updatedAt: convertTimestamp(doc.data().updatedAt)
       } as FriendRequest));
       callback(requests);
     }, (error) => {
