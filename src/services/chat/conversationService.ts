@@ -139,7 +139,7 @@ export const conversationService = {
   },
 
   // Ghim hoặc bỏ ghim hội thoại
-  togglePinConversation: async (conversationId: string, pinned: boolean): Promise<void> => {
+  togglePin: async (conversationId: string, pinned: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { pinned });
@@ -150,7 +150,7 @@ export const conversationService = {
   },
 
   // Bật hoặc tắt thông báo hội thoại
-  toggleMuteConversation: async (conversationId: string, muted: boolean): Promise<void> => {
+  toggleMute: async (conversationId: string, muted: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { muted });
@@ -161,7 +161,7 @@ export const conversationService = {
   },
 
   // Lưu trữ hoặc bỏ lưu trữ hội thoại
-  toggleArchiveConversation: async (conversationId: string, archived: boolean): Promise<void> => {
+  toggleArchive: async (conversationId: string, archived: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { archived });
@@ -172,7 +172,7 @@ export const conversationService = {
   },
 
   // Đánh dấu hội thoại là chưa đọc hoặc đã đọc
-  toggleMarkUnreadConversation: async (conversationId: string, markedUnread: boolean): Promise<void> => {
+  toggleMarkUnread: async (conversationId: string, markedUnread: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, { markedUnread });
@@ -197,7 +197,7 @@ export const conversationService = {
   },
 
   // Đánh dấu tất cả hội thoại là đã đọc cho người dùng hiện tại
-  markAllAsRead: async (userId: string): Promise<void> => {
+  markAllConversationsAsRead: async (userId: string): Promise<void> => {
     try {
       const q = query(
         collection(db, 'conversations'),

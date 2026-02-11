@@ -212,7 +212,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   markAsRead: async (conversationId: string, userId: string) => {
     try {
-      await chatService.markMessagesAsRead(conversationId, userId);
+      await chatService.markAsRead(conversationId, userId);
     } catch (error) {
       console.error("Lỗi đánh dấu đã đọc:", error);
     }
@@ -220,7 +220,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   markAsDelivered: async (conversationId: string, userId: string) => {
     try {
-      await chatService.markMessagesAsDelivered(conversationId, userId);
+      await chatService.markAsDelivered(conversationId, userId);
     } catch (error) {
       console.error("Lỗi đánh dấu đã nhận:", error);
     }

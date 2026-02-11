@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Conversation, User, UserStatus } from '../../types';
 import { formatChatTime, toDate } from '../../utils/dateUtils';
+import { getLastName } from '../../utils/uiUtils';
 
 interface UseConversationItemProps {
   conversation: Conversation;
@@ -70,7 +71,6 @@ export const useConversationItem = ({
     const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
     if (typingUserIds.length === 0) return null;
 
-    const getLastName = (name?: string) => name?.trim().split(' ').pop() || '';
     const typingUsers = typingUserIds.map(uid => conversation.participants.find(p => p.id === uid)).filter(Boolean);
 
     if (typingUsers.length === 1) return `${getLastName(typingUsers[0]?.name) || 'Ai đó'} đang soạn tin...`;

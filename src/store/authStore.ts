@@ -88,7 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useNotificationStore.getState().reset();
       useCommentStore.getState().reset();
       useReportStore.getState().reset();
-      useUserCache.getState().clear();
+      useUserCache.getState().reset();
 
       await authService.logout();
       set({ user: null });

@@ -406,7 +406,7 @@ export const messageService = {
   },
 
   // Xác nhận người dùng đã nhận tin.
-  markMessagesAsDelivered: async (
+  markAsDelivered: async (
     conversationId: string,
     userId: string,
   ): Promise<void> => {
@@ -446,7 +446,7 @@ export const messageService = {
   },
 
   // Xác nhận người dùng đã xem tin.
-  markMessagesAsRead: async (
+  markAsRead: async (
     conversationId: string,
     userId: string,
   ): Promise<void> => {
