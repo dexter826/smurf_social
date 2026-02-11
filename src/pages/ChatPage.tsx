@@ -2,12 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
 import { useChat } from '../hooks';
+import { useLoadingStore } from '../store/loadingStore';
 import { friendService } from '../services/friendService';
 import { FriendRequest } from '../types';
-import { 
-  ConversationList, ChatBox, ChatInput, ChatDetailsPanel, 
-  CreateGroupModal, AddMemberModal, EditGroupModal, 
-  TransferAdminModal, ForwardModal, MessengerSkeleton 
+import {
+  ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
+  CreateGroupModal, AddMemberModal, EditGroupModal,
+  TransferAdminModal, ForwardModal, MessengerSkeleton
 } from '../components/chat';
 import { scrollToMessage } from '../utils';
 
@@ -22,7 +23,6 @@ const ChatPage: React.FC = () => {
     currentMessages,
     currentTypingUsers,
     isLoading,
-    isRevalidating,
     viewMode,
     setViewMode,
     isSearchFocused,
@@ -40,7 +40,7 @@ const ChatPage: React.FC = () => {
     setReplyingTo,
     editingMessage,
     setEditingMessage,
-    
+
     handleSelectConversation,
     handleSendText,
     handleEditMessage,
@@ -78,6 +78,7 @@ const ChatPage: React.FC = () => {
     hasMoreMessages,
     handleLoadMoreMessages
   } = useChat();
+  const isSearching = useLoadingStore(state => state.isLoading('contacts.search'));
 
   React.useEffect(() => {
     setIsChatVisible(true);
@@ -158,7 +159,7 @@ const ChatPage: React.FC = () => {
           currentUserFriendIds={currentUser.friendIds || []}
           blockedUserIds={currentUser.blockedUserIds || []}
           isLoading={isLoading}
-          isRevalidating={isRevalidating}
+          isSearching={isSearching}
           viewMode={viewMode}
           archivedCount={archivedCount}
           onViewModeChange={setViewMode}
@@ -247,7 +248,7 @@ const ChatPage: React.FC = () => {
                 setReplyingTo(null);
                 setEditingMessage(null);
               }}
-              onEditMessage={handleEditMessage}
+              onEditMessage={editingMessage ? (text) => handleEditMessage(editingMessage.id, text) : undefined}
             />
           </>
         ) : (
@@ -288,9 +289,9 @@ const ChatPage: React.FC = () => {
           onLeaveGroup={() => {
             const result = handleLeaveGroup();
             if (result && 'then' in result) {
-               (result as Promise<{ needAssignAdmin: boolean }>).then((res) => {
-                 if (res?.needAssignAdmin) setShowAssignAdmin(true);
-               });
+              (result as Promise<{ needAssignAdmin: boolean }>).then((res) => {
+                if (res?.needAssignAdmin) setShowAssignAdmin(true);
+              });
             }
           }}
           onEditGroup={() => setShowEditGroup(true)}

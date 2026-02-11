@@ -7,6 +7,7 @@ import { useChatActions } from './chat/useChatActions';
 import { useChatMessages } from './chat/useChatMessages';
 import { useChatBlock } from './chat/useChatBlock';
 import { useChatGroups } from './chat/useChatGroups';
+import { useLoading } from './useLoading';
 
 export const useChat = () => {
   const { user: currentUser } = useAuthStore();
@@ -15,8 +16,6 @@ export const useChat = () => {
     selectedConversationId,
     messages,
     typingUsers,
-    isLoading,
-    isRevalidating,
     selectConversation,
     subscribeToMessages,
     markAsRead,
@@ -33,12 +32,11 @@ export const useChat = () => {
     removeFromSearchHistory,
     clearSearchHistory,
     setIsChatVisible,
-    isLoadingMore: storeIsLoadingMore,
-    hasMoreMessages: storeHasMoreMessages,
     loadMoreMessages,
   } = useChatStore();
 
   const { users: usersMap, fetchUsers } = useUserCache();
+  const { isLoading, checkLoading } = useLoading();
   const [viewMode, setViewMode] = useState<'normal' | 'archived'>('normal');
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -64,6 +62,8 @@ export const useChat = () => {
 
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] || []) : [];
   const currentTypingUsers = selectedConversationId ? (typingUsers[selectedConversationId] || []) : [];
+
+  const { isLoadingMore: storeIsLoadingMore, hasMoreMessages: storeHasMoreMessages } = useChatStore();
   const isLoadingMore = selectedConversationId ? (storeIsLoadingMore[selectedConversationId] || false) : false;
   const hasMoreMessages = selectedConversationId ? (storeHasMoreMessages[selectedConversationId] || false) : false;
 
@@ -161,8 +161,7 @@ export const useChat = () => {
     currentTypingUsers,
     usersMap,
     archivedCount,
-    isLoading,
-    isRevalidating,
+    isLoading: checkLoading('chat'),
     isLoadingMore,
     hasMoreMessages,
     isSearchFocused,

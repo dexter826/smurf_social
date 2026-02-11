@@ -3,6 +3,7 @@ import { Conversation, User } from '../../types';
 import { chatService } from '../../services/chatService';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../authStore';
+import { useLoadingStore } from '../loadingStore';
 import NotificationSound from '../../assets/sounds/message-notification.mp3';
 import type { ChatState } from '../chatStore';
 
@@ -11,8 +12,6 @@ let lastPlayedId = '';
 export interface ConversationSlice {
   conversations: Conversation[];
   selectedConversationId: string | null;
-  isLoading: boolean;
-  isRevalidating: boolean;
   searchTerm: string;
   isSearchFocused: boolean;
   searchResults: { conversations: Conversation[]; users: User[] };
@@ -33,7 +32,6 @@ export interface ConversationSlice {
   removeFromSearchHistory: (itemId: string, userId: string) => void;
   clearSearchHistory: (userId: string) => void;
   setSearchTerm: (term: string) => void;
-  setLoading: (loading: boolean) => void;
   setIsChatVisible: (visible: boolean) => void;
   markAllAsRead: (userId: string) => Promise<void>;
 }
@@ -41,8 +39,6 @@ export interface ConversationSlice {
 export const createConversationSlice: StateCreator<ChatState, [], [], ConversationSlice> = (set, get) => ({
   conversations: [],
   selectedConversationId: null,
-  isLoading: false,
-  isRevalidating: false,
   searchTerm: '',
   isSearchFocused: false,
   searchResults: { conversations: [], users: [] },
@@ -52,20 +48,20 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   subscribeToConversations: (userId: string) => {
     const { conversations } = get();
     const hasCache = conversations.length > 0;
-    
-    set({ isLoading: !hasCache, isRevalidating: hasCache });
-    
+
+    useLoadingStore.getState().setLoading('chat', !hasCache);
+
     const unsubscribe = chatService.subscribeToConversations(userId, (conversations) => {
       const prevConversations = get().conversations;
-  
+
       if (prevConversations.length > 0) {
         conversations.forEach(conv => {
           const lastMsg = conv.lastMessage;
           const isUnread = conv.unreadCount?.[userId] > 0;
           const isViewingThisConv = get().isChatVisible && conv.id === get().selectedConversationId;
-          
+
           if (lastMsg && lastMsg.id !== lastPlayedId && isUnread &&
-              lastMsg.senderId !== userId && !conv.muted && !isViewingThisConv) {
+            lastMsg.senderId !== userId && !conv.muted && !isViewingThisConv) {
             lastPlayedId = lastMsg.id || '';
             const audio = new Audio(NotificationSound);
             audio.play().catch(err => console.debug("Autoplay blocked:", err));
@@ -73,15 +69,14 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
         });
       }
 
-      set({ 
-        conversations: conversations.map(c => 
+      set({
+        conversations: conversations.map(c =>
           (c.id === get().selectedConversationId && get().isChatVisible)
             ? { ...c, unreadCount: { ...c.unreadCount, [userId]: 0 }, markedUnread: false }
             : c
-        ), 
-        isLoading: false,
-        isRevalidating: false
+        )
       });
+      useLoadingStore.getState().setLoading('chat', false);
     });
 
     return unsubscribe;
@@ -89,14 +84,14 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
 
   selectConversation: (conversationId: string | null) => {
     set({ selectedConversationId: conversationId });
-    
+
     if (conversationId) {
       const { user } = useAuthStore.getState();
       if (user) {
         set((state) => ({
           conversations: state.conversations.map(c =>
-            c.id === conversationId 
-              ? { ...c, unreadCount: { ...c.unreadCount, [user.id]: 0 }, markedUnread: false } 
+            c.id === conversationId
+              ? { ...c, unreadCount: { ...c.unreadCount, [user.id]: 0 }, markedUnread: false }
               : c
           )
         }));
@@ -116,19 +111,21 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   searchConversations: async (userId: string, term: string) => {
-    set({ searchTerm: term, isLoading: true });
-    
+    set({ searchTerm: term });
+    useLoadingStore.getState().setLoading('contacts.search', true);
+
     try {
       if (!term.trim()) {
-        set({ searchResults: { conversations: [], users: [] }, isLoading: false });
+        set({ searchResults: { conversations: [], users: [] } });
         return;
       }
 
       const friendResults = await userService.searchFriends(term, userId);
-      set({ searchResults: { conversations: [], users: friendResults }, isLoading: false });
+      set({ searchResults: { conversations: [], users: friendResults } });
     } catch (error) {
       console.error("Lỗi tìm bạn bè:", error);
-      set({ isLoading: false });
+    } finally {
+      useLoadingStore.getState().setLoading('contacts.search', false);
     }
   },
 
@@ -180,7 +177,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     set(state => ({
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
     }));
-    
+
     if (get().clearMessages) {
       get().clearMessages(conversationId);
     }
@@ -204,7 +201,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
       const userHistory = state.searchHistory[userId] || [];
       const filtered = userHistory.filter(h => h.id !== item.id);
       const newHistory = [item, ...filtered].slice(0, 10);
-      return { 
+      return {
         searchHistory: {
           ...state.searchHistory,
           [userId]: newHistory
@@ -214,7 +211,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   removeFromSearchHistory: (itemId: string, userId: string) => {
-    set((state) => ({ 
+    set((state) => ({
       searchHistory: {
         ...state.searchHistory,
         [userId]: (state.searchHistory[userId] || []).filter(h => h.id !== itemId)
@@ -233,10 +230,6 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
 
   setSearchTerm: (term: string) => {
     set({ searchTerm: term });
-  },
-
-  setLoading: (loading: boolean) => {
-    set({ isLoading: loading });
   },
 
   setIsChatVisible: (visible: boolean) => {

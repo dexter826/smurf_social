@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNotificationStore } from '../../store/notificationStore';
+import { useLoadingStore } from '../../store/loadingStore';
 import { NotificationItem } from './NotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { BellOff } from 'lucide-react';
@@ -10,7 +11,8 @@ interface NotificationListProps {
 }
 
 export const NotificationList: React.FC<NotificationListProps> = ({ onItemClick, maxHeight = '400px' }) => {
-  const { notifications, isLoading, isRevalidating } = useNotificationStore();
+  const { notifications } = useNotificationStore();
+  const isLoading = useLoadingStore(state => state.isLoading('notifications'));
 
   if (isLoading && notifications.length === 0) {
     return <NotificationSkeleton />;

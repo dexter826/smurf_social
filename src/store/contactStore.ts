@@ -3,29 +3,27 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, FriendRequest } from '../types';
 import { userService } from '../services/userService';
 import { friendService } from '../services/friendService';
+import { useLoadingStore } from './loadingStore';
 
 interface ContactState {
   friends: User[];
   receivedRequests: FriendRequest[];
   sentRequests: FriendRequest[];
   searchResults: User[];
-  isLoading: boolean;
-  isSearching: boolean;
-  isRevalidating: boolean;
-  
+
   subscribeToFriends: (userId: string) => () => void;
   fetchReceivedRequests: (userId: string) => Promise<void>;
   fetchSentRequests: (userId: string) => Promise<void>;
   subscribeToRequests: (userId: string) => () => void;
   searchUsers: (searchTerm: string, userId: string) => Promise<User[]>;
-  
+
   sendFriendRequest: (senderId: string, receiverId: string, message?: string) => Promise<void>;
   acceptFriendRequest: (requestId: string, userId: string, friendId: string) => Promise<void>;
   rejectFriendRequest: (requestId: string) => Promise<void>;
   cancelFriendRequest: (requestId: string) => Promise<void>;
   unfriend: (userId: string, friendId: string) => Promise<void>;
   blockUser: (userId: string, blockedUserId: string) => Promise<void>;
-  
+
   addFriend: (friend: User) => void;
   removeFriend: (friendId: string) => void;
   clearSearchResults: () => void;
@@ -39,9 +37,6 @@ export const useContactStore = create<ContactState>()(
       receivedRequests: [],
       sentRequests: [],
       searchResults: [],
-      isLoading: false,
-      isSearching: false,
-      isRevalidating: false,
 
       reset: () => {
         set({
@@ -49,15 +44,14 @@ export const useContactStore = create<ContactState>()(
           receivedRequests: [],
           sentRequests: [],
           searchResults: [],
-          isLoading: false,
-          isSearching: false,
-          isRevalidating: false,
         });
       },
 
       subscribeToFriends: (userId: string) => {
+        useLoadingStore.getState().setLoading('contacts.friends', true);
         return userService.subscribeToFriends(userId, (friends) => {
-          set({ friends, isLoading: false });
+          set({ friends });
+          useLoadingStore.getState().setLoading('contacts.friends', false);
         });
       },
 
@@ -99,14 +93,14 @@ export const useContactStore = create<ContactState>()(
           set({ searchResults: [] });
           return [];
         }
-        
-        set({ isSearching: true });
+
+        useLoadingStore.getState().setLoading('contacts.search', true);
         try {
           const results = await userService.searchUsers(searchTerm, userId);
           set({ searchResults: results });
           return results;
         } finally {
-          set({ isSearching: false });
+          useLoadingStore.getState().setLoading('contacts.search', false);
         }
       },
 
@@ -124,7 +118,7 @@ export const useContactStore = create<ContactState>()(
         set(state => ({
           receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
         }));
-        
+
         try {
           await friendService.acceptFriendRequest(requestId, userId, friendId);
         } catch (error) {
@@ -139,7 +133,7 @@ export const useContactStore = create<ContactState>()(
         set(state => ({
           receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
         }));
-        
+
         try {
           await friendService.rejectFriendRequest(requestId);
         } catch (error) {
@@ -154,7 +148,7 @@ export const useContactStore = create<ContactState>()(
         set(state => ({
           sentRequests: state.sentRequests.filter(r => r.id !== requestId)
         }));
-        
+
         try {
           await friendService.cancelFriendRequest(requestId);
         } catch (error) {
@@ -196,8 +190,8 @@ export const useContactStore = create<ContactState>()(
         return { friends: [...state.friends, friend] };
       }),
 
-      removeFriend: (friendId) => set((state) => ({ 
-        friends: state.friends.filter(f => f.id !== friendId) 
+      removeFriend: (friendId) => set((state) => ({
+        friends: state.friends.filter(f => f.id !== friendId)
       })),
 
       clearSearchResults: () => set({ searchResults: [] }),
@@ -205,7 +199,7 @@ export const useContactStore = create<ContactState>()(
     {
       name: 'smurf_contact_cache',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         friends: state.friends,
         receivedRequests: state.receivedRequests,
         sentRequests: state.sentRequests

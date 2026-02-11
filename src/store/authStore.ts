@@ -11,10 +11,10 @@ import { useContactStore } from "./contactStore";
 import { useNotificationStore } from "./notificationStore";
 import { useCommentStore } from "./commentStore";
 import { useReportStore } from "./reportStore";
+import { useLoadingStore } from "./loadingStore";
 
 interface AuthState {
   user: User | null;
-  isLoading: boolean;
   isPendingVerification: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name: string) => Promise<void>;
@@ -23,9 +23,7 @@ interface AuthState {
   checkVerificationStatus: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
-  setLoading: (isLoading: boolean) => void;
   initialize: () => () => void;
-  // Profile update methods - thay vì hook gọi setState trực tiếp
   updateUserProfile: (updates: Partial<User>) => void;
   updateAvatar: (avatarUrl: string) => void;
   updateBlockList: (action: "add" | "remove", targetUserId: string) => void;
@@ -34,30 +32,30 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  isLoading: true,
   isPendingVerification: false,
 
   setUser: (user) => set({ user }),
-  setLoading: (isLoading) => set({ isLoading }),
 
   login: async (email, pass) => {
-    set({ isLoading: true });
+    useLoadingStore.getState().setLoading('auth.login', true);
     try {
       const firebaseUser = await authService.login(email, pass);
 
       if (!firebaseUser.emailVerified) {
-        set({ isPendingVerification: true, isLoading: false });
+        set({ isPendingVerification: true });
         return;
       }
       set({ isPendingVerification: false });
     } catch (error) {
-      set({ isLoading: false, isPendingVerification: false });
+      set({ isPendingVerification: false });
       throw error;
+    } finally {
+      useLoadingStore.getState().setLoading('auth.login', false);
     }
   },
 
   register: async (email, pass, name) => {
-    set({ isLoading: true });
+    useLoadingStore.getState().setLoading('auth.register', true);
     try {
       const firebaseUser = await authService.register(email, pass);
       await userService.updateProfile(firebaseUser.uid, {
@@ -71,7 +69,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ isPendingVerification: true });
     } finally {
-      set({ isLoading: false });
+      useLoadingStore.getState().setLoading('auth.register', false);
     }
   },
 
@@ -101,11 +99,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   resetPassword: async (email) => {
-    set({ isLoading: true });
+    useLoadingStore.getState().setLoading('auth', true);
     try {
       await authService.resetPassword(email);
     } finally {
-      set({ isLoading: false });
+      useLoadingStore.getState().setLoading('auth', false);
     }
   },
 
@@ -163,10 +161,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateBlockList: (action, targetUserId) => {
     const { user } = get();
     if (!user) return;
-    
+
     const currentBlocked = user.blockedUserIds || [];
     const currentFriends = user.friendIds || [];
-    
+
     if (action === 'add') {
       set({
         user: {
@@ -198,6 +196,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: () => {
     let userUnsubscribe: (() => void) | null = null;
+    useLoadingStore.getState().setLoading('auth', true);
 
     const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (userUnsubscribe) {
@@ -207,7 +206,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (firebaseUser) {
         if (!firebaseUser.emailVerified) {
-          set({ user: null, isPendingVerification: true, isLoading: false });
+          set({ user: null, isPendingVerification: true });
+          useLoadingStore.getState().setLoading('auth', false);
           return;
         }
 
@@ -216,7 +216,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           if (userData) {
             if (userData.status === UserStatus.BANNED) {
-              set({ user: userData, isLoading: false });
+              set({ user: userData });
+              useLoadingStore.getState().setLoading('auth', false);
               get().logout();
               return;
             }
@@ -253,7 +254,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({ user: null });
       }
-      set({ isLoading: false });
+      useLoadingStore.getState().setLoading('auth', false);
     });
 
     return () => {

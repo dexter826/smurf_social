@@ -15,7 +15,6 @@ const ContactsPage: React.FC = () => {
     groupedFriends,
     userCache,
     isLoading,
-    isRevalidating,
     activeTab,
     setActiveTab,
     searchTerm,

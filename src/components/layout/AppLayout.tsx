@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useChatStore } from '../../store/chatStore';
 import { useContactStore } from '../../store/contactStore';
+import { useLoadingStore } from '../../store/loadingStore';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
 import { PostViewModal } from '../feed';
 import { usePostStore } from '../../store/postStore';
@@ -22,7 +23,8 @@ export const AppLayout: React.FC = () => {
   const { receivedRequests, subscribeToRequests } = useContactStore();
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
   
-  const { selectedPost, setSelectedPost, isModalLoading, reactToPost } = usePostStore();
+  const { selectedPost, setSelectedPost, reactToPost } = usePostStore();
+  const isModalLoading = useLoadingStore(state => state.isLoading('feed'));
   const { users: usersMap, fetchUsers } = useUserCache();
 
   const handleConfirmLogout = useLogout();

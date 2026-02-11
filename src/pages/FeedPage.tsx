@@ -3,6 +3,7 @@ import { PostItem, PostModal, PostViewModal, CreatePost, FeedSkeleton } from '..
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
+import { useLoadingStore } from '../store/loadingStore';
 import { Visibility, UserStatus } from '../types';
 import { useFeed } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
@@ -12,7 +13,6 @@ const FeedPage: React.FC = () => {
   const {
     posts,
     isLoading,
-    isRevalidating,
     hasMore,
     usersMap,
     handleReact,
@@ -20,6 +20,7 @@ const FeedPage: React.FC = () => {
     handleDelete,
     observerRef,
   } = useFeed();
+  const isLoadingMore = useLoadingStore(state => state.isLoading('feed.loadMore'));
 
   const { selectedPost, setSelectedPost } = usePostStore();
 
@@ -27,10 +28,10 @@ const FeedPage: React.FC = () => {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const handleEditPost = async (
-    content: string, 
-    images: string[], 
-    videos: string[], 
-    visibility: Visibility, 
+    content: string,
+    images: string[],
+    videos: string[],
+    visibility: Visibility,
     videoThumbnails?: Record<string, string>,
     pendingFiles?: File[]
   ) => {
@@ -75,7 +76,7 @@ const FeedPage: React.FC = () => {
         {posts.length === 0 ? (
           <div className="bg-bg-primary rounded-xl p-8 md:p-12 shadow-sm border border-border-light text-center transition-theme mx-2 md:mx-0">
             <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-               <span className="text-4xl" role="img" aria-label="notes">📝</span>
+              <span className="text-4xl" role="img" aria-label="notes">📝</span>
             </div>
             <p className="text-text-primary text-lg font-semibold">Chưa có bài viết nào</p>
             <p className="text-text-secondary text-sm mt-2 max-w-[250px] mx-auto">
@@ -90,7 +91,8 @@ const FeedPage: React.FC = () => {
                 name: 'Người dùng',
                 avatar: '',
                 email: '',
-                status: UserStatus.OFFLINE
+                status: UserStatus.OFFLINE,
+                createdAt: new Date()
               };
 
               return (
@@ -108,8 +110,8 @@ const FeedPage: React.FC = () => {
             })}
 
             <div ref={observerRef} className="h-4 w-full" />
-            
-            {isLoading && hasMore && (
+
+            {isLoadingMore && hasMore && (
               <div className="space-y-4 mt-4 px-2 md:px-0">
                 {[...Array(2)].map((_, i) => (
                   <PostItem.Skeleton key={`more-${i}`} />
