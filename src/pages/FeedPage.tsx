@@ -20,7 +20,7 @@ const FeedPage: React.FC = () => {
     handleDelete,
     observerRef,
   } = useFeed();
-  const isLoadingMore = useLoadingStore(state => state.isLoading('feed.loadMore'));
+  const isLoadingMore = useLoadingStore(state => state.loadingStates['feed.loadMore']);
 
   const { selectedPost, setSelectedPost } = usePostStore();
 

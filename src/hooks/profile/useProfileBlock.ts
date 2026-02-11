@@ -7,6 +7,8 @@ import { toast } from '../../store/toastStore';
 import { FriendStatus } from '../../types';
 import { TOAST_MESSAGES } from '../../constants';
 
+const EMPTY_IDS: string[] = [];
+
 interface UseProfileBlockProps {
   currentUser: User | null;
   profile: User | null;
@@ -25,7 +27,7 @@ export const useProfileBlock = ({
   friendStatus,
   pendingRequestId
 }: UseProfileBlockProps) => {
-  const blockedUserIds = useAuthStore(state => state.user?.blockedUserIds || []);
+  const blockedUserIds = useAuthStore(state => state.user?.blockedUserIds ?? EMPTY_IDS);
   
   const isBlockedByMe = useMemo(() => 
     blockedUserIds.includes(profileUserId || ''),

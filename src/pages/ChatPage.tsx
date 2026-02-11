@@ -78,7 +78,7 @@ const ChatPage: React.FC = () => {
     hasMoreMessages,
     handleLoadMoreMessages
   } = useChat();
-  const isSearching = useLoadingStore(state => state.isLoading('contacts.search'));
+  const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
 
   React.useEffect(() => {
     setIsChatVisible(true);

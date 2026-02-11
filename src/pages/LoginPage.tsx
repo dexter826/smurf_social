@@ -19,7 +19,9 @@ import {
 
 const LoginPage: React.FC = () => {
   const { login, register, resetPassword, sendVerificationEmail } = useAuthStore();
-  const isLoading = useLoadingStore(state => state.isAnyLoading('auth.login', 'auth.register', 'auth'));
+  const isLoading = useLoadingStore(state =>
+    state.loadingStates['auth.login'] || state.loadingStates['auth.register'] || state.loadingStates['auth']
+  );
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [rememberMe, setRememberMe] = useState(false);

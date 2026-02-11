@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useIntersectionObserver } from './utils/useIntersectionObserver';
-import { useLoading } from './useLoading';
+import { useLoadingStore } from '../store/loadingStore';
 
 interface UseFeedReturn {
   posts: Post[];
@@ -30,16 +30,17 @@ export const useFeed = (): UseFeedReturn => {
     deletePost,
   } = usePostStore();
   const { users: usersMap, fetchUsers } = useUserCache();
-  const { isLoading, checkLoading } = useLoading();
+  const feedPostsLoading = useLoadingStore(state => state.loadingStates['feed.posts'] ?? false);
+  const feedLoadMoreLoading = useLoadingStore(state => state.loadingStates['feed.loadMore'] ?? false);
 
   const handleLoadMore = useCallback(() => {
-    if (!currentUser || checkLoading('feed.posts') || checkLoading('feed.loadMore') || !hasMore) return;
+    if (!currentUser || feedPostsLoading || feedLoadMoreLoading || !hasMore) return;
     const blockedUserIds = currentUser.blockedUserIds || [];
     fetchPosts(currentUser.id, currentUser.friendIds || [], blockedUserIds, true);
-  }, [currentUser, hasMore, fetchPosts, checkLoading]);
+  }, [currentUser, hasMore, fetchPosts, feedPostsLoading, feedLoadMoreLoading]);
 
   const observerRef = useIntersectionObserver(handleLoadMore, {
-    enabled: hasMore && !checkLoading('feed.posts') && !checkLoading('feed.loadMore') && !!currentUser
+    enabled: hasMore && !feedPostsLoading && !feedLoadMoreLoading && !!currentUser
   });
 
 
@@ -57,7 +58,7 @@ export const useFeed = (): UseFeedReturn => {
     const friendIds = currentUser.friendIds || [];
     const blockedUserIds = currentUser.blockedUserIds || [];
 
-    if (posts.length === 0 || !checkLoading('feed.posts')) {
+    if (posts.length === 0 || !feedPostsLoading) {
       fetchPosts(currentUser.id, friendIds, blockedUserIds, false);
     }
 
@@ -103,7 +104,7 @@ export const useFeed = (): UseFeedReturn => {
 
   return {
     posts,
-    isLoading: checkLoading('feed.posts'),
+    isLoading: feedPostsLoading,
     hasMore,
     usersMap,
     handleLoadMore,

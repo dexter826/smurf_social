@@ -12,7 +12,7 @@ interface NotificationListProps {
 
 export const NotificationList: React.FC<NotificationListProps> = ({ onItemClick, maxHeight = '400px' }) => {
   const { notifications } = useNotificationStore();
-  const isLoading = useLoadingStore(state => state.isLoading('notifications'));
+  const isLoading = useLoadingStore(state => state.loadingStates['notifications']);
 
   if (isLoading && notifications.length === 0) {
     return <NotificationSkeleton />;

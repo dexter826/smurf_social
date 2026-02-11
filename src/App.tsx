@@ -1,23 +1,22 @@
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
-import { useLoadingStore } from './store/loadingStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { ScreenLoader, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
 import { ReportModal } from './components/ui/ReportModal';
-import LoginPage from './pages/LoginPage';
-import ChatPage from './pages/ChatPage';
-import FeedPage from './pages/FeedPage';
-import ContactsPage from './pages/ContactsPage';
-import ProfilePage from './pages/ProfilePage';
-import SettingsPage from './pages/SettingsPage';
-import NotificationsPage from './pages/NotificationsPage';
-import BannedPage from './pages/BannedPage';
-import EmailVerificationPage from './pages/EmailVerificationPage';
-import { MobileMenuPage } from './pages/MobileMenuPage';
 import { UserStatus } from './types';
 import { AdminLayout } from './components/layout/AdminLayout';
+import LoginPage from './pages/LoginPage';
+import ChatPage from './pages/ChatPage';
 
+const FeedPage = React.lazy(() => import('./pages/FeedPage'));
+const ContactsPage = React.lazy(() => import('./pages/ContactsPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
+const BannedPage = React.lazy(() => import('./pages/BannedPage'));
+const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerificationPage'));
+const MobileMenuPage = React.lazy(() => import('./pages/MobileMenuPage'));
 const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 

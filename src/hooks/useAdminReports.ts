@@ -21,8 +21,8 @@ export function useAdminReports() {
   const { users: userCache, fetchUsers } = useUserCache();
 
   const [reports, setReports] = useState<Report[]>([]);
-  const { setLoading } = useLoadingStore();
-  const isLoading = useLoadingStore(state => state.isLoading('admin.reports'));
+  const setLoading = useLoadingStore(state => state.setLoading);
+  const isLoading = useLoadingStore(state => state.loadingStates['admin.reports']);
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<ReportStatus | 'pending'>('pending');
   const [typeFilter, setTypeFilter] = useState<ReportType | 'all'>('all');
