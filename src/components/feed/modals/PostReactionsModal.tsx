@@ -91,7 +91,7 @@ export const PostReactionsModal: React.FC<PostReactionsModalProps> = ({
                 friends.map(({ user, emoji }) => (
                   <div 
                     key={user.id} 
-                    className="flex items-center justify-between px-4 py-3 hover:bg-bg-secondary transition-colors cursor-pointer"
+                    className="flex items-center justify-between px-4 py-3 hover:bg-bg-secondary active:bg-bg-active transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">

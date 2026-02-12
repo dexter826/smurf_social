@@ -91,7 +91,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                   onEdit?.(message);
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-colors"
               >
                 <Edit2 size={14} /> Chỉnh sửa
               </button>
@@ -102,7 +102,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                   setShowRecallConfirm(true);
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-warning"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-colors text-warning"
               >
                 <RotateCcw size={14} /> Thu hồi
               </button>
@@ -112,7 +112,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 onDeleteForMe?.(message.id);
                 setShowMenu(false);
               }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2 transition-colors text-error"
+              className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-colors text-error"
             >
               <Trash2 size={14} /> Xóa phía tôi
             </button>

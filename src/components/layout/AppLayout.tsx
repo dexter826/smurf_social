@@ -105,10 +105,10 @@ export const AppLayout: React.FC = () => {
                 <item.Icon size={20} />
                 <span className="text-sm font-bold">{item.label}</span>
                 {item.to === '/' && totalUnread > 0 && (
-                  <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full ring-2 ring-bg-primary" />
+                  <span className="absolute top-2 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
                 )}
                 {item.to === '/contacts' && hasNewRequests && (
-                  <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full ring-2 ring-bg-primary" />
+                  <span className="absolute top-2 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
                 )}
               </div>
             </NavLink>
@@ -162,7 +162,7 @@ export const AppLayout: React.FC = () => {
 
               <button
                 onClick={() => setShowLogoutConfirm(true)} 
-                className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 text-text-tertiary hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-500" 
+                className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 text-text-tertiary hover:bg-error-light hover:text-error active:bg-error-light/80" 
                 title="Đăng xuất"
               >
                 <LogOut size={20} />
@@ -177,7 +177,7 @@ export const AppLayout: React.FC = () => {
       </main>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-sm">
         {navItems.filter(item => item.to !== '/admin').map((item) => (
           <NavLink
             key={item.to}
@@ -191,10 +191,10 @@ export const AppLayout: React.FC = () => {
             <div className="relative">
               <item.Icon size={24} />
               {item.to === '/' && totalUnread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
               )}
               {item.to === '/contacts' && hasNewRequests && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
               )}
             </div>
             <span className="text-[10px] font-medium">{item.label}</span>
@@ -213,7 +213,7 @@ export const AppLayout: React.FC = () => {
             <div className="relative">
               <Bell size={24} />
               {unreadNotifications > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
               )}
             </div>
             <span className="text-[10px] font-medium">Thông báo</span>

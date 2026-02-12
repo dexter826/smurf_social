@@ -221,7 +221,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 className="group rounded-full w-9 h-9 md:w-10 md:h-10"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
-                icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
+                icon={<ImageIcon className="text-success group-hover:scale-110 transition-transform" size={20} />}
                 size="md"
               />
               <IconButton
@@ -230,7 +230,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 className="group rounded-full w-9 h-9 md:w-10 md:h-10"
                 title="Video"
                 disabled={isSubmitting || isUploading}
-                icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
+                icon={<Video className="text-info group-hover:scale-110 transition-transform" size={20} />}
                 size="md"
               />
               <div className="flex items-center">
@@ -244,7 +244,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                   disabled={isSubmitting || isUploading}
                   size={20}
                   buttonSize="md"
-                  iconClassName="text-yellow-500 group-hover:scale-110 transition-transform"
+                  iconClassName="text-warning group-hover:scale-110 transition-transform"
                 />
               </div>
             </div>
@@ -312,7 +312,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveImage(idx)}
-                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-black/70 active:bg-black/90"
                 >
                   <X size={16} />
                 </button>
@@ -327,7 +327,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveVideo(idx)}
-                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-black/70 active:bg-black/90"
                 >
                   <X size={16} />
                 </button>
@@ -352,7 +352,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemovePending(idx)}
-                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-black/70 active:bg-black/90"
                 >
                   <X size={16} />
                 </button>

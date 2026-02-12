@@ -22,7 +22,7 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ onSelect, onCl
           onSelect('REMOVE');
           onClose?.();
         }}
-        className="w-9 h-9 flex items-center justify-center text-text-secondary hover:text-error hover:scale-110 transition-transform duration-200 relative group rounded-full hover:bg-bg-secondary"
+        className="w-9 h-9 flex items-center justify-center text-text-secondary hover:text-error active:text-error hover:scale-110 active:scale-95 transition-transform duration-200 relative group rounded-full hover:bg-bg-secondary"
         title="Gỡ cảm xúc"
       >
         <Ban size={20} />
@@ -36,7 +36,7 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ onSelect, onCl
             onSelect(emoji);
             onClose?.();
           }}
-          className="w-9 h-9 flex items-center justify-center text-2xl hover:scale-125 transition-transform duration-200 relative group rounded-full hover:bg-bg-secondary"
+          className="w-9 h-9 flex items-center justify-center text-2xl hover:scale-125 active:scale-95 transition-transform duration-200 relative group rounded-full hover:bg-bg-secondary"
         >
           {emoji}
         </button>

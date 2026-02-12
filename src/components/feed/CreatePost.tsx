@@ -66,7 +66,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
             variant="ghost"
             onClick={() => imageInputRef.current?.click()}
             className="flex-1 group px-2"
-            icon={<ImageIcon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />}
+            icon={<ImageIcon className="text-success group-hover:scale-110 transition-transform" size={20} />}
           >
             <span className="text-xs sm:text-[15px] font-semibold">Ảnh</span>
           </Button>
@@ -74,7 +74,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
             variant="ghost"
             onClick={() => cameraPhotoRef.current?.click()}
             className="flex-1 group px-2"
-            icon={<Camera className="text-red-500 group-hover:scale-110 transition-transform" size={20} />}
+            icon={<Camera className="text-error group-hover:scale-110 transition-transform" size={20} />}
           >
             <span className="text-xs sm:text-[15px] font-semibold">Máy ảnh</span>
           </Button>
@@ -82,7 +82,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
             variant="ghost"
             onClick={() => videoInputRef.current?.click()}
             className="flex-1 group px-2"
-            icon={<Video className="text-blue-500 group-hover:scale-110 transition-transform" size={20} />}
+            icon={<Video className="text-info group-hover:scale-110 transition-transform" size={20} />}
           >
             <span className="text-xs sm:text-[15px] font-semibold">Video</span>
           </Button>

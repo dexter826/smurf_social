@@ -144,11 +144,11 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               readers={readers}
             />
             {isUnread && unreadCount > 0 ? (
-              <span className="flex-shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+              <span className="flex-shrink-0 bg-error text-text-on-primary text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
               </span>
             ) : isUnread && conversation.markedUnread ? (
-              <span className="flex-shrink-0 bg-red-500 w-2.5 h-2.5 rounded-full" />
+              <span className="flex-shrink-0 bg-error w-2.5 h-2.5 rounded-full" />
             ) : null}
           </div>
         </div>

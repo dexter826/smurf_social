@@ -153,7 +153,7 @@ export const UsersView: React.FC = () => {
             filteredUsers.map(user => (
               <div 
                 key={user.id}
-                className="bg-bg-primary p-5 rounded-xl border border-border-light shadow-sm hover:border-primary/20 transition-all flex items-center justify-between group"
+                className="bg-bg-primary p-5 rounded-xl border border-border-light shadow-sm hover:border-primary/20 active:bg-bg-hover transition-all flex items-center justify-between group"
               >
                 <div className="flex items-center gap-4 overflow-hidden">
                   <UserAvatar 

@@ -92,7 +92,7 @@ const ContactsPage: React.FC = () => {
             <Bell size={20} />
             <span className="font-medium">Lời mời kết bạn</span>
             {receivedRequests.length > 0 && (
-              <span className="ml-auto text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+              <span className="ml-auto text-xs bg-error text-text-on-primary px-2 py-0.5 rounded-full">
                 {receivedRequests.length}
               </span>
             )}
@@ -133,7 +133,7 @@ const ContactsPage: React.FC = () => {
               onClick={() => setActiveTab('requests')}
             >
               Lời mời
-               {receivedRequests.length > 0 && <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+               {receivedRequests.length > 0 && <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-error rounded-full" />}
             </button>
             <button 
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === 'sent' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
@@ -187,7 +187,7 @@ const ContactsPage: React.FC = () => {
             <div className="space-y-6">
               {[...Array(2)].map((_, i) => (
                 <div key={i}>
-                  <div className="w-10 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2 mx-2 animate-pulse" />
+                  <div className="w-10 h-4 bg-bg-tertiary rounded mb-2 mx-2 animate-pulse" />
                   <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light">
                     {[...Array(3)].map((_, j) => (
                       <FriendItem.Skeleton key={j} />

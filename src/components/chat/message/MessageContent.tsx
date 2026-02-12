@@ -54,8 +54,8 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
                 </span>
              </div>
           )}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-            <ImageIcon className="opacity-0 group-hover:opacity-100 text-white" size={32} />
+          <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/10 transition-colors flex items-center justify-center">
+            <ImageIcon className="opacity-0 md:group-hover:opacity-100 text-white transition-opacity" size={32} />
           </div>
         </div>
       );

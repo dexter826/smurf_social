@@ -37,7 +37,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.3)"
+          stroke="var(--text-inverse, rgba(255,255,255,0.3))"
           strokeWidth={strokeWidth}
         />
         {/* Progress circle */}
@@ -46,7 +46,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={isComplete ? '#22c55e' : '#ffffff'}
+          stroke={isComplete ? 'var(--color-success)' : 'var(--text-inverse, #ffffff)'}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -60,14 +60,15 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
         {showCancel && onCancel && !isComplete ? (
           <button
             onClick={onCancel}
-            className="p-1 rounded-full hover:bg-white/20 transition-colors"
+            className="p-1 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors"
             title="Hủy upload"
+            aria-label="Hủy upload"
           >
-            <X size={size * 0.35} className="text-white" />
+            <X size={size * 0.35} className="text-text-inverse" />
           </button>
         ) : showPercentage ? (
           <span 
-            className="text-white font-semibold"
+            className="text-text-inverse font-semibold"
             style={{ fontSize: size * 0.25 }}
           >
             {isComplete ? '✓' : `${Math.round(progress)}%`}

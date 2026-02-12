@@ -112,12 +112,12 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                     
                     {/* Role badges - chỉ icon */}
                     {role === 'creator' && (
-                      <span className="text-yellow-500" title="Trưởng nhóm">
+                      <span className="text-warning" title="Trưởng nhóm">
                         <Crown size={14} />
                       </span>
                     )}
                     {role === 'admin' && (
-                      <span className="text-blue-500" title="Admin">
+                      <span className="text-info" title="Admin">
                         <Shield size={14} />
                       </span>
                     )}
@@ -138,7 +138,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                   disableTriggerScale
                   trigger={
                     <IconButton
-                      className="opacity-0 group-hover:opacity-100"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                       icon={<MoreVertical size={16} />}
                       size="sm"
                     />

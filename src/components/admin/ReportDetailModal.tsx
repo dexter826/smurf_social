@@ -123,7 +123,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[var(--z-modal)] flex items-center justify-center p-4">
       <div
-        className="bg-bg-primary w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl border border-border-light flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
+        className="bg-bg-primary w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-xl border border-border-light flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -231,7 +231,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                         })}
                       >
                         <img src={img} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase">Xem ảnh</div>
+                        <div className="absolute inset-0 bg-black/20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase">Xem ảnh</div>
                       </div>
                     ))}
                   </div>
@@ -315,7 +315,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                           })}
                         >
                           <img src={(content as Comment).image} className="w-full h-full object-contain transition-transform group-hover:scale-105" />
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">Xem ảnh cỡ lớn</div>
+                          <div className="absolute inset-0 bg-black/20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">Xem ảnh cỡ lớn</div>
                         </div>
                       )}
                     </div>
