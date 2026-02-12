@@ -42,6 +42,7 @@ interface DropdownProps {
   children: React.ReactNode;
   align?: 'left' | 'right';
   className?: string;
+  menuClassName?: string;
   isOpen?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
   disableTriggerScale?: boolean;
@@ -52,6 +53,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   children,
   align = 'right',
   className = '',
+  menuClassName = '',
   isOpen: controlledIsOpen,
   onOpenChange,
   disableTriggerScale = false
@@ -100,6 +102,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             shadow-dropdown overflow-hidden
             animate-in fade-in zoom-in-95 duration-200
             ${align === 'right' ? 'origin-top-right' : 'origin-top-left'}
+            ${menuClassName}
           `}
           style={{
             top: `${top}px`,
