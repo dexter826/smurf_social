@@ -134,12 +134,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       isOpen={isOpen} 
       onClose={onClose} 
       showHeader={false} 
-      maxWidth={hasMedia ? "6xl" : "lg"} 
+      maxWidth="full" 
       padding="none" 
-      fullScreen="mobile"
+      fullScreen={true}
       className={`
-        ${hasMedia ? "md:h-[90vh] lg:h-[85vh] xl:h-[88vh]" : "md:max-h-[85vh] md:h-auto"} 
-        transition-all duration-500 !rounded-none md:!rounded-[32px] overflow-hidden
+        transition-all duration-500 overflow-hidden
       `}
       bodyClassName={`overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row' : ''}`}
     >
