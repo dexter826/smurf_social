@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Bell, Flag, Menu, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -19,7 +19,7 @@ import { useLogout } from '../../hooks/utils/useLogout';
 export const AppLayout: React.FC = () => {
   const { user } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
-  const { subscribeToConversations } = useChatStore();
+  const { subscribeToConversations, selectedConversationId } = useChatStore();
   const { receivedRequests, subscribeToRequests } = useContactStore();
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
   
@@ -29,9 +29,12 @@ export const AppLayout: React.FC = () => {
 
   const handleConfirmLogout = useLogout();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isAdmin = user?.role === 'admin';
+
+  const isChatRoom = location.pathname === '/' && !!selectedConversationId;
 
   useEffect(() => {
     if (!user) return;
@@ -172,13 +175,14 @@ export const AppLayout: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 relative flex flex-col h-full overflow-hidden transition-theme pb-[60px] md:pb-0">
+      <main className={`flex-1 relative flex flex-col h-full overflow-hidden transition-theme md:pb-0 ${isChatRoom ? 'pb-0' : 'pb-[60px]'}`}>
         <Outlet />
       </main>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-sm">
-        {navItems.filter(item => item.to !== '/admin').map((item) => (
+      {!isChatRoom && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-sm">
+          {navItems.filter(item => item.to !== '/admin').map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -231,7 +235,8 @@ export const AppLayout: React.FC = () => {
            <Menu size={24} />
            <span className="text-[10px] font-medium">Menu</span>
          </NavLink>
-      </nav>
+        </nav>
+      )}
 
       <ConfirmDialog
         isOpen={showLogoutConfirm}
