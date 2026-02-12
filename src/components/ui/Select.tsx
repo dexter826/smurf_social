@@ -60,9 +60,9 @@ export const Select: React.FC<SelectProps> = ({
   };
 
   const sizeClasses = {
-    sm: 'h-8 px-2 text-xs',
-    md: 'h-11 px-4 text-sm',
-    lg: 'h-14 px-6 text-base'
+    sm: 'h-9 px-3 text-xs',
+    md: 'h-10 px-4 text-sm',
+    lg: 'h-12 px-6 text-base'
   };
 
   const variantClasses = {

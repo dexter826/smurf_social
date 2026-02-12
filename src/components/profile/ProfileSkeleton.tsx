@@ -38,7 +38,7 @@ export const ProfileSkeleton: React.FC = () => {
           </div>
           
           {/* Tabs Skeleton */}
-          <div className="flex gap-1 md:gap-4 border-t border-border-light pt-0 h-14 overflow-x-auto no-scrollbar">
+          <div className="flex gap-1 md:gap-4 border-t border-border-light pt-0 h-12 overflow-x-auto no-scrollbar">
             <div className="flex items-center px-4 min-w-max gap-6">
               <Skeleton width={100} height={24} />
               <Skeleton width={100} height={24} />

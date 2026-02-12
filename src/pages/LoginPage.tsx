@@ -193,13 +193,15 @@ const LoginPage: React.FC = () => {
                 {...forgotForm.register('email')}
                 error={forgotForm.formState.errors.email?.message}
                 autoComplete="email"
-                className="rounded-xl h-12"
+                size="lg"
+                className="rounded-xl"
               />
 
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full h-12 text-sm font-bold rounded-xl shadow-md"
+                size="lg"
+                className="w-full font-bold rounded-xl shadow-md"
                 isLoading={isLoading}
               >
                 Gửi mã khôi phục
@@ -247,7 +249,8 @@ const LoginPage: React.FC = () => {
                     placeholder="Nhập họ tên"
                     {...registerForm.register('name')}
                     error={registerForm.formState.errors.name?.message}
-                    className="rounded-xl h-12"
+                    size="lg"
+                    className="rounded-xl"
                   />
                 )}
 
@@ -259,7 +262,8 @@ const LoginPage: React.FC = () => {
                   {...(activeTab === 'login' ? loginForm.register('email') : registerForm.register('email'))}
                   error={activeTab === 'login' ? loginForm.formState.errors.email?.message : registerForm.formState.errors.email?.message}
                   autoComplete="email"
-                  className="rounded-xl h-12"
+                  size="lg"
+                  className="rounded-xl"
                 />
 
                 <div className="space-y-1.5">
@@ -306,7 +310,8 @@ const LoginPage: React.FC = () => {
                     autoComplete="new-password"
                     {...registerForm.register('confirmPassword')}
                     error={registerForm.formState.errors.confirmPassword?.message}
-                    className="rounded-xl h-12"
+                    size="lg"
+                    className="rounded-xl"
                     rightElement={
                       <button
                         type="button"
@@ -323,7 +328,8 @@ const LoginPage: React.FC = () => {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full h-12 text-sm font-bold rounded-xl shadow-md mt-2"
+                  size="lg"
+                  className="w-full font-bold rounded-xl shadow-md mt-2"
                   isLoading={isLoading}
                 >
                   {activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký'}

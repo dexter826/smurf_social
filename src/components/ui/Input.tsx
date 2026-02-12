@@ -1,11 +1,12 @@
 import React from 'react';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
   icon?: React.ReactNode;
   rightElement?: React.ReactNode;
   containerClassName?: string;
   error?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export const Input: React.FC<InputProps> = ({ 
@@ -16,6 +17,7 @@ export const Input: React.FC<InputProps> = ({
   containerClassName='', 
   error, 
   id,
+  size = 'md',
   ...props 
 }) => {
   const inputId = id || (label ? `input-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
@@ -43,7 +45,8 @@ export const Input: React.FC<InputProps> = ({
             ${icon ? 'pl-11' : 'pl-4'} 
             ${rightElement ? 'pr-11' : 'pr-4'} 
             ${error ? 'border-error ring ring-error/10' : ''} 
-            h-11 ${className}
+            ${size === 'sm' ? 'h-9 text-xs' : size === 'lg' ? 'h-12 text-base' : 'h-10 text-sm'}
+            ${className}
           `}
           {...props}
         />

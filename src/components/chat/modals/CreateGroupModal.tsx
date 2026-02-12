@@ -209,7 +209,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             placeholder="Nhập tên nhóm..."
             {...register('name')}
             error={errors.name?.message}
-            className="bg-bg-secondary h-11"
+            size="md"
+            className="bg-bg-secondary"
           />
         </div>
 

@@ -271,10 +271,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 <div className="px-6 py-4">
                   <Button 
                     variant="ghost" 
-                    size="sm" 
+                    size="md"
                     onClick={loadMoreRootComments} 
                     isLoading={isLoading} 
-                    className="text-primary w-full justify-start font-bold text-xs h-10 border-border-light hover:bg-bg-primary tracking-widest"
+                    className="text-primary w-full justify-start font-bold text-xs border-border-light hover:bg-bg-primary tracking-widest"
                   >
                     Xem thêm bình luận cũ...
                   </Button>

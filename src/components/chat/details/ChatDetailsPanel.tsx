@@ -166,7 +166,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 h-[72px] border-b border-border-light flex-shrink-0">
+        <div className="flex items-center justify-between px-4 h-16 border-b border-border-light flex-shrink-0">
           <h2 className="text-base font-bold text-text-primary">Chi tiết</h2>
           <IconButton
             onClick={onClose}

@@ -14,6 +14,7 @@ interface DatePickerProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export const DatePicker: React.FC<DatePickerProps> = ({
@@ -23,7 +24,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   error,
   placeholder = 'Chọn ngày',
   disabled = false,
-  className = ''
+  className = '',
+  size = 'md'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<'days' | 'months' | 'years'>('days');
@@ -291,8 +293,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <div
           onClick={toggleOpen}
           className={`
-            w-full h-11 px-4 flex items-center justify-between rounded-xl border outline-none transition-all
+            w-full flex items-center justify-between rounded-xl border outline-none transition-all
             bg-bg-primary text-sm
+            ${size === 'sm' ? 'h-9 px-3 text-xs' : size === 'lg' ? 'h-12 px-6 text-base' : 'h-10 px-4 text-sm'}
             ${isOpen ? 'border-primary ring ring-primary/20' : 'border-border-light hover:border-primary'}
             ${error ? 'border-error ring ring-error/10' : ''}
             ${disabled ? 'opacity-50 cursor-not-allowed bg-bg-secondary' : 'cursor-pointer'}
