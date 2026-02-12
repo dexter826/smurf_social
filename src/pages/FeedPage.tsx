@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { StickyNote } from 'lucide-react';
 import { PostItem, PostModal, PostViewModal, CreatePost, FeedSkeleton } from '../components/feed';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
@@ -76,7 +77,7 @@ const FeedPage: React.FC = () => {
         {posts.length === 0 ? (
           <div className="bg-bg-primary rounded-xl p-8 md:p-12 shadow-sm border border-border-light text-center transition-theme mx-2 md:mx-0">
             <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl" role="img" aria-label="notes">📝</span>
+              <StickyNote size={32} className="text-text-tertiary opacity-40" />
             </div>
             <p className="text-text-primary text-lg font-semibold">Chưa có bài viết nào</p>
             <p className="text-text-secondary text-sm mt-2 max-w-[250px] mx-auto">

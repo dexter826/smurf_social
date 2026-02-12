@@ -43,9 +43,10 @@ const BannedPage: React.FC = () => {
           </p>
           <a 
             href="mailto:support@smurfy.com"
-            className="text-primary font-medium hover:underline text-sm"
+            className="text-primary font-medium hover:underline text-sm flex items-center gap-1.5"
           >
-            📧 support@smurfy.com
+            <Mail size={14} />
+            support@smurfy.com
           </a>
         </div>
 
