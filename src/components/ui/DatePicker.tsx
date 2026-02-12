@@ -86,27 +86,27 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <div className="flex items-center gap-1 text-sm font-bold text-text-primary">
           {view === 'days' && (
             <>
-              <button 
+              <button
                 type="button"
                 onClick={() => setView('months')}
-                className="hover:text-primary active:text-primary-active transition-colors capitalize px-1 py-0.5 rounded-lg hover:bg-bg-hover"
+                className="hover:text-primary active:text-primary-active transition-all duration-base capitalize px-1 py-0.5 rounded-lg hover:bg-bg-hover"
               >
                 {format(currentMonth, 'MMMM', { locale: vi })}
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => setView('years')}
-                className="hover:text-primary active:text-primary-active transition-colors px-1 py-0.5 rounded-lg hover:bg-bg-hover"
+                className="hover:text-primary active:text-primary-active transition-all duration-base px-1 py-0.5 rounded-lg hover:bg-bg-hover"
               >
                 {format(currentMonth, 'yyyy')}
               </button>
             </>
           )}
           {view === 'months' && (
-            <button 
+            <button
               type="button"
               onClick={() => setView('years')}
-              className="hover:text-primary transition-colors px-1 py-0.5 rounded-md hover:bg-bg-hover"
+              className="hover:text-primary transition-all duration-base px-1 py-0.5 rounded-md hover:bg-bg-hover"
             >
               Năm {format(currentMonth, 'yyyy')}
             </button>
@@ -148,8 +148,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 icon={<ChevronRight size={18} />}
                 size="sm"
               />
-              <button 
-                className="text-xs text-primary font-semibold px-2 py-1 ml-1 rounded-md hover:bg-primary-light"
+              <button
+                className="text-xs text-primary font-semibold px-2 py-1 ml-1 rounded-md hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
                 onClick={() => setView('days')}
               >
                 Hủy
@@ -157,8 +157,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             </>
           )}
           {view === 'months' && (
-            <button 
-              className="text-xs text-primary font-semibold px-2 py-1 rounded-md hover:bg-primary-light"
+            <button
+              className="text-xs text-primary font-semibold px-2 py-1 rounded-md hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
               onClick={() => setView('days')}
             >
               Hủy
@@ -186,7 +186,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             type="button"
             onClick={() => handleMonthSelect(m.index)}
             className={`
-              h-12 text-sm rounded-xl transition-all capitalize
+              h-12 text-sm rounded-xl transition-all duration-base capitalize
               ${currentMonth.getMonth() === m.index ? 'bg-primary text-text-on-primary font-bold' : 'hover:bg-bg-hover active:bg-bg-active text-text-primary'}
             `}
           >
@@ -255,7 +255,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             type="button"
             onClick={(e) => { e.stopPropagation(); handleDateSelect(d); }}
             className={`
-              relative h-10 w-full flex items-center justify-center text-sm transition-all rounded-lg
+              relative h-10 w-full flex items-center justify-center text-sm transition-all duration-base rounded-lg
               ${!isCurrentMonth ? 'text-text-tertiary opacity-40' : 'text-text-primary'}
               ${isSelected ? 'bg-primary text-text-on-primary font-bold shadow-md' : 'hover:bg-bg-hover active:bg-bg-active'}
               ${isToday(d) && !isSelected ? 'text-primary font-bold' : ''}
@@ -293,7 +293,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <div
           onClick={toggleOpen}
           className={`
-            w-full flex items-center justify-between rounded-xl border outline-none transition-all
+            w-full flex items-center justify-between rounded-xl border outline-none transition-all duration-base
             bg-bg-primary text-sm
             ${size === 'sm' ? 'h-9 px-3 text-xs' : size === 'lg' ? 'h-12 px-6 text-base' : 'h-10 px-4 text-sm'}
             ${isOpen ? 'border-primary ring ring-primary/20' : 'border-border-light hover:border-primary'}
@@ -308,7 +308,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         </div>
 
         {isOpen && createPortal(
-          <div 
+          <div
             ref={dropdownRef}
             style={{
               top: openUp ? 'auto' : `calc(${containerRef.current?.getBoundingClientRect().bottom ?? 0}px + 8px)`,

@@ -29,8 +29,8 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
   if (!message) return null;
 
   const filteredConversations = conversations.filter(conv => {
-    const name = conv.isGroup 
-      ? conv.groupName 
+    const name = conv.isGroup
+      ? conv.groupName
       : conv.participants.find(p => p.id !== currentUserId)?.name || '';
     return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -97,7 +97,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
               return (
                 <div
                   key={conv.id}
-                  className="flex items-center justify-between p-2 hover:bg-bg-hover rounded-xl transition-colors group"
+                  className="flex items-center justify-between p-2 hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all duration-base group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <UserAvatar
@@ -117,7 +117,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                     disabled={hasSent}
                     onClick={() => handleForward(conv.id)}
                     icon={!hasSent && <Send size={14} className="text-primary" />}
-                    className={hasSent ? "" : "opacity-0 group-hover:opacity-100 transition-opacity"}
+                    className={hasSent ? "" : "opacity-0 group-hover:opacity-100 transition-all duration-base"}
                   >
                     {hasSent ? 'Đã gửi' : 'Gửi'}
                   </Button>

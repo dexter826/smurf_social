@@ -13,7 +13,7 @@ interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
   size?: "sm" | "md" | "lg";
 }
 
-const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover active:bg-bg-active outline-none focus-visible:ring focus-visible:ring-primary/20 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
+const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all duration-base hover:bg-bg-hover active:bg-bg-active outline-none focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
 
 const iconVariants = {
   primary: "text-primary hover:text-primary-hover",

@@ -38,7 +38,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   isBlocked,
 }) => {
   return (
-    <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
+    <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-all duration-base flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
       <IconButton
         ref={menuButtonRef}
         onClick={toggleMenu}
@@ -52,9 +52,8 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
             className="fixed inset-0 z-10"
             onClick={() => setShowMenu(false)}
           />
-          <div className={`absolute z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40 ${isMe ? 'right-0' : 'left-0'} ${
-            menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-8'
-          }`}>
+          <div className={`absolute z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40 ${isMe ? 'right-0' : 'left-0'} ${menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-8'
+            }`}>
             <button
               onClick={() => {
                 if (!isBlocked) {
@@ -63,9 +62,8 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 }
               }}
               disabled={isBlocked}
-              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                isBlocked ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bg-hover'
-              }`}
+              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-all duration-base ${isBlocked ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bg-hover active:bg-bg-active'
+                }`}
               title={isBlocked ? 'Không thể trả lời khi bị chặn' : ''}
             >
               <Reply size={14} /> Trả lời
@@ -78,9 +76,8 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 }
               }}
               disabled={isBlocked}
-              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                isBlocked ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bg-hover'
-              }`}
+              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-all duration-base ${isBlocked ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bg-hover active:bg-bg-active'
+                }`}
               title={isBlocked ? 'Không thể chuyển tiếp khi bị chặn' : ''}
             >
               <Forward size={14} /> Chuyển tiếp
@@ -91,7 +88,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                   onEdit?.(message);
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-colors"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-all duration-base"
               >
                 <Edit2 size={14} /> Chỉnh sửa
               </button>
@@ -102,7 +99,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                   setShowRecallConfirm(true);
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-colors text-warning"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-all duration-base text-warning"
               >
                 <RotateCcw size={14} /> Thu hồi
               </button>
@@ -112,7 +109,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 onDeleteForMe?.(message.id);
                 setShowMenu(false);
               }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-colors text-error"
+              className="w-full px-4 py-2 text-left text-sm hover:bg-bg-hover active:bg-bg-active flex items-center gap-2 transition-all duration-base text-error"
             >
               <Trash2 size={14} /> Xóa phía tôi
             </button>

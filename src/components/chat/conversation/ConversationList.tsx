@@ -222,7 +222,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               <>
                 <button
                   onClick={() => setRequestsExpanded(!requestsExpanded)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 bg-bg-tertiary border-b border-border-light hover:bg-bg-hover transition-theme"
+                  className="w-full flex items-center justify-between px-4 py-2.5 bg-bg-tertiary border-b border-border-light hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
                 >
                   <span className="flex items-center gap-2 text-sm font-medium text-text-primary">
                     <MessageCircle size={16} className="text-primary" />
@@ -233,7 +233,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   </span>
                   <ChevronDown
                     size={16}
-                    className={`text-text-secondary transition-transform duration-200 ${requestsExpanded ? 'rotate-180' : ''}`}
+                    className={`text-text-secondary transition-transform duration-base ${requestsExpanded ? 'rotate-180' : ''}`}
                   />
                 </button>
                 {requestsExpanded && (

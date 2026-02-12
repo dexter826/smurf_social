@@ -112,7 +112,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
           {media.map((item, index) => (
             <div
               key={`${item.url}-${index}`}
-              className="aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative group"
+              className="aspect-square bg-secondary rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-all duration-base relative group"
               onClick={() => setSelectedIndex(index)}
             >
               {item.type === 'video' ? (
@@ -125,7 +125,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
                 />
               )}
               {item.type === 'video' && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all duration-base">
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                     <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
                   </div>

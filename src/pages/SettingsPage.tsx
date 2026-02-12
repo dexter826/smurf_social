@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Ban, 
-  UserCheck, 
-  Shield, 
-  Key, 
-  Moon, 
+import {
+  Ban,
+  UserCheck,
+  Shield,
+  Key,
+  Moon,
   Sun,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,36 +27,33 @@ const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNod
 ];
 
 const Toggle = React.memo(({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
-  <div 
+  <div
     onClick={onToggle}
-    className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${
-      enabled ? 'bg-primary' : 'bg-bg-tertiary'
-    }`}
+    className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-all duration-base ${enabled ? 'bg-primary' : 'bg-bg-tertiary'
+      }`}
   >
-    <div className={`w-4 h-4 bg-bg-primary rounded-full shadow-md transition-transform duration-200 ${
-      enabled ? 'translate-x-6' : 'translate-x-0'
-    }`} />
+    <div className={`w-4 h-4 bg-bg-primary rounded-full shadow-md transition-transform duration-base ${enabled ? 'translate-x-6' : 'translate-x-0'
+      }`} />
   </div>
 ));
 
-const SettingItem = React.memo(({ 
-  icon, 
-  title, 
-  description, 
+const SettingItem = React.memo(({
+  icon,
+  title,
+  description,
   action,
-  onClick 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string; 
+  onClick
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
   action?: React.ReactNode;
   onClick?: () => void;
 }) => (
-  <div 
+  <div
     onClick={onClick}
-    className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border border-border-light ${
-      onClick ? 'cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-colors' : ''
-    }`}
+    className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border border-border-light ${onClick ? 'cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-all duration-base' : ''
+      }`}
   >
     <div className="flex items-center gap-4">
       <div className="p-2 bg-primary-light rounded-lg text-primary">
@@ -76,7 +73,7 @@ const SettingsPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
   const { users: userCache, fetchUsers } = useUserCache();
-  
+
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance');
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const setLoading = useLoadingStore(state => state.setLoading);
@@ -114,7 +111,7 @@ const SettingsPage: React.FC = () => {
 
   const handleUnblock = async () => {
     if (!unblockUserId || !currentUser) return;
-    
+
     try {
       await userService.unblockUser(currentUser.id, unblockUserId);
       setBlockedUsers(prev => prev.filter(u => u.id !== unblockUserId));
@@ -179,11 +176,11 @@ const SettingsPage: React.FC = () => {
                     key={user.id}
                     className="flex items-center gap-3 p-3 border-b border-border-light last:border-b-0"
                   >
-                    <UserAvatar 
+                    <UserAvatar
                       userId={user.id}
-                      src={user.avatar} 
-                      name={user.name} 
-                      size="md" 
+                      src={user.avatar}
+                      name={user.name}
+                      size="md"
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-text-primary truncate">{user.name}</h3>
@@ -221,15 +218,14 @@ const SettingsPage: React.FC = () => {
           <div className="px-4 py-2 text-sm font-semibold text-text-tertiary uppercase tracking-wider">
             Cài đặt
           </div>
-          
+
           {MENU_ITEMS.map(item => (
             <div
               key={item.id}
-              className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
-                activeSection === item.id 
-                  ? 'bg-primary-light text-primary' 
-                  : 'hover:bg-bg-hover text-text-secondary'
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${activeSection === item.id
+                ? 'bg-primary-light text-primary'
+                : 'hover:bg-bg-hover text-text-secondary'
+                }`}
               onClick={() => setActiveSection(item.id)}
             >
               {item.icon}
@@ -259,11 +255,10 @@ const SettingsPage: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
-                activeSection === item.id 
-                  ? 'bg-primary-light text-primary font-medium' 
-                  : 'text-text-secondary hover:bg-bg-hover'
-              }`}
+              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all duration-base ${activeSection === item.id
+                ? 'bg-primary-light text-primary font-medium'
+                : 'text-text-secondary hover:bg-bg-hover'
+                }`}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -288,7 +283,7 @@ const SettingsPage: React.FC = () => {
         message={CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(blockedUsers.find(u => u.id === unblockUserId)?.name || 'người này')}
         confirmLabel={CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM}
       />
-      <ChangePasswordModal 
+      <ChangePasswordModal
         isOpen={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
       />

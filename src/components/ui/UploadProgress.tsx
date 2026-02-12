@@ -32,12 +32,11 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
           </span>
         </div>
       )}
-      
+
       <div className="w-full h-1.5 bg-bg-secondary rounded-full overflow-hidden">
         <div
-          className={`h-full transition-all duration-slow rounded-full ${
-            isComplete ? 'bg-success' : 'bg-primary'
-          }`}
+          className={`h-full transition-all duration-base rounded-full ${isComplete ? 'bg-success' : 'bg-primary'
+            }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
         />
       </div>
@@ -80,10 +79,10 @@ export const MultiUploadProgress: React.FC<MultiUploadProgressProps> = ({
           {Math.round(totalProgress)}%
         </span>
       </div>
-      
+
       <div className="w-full h-2 bg-bg-secondary rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary transition-all duration-slow rounded-full"
+          className="h-full bg-primary transition-all duration-base rounded-full"
           style={{ width: `${Math.min(totalProgress, 100)}%` }}
         />
       </div>
@@ -94,9 +93,8 @@ export const MultiUploadProgress: React.FC<MultiUploadProgressProps> = ({
             <div key={index} className="flex items-center gap-2">
               <div className="flex-1 h-1 bg-bg-secondary rounded-full overflow-hidden">
                 <div
-                  className={`h-full transition-all duration-200 rounded-full ${
-                    file.progress >= 100 ? 'bg-success' : 'bg-primary/60'
-                  }`}
+                  className={`h-full transition-all duration-base rounded-full ${file.progress >= 100 ? 'bg-success' : 'bg-primary/60'
+                    }`}
                   style={{ width: `${file.progress}%` }}
                 />
               </div>

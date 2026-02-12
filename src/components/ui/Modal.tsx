@@ -63,18 +63,18 @@ export const Modal: React.FC<ModalProps> = ({
 
   const modalContent = (
     <div className={`fixed inset-0 z-[var(--z-modal)] flex items-center justify-center ${isFullScreenAlways ? 'p-0' : (isFullScreenMobile ? 'max-md:p-0 p-4' : 'p-4')} overflow-hidden`}>
-      <div 
-        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-in fade-in duration-200"
+      <div
+        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-in fade-in duration-base"
         onClick={onClose}
       />
-      
+
       <div className={`
         relative bg-bg-primary w-full shadow-2xl transition-theme overflow-hidden flex flex-col justify-between md:justify-start 
-        ${isFullScreenAlways 
-          ? 'h-full max-h-screen rounded-none' 
+        ${isFullScreenAlways
+          ? 'h-full max-h-screen rounded-none'
           : (isFullScreenMobile
             ? 'h-full md:h-auto max-md:max-h-screen md:max-h-[90vh] rounded-none md:rounded-2xl animate-in slide-in-from-bottom md:zoom-in-95 duration-slow'
-            : 'rounded-2xl h-auto md:h-auto md:max-h-[90vh] animate-in slide-in-from-bottom md:zoom-in-95 duration-200'
+            : 'rounded-2xl h-auto md:h-auto md:max-h-[90vh] animate-in slide-in-from-bottom md:zoom-in-95 duration-base'
           )}
         ${maxWidthClasses[maxWidth]} ${className}
       `}>
@@ -163,14 +163,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   const dialogContent = (
     <div className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className={`fixed inset-0 bg-bg-overlay backdrop-blur-sm transition-opacity duration-200 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
+      <div
+        className={`fixed inset-0 bg-bg-overlay backdrop-blur-sm transition-all duration-base ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
-      
+
       {/* Dialog */}
       <div className={`
-        relative bg-bg-primary w-full max-w-[320px] rounded-xl shadow-2xl p-5 transition-all duration-200
+        relative bg-bg-primary w-full max-w-[320px] rounded-xl shadow-2xl p-5 transition-all duration-base
         ${isAnimating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
       `}>
         {/* Icon + Title + Message */}

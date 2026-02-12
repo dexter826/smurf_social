@@ -72,10 +72,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const blockedUserIds = currentUser.blockedUserIds || [];
 
   // Lọc bình luận theo quyền riêng tư (chỉ xem của mình, tác giả, hoặc bạn bè)
-  const filteredRootComments = useMemo(() => 
-    currentRootComments.filter(c => 
-      c.userId === currentUser.id || 
-      c.userId === postOwnerId || 
+  const filteredRootComments = useMemo(() =>
+    currentRootComments.filter(c =>
+      c.userId === currentUser.id ||
+      c.userId === postOwnerId ||
       currentUser.friendIds?.includes(c.userId)
     ), [currentRootComments, currentUser.id, currentUser.friendIds, postOwnerId]
   );
@@ -123,7 +123,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const loadReplies = async (parentId: string) => {
     if (isLoadingReplyMap[parentId]) return;
-    
+
     if (replySubscriptionsRef.current[parentId]) {
       setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
       try {
@@ -234,7 +234,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           ) : filteredRootComments.length === 0 ? (
             <div className="text-center py-10 px-6">
               <p className="text-text-secondary text-sm italic">
-                {totalCommentCount > 0 
+                {totalCommentCount > 0
                   ? `Có ${totalCommentCount} bình luận. Bạn chỉ xem được bình luận của bạn bè.`
                   : 'Hãy là người đầu tiên bình luận!'}
               </p>
@@ -243,7 +243,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <div className="flex flex-col">
               {filteredRootComments.map(comment => (
                 <div key={comment.id} ref={el => { commentRefs.current[comment.id] = el; }}>
-                  <CommentItem 
+                  <CommentItem
                     comment={comment}
                     postId={postId}
                     currentUser={currentUser}
@@ -269,11 +269,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               ))}
               {currentHasMoreRoot && (
                 <div className="px-6 py-4">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="md"
-                    onClick={loadMoreRootComments} 
-                    isLoading={isLoading} 
+                    onClick={loadMoreRootComments}
+                    isLoading={isLoading}
                     className="text-primary w-full justify-start font-bold text-xs border-border-light hover:bg-bg-primary tracking-widest"
                   >
                     Xem thêm bình luận cũ...
@@ -292,24 +292,24 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         {replyingTo && (
           <div className="flex items-center justify-between mb-2 px-3 py-1.5 bg-primary/5 rounded-xl text-[11px] text-primary border border-primary/10 backdrop-blur-sm">
             <span className="font-medium flex items-center gap-1.5">
-               <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-               Đang trả lời <strong>{users[replyingTo.userId || '']?.name}</strong>
+              <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+              Đang trả lời <strong>{users[replyingTo.userId || '']?.name}</strong>
             </span>
-            <button onClick={resetInput} className="p-0.5 hover:bg-primary/10 rounded-full transition-colors">
+            <button onClick={resetInput} className="p-0.5 hover:bg-primary/10 active:bg-primary/20 rounded-full transition-all duration-base">
               <X size={12} />
             </button>
           </div>
         )}
-        
+
         {uploadProgress !== null && (
           <div className="mb-2">
-            <UploadProgress 
-              progress={uploadProgress} 
+            <UploadProgress
+              progress={uploadProgress}
               fileName="Đang tải lên media..."
             />
           </div>
         )}
-        
+
         {activeInputId === 'root' && (
           <CommentInput
             user={currentUser}

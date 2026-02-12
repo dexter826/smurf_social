@@ -91,7 +91,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
           <LazyImage
             src={imageUrl}
             alt="sent"
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-slow"
+            className="w-full h-full object-cover transition-all duration-base"
           />
           {isOverlay && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold">
@@ -140,9 +140,9 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
                 onClick={() => setShowReactionSelector(!showReactionSelector)}
               />
             ) : (
-              <div className="opacity-0 group-hover/message:opacity-100 transition-opacity">
+              <div className="opacity-0 group-hover/message:opacity-100 transition-all duration-base">
                 <button
-                  className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-200"
+                  className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-base"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowReactionSelector(!showReactionSelector);
@@ -253,7 +253,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
         >
           <div className="space-y-3">
             {lastReadByUsers.map(reader => (
-              <div key={reader.id} className="flex items-center gap-3 p-2 hover:bg-bg-hover rounded-lg transition-colors">
+              <div key={reader.id} className="flex items-center gap-3 p-2 hover:bg-bg-hover active:bg-bg-active rounded-lg transition-all duration-base">
                 <UserAvatar userId={reader.id} src={reader.avatar} size="md" initialStatus={reader.status} showStatus={true} />
                 <div className="flex-1">
                   <div className="text-sm font-bold text-text-primary">{reader.name}</div>

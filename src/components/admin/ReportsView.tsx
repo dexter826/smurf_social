@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Shield, 
-  Flag, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Eye, 
-  AlertTriangle, 
+import {
+  Shield,
+  Flag,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye,
+  AlertTriangle,
   FileX,
   Search,
   Filter
@@ -69,11 +69,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
               <button
                 key={tab.value}
                 onClick={() => setStatusFilter(tab.value as ReportStatus | 'all')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  statusFilter === tab.value 
-                    ? `bg-bg-primary text-primary shadow-sm` 
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === tab.value
+                    ? `bg-bg-primary text-primary shadow-sm`
                     : 'text-text-secondary hover:text-text-primary'
-                }`}
+                  }`}
               >
                 {tab.label}
                 <span className="opacity-50 font-medium">({tab.count})</span>
@@ -82,12 +81,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto min-w-[160px]">
-             <Select
-               value={typeFilter}
+            <Select
+              value={typeFilter}
               onChange={(val) => setTypeFilter(val as ReportType | 'all')}
-               options={typeOptions}
-               className="flex-1"
-             />
+              options={typeOptions}
+              className="flex-1"
+            />
           </div>
         </div>
       </div>
@@ -118,12 +117,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
             reports.map(report => {
               const reporter = getUser(report.reporterId);
               const reasonConfig = REPORT_CONFIG.REASONS[report.reason as keyof typeof REPORT_CONFIG.REASONS];
-              
+
               return (
-                <div 
+                <div
                   key={report.id}
                   onClick={() => onSelectReport(report.id)}
-                  className="bg-bg-primary p-4 rounded-xl border border-border-light shadow-sm hover:border-primary/30 active:bg-bg-hover transition-all cursor-pointer group"
+                  className="bg-bg-primary p-4 rounded-xl border border-border-light shadow-sm hover:border-primary/30 active:bg-bg-hover transition-all duration-base cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -147,9 +146,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
                   </div>
 
                   {report.description && (
-                     <div className="bg-bg-secondary/30 p-2.5 rounded-lg border border-border-light mb-3">
-                        <p className="text-xs text-text-secondary italic line-clamp-1">"{report.description}"</p>
-                     </div>
+                    <div className="bg-bg-secondary/30 p-2.5 rounded-lg border border-border-light mb-3">
+                      <p className="text-xs text-text-secondary italic line-clamp-1">"{report.description}"</p>
+                    </div>
                   )}
 
                   <div className="flex items-center justify-between pt-3 border-t border-border-light">

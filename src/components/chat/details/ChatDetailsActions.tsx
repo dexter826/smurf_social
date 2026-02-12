@@ -130,9 +130,9 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
             key={index}
             onClick={action.onClick}
             className={`
-              w-full flex items-center gap-3 px-4 py-3 transition-colors
-              ${action.variant === 'danger' 
-                ? 'text-error hover:bg-error/10' 
+              w-full flex items-center gap-3 px-4 py-3 transition-all duration-base
+              ${action.variant === 'danger'
+                ? 'text-error hover:bg-error/10'
                 : 'text-text-primary hover:bg-bg-hover'
               }
             `}
@@ -153,7 +153,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         onClose={() => setShowBlockConfirm(false)}
         onConfirm={() => onToggleBlock?.()}
         title={isBlocked ? 'Bỏ chặn người dùng' : 'Chặn người dùng'}
-        message={isBlocked 
+        message={isBlocked
           ? 'Bạn có chắc chắn muốn bỏ chặn người này? Họ sẽ có thể gửi tin nhắn cho bạn.'
           : 'Bạn có chắc chắn muốn chặn người này? Bạn sẽ không nhận được tin nhắn từ họ.'
         }
@@ -166,7 +166,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => onDelete?.()}
         title={isGroup ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}
-        message={isGroup 
+        message={isGroup
           ? 'Bạn có chắc chắn muốn giải tán nhóm này? Tất cả tin nhắn và thành viên sẽ bị xóa vĩnh viễn.'
           : 'Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Tất cả tin nhắn sẽ bị xóa vĩnh viễn.'
         }

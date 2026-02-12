@@ -32,43 +32,42 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
   switch (message.type) {
     case 'image':
       return (
-        <div 
+        <div
           className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative"
           onClick={() => setShowFullImage(true)}
         >
-          <LazyImage 
-            src={message.fileUrl || message.content} 
-            alt="sent" 
+          <LazyImage
+            src={message.fileUrl || message.content}
+            alt="sent"
             className="w-full h-auto"
           />
           {isMe && uploadProgress[message.id] && (
-             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
-                <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-2">
-                   <div 
-                      className="bg-primary h-full transition-all duration-slow"
-                      style={{ width: `${uploadProgress[message.id].progress}%` }}
-                   />
-                </div>
-                <span className="text-[10px] text-white font-medium">
-                  {uploadProgress[message.id].error ? 'Lỗi tải lên' : `Đang tải ${Math.round(uploadProgress[message.id].progress)}%`}
-                </span>
-             </div>
+            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
+              <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-2">
+                <div
+                  className="bg-primary h-full transition-all duration-slow"
+                  style={{ width: `${uploadProgress[message.id].progress}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-white font-medium">
+                {uploadProgress[message.id].error ? 'Lỗi tải lên' : `Đang tải ${Math.round(uploadProgress[message.id].progress)}%`}
+              </span>
+            </div>
           )}
-          <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/10 transition-colors flex items-center justify-center">
-            <ImageIcon className="opacity-0 md:group-hover:opacity-100 text-white transition-opacity" size={32} />
+          <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/10 transition-all duration-base flex items-center justify-center">
+            <ImageIcon className="opacity-0 md:group-hover:opacity-100 text-white transition-all duration-base" size={32} />
           </div>
         </div>
       );
-      
+
     case 'file':
-      const fileSize = message.fileSize 
+      const fileSize = message.fileSize
         ? `${(message.fileSize / 1024).toFixed(1)} KB`
         : 'N/A';
-        
+
       return (
-        <div className={`flex items-center gap-3 p-3 rounded-lg border min-w-[220px] ${
-          isMe ? 'bg-primary-light border-primary' : 'bg-bg-primary border-border-light'
-        }`}>
+        <div className={`flex items-center gap-3 p-3 rounded-lg border min-w-[220px] ${isMe ? 'bg-primary-light border-primary' : 'bg-bg-primary border-border-light'
+          }`}>
           <div className={`p-2 rounded ${isMe ? 'bg-primary-light' : 'bg-secondary'}`}>
             <FileText size={24} className={isMe ? 'text-primary' : 'text-text-secondary'} />
           </div>
@@ -79,33 +78,33 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
           <a
             href={message.fileUrl}
             download={message.fileName}
-            className="p-1 hover:bg-black/10 rounded-full transition-colors"
+            className="p-1 hover:bg-black/10 active:bg-black/20 rounded-full transition-all duration-base"
             onClick={(e) => e.stopPropagation()}
           >
             <Download size={18} />
           </a>
           {isMe && uploadProgress[message.id] && (
-             <div className="absolute inset-0 bg-bg-primary/80 flex flex-col items-center justify-center p-2 rounded-lg">
-                <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden mb-1">
-                   <div 
-                      className="bg-primary h-full transition-all duration-slow"
-                      style={{ width: `${uploadProgress[message.id].progress}%` }}
-                   />
-                </div>
-                <span className="text-[10px] text-text-secondary">
-                  {uploadProgress[message.id].error ? 'Lỗi' : `${Math.round(uploadProgress[message.id].progress)}%`}
-                </span>
-             </div>
+            <div className="absolute inset-0 bg-bg-primary/80 flex flex-col items-center justify-center p-2 rounded-lg">
+              <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden mb-1">
+                <div
+                  className="bg-primary h-full transition-all duration-slow"
+                  style={{ width: `${uploadProgress[message.id].progress}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-text-secondary">
+                {uploadProgress[message.id].error ? 'Lỗi' : `${Math.round(uploadProgress[message.id].progress)}%`}
+              </span>
+            </div>
           )}
         </div>
       );
-      
+
     case 'video':
       const videoUrl = message.fileUrl || message.content;
       return (
         <div className="rounded-lg overflow-hidden max-w-[300px] border border-border-light shadow-sm">
-          <LazyVideo 
-            src={videoUrl} 
+          <LazyVideo
+            src={videoUrl}
             thumbnail={message.videoThumbnails?.[videoUrl]}
             className="w-full h-auto max-h-[400px] object-contain"
           />
@@ -114,17 +113,15 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
     case 'voice':
       return (
-        <div 
-          className={`flex items-center gap-3 p-3 rounded-2xl min-w-[200px] cursor-pointer transition-all active:scale-95 ${
-            isMe 
-              ? 'bg-bg-message-sent text-text-on-primary shadow-md' 
-              : 'bg-bg-message-received text-text-primary border border-border-light'
-          }`}
+        <div
+          className={`flex items-center gap-3 p-3 rounded-2xl min-w-[200px] cursor-pointer transition-all duration-base ${isMe
+            ? 'bg-bg-message-sent text-text-on-primary shadow-md'
+            : 'bg-bg-message-received text-text-primary border border-border-light'
+            }`}
           onClick={onToggleVoice}
         >
-          <div className={`p-2.5 rounded-full shadow-sm transition-colors ${
-            isMe ? 'bg-bg-primary text-primary' : 'bg-primary text-white'
-          }`}>
+          <div className={`p-2.5 rounded-full shadow-sm transition-all duration-base ${isMe ? 'bg-bg-primary text-primary' : 'bg-primary text-white'
+            }`}>
             {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} className="ml-0.5" fill="currentColor" />}
           </div>
           <div className="flex-1">
@@ -136,12 +133,12 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
           </div>
         </div>
       );
-      
+
     default:
       const renderTextWithMentions = (text: string) => {
         const combinedRegex = /(@\[[^\]]+\]|(?:https?:\/\/|www\.)[^\s]+)/g;
         const parts = text.split(combinedRegex);
-        
+
         return parts.map((part, index) => {
           if (part.startsWith('@[') && part.endsWith(']')) {
             const name = part.slice(2, -1);
@@ -151,16 +148,16 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
               </span>
             );
           }
-          
+
           if (/^(https?:\/\/|www\.)/.test(part)) {
             const href = part.startsWith('www.') ? `https://${part}` : part;
             return (
-              <a 
-                key={index} 
-                href={href} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className={`underline break-all transition-opacity hover:opacity-80 ${isMe ? 'text-white/90' : 'text-primary'}`}
+              <a
+                key={index}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`underline break-all transition-all duration-base hover:opacity-80 ${isMe ? 'text-white/90' : 'text-primary'}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {part}

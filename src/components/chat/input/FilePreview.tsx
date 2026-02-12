@@ -34,13 +34,13 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 </div>
               ) : item.type === 'voice' ? (
                 <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-1 group/audio cursor-pointer"
-                     onClick={() => item.preview && onPlayVoice(item.preview, index)}>
+                  onClick={() => item.preview && onPlayVoice(item.preview, index)}>
                   {playingIndex === index ? (
                     <div className="p-1.5 bg-primary text-white rounded-full">
                       <Pause size={16} fill="currentColor" />
                     </div>
                   ) : (
-                    <div className="p-1.5 bg-secondary-hover text-primary rounded-full group-hover/audio:bg-primary group-hover/audio:text-white transition-colors">
+                    <div className="p-1.5 bg-secondary-hover text-primary rounded-full group-hover/audio:bg-primary group-hover/audio:text-white transition-all duration-base">
                       <Play size={16} fill="currentColor" />
                     </div>
                   )}
@@ -57,16 +57,16 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 </span>
               </div>
             )}
-            
+
             {!isSending && (
               <IconButton
                 onClick={() => onRemove(index)}
-                className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 z-20 transition-opacity"
+                className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 z-20 transition-all duration-base"
                 icon={<X size={14} />}
                 size="sm"
               />
             )}
-            
+
             <CircularProgressOverlay
               isVisible={isSending}
               progress={75}

@@ -81,18 +81,18 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
     <div
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-200 rounded-xl group
-        hover:bg-bg-hover
-        ${isActive ? 'bg-primary-light dark:bg-primary/20' : ''}
+        relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-base rounded-xl group
+        hover:bg-bg-hover active:bg-bg-active
+        ${isActive ? 'bg-primary-light' : ''}
         ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
       `}
     >
       <div className="relative flex-shrink-0">
-        <UserAvatar 
-          userId={conversation.isGroup ? '' : partner?.id} 
-          src={chatInfo.avatar} 
-          name={chatInfo.name} 
-          size="md" 
+        <UserAvatar
+          userId={conversation.isGroup ? '' : partner?.id}
+          src={chatInfo.avatar}
+          name={chatInfo.name}
+          size="md"
           initialStatus={chatInfo.status}
           isGroup={conversation.isGroup}
           members={conversation.participants}
@@ -137,7 +137,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <MessageStatus 
+            <MessageStatus
               isMine={isLastMessageMine && !isUnread && !typingText}
               isRead={isLastMessageRead}
               isDelivered={isLastMessageDelivered}
@@ -154,14 +154,14 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         </div>
       </div>
 
-      <div className={`md:absolute md:top-2 md:right-2 transition-opacity flex-shrink-0 ${isMenuOpen ? 'opacity-100 md:z-10' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
+      <div className={`md:absolute md:top-2 md:right-2 transition-all duration-base flex-shrink-0 ${isMenuOpen ? 'opacity-100 md:z-10' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
         <Dropdown
           isOpen={isMenuOpen}
           onOpenChange={setIsMenuOpen}
           disableTriggerScale
           trigger={
             <IconButton
-              className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 ${isMenuOpen ? 'opacity-100' : ''}`}
+              className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base ${isMenuOpen ? 'opacity-100' : ''}`}
               icon={<MoreVertical size={16} />}
               size="sm"
             />

@@ -11,22 +11,22 @@ interface ReactionSelectorProps {
 
 const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ onSelect, onClose, className = '', currentReaction }) => {
   return (
-    <div 
-      className={`absolute z-[var(--z-dropdown)] bg-bg-primary border border-border-light rounded-full shadow-lg p-1.5 flex gap-1 animate-in fade-in zoom-in duration-200 after:content-[''] after:absolute after:left-0 after:-bottom-4 after:w-full after:h-4 after:bg-transparent ${className}`}
+    <div
+      className={`absolute z-[var(--z-dropdown)] bg-bg-primary border border-border-light rounded-full shadow-lg p-1.5 flex gap-1 animate-in fade-in zoom-in duration-base after:content-[''] after:absolute after:left-0 after:-bottom-4 after:w-full after:h-4 after:bg-transparent ${className}`}
       onMouseLeave={onClose}
     >
       {currentReaction && (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect('REMOVE');
-          onClose?.();
-        }}
-        className="w-9 h-9 flex items-center justify-center text-text-secondary hover:text-error active:text-error hover:scale-110 active:scale-95 transition-transform duration-200 relative group rounded-full hover:bg-bg-secondary"
-        title="Gỡ cảm xúc"
-      >
-        <Ban size={20} />
-      </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect('REMOVE');
+            onClose?.();
+          }}
+          className="w-9 h-9 flex items-center justify-center text-text-secondary hover:text-error hover:bg-bg-hover active:bg-bg-active transition-all duration-base relative group rounded-full"
+          title="Gỡ cảm xúc"
+        >
+          <Ban size={20} />
+        </button>
       )}
       {REACTIONS.map((emoji) => (
         <button
@@ -36,7 +36,7 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ onSelect, onCl
             onSelect(emoji);
             onClose?.();
           }}
-          className="w-9 h-9 flex items-center justify-center text-2xl hover:scale-125 active:scale-95 transition-transform duration-200 relative group rounded-full hover:bg-bg-secondary"
+          className="w-9 h-9 flex items-center justify-center text-2xl hover:bg-bg-hover active:bg-bg-active transition-all duration-base relative group rounded-full"
         >
           {emoji}
         </button>

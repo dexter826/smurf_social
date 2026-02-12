@@ -25,11 +25,10 @@ export const NotificationDropdown: React.FC = () => {
     <div className="relative group" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 ${
-          isOpen 
-          ? 'bg-bg-secondary text-primary shadow-sm' 
-          : 'text-text-tertiary hover:bg-bg-secondary hover:text-primary'
-        }`}
+        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base ${isOpen
+          ? 'bg-bg-hover text-primary shadow-sm'
+          : 'text-text-tertiary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
+          }`}
         title="Thông báo"
       >
         <div className="relative">
@@ -41,11 +40,11 @@ export const NotificationDropdown: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-bg-primary rounded-xl shadow-xl border border-border-light z-[var(--z-dropdown)] overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-bg-primary rounded-xl shadow-xl border border-border-light z-[var(--z-dropdown)] overflow-hidden animate-in fade-in zoom-in duration-base">
           <div className="flex items-center justify-between p-4 border-b border-border-light bg-bg-primary/50 backdrop-blur-md">
             <h3 className="font-bold text-lg text-text-primary">Thông báo</h3>
             {unreadCount > 0 && (
-              <button 
+              <button
                 onClick={handleMarkAllRead}
                 className="text-xs font-medium text-primary hover:underline"
               >
@@ -53,15 +52,15 @@ export const NotificationDropdown: React.FC = () => {
               </button>
             )}
           </div>
-          
-          
+
+
           <div className="p-2">
             <NotificationList onItemClick={() => setIsOpen(false)} />
           </div>
-          
+
           <div className="p-3 border-t border-border-light text-center bg-bg-secondary/30">
-            <button 
-              className="text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
+            <button
+              className="text-sm font-semibold text-text-secondary hover:text-primary transition-all duration-base"
               onClick={() => {
                 navigate('/notifications');
                 setIsOpen(false);

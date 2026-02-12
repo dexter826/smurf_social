@@ -21,7 +21,7 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
 
   const searchResults = useMemo(() => {
     if (!searchTerm.trim()) return [];
-    
+
     const term = searchTerm.toLowerCase();
     return messages
       .filter((msg) => {
@@ -35,11 +35,11 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
 
   const highlightText = (text: string, term: string) => {
     if (!term.trim()) return text;
-    
+
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
-    return parts.map((part, i) => 
-      part.toLowerCase() === term.toLowerCase() 
+    return parts.map((part, i) =>
+      part.toLowerCase() === term.toLowerCase()
         ? <mark key={i} className="bg-warning-light dark:bg-warning/30 rounded px-0.5">{part}</mark>
         : part
     );
@@ -89,7 +89,7 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
                   <button
                     key={msg.id}
                     onClick={() => onMessageClick?.(msg.id)}
-                    className="w-full text-left p-3 rounded-lg hover:bg-bg-hover transition-colors"
+                    className="w-full text-left p-3 rounded-lg hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-text-secondary">

@@ -46,13 +46,13 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
               members={conversation.participants}
             />
           ) : (
-            <UserAvatar 
-              userId={partner?.id ?? ''} 
-              src={avatarSrc} 
-              name={chatName} 
-              size="md" 
-              initialStatus={partner?.status} 
-              showStatus={false} 
+            <UserAvatar
+              userId={partner?.id ?? ''}
+              src={avatarSrc}
+              name={chatName}
+              size="md"
+              initialStatus={partner?.status}
+              showStatus={false}
             />
           )}
         </div>
@@ -63,10 +63,10 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
             {!conversation.isGroup && partner && usersMap[partner.id]?.status === UserStatus.BANNED && <BannedBadge />}
           </div>
           {!conversation.isGroup && partner && (
-            <UserStatusText 
-              userId={partner.id} 
-              className="text-xs text-text-tertiary truncate leading-tight" 
-              initialStatus={partner.status} 
+            <UserStatusText
+              userId={partner.id}
+              className="text-xs text-text-tertiary truncate leading-tight"
+              initialStatus={partner.status}
             />
           )}
           {conversation.isGroup && (
@@ -78,29 +78,29 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-0.5 md:gap-1">
-        <IconButton 
-          onClick={() => { }} 
-          title="Cuộc gọi âm thanh" 
-          variant="ghost" 
-          className="text-primary hover:bg-primary-light" 
-          icon={<Phone size={20} />} 
-          size="md" 
+        <IconButton
+          onClick={() => { }}
+          title="Cuộc gọi âm thanh"
+          variant="ghost"
+          className="text-primary"
+          icon={<Phone size={20} />}
+          size="md"
         />
-        <IconButton 
-          onClick={() => { }} 
-          title="Cuộc gọi video" 
-          variant="ghost" 
-          className="text-primary hover:bg-primary-light" 
-          icon={<Video size={20} />} 
-          size="md" 
+        <IconButton
+          onClick={() => { }}
+          title="Cuộc gọi video"
+          variant="ghost"
+          className="text-primary"
+          icon={<Video size={20} />}
+          size="md"
         />
-        <IconButton 
-          onClick={onInfoClick} 
-          title="Thông tin hội thoại" 
-          variant="ghost" 
-          className="text-text-secondary hover:text-primary" 
-          icon={<Info size={20} />} 
-          size="md" 
+        <IconButton
+          onClick={onInfoClick}
+          title="Thông tin hội thoại"
+          variant="ghost"
+          className="text-text-secondary hover:text-primary"
+          icon={<Info size={20} />}
+          size="md"
         />
       </div>
     </div>

@@ -57,7 +57,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
                 href={msg.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="aspect-square rounded-lg overflow-hidden hover:opacity-80 active:opacity-70 transition-opacity"
+                className="aspect-square rounded-lg overflow-hidden hover:opacity-80 active:opacity-70 transition-all duration-base"
               >
                 <LazyImage
                   src={msg.fileUrl!}
@@ -81,10 +81,10 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
                 href={msg.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="aspect-video rounded-lg overflow-hidden bg-bg-tertiary hover:opacity-80 active:opacity-70 transition-opacity relative group"
+                className="aspect-video rounded-lg overflow-hidden bg-bg-tertiary hover:opacity-80 active:opacity-70 transition-all duration-base relative group"
               >
                 <video src={msg.fileUrl} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-base">
                   <ExternalLink size={24} className="text-white" />
                 </div>
               </a>
@@ -104,7 +104,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
                 href={msg.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 rounded-xl hover:bg-bg-hover active:bg-bg-active transition-colors"
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
               >
                 <div className="w-10 h-10 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
                   <FileText size={20} className="text-primary" />
@@ -138,9 +138,9 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`
-              flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors relative
-              ${activeTab === tab.id 
-                ? 'text-primary' 
+              flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all duration-base relative
+              ${activeTab === tab.id
+                ? 'text-primary'
                 : 'text-text-tertiary hover:text-text-secondary'
               }
             `}

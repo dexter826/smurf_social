@@ -54,7 +54,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
 
   const formData = watch();
   const [isUploading, setIsUploading] = React.useState(false);
-  
+
   // State cho file pending (chưa upload) và preview blob URL
   const [pendingImage, setPendingImage] = React.useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
@@ -87,7 +87,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
 
   const handleFormSubmit = async (data: CommentFormValues) => {
     const submittedData = { ...data };
-    
+
     // Upload pending image khi submit
     let imageUrl = submittedData.image;
     if (pendingImage) {
@@ -101,7 +101,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
         setIsUploading(false);
       }
     }
-    
+
     // Cleanup
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -109,7 +109,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     setPendingImage(null);
     setPreviewUrl(null);
     reset();
-    
+
     try {
       await onSubmit(submittedData.content || '', imageUrl);
     } catch (error) {
@@ -130,9 +130,9 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     <div className="flex gap-3">
       <UserAvatar userId={user.id} src={user.avatar} name={user.name} size="xs" />
       <div className="flex-1 min-w-0">
-        <form 
+        <form
           onSubmit={handleSubmit(handleFormSubmit)}
-          className="bg-bg-secondary rounded-2xl transition-colors p-2"
+          className="bg-bg-secondary rounded-2xl transition-all duration-base p-2"
         >
           <textarea
             {...register('content')}
@@ -171,7 +171,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                   <IconButton
                     type="button"
                     onClick={handleRemoveMedia}
-                    className="absolute -top-2 -right-2 bg-text-primary text-bg-primary shadow-md hover:scale-110"
+                    className="absolute -top-2 -right-2 bg-text-primary text-bg-primary shadow-md"
                     size="sm"
                     icon={<X size={12} />}
                   />
@@ -217,7 +217,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                 variant="primary"
                 disabled={(!isDirty && !pendingImage) || isSubmitting || isUploading}
                 isLoading={isSubmitting}
-                className="w-9 h-9 rounded-full shadow-sm active:scale-90 p-0 flex-shrink-0"
+                className="w-9 h-9 rounded-full shadow-sm p-0 flex-shrink-0"
                 icon={<Send size={16} className="fill-current" />}
               />
             </div>

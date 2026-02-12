@@ -132,7 +132,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
             {/* Controls */}
             <div className="absolute top-4 right-4 z-[var(--z-dialog)]">
                 <button
-                    className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md border border-white/5"
+                    className="p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full transition-all duration-base backdrop-blur-md border border-white/5"
                     onClick={(e) => {
                         e.stopPropagation();
                         onClose();
@@ -145,14 +145,14 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
             {media.length > 1 && (
                 <>
                     <button
-                        className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all active:scale-95"
+                        className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all duration-base"
                         onClick={handlePrev}
                     >
                         <ChevronLeft size={32} />
                     </button>
 
                     <button
-                        className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all active:scale-95"
+                        className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all duration-base"
                         onClick={handleNext}
                     >
                         <ChevronRight size={32} />
@@ -168,7 +168,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
             {/* Video Play/Pause Button */}
             {currentMedia?.type === 'video' && (
                 <button
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white/20 hover:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/10 z-[var(--z-dialog)] transition-all active:scale-95"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-full backdrop-blur-md border border-white/10 z-[var(--z-dialog)] transition-all duration-base"
                     onClick={(e) => {
                         e.stopPropagation();
                         toggleVideoPlayback();

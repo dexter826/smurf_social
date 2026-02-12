@@ -100,7 +100,7 @@ const EmailVerificationPage: React.FC = () => {
 
             <Button
               variant="secondary"
-              className="w-full h-12 text-sm font-bold rounded-xl text-text-secondary hover:bg-bg-secondary"
+              className="w-full h-12 text-sm font-bold rounded-xl text-text-secondary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
               onClick={handleResend}
               disabled={isLoading}
               icon={<RefreshCw size={18} />}
@@ -111,9 +111,9 @@ const EmailVerificationPage: React.FC = () => {
             <div className="pt-6 border-t border-border-light mt-8">
               <button
                 onClick={handleLogout}
-                className="group flex items-center gap-2 text-sm font-bold text-text-tertiary hover:text-error transition-colors mx-auto sm:mx-0"
+                className="group flex items-center gap-2 text-sm font-bold text-text-tertiary hover:text-error transition-all duration-base mx-auto sm:mx-0"
               >
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-all duration-base" />
                 Quay lại Đăng nhập
               </button>
             </div>

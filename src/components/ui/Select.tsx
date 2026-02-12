@@ -66,7 +66,7 @@ export const Select: React.FC<SelectProps> = ({
   };
 
   const variantClasses = {
-    default: `bg-bg-primary border ${isOpen ? 'border-primary ring-4 ring-primary-light/30' : 'border-border-light hover:border-primary'}`,
+    default: `bg-bg-primary border ${isOpen ? 'border-primary ring-4 ring-primary/20' : 'border-border-light hover:border-primary'}`,
     ghost: `bg-transparent border-none hover:bg-bg-hover`
   };
 
@@ -77,12 +77,12 @@ export const Select: React.FC<SelectProps> = ({
           {label}
         </label>
       )}
-      
+
       <div className="relative">
         <div
           onClick={() => !disabled && setIsOpen(!isOpen)}
           className={`
-            w-full flex items-center justify-between outline-none transition-all rounded-xl font-normal
+            w-full flex items-center justify-between outline-none transition-all duration-base rounded-xl font-normal
             ${sizeClasses[size]}
             ${variantClasses[variant]}
             ${error ? 'border-error ring-4 ring-error/10' : 'border-border-light'}
@@ -95,14 +95,14 @@ export const Select: React.FC<SelectProps> = ({
               {selectedOption ? selectedOption.label : placeholder}
             </span>
           </div>
-          <ChevronDown 
-            size={size === 'sm' ? 14 : 18} 
-            className={`text-text-tertiary transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} 
+          <ChevronDown
+            size={size === 'sm' ? 14 : 18}
+            className={`text-text-tertiary transition-all duration-base flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
 
         {isOpen && createPortal(
-          <div 
+          <div
             ref={dropdownRef}
             style={{
               top: openUp ? 'auto' : `calc(${containerRef.current?.getBoundingClientRect().bottom ?? 0}px + 6px)`,
@@ -114,7 +114,7 @@ export const Select: React.FC<SelectProps> = ({
               position: 'fixed'
             }}
             className={`
-              z-[var(--z-popover)] bg-bg-primary border border-border-light rounded-xl shadow-dropdown py-1.5 transition-all animate-in fade-in zoom-in-95 duration-200
+              z-[var(--z-popover)] bg-bg-primary border border-border-light rounded-xl shadow-dropdown py-1.5 transition-all animate-in fade-in zoom-in-95 duration-base
             `}
           >
             <div className="max-h-60 overflow-y-auto custom-scrollbar">
@@ -124,9 +124,9 @@ export const Select: React.FC<SelectProps> = ({
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   className={`
-                    w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors font-normal hover:bg-bg-hover active:bg-bg-active
-                    ${option.value === value 
-                      ? 'bg-primary-light text-primary font-medium' 
+                    w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors duration-base font-normal hover:bg-bg-hover active:bg-bg-active
+                    ${option.value === value
+                      ? 'bg-primary-light text-primary font-medium'
                       : 'text-text-primary'
                     }
                   `}
@@ -143,7 +143,7 @@ export const Select: React.FC<SelectProps> = ({
           document.body
         )}
       </div>
-      
+
       {error && (
         <p className="mt-0.5 ml-1 text-[11px] font-medium text-error flex items-center gap-1 animate-fade-in">
           {error}

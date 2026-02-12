@@ -19,21 +19,29 @@ export const ConversationFilters: React.FC<ConversationFiltersProps> = ({
 
   return (
     <div className="flex-shrink-0 flex items-center px-4 h-12 border-b border-border-light bg-bg-primary">
-      {filters.map((filter) => (
-        <Button
-          key={filter.id}
-          variant="ghost"
-          onClick={() => onFilterChange(filter.id)}
-          className={`flex-1 h-full relative hover:!bg-transparent hover:!text-current transition-colors ${
-            activeFilter === filter.id ? 'text-primary' : 'text-text-tertiary'
-          }`}
-        >
-          {filter.label}
-          {activeFilter === filter.id && (
-            <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
-          )}
-        </Button>
-      ))}
+      {filters.map((filter) => {
+        const isActive = activeFilter === filter.id;
+        return (
+          <Button
+            key={filter.id}
+            variant="ghost"
+            onClick={() => onFilterChange(filter.id)}
+            className={`
+              flex-1 h-full relative rounded-none border-0
+              !bg-transparent hover:!bg-transparent active:!bg-transparent
+              ${isActive
+                ? '!text-primary !font-bold'
+                : '!text-text-tertiary hover:!text-text-primary'
+              }
+            `}
+          >
+            {filter.label}
+            {isActive && (
+              <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-t-full" />
+            )}
+          </Button>
+        );
+      })}
     </div>
   );
 };

@@ -85,7 +85,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                         )}
                         <button
                             onClick={() => window.location.reload()}
-                            className="mt-6 w-full bg-primary text-text-on-primary py-2 px-4 rounded-xl hover:bg-primary-hover active:bg-primary-active transition-colors"
+                            className="mt-6 w-full bg-primary text-text-on-primary py-2 px-4 rounded-xl hover:bg-primary-hover active:bg-primary-active transition-all duration-base"
                         >
                             Tải lại trang
                         </button>

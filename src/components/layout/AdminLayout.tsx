@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { 
-  Shield, 
-  Users, 
-  Flag, 
-  LogOut, 
-  Moon, 
-  Sun, 
+import {
+  Shield,
+  Users,
+  Flag,
+  LogOut,
+  Moon,
+  Sun,
   LayoutDashboard,
   ChevronLeft
 } from 'lucide-react';
@@ -42,10 +42,10 @@ export const AdminLayout: React.FC = () => {
           <div className="px-4 py-2 text-sm font-semibold text-text-tertiary uppercase tracking-wider mb-2">
             Quản trị
           </div>
-          
-          <button 
+
+          <button
             onClick={() => navigate('/')}
-            className="w-full h-10 flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all mb-4"
+            className="w-full h-10 flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active rounded-xl transition-all duration-base mb-4"
           >
             <ChevronLeft size={20} />
             Quay lại App
@@ -56,10 +56,9 @@ export const AdminLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 mx-2 my-0.5 rounded-xl transition-all duration-200 ${
-                  isActive 
-                  ? 'bg-primary-light text-primary font-bold shadow-sm' 
-                  : 'text-text-secondary hover:bg-bg-hover'
+                `flex items-center gap-3 px-4 py-3 mx-2 my-0.5 rounded-xl transition-all duration-base ${isActive
+                  ? 'bg-primary-light text-primary font-bold'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`
               }
             >
@@ -72,15 +71,15 @@ export const AdminLayout: React.FC = () => {
         <div className="p-4 border-t border-border-light space-y-1">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active rounded-xl transition-all duration-base"
           >
             {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             {mode === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
           </button>
-          
+
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active hover:text-error rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-error active:bg-bg-active rounded-xl transition-all duration-base"
           >
             <LogOut size={20} />
             Đăng xuất
@@ -100,15 +99,15 @@ export const AdminLayout: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden h-16 bg-bg-primary border-b border-border-light flex items-center justify-between px-4 z-40">
-          <button 
+          <button
             onClick={() => navigate('/')}
-            className="p-2 text-text-tertiary hover:text-primary active:text-primary-active"
+            className="p-2 text-text-tertiary hover:text-primary active:text-primary-active transition-all duration-base"
           >
             <ChevronLeft size={20} />
           </button>
           <span className="font-bold text-sm uppercase">Admin Panel</span>
           <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className="p-2 text-text-tertiary">
+            <button onClick={toggleTheme} className="p-2 text-text-tertiary hover:text-primary active:text-primary-active transition-all duration-base">
               {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
           </div>
@@ -121,10 +120,9 @@ export const AdminLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                  isActive 
-                  ? 'bg-primary-light text-primary font-bold shadow-sm' 
-                  : 'text-text-secondary hover:bg-bg-hover'
+                `flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-base ${isActive
+                  ? 'bg-primary-light text-primary'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`
               }
             >

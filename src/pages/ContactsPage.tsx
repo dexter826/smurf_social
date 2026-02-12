@@ -69,11 +69,10 @@ const ContactsPage: React.FC = () => {
 
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-2 text-sm font-semibold text-text-tertiary uppercase tracking-wider">Danh sách</div>
-          
+
           <div
-            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
-              activeTab === 'all' ? 'bg-primary-light text-primary' : 'hover:bg-bg-hover text-text-secondary'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all duration-base ${activeTab === 'all' ? 'bg-primary-light text-primary' : 'hover:bg-bg-hover text-text-secondary'
+              }`}
             onClick={() => setActiveTab('all')}
           >
             <Users size={20} />
@@ -84,9 +83,8 @@ const ContactsPage: React.FC = () => {
           </div>
 
           <div
-            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
-              activeTab === 'requests' ? 'bg-primary-light text-primary' : 'hover:bg-bg-hover text-text-secondary'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${activeTab === 'requests' ? 'bg-primary-light text-primary' : 'hover:bg-bg-hover text-text-secondary'
+              }`}
             onClick={() => setActiveTab('requests')}
           >
             <Bell size={20} />
@@ -99,9 +97,8 @@ const ContactsPage: React.FC = () => {
           </div>
 
           <div
-            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${
-              activeTab === 'sent' ? 'bg-primary-light text-primary' : 'hover:bg-bg-hover text-text-secondary'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-0.5 cursor-pointer rounded-xl transition-all ${activeTab === 'sent' ? 'bg-primary-light text-primary' : 'hover:bg-bg-hover text-text-secondary'
+              }`}
             onClick={() => setActiveTab('sent')}
           >
             <UserPlus size={20} />
@@ -119,23 +116,23 @@ const ContactsPage: React.FC = () => {
       <div className="flex-1 flex flex-col h-full bg-bg-primary md:bg-bg-secondary">
         {/* Header */}
         <div className="p-4 border-b border-border-light bg-bg-primary sticky top-0 z-10">
-          
+
           {/* Mobile Tab Switcher */}
           <div className="flex md:hidden p-1 bg-bg-secondary rounded-xl mb-4">
-            <button 
+            <button
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === 'all' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
               onClick={() => setActiveTab('all')}
             >
               Bạn bè
             </button>
-            <button 
+            <button
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all relative ${activeTab === 'requests' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
               onClick={() => setActiveTab('requests')}
             >
               Lời mời
-               {receivedRequests.length > 0 && <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-error rounded-full" />}
+              {receivedRequests.length > 0 && <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-error rounded-full" />}
             </button>
-            <button 
+            <button
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === 'sent' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
               onClick={() => setActiveTab('sent')}
             >
@@ -178,7 +175,7 @@ const ContactsPage: React.FC = () => {
               </Button>
             </div>
           )}
-          
+
         </div>
 
         {/* Content Area */}

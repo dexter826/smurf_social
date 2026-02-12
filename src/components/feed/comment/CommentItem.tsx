@@ -57,7 +57,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   openReportModal
 }) => {
   const navigate = useNavigate();
-  
+
   const author = users[comment.userId];
   const commentReplies = replies[comment.id] || [];
   const hasMoreR = hasMoreReply[comment.id];
@@ -125,9 +125,9 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
             ) : (
               <>
                 <div className="text-sm text-text-primary mt-1 break-words break-all leading-relaxed">
-                  <TruncatedText 
-                    content={comment.content} 
-                    threshold={200} 
+                  <TruncatedText
+                    content={comment.content}
+                    threshold={200}
                     expandClassName="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-[11px] tracking-wider"
                   />
                 </div>
@@ -143,16 +143,16 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
           {!isEditing && (
             <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold">
               <span title={formatDateTime(comment.createdAt)}>{formatRelativeTime(comment.createdAt)}</span>
-              <button onClick={() => handleReplyClick(comment)} className="hover:text-primary active:text-primary transition-colors cursor-pointer">Trả lời</button>
+              <button onClick={() => handleReplyClick(comment)} className="hover:text-primary active:text-primary transition-all duration-base cursor-pointer">Trả lời</button>
               {comment.userId === currentUser.id ? (
                 <>
-                  <button onClick={() => handleEditClick(comment)} className="hover:text-primary active:text-primary transition-colors cursor-pointer">Chỉnh sửa</button>
-                  <button onClick={() => handleDeleteClick(comment)} className="text-error/70 hover:text-error transition-colors cursor-pointer">Xóa</button>
+                  <button onClick={() => handleEditClick(comment)} className="hover:text-primary active:text-primary transition-all duration-base cursor-pointer">Chỉnh sửa</button>
+                  <button onClick={() => handleDeleteClick(comment)} className="text-error/70 hover:text-error transition-all duration-base cursor-pointer">Xóa</button>
                 </>
               ) : (
                 <button
                   onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.userId)}
-                  className="text-text-tertiary hover:text-error transition-colors cursor-pointer flex items-center gap-0.5"
+                  className="text-text-tertiary hover:text-error transition-all duration-base cursor-pointer flex items-center gap-0.5"
                 >
                   <Flag size={10} /> Báo cáo
                 </button>
@@ -185,8 +185,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 <>
                   <div className="space-y-1">
                     {commentReplies.map(reply => (
-                      <CommentItem 
-                        key={reply.id} 
+                      <CommentItem
+                        key={reply.id}
                         comment={reply}
                         postId={postId}
                         currentUser={currentUser}
@@ -198,7 +198,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                         postOwnerId={postOwnerId}
                         activeInputId={activeInputId}
                         inputMode={inputMode}
-                        isReply 
+                        isReply
                         rootAuthorId={comment.userId}
                         handleReplyClick={handleReplyClick}
                         handleEditClick={handleEditClick}
@@ -213,9 +213,9 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     ))}
                   </div>
                   {hasMoreR && (
-                    <button 
-                      onClick={() => loadReplies(comment.id)} 
-                      className="text-primary hover:underline text-[10px] font-bold ml-10 mt-2 tracking-wider transition-all" 
+                    <button
+                      onClick={() => loadReplies(comment.id)}
+                      className="text-primary hover:underline text-[10px] font-bold ml-10 mt-2 tracking-wider transition-all"
                       disabled={isLoadingR}
                     >
                       {isLoadingR ? 'Đang tải...' : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - commentReplies.length)} trả lời`}

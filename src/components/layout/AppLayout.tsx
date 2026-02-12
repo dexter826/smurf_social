@@ -22,7 +22,7 @@ export const AppLayout: React.FC = () => {
   const { subscribeToConversations, selectedConversationId } = useChatStore();
   const { receivedRequests, subscribeToRequests } = useContactStore();
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
-  
+
   const { selectedPost, setSelectedPost, reactToPost } = usePostStore();
   const isModalLoading = useLoadingStore(state => state.loadingStates['feed']);
   const { users: usersMap, fetchUsers } = useUserCache();
@@ -78,14 +78,14 @@ export const AppLayout: React.FC = () => {
       {/* Desktop Navbar */}
       <header className="hidden md:flex h-16 w-full items-center bg-bg-primary px-6 z-50 shadow-sm border-b border-border-light transition-theme">
         {/* Left: Logo */}
-        <div 
-          className="flex-1 flex items-center cursor-pointer transition-transform duration-200" 
+        <div
+          className="flex-1 flex items-center cursor-pointer transition-all duration-base hover:opacity-90"
           onClick={() => navigate('/feed')}
         >
-          <img 
-            src="/logo_text_blue.png" 
-            alt="Smurfy" 
-            className="h-9 object-contain" 
+          <img
+            src="/logo_text_blue.png"
+            alt="Smurfy"
+            className="h-9 object-contain"
           />
         </div>
 
@@ -96,10 +96,9 @@ export const AppLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `px-5 h-12 flex items-center justify-center rounded-xl transition-all duration-200 relative group ${
-                  isActive 
-                  ? 'bg-bg-secondary text-primary shadow-sm' 
-                  : 'text-text-tertiary hover:bg-bg-secondary/70 hover:text-text-primary'
+                `px-5 h-12 flex items-center justify-center rounded-xl transition-all duration-base relative group ${isActive
+                  ? 'bg-primary-light text-primary font-bold'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`
               }
               title={item.label}
@@ -122,10 +121,10 @@ export const AppLayout: React.FC = () => {
         <div className="flex-1 flex items-center justify-end gap-2">
           <div className="flex items-center gap-1">
             <NotificationDropdown />
-            
+
             <button
-              onClick={toggleTheme} 
-              className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 text-text-tertiary hover:bg-bg-secondary hover:text-primary"
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base text-text-tertiary hover:bg-bg-hover hover:text-primary active:bg-bg-active"
               title="Chế độ tối"
             >
               {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
@@ -135,41 +134,40 @@ export const AppLayout: React.FC = () => {
           <div className="w-px h-6 bg-border-light mx-1" />
 
           <div className="flex items-center gap-2">
-             <NavLink 
-                to="/settings"
-                className={({ isActive }) => 
-                  `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-bg-secondary text-primary shadow-sm' 
-                      : 'text-text-tertiary hover:bg-bg-secondary hover:text-primary'
-                  }`
-                }
-                title="Cài đặt"
-              >
-                <Settings size={20} />
-               </NavLink>
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base ${isActive
+                  ? 'bg-primary-light text-primary'
+                  : 'text-text-tertiary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
+                }`
+              }
+              title="Cài đặt"
+            >
+              <Settings size={20} />
+            </NavLink>
 
 
 
-              <div className="group relative ml-1" onClick={() => navigate('/profile')}>
-                {user && (
-                  <UserAvatar 
-                    userId={user.id}
-                    src={user.avatar} 
-                    size="sm" 
-                    className="cursor-pointer ring-2 ring-transparent group-hover:ring-primary transition-all" 
-                    initialStatus={user.status}
-                  />
-                )}
-              </div>
+            <div className="group relative ml-1" onClick={() => navigate('/profile')}>
+              {user && (
+                <UserAvatar
+                  userId={user.id}
+                  src={user.avatar}
+                  size="sm"
+                  className="cursor-pointer ring-2 ring-transparent group-hover:ring-primary/30 transition-all duration-base"
+                  initialStatus={user.status}
+                />
+              )}
+            </div>
 
-              <button
-                onClick={() => setShowLogoutConfirm(true)} 
-                className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 text-text-tertiary hover:bg-error-light hover:text-error active:bg-error-light/80" 
-                title="Đăng xuất"
-              >
-                <LogOut size={20} />
-              </button>
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base text-text-tertiary hover:bg-error/10 hover:text-error active:bg-error/20"
+              title="Đăng xuất"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </div>
       </header>
@@ -183,34 +181,32 @@ export const AppLayout: React.FC = () => {
       {!isChatRoom && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-16 z-50 pb-safe transition-theme shadow-sm">
           {navItems.filter(item => item.to !== '/admin').map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
+                }`
+              }
+            >
+              <div className="relative">
+                <item.Icon size={24} />
+                {item.to === '/' && totalUnread > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
+                )}
+                {item.to === '/contacts' && hasNewRequests && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
+                )}
+              </div>
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </NavLink>
+          ))}
+
+          {/* Mobile Notification Icon */}
           <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
-                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-              }`
-            }
-          >
-            <div className="relative">
-              <item.Icon size={24} />
-              {item.to === '/' && totalUnread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
-              )}
-              {item.to === '/contacts' && hasNewRequests && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
-              )}
-            </div>
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </NavLink>
-        ))}
-        
-        {/* Mobile Notification Icon */}
-        <NavLink
             to="/notifications"
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
-                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
               }`
             }
           >
@@ -222,19 +218,18 @@ export const AppLayout: React.FC = () => {
             </div>
             <span className="text-[10px] font-medium">Thông báo</span>
           </NavLink>
-          
-         {/* Mobile Menu Button */}
-         <NavLink
-           to="/menu"
-           className={({ isActive }) =>
-             `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
-               isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-             }`
-           }
-         >
-           <Menu size={24} />
-           <span className="text-[10px] font-medium">Menu</span>
-         </NavLink>
+
+          {/* Mobile Menu Button */}
+          <NavLink
+            to="/menu"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
+              }`
+            }
+          >
+            <Menu size={24} />
+            <span className="text-[10px] font-medium">Menu</span>
+          </NavLink>
         </nav>
       )}
 

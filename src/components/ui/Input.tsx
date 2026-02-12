@@ -9,16 +9,16 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
   size?: 'sm' | 'md' | 'lg';
 }
 
-export const Input: React.FC<InputProps> = ({ 
+export const Input: React.FC<InputProps> = ({
   label,
-  icon, 
-  rightElement, 
-  className = '', 
-  containerClassName='', 
-  error, 
+  icon,
+  rightElement,
+  className = '',
+  containerClassName = '',
+  error,
   id,
   size = 'md',
-  ...props 
+  ...props
 }) => {
   const inputId = id || (label ? `input-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
 
@@ -31,20 +31,20 @@ export const Input: React.FC<InputProps> = ({
       )}
       <div className="relative group">
         {icon && (
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-tertiary group-focus-within:text-primary transition-colors">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-tertiary group-focus-within:text-primary transition-colors duration-base">
             {icon}
           </div>
         )}
         <input
           id={inputId}
           className={`
-            block w-full rounded-xl transition-all outline-none text-base sm:text-sm
+            block w-full rounded-xl transition-all duration-base outline-none text-base sm:text-sm
             bg-bg-primary border border-border-light text-text-primary placeholder:text-text-tertiary
-            focus:border-primary focus-visible:ring focus-visible:ring-primary/20 focus-visible:ring-offset-1
-            disabled:bg-bg-secondary disabled:text-text-tertiary disabled:cursor-not-allowed disabled:border-border-light
+            focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:ring-offset-1
+            disabled:opacity-50 disabled:bg-bg-secondary disabled:text-text-tertiary disabled:cursor-not-allowed disabled:border-border-light
             ${icon ? 'pl-11' : 'pl-4'} 
             ${rightElement ? 'pr-11' : 'pr-4'} 
-            ${error ? 'border-error ring ring-error/10' : ''} 
+            ${error ? 'border-error ring-4 ring-error/10' : ''} 
             ${size === 'sm' ? 'h-9 text-xs' : size === 'lg' ? 'h-12 text-base' : 'h-10 text-sm'}
             ${className}
           `}

@@ -64,10 +64,10 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             className={`w-full group ${myReaction ? 'text-primary' : 'text-text-secondary hover:text-primary'}`}
             onClick={() => onReact(postId, myReaction || '👍')}
             onMouseEnter={() => setShowReactions(true)}>
-            <div className="flex items-center gap-2 transition-transform active:scale-95">
+            <div className="flex items-center gap-2">
               {myReaction
                 ? <span className="text-xl animate-in zoom-in spin-in-12 duration-slow">{myReaction}</span>
-                : <Heart size={20} className="group-hover:scale-110 transition-transform" />}
+                : <Heart size={20} />}
               <span className={`text-sm font-medium ${myReaction ? `text-${REACTION_LABELS[myReaction]}` : ''}`}>
                 {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}
               </span>
@@ -75,7 +75,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
           </Button>
         </div>
         <Button variant="ghost" onClick={onCommentClick}
-          className={`flex-1 text-text-secondary ${onCommentClick ? 'hover:text-primary hover:bg-bg-secondary' : ''}`}
+          className={`flex-1 text-text-secondary ${onCommentClick ? 'hover:text-primary hover:bg-bg-hover' : ''}`}
           icon={<MessageCircle size={20} />}>
           <span className="text-sm font-medium">Bình luận</span>
         </Button>

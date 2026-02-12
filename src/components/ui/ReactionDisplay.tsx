@@ -7,9 +7,9 @@ interface ReactionDisplayProps {
   variant?: 'default' | 'minimal';
 }
 
-const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({ 
-  reactions = {}, 
-  className = '', 
+const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
+  reactions = {},
+  className = '',
   onClick,
   variant = 'default'
 }) => {
@@ -29,16 +29,15 @@ const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
   }, [reactions]);
 
   if (total === 0) return null;
-  
+
   const isMinimal = variant === 'minimal';
-  
+
   return (
-    <div 
-      className={`flex items-center gap-1 select-none transition-all duration-200 ${
-        isMinimal 
-          ? (onClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default') 
-          : 'px-1 py-[1px] bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm cursor-pointer hover:bg-bg-hover hover:ring-primary hover:shadow-md'
-      } ${className}`}
+    <div
+      className={`flex items-center gap-1 select-none transition-all duration-base ${isMinimal
+        ? (onClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default')
+        : 'px-1 py-[1px] bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm cursor-pointer hover:bg-bg-hover hover:ring-primary hover:shadow-md'
+        } ${className}`}
       onClick={(e) => {
         if (!onClick) return;
         e.stopPropagation();
@@ -47,12 +46,12 @@ const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
     >
       <div className={`flex items-center ${isMinimal ? '-space-x-1.5' : '-space-x-1 mr-0.5'}`}>
         {sortedEmojis.map((emoji, index) => (
-          <div 
-            key={emoji} 
+          <div
+            key={emoji}
             className={`
               flex items-center justify-center rounded-full 
               ${isMinimal ? 'w-6 h-6 text-base bg-bg-primary border border-border-light' : 'text-[11px] sm:text-xs'}
-              transition-transform
+              transition-all duration-base
             `}
             style={{ zIndex: 10 - index }}
           >

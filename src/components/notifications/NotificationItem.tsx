@@ -28,7 +28,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       fetchUser(notification.senderId);
     }
   }, [notification.senderId, sender, fetchUser]);
-  
+
   const handleItemClick = async () => {
     if (!notification.isRead) {
       await markAsRead(notification.id);
@@ -91,10 +91,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
   ].includes(notification.type);
 
   return (
-    <div 
-      className={`group flex items-start gap-3 p-3 cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-colors rounded-xl mb-1 ${
-        !notification.isRead ? 'bg-primary/5' : ''
-      }`}
+    <div
+      className={`group flex items-start gap-3 p-3 cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-all duration-base rounded-xl mb-1 ${!notification.isRead ? 'bg-primary/5' : ''
+        }`}
       onClick={handleItemClick}
     >
       {isSystem ? (
@@ -115,7 +114,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           {formatRelativeTime(notification.createdAt)}
         </span>
       </div>
-      
+
       <div className="flex flex-col items-end gap-2">
         {!notification.isRead && (
           <div className="w-2.5 h-2.5 bg-primary rounded-full" />
@@ -124,7 +123,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           variant="ghost"
           size="sm"
           onClick={handleDelete}
-          className="md:opacity-0 md:group-hover:opacity-100 p-2 h-auto text-text-tertiary hover:text-error hover:bg-error/10 transition-all rounded-full"
+          className="md:opacity-0 md:group-hover:opacity-100 p-2 h-auto text-text-tertiary hover:text-error hover:bg-error/10 transition-all duration-base rounded-full"
           icon={<Trash2 size={16} />}
         />
       </div>

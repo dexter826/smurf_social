@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  User as UserIcon, 
-  Settings, 
-  Moon, 
-  Sun, 
-  LogOut, 
+import {
+  User as UserIcon,
+  Settings,
+  Moon,
+  Sun,
+  LogOut,
   ChevronRight,
   MessageCircle,
   Users,
@@ -50,10 +50,10 @@ export const MobileMenuPage: React.FC = () => {
       <div className="bg-bg-primary border-b border-border-light p-4">
         <div className="flex items-center gap-3">
           {user && (
-            <UserAvatar 
+            <UserAvatar
               userId={user.id}
-              src={user.avatar} 
-              size="lg" 
+              src={user.avatar}
+              size="lg"
               initialStatus={user.status}
             />
           )}
@@ -70,7 +70,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Xem hồ sơ */}
           <button
             onClick={() => navigate('/profile')}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
               <UserIcon size={22} />
@@ -85,7 +85,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Cài đặt */}
           <button
             onClick={() => navigate('/settings')}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               <Settings size={22} />
@@ -100,7 +100,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Chế độ tối */}
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
@@ -109,8 +109,8 @@ export const MobileMenuPage: React.FC = () => {
               <span className="font-semibold text-text-primary">Chế độ tối</span>
               <p className="text-xs text-text-tertiary mt-0.5">{mode === 'dark' ? 'Đang bật' : 'Đang tắt'}</p>
             </div>
-            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${mode === 'dark' ? 'bg-primary' : 'bg-bg-tertiary'}`}>
-              <div className={`w-5 h-5 bg-bg-primary rounded-full shadow transition-transform ${mode === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
+            <div className={`w-12 h-7 rounded-full p-1 transition-all duration-base ${mode === 'dark' ? 'bg-primary' : 'bg-bg-tertiary'}`}>
+              <div className={`w-5 h-5 bg-bg-primary rounded-full shadow transition-all duration-base ${mode === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
             </div>
           </button>
 
@@ -118,7 +118,7 @@ export const MobileMenuPage: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
             >
               <div className="w-10 h-10 flex items-center justify-center rounded-full bg-warning/10 text-warning">
                 <Shield size={22} />
@@ -157,8 +157,7 @@ export const MobileMenuPage: React.FC = () => {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${
-                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`
             }
           >
@@ -171,7 +170,7 @@ export const MobileMenuPage: React.FC = () => {
             <span className="text-[10px] font-medium">{item.label}</span>
           </NavLink>
         ))}
-        
+
         {/* Menu active */}
         <div className="flex flex-col items-center justify-center w-full h-full space-y-1 text-primary">
           <Menu size={24} />
