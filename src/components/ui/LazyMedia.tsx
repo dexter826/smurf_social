@@ -130,7 +130,7 @@ export const LazyVideo: React.FC<LazyVideoProps> = ({
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
             <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-800 ml-1" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-text-primary ml-1" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>

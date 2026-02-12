@@ -23,7 +23,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ label, className = '', id, .
           {...props}
         />
         <svg
-          className="absolute left-0.5 top-0.5 h-3 w-3 pointer-events-none text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+          className="absolute left-0.5 top-0.5 h-3 w-3 pointer-events-none text-text-on-primary opacity-0 peer-checked:opacity-100 transition-opacity"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="none"

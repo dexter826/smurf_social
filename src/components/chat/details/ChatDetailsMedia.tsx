@@ -57,7 +57,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
                 href={msg.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="aspect-square rounded-md overflow-hidden hover:opacity-80 transition-opacity"
+                className="aspect-square rounded-lg overflow-hidden hover:opacity-80 active:opacity-70 transition-opacity"
               >
                 <LazyImage
                   src={msg.fileUrl!}
@@ -81,7 +81,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
                 href={msg.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="aspect-video rounded-md overflow-hidden bg-bg-tertiary hover:opacity-80 transition-opacity relative group"
+                className="aspect-video rounded-lg overflow-hidden bg-bg-tertiary hover:opacity-80 active:opacity-70 transition-opacity relative group"
               >
                 <video src={msg.fileUrl} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -104,7 +104,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
                 href={msg.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-bg-hover transition-colors"
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-bg-hover active:bg-bg-active transition-colors"
               >
                 <div className="w-10 h-10 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
                   <FileText size={20} className="text-primary" />

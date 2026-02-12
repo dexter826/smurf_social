@@ -109,8 +109,8 @@ export const MobileMenuPage: React.FC = () => {
               <span className="font-semibold text-text-primary">Chế độ tối</span>
               <p className="text-xs text-text-tertiary mt-0.5">{mode === 'dark' ? 'Đang bật' : 'Đang tắt'}</p>
             </div>
-            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${mode === 'dark' ? 'bg-primary' : 'bg-gray-300'}`}>
-              <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${mode === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
+            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${mode === 'dark' ? 'bg-primary' : 'bg-bg-tertiary'}`}>
+              <div className={`w-5 h-5 bg-bg-primary rounded-full shadow transition-transform ${mode === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
             </div>
           </button>
 
@@ -151,7 +151,7 @@ export const MobileMenuPage: React.FC = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe shadow-sm">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -165,7 +165,7 @@ export const MobileMenuPage: React.FC = () => {
             <div className="relative">
               <item.Icon size={24} />
               {item.badge && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
               )}
             </div>
             <span className="text-[10px] font-medium">{item.label}</span>

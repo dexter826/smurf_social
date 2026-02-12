@@ -184,7 +184,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             <div className="flex items-center gap-1">
               <IconButton
                 type="button"
-                className="text-text-tertiary hover:text-green-500"
+                className="text-text-tertiary hover:text-success active:text-success"
                 onClick={() => fileInputRef.current?.click()}
                 icon={<ImageIcon size={16} />}
                 size="sm"

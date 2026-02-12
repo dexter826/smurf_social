@@ -30,10 +30,10 @@ const Toggle = React.memo(({ enabled, onToggle }: { enabled: boolean; onToggle: 
   <div 
     onClick={onToggle}
     className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${
-      enabled ? 'bg-primary' : 'bg-gray-400'
+      enabled ? 'bg-primary' : 'bg-bg-tertiary'
     }`}
   >
-    <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${
+    <div className={`w-4 h-4 bg-bg-primary rounded-full shadow-md transition-transform duration-200 ${
       enabled ? 'translate-x-6' : 'translate-x-0'
     }`} />
   </div>
@@ -55,7 +55,7 @@ const SettingItem = React.memo(({
   <div 
     onClick={onClick}
     className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border border-border-light ${
-      onClick ? 'cursor-pointer hover:bg-bg-hover transition-colors' : ''
+      onClick ? 'cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-colors' : ''
     }`}
   >
     <div className="flex items-center gap-4">

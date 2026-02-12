@@ -92,7 +92,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
 
   return (
     <div 
-      className={`group flex items-start gap-3 p-3 cursor-pointer hover:bg-bg-hover transition-colors rounded-lg mb-1 ${
+      className={`group flex items-start gap-3 p-3 cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-colors rounded-xl mb-1 ${
         !notification.isRead ? 'bg-primary/5' : ''
       }`}
       onClick={handleItemClick}

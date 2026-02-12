@@ -45,7 +45,7 @@ export const AdminLayout: React.FC = () => {
           
           <button 
             onClick={() => navigate('/')}
-            className="w-full h-11 flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover rounded-xl transition-all mb-4"
+            className="w-full h-11 flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all mb-4"
           >
             <ChevronLeft size={20} />
             Quay lại App
@@ -72,7 +72,7 @@ export const AdminLayout: React.FC = () => {
         <div className="p-4 border-t border-border-light space-y-1">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all"
           >
             {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             {mode === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
@@ -80,7 +80,7 @@ export const AdminLayout: React.FC = () => {
           
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-error rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active hover:text-error rounded-xl transition-all"
           >
             <LogOut size={20} />
             Đăng xuất
@@ -102,7 +102,7 @@ export const AdminLayout: React.FC = () => {
         <header className="md:hidden h-14 bg-bg-primary border-b border-border-light flex items-center justify-between px-4 z-40">
           <button 
             onClick={() => navigate('/')}
-            className="p-2 text-text-tertiary hover:text-primary"
+            className="p-2 text-text-tertiary hover:text-primary active:text-primary-active"
           >
             <ChevronLeft size={20} />
           </button>
@@ -121,7 +121,7 @@ export const AdminLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
+                `flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                   isActive 
                   ? 'bg-primary-light text-primary font-bold shadow-sm' 
                   : 'text-text-secondary hover:bg-bg-hover'

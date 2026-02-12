@@ -124,7 +124,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       {/* Cover */}
       <div className="relative h-[200px] md:h-[320px] w-full md:rounded-b-2xl shadow-sm">
         {/* Background Image Layer */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-primary-600 md:rounded-b-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-active md:rounded-b-2xl overflow-hidden">
           <LazyImage
             src={user.coverImage || '/cover-image.jpg'} 
             className="w-full h-full object-cover" 
@@ -323,7 +323,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   <Button 
                     onClick={onMessageClick} 
                     icon={<MessageCircle size={18} />}
-                    className="bg-primary-600 hover:bg-primary-700 shadow-md"
+                    className="bg-primary hover:bg-primary-hover active:bg-primary-active shadow-md"
                   >
                     Nhắn tin
                   </Button>
@@ -333,7 +333,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       variant="secondary" 
                       onClick={onFriendClick} 
                       icon={<UserCheck size={18} />}
-                      className="border-primary-100 bg-primary-50 text-primary-600 hover:bg-primary-100"
+                      className="border-primary/20 bg-primary-light text-primary hover:bg-primary-light/80"
                     >
                       Bạn bè
                     </Button>
@@ -351,7 +351,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       variant="primary"
                       onClick={onFriendClick} 
                       icon={<UserPlus size={18} />}
-                      className="bg-primary-600 hover:bg-primary-700 shadow-md"
+                      className="bg-primary hover:bg-primary-hover active:bg-primary-active shadow-md"
                     >
                       Chấp nhận
                     </Button>

@@ -12,10 +12,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const baseStyle = "inline-flex items-center justify-center font-semibold transition-all duration-base outline-none border-2 border-transparent focus-visible:ring focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
 const variants = {
-  primary: "bg-primary hover:bg-primary-hover text-white shadow-sm hover:shadow-md",
-  secondary: "bg-bg-secondary hover:bg-bg-hover text-text-primary border border-border-light",
-  ghost: "hover:bg-bg-hover text-text-secondary hover:text-text-primary",
-  danger: "bg-error hover:opacity-90 text-white shadow-sm",
+  primary: "bg-primary hover:bg-primary-hover active:bg-primary-active text-text-on-primary shadow-sm hover:shadow-md",
+  secondary: "bg-bg-secondary hover:bg-bg-hover active:bg-bg-active text-text-primary border border-border-light",
+  ghost: "hover:bg-bg-hover active:bg-bg-active text-text-secondary hover:text-text-primary",
+  danger: "bg-error hover:opacity-90 active:opacity-80 text-text-on-primary shadow-sm",
 };
 
 const sizes = {

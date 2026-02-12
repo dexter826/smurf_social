@@ -123,7 +123,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
                 <div 
                   key={report.id}
                   onClick={() => onSelectReport(report.id)}
-                  className="bg-bg-primary p-4 rounded-xl border border-border-light shadow-sm hover:border-primary/30 transition-all cursor-pointer group"
+                  className="bg-bg-primary p-4 rounded-xl border border-border-light shadow-sm hover:border-primary/30 active:bg-bg-hover transition-all cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">

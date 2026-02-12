@@ -87,14 +87,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <button 
                 type="button"
                 onClick={() => setView('months')}
-                className="hover:text-primary transition-colors capitalize px-1 py-0.5 rounded-md hover:bg-bg-hover"
+                className="hover:text-primary active:text-primary-active transition-colors capitalize px-1 py-0.5 rounded-lg hover:bg-bg-hover"
               >
                 {format(currentMonth, 'MMMM', { locale: vi })}
               </button>
               <button 
                 type="button"
                 onClick={() => setView('years')}
-                className="hover:text-primary transition-colors px-1 py-0.5 rounded-md hover:bg-bg-hover"
+                className="hover:text-primary active:text-primary-active transition-colors px-1 py-0.5 rounded-lg hover:bg-bg-hover"
               >
                 {format(currentMonth, 'yyyy')}
               </button>
@@ -185,7 +185,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             onClick={() => handleMonthSelect(m.index)}
             className={`
               h-12 text-sm rounded-xl transition-all capitalize
-              ${currentMonth.getMonth() === m.index ? 'bg-primary text-white font-bold' : 'hover:bg-bg-hover text-text-primary'}
+              ${currentMonth.getMonth() === m.index ? 'bg-primary text-text-on-primary font-bold' : 'hover:bg-bg-hover active:bg-bg-active text-text-primary'}
             `}
           >
             {m.name}
@@ -208,7 +208,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             onClick={() => handleYearSelect(y)}
             className={`
               h-12 text-sm rounded-xl transition-all
-              ${centerYear === y ? 'bg-primary text-white font-bold' : 'hover:bg-bg-hover text-text-primary'}
+              ${centerYear === y ? 'bg-primary text-text-on-primary font-bold' : 'hover:bg-bg-hover active:bg-bg-active text-text-primary'}
             `}
           >
             {y}
@@ -255,7 +255,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             className={`
               relative h-10 w-full flex items-center justify-center text-sm transition-all rounded-lg
               ${!isCurrentMonth ? 'text-text-tertiary opacity-40' : 'text-text-primary'}
-              ${isSelected ? 'bg-primary text-white font-bold shadow-md' : 'hover:bg-bg-hover'}
+              ${isSelected ? 'bg-primary text-text-on-primary font-bold shadow-md' : 'hover:bg-bg-hover active:bg-bg-active'}
               ${isToday(d) && !isSelected ? 'text-primary font-bold' : ''}
             `}
           >

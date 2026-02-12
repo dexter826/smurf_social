@@ -40,7 +40,7 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
     const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
     return parts.map((part, i) => 
       part.toLowerCase() === term.toLowerCase() 
-        ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-600/50 rounded px-0.5">{part}</mark>
+        ? <mark key={i} className="bg-warning-light dark:bg-warning/30 rounded px-0.5">{part}</mark>
         : part
     );
   };

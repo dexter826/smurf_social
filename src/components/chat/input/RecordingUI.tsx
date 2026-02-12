@@ -22,7 +22,7 @@ export const RecordingUI: React.FC<RecordingUIProps> = ({
   return (
     <div className="flex-1 flex items-center justify-between bg-bg-secondary rounded-2xl px-4 py-3 border border-primary animate-pulse-soft">
       <div className="flex items-center gap-2 text-primary font-medium">
-        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+        <div className="w-2 h-2 rounded-full bg-error animate-pulse" />
         <span>{formatTime(duration)}</span>
       </div>
       <div className="flex items-center gap-2">

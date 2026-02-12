@@ -124,7 +124,7 @@ export const Select: React.FC<SelectProps> = ({
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   className={`
-                    w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors font-normal hover:bg-bg-hover
+                    w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors font-normal hover:bg-bg-hover active:bg-bg-active
                     ${option.value === value 
                       ? 'bg-primary-light text-primary font-medium' 
                       : 'text-text-primary'

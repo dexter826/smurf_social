@@ -13,7 +13,7 @@ interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
   size?: "sm" | "md" | "lg";
 }
 
-const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover outline-none focus-visible:ring focus-visible:ring-primary/20 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
+const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover active:bg-bg-active outline-none focus-visible:ring focus-visible:ring-primary/20 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
 
 const iconVariants = {
   primary: "text-primary hover:text-primary-hover",
@@ -28,16 +28,17 @@ const iconButtonSizes = {
   lg: "w-10 h-10",
 };
 
-export const IconButton: React.FC<IconButtonProps> = ({
+export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(({
   icon,
   variant = "secondary",
   size = "md",
   className = "",
   disabled,
   ...props
-}) => {
+}, ref) => {
   return (
     <button
+      ref={ref}
       className={`${baseStyle} ${iconVariants[variant]} ${iconButtonSizes[size]} ${className}`}
       disabled={disabled}
       {...props}
@@ -45,5 +46,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
       {icon}
     </button>
   );
-};
+});
+
+IconButton.displayName = "IconButton";
 

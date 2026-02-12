@@ -133,7 +133,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
                     e.stopPropagation();
                     onRemoveFromHistory(item.id);
                   }}
-                  className="text-text-tertiary hover:opacity-100 opacity-0 group-hover:opacity-100 hover:bg-bg-tertiary rounded-full"
+                  className="text-text-tertiary opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-bg-tertiary active:bg-bg-active rounded-full transition-opacity"
                   icon={<X size={14} />}
                 />
               </div>

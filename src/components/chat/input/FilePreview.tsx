@@ -61,7 +61,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             {!isSending && (
               <IconButton
                 onClick={() => onRemove(index)}
-                className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 z-20"
+                className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 z-20 transition-opacity"
                 icon={<X size={14} />}
                 size="sm"
               />
