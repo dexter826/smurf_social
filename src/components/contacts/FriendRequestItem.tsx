@@ -33,8 +33,8 @@ const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-bg-hover active:bg-bg-active rounded-xl first:rounded-t-xl last:rounded-b-xl transition-colors border-b border-divider last:border-0">
-      <div className="flex items-center gap-3 flex-1">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-bg-hover active:bg-bg-active rounded-xl first:rounded-t-xl last:rounded-b-xl transition-colors border-b border-divider last:border-0 gap-4">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
         <UserAvatar 
           userId={user.id} 
           src={user.avatar} 
@@ -43,15 +43,15 @@ const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
           initialStatus={user.status} 
           onClick={handleProfileClick}
         />
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h3 
-            className="font-semibold text-text-primary cursor-pointer hover:underline"
+            className="font-semibold text-text-primary cursor-pointer hover:underline truncate"
             onClick={handleProfileClick}
           >
             {user.name}
           </h3>
           {request.message && (
-            <p className="text-sm text-text-secondary mt-1">"{request.message}"</p>
+            <p className="text-sm text-text-secondary mt-1 line-clamp-2">"{request.message}"</p>
           )}
           <p className="text-xs text-text-tertiary mt-1 flex items-center gap-1">
             <Clock size={12} />
@@ -60,10 +60,11 @@ const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 sm:shrink-0">
         {type === 'received' && (
           <>
             <Button
+              className="flex-1 sm:flex-none"
               variant="primary"
               size="sm"
               icon={<Check size={16} />}
@@ -73,6 +74,7 @@ const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
               Chấp nhận
             </Button>
             <Button
+              className="flex-1 sm:flex-none"
               variant="secondary"
               size="sm"
               icon={<X size={16} />}
@@ -85,6 +87,7 @@ const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
         )}
         {type === 'sent' && (
           <Button
+            className="flex-1 sm:flex-none"
             variant="secondary"
             size="sm"
             onClick={() => onCancel?.(request.id)}
