@@ -96,7 +96,7 @@ export const AppLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `px-5 h-11 flex items-center justify-center rounded-xl transition-all duration-200 relative group ${
+                `px-5 h-12 flex items-center justify-center rounded-xl transition-all duration-200 relative group ${
                   isActive 
                   ? 'bg-bg-secondary text-primary shadow-sm' 
                   : 'text-text-tertiary hover:bg-bg-secondary/70 hover:text-text-primary'
@@ -181,7 +181,7 @@ export const AppLayout: React.FC = () => {
 
       {/* Mobile Navigation */}
       {!isChatRoom && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe transition-theme shadow-sm">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-16 z-50 pb-safe transition-theme shadow-sm">
           {navItems.filter(item => item.to !== '/admin').map((item) => (
           <NavLink
             key={item.to}

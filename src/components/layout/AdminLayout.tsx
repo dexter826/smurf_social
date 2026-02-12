@@ -45,7 +45,7 @@ export const AdminLayout: React.FC = () => {
           
           <button 
             onClick={() => navigate('/')}
-            className="w-full h-11 flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all mb-4"
+            className="w-full h-10 flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all mb-4"
           >
             <ChevronLeft size={20} />
             Quay lại App
@@ -87,7 +87,7 @@ export const AdminLayout: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-3 px-4 py-4 mt-2">
-            <UserAvatar src={user?.avatar} name={user?.name} size="md" />
+            <UserAvatar userId={user?.id || ''} src={user?.avatar} name={user?.name} size="md" />
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-bold text-text-primary truncate">{user?.name}</span>
               <span className="text-[11px] text-text-tertiary truncate">Administrator</span>
@@ -99,7 +99,7 @@ export const AdminLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden h-14 bg-bg-primary border-b border-border-light flex items-center justify-between px-4 z-40">
+        <header className="md:hidden h-16 bg-bg-primary border-b border-border-light flex items-center justify-between px-4 z-40">
           <button 
             onClick={() => navigate('/')}
             className="p-2 text-text-tertiary hover:text-primary active:text-primary-active"

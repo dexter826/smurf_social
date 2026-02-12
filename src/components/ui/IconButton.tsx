@@ -23,9 +23,9 @@ const iconVariants = {
 };
 
 const iconButtonSizes = {
-  sm: "w-8 h-8",
-  md: "w-9 h-9",
-  lg: "w-10 h-10",
+  sm: "w-9 h-9",
+  md: "w-10 h-10",
+  lg: "w-12 h-12",
 };
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(({

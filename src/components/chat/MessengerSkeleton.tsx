@@ -27,7 +27,7 @@ export const MessengerSkeleton: React.FC = () => {
 
       {/* Main Chat Skeleton */}
       <div className="hidden md:flex flex-1 flex-col bg-bg-secondary">
-        <div className="h-[72px] px-4 border-b border-border-light bg-bg-primary flex items-center justify-between">
+        <div className="h-16 px-4 border-b border-border-light bg-bg-primary flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Skeleton variant="circle" width={40} height={40} />
             <div className="space-y-1">

@@ -72,7 +72,7 @@ export const MobileMenuPage: React.FC = () => {
             onClick={() => navigate('/profile')}
             className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
           >
-            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
               <UserIcon size={22} />
             </div>
             <div className="flex-1 text-left">
@@ -87,7 +87,7 @@ export const MobileMenuPage: React.FC = () => {
             onClick={() => navigate('/settings')}
             className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
           >
-            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
+            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               <Settings size={22} />
             </div>
             <div className="flex-1 text-left">
@@ -102,7 +102,7 @@ export const MobileMenuPage: React.FC = () => {
             onClick={toggleTheme}
             className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
           >
-            <div className="w-11 h-11 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
+            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
             </div>
             <div className="flex-1 text-left">
@@ -120,7 +120,7 @@ export const MobileMenuPage: React.FC = () => {
               onClick={() => navigate('/admin')}
               className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
             >
-              <div className="w-11 h-11 flex items-center justify-center rounded-full bg-warning/10 text-warning">
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-warning/10 text-warning">
                 <Shield size={22} />
               </div>
               <div className="flex-1 text-left">
@@ -140,7 +140,7 @@ export const MobileMenuPage: React.FC = () => {
             onClick={() => setShowLogoutConfirm(true)}
             className="!justify-start !p-3.5 !h-auto !rounded-xl !bg-bg-primary hover:!bg-error/5 !border !border-error/20 !text-error"
             icon={
-              <div className="w-11 h-11 flex items-center justify-center rounded-full bg-error/10 text-error">
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-error/10 text-error">
                 <LogOut size={22} />
               </div>
             }
@@ -151,7 +151,7 @@ export const MobileMenuPage: React.FC = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-[60px] z-50 pb-safe shadow-sm">
+      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-16 z-50 pb-safe shadow-sm">
         {navItems.map((item) => (
           <NavLink
             key={item.to}

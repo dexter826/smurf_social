@@ -29,7 +29,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
   return (
     <>
       {showStats && (hasStats ? (
-        <div className={statsClassName || "px-4 py-1 flex justify-between items-center border-b border-border-light min-h-[40px]"}>
+        <div className={statsClassName || "px-4 py-1 flex justify-between items-center border-b border-border-light h-10"}>
           <div className="flex items-center gap-1.5">
             <ReactionDisplay reactions={reactions} variant="minimal" onClick={onViewReactions} />
           </div>

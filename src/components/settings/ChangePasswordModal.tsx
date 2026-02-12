@@ -3,7 +3,7 @@ import { Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '../ui';
+import { Button, Input, Modal } from '../ui';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
@@ -71,130 +71,122 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-overlay backdrop-blur-sm">
-      <div className="w-full max-w-md bg-bg-primary rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-border-light">
-          <h2 className="text-xl font-bold text-text-primary">Đổi mật khẩu</h2>
-          <p className="text-sm text-text-tertiary mt-1">
-            Vui lòng nhập mật khẩu hiện tại và mật khẩu mới của bạn.
-          </p>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Đổi mật khẩu"
+      maxWidth="md"
+      footer={
+        <div className="flex items-center gap-3 w-full">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            className="flex-1"
+            disabled={isLoading}
+          >
+            Hủy
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            onClick={handleSubmit(onSubmit)}
+            className="flex-1"
+            isLoading={isLoading}
+            disabled={success}
+          >
+            Lưu thay đổi
+          </Button>
         </div>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-text-tertiary">
+          Vui lòng nhập mật khẩu hiện tại và mật khẩu mới của bạn.
+        </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-          {(error || Object.keys(errors).length > 0) && (
-            <div className="flex flex-col gap-1.5 p-3 bg-error/10 border border-error/20 rounded-xl text-error text-sm">
-              <div className="flex items-center gap-2">
-                <AlertCircle size={18} />
-                <span>{error || "Vui lòng kiểm tra lại thông tin:"}</span>
-              </div>
-              {Object.values(errors).map((err, i) => (
-                <p key={i} className="pl-7 text-xs">• {err?.message}</p>
-              ))}
+        {(error || Object.keys(errors).length > 0) && (
+          <div className="flex flex-col gap-1.5 p-3 bg-error/10 border border-error/20 rounded-xl text-error text-sm">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={18} />
+              <span>{error || "Vui lòng kiểm tra lại thông tin:"}</span>
             </div>
-          )}
+            {Object.values(errors).map((err, i) => (
+              <p key={i} className="pl-7 text-xs">• {err?.message}</p>
+            ))}
+          </div>
+        )}
 
-          {success && (
-            <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-xl text-success text-sm">
-              <CheckCircle2 size={18} />
-              <span>Đổi mật khẩu thành công!</span>
-            </div>
-          )}
+        {success && (
+          <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-xl text-success text-sm">
+            <CheckCircle2 size={18} />
+            <span>Đổi mật khẩu thành công!</span>
+          </div>
+        )}
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary px-1">Mật khẩu hiện tại</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
-              <input
-                type={showPasswords ? "text" : "password"}
-                {...register('currentPassword')}
-                autoComplete="current-password"
-                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary outline-none focus-visible:ring focus-visible:ring-offset-1 transition-all duration-base ${
-                  errors.currentPassword ? 'border-error focus-visible:ring-error/20' : 'border-border-light focus-visible:ring-primary/20'
-                }`}
-                placeholder="Nhập mật khẩu hiện tại"
-              />
+        <div className="space-y-4">
+          <Input
+            label="Mật khẩu hiện tại"
+            type={showPasswords ? "text" : "password"}
+            {...register('currentPassword')}
+            autoComplete="current-password"
+            placeholder="Nhập mật khẩu hiện tại"
+            icon={<Lock size={18} />}
+            error={errors.currentPassword?.message}
+            rightElement={
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
+                className="p-2 text-text-tertiary hover:text-text-primary transition-colors"
               >
                 {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </div>
-          </div>
+            }
+          />
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary px-1">Mật khẩu mới</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
-              <input
-                type={showPasswords ? "text" : "password"}
-                {...register('newPassword')}
-                autoComplete="new-password"
-                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary outline-none focus-visible:ring focus-visible:ring-offset-1 transition-all duration-base ${
-                  errors.newPassword ? 'border-error focus-visible:ring-error/20' : 'border-border-light focus-visible:ring-primary/20'
-                }`}
-                placeholder="Nhập mật khẩu mới"
-              />
+          <Input
+            label="Mật khẩu mới"
+            type={showPasswords ? "text" : "password"}
+            {...register('newPassword')}
+            autoComplete="new-password"
+            placeholder="Nhập mật khẩu mới"
+            icon={<Lock size={18} />}
+            error={errors.newPassword?.message}
+            rightElement={
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
+                className="p-2 text-text-tertiary hover:text-text-primary transition-colors"
               >
                 {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </div>
-          </div>
+            }
+          />
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary px-1">Xác nhận mật khẩu mới</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
-              <input
-                type={showPasswords ? "text" : "password"}
-                {...register('confirmPassword')}
-                autoComplete="new-password"
-                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary outline-none focus-visible:ring focus-visible:ring-offset-1 transition-all duration-base ${
-                  errors.confirmPassword ? 'border-error focus-visible:ring-error/20' : 'border-border-light focus-visible:ring-primary/20'
-                }`}
-                placeholder="Xác nhận mật khẩu mới"
-              />
+          <Input
+            label="Xác nhận mật khẩu mới"
+            type={showPasswords ? "text" : "password"}
+            {...register('confirmPassword')}
+            autoComplete="new-password"
+            placeholder="Xác nhận mật khẩu mới"
+            icon={<Lock size={18} />}
+            error={errors.confirmPassword?.message}
+            rightElement={
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
+                className="p-2 text-text-tertiary hover:text-text-primary transition-colors"
               >
                 {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 mt-6">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              className="flex-1"
-              disabled={isLoading}
-            >
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              className="flex-1"
-              isLoading={isLoading}
-              disabled={success}
-            >
-              Lưu thay đổi
-            </Button>
-          </div>
-        </form>
+            }
+          />
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

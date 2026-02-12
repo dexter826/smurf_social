@@ -218,7 +218,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               <IconButton
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="group rounded-full w-9 h-9 md:w-10 md:h-10"
+                className="group rounded-full"
                 title="Ảnh"
                 disabled={isSubmitting || isUploading}
                 icon={<ImageIcon className="text-success group-hover:scale-110 transition-transform" size={20} />}
@@ -227,7 +227,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               <IconButton
                 type="button"
                 onClick={() => videoInputRef.current?.click()}
-                className="group rounded-full w-9 h-9 md:w-10 md:h-10"
+                className="group rounded-full"
                 title="Video"
                 disabled={isSubmitting || isUploading}
                 icon={<Video className="text-info group-hover:scale-110 transition-transform" size={20} />}
@@ -255,7 +255,8 @@ export const PostModal: React.FC<PostModalProps> = ({
 
           <Button
             variant="primary"
-            className="w-full h-10 md:h-11 text-[15px] font-bold shadow-sm"
+            size="md"
+            className="w-full text-[15px] font-bold shadow-sm"
             onClick={handleSubmit(onFormSubmit)}
             disabled={isSubmitting || isUploading || !isValid}
             isLoading={isSubmitting}

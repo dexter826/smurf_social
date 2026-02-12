@@ -32,7 +32,7 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   onMarkAllRead,
 }) => {
   return (
-    <div className="flex-shrink-0 px-3 h-[72px] flex items-center border-b border-border-light gap-1.5">
+    <div className="flex-shrink-0 px-3 h-16 flex items-center border-b border-border-light gap-1.5">
       <div className="flex items-center gap-1.5 flex-1 min-w-0">
         <div className="relative flex-1 flex items-center">
           <Input
