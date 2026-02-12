@@ -143,7 +143,7 @@ const LoginPage: React.FC = () => {
       {/* Cánh trái: Branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#4b8df8] to-[#0047b3] relative overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-[#000]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-black/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex items-center">
           <img src="/logo_text_white.png" alt="Smurfy" className="h-12 object-contain" />

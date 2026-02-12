@@ -45,7 +45,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
                 <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-2">
                    <div 
-                      className="bg-primary h-full transition-all duration-300"
+                      className="bg-primary h-full transition-all duration-slow"
                       style={{ width: `${uploadProgress[message.id].progress}%` }}
                    />
                 </div>
@@ -88,7 +88,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
              <div className="absolute inset-0 bg-bg-primary/80 flex flex-col items-center justify-center p-2 rounded-lg">
                 <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden mb-1">
                    <div 
-                      className="bg-primary h-full transition-all duration-300"
+                      className="bg-primary h-full transition-all duration-slow"
                       style={{ width: `${uploadProgress[message.id].progress}%` }}
                    />
                 </div>
@@ -160,7 +160,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
                 href={href} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className={`underline break-all transition-opacity hover:opacity-80 ${isMe ? 'text-blue-200' : 'text-primary'}`}
+                className={`underline break-all transition-opacity hover:opacity-80 ${isMe ? 'text-white/90' : 'text-primary'}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {part}

@@ -37,7 +37,7 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   }
 
   return (
-    <div className="absolute bottom-2 left-4 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="absolute bottom-2 left-4 z-10 animate-in fade-in slide-in-from-bottom-2 duration-slow">
       <span className="text-xs text-text-tertiary italic flex items-center gap-1">
         {typingText}
       </span>

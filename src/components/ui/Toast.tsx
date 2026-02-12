@@ -18,7 +18,7 @@ export const ToastContainer: React.FC = () => {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto flex items-center gap-3 bg-bg-primary border border-border-light px-4 py-3 rounded-xl shadow-dropdown animate-in fade-in slide-in-from-top-2 duration-300 w-full max-w-md transition-theme"
+          className="pointer-events-auto flex items-center gap-3 bg-bg-primary border border-border-light px-4 py-3 rounded-xl shadow-dropdown animate-in fade-in slide-in-from-top-2 duration-slow w-full max-w-md transition-theme"
           role="alert"
         >
           <div className="shrink-0">

@@ -9,17 +9,17 @@ export const iconSizes = {
 
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: React.ReactNode;
-  variant?: "default" | "primary" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
 }
 
-const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover outline-none focus:outline-none focus:ring-0 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
+const baseStyle = "inline-flex items-center justify-center rounded-xl transition-all hover:bg-bg-hover outline-none focus-visible:ring focus-visible:ring-primary/20 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
 
 const iconVariants = {
-  default: "text-text-secondary hover:text-text-primary",
   primary: "text-primary hover:text-primary-hover",
+  secondary: "text-text-secondary hover:text-text-primary",
+  ghost: "text-text-tertiary hover:text-text-primary",
   danger: "text-error hover:text-error",
-  ghost: "text-text-tertiary hover:text-text-primary hover:bg-bg-hover",
 };
 
 const iconButtonSizes = {
@@ -30,7 +30,7 @@ const iconButtonSizes = {
 
 export const IconButton: React.FC<IconButtonProps> = ({
   icon,
-  variant = "default",
+  variant = "secondary",
   size = "md",
   className = "",
   disabled,

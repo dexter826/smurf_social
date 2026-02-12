@@ -91,7 +91,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
           <LazyImage
             src={imageUrl}
             alt="sent"
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-slow"
           />
           {isOverlay && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold">

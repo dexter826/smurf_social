@@ -150,7 +150,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
         onClick={onClose}
         className={`
           fixed inset-0 bg-bg-overlay backdrop-blur-sm z-40 md:hidden
-          transition-opacity duration-300
+          transition-opacity duration-slow
           ${isAnimating ? 'opacity-100' : 'opacity-0'}
         `}
       />
@@ -161,7 +161,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
           fixed md:relative right-0 top-0 h-full z-50
           w-full md:w-[320px] bg-bg-primary border-l border-border-light
           flex flex-col shadow-xl
-          transition-transform duration-300 ease-out
+          transition-transform duration-slow ease-out
           ${isAnimating ? 'translate-x-0' : 'translate-x-full'}
         `}
       >

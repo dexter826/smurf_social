@@ -55,7 +55,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const handleCloseReactions = useCallback(() => setIsReactionsModalOpen(false), []);
 
   return (
-    <div className={`bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-300 relative ${isUploading ? 'opacity-85' : 'opacity-100'}`}>
+    <div className={`bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-base relative ${isUploading ? 'opacity-85' : 'opacity-100'}`}>
       {/* Thanh tiến trình mỏng ở đỉnh card */}
       {isUploading && (
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-bg-secondary z-20">

@@ -293,8 +293,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           className={`
             w-full h-11 px-4 flex items-center justify-between rounded-xl border outline-none transition-all
             bg-bg-primary text-sm
-            ${isOpen ? 'border-primary ring-4 ring-primary-light/30' : 'border-border-light hover:border-primary'}
-            ${error ? 'border-error ring-4 ring-error/10' : ''}
+            ${isOpen ? 'border-primary ring ring-primary/20' : 'border-border-light hover:border-primary'}
+            ${error ? 'border-error ring ring-error/10' : ''}
             ${disabled ? 'opacity-50 cursor-not-allowed bg-bg-secondary' : 'cursor-pointer'}
           `}
         >

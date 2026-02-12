@@ -107,7 +107,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             </h3>
             {!conversation.isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="sm" />}
             {showMessageRequestBadge && isMessageRequest && (
-              <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200 flex-shrink-0">
+              <span className="text-[10px] text-warning bg-warning-light px-1.5 py-0.5 rounded-full border border-warning/30 flex-shrink-0">
                 Tin nhắn chờ
               </span>
             )}

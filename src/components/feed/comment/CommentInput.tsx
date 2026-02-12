@@ -142,7 +142,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             }}
             placeholder={placeholder}
             rows={1}
-            className="w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-sm resize-none py-1 placeholder:text-text-tertiary max-h-32 custom-scrollbar"
+            className="w-full bg-transparent border-none outline-none text-sm resize-none py-1 placeholder:text-text-tertiary max-h-32 custom-scrollbar"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

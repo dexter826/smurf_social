@@ -3,6 +3,76 @@
 @tailwind utilities;
 
 :root {
+  /* === Spacing Scale (4px base, 0.25rem) === */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;
+  /* 4px */
+  --spacing-2: 0.5rem;
+  /* 8px */
+  --spacing-3: 0.75rem;
+  /* 12px */
+  --spacing-4: 1rem;
+  /* 16px */
+  --spacing-5: 1.25rem;
+  /* 20px */
+  --spacing-6: 1.5rem;
+  /* 24px */
+  --spacing-8: 2rem;
+  /* 32px */
+  --spacing-10: 2.5rem;
+  /* 40px */
+  --spacing-12: 3rem;
+  /* 48px */
+
+  /* === Typography Scale === */
+  --font-size-xs: 0.6875rem;
+  /* 11px */
+  --font-size-sm: 0.875rem;
+  /* 14px */
+  --font-size-base: 1rem;
+  /* 16px */
+  --font-size-lg: 1.125rem;
+  /* 18px */
+  --font-size-xl: 1.25rem;
+  /* 20px */
+  --font-size-2xl: 1.5rem;
+  /* 24px */
+  --font-size-3xl: 1.875rem;
+  /* 30px */
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+
+  /* === Border Radius Scale === */
+  --radius-sm: 0.5rem;
+  /* 8px */
+  --radius-md: 0.75rem;
+  /* 12px */
+  --radius-lg: 1rem;
+  /* 16px */
+  --radius-xl: 1.25rem;
+  /* 20px */
+  --radius-2xl: 1.5rem;
+  /* 24px */
+  --radius-full: 9999px;
+
+  /* === Transitions === */
+  --transition-fast: 150ms;
+  --transition-base: 200ms;
+  --transition-slow: 300ms;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* === Focus Ring === */
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--color-primary);
+  --focus-ring-opacity: 0.3;
+
   /* === Brand Colors === */
   --color-primary: #0068ff;
   --color-primary-hover: #0056d6;
@@ -59,7 +129,17 @@
   --badge-bg: #ef4444;
   --badge-text: #ffffff;
 
+  /* === Surface Tokens === */
+  --surface-base: var(--bg-primary);
+  --surface-elevated: var(--bg-secondary);
+  --surface-overlay: var(--bg-tertiary);
+
+  /* === Shadow System === */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 8px 24px 0 rgba(0, 0, 0, 0.15);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
 
   /* === Z-Index System === */
@@ -131,11 +211,18 @@
   --badge-bg: #f85149;
   --badge-text: #ffffff;
 
-  /* === Shadows (Tùy chỉnh cho dark mode) === */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.5);
-  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.6);
+  /* === Surface Tokens === */
+  --surface-base: var(--bg-primary);
+  --surface-elevated: var(--bg-secondary);
+  --surface-overlay: var(--bg-tertiary);
+
+  /* === Shadow System (darker for dark mode) === */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 8px 24px 0 rgba(0, 0, 0, 0.8);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.8);
 }
 
 .shadow-soft-md {
