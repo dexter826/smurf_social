@@ -168,14 +168,24 @@ export const UsersView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-text-primary truncate">{user.name}</span>
                       {user.role === 'admin' && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
-                          Quản trị viên
-                        </span>
+                        <div className="flex items-center">
+                          <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                            Quản trị viên
+                          </span>
+                          <span className="sm:hidden p-1 rounded bg-primary/10 text-primary" title="Quản trị viên">
+                            <Shield size={10} />
+                          </span>
+                        </div>
                       )}
                       {user.status === UserStatus.BANNED && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-error/10 text-error border border-error/20">
-                          ĐÃ KHÓA
-                        </span>
+                        <div className="flex items-center">
+                          <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-error/10 text-error border border-error/20 uppercase">
+                            Đã khóa
+                          </span>
+                          <span className="sm:hidden p-1 rounded bg-error/10 text-error" title="Đã khóa">
+                            <Lock size={10} />
+                          </span>
+                        </div>
                       )}
                     </div>
                     <div className="text-xs text-text-tertiary truncate">{user.email}</div>
