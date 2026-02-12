@@ -118,7 +118,7 @@ export const MobileMenuPage: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-warning/30"
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover transition-colors border border-border-light"
             >
               <div className="w-11 h-11 flex items-center justify-center rounded-full bg-warning/10 text-warning">
                 <Shield size={22} />
