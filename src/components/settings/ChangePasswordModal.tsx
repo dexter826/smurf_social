@@ -82,7 +82,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           {(error || Object.keys(errors).length > 0) && (
-            <div className="flex flex-col gap-1.5 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm">
+            <div className="flex flex-col gap-1.5 p-3 bg-error/10 border border-error/20 rounded-xl text-error text-sm">
               <div className="flex items-center gap-2">
                 <AlertCircle size={18} />
                 <span>{error || "Vui lòng kiểm tra lại thông tin:"}</span>
@@ -94,7 +94,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
           )}
 
           {success && (
-            <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-500 text-sm">
+            <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-xl text-success text-sm">
               <CheckCircle2 size={18} />
               <span>Đổi mật khẩu thành công!</span>
             </div>
@@ -108,8 +108,8 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 type={showPasswords ? "text" : "password"}
                 {...register('currentPassword')}
                 autoComplete="current-password"
-                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
-                  errors.currentPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
+                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary outline-none focus-visible:ring focus-visible:ring-offset-1 transition-all duration-base ${
+                  errors.currentPassword ? 'border-error focus-visible:ring-error/20' : 'border-border-light focus-visible:ring-primary/20'
                 }`}
                 placeholder="Nhập mật khẩu hiện tại"
               />
@@ -132,8 +132,8 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 type={showPasswords ? "text" : "password"}
                 {...register('newPassword')}
                 autoComplete="new-password"
-                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
-                  errors.newPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
+                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary outline-none focus-visible:ring focus-visible:ring-offset-1 transition-all duration-base ${
+                  errors.newPassword ? 'border-error focus-visible:ring-error/20' : 'border-border-light focus-visible:ring-primary/20'
                 }`}
                 placeholder="Nhập mật khẩu mới"
               />
@@ -156,8 +156,8 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 type={showPasswords ? "text" : "password"}
                 {...register('confirmPassword')}
                 autoComplete="new-password"
-                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary focus:outline-none focus:ring-2 transition-all ${
-                  errors.confirmPassword ? 'border-red-500 focus:ring-red-500/50' : 'border-border-light focus:ring-primary/50'
+                className={`w-full pl-10 pr-10 py-2.5 bg-bg-secondary border rounded-xl text-text-primary outline-none focus-visible:ring focus-visible:ring-offset-1 transition-all duration-base ${
+                  errors.confirmPassword ? 'border-error focus-visible:ring-error/20' : 'border-border-light focus-visible:ring-primary/20'
                 }`}
                 placeholder="Xác nhận mật khẩu mới"
               />

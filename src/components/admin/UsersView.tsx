@@ -186,14 +186,14 @@ export const UsersView: React.FC = () => {
                   <IconButton
                     icon={<Eye size={18} />}
                     onClick={() => navigate(`/profile/${user.id}`)}
-                    variant="default"
+                    variant="secondary"
                     title="Xem chi tiết"
                   />
                   {user.status === UserStatus.BANNED ? (
                     <IconButton
                       icon={<Unlock size={18} />}
                       onClick={() => handleUnbanClick(user.id, user.name)}
-                      variant="default"
+                      variant="secondary"
                       className="text-error hover:bg-error/10"
                       title="Mở khóa tài khoản"
                     />
@@ -201,7 +201,7 @@ export const UsersView: React.FC = () => {
                     <IconButton
                       icon={<Lock size={18} />}
                       onClick={() => handleBanClick(user.id, user.name)}
-                      variant="default"
+                      variant="secondary"
                       className="text-text-tertiary hover:text-error hover:bg-error/10"
                       title="Khóa tài khoản"
                     />

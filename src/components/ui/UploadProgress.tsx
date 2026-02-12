@@ -35,7 +35,7 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
       
       <div className="w-full h-1.5 bg-bg-secondary rounded-full overflow-hidden">
         <div
-          className={`h-full transition-all duration-300 rounded-full ${
+          className={`h-full transition-all duration-slow rounded-full ${
             isComplete ? 'bg-success' : 'bg-primary'
           }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
@@ -83,7 +83,7 @@ export const MultiUploadProgress: React.FC<MultiUploadProgressProps> = ({
       
       <div className="w-full h-2 bg-bg-secondary rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary transition-all duration-300 rounded-full"
+          className="h-full bg-primary transition-all duration-slow rounded-full"
           style={{ width: `${Math.min(totalProgress, 100)}%` }}
         />
       </div>

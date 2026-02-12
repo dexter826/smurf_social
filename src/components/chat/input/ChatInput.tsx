@@ -298,7 +298,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               </div>
             </div>
           </div>
-          <IconButton onClick={onCancelAction} icon={<X size={14} />} size="sm" variant="default" />
+          <IconButton onClick={onCancelAction} icon={<X size={14} />} size="sm" variant="secondary" />
         </div>
       )}
 

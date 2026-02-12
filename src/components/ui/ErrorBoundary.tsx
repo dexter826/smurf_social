@@ -40,7 +40,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             return (
                 <div className="flex items-center justify-center min-h-screen bg-gray-50">
                     <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-                        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
+                        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-error-light rounded-full">
                             <svg
                                 className="w-6 h-6 text-red-600"
                                 fill="none"
@@ -85,7 +85,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                         )}
                         <button
                             onClick={() => window.location.reload()}
-                            className="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                            className="mt-6 w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-hover transition-colors"
                         >
                             Tải lại trang
                         </button>

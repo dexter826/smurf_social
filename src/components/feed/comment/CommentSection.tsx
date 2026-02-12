@@ -224,7 +224,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   }, [currentUser.id]);
 
   return (
-    <div className={`flex flex-col min-h-0 transition-all duration-300 ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
+    <div className={`flex flex-col min-h-0 transition-all duration-base ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {header && <div className="bg-bg-primary">{header}</div>}
 

@@ -72,7 +72,7 @@ export const Modal: React.FC<ModalProps> = ({
         ${isFullScreenAlways 
           ? 'h-full max-h-screen rounded-none' 
           : (isFullScreenMobile
-            ? 'h-full md:h-auto max-md:max-h-screen md:max-h-[90vh] rounded-none md:rounded-2xl animate-in slide-in-from-bottom md:zoom-in-95 duration-300'
+            ? 'h-full md:h-auto max-md:max-h-screen md:max-h-[90vh] rounded-none md:rounded-2xl animate-in slide-in-from-bottom md:zoom-in-95 duration-slow'
             : 'rounded-2xl h-auto md:h-auto md:max-h-[90vh] animate-in slide-in-from-bottom md:zoom-in-95 duration-200'
           )}
         ${maxWidthClasses[maxWidth]} ${className}
@@ -119,7 +119,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'danger' | 'primary' | 'success' | 'warning';
+  variant?: 'primary' | 'danger';
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -179,11 +179,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               <AlertTriangle size={24} />
             </div>
           )}
-          {variant === 'warning' && (
-            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3">
-              <AlertTriangle size={24} />
-            </div>
-          )}
+
           {variant === 'primary' && (
             <div className="w-12 h-12 bg-primary-light text-primary rounded-full flex items-center justify-center mb-3">
               <Info size={24} />

@@ -111,7 +111,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           ref={innerRef}
           id={inputId}
           className={`
-            block w-full bg-transparent outline-none border-none focus:ring-0 text-base sm:text-[15px] leading-relaxed resize-none
+            block w-full bg-transparent outline-none border-none text-base sm:text-[15px] leading-relaxed resize-none
             ${renderOverlay ? 'text-transparent caret-text-primary selection:bg-primary/20 selection:text-transparent' : 'text-text-primary'}
             placeholder:text-text-tertiary
             ${icon ? 'pl-11' : 'pl-4'} 

@@ -65,7 +65,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         alt={alt}
         onLoad={handleLoad}
         onError={handleError}
-        className={`transition-opacity duration-300 ${
+        className={`transition-opacity duration-slow ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         } ${className}`}
         loading="lazy"

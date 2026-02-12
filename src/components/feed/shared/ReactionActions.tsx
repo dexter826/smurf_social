@@ -66,7 +66,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             onMouseEnter={() => setShowReactions(true)}>
             <div className="flex items-center gap-2 transition-transform active:scale-95">
               {myReaction
-                ? <span className="text-xl animate-in zoom-in spin-in-12 duration-300">{myReaction}</span>
+                ? <span className="text-xl animate-in zoom-in spin-in-12 duration-slow">{myReaction}</span>
                 : <Heart size={20} className="group-hover:scale-110 transition-transform" />}
               <span className={`text-sm font-medium ${myReaction ? `text-${REACTION_LABELS[myReaction]}` : ''}`}>
                 {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}

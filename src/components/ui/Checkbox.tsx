@@ -15,8 +15,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({ label, className = '', id, .
           id={checkboxId}
           className={`
             peer h-4 w-4 cursor-pointer appearance-none rounded border border-border-light bg-bg-primary 
-            transition-all checked:bg-primary checked:border-primary focus:outline-none 
-            focus:ring-2 focus:ring-primary/20 hover:border-primary/50
+            transition-all checked:bg-primary checked:border-primary 
+            focus-visible:ring focus-visible:ring-primary/20 focus-visible:ring-offset-1
+            hover:border-primary/50
             ${className}
           `}
           {...props}

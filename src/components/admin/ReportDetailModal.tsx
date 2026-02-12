@@ -121,7 +121,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
   const reasonConfig = report ? REPORT_CONFIG.REASONS[report.reason as keyof typeof REPORT_CONFIG.REASONS] : null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[var(--z-modal)] flex items-center justify-center p-4">
       <div
         className="bg-bg-primary w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl border border-border-light flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
         onClick={(e) => e.stopPropagation()}
@@ -140,7 +140,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
           <IconButton
             icon={<X size={20} />}
             onClick={onClose}
-            variant="default"
+            variant="secondary"
             className="hover:bg-bg-secondary rounded-full"
           />
         </div>
@@ -351,7 +351,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
               {report.targetType === ReportType.USER ? (
                 <>
                   <Button
-                    variant="warning"
+                    variant="danger"
                     className="flex-1 rounded-xl font-bold"
                     onClick={() => { setActionType('warn'); setShowConfirm(true); }}
                   >

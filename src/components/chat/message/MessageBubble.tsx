@@ -363,7 +363,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
         title="Thu hồi tin nhắn"
         message="Tin nhắn này sẽ bị thu hồi đối với tất cả mọi người trong cuộc trò chuyện."
         confirmLabel="Thu hồi"
-        variant="warning"
+        variant="danger"
       />
     </>
   );
