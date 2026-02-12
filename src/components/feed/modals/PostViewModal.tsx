@@ -209,7 +209,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         {/* Panel noi dung va tuong tac */}
         <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 overflow-hidden ${hasMedia ? 'w-full lg:w-[460px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
           
-          <div className="p-4 md:p-5 border-b border-border-light flex items-center justify-between shrink-0 bg-bg-primary z-30">
+          <div className="w-full p-4 md:p-5 border-b border-border-light flex items-center shrink-0 bg-bg-primary z-30">
             <div className="flex gap-3 items-center flex-1 min-w-0">
               <UserAvatar 
                 userId={author?.id} 
@@ -236,11 +236,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0 ml-auto">
               {isOwner ? (
                 <Dropdown
                   trigger={<IconButton icon={<MoreHorizontal size={20} />} size="md" variant="ghost" />}
-                  className="w-52"
+                  menuClassName="z-[var(--z-popover)]"
                 >
                   <DropdownItem icon={<Edit size={18} />} label="Chỉnh sửa bài viết" onClick={() => onEdit?.(post.id)} />
                   <DropdownItem icon={<Trash2 size={18} />} label="Xóa bài viết" variant="danger" onClick={() => onDelete?.(post.id)} />
@@ -248,7 +248,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               ) : (
                 <Dropdown
                   trigger={<IconButton icon={<MoreHorizontal size={20} />} size="md" variant="ghost" />}
-                  className="w-52"
+                  menuClassName="z-[var(--z-popover)]"
                 >
                   <DropdownItem 
                     icon={<Flag size={18} />} 
