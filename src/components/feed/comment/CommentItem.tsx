@@ -83,7 +83,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
           `}>
             <div className="flex items-center gap-1.5 mb-1.5 flex-nowrap overflow-hidden">
               <h4
-                className="font-bold text-[13px] text-text-primary whitespace-nowrap cursor-pointer hover:underline leading-none"
+                className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline leading-none min-w-0"
                 onClick={onProfileNavigate}
               >
                 {author?.name || 'Người dùng'}
