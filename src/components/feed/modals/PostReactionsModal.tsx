@@ -89,17 +89,17 @@ export const PostReactionsModal: React.FC<PostReactionsModalProps> = ({
             <div className="overflow-y-auto py-2 custom-scrollbar">
               {friends.length > 0 ? (
                 friends.map(({ user, emoji }) => (
-                  <div 
-                    key={user.id} 
-                    className="flex items-center justify-between px-4 py-3 hover:bg-bg-secondary active:bg-bg-active transition-colors cursor-pointer"
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between px-4 py-3 hover:bg-bg-hover active:bg-bg-active transition-all duration-base cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <UserAvatar 
-                          userId={user.id} 
-                          src={user.avatar} 
-                          name={user.name} 
-                          size="md" 
+                        <UserAvatar
+                          userId={user.id}
+                          src={user.avatar}
+                          name={user.name}
+                          size="md"
                           showStatus={false}
                         />
                         <span className="absolute -bottom-1.5 -right-1.5 text-base">
@@ -117,7 +117,7 @@ export const PostReactionsModal: React.FC<PostReactionsModalProps> = ({
               {othersCount > 0 && (
                 <div className="px-4 py-4 text-center border-t border-border-light bg-bg-secondary/20">
                   <p className="text-sm text-text-secondary font-medium italic">
-                    {friends.length > 0 
+                    {friends.length > 0
                       ? `và ${othersCount} người khác đã bày tỏ cảm xúc`
                       : `${othersCount} người đã bày tỏ cảm xúc`}
                   </p>

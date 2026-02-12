@@ -11,20 +11,20 @@ interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   renderOverlay?: (value: string) => React.ReactNode;
 }
 
-export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({ 
+export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
   label,
-  icon, 
-  rightElement, 
-  className = '', 
-  containerClassName = '', 
-  error, 
+  icon,
+  rightElement,
+  className = '',
+  containerClassName = '',
+  error,
   id,
   autoResize = false,
   maxHeight = 120,
   onChange,
   value,
   renderOverlay,
-  ...props 
+  ...props
 }, ref) => {
   const innerRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -49,7 +49,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         // Assuming typical 1px border. 
         const widthDiff = innerRef.current.offsetWidth - innerRef.current.clientWidth;
         // If border is 1px each side, diff is 2px. Anything more is scrollbar.
-        const sbWidth = Math.max(0, widthDiff - 2); 
+        const sbWidth = Math.max(0, widthDiff - 2);
         setScrollbarWidth(sbWidth);
       }
     });
@@ -65,15 +65,15 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         </label>
       )}
       <div className={`
-        relative group transition-all overflow-hidden
-        bg-bg-primary border border-border-light
-        ${props.disabled ? 'bg-bg-secondary cursor-not-allowed opacity-60' : 'focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-light/30 transition-all'}
+        relative group overflow-hidden
+        bg-bg-primary border border-border-light transition-all duration-base
+        ${props.disabled ? 'opacity-50 bg-bg-secondary cursor-not-allowed' : 'focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/20'}
         ${!className.includes('rounded-') ? 'rounded-xl' : ''}
         ${error ? 'border-error ring-4 ring-error/10' : ''} 
         ${className}
       `}>
         {renderOverlay && (
-          <div 
+          <div
             aria-hidden="true"
             className={`
               absolute inset-0 w-full h-full pointer-events-none
@@ -94,7 +94,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
             ref={(el) => {
               overlayRef.current = el;
               if (el && innerRef.current) {
-                 el.scrollTop = innerRef.current.scrollTop;
+                el.scrollTop = innerRef.current.scrollTop;
               }
             }}
           >
@@ -103,7 +103,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         )}
 
         {icon && (
-          <div className="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none text-text-tertiary group-focus-within:text-primary transition-colors">
+          <div className="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none text-text-tertiary group-focus-within:text-primary transition-colors duration-base">
             {icon}
           </div>
         )}
@@ -124,11 +124,11 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
           rows={1}
           value={value}
           onScroll={(e) => {
-             const target = e.target as HTMLTextAreaElement;
-             if (overlayRef.current) {
-               overlayRef.current.scrollTop = target.scrollTop;
-             }
-             props.onScroll?.(e);
+            const target = e.target as HTMLTextAreaElement;
+            if (overlayRef.current) {
+              overlayRef.current.scrollTop = target.scrollTop;
+            }
+            props.onScroll?.(e);
           }}
           onChange={(e) => {
             onChange?.(e);

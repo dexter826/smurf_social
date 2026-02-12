@@ -26,17 +26,17 @@ const FriendItemInner: React.FC<FriendItemProps> = ({
   }, [onMessage, friend.id, navigate]);
 
   return (
-    <div 
-      className="relative flex items-center justify-between p-3 hover:bg-bg-hover rounded-lg first:rounded-t-xl last:rounded-b-xl transition-colors group border-b border-divider last:border-0 cursor-pointer"
+    <div
+      className="relative flex items-center justify-between p-3 hover:bg-bg-hover active:bg-bg-active rounded-lg first:rounded-t-xl last:rounded-b-xl transition-all duration-base group border-b border-divider last:border-0 cursor-pointer"
       onClick={handleMessage}
     >
       <div className="flex items-center gap-4 flex-1">
-        <UserAvatar 
-          userId={friend.id} 
-          src={friend.avatar} 
-          name={friend.name} 
-          size="md" 
-          initialStatus={friend.status} 
+        <UserAvatar
+          userId={friend.id}
+          src={friend.avatar}
+          name={friend.name}
+          size="md"
+          initialStatus={friend.status}
         />
         <div>
           <div className="flex items-center gap-1.5">
@@ -61,18 +61,18 @@ const FriendItemInner: React.FC<FriendItemProps> = ({
               <IconButton icon={<MoreVertical size={16} />} size="sm" />
             }
           >
-          <DropdownItem
-            icon={<UserIcon size={16} />}
-            label="Xem trang cá nhân"
-            onClick={() => navigate(`/profile/${friend.id}`)}
-          />
-          <DropdownItem
-            icon={<UserMinus size={16} />}
-            label="Hủy kết bạn"
-            variant="danger"
-            onClick={() => onUnfriend?.(friend.id)}
-          />
-        </Dropdown>
+            <DropdownItem
+              icon={<UserIcon size={16} />}
+              label="Xem trang cá nhân"
+              onClick={() => navigate(`/profile/${friend.id}`)}
+            />
+            <DropdownItem
+              icon={<UserMinus size={16} />}
+              label="Hủy kết bạn"
+              variant="danger"
+              onClick={() => onUnfriend?.(friend.id)}
+            />
+          </Dropdown>
         </div>
       </div>
     </div>

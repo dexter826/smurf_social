@@ -35,7 +35,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
           onClick={onClick}
         >
           <div
-            className="absolute inset-0 scale-110 blur-2xl opacity-30 grayscale pointer-events-none"
+            className="absolute inset-0 blur-2xl opacity-30 grayscale pointer-events-none"
             style={{ backgroundImage: `url(${item.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
           />
           {item.type === 'video' ? (
@@ -46,7 +46,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
               className="relative z-10 w-full h-auto max-h-[600px] object-contain"
             />
           ) : (
-            <LazyImage src={item.url} alt="" className="relative z-10 w-full h-auto max-h-[600px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" />
+            <LazyImage src={item.url} alt="" className="relative z-10 w-full h-auto max-h-[600px] object-contain transition-all duration-base" />
           )}
         </div>
       </div>
@@ -56,11 +56,10 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
   return (
     <div className="bg-bg-secondary relative select-none overflow-hidden">
       <div
-        className={`grid gap-0.5 aspect-[4/3] sm:aspect-video cursor-pointer ${
-          count === 2 ? 'grid-cols-2' :
+        className={`grid gap-0.5 aspect-[4/3] sm:aspect-video cursor-pointer ${count === 2 ? 'grid-cols-2' :
           count === 3 ? 'grid-cols-2 grid-rows-2' :
-          'grid-cols-2 grid-rows-2'
-        }`}
+            'grid-cols-2 grid-rows-2'
+          }`}
         onClick={onClick}
       >
         {allMedia.slice(0, 4).map((item, idx) => {
@@ -77,7 +76,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <LazyImage src={item.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                <LazyImage src={item.url} alt="" className="w-full h-full object-cover transition-all duration-base" />
               )}
 
               {idx === 3 && count > 4 && (

@@ -58,16 +58,15 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       {!isLoaded && (
         <div className="absolute inset-0 bg-bg-secondary animate-pulse" />
       )}
-      
+
       <img
         ref={imgRef}
         src={imageSrc}
         alt={alt}
         onLoad={handleLoad}
         onError={handleError}
-        className={`transition-opacity duration-slow ${
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        } ${className}`}
+        className={`transition-all duration-base ${isLoaded ? 'opacity-100' : 'opacity-0'
+          } ${className}`}
         loading="lazy"
         {...props}
       />
@@ -119,16 +118,16 @@ export const LazyVideo: React.FC<LazyVideoProps> = ({
   return (
     <div ref={containerRef} className={`relative ${wrapperClassName}`}>
       {!showVideo && thumbnail ? (
-        <div 
+        <div
           className="relative cursor-pointer group"
           onClick={handlePlay}
         >
-          <img 
-            src={thumbnail} 
+          <img
+            src={thumbnail}
             alt="Video thumbnail"
             className={`w-full h-auto ${className}`}
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-all duration-base">
             <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
               <svg className="w-6 h-6 text-text-primary ml-1" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />

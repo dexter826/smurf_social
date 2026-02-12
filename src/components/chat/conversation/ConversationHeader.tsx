@@ -75,7 +75,7 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
                 size="md"
                 icon={<Users size={20} />}
                 title="Tạo nhóm mới"
-                className="text-primary hover:bg-primary-light"
+                className="text-primary"
               />
             )}
             {onNewChat && (
@@ -85,7 +85,7 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
                 size="md"
                 icon={<UserPlus size={20} />}
                 title="Tạo cuộc trò chuyện mới"
-                className="text-primary hover:bg-primary-light"
+                className="text-primary"
               />
             )}
           </>
@@ -94,17 +94,17 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
         <Dropdown
           align="right"
           trigger={
-            <IconButton 
-              icon={<MoreVertical size={20} />} 
-              variant="ghost" 
-              className="text-text-secondary hover:bg-bg-secondary"
+            <IconButton
+              icon={<MoreVertical size={20} />}
+              variant="ghost"
+              className="text-text-secondary"
             />
           }
         >
           <div className="py-1">
             <button
               onClick={() => onViewModeChange?.(viewMode === 'archived' ? 'normal' : 'archived')}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
             >
               <Archive size={18} className="text-text-tertiary" />
               {viewMode === 'archived' ? 'Quay lại tin nhắn' : 'Tin nhắn đã lưu trữ'}
@@ -117,7 +117,7 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
             {onMarkAllRead && (
               <button
                 onClick={onMarkAllRead}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
               >
                 <CheckCircle2 size={18} className="text-text-tertiary" />
                 Đánh dấu tất cả đã đọc

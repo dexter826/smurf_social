@@ -230,8 +230,8 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                           index: idx
                         })}
                       >
-                        <img src={img} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-black/20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase">Xem ảnh</div>
+                        <img src={img} className="w-full h-full object-cover transition-all duration-base" />
+                        <div className="absolute inset-0 bg-black/20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base flex items-center justify-center text-white text-[10px] font-bold uppercase">Xem ảnh</div>
                       </div>
                     ))}
                   </div>
@@ -314,8 +314,8 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                             index: 0
                           })}
                         >
-                          <img src={(content as Comment).image} className="w-full h-full object-contain transition-transform group-hover:scale-105" />
-                          <div className="absolute inset-0 bg-black/20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">Xem ảnh cỡ lớn</div>
+                          <img src={(content as Comment).image} className="w-full h-full object-contain transition-all duration-base" />
+                          <div className="absolute inset-0 bg-black/20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">Xem ảnh cỡ lớn</div>
                         </div>
                       )}
                     </div>

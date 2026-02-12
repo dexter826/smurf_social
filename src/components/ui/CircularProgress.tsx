@@ -26,7 +26,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   const isComplete = progress >= 100;
 
   return (
-    <div 
+    <div
       className={`relative inline-flex items-center justify-center ${className}`}
       style={{ width: size, height: size }}
     >
@@ -60,14 +60,14 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
         {showCancel && onCancel && !isComplete ? (
           <button
             onClick={onCancel}
-            className="p-1 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors"
+            className="p-1 rounded-full hover:bg-white/20 active:bg-white/30 transition-all duration-base"
             title="Hủy upload"
             aria-label="Hủy upload"
           >
             <X size={size * 0.35} className="text-text-inverse" />
           </button>
         ) : showPercentage ? (
-          <span 
+          <span
             className="text-text-inverse font-semibold"
             style={{ fontSize: size * 0.25 }}
           >

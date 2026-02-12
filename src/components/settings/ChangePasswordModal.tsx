@@ -20,7 +20,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   const { logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -45,13 +45,13 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
     try {
       // 1. Xác thực lại người dùng
       await authService.reauthenticate(data.currentPassword);
-      
+
       // 2. Đổi mật khẩu
       await authService.changePassword(data.newPassword);
-      
+
       setSuccess(true);
       toast.success(TOAST_MESSAGES.AUTH.CHANGE_PASSWORD_SUCCESS);
-      
+
       setTimeout(async () => {
         await logout();
         onClose();
@@ -138,7 +138,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="p-2 text-text-tertiary hover:text-text-primary transition-colors"
+                className="p-2 text-text-tertiary hover:text-text-primary transition-all duration-base"
               >
                 {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -158,7 +158,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="p-2 text-text-tertiary hover:text-text-primary transition-colors"
+                className="p-2 text-text-tertiary hover:text-text-primary transition-all duration-base"
               >
                 {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -178,7 +178,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="p-2 text-text-tertiary hover:text-text-primary transition-colors"
+                className="p-2 text-text-tertiary hover:text-text-primary transition-all duration-base"
               >
                 {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>

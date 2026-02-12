@@ -150,7 +150,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
         onClick={onClose}
         className={`
           fixed inset-0 bg-bg-overlay backdrop-blur-sm z-40 md:hidden
-          transition-opacity duration-slow
+          transition-all duration-slow
           ${isAnimating ? 'opacity-100' : 'opacity-0'}
         `}
       />
@@ -161,7 +161,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
           fixed md:relative right-0 top-0 h-full z-50
           w-full md:w-[320px] bg-bg-primary border-l border-border-light
           flex flex-col shadow-xl
-          transition-transform duration-slow ease-out
+          transition-all duration-slow ease-out
           ${isAnimating ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
@@ -182,7 +182,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex-1 flex flex-col items-center gap-1 py-3 transition-colors relative
+                flex-1 flex flex-col items-center gap-1 py-3 transition-all duration-base relative
                 ${activeTab === tab.id
                   ? 'text-primary'
                   : 'text-text-tertiary hover:text-text-secondary'

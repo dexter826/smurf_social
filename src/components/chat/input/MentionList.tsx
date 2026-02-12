@@ -22,15 +22,14 @@ export const MentionList: React.FC<MentionListProps> = ({
           <button
             key={user.id}
             onClick={() => onSelect(user)}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-              index === selectedIndex
-                ? 'bg-bg-hover' // Highlight item đang chọn
-                : 'hover:bg-bg-hover'
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-all duration-base ${index === selectedIndex
+                ? 'bg-bg-hover active:bg-bg-active'
+                : 'hover:bg-bg-hover active:bg-bg-active'
+              }`}
           >
-            <UserAvatar 
-              userId={user.id} 
-              src={user.avatar} 
+            <UserAvatar
+              userId={user.id}
+              src={user.avatar}
               initialStatus={user.status}
               size="xs"
             />

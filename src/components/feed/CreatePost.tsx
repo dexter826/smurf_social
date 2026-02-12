@@ -14,7 +14,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
   const { createPost } = usePostStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  
+
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const cameraPhotoRef = useRef<HTMLInputElement>(null);
@@ -60,13 +60,13 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
             <span className="truncate">{currentUser.name} ơi, bạn đang nghĩ gì thế?</span>
           </Button>
         </div>
-        
+
         <div className="flex gap-1 pt-2 border-t border-divider">
           <Button
             variant="ghost"
             onClick={() => imageInputRef.current?.click()}
             className="flex-1 group px-2"
-            icon={<ImageIcon className="text-success group-hover:scale-110 transition-transform" size={20} />}
+            icon={<ImageIcon className="text-success transition-all duration-base" size={20} />}
           >
             <span className="text-xs sm:text-[15px] font-semibold">Ảnh</span>
           </Button>
@@ -74,7 +74,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
             variant="ghost"
             onClick={() => cameraPhotoRef.current?.click()}
             className="flex-1 group px-2"
-            icon={<Camera className="text-error group-hover:scale-110 transition-transform" size={20} />}
+            icon={<Camera className="text-error transition-all duration-base" size={20} />}
           >
             <span className="text-xs sm:text-[15px] font-semibold">Máy ảnh</span>
           </Button>
@@ -82,7 +82,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
             variant="ghost"
             onClick={() => videoInputRef.current?.click()}
             className="flex-1 group px-2"
-            icon={<Video className="text-info group-hover:scale-110 transition-transform" size={20} />}
+            icon={<Video className="text-info transition-all duration-base" size={20} />}
           >
             <span className="text-xs sm:text-[15px] font-semibold">Video</span>
           </Button>

@@ -23,10 +23,10 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
       onClick();
     }}
     className={`
-      w-full px-4 py-2.5 text-left text-sm flex items-center justify-start gap-3 transition-colors
-      hover:bg-bg-hover active:bg-bg-hover/80
-      ${variant === 'danger' 
-        ? 'text-error hover:text-error' 
+      w-full px-4 py-2.5 text-left text-sm flex items-center justify-start gap-3 transition-all duration-base
+      hover:bg-bg-hover active:bg-bg-active
+      ${variant === 'danger'
+        ? 'text-error hover:text-error'
         : 'text-text-primary'
       }
       ${className}
@@ -82,32 +82,32 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
   return (
     <div className={`relative inline-block ${className}`} ref={containerRef}>
-      <div 
+      <div
         onClick={(e) => {
           e.stopPropagation();
           handleOpenChange(!isOpen);
         }}
-        className={`cursor-pointer transition-transform ${disableTriggerScale ? '' : 'active:scale-95'}`}
+        className={`cursor-pointer ${disableTriggerScale ? '' : ''}`}
       >
         {trigger}
       </div>
 
       {isOpen && createPortal(
-        <div 
+        <div
           ref={dropdownRef}
           className={`
             fixed z-[var(--z-dropdown)] mt-1.5
             min-w-[180px] w-max max-w-[calc(100vw-32px)]
             bg-bg-primary border border-border-light rounded-xl 
             shadow-dropdown overflow-hidden
-            animate-in fade-in zoom-in-95 duration-200
+            animate-in fade-in zoom-in-95 duration-base
             ${align === 'right' ? 'origin-top-right' : 'origin-top-left'}
             ${menuClassName}
           `}
           style={{
             top: `${top}px`,
-            left: align === 'right' 
-              ? `${left + width - (dropdownRef.current?.offsetWidth || 180)}px` 
+            left: align === 'right'
+              ? `${left + width - (dropdownRef.current?.offsetWidth || 180)}px`
               : `${left}px`,
           }}
           onClick={() => handleOpenChange(false)}

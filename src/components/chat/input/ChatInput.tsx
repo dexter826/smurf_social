@@ -125,7 +125,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setInputText(text);
-    
+
     // Typing indicator
     onTyping(true);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -275,9 +275,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme pb-safe z-30 relative">
-      <FilePreview 
-        files={selectedFiles} 
-        onRemove={removeFile} 
+      <FilePreview
+        files={selectedFiles}
+        onRemove={removeFile}
         onPlayVoice={handlePlayVoice}
         playingIndex={playingPreview}
         isSending={isSending}
@@ -304,16 +304,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       <form onSubmit={handleSubmit} className="relative flex items-center gap-2 px-4 py-3 bg-bg-primary">
         {showMentions && filteredParticipants.length > 0 && (
-          <MentionList 
-            users={filteredParticipants} 
-            selectedIndex={mentionIndex} 
-            onSelect={handleSelectMention} 
+          <MentionList
+            users={filteredParticipants}
+            selectedIndex={mentionIndex}
+            onSelect={handleSelectMention}
           />
         )}
-        
-        <ActionsMenu 
-          isOpen={showActions} 
-          onToggle={() => setShowActions(!showActions)} 
+
+        <ActionsMenu
+          isOpen={showActions}
+          onToggle={() => setShowActions(!showActions)}
           onAction={(type) => {
             setShowActions(false);
             if (type === 'image') imageInputRef.current?.click();
@@ -344,8 +344,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             className="rounded-2xl"
             renderOverlay={(value) => (
               <>
-                {value.split(/(@\[[^\]]+\])/g).map((part, i) => 
-                  part.startsWith('@[') && part.endsWith(']') 
+                {value.split(/(@\[[^\]]+\])/g).map((part, i) =>
+                  part.startsWith('@[') && part.endsWith(']')
                     ? <span key={i} className="text-primary bg-primary/10 rounded box-decoration-clone">{part}</span>
                     : <span key={i}>{part}</span>
                 )}
@@ -369,7 +369,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           disabled={disabled || (!inputText.trim() && selectedFiles.length === 0)}
           isLoading={isSending}
           variant={(inputText.trim() || selectedFiles.length > 0) ? 'primary' : 'secondary'}
-          className={`w-10 h-10 shadow-md active:scale-90 rounded-full flex-shrink-0 ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-40'}`}
+          className={`w-10 h-10 shadow-md rounded-full flex-shrink-0 ${(inputText.trim() || selectedFiles.length > 0) ? '' : 'opacity-40'}`}
           icon={<Send size={18} className={inputText.trim() || selectedFiles.length > 0 ? 'fill-current' : ''} />}
         />
       </form>

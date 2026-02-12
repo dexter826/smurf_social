@@ -34,7 +34,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
   conversations
 }) => {
   const isHistoryEmpty = history.length === 0;
-  
+
   if (isLoading) {
     return <SearchResults.Skeleton />;
   }
@@ -60,7 +60,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
             <Clock size={12} />
             Tìm kiếm gần đây
           </span>
-          <Button 
+          <Button
             variant="ghost"
             size="sm"
             onClick={onClearHistory}
@@ -80,7 +80,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
             return true;
           }).map((item) => {
             const isConversation = 'participantIds' in item;
-            
+
             // Đồng bộ dữ liệu mới nhất cho hội thoại
             let displayItem = item;
             if (isConversation) {
@@ -91,7 +91,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
             const itemAsConv = displayItem as Conversation;
             const itemAsUser = displayItem as User;
 
-            const displayName = isConversation 
+            const displayName = isConversation
               ? (itemAsConv.isGroup ? itemAsConv.groupName : itemAsConv.participants.find(p => p.id !== currentUserId)?.name)
               : itemAsUser.name;
             const avatar = isConversation
@@ -101,23 +101,23 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
             return (
               <div
                 key={item.id}
-                className="group flex items-center gap-3 px-3 py-2 hover:bg-bg-secondary cursor-pointer transition-all rounded-xl relative"
+                className="group flex items-center gap-3 px-3 py-2 hover:bg-bg-hover active:bg-bg-active cursor-pointer transition-all duration-base rounded-xl relative"
                 onClick={() => isConversation ? onSelectConversation(item.id) : onSelectUser(item as User)}
               >
                 {isConversation ? (
-                  <Avatar 
-                    src={avatar} 
-                    name={displayName || ''} 
-                    size="md" 
-                    isGroup={itemAsConv.isGroup} 
+                  <Avatar
+                    src={avatar}
+                    name={displayName || ''}
+                    size="md"
+                    isGroup={itemAsConv.isGroup}
                     members={itemAsConv.participants}
                   />
                 ) : (
-                  <UserAvatar 
-                    userId={displayItem.id} 
-                    src={avatar} 
-                    name={displayName || ''} 
-                    size="md" 
+                  <UserAvatar
+                    userId={displayItem.id}
+                    src={avatar}
+                    name={displayName || ''}
+                    size="md"
                     initialStatus={itemAsUser.status}
                   />
                 )}
@@ -133,7 +133,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
                     e.stopPropagation();
                     onRemoveFromHistory(item.id);
                   }}
-                  className="text-text-tertiary opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-bg-tertiary active:bg-bg-active rounded-full transition-opacity"
+                  className="text-text-tertiary opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-bg-tertiary active:bg-bg-active rounded-full transition-all duration-base"
                   icon={<X size={14} />}
                 />
               </div>
@@ -171,13 +171,13 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
           <div
             key={user.id}
             onClick={() => onSelectUser(user)}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-bg-secondary cursor-pointer transition-all active:bg-bg-tertiary rounded-lg mx-2"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-bg-hover active:bg-bg-active cursor-pointer transition-all duration-base rounded-lg mx-2"
           >
-            <UserAvatar 
-              userId={user.id} 
-              src={user.avatar} 
-              name={user.name} 
-              size="md" 
+            <UserAvatar
+              userId={user.id}
+              src={user.avatar}
+              name={user.name}
+              size="md"
               initialStatus={user.status}
             />
             <div className="flex-1 min-w-0">

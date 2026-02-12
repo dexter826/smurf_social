@@ -18,7 +18,7 @@ import { uploadWithProgress } from '../../utils/uploadUtils';
 export const ReportModal: React.FC = () => {
   const { user } = useAuthStore();
   const { isOpen, data: reportContext, isSubmitting: isStoreSubmitting, closeReportModal, submitReport, error } = useReportStore();
-  
+
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -26,7 +26,7 @@ export const ReportModal: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isSubmitting = isStoreSubmitting || isUploading;
-  
+
   const {
     register,
     handleSubmit,
@@ -69,7 +69,7 @@ export const ReportModal: React.FC = () => {
     if (e.target.files) {
       const files = Array.from(e.target.files) as File[];
       const totalImages = selectedImages.length + files.length;
-      
+
       if (totalImages > REPORT_CONFIG.MAX_IMAGES_PER_REPORT) {
         toast.error(TOAST_MESSAGES.REPORT.IMAGE_LIMIT(REPORT_CONFIG.MAX_IMAGES_PER_REPORT));
         return;
@@ -77,7 +77,7 @@ export const ReportModal: React.FC = () => {
 
       const newImages = [...selectedImages, ...files];
       setSelectedImages(newImages);
-      
+
       const newPreviews = files.map(file => URL.createObjectURL(file));
       setPreviewUrls(prev => [...prev, ...newPreviews]);
     }
@@ -110,13 +110,13 @@ export const ReportModal: React.FC = () => {
       }
 
       const success = await submitReport(
-        user.id, 
-        data.reason as ReportReason, 
+        user.id,
+        data.reason as ReportReason,
         data.description || undefined,
         imageUrls,
         shouldBlock
       );
-      
+
       if (success) {
         toast.success(TOAST_MESSAGES.REPORT.SUBMIT_SUCCESS);
         handleClose();
@@ -140,9 +140,9 @@ export const ReportModal: React.FC = () => {
   const isUserReport = reportContext?.type === ReportType.USER;
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={handleClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
       title={isUserReport ? "Báo cáo người dùng" : "Báo cáo vi phạm"}
       maxWidth="sm"
     >
@@ -152,8 +152,8 @@ export const ReportModal: React.FC = () => {
           {/* Header info */}
           <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
             <AlertTriangle size={16} className="text-warning flex-shrink-0" />
-            <span>{isUserReport 
-              ? "Hãy cho chúng tôi biết người dùng này đang vi phạm điều gì" 
+            <span>{isUserReport
+              ? "Hãy cho chúng tôi biết người dùng này đang vi phạm điều gì"
               : "Chọn lý do phù hợp nhất để giúp chúng tôi xử lý nhanh hơn"}
             </span>
           </div>
@@ -164,10 +164,10 @@ export const ReportModal: React.FC = () => {
               <label
                 key={key}
                 className={`
-                  flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all
-                  border ${formData.reason === key 
-                    ? 'border-primary bg-primary/5 shadow-sm' 
-                    : 'border-border-light hover:bg-bg-hover hover:border-border-medium'
+                  flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-base
+                  border ${formData.reason === key
+                    ? 'border-primary bg-primary/5 shadow-sm'
+                    : 'border-border-light hover:bg-bg-hover active:bg-bg-active hover:border-border-medium'
                   }
                 `}
               >
@@ -215,7 +215,7 @@ export const ReportModal: React.FC = () => {
                   </label>
                   <span className="text-xs text-text-tertiary">{selectedImages.length}/{REPORT_CONFIG.MAX_IMAGES_PER_REPORT}</span>
                 </div>
-                
+
                 <div className="grid grid-cols-4 gap-2">
                   {previewUrls.map((url, index) => (
                     <div key={index} className="aspect-square relative group rounded-lg overflow-hidden border border-border-light">
@@ -223,18 +223,18 @@ export const ReportModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity active:bg-black/70"
+                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base active:bg-black/70"
                       >
                         <X size={12} />
                       </button>
                     </div>
                   ))}
-                  
+
                   {selectedImages.length < REPORT_CONFIG.MAX_IMAGES_PER_REPORT && (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border-light rounded-lg hover:bg-bg-secondary/50 hover:border-primary/50 transition-colors text-text-tertiary hover:text-primary"
+                      className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border-light rounded-lg hover:bg-bg-hover active:bg-bg-active hover:border-primary/50 transition-all duration-base text-text-tertiary hover:text-primary"
                     >
                       <ImageIcon size={20} />
                       <span className="text-[10px]">Thêm ảnh</span>
@@ -255,7 +255,7 @@ export const ReportModal: React.FC = () => {
 
           {/* Tùy chọn chặn người dùng */}
           {(formData.reason !== '') && (
-            <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-base">
               <Checkbox
                 label="Chặn người dùng này để tránh các tương tác tiêu cực"
                 checked={shouldBlock}
@@ -268,9 +268,9 @@ export const ReportModal: React.FC = () => {
 
         {/* Fixed Actions Footer */}
         <div className="flex gap-3 pt-4 mt-2 border-t border-border-light">
-          <Button 
+          <Button
             type="button"
-            variant="secondary" 
+            variant="secondary"
             onClick={handleClose}
             className="flex-1"
             disabled={isSubmitting}

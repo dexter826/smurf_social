@@ -67,26 +67,26 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
             variant="ghost"
             size="sm"
             onClick={onAddMember}
-            className="text-primary hover:bg-primary-light"
+            className="text-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
             icon={<UserPlus size={16} />}
           >
             Thêm
           </Button>
         )}
       </div>
-      
+
       <div className="space-y-1">
         {members.map((member) => {
           const isCurrentUser = member.id === currentUserId;
           const role = getMemberRole(member.id);
           const canManage = canManageMember(member.id);
-          
+
           return (
             <div
               key={member.id}
-              className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-bg-hover group"
+              className="flex items-center gap-3 px-4 py-2.5 transition-all duration-base hover:bg-bg-hover active:bg-bg-active group"
             >
-              <div 
+              <div
                 onClick={() => !isCurrentUser && onMemberClick?.(member.id)}
                 className={`flex items-center gap-3 flex-1 min-w-0 ${!isCurrentUser ? 'cursor-pointer' : ''}`}
               >
@@ -99,17 +99,17 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                   showStatus
                   onClick={() => handleMemberProfileClick(member.id)}
                 />
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span 
+                    <span
                       className={`text-sm font-medium text-text-primary truncate ${!isCurrentUser ? 'cursor-pointer hover:underline' : ''}`}
                       onClick={() => handleMemberProfileClick(member.id)}
                     >
                       {member.name}
                       {isCurrentUser && <span className="text-text-tertiary"> (Bạn)</span>}
                     </span>
-                    
+
                     {/* Role badges - chỉ icon */}
                     {role === 'creator' && (
                       <span className="text-warning" title="Trưởng nhóm">
@@ -138,7 +138,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                   disableTriggerScale
                   trigger={
                     <IconButton
-                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base"
                       icon={<MoreVertical size={16} />}
                       size="sm"
                     />
