@@ -172,10 +172,10 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             <div
               className={`
                 relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
-                ${(message.type === 'text' || message.isRecalled) ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
+                ${(message.type === 'text' || message.isRecalled || message.replyToId) ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe
-                  ? ((message.type === 'text' || message.isRecalled) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '')
-                  : ((message.type === 'text' || message.isRecalled) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
+                  ? ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '')
+                  : ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
                 }
               `}
             >

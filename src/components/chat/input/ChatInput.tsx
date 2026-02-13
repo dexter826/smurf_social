@@ -15,11 +15,11 @@ import { validateFileSize } from '../../../utils/fileUtils';
 import { Message, User } from '../../../types';
 
 interface ChatInputProps {
-  onSendText: (text: string, mentions?: string[]) => void;
-  onSendImage: (file: File) => void;
-  onSendFile: (file: File) => void;
-  onSendVideo?: (file: File) => void;
-  onSendVoice?: (file: File) => void;
+  onSendText: (text: string, mentions?: string[], replyToId?: string) => void;
+  onSendImage: (file: File, replyToId?: string) => void;
+  onSendFile: (file: File, replyToId?: string) => void;
+  onSendVideo?: (file: File, replyToId?: string) => void;
+  onSendVoice?: (file: File, replyToId?: string) => void;
   onTyping: (isTyping: boolean) => void;
   disabled?: boolean;
   blockedMessage?: string;
@@ -186,10 +186,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
     try {
       selectedFiles.forEach(item => {
-        if (item.type === 'image') onSendImage(item.file);
-        else if (item.type === 'video') onSendVideo?.(item.file);
-        else if (item.type === 'voice') onSendVoice?.(item.file);
-        else onSendFile(item.file);
+        if (item.type === 'image') onSendImage(item.file, replyingTo?.id);
+        else if (item.type === 'video') onSendVideo?.(item.file, replyingTo?.id);
+        else if (item.type === 'voice') onSendVoice?.(item.file, replyingTo?.id);
+        else onSendFile(item.file, replyingTo?.id);
       });
       clearAllFiles();
 
@@ -205,7 +205,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             const user = participants.find(p => p.name === name);
             if (user) mentions.push(user.id);
           }
-          await onSendText(inputText.trim(), mentions.length > 0 ? [...new Set(mentions)] : undefined);
+          await onSendText(inputText.trim(), mentions.length > 0 ? [...new Set(mentions)] : undefined, replyingTo?.id);
         }
         setInputText('');
       }

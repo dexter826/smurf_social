@@ -72,6 +72,7 @@ async function createAndSendMediaMessage(
   type: MessageType,
   options: {
     replyToId?: string;
+    replyToMessage?: Message;
     onProgress?: ProgressCallback;
     compress?: boolean;
     displayContent: string;
@@ -115,6 +116,9 @@ async function createAndSendMediaMessage(
   }
   if (options.replyToId) {
     messageData.replyToId = options.replyToId;
+  }
+  if (options.replyToMessage) {
+    messageData.replyToMessage = options.replyToMessage;
   }
 
   let finalId = options.preGeneratedId;
@@ -255,6 +259,7 @@ export const messageService = {
     senderId: string,
     content: string,
     replyToId?: string,
+    replyToMessage?: Message,
     isForwarded?: boolean,
     mentions?: string[],
     preGeneratedId?: string,
@@ -273,6 +278,7 @@ export const messageService = {
       };
 
       if (replyToId) messageData.replyToId = replyToId;
+      if (replyToMessage) messageData.replyToMessage = replyToMessage;
       if (isForwarded) messageData.isForwarded = isForwarded;
 
       let finalId = preGeneratedId;
@@ -304,12 +310,14 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    replyToMessage?: Message,
     onProgress?: ProgressCallback,
     preGeneratedId?: string,
   ): Promise<string> => {
     try {
       return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.IMAGE, {
         replyToId,
+        replyToMessage,
         onProgress,
         compress: true,
         displayContent: "Hình ảnh",
@@ -327,12 +335,14 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    replyToMessage?: Message,
     onProgress?: ProgressCallback,
     preGeneratedId?: string,
   ): Promise<string> => {
     try {
       return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.FILE, {
         replyToId,
+        replyToMessage,
         onProgress,
         displayContent: file.name,
         preGeneratedId
@@ -349,12 +359,14 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    replyToMessage?: Message,
     onProgress?: ProgressCallback,
     preGeneratedId?: string,
   ): Promise<string> => {
     try {
       return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VIDEO, {
         replyToId,
+        replyToMessage,
         onProgress,
         displayContent: "Video",
         preGeneratedId
@@ -371,12 +383,14 @@ export const messageService = {
     senderId: string,
     file: File,
     replyToId?: string,
+    replyToMessage?: Message,
     onProgress?: ProgressCallback,
     preGeneratedId?: string,
   ): Promise<string> => {
     try {
       return await createAndSendMediaMessage(conversationId, senderId, file, MessageType.VOICE, {
         replyToId,
+        replyToMessage,
         onProgress,
         displayContent: "Tin nhắn thoại",
         preGeneratedId
@@ -627,6 +641,7 @@ export const messageService = {
     senderId: string,
     content: string,
     replyToId: string,
+    replyToMessage?: Message,
     preGeneratedId?: string,
   ): Promise<string> => {
     try {
@@ -637,6 +652,7 @@ export const messageService = {
         type: MessageType.TEXT,
         createdAt: serverTimestamp(),
         replyToId,
+        replyToMessage: replyToMessage || null,
         readBy: [senderId],
         deliveredTo: [senderId],
         deliveredAt: null,
@@ -653,7 +669,7 @@ export const messageService = {
       await updateConversationAfterMessage(
         conversationId,
         senderId,
-        { content, type: MessageType.TEXT, replyToId },
+        { content, type: MessageType.TEXT, replyToId, replyToMessage },
         content,
         finalId!
       );

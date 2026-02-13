@@ -44,7 +44,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
     const processedMessages = messages
       .filter(msg => !msg.deletedBy?.includes(currentUserId))
       .map(msg => {
-        if (msg.replyToId) {
+        if (msg.replyToId && !msg.replyToMessage) {
           const replyToMessage = messages.find(m => m.id === msg.replyToId);
           return { ...msg, replyToMessage };
         }
