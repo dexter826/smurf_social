@@ -18,10 +18,10 @@ export interface MessageSlice {
   subscribeToMessages: (conversationId: string) => () => void;
   loadMoreMessages: (conversationId: string) => Promise<void>;
   sendTextMessage: (conversationId: string, senderId: string, content: string, mentions?: string[]) => Promise<void>;
-  sendImageMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
-  sendFileMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
-  sendVideoMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
-  sendVoiceMessage: (conversationId: string, senderId: string, file: File) => Promise<void>;
+  sendImageMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
+  sendFileMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
+  sendVideoMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
+  sendVoiceMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
   markAsRead: (conversationId: string, userId: string) => Promise<void>;
   markAsDelivered: (conversationId: string, userId: string) => Promise<void>;
   recallMessage: (messageId: string, conversationId: string) => Promise<void>;
@@ -66,6 +66,7 @@ const sendMediaMessage = (
   conversationId: string,
   senderId: string,
   file: File,
+  replyToId: string | undefined,
   set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>)) => void,
   get: () => ChatState
 ) => {
@@ -74,6 +75,9 @@ const sendMediaMessage = (
   const isFile = type === 'file';
   const localUrl = isFile ? undefined : URL.createObjectURL(file);
 
+  const currentMessages = get().messages[conversationId] || [];
+  const targetMessage = replyToId ? currentMessages.find(m => m.id === replyToId) : undefined;
+
   const optimisticMessage: Message = {
     id: realId,
     conversationId,
@@ -81,6 +85,8 @@ const sendMediaMessage = (
     content: isFile ? file.name : localUrl!,
     createdAt: new Date(),
     type: config.messageType,
+    replyToId,
+    replyToMessage: targetMessage,
     readBy: [senderId],
     deliveredTo: [senderId],
     ...(isFile ? { fileName: file.name, fileSize: file.size } : { fileUrl: localUrl }),
@@ -93,7 +99,7 @@ const sendMediaMessage = (
 
   const serviceFn = messageService[config.serviceFn] as any;
 
-  serviceFn(conversationId, senderId, file, undefined, (p: { progress: number }) => {
+  serviceFn(conversationId, senderId, file, replyToId, targetMessage, (p: { progress: number }) => {
     get().setUploadProgress(realId, p.progress);
   }, realId).then(() => {
     set(state => {
@@ -177,7 +183,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }));
 
     try {
-      await messageService.sendTextMessage(conversationId, senderId, content, undefined, false, mentions, realId);
+      await messageService.sendTextMessage(conversationId, senderId, content, undefined, undefined, false, mentions, realId);
     } catch (error) {
       set(state => ({
         messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }
@@ -187,20 +193,20 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   },
 
 
-  sendImageMessage: async (conversationId: string, senderId: string, file: File) => {
-    sendMediaMessage('image', conversationId, senderId, file, set, get);
+  sendImageMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+    sendMediaMessage('image', conversationId, senderId, file, replyToId, set, get);
   },
 
-  sendVideoMessage: async (conversationId: string, senderId: string, file: File) => {
-    sendMediaMessage('video', conversationId, senderId, file, set, get);
+  sendVideoMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+    sendMediaMessage('video', conversationId, senderId, file, replyToId, set, get);
   },
 
-  sendFileMessage: async (conversationId: string, senderId: string, file: File) => {
-    sendMediaMessage('file', conversationId, senderId, file, set, get);
+  sendFileMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+    sendMediaMessage('file', conversationId, senderId, file, replyToId, set, get);
   },
 
-  sendVoiceMessage: async (conversationId: string, senderId: string, file: File) => {
-    sendMediaMessage('voice', conversationId, senderId, file, set, get);
+  sendVoiceMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+    sendMediaMessage('voice', conversationId, senderId, file, replyToId, set, get);
   },
 
   markAsRead: async (conversationId: string, userId: string) => {
@@ -250,6 +256,9 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   replyToMessage: async (conversationId: string, senderId: string, content: string, replyToId: string) => {
     const realId = messageService.generateMessageId();
+    const currentMessages = get().messages[conversationId] || [];
+    const targetMessage = currentMessages.find(m => m.id === replyToId);
+
     const optimisticMessage: Message = {
       id: realId,
       conversationId,
@@ -258,6 +267,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       createdAt: new Date(),
       type: MessageType.TEXT,
       replyToId,
+      replyToMessage: targetMessage,
       readBy: [],
       deliveredTo: [],
     };
@@ -267,7 +277,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }));
 
     try {
-      await messageService.replyToMessage(conversationId, senderId, content, replyToId, realId);
+      await messageService.replyToMessage(conversationId, senderId, content, replyToId, targetMessage, realId);
     } catch (error) {
       set(state => ({
         messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }

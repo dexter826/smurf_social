@@ -39,24 +39,24 @@ export const useChatMessages = ({
     }
   }, [selectedConversationId, currentUserId, sendTextMessage, storeReplyToMessage]);
 
-  const handleSendImage = useCallback(async (file: File) => {
+  const handleSendImage = useCallback(async (file: File, replyToId?: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    await sendImageMessage(selectedConversationId, currentUserId, file);
+    await sendImageMessage(selectedConversationId, currentUserId, file, replyToId);
   }, [selectedConversationId, currentUserId, sendImageMessage]);
 
-  const handleSendFile = useCallback(async (file: File) => {
+  const handleSendFile = useCallback(async (file: File, replyToId?: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    await sendFileMessage(selectedConversationId, currentUserId, file);
+    await sendFileMessage(selectedConversationId, currentUserId, file, replyToId);
   }, [selectedConversationId, currentUserId, sendFileMessage]);
 
-  const handleSendVideo = useCallback(async (file: File) => {
+  const handleSendVideo = useCallback(async (file: File, replyToId?: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    await sendVideoMessage(selectedConversationId, currentUserId, file);
+    await sendVideoMessage(selectedConversationId, currentUserId, file, replyToId);
   }, [selectedConversationId, currentUserId, sendVideoMessage]);
 
-  const handleSendVoice = useCallback(async (file: File) => {
+  const handleSendVoice = useCallback(async (file: File, replyToId?: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    await sendVoiceMessage(selectedConversationId, currentUserId, file);
+    await sendVoiceMessage(selectedConversationId, currentUserId, file, replyToId);
   }, [selectedConversationId, currentUserId, sendVoiceMessage]);
 
   const handleEditMessage = useCallback(async (messageId: string, text: string) => {
