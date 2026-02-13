@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ChevronRight, Loader2 } from 'lucide-react';
-import { IconButton, LazyImage } from '../../ui';
+import { IconButton, LazyImage, CircularProgressOverlay } from '../../ui';
 
 interface MediaItem {
   url: string;
@@ -12,10 +12,11 @@ interface PostMediaGridProps {
   videos?: string[];
   videoThumbnails?: Record<string, string>;
   onClick?: () => void;
+  uploadProgress?: number;
 }
 
 const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
-  images, videos, videoThumbnails, onClick
+  images, videos, videoThumbnails, onClick, uploadProgress
 }) => {
   const allMedia = useMemo<MediaItem[]>(() => [
     ...(images || []).map(url => ({ url, type: 'image' })),
@@ -47,11 +48,12 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
         )}
 
         {isBlob && (
-          <div className="absolute inset-0 flex items-center justify-center z-20">
-            <div className="bg-black/50 p-2 rounded-full text-white">
-              <Loader2 size={20} className="animate-spin" />
-            </div>
-          </div>
+          <CircularProgressOverlay
+            isVisible={true}
+            progress={uploadProgress ?? 0}
+            size={32}
+            showPercentage={false}
+          />
         )}
 
         {!isBlob && item.type === 'video' && (
@@ -94,11 +96,12 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
           )}
 
           {isBlob && (
-            <div className="absolute inset-0 flex items-center justify-center z-20">
-              <div className="bg-black/50 p-3 rounded-full text-white">
-                <Loader2 size={28} className="animate-spin" />
-              </div>
-            </div>
+            <CircularProgressOverlay
+              isVisible={true}
+              progress={uploadProgress ?? 0}
+              size={48}
+              showPercentage={true}
+            />
           )}
         </div>
       </div>

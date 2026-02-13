@@ -43,6 +43,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const myReaction = post.reactions?.[currentUser.id];
   const isOwner = post.userId === currentUser.id;
 
+  const hasMedia = (post.images?.length ?? 0) > 0 || (post.videos?.length ?? 0) > 0;
+
   const handleProfileClick = useCallback(() => {
     if (author?.id) {
       onProfileClick?.();
@@ -56,15 +58,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
   return (
     <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-base relative">
-      {/* Thanh tiến trình ở đỉnh card */}
-      {isUploading && (
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-bg-secondary z-20">
-          <div 
-            className="h-full bg-info transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
 
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
@@ -85,9 +78,9 @@ const PostItemInner: React.FC<PostItemProps> = ({
               >
                 {author?.name || 'Unknown User'}
               </h3>
-              {isUploading && (
-                <span className="text-[11px] text-info font-medium">
-                  Đang đăng • {Math.round(progress)}%
+              {isUploading && !hasMedia && (
+                <span className="text-xs text-info font-medium">
+                  Đang đăng...
                 </span>
               )}
             </div>
@@ -151,6 +144,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         videos={post.videos}
         videoThumbnails={post.videoThumbnails}
         onClick={handleViewDetail}
+        uploadProgress={uploadState?.progress}
       />
 
       <ReactionActions

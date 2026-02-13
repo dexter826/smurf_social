@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { X, Image as ImageIcon, Video, Globe, Users, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, UploadProgress, ConfirmDialog } from '../../ui';
+import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, ConfirmDialog } from '../../ui';
 import { toast } from '../../../store/toastStore';
 import { validateFileSize } from '../../../utils/fileUtils';
 import { User, Post, Visibility } from '../../../types';
