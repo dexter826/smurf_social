@@ -29,7 +29,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   const hasMoreRef = useRef(true);
   
   const { users, fetchUsers } = useUserCache();
-  const { posts: allStorePosts } = usePostStore();
+  const { posts: allStorePosts, deletePost: deleteStorePost } = usePostStore();
 
   const posts = useMemo(() => {
     if (userId !== currentUser.id) return dbPosts;
@@ -159,9 +159,16 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   }, [posts, currentUser.id]);
 
   const handleDelete = useCallback(async (postId: string, images?: string[]) => {
-    await postService.deletePost(postId, images);
-    setDbPosts(prev => prev.filter(p => p.id !== postId));
-  }, []);
+    try {
+      // Gọi hàm xóa từ store để cập nhật trạng thái toàn cục
+      await deleteStorePost(postId, images);
+      // Cập nhật trạng thái local
+      setDbPosts(prev => prev.filter(p => p.id !== postId));
+    } catch (error) {
+      console.error("Lỗi khi xóa bài viết trong hook:", error);
+      throw error;
+    }
+  }, [deleteStorePost]);
 
   const refresh = useCallback(async () => {
     await loadPosts(true);
