@@ -175,12 +175,15 @@ export const usePostStore = create<PostState>()(
 
       createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: Visibility = Visibility.PUBLIC, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => {
         const postId = postService.generatePostId();
+        const previewImages = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('image/')).map(f => URL.createObjectURL(f)) : [];
+        const previewVideos = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('video/')).map(f => URL.createObjectURL(f)) : [];
+
         const newPost: Post = {
           id: postId,
           userId,
           content,
-          images: images || [],
-          videos: videos || [],
+          images: [...(images || []), ...previewImages],
+          videos: [...(videos || []), ...previewVideos],
           videoThumbnails: videoThumbnails || {},
           reactions: {},
           visibility,
@@ -240,6 +243,10 @@ export const usePostStore = create<PostState>()(
               }
             }));
             toast.error(TOAST_MESSAGES.POST.CREATE_FAILED(errorMessage));
+          } finally {
+            // Dọn dẹp các URL tạm thời để tránh rò rỉ bộ nhớ
+            previewImages.forEach(url => URL.revokeObjectURL(url));
+            previewVideos.forEach(url => URL.revokeObjectURL(url));
           }
         };
 
@@ -251,10 +258,23 @@ export const usePostStore = create<PostState>()(
         const post = posts.find(p => p.id === postId);
         if (!post) return;
 
+        // Tạo URL xem trước tạm thời
+        const previewImages = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('image/')).map(f => URL.createObjectURL(f)) : [];
+        const previewVideos = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('video/')).map(f => URL.createObjectURL(f)) : [];
+
         set(state => ({
           posts: state.posts.map(p =>
             p.id === postId
-              ? { ...p, content, images, videos, visibility, videoThumbnails, isEdited: true, editedAt: new Date() }
+              ? { 
+                  ...p, 
+                  content, 
+                  images: [...images, ...previewImages], 
+                  videos: [...videos, ...previewVideos], 
+                  visibility, 
+                  videoThumbnails, 
+                  isEdited: true, 
+                  editedAt: new Date() 
+                }
               : p
           ),
           uploadingStates: pendingFiles && pendingFiles.length > 0
@@ -308,6 +328,10 @@ export const usePostStore = create<PostState>()(
               }
             }));
             toast.error(TOAST_MESSAGES.POST.UPDATE_FAILED(errorMessage));
+          } finally {
+            // Dọn dẹp URL tạm
+            previewImages.forEach(url => URL.revokeObjectURL(url));
+            previewVideos.forEach(url => URL.revokeObjectURL(url));
           }
         };
 
