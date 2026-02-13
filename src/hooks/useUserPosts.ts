@@ -13,7 +13,7 @@ interface UseUserPostsReturn {
   hasMore: boolean;
   users: Record<string, User>;
   handleLoadMore: () => void;
-  handleLike: (postId: string) => Promise<void>;
+  handleReact: (postId: string, reaction: string) => Promise<void>;
   handleDelete: (postId: string, images?: string[]) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -108,34 +108,35 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     }
   }, [loading, loadingMore, hasMore, loadPosts]);
 
-  const handleLike = useCallback(async (postId: string) => {
+  const handleReact = useCallback(async (postId: string, reaction: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
-    const isLiked = post.reactions?.[currentUser.id] === '👍';
+    const oldReaction = post.reactions?.[currentUser.id];
+    const isRemove = oldReaction === reaction;
     
     setPosts(prev => prev.map(p => {
       if (p.id !== postId) return p;
       
       const newReactions = { ...(p.reactions || {}) };
-      if (isLiked) {
+      if (isRemove) {
         delete newReactions[currentUser.id];
       } else {
-        newReactions[currentUser.id] = '👍';
+        newReactions[currentUser.id] = reaction;
       }
       return { ...p, reactions: newReactions };
     }));
 
     try {
-      await postService.reactToPost(postId, currentUser.id, isLiked ? 'REMOVE' : '👍');
+      await postService.reactToPost(postId, currentUser.id, isRemove ? 'REMOVE' : reaction);
     } catch (error) {
       // Rollback
       setPosts(prev => prev.map(p => {
         if (p.id !== postId) return p;
         
         const oldReactions = { ...(p.reactions || {}) };
-        if (isLiked) {
-          oldReactions[currentUser.id] = '👍';
+        if (oldReaction) {
+          oldReactions[currentUser.id] = oldReaction;
         } else {
           delete oldReactions[currentUser.id];
         }
@@ -160,7 +161,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     hasMore,
     users,
     handleLoadMore,
-    handleLike,
+    handleReact,
     handleDelete,
     refresh
   };
