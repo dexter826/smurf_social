@@ -301,63 +301,67 @@ export const PostModal: React.FC<PostModalProps> = ({
               />
             </div>
 
-            {(formData.images.length > 0 || formData.videos.length > 0 || previews.length > 0) && (
-              <div className="grid grid-cols-2 gap-2 mt-4">
-                {/* Media đã upload */}
-                {formData.images.map((img, idx) => (
-                  <div key={`img-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(idx)}
-                      className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-                {formData.videos.map((video, idx) => (
-                  <div key={`vid-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light">
-                    <video src={video} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <Video className="text-white/80" size={32} />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveVideo(idx)}
-                      className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-                {/* Pending files (chưa upload) */}
-                {previews.map((preview, idx) => (
-                  <div key={`pending-${idx}`} className="relative group rounded-xl overflow-hidden bg-bg-secondary aspect-square md:aspect-video border border-border-light border-dashed">
-                    {preview.type === 'image' ? (
-                      <img src={preview.url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <>
-                        <video src={preview.url} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                          <Video className="text-white/80" size={32} />
-                        </div>
-                      </>
-                    )}
-                    <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-[10px] text-white/80">
-                      Chưa tải lên
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePending(idx)}
-                      className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+
+            {/* Media Preview Section */}
+            {(() => {
+              const allPreviews = [
+                ...formData.images.map(url => ({ url, type: 'image' as const, isPending: false })),
+                ...formData.videos.map(url => ({ url, type: 'video' as const, isPending: false })),
+                ...previews.map(p => ({ ...p, isPending: true }))
+              ];
+              
+              if (allPreviews.length === 0) return null;
+              
+              const count = allPreviews.length;
+              const gridClass = count === 1 ? 'grid-cols-1' : 'grid-cols-2';
+              
+              return (
+                <div className={`grid ${gridClass} gap-2 mt-4`}>
+                  {allPreviews.map((item, idx) => {
+                    const isLarge = count === 3 && idx === 0;
+                    return (
+                      <div 
+                        key={`${item.url}-${idx}`} 
+                        className={`relative group rounded-xl overflow-hidden bg-bg-secondary border border-border-light shadow-sm ${
+                          isLarge ? 'col-span-2 aspect-video' : 'aspect-square md:aspect-video'
+                        }`}
+                      >
+                        {item.type === 'image' ? (
+                          <img src={item.url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <>
+                            <video src={item.url} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                              <Video className="text-white/80" size={32} />
+                            </div>
+                          </>
+                        )}
+                        
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (item.isPending) {
+                              // Tìm index trong mảng previews gốc
+                              const pIdx = previews.findIndex(p => p.url === item.url);
+                              if (pIdx !== -1) handleRemovePending(pIdx);
+                            } else if (item.type === 'image') {
+                              const iIdx = formData.images.indexOf(item.url);
+                              if (iIdx !== -1) handleRemoveImage(iIdx);
+                            } else {
+                              const vIdx = formData.videos.indexOf(item.url);
+                              if (vIdx !== -1) handleRemoveVideo(vIdx);
+                            }
+                          }}
+                          className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90 z-20"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </Modal>
