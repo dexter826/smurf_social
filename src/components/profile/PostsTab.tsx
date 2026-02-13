@@ -38,10 +38,8 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
       const post = posts.find(p => p.id === postToDelete);
       await performDelete(postToDelete, post?.images);
       setPostToDelete(null);
-      toast.success('Đã xóa bài viết');
     } catch (error) {
       console.error("Lỗi xóa post", error);
-      toast.error('Không thể xóa bài viết');
     }
   };
 
