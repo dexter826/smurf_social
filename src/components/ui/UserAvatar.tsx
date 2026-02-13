@@ -42,6 +42,7 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
   }, [userId, name, cachedUser, fetchUsers]);
 
   const displayName = name || cachedUser?.name;
+  const avatarUrl = src || (userId === currentUser?.id ? currentUser?.avatar : cachedUser?.avatar);
 
   const statusToDisplay = useMemo(() => {
     const status = presence?.status;
@@ -56,7 +57,7 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
 
   return (
     <Avatar
-      src={src}
+      src={avatarUrl}
       name={displayName}
       size={size}
       status={statusToDisplay}

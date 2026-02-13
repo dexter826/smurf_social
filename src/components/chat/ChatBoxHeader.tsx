@@ -48,7 +48,6 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
           ) : (
             <UserAvatar
               userId={partner?.id ?? ''}
-              src={avatarSrc}
               name={chatName}
               size="md"
               initialStatus={partner?.status}

@@ -112,7 +112,6 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
           {showAvatar && (
             <UserAvatar
               userId={sender?.id ?? ''}
-              src={sender?.avatar}
               size="sm"
               showStatus={false}
             />
@@ -253,7 +252,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
           <div className="space-y-3">
             {lastReadByUsers.map(reader => (
               <div key={reader.id} className="flex items-center gap-3 p-2 hover:bg-bg-hover active:bg-bg-active rounded-lg transition-all duration-base">
-                <UserAvatar userId={reader.id} src={reader.avatar} size="md" initialStatus={reader.status} showStatus={true} />
+                <UserAvatar userId={reader.id} size="md" initialStatus={reader.status} showStatus={true} />
                 <div className="flex-1">
                   <div className="text-sm font-bold text-text-primary">{reader.name}</div>
                   <UserStatusText

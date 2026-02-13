@@ -146,7 +146,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             {showAvatar && (
               <UserAvatar
                 userId={sender?.id ?? ''}
-                src={sender?.avatar}
                 size="sm"
                 initialStatus={sender?.status}
                 showStatus={false}

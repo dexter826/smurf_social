@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Conversation, User, UserStatus } from '../../types';
 import { formatChatTime, toDate } from '../../utils/dateUtils';
 import { getLastName } from '../../utils/uiUtils';
+import { useUserCache } from '../../store/userCacheStore';
 
 interface UseConversationItemProps {
   conversation: Conversation;
@@ -18,11 +19,18 @@ export const useConversationItem = ({
   currentUserFriendIds
 }: UseConversationItemProps) => {
 
-  const partner = useMemo(() => 
+  const { users: usersMap } = useUserCache();
+
+  const partnerId = useMemo(() => 
     conversation.isGroup 
       ? null 
-      : conversation.participants.find(p => p.id !== currentUserId),
+      : conversation.participants.find(p => p.id !== currentUserId)?.id,
     [conversation, currentUserId]
+  );
+
+  const partner = useMemo(() => 
+    partnerId ? (usersMap[partnerId] || conversation.participants.find(p => p.id === partnerId)) : null,
+    [partnerId, usersMap, conversation.participants]
   );
 
   const isDataMissing = !conversation.isGroup && (!partner || !partner.name);
