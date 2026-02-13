@@ -134,13 +134,13 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       showHeader={false}
-      maxWidth="full"
+      maxWidth={hasMedia ? 'full' : '2xl'}
       padding="none"
-      fullScreen={true}
+      fullScreen={hasMedia ? true : 'mobile'}
       className={`
         transition-all duration-base overflow-hidden
       `}
-      bodyClassName={`overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row' : ''}`}
+      bodyClassName={`overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row h-full' : 'h-auto max-h-[90vh]'}`}
     >
 
       {/* Khong gian Cinema cho Media (Desktop) */}
@@ -206,7 +206,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       )}
 
       {/* Panel noi dung va tuong tac */}
-      <div className={`flex flex-col bg-bg-primary h-full transition-theme relative z-10 overflow-hidden ${hasMedia ? 'w-full lg:w-[460px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full'}`}>
+      <div className={`flex flex-col bg-bg-primary transition-theme relative z-10 overflow-hidden ${hasMedia ? 'h-full w-full lg:w-[460px] lg:border-l border-border-light flex-1 lg:flex-none' : 'w-full h-auto'}`}>
 
         <div className="w-full p-4 md:p-5 border-b border-border-light flex items-center shrink-0 bg-bg-primary z-30">
           <div className="flex gap-3 items-center flex-1 min-w-0">
