@@ -23,7 +23,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
     hasMore,
     users,
     handleLoadMore,
-    handleLike,
+    handleReact,
     handleDelete: performDelete,
   } = useUserPosts(userId, currentUser);
 
@@ -79,8 +79,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser }) => {
               post={post}
               author={users[post.userId]}
               currentUser={currentUser}
-              onLike={handleLike}
-              onComment={() => {}}
+              onReact={handleReact}
               onEdit={() => {}}
               onDelete={(id) => setPostToDelete(id)}
               onViewDetail={(post) => setSelectedPost(post)}
