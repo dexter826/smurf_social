@@ -307,7 +307,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                         src={user.avatar}
                         name={user.name}
                         size="2xs"
-                        className="ring-1 ring-bg-primary"
                       />
                     ))}
                   </div>

@@ -100,7 +100,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-0.5">
+        <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-2">
             <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatInfo.name}
