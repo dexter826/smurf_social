@@ -1,6 +1,6 @@
 import React from 'react';
-import { X, Play, Pause, Paperclip, Video } from 'lucide-react';
-import { IconButton, CircularProgressOverlay } from '../../ui';
+import { X, Play, Pause, Paperclip, Video, Loader2 } from 'lucide-react';
+import { IconButton } from '../../ui';
 
 interface FilePreviewProps {
   files: { file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[];
@@ -67,12 +67,11 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               />
             )}
 
-            <CircularProgressOverlay
-              isVisible={isSending}
-              progress={75}
-              size={32}
-              showPercentage={false}
-            />
+            {isSending && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px] rounded-lg z-10">
+                <Loader2 size={20} className="animate-spin text-white" />
+              </div>
+            )}
           </div>
         ))}
       </div>

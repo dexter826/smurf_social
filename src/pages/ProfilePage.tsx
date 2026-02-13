@@ -26,6 +26,7 @@ const ProfilePage: React.FC = () => {
     latestMedia,
     loading,
     uploading,
+    uploadProgress,
     isOwnProfile,
     friendStatus,
     canViewContent,
@@ -133,6 +134,7 @@ const ProfilePage: React.FC = () => {
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
           uploading={uploading}
+          uploadProgress={uploadProgress}
         />
 
         {canViewContent && (

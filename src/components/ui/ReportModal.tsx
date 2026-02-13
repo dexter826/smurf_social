@@ -285,7 +285,7 @@ export const ReportModal: React.FC = () => {
             className="flex-1"
             icon={<Flag size={16} />}
           >
-            {isUploading ? 'Đang tải ảnh...' : 'Gửi báo cáo'}
+            {isUploading ? `Đang tải ${selectedImages.length} ảnh...` : 'Gửi báo cáo'}
           </Button>
         </div>
       </form>

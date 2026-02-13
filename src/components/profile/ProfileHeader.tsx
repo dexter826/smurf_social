@@ -3,7 +3,7 @@ import { Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Penc
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
 import { FriendStatus } from '../../types';
-import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage } from '../ui';
+import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
 import { Image as ImageIcon } from 'lucide-react';
 import { useReportStore } from '../../store/reportStore';
 
@@ -23,6 +23,7 @@ interface ProfileHeaderProps {
   onUnblockClick?: () => void;
   isBlockedByMe?: boolean;
   uploading?: boolean;
+  uploadProgress?: number;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -40,7 +41,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onBlockClick,
   onUnblockClick,
   isBlockedByMe = false,
-  uploading = false
+  uploading = false,
+  uploadProgress
 }) => {
   const navigate = useNavigate();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -204,6 +206,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       initialStatus={user.status}
                       showStatus={false}
                     />
+                    {uploading && uploadProgress !== undefined && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full z-20">
+                        <CircularProgress
+                          progress={uploadProgress}
+                          size={40}
+                          showPercentage={true}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {isOwnProfile && (
