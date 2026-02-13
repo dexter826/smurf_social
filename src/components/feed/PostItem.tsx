@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { MoreHorizontal, Edit, Trash2, Flag, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
@@ -55,12 +55,12 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const handleCloseReactions = useCallback(() => setIsReactionsModalOpen(false), []);
 
   return (
-    <div className={`bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-base relative ${isUploading ? 'opacity-85' : 'opacity-100'}`}>
-      {/* Thanh tiến trình mỏng ở đỉnh card */}
+    <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-base relative">
+      {/* Thanh tiến trình ở đỉnh card */}
       {isUploading && (
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-bg-secondary z-20">
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-bg-secondary z-20">
           <div 
-            className="h-full bg-info transition-all duration-500 ease-out shadow-[0_0_8px_var(--color-info)]"
+            className="h-full bg-info transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -86,9 +86,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
                 {author?.name || 'Unknown User'}
               </h3>
               {isUploading && (
-                <span className="flex items-center gap-1.5 px-2 py-0.5 bg-info-light dark:bg-info/10 text-[10px] font-bold text-info rounded-full uppercase tracking-wider animate-pulse">
-                  <Loader2 size={10} className="animate-spin" />
-                  Đang đăng...
+                <span className="text-[11px] text-info font-medium">
+                  Đang đăng • {Math.round(progress)}%
                 </span>
               )}
             </div>
