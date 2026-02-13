@@ -28,7 +28,6 @@ export const MessageStatus: React.FC<MessageStatusProps> = ({
               src={user.avatar} 
               name={user.name} 
               size="2xs" 
-              className="ring-1 ring-bg-primary"
             />
           ))}
         </div>

@@ -14,7 +14,7 @@ interface AvatarProps {
 }
 
 const sizeClasses = {
-  '2xs': 'w-[14px] h-[14px] text-[8px]',
+  '2xs': 'w-[14px] h-[14px] text-[7px]',
   xs: 'w-6 h-6 text-[10px]',
   sm: 'w-9 h-9 text-xs',
   md: 'w-10 h-10 text-sm',
@@ -123,10 +123,10 @@ const AvatarInner: React.FC<AvatarProps> = ({
 
   return (
     <div 
-      className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} ${!isGroup ? 'rounded-full' : ''} ${className} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} rounded-full ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      <div className={`w-full h-full relative ${!isGroup ? 'rounded-full overflow-hidden border-border-light bg-bg-secondary' : ''} ${size !== '2xs' && !isGroup ? 'border' : ''} flex items-center justify-center`}>
+      <div className={`w-full h-full relative rounded-full overflow-hidden bg-bg-secondary ${size !== '2xs' ? 'border border-border-light' : ''} flex items-center justify-center`}>
         {renderContent()}
       </div>
       {status && (
