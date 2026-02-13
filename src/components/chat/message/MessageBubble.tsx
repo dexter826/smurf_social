@@ -227,7 +227,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   ) : (
                     <div className="opacity-0 group-hover/message:opacity-100 transition-all duration-base">
                       <button
-                        className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-base"
+                        className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowReactionSelector(!showReactionSelector);
@@ -259,22 +259,24 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               )}
             </div>
 
-            <MessageActions
-              message={message}
-              isMe={isMe}
-              canEdit={canEdit}
-              showMenu={showMenu}
-              setShowMenu={setShowMenu}
-              menuPlacement={menuPlacement}
-              menuButtonRef={menuButtonRef}
-              toggleMenu={toggleMenu}
-              onReply={onReply}
-              onForward={onForward}
-              onEdit={onEdit}
-              setShowRecallConfirm={setShowRecallConfirm}
-              onDeleteForMe={onDeleteForMe}
-              isBlocked={isBlocked}
-            />
+            {!message.isRecalled && (
+              <MessageActions
+                message={message}
+                isMe={isMe}
+                canEdit={canEdit}
+                showMenu={showMenu}
+                setShowMenu={setShowMenu}
+                menuPlacement={menuPlacement}
+                menuButtonRef={menuButtonRef}
+                toggleMenu={toggleMenu}
+                onReply={onReply}
+                onForward={onForward}
+                onEdit={onEdit}
+                setShowRecallConfirm={setShowRecallConfirm}
+                onDeleteForMe={onDeleteForMe}
+                isBlocked={isBlocked}
+              />
+            )}
           </div>
 
           {/* Thời gian cho file media */}

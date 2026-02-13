@@ -36,7 +36,7 @@ const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
     <div
       className={`flex items-center gap-1 select-none transition-all duration-base ${isMinimal
         ? (onClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default')
-        : 'px-1 py-[1px] bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm cursor-pointer hover:bg-bg-hover hover:ring-primary hover:shadow-md'
+        : 'px-1 py-[1px] bg-bg-secondary rounded-full border border-divider shadow-sm cursor-pointer hover:bg-bg-hover hover:border-primary hover:shadow-md'
         } ${className}`}
       onClick={(e) => {
         if (!onClick) return;
