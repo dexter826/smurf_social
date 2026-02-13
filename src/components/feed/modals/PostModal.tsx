@@ -57,8 +57,6 @@ export const PostModal: React.FC<PostModalProps> = ({
   });
 
   const formData = watch();
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [uploadProgress, setUploadProgress] = React.useState<number>(0);
   const [showDiscardConfirm, setShowDiscardConfirm] = React.useState(false);
 
   const [pendingFiles, setPendingFiles] = React.useState<File[]>([]);
@@ -220,7 +218,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                   className="group rounded-full"
                   title="Ảnh"
-                  disabled={isSubmitting || isUploading}
+                  disabled={isSubmitting}
                   icon={<ImageIcon className="text-success transition-all duration-base" size={20} />}
                   size="md"
                 />
@@ -229,7 +227,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                   onClick={() => videoInputRef.current?.click()}
                   className="group rounded-full"
                   title="Video"
-                  disabled={isSubmitting || isUploading}
+                  disabled={isSubmitting}
                   icon={<Video className="text-info transition-all duration-base" size={20} />}
                   size="md"
                 />
@@ -241,7 +239,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                         setValue('content', newText, { shouldDirty: true });
                       });
                     }}
-                    disabled={isSubmitting || isUploading}
+                    disabled={isSubmitting}
                     size={20}
                     buttonSize="md"
                     iconClassName="text-warning transition-all duration-base"
@@ -258,7 +256,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               size="md"
               className="w-full text-[15px] font-bold shadow-sm"
               onClick={handleSubmit(onFormSubmit)}
-              disabled={isSubmitting || isUploading || !isValid}
+              disabled={isSubmitting || !isValid}
               isLoading={isSubmitting}
             >
               {isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
@@ -358,15 +356,6 @@ export const PostModal: React.FC<PostModalProps> = ({
                     </button>
                   </div>
                 ))}
-                {isUploading && (
-                  <div className="flex flex-col items-center justify-center aspect-square md:aspect-video bg-bg-secondary rounded-xl border border-border-light p-4">
-                    <UploadProgress
-                      progress={uploadProgress}
-                      fileName="Đang tải lên media..."
-                      showDetails
-                    />
-                  </div>
-                )}
               </div>
             )}
           </div>

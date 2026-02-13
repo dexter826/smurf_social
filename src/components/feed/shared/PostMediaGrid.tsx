@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { IconButton, LazyImage } from '../../ui';
 
 interface MediaItem {
@@ -47,9 +47,9 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
         )}
 
         {isBlob && (
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center z-20">
-            <div className="bg-black/40 p-2 rounded-full text-white animate-spin">
-              <Loader2 size={24} />
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <div className="bg-black/60 px-2 py-1 rounded text-white text-[10px] font-medium">
+              Đang xử lý
             </div>
           </div>
         )}
@@ -95,8 +95,8 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
 
           {isBlob && (
             <div className="absolute inset-0 flex items-center justify-center z-20">
-              <div className="bg-primary/80 backdrop-blur-md p-3 rounded-full text-white shadow-xl shadow-primary/20 animate-spin">
-                <Loader2 size={32} />
+              <div className="bg-black/60 px-3 py-1.5 rounded-lg text-white text-xs font-medium">
+                Đang xử lý
               </div>
             </div>
           )}
