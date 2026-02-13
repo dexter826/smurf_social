@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
 
 import { useUserCache } from '../store/userCacheStore';
+import { usePostStore } from '../store/postStore';
 import { DocumentSnapshot } from 'firebase/firestore';
 
 interface UseUserPostsReturn {
@@ -19,7 +20,7 @@ interface UseUserPostsReturn {
 }
 
 export const useUserPosts = (userId: string, currentUser: User): UseUserPostsReturn => {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [dbPosts, setDbPosts] = useState<Post[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -28,6 +29,18 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   const hasMoreRef = useRef(true);
   
   const { users, fetchUsers } = useUserCache();
+  const { posts: allStorePosts } = usePostStore();
+
+  const posts = useMemo(() => {
+    if (userId !== currentUser.id) return dbPosts;
+
+    const dbPostIds = new Set(dbPosts.map(p => p.id));
+    const uploadingPosts = allStorePosts.filter(p => 
+      p.userId === userId && !dbPostIds.has(p.id)
+    );
+
+    return [...uploadingPosts, ...dbPosts];
+  }, [dbPosts, allStorePosts, userId, currentUser.id]);
 
   const loadPosts = useCallback(async (isFirstPage: boolean = false) => {
     if (!isFirstPage && !hasMoreRef.current) return;
@@ -55,9 +68,9 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
       setHasMore(hasMoreRef.current);
 
       if (isFirstPage) {
-        setPosts(newPosts);
+        setDbPosts(newPosts);
       } else {
-        setPosts(prev => [...prev, ...newPosts]);
+        setDbPosts(prev => [...prev, ...newPosts]);
       }
       
       const userIds = [...new Set(newPosts.map(p => p.userId))];
@@ -79,7 +92,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
       currentUser.id,
       currentUser.friendIds || [],
       (newPosts) => {
-        setPosts(prev => {
+        setDbPosts(prev => {
           const updatedPosts = [...prev];
           newPosts.forEach(npm => {
             const index = updatedPosts.findIndex(p => p.id === npm.id);
@@ -115,7 +128,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     const oldReaction = post.reactions?.[currentUser.id];
     const isRemove = oldReaction === reaction;
     
-    setPosts(prev => prev.map(p => {
+    setDbPosts(prev => prev.map(p => {
       if (p.id !== postId) return p;
       
       const newReactions = { ...(p.reactions || {}) };
@@ -131,7 +144,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
       await postService.reactToPost(postId, currentUser.id, isRemove ? 'REMOVE' : reaction);
     } catch (error) {
       // Rollback
-      setPosts(prev => prev.map(p => {
+      setDbPosts(prev => prev.map(p => {
         if (p.id !== postId) return p;
         
         const oldReactions = { ...(p.reactions || {}) };
@@ -147,7 +160,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
 
   const handleDelete = useCallback(async (postId: string, images?: string[]) => {
     await postService.deletePost(postId, images);
-    setPosts(prev => prev.filter(p => p.id !== postId));
+    setDbPosts(prev => prev.filter(p => p.id !== postId));
   }, []);
 
   const refresh = useCallback(async () => {
