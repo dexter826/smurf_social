@@ -96,9 +96,9 @@ export const AppLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `px-5 h-12 flex items-center justify-center rounded-xl transition-all duration-base relative group ${isActive
+                `px-3.5 h-10 flex items-center justify-center rounded-xl transition-all duration-base relative group border-2 border-transparent ${isActive
                   ? 'bg-primary-light text-primary font-bold'
-                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
                 }`
               }
               title={item.label}
@@ -122,13 +122,13 @@ export const AppLayout: React.FC = () => {
           <div className="flex items-center gap-1">
             <NotificationDropdown />
 
-            <button
+            <IconButton
               onClick={toggleTheme}
-              className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base text-text-tertiary hover:bg-bg-hover hover:text-primary active:bg-bg-active"
+              icon={mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               title="Chế độ tối"
-            >
-              {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
+              variant="ghost"
+              className="text-text-secondary hover:text-primary"
+            />
           </div>
 
           <div className="w-px h-6 bg-border-light mx-1" />
@@ -137,9 +137,9 @@ export const AppLayout: React.FC = () => {
             <NavLink
               to="/settings"
               className={({ isActive }) =>
-                `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base ${isActive
+                `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base border-2 border-transparent ${isActive
                   ? 'bg-primary-light text-primary'
-                  : 'text-text-tertiary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
                 }`
               }
               title="Cài đặt"
@@ -161,13 +161,13 @@ export const AppLayout: React.FC = () => {
               )}
             </div>
 
-            <button
+            <IconButton
               onClick={() => setShowLogoutConfirm(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base text-text-tertiary hover:bg-error/10 hover:text-error active:bg-error/20"
+              icon={<LogOut size={20} />}
               title="Đăng xuất"
-            >
-              <LogOut size={20} />
-            </button>
+              variant="ghost"
+              className="text-text-secondary hover:bg-error/10 hover:text-error"
+            />
           </div>
         </div>
       </header>

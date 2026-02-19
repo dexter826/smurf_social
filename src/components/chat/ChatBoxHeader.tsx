@@ -26,14 +26,14 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
     <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-4 h-16 border-b border-border-light bg-bg-primary transition-theme">
       <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
         {onBack && (
-          <Button
-            variant="ghost"
-            size="sm"
+          <IconButton
+            icon={<ChevronLeft size={24} />}
             onClick={onBack}
-            className="md:hidden -ml-2 text-text-secondary hover:text-text-primary h-10 w-10 p-0 rounded-full"
-          >
-            <ChevronLeft size={24} />
-          </Button>
+            variant="ghost"
+            className="md:hidden -ml-2 text-text-secondary"
+            size="md"
+            title="Quay lại"
+          />
         )}
 
         <div className="flex-shrink-0">
@@ -81,7 +81,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
           onClick={() => { }}
           title="Cuộc gọi âm thanh"
           variant="ghost"
-          className="text-primary"
+          className="text-text-secondary"
           icon={<Phone size={20} />}
           size="md"
         />
@@ -89,7 +89,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
           onClick={() => { }}
           title="Cuộc gọi video"
           variant="ghost"
-          className="text-primary"
+          className="text-text-secondary"
           icon={<Video size={20} />}
           size="md"
         />

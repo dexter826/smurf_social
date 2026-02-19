@@ -101,7 +101,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="p-4 border-t border-border-light bg-bg-secondary/30 flex justify-end gap-3 pb-[calc(12px+env(safe-area-inset-bottom))] md:pb-4">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-t-2 border-border-light bg-bg-secondary/30 flex justify-end gap-3 pb-[calc(12px+env(safe-area-inset-bottom))] md:pb-4">
             {footer}
           </div>
         )}
@@ -170,7 +170,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
       {/* Dialog */}
       <div className={`
-        relative bg-bg-primary w-full max-w-[320px] rounded-xl shadow-2xl p-5 transition-all duration-base
+        relative bg-bg-primary w-full max-w-[320px] rounded-xl shadow-2xl p-5 transition-all duration-base border-2 border-border-light
         ${isAnimating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
       `}>
         {/* Icon + Title + Message */}

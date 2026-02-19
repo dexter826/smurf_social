@@ -52,7 +52,7 @@ const SettingItem = React.memo(({
 }) => (
   <div
     onClick={onClick}
-    className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border border-border-light ${onClick ? 'cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-all duration-base' : ''
+    className={`flex items-center justify-between p-4 bg-bg-primary rounded-xl border-2 border-border-light ${onClick ? 'cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-all duration-base' : ''
       }`}
   >
     <div className="flex items-center gap-4">
@@ -165,12 +165,12 @@ const SettingsPage: React.FC = () => {
                 ))}
               </div>
             ) : blockedUsers.length === 0 ? (
-              <div className="text-center py-12 text-text-tertiary bg-bg-primary rounded-xl border border-border-light">
+              <div className="text-center py-12 text-text-tertiary bg-bg-primary rounded-xl border-2 border-border-light">
                 <Ban size={48} className="mx-auto mb-3 opacity-30" />
                 <p>Chưa có người dùng nào bị chặn</p>
               </div>
             ) : (
-              <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
+              <div className="bg-bg-primary rounded-xl border-2 border-border-light overflow-hidden">
                 {blockedUsers.map(user => (
                   <div
                     key={user.id}
@@ -231,7 +231,7 @@ const SettingsPage: React.FC = () => {
               {item.icon}
               <span className="font-medium">{item.label}</span>
               {item.id === 'blocked' && blockedUsers.length > 0 && (
-                <span className="ml-auto text-xs bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light">
+                <span className="ml-auto text-xs bg-bg-secondary px-2 py-0.5 rounded-full border-2 border-border-light">
                   {blockedUsers.length}
                 </span>
               )}

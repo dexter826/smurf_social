@@ -13,10 +13,11 @@ const baseStyle = "inline-flex items-center justify-center font-semibold transit
 
 const variants = {
   primary: "bg-primary hover:bg-primary-hover active:bg-primary-active text-text-on-primary shadow-sm hover:shadow-md",
-  secondary: "bg-bg-secondary hover:bg-bg-hover active:bg-bg-active text-text-primary border border-border-light",
+  secondary: "bg-bg-secondary hover:bg-bg-hover active:bg-bg-active text-text-primary border-2 border-border-light",
   ghost: "hover:bg-bg-hover active:bg-bg-active text-text-secondary hover:text-text-primary",
   danger: "bg-error hover:bg-error/90 active:bg-error/80 text-text-on-primary shadow-sm",
 };
+
 
 const sizes = {
   sm: "h-9 px-3 text-sm gap-2 rounded-lg",
