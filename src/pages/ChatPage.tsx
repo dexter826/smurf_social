@@ -4,7 +4,6 @@ import { MessageSquare } from 'lucide-react';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
 import { friendService } from '../services/friendService';
-import { FriendRequest } from '../types';
 import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
@@ -76,7 +75,10 @@ const ChatPage: React.FC = () => {
     setIsChatVisible,
     isLoadingMore,
     hasMoreMessages,
-    handleLoadMoreMessages
+    handleLoadMoreMessages,
+    friendRequestStatus,
+    currentReceivedRequest,
+    receivedRequests,
   } = useChat();
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
 
@@ -90,36 +92,6 @@ const ChatPage: React.FC = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
-  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
-  const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
-
-  useEffect(() => {
-    if (!currentUser?.id) return;
-
-    const unsubSent = friendService.subscribeToSentRequests(currentUser.id, setSentRequests);
-    const unsubReceived = friendService.subscribeToReceivedRequests(currentUser.id, setReceivedRequests);
-
-    return () => {
-      unsubSent();
-      unsubReceived();
-    };
-  }, [currentUser?.id]);
-
-  const friendRequestStatus = useMemo(() => {
-    if (!selectedConversation || selectedConversation.isGroup || !currentUser) return 'none';
-    const partnerId = selectedConversation.participantIds.find(id => id !== currentUser.id);
-    if (!partnerId) return 'none';
-
-    if (sentRequests.some(r => r.receiverId === partnerId)) return 'sent';
-    if (receivedRequests.some(r => r.senderId === partnerId)) return 'received';
-    return 'none';
-  }, [selectedConversation, currentUser, sentRequests, receivedRequests]) as 'none' | 'sent' | 'received';
-
-  const currentReceivedRequest = useMemo(() => {
-    if (!selectedConversation || selectedConversation.isGroup || !currentUser) return null;
-    const partnerId = selectedConversation.participantIds.find(id => id !== currentUser.id);
-    return receivedRequests.find(r => r.senderId === partnerId);
-  }, [selectedConversation, currentUser, receivedRequests]);
 
   if (!currentUser) {
     return <MessengerSkeleton />;

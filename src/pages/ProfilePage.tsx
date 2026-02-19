@@ -246,11 +246,20 @@ const ProfilePage: React.FC = () => {
               <Lock size={40} className="text-text-secondary" />
             </div>
             <h2 className="text-2xl font-bold text-text-primary mb-3">Không thể xem trang này</h2>
-            <p className="text-text-secondary mb-8">Bạn đã chặn người dùng này. Bỏ chặn để xem nội dung của họ.</p>
+            <p className="text-text-secondary mb-8">
+              {isBlockedByMe
+                ? 'Bạn đã chặn người dùng này. Bỏ chặn để xem nội dung của họ.'
+                : 'Bạn không thể xem trang cá nhân này.'
+              }
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => navigate('/contacts')} variant="primary" className="px-8">
-                Tìm kiếm bạn bè
-              </Button>
+              {isBlockedByMe ? (
+                <Button onClick={handleUnblockUser} variant="primary" className="px-8">
+                  Bỏ chặn
+                </Button>
+              ) : (
+                <Button onClick={() => navigate(-1)} variant="ghost">Quay lại</Button>
+              )}
             </div>
           </div>
         </div>
