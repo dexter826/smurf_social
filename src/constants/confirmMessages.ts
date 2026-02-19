@@ -1,7 +1,4 @@
-/**
- * Confirm Dialog Messages
- * Các hằng số thông báo xác nhận trên toàn bộ ứng dụng
- */
+// Thông báo xác nhận.
 
 export const CONFIRM_MESSAGES = {
   FRIEND: {

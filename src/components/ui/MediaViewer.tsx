@@ -30,7 +30,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
         }
     }, [isOpen, initialIndex]);
 
-    // Auto-pause video khi chuyển slide hoặc đóng viewer
+    // Dừng video khi chuyển slide.
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.pause();

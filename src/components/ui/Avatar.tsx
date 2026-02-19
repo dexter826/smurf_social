@@ -39,7 +39,6 @@ const AvatarInner: React.FC<AvatarProps> = ({
   onClick
 }) => {
   const renderContent = () => {
-    // Ưu tiên ảnh
     if (src && src !== '/blank-avatar.png') {
       return (
         <img
@@ -53,7 +52,6 @@ const AvatarInner: React.FC<AvatarProps> = ({
       );
     }
 
-    // Avatar nhóm
     if (isGroup && members.length > 0) {
       const displayMembers = members.slice(0, 4);
       const count = displayMembers.length;
@@ -73,7 +71,6 @@ const AvatarInner: React.FC<AvatarProps> = ({
           return 'w-[58%] h-[58%] bottom-0 right-0 z-20';
         }
 
-        // 4 thành viên
         if (index === 0) return 'w-[58%] h-[58%] top-0 left-0 z-10';
         if (index === 1) return 'w-[58%] h-[58%] top-0 right-0';
         if (index === 2) return 'w-[58%] h-[58%] bottom-0 left-0 z-20';

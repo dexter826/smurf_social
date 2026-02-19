@@ -40,15 +40,12 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
     }
   }, [value, autoResize, maxHeight]);
 
-  // Monitor scrollbar width to sync overlay
+  // Đồng bộ cuộn cho overlay.
   useEffect(() => {
     if (!innerRef.current) return;
     const observer = new ResizeObserver(() => {
       if (innerRef.current) {
-        // Calculate scrollbar width by difference in offsetWidth and clientWidth (minus borders)
-        // Assuming typical 1px border. 
         const widthDiff = innerRef.current.offsetWidth - innerRef.current.clientWidth;
-        // If border is 1px each side, diff is 2px. Anything more is scrollbar.
         const sbWidth = Math.max(0, widthDiff - 2);
         setScrollbarWidth(sbWidth);
       }
@@ -88,7 +85,6 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
             style={{
               paddingTop: innerRef.current ? getComputedStyle(innerRef.current).paddingTop : '8px',
               paddingBottom: innerRef.current ? getComputedStyle(innerRef.current).paddingBottom : '8px',
-              // Add padding right dynamically to account for scrollbar + right element
               paddingRight: `calc(${rightElement ? '2rem' : '1rem'} + ${scrollbarWidth}px)`,
             }}
             ref={(el) => {

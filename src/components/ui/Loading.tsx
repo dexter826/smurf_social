@@ -16,7 +16,6 @@ export const Loading: React.FC<LoadingProps> = ({
   className = '',
   color = 'text-primary'
 }) => {
-  // Xác định kích thước
   const getIconSize = () => {
     if (typeof size === 'number') return size;
     switch (size) {
@@ -35,7 +34,6 @@ export const Loading: React.FC<LoadingProps> = ({
     />
   );
 
-  // Loading icon
   if (variant === 'spinner') {
     return (
       <div className={`flex items-center justify-center ${className}`}>
@@ -45,7 +43,6 @@ export const Loading: React.FC<LoadingProps> = ({
     );
   }
 
-  // Toàn trang
   if (variant === 'page') {
     return (
       <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-bg-primary transition-theme ${className}`}>
@@ -55,7 +52,6 @@ export const Loading: React.FC<LoadingProps> = ({
     );
   }
 
-  // Lớp phủ
   if (variant === 'overlay') {
     return (
       <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-bg-primary/60 backdrop-blur-[2px] rounded-inherit transition-theme ${className}`}>
@@ -65,7 +61,6 @@ export const Loading: React.FC<LoadingProps> = ({
     );
   }
 
-  // Loading đệm
   return (
     <div className={`flex flex-col items-center justify-center p-8 w-full ${className}`}>
       {spinner}

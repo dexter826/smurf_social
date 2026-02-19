@@ -69,9 +69,7 @@ export const uploadWithProgress = (
   });
 };
 
-/**
- * Format bytes thành readable string
- */
+// Định dạng bytes thành chuỗi dễ đọc
 export const formatBytes = (bytes: number): string => {
   if (bytes === 0) return "0 B";
   const k = 1024;

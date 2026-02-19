@@ -1,10 +1,7 @@
 import { toast } from '../store/toastStore';
 import { FILE_LIMITS, FileLimitType } from '../constants/fileConfig';
 
-
-/**
- * Kiểm tra file có vượt quá kích thước cho phép hay không
- */
+// Xử lý ảnh và video
 export const validateFileSize = (file: File, type: FileLimitType): boolean => {
   const limit = FILE_LIMITS[type];
   if (file.size > limit) {
