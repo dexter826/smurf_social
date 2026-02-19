@@ -1,5 +1,5 @@
 import { toast } from '../store/toastStore';
-import { FILE_LIMITS, FileLimitType } from '../constants/fileConfig';
+import { FILE_LIMITS, FileLimitType } from '../constants';
 
 // Xử lý ảnh và video
 export const validateFileSize = (file: File, type: FileLimitType): boolean => {

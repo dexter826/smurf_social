@@ -8,9 +8,9 @@ import { ActionsMenu } from './ActionsMenu';
 import { useAudioRecorder } from '../../../hooks/chat/useAudioRecorder';
 import { useMentions } from '../../../hooks/chat/useMentions';
 import { toast } from '../../../store/toastStore';
-import { TOAST_MESSAGES } from '../../../constants';
+import { TOAST_MESSAGES, FILE_LIMITS } from '../../../constants';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
-import { FILE_LIMITS } from '../../../constants/fileConfig';
+
 import { validateFileSize } from '../../../utils/fileUtils';
 import { Message, User } from '../../../types';
 
