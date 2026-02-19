@@ -24,7 +24,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
     }}
     className={`
       w-full px-4 py-2.5 text-left text-sm flex items-center justify-start gap-3 transition-all duration-base
-      hover:bg-bg-hover active:bg-bg-active
+      hover:bg-bg-hover active:bg-bg-active font-medium
       ${variant === 'danger'
         ? 'text-error hover:text-error'
         : 'text-text-primary'
@@ -32,8 +32,8 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
       ${className}
     `}
   >
-    {icon && <span className={`flex-shrink-0 ${variant === 'danger' ? 'text-error' : 'text-text-secondary'}`}>{icon}</span>}
-    <span className="truncate font-medium flex-1">{label}</span>
+    {icon && <span className={`flex-shrink-0 transition-colors ${variant === 'danger' ? 'text-error' : 'text-text-secondary group-hover:text-text-primary'}`}>{icon}</span>}
+    <span className="truncate flex-1">{label}</span>
   </button>
 );
 
@@ -98,7 +98,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
           className={`
             fixed z-[var(--z-dropdown)] mt-1.5
             min-w-[180px] w-max max-w-[calc(100vw-32px)]
-            bg-bg-primary border border-border-light rounded-xl 
+            bg-bg-primary border-2 border-border-light rounded-xl 
             shadow-dropdown overflow-hidden
             animate-in fade-in zoom-in-95 duration-base
             ${align === 'right' ? 'origin-top-right' : 'origin-top-left'}

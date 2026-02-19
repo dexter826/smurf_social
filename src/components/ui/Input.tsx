@@ -37,17 +37,7 @@ export const Input: React.FC<InputProps> = ({
         )}
         <input
           id={inputId}
-          className={`
-            block w-full rounded-xl transition-all duration-base outline-none text-base sm:text-sm
-            bg-bg-primary border border-border-light text-text-primary placeholder:text-text-tertiary
-            focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:ring-offset-1
-            disabled:opacity-50 disabled:bg-bg-secondary disabled:text-text-tertiary disabled:cursor-not-allowed disabled:border-border-light
-            ${icon ? 'pl-11' : 'pl-4'} 
-            ${rightElement ? 'pr-11' : 'pr-4'} 
-            ${error ? 'border-error ring-4 ring-error/10' : ''} 
-            ${size === 'sm' ? 'h-9 text-xs' : size === 'lg' ? 'h-12 text-base' : 'h-10 text-sm'}
-            ${className}
-          `}
+          className={`w-full bg-bg-primary border-2 ${error ? 'border-error' : 'border-border-light'} rounded-xl transition-all duration-base outline-none focus:ring-4 ${error ? 'focus:ring-error/20' : 'focus:ring-primary/20'} ${error ? 'focus:border-error' : 'focus:border-primary'} ${size === 'sm' ? 'h-9 px-3 text-sm' : size === 'lg' ? 'h-12 px-4 text-base' : 'h-10 px-4 text-sm'} ${icon ? 'pl-10' : ''} ${rightElement ? 'pr-10' : ''} ${className}`}
           {...props}
         />
         {rightElement && (

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationList } from './NotificationList';
 import { useAuthStore } from '../../store/authStore';
+import { IconButton } from '../ui';
 
 export const NotificationDropdown: React.FC = () => {
   const { user } = useAuthStore();
@@ -23,21 +24,20 @@ export const NotificationDropdown: React.FC = () => {
 
   return (
     <div className="relative group" ref={dropdownRef}>
-      <button
+      <IconButton
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base ${isOpen
-          ? 'bg-bg-hover text-primary shadow-sm'
-          : 'text-text-tertiary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
-          }`}
+        icon={
+          <div className="relative">
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
+            )}
+          </div>
+        }
+        variant={isOpen ? "secondary" : "ghost"}
         title="Thông báo"
-      >
-        <div className="relative">
-          <Bell size={20} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
-          )}
-        </div>
-      </button>
+        className={isOpen ? "text-primary shadow-sm" : "text-text-secondary hover:text-primary"}
+      />
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-bg-primary rounded-xl shadow-xl border border-border-light z-[var(--z-dropdown)] overflow-hidden animate-in fade-in zoom-in duration-base">

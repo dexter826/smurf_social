@@ -70,7 +70,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Xem hồ sơ */}
           <button
             onClick={() => navigate('/profile')}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
               <UserIcon size={22} />
@@ -85,7 +85,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Cài đặt */}
           <button
             onClick={() => navigate('/settings')}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               <Settings size={22} />
@@ -100,7 +100,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Chế độ tối */}
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
@@ -118,7 +118,7 @@ export const MobileMenuPage: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border border-border-light"
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
             >
               <div className="w-10 h-10 flex items-center justify-center rounded-full bg-warning/10 text-warning">
                 <Shield size={22} />
@@ -138,7 +138,7 @@ export const MobileMenuPage: React.FC = () => {
             variant="ghost"
             fullWidth
             onClick={() => setShowLogoutConfirm(true)}
-            className="!justify-start !p-3.5 !h-auto !rounded-xl !bg-bg-primary hover:!bg-error/5 !border !border-error/20 !text-error"
+            className="!justify-start p-3.5 h-auto rounded-xl bg-bg-primary hover:bg-error/5 border-2 border-error/20 text-error"
             icon={
               <div className="w-10 h-10 flex items-center justify-center rounded-full bg-error/10 text-error">
                 <LogOut size={22} />

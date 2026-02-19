@@ -57,7 +57,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const handleCloseReactions = useCallback(() => setIsReactionsModalOpen(false), []);
 
   return (
-    <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden mb-4 transition-all duration-base relative">
+    <div className="bg-bg-primary rounded-xl shadow-sm border-2 border-border-light overflow-hidden mb-4 transition-all duration-base relative">
 
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
