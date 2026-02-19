@@ -4,8 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Gender } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toast } from '../../store/toastStore';
-import { API_ENDPOINTS } from '../../constants/api';
-import { TOAST_MESSAGES } from '../../constants';
+import { API_ENDPOINTS, TOAST_MESSAGES } from '../../constants';
 import { profileSchema, ProfileFormValues } from '../../utils/validation';
 
 interface EditProfileModalProps {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getInitials, getAvatarGradient } from '../../utils/avatarUtils';
+import { getInitials, getAvatarGradient } from '../../utils';
 import { User, UserStatus } from '../../types';
 
 interface AvatarProps {

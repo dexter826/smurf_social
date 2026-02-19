@@ -1,4 +1,19 @@
-import { API_ENDPOINTS } from '../constants/api';
+import { API_ENDPOINTS, FILE_LIMITS, FileLimitType, TOAST_MESSAGES } from '../constants';
+import { toast } from '../store/toastStore';
+
+// Kiểm tra dung lượng file
+export const validateFileSize = (file: File, type: FileLimitType): boolean => {
+  const limit = FILE_LIMITS[type];
+  if (file.size > limit) {
+    const mbLimit = limit / (1024 * 1024);
+    const labels: Record<string, string> = { IMAGE: 'Ảnh', AVATAR: 'Ảnh đại diện', COVER: 'Ảnh bìa', FILE: 'File', VIDEO: 'Video' };
+    const typeLabel = labels[type] || 'File';
+      
+    toast.error(TOAST_MESSAGES.MEDIA.FILE_TOO_LARGE(file.name, mbLimit, typeLabel));
+    return false;
+  }
+  return true;
+};
 
 export interface UploadProgress {
   progress: number;

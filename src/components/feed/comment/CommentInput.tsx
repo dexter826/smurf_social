@@ -3,7 +3,7 @@ import { Image as ImageIcon, X, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, IconButton, Button, EmojiPicker, Loading } from '../../ui';
-import { validateFileSize } from '../../../utils/fileUtils';
+import { validateFileSize } from '../../../utils';
 import { toast } from '../../../store/toastStore';
 import { commentSchema, CommentFormValues } from '../../../utils/validation';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
