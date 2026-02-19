@@ -121,10 +121,10 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
         )}
         <Button
           variant="ghost"
-          size="sm"
+          size="md"
           onClick={handleDelete}
-          className="md:opacity-0 md:group-hover:opacity-100 p-2 h-auto text-text-tertiary hover:text-error hover:bg-error/10 transition-all duration-base rounded-full"
-          icon={<Trash2 size={16} />}
+          className="md:opacity-0 md:group-hover:opacity-100 text-text-tertiary hover:text-error hover:bg-error/10 transition-all duration-base rounded-full active:scale-95"
+          icon={<Trash2 size={18} />}
         />
       </div>
     </div>

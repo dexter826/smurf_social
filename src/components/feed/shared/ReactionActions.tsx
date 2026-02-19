@@ -29,7 +29,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
   return (
     <>
       {showStats && (hasStats ? (
-        <div className={statsClassName || "px-4 py-1 flex justify-between items-center border-b border-border-light h-10"}>
+        <div className={statsClassName || "px-4 py-1 flex justify-between items-center border-b border-border-light min-h-[40px]"}>
           <div className="flex items-center gap-1.5">
             <ReactionDisplay reactions={reactions} variant="minimal" onClick={onViewReactions} />
           </div>
@@ -61,7 +61,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             />
           )}
           <Button variant="ghost"
-            className={`w-full group ${myReaction ? 'text-primary' : 'text-text-secondary hover:text-primary'}`}
+            className={`w-full min-h-[44px] group ${myReaction ? 'text-primary' : 'text-text-secondary hover:text-primary'}`}
             onClick={() => onReact(postId, myReaction || '👍')}
             onMouseEnter={() => setShowReactions(true)}>
             <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
           </Button>
         </div>
         <Button variant="ghost" onClick={onCommentClick}
-          className={`flex-1 text-text-secondary ${onCommentClick ? 'hover:text-primary hover:bg-bg-hover' : ''}`}
+          className={`flex-1 min-h-[44px] text-text-secondary ${onCommentClick ? 'hover:text-primary hover:bg-bg-hover' : ''}`}
           icon={<MessageCircle size={20} />}>
           <span className="text-sm font-medium">Bình luận</span>
         </Button>

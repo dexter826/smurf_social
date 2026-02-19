@@ -36,29 +36,29 @@ export const ActionsMenu: React.FC<ActionsMenuProps> = ({
             type="button"
             onClick={() => onAction('image')}
             title="Hình ảnh & Video"
-            icon={<ImageIcon size={16} />}
-            size="sm"
+            icon={<ImageIcon size={18} />}
+            size="md"
           />
           <IconButton
             type="button"
             onClick={() => onAction('camera')}
             title="Chụp ảnh/Quay phim"
-            icon={<Camera size={16} />}
-            size="sm"
+            icon={<Camera size={18} />}
+            size="md"
           />
           <IconButton
             type="button"
             onClick={() => onAction('file')}
             title="Gửi file"
-            icon={<Paperclip size={16} />}
-            size="sm"
+            icon={<Paperclip size={18} />}
+            size="md"
           />
           <IconButton
             type="button"
             onClick={() => onAction('voice')}
             title="Ghi âm"
-            icon={<Mic size={16} />}
-            size="sm"
+            icon={<Mic size={18} />}
+            size="md"
             disabled={disabled}
           />
         </div>

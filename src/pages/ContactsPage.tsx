@@ -55,7 +55,7 @@ const ContactsPage: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-bg-secondary">
       {/* Sidebar */}
-      <div className="hidden md:flex flex-col w-[320px] border-r border-border-light bg-bg-primary pt-4">
+      <div className="hidden md:flex flex-col w-[280px] lg:w-[320px] border-r border-border-light bg-bg-primary pt-4">
         <div className="px-4 mb-4">
           <Button
             variant="primary"
@@ -118,22 +118,22 @@ const ContactsPage: React.FC = () => {
         <div className="p-4 border-b border-border-light bg-bg-primary sticky top-0 z-10">
 
           {/* Mobile Tab Switcher */}
-          <div className="flex md:hidden p-1 bg-bg-secondary rounded-xl mb-4">
+          <div className="flex md:hidden p-1 bg-bg-secondary rounded-xl mb-3">
             <button
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === 'all' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
+              className={`flex-1 py-2 min-h-[40px] text-xs sm:text-sm font-semibold rounded-lg transition-all ${activeTab === 'all' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
               onClick={() => setActiveTab('all')}
             >
               Bạn bè
             </button>
             <button
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all relative ${activeTab === 'requests' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
+              className={`flex-1 py-2 min-h-[40px] text-xs sm:text-sm font-semibold rounded-lg transition-all relative ${activeTab === 'requests' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
               onClick={() => setActiveTab('requests')}
             >
               Lời mời
               {receivedRequests.length > 0 && <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-error rounded-full" />}
             </button>
             <button
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === 'sent' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
+              className={`flex-1 py-2 min-h-[40px] text-xs sm:text-sm font-semibold rounded-lg transition-all ${activeTab === 'sent' ? 'bg-bg-primary text-primary shadow-sm' : 'text-text-tertiary'}`}
               onClick={() => setActiveTab('sent')}
             >
               Đã gửi
@@ -179,7 +179,7 @@ const ContactsPage: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-2 md:p-4">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4">
           {isLoading ? (
             <div className="space-y-6">
               {[...Array(2)].map((_, i) => (

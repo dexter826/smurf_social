@@ -45,7 +45,7 @@ export const AdminLayout: React.FC = () => {
 
           <button
             onClick={() => navigate('/')}
-            className="w-full h-10 flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active rounded-xl transition-all duration-base mb-4"
+            className="w-full min-h-[44px] flex items-center gap-3 px-4 mx-0 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active rounded-xl transition-all duration-base mb-4"
           >
             <ChevronLeft size={20} />
             Quay lại App
@@ -56,7 +56,7 @@ export const AdminLayout: React.FC = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 mx-2 my-0.5 rounded-xl transition-all duration-base ${isActive
+                `flex items-center gap-3 px-4 py-3 min-h-[44px] mx-2 my-0.5 rounded-xl transition-all duration-base ${isActive
                   ? 'bg-primary-light text-primary font-bold'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`
@@ -71,7 +71,7 @@ export const AdminLayout: React.FC = () => {
         <div className="p-4 border-t border-border-light space-y-1">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active rounded-xl transition-all duration-base"
+            className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active rounded-xl transition-all duration-base"
           >
             {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             {mode === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
@@ -79,7 +79,7 @@ export const AdminLayout: React.FC = () => {
 
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 mx-2 my-0.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-error active:bg-bg-active rounded-xl transition-all duration-base"
+            className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-error active:bg-bg-active rounded-xl transition-all duration-base"
           >
             <LogOut size={20} />
             Đăng xuất
@@ -98,29 +98,29 @@ export const AdminLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden h-16 bg-bg-primary border-b border-border-light flex items-center justify-between px-4 z-40">
+        <header className="md:hidden h-16 bg-bg-primary border-b border-border-light flex items-center justify-between px-4 z-40 sticky top-0">
           <button
             onClick={() => navigate('/')}
-            className="p-2 text-text-tertiary hover:text-primary active:text-primary-active transition-all duration-base"
+            className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-tertiary hover:text-primary active:text-primary-active transition-all duration-base rounded-lg"
           >
             <ChevronLeft size={20} />
           </button>
           <span className="font-bold text-sm uppercase">Admin Panel</span>
-          <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className="p-2 text-text-tertiary hover:text-primary active:text-primary-active transition-all duration-base">
+          <div className="flex items-center gap-1">
+            <button onClick={toggleTheme} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-tertiary hover:text-primary active:text-primary-active transition-all duration-base rounded-lg">
               {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
           </div>
         </header>
 
         {/* Mobile Tabs */}
-        <nav className="md:hidden flex overflow-x-auto border-b border-border-light bg-bg-primary px-2 py-2 gap-1 no-scrollbar flex-shrink-0">
+        <nav className="md:hidden flex overflow-x-auto border-b border-border-light bg-bg-primary px-2 py-1.5 gap-1 no-scrollbar flex-shrink-0">
           {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-base ${isActive
+                `flex-shrink-0 flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-base ${isActive
                   ? 'bg-primary-light text-primary'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`

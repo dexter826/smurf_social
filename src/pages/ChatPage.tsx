@@ -123,7 +123,7 @@ const ChatPage: React.FC = () => {
   return (
     <div className="flex h-full w-full">
       {/* Sidebar danh sách hội thoại */}
-      <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[320px] flex-shrink-0 w-full`}>
+      <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[300px] lg:w-[360px] flex-shrink-0 w-full`}>
         <ConversationList
           conversations={filteredConversations}
           selectedId={selectedConversationId}

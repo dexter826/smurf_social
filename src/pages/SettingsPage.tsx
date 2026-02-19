@@ -213,7 +213,7 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-bg-secondary">
       {/* Sidebar - Desktop */}
-      <div className="hidden md:flex flex-col w-[320px] border-r border-border-light bg-bg-primary pt-4">
+      <div className="hidden md:flex flex-col w-[260px] lg:w-[320px] border-r border-border-light bg-bg-primary pt-4">
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-2 text-sm font-semibold text-text-tertiary uppercase tracking-wider">
             Cài đặt
@@ -250,12 +250,12 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* Mobile Tabs */}
-        <div className="md:hidden flex overflow-x-auto border-b border-border-light bg-bg-primary px-2 py-2 gap-1 no-scrollbar flex-shrink-0">
+        <div className="md:hidden flex overflow-x-auto border-b border-border-light bg-bg-primary px-2 py-1.5 gap-1 no-scrollbar flex-shrink-0">
           {MENU_ITEMS.map(item => (
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all duration-base ${activeSection === item.id
+              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-lg text-sm whitespace-nowrap transition-all duration-base ${activeSection === item.id
                 ? 'bg-primary-light text-primary font-medium'
                 : 'text-text-secondary hover:bg-bg-hover'
                 }`}
@@ -267,7 +267,7 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-2 md:p-4">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4">
           <div className="max-w-2xl mx-auto">
             {renderContent()}
           </div>

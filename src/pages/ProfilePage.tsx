@@ -94,7 +94,7 @@ const ProfilePage: React.FC = () => {
   // Nếu là profile bị ban (và không phải chính mình), ẩn hoàn toàn
   if (isBannedProfile && !isOwnProfile) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center bg-bg-secondary h-full flex items-center justify-center">
+      <div className="max-w-2xl mx-auto px-4 py-12 md:py-20 text-center bg-bg-secondary h-full flex items-center justify-center">
         <div className="bg-bg-primary rounded-2xl shadow-sm border border-border-light p-10 w-full max-w-lg">
           <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
             <Lock size={40} className="text-text-secondary" />
@@ -145,8 +145,8 @@ const ProfilePage: React.FC = () => {
       {canViewContent ? (
         <div className="max-w-5xl mx-auto px-4 pt-2 pb-12">
           {activeTab === 'posts' ? (
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="w-full md:w-[360px] flex-shrink-0 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+              <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 space-y-4 order-2 md:order-1">
                 {/* Khối Giới thiệu */}
                 <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4">
                   <h3 className="font-bold text-lg mb-4 text-text-primary">Giới thiệu</h3>
@@ -210,7 +210,7 @@ const ProfilePage: React.FC = () => {
                     </Button>
                   </div>
                   {latestMedia.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                       {latestMedia.map((url, idx) => (
                         <div
                           key={idx}
@@ -229,7 +229,7 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 order-1 md:order-2">
                 <PostsTab userId={profile.id} currentUser={currentUser} />
               </div>
             </div>
@@ -240,7 +240,7 @@ const ProfilePage: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <div className="max-w-2xl mx-auto px-4 py-12 md:py-20 text-center">
           <div className="bg-bg-primary rounded-2xl shadow-sm border border-border-light p-10">
             <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
               <Lock size={40} className="text-text-secondary" />

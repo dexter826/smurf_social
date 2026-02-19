@@ -69,7 +69,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
               <button
                 key={tab.value}
                 onClick={() => setStatusFilter(tab.value as ReportStatus | 'pending')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === tab.value
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${statusFilter === tab.value
                     ? `bg-bg-primary text-primary shadow-sm`
                     : 'text-text-secondary hover:text-text-primary'
                   }`}
