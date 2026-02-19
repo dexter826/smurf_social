@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { useUserCache } from '../../store/userCacheStore';
 import { toast } from '../../store/toastStore';
-import { validateFileSize } from '../../utils/fileUtils';
+import { validateFileSize } from '../../utils';
 import { TOAST_MESSAGES } from '../../constants';
 
 interface UseProfileMediaProps {

@@ -5,6 +5,7 @@ import { Modal, Input, Button, Avatar, IconButton, ImageCropper } from '../../ui
 import { groupService } from '../../../services/chat/groupService';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES } from '../../../constants';
+import { validateFileSize } from '../../../utils';
 
 interface EditGroupModalProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!validateFileSize(file, 'AVATAR')) return;
       const url = URL.createObjectURL(file);
       setCropImage(url);
       setShowCropper(true);

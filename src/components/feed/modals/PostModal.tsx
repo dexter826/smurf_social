@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, ConfirmDialog } from '../../ui';
 import { toast } from '../../../store/toastStore';
-import { validateFileSize } from '../../../utils/fileUtils';
+import { validateFileSize } from '../../../utils';
 import { User, Post, Visibility } from '../../../types';
 import { postSchema, PostFormValues } from '../../../utils/validation';
 import { insertTextAtCursor } from '../../../utils/uiUtils';

@@ -13,7 +13,7 @@ import { toast } from '../../store/toastStore';
 import { REPORT_CONFIG, IMAGE_COMPRESSION, TOAST_MESSAGES } from '../../constants';
 import { reportSchema, ReportFormValues } from '../../utils/validation';
 import { compressImage } from '../../utils/imageUtils';
-import { uploadWithProgress } from '../../utils/uploadUtils';
+import { uploadWithProgress, validateFileSize } from '../../utils/uploadUtils';
 
 export const ReportModal: React.FC = () => {
   const { user } = useAuthStore();
@@ -68,17 +68,22 @@ export const ReportModal: React.FC = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files) as File[];
-      const totalImages = selectedImages.length + files.length;
+      
+      // Kiểm tra dung lượng từng file
+      const validFiles = files.filter(file => validateFileSize(file, 'IMAGE'));
+      if (validFiles.length === 0) return;
+
+      const totalImages = selectedImages.length + validFiles.length;
 
       if (totalImages > REPORT_CONFIG.MAX_IMAGES_PER_REPORT) {
         toast.error(TOAST_MESSAGES.REPORT.IMAGE_LIMIT(REPORT_CONFIG.MAX_IMAGES_PER_REPORT));
         return;
       }
 
-      const newImages = [...selectedImages, ...files];
+      const newImages = [...selectedImages, ...validFiles];
       setSelectedImages(newImages);
 
-      const newPreviews = files.map(file => URL.createObjectURL(file));
+      const newPreviews = validFiles.map(file => URL.createObjectURL(file));
       setPreviewUrls(prev => [...prev, ...newPreviews]);
     }
   };

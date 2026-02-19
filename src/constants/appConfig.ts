@@ -1,3 +1,5 @@
+import { getValidatedEnvConfig } from '../utils/validateEnv';
+
 // Phân trang
 export const PAGINATION = {
   FEED_POSTS: 15,
@@ -95,4 +97,30 @@ export const REPORT_CONFIG = {
     comment: 'Bình luận',
     user: 'Người dùng'
   }
+} as const;
+
+// Phản ứng (Reactions)
+export const REACTIONS = ['👍', '❤️', '😆', '😮', '😢', '😡'] as const;
+
+export type ReactionType = typeof REACTIONS[number];
+
+export const REACTION_LABELS: Record<ReactionType, string> = {
+  '👍': 'Thích',
+  '❤️': 'Yêu thích',
+  '😆': 'Haha',
+  '😮': 'Wow',
+  '😢': 'Buồn',
+  '😡': 'Phẫn nộ'
+};
+
+// API Endpoints
+const envConfig = getValidatedEnvConfig();
+
+export const API_ENDPOINTS = {
+  PROVINCES: envConfig.api.provincesUrl,
+  CLOUDINARY: {
+    CLOUD_NAME: envConfig.cloudinary.cloudName,
+    UPLOAD_PRESET: envConfig.cloudinary.uploadPreset,
+    UPLOAD_URL: `https://api.cloudinary.com/v1_1/${envConfig.cloudinary.cloudName}/upload`,
+  },
 } as const;

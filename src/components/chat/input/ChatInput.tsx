@@ -9,9 +9,7 @@ import { useAudioRecorder } from '../../../hooks/chat/useAudioRecorder';
 import { useMentions } from '../../../hooks/chat/useMentions';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES, FILE_LIMITS } from '../../../constants';
-import { insertTextAtCursor } from '../../../utils/uiUtils';
-
-import { validateFileSize } from '../../../utils/fileUtils';
+import { insertTextAtCursor, validateFileSize } from '../../../utils';
 import { Message, User } from '../../../types';
 
 interface ChatInputProps {
