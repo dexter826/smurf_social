@@ -9,9 +9,7 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   wrapperClassName?: string;
 }
 
-/**
- * Lazy loading image với IntersectionObserver
- */
+// Lazy load image.
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
   alt,
@@ -81,9 +79,7 @@ interface LazyVideoProps extends React.VideoHTMLAttributes<HTMLVideoElement> {
   wrapperClassName?: string;
 }
 
-/**
- * Lazy loading video với thumbnail
- */
+// Lazy load video.
 export const LazyVideo: React.FC<LazyVideoProps> = ({
   src,
   thumbnail,

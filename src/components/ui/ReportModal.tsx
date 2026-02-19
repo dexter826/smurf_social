@@ -58,7 +58,7 @@ export const ReportModal: React.FC = () => {
     }
   }, [isOpen, reset, reportContext?.type]);
 
-  // Clean up preview URLs
+  // Thu hồi URL preview.
   useEffect(() => {
     return () => {
       previewUrls.forEach(url => URL.revokeObjectURL(url));
@@ -99,7 +99,6 @@ export const ReportModal: React.FC = () => {
       setIsUploading(true);
       let imageUrls: string[] = [];
 
-      // Upload images if any
       if (selectedImages.length > 0) {
         const uploadPromises = selectedImages.map(async (file) => {
           const compressed = await compressImage(file, IMAGE_COMPRESSION.REPORT);
@@ -139,7 +138,6 @@ export const ReportModal: React.FC = () => {
   const reasonEntries = Object.entries(REPORT_CONFIG.REASONS) as [ReportReason, { label: string; description: string }][];
   const isUserReport = reportContext?.type === ReportType.USER;
 
-  // Footer cố định ngoài vùng cuộn
   const modalFooter = (
     <div className="flex flex-col gap-3 w-full">
       {/* Tùy chọn chặn */}

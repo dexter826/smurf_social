@@ -74,7 +74,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
   useClickOutside([containerRef, dropdownRef], () => handleOpenChange(false), isOpen);
 
-  // Tính toán vị trí khi render
   const rect = containerRef.current?.getBoundingClientRect();
   const top = rect ? rect.bottom : 0;
   const left = rect ? rect.left : 0;

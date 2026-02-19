@@ -1,6 +1,4 @@
-/**
- * Utils barrel exports
- */
+// Xuất các hàm tiện ích
 export * from './imageUtils';
 export * from './retryUtils';
 export * from './uploadUtils';

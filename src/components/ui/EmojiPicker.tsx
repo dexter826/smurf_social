@@ -42,9 +42,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
       const windowHeight = window.innerHeight;
       const windowWidth = window.innerWidth;
       
-      // Calculate space below and above
       const spaceBelow = windowHeight - rect.bottom;
-      const pickerHeight = 400; // Approx height
+      const pickerHeight = 400; 
       
       const needsReverse = spaceBelow < pickerHeight && rect.top > pickerHeight;
       setIsReverse(needsReverse);
@@ -61,7 +60,6 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   useLayoutEffect(() => {
     if (isOpen) {
       updateCoords();
-      // Recalculate on scroll/resize
       window.addEventListener('scroll', updateCoords, true);
       window.addEventListener('resize', updateCoords);
       return () => {

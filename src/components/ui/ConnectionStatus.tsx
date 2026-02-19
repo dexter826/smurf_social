@@ -2,10 +2,6 @@ import React from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useConnectionStatus } from '../../hooks/utils/useConnectionStatus';
 
-/**
- * Component hiển thị trạng thái kết nối
- * Tự động ẩn khi kết nối ổn định, hiện khi mất kết nối
- */
 export const ConnectionStatus: React.FC = () => {
     const { isFullyConnected, isOnline, isConnected } = useConnectionStatus();
     const [showReconnected, setShowReconnected] = React.useState(false);
@@ -25,7 +21,6 @@ export const ConnectionStatus: React.FC = () => {
         }
     }, [isFullyConnected]);
 
-    // Không hiển thị gì khi kết nối ổn định và không có thông báo reconnect
     if (isFullyConnected && !showReconnected) {
         return null;
     }

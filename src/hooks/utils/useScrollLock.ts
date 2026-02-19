@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 
-/**
- * Hook khóa cuộn trang khi hiển thị overlay
- */
+// Khóa cuộn trang.
 export const useScrollLock = (lock: boolean) => {
   useEffect(() => {
     if (lock) {

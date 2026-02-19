@@ -79,7 +79,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   );
 };
 
-// Overlay variant cho preview images
+// ========== OVERLAY ========== 
 interface CircularProgressOverlayProps extends CircularProgressProps {
   isVisible: boolean;
 }

@@ -8,7 +8,7 @@ import { IconButton } from './IconButton';
 
 interface DatePickerProps {
   label?: string;
-  value?: number; // Timestmap
+  value?: number;
   onChange: (timestamp: number) => void;
   error?: string;
   placeholder?: string;

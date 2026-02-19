@@ -1,6 +1,4 @@
-/**
- * Utility functions cho xử lý ảnh và video
- */
+// Xử lý ảnh và video
 
 interface CompressionOptions {
   maxSizeMB?: number;
@@ -8,9 +6,7 @@ interface CompressionOptions {
   quality?: number;
 }
 
-/**
- * Nén ảnh trước khi upload (giảm 60-80% size)
- */
+// Nén ảnh trước khi upload
 export const compressImage = async (
   file: File,
   options: CompressionOptions = {}
@@ -69,9 +65,7 @@ export const compressImage = async (
 };
 
 
-/**
- * Kiểm tra file có phải là ảnh không
- */
+// Kiểm tra file ảnh
 export const isImageFile = (file: File): boolean => {
   return file.type.startsWith('image/');
 };

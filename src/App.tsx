@@ -58,22 +58,22 @@ const App: React.FC = () => {
     return () => unsubscribeAuth();
   }, [initializeAuth]);
 
-  // Thiết lập hệ thống Presence (Trạng thái hoạt động)
+  // Cập nhật trạng thái người dùng.
   useEffect(() => {
     if (!user) return;
 
     const userStatusRef = ref(rtdb, `/status/${user.id}`);
     const connectedRef = ref(rtdb, '.info/connected');
 
-    // Lắng nghe trạng thái kết nối của Firebase
+    // Đồng bộ với trạng thái kết nối server.
     const unsubscribeConnected = onValue(connectedRef, (snap) => {
       if (snap.val() === true) {
-        // Khi kết nối thành công, thiết lập "di chúc" onDisconnect
+        // Thiết lập tự động offline khi mất kết nối.
         onDisconnect(userStatusRef).set({
           status: UserStatus.OFFLINE,
           lastSeen: serverTimestamp()
         }).then(() => {
-          // Sau khi thiết lập di chúc, mới set trạng thái online
+          // Đánh dấu người dùng đang hoạt động.
           set(userStatusRef, {
             status: UserStatus.ONLINE,
             lastSeen: serverTimestamp()
@@ -84,7 +84,7 @@ const App: React.FC = () => {
 
     return () => {
       unsubscribeConnected();
-      // Khi component unmount (ví dụ đổi user), cập nhật offline
+      // Ngắt kết nối và cập nhật offline.
       set(userStatusRef, {
         status: UserStatus.OFFLINE,
         lastSeen: serverTimestamp()
@@ -99,7 +99,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
 
-            {/* Main App Routes */}
+
             <Route path="/" element={
               <ProtectedRoute>
                 <AppLayout />
@@ -114,7 +114,7 @@ const App: React.FC = () => {
               <Route path="notifications" element={<NotificationsPage />} />
             </Route>
 
-            {/* Admin Routes with Sidebar in Layout */}
+
             <Route path="/admin" element={
               <ProtectedRoute requireAdmin>
                 <AdminLayout />

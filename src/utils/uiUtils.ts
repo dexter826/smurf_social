@@ -1,9 +1,6 @@
 import { RefObject } from 'react';
 
-/**
- * Cuộn đến một tin nhắn cụ thể và hiển thị hiệu ứng highlight
- * @param messageId ID của tin nhắn cần cuộn tới
- */
+// Cuộn đến tin nhắn và hiệu ứng highlight
 export const scrollToMessage = (messageId: string) => {
   const element = document.getElementById(`msg-${messageId}`);
   if (element) {
