@@ -1,4 +1,4 @@
-# 🐳 Smurf Social
+# 🐳 Smurfy
 
 > Ứng dụng mạng xã hội & chat realtime hiện đại được xây dựng với React, TypeScript và Firebase
 
@@ -29,9 +29,9 @@
 
 ## 🎯 Giới Thiệu
 
-**Smurf Social** là một ứng dụng mạng xã hội full-featured với khả năng chat realtime, newsfeed, quản lý bạn bè và nhiều tính năng khác. Dự án được xây dựng với mục tiêu tạo ra một nền tảng kết nối cộng đồng hiện đại, nhanh chóng và dễ sử dụng.
+**Smurfy** là một ứng dụng mạng xã hội full-featured với khả năng chat realtime, newsfeed, quản lý bạn bè và nhiều tính năng khác. Dự án được xây dựng với mục tiêu tạo ra một nền tảng kết nối cộng đồng hiện đại, nhanh chóng và dễ sử dụng.
 
-### Tại Sao Chọn Smurf Social?
+### Tại Sao Chọn Smurfy?
 
 - ⚡ **Realtime**: Chat và notifications được cập nhật tức thì
 - 🎨 **Modern UI**: Giao diện đẹp mắt với dark/light mode
@@ -45,12 +45,14 @@
 ## ✨ Tính Năng
 
 ### 🔐 Authentication
+
 - Đăng ký / Đăng nhập với email & password
 - Email verification
 - Quên mật khẩu
 - Session management
 
 ### 💬 Chat Realtime
+
 - Chat 1-1 và nhóm
 - Gửi text, images, videos, files, voice messages
 - Reactions, reply, forward, edit, recall messages
@@ -60,6 +62,7 @@
 - Group management (add/remove members, promote admin...)
 
 ### 📰 Newsfeed
+
 - Đăng bài với text, images, videos
 - Reactions (like, love, haha, wow, sad, angry)
 - Comments & replies
@@ -67,28 +70,33 @@
 - Edit & delete posts
 
 ### 👥 Contacts & Friends
+
 - Gửi & nhận friend requests
 - Quản lý danh sách bạn bè
 - Tìm kiếm người dùng
 - Block/unblock users
 
 ### 🔔 Notifications
+
 - Realtime notifications
 - Push notifications (FCM)
 - Notification types: likes, comments, friend requests, reports...
 
 ### 👤 Profile
+
 - Cập nhật thông tin cá nhân
 - Upload avatar & cover image
 - Xem posts của user
 - Thống kê bạn bè & posts
 
 ### ⚙️ Settings
+
 - Theme (light/dark mode)
 - Privacy settings
 - Account settings
 
 ### 🛡️ Admin Dashboard
+
 - Quản lý users (ban/unban)
 - Xử lý reports
 - Thống kê hệ thống
@@ -98,11 +106,12 @@
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React 19.2.3** - UI library
 - **TypeScript 5.8.2** - Type safety
 - **Vite 6.2.0** - Build tool
 - **React Router DOM 7.13.0** - Routing
-- **Zustand 5.0.10** - State management
+- **Zustand 4.5.5** - State management
 - **Tailwind CSS 3.4.17** - Styling
 - **Styled Components 6.3.8** - CSS-in-JS
 - **React Hook Form 7.71.1** - Form handling
@@ -112,6 +121,7 @@
 - **React Easy Crop** - Image cropping
 
 ### Backend & Services
+
 - **Firebase Authentication** - User authentication
 - **Firestore** - NoSQL database
 - **Firebase Realtime Database** - Presence system
@@ -120,8 +130,8 @@
 - **Cloudinary** - Image/video hosting & optimization
 
 ### Development Tools
+
 - **ESLint** - Code linting
-- **Prettier** - Code formatting
 - **PostCSS** - CSS processing
 - **Autoprefixer** - CSS vendor prefixes
 
@@ -172,8 +182,6 @@ User Action → Component → Hook → Store → Service → Firebase
                             Re-render Component
 ```
 
-Xem thêm chi tiết tại [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-
 ---
 
 ## 📦 Cài Đặt
@@ -187,8 +195,8 @@ Xem thêm chi tiết tại [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 ### Clone Repository
 
 ```bash
-git clone https://github.com/your-username/smurf-social.git
-cd smurf-social
+git clone https://github.com/dexter826/smurf_social.git
+cd smurf_social
 ```
 
 ### Cài Đặt Dependencies
@@ -238,13 +246,14 @@ VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_DATABASE_URL=https://your_project_id-default-rtdb.firebaseio.com
+VITE_FIREBASE_VAPID_KEY=your_vapid_key_here
 
 # Cloudinary Configuration
 VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 
-# Optional
-VITE_FIREBASE_VAPID_KEY=your_vapid_key_here
+# API Endpoints
+VITE_PROVINCES_API_URL=https://provinces.open-api.vn/api/
 ```
 
 ### 4. Firestore Security Rules
@@ -298,9 +307,8 @@ yarn preview
 ## 📁 Cấu Trúc Thư Mục
 
 ```
-smurf-social/
+smurf_social/
 ├── .agent/              # Agent configs & analysis
-├── docs/                # Documentation
 ├── public/              # Static assets
 ├── src/
 │   ├── components/      # UI components
@@ -313,7 +321,7 @@ smurf-social/
 │   ├── styles/          # Global styles
 │   ├── utils/           # Utility functions
 │   ├── App.tsx          # Main app component
-│   ├── main.tsx         # Entry point
+│   ├── index.tsx        # Entry point
 │   └── types.ts         # TypeScript types
 ├── .env.example         # Environment variables template
 ├── firebase.json        # Firebase config
@@ -324,20 +332,15 @@ smurf-social/
 └── vite.config.ts       # Vite config
 ```
 
-Xem chi tiết tại [FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md)
-
 ---
 
 ## 📜 Scripts
 
-| Script | Mô Tả |
-|--------|-------|
-| `npm run dev` | Chạy development server |
-| `npm run build` | Build production |
+| Script            | Mô Tả                    |
+| ----------------- | ------------------------ |
+| `npm run dev`     | Chạy development server  |
+| `npm run build`   | Build production         |
 | `npm run preview` | Preview production build |
-| `npm run lint` | Lint code với ESLint |
-| `npm run format` | Format code với Prettier |
-| `npm run type-check` | Check TypeScript types |
 
 ---
 
@@ -346,21 +349,25 @@ Xem chi tiết tại [FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md)
 ### Firebase Hosting
 
 1. Install Firebase CLI:
+
 ```bash
 npm install -g firebase-tools
 ```
 
 2. Login to Firebase:
+
 ```bash
 firebase login
 ```
 
 3. Initialize Firebase:
+
 ```bash
 firebase init
 ```
 
 4. Build và deploy:
+
 ```bash
 npm run build
 firebase deploy
@@ -369,35 +376,22 @@ firebase deploy
 ### Vercel
 
 1. Install Vercel CLI:
+
 ```bash
 npm install -g vercel
 ```
 
 2. Deploy:
+
 ```bash
 vercel
 ```
-
-### Netlify
-
-1. Install Netlify CLI:
-```bash
-npm install -g netlify-cli
-```
-
-2. Deploy:
-```bash
-npm run build
-netlify deploy --prod
-```
-
-Xem chi tiết tại [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)
 
 ---
 
 ## 🤝 Đóng Góp
 
-Chúng tôi rất hoan nghênh mọi đóng góp! Vui lòng đọc [CONTRIBUTING.md](docs/CONTRIBUTING.md) để biết thêm chi tiết.
+Chúng tôi rất hoan nghênh mọi đóng góp!
 
 ### Quy Trình Đóng Góp
 
@@ -410,53 +404,34 @@ Chúng tôi rất hoan nghênh mọi đóng góp! Vui lòng đọc [CONTRIBUTING
 ### Coding Conventions
 
 - Sử dụng TypeScript cho tất cả code
-- Follow ESLint & Prettier rules
-- Viết tests cho features mới
 - Viết JSDoc comments cho public APIs
-- Follow naming conventions trong [CODING_CONVENTIONS.md](docs/CODING_CONVENTIONS.md)
-
----
-
-## 📚 Documentation
-
-- [Architecture](docs/ARCHITECTURE.md) - Kiến trúc hệ thống
-- [Codebase Overview](docs/CODEBASE_OVERVIEW.md) - Tổng quan codebase
-- [Folder Structure](docs/FOLDER_STRUCTURE.md) - Cấu trúc thư mục
-- [Coding Conventions](docs/CODING_CONVENTIONS.md) - Quy ước code
-- [Contributing](docs/CONTRIBUTING.md) - Hướng dẫn đóng góp
-- [Environment Setup](docs/ENVIRONMENT_SETUP.md) - Cài đặt môi trường
-- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) - Hướng dẫn deploy
-- [API Reference](docs/API_REFERENCE.md) - Tài liệu API
 
 ---
 
 ## 🐛 Bug Reports & Feature Requests
 
-Nếu bạn phát hiện bug hoặc muốn đề xuất tính năng mới, vui lòng tạo issue tại [GitHub Issues](https://github.com/your-username/smurf-social/issues).
-
----
-
-## 📝 Changelog
-
-Xem [CHANGELOG.md](docs/CHANGELOG.md) để biết lịch sử thay đổi.
+Nếu bạn phát hiện bug hoặc muốn đề xuất tính năng mới, vui lòng tạo issue tại [GitHub Issues](https://github.com/dexter826/smurf_social/issues).
 
 ---
 
 ## 🗺️ Roadmap
 
 ### Q1 2026
+
 - [ ] Video calls (WebRTC)
 - [ ] Stories feature
 - [ ] Advanced search & filters
 - [ ] User mentions trong posts
 
 ### Q2 2026
+
 - [ ] Mobile app (React Native)
 - [ ] Desktop app (Electron)
 - [ ] AI-powered content moderation
 - [ ] Multi-language support
 
 ### Q3 2026
+
 - [ ] Marketplace feature
 - [ ] Events & groups
 - [ ] Live streaming
@@ -466,7 +441,7 @@ Xem [CHANGELOG.md](docs/CHANGELOG.md) để biết lịch sử thay đổi.
 
 ## 👥 Team
 
-- **Lead Developer**: [Your Name](https://github.com/your-username)
+- **Lead Developer**: [Dexter](https://github.com/dexter826)
 - **UI/UX Designer**: [Designer Name](https://github.com/designer)
 - **Backend Developer**: [Backend Dev](https://github.com/backend-dev)
 
@@ -497,16 +472,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=your-username/smurf-social&type=Date)](https://star-history.com/#your-username/smurf-social&Date)
-
----
-
 <div align="center">
 
-**Made with ❤️ by Smurf Social Team**
+**Made with ❤️ by Smurfy Team**
 
-[Website](https://smurf-social.com) • [Documentation](docs/) • [Report Bug](https://github.com/your-username/smurf-social/issues) • [Request Feature](https://github.com/your-username/smurf-social/issues)
+[Website](https://smurf-social.com) • [Report Bug](https://github.com/dexter826/smurf_social/issues) • [Request Feature](https://github.com/dexter826/smurf_social/issues)
 
 </div>
