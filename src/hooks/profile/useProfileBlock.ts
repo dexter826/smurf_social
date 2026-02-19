@@ -77,6 +77,7 @@ export const useProfileBlock = ({
 
   return {
     isBlockedByMe,
+    isBlockedByThem,
     canViewContent,
     handleBlockUser,
     handleUnblockUser,

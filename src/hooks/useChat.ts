@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Message, User, Conversation } from '../types';
+import { Message, User, Conversation, FriendStatus, FriendRequest } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
+import { friendService } from '../services/friendService';
 import { useChatActions } from './chat/useChatActions';
 import { useChatMessages } from './chat/useChatMessages';
 import { useChatBlock } from './chat/useChatBlock';
@@ -45,6 +46,8 @@ export const useChat = () => {
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
 
   const selectedConversation = useMemo(
     () => conversations.find(c => c.id === selectedConversationId),
@@ -77,6 +80,43 @@ export const useChat = () => {
 
   const partner = partnerId ? (usersMap[partnerId] ?? null) : null;
 
+  // Subscribe friend requests để lấy pendingRequestId
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const unsubSent = friendService.subscribeToSentRequests(currentUser.id, setSentRequests);
+    const unsubReceived = friendService.subscribeToReceivedRequests(currentUser.id, setReceivedRequests);
+    return () => { unsubSent(); unsubReceived(); };
+  }, [currentUser?.id]);
+
+  // Tính trạng thái bạn bè với partner từ friendIds
+  const partnerFriendStatus = useMemo(() => {
+    if (!partnerId || !currentUser?.friendIds) return undefined;
+    return currentUser.friendIds.includes(partnerId) ? FriendStatus.FRIEND : undefined;
+  }, [partnerId, currentUser?.friendIds]);
+
+  // Tìm pending request ID giữa currentUser và partner
+  const partnerPendingRequestId = useMemo(() => {
+    if (!partnerId) return undefined;
+    const sent = sentRequests.find(r => r.receiverId === partnerId);
+    if (sent) return sent.id;
+    const received = receivedRequests.find(r => r.senderId === partnerId);
+    return received?.id;
+  }, [partnerId, sentRequests, receivedRequests]);
+
+  // Trạng thái lời mời kết bạn với partner (cho UI ChatBox)
+  const friendRequestStatus = useMemo(() => {
+    if (!partnerId) return 'none' as const;
+    if (sentRequests.some(r => r.receiverId === partnerId)) return 'sent' as const;
+    if (receivedRequests.some(r => r.senderId === partnerId)) return 'received' as const;
+    return 'none' as const;
+  }, [partnerId, sentRequests, receivedRequests]);
+
+  // Lời mời kết bạn đang nhận từ partner
+  const currentReceivedRequest = useMemo(() =>
+    partnerId ? receivedRequests.find(r => r.senderId === partnerId) ?? null : null,
+    [partnerId, receivedRequests]
+  );
+
   // Sub-hooks composition
   const actions = useChatActions({
     selectedConversationId,
@@ -95,6 +135,8 @@ export const useChat = () => {
     partner,
     isGroup: selectedConversation?.isGroup ?? false,
     usersMap,
+    friendStatus: partnerFriendStatus,
+    pendingRequestId: partnerPendingRequestId,
   });
 
   const groups = useChatGroups({
@@ -204,6 +246,12 @@ export const useChat = () => {
     partnerId,
     blockedMessage: block.blockedMessage,
     getBlockedMessage: block.getBlockedMessage,
+
+    // Friend requests
+    friendRequestStatus,
+    currentReceivedRequest,
+    sentRequests,
+    receivedRequests,
 
     // Actions
     ...actions,
