@@ -68,7 +68,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
             {tabs.map(tab => (
               <button
                 key={tab.value}
-                onClick={() => setStatusFilter(tab.value as ReportStatus | 'all')}
+                onClick={() => setStatusFilter(tab.value as ReportStatus | 'pending')}
                 className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === tab.value
                     ? `bg-bg-primary text-primary shadow-sm`
                     : 'text-text-secondary hover:text-text-primary'
@@ -153,7 +153,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
 
                   <div className="flex items-center justify-between pt-3 border-t border-border-light">
                     <div className="flex items-center gap-2">
-                      <UserAvatar size="xs" src={reporter?.avatar} name={reporter?.name} />
+                      <UserAvatar size="xs" userId={report.reporterId} src={reporter?.avatar} name={reporter?.name} />
                       <span className="text-[10px] font-medium text-text-tertiary truncate max-w-[120px]">
                         {reporter?.name}
                       </span>
