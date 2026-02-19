@@ -78,11 +78,13 @@ export const useReportStore = create<ReportState>((set, get) => ({
       );
       
       if (hasReported) {
-        set({ error: 'Bạn đã báo cáo nội dung này trước đó', isSubmitting: false });
         if (blockUser && targetOwnerId) {
           await userService.blockUser(reporterId, targetOwnerId);
           useAuthStore.getState().updateBlockList('add', targetOwnerId);
+          set({ isOpen: false, isSubmitting: false });
+          return true;
         }
+        set({ error: 'Bạn đã báo cáo nội dung này trước đó', isSubmitting: false });
         return false;
       }
 
