@@ -24,7 +24,7 @@ export const ActionsMenu: React.FC<ActionsMenuProps> = ({
           onToggle();
         }}
         className={`transition-all ${isOpen ? 'rotate-45' : ''}`}
-        variant={isOpen ? 'primary' : 'default'}
+        variant={isOpen ? 'primary' : 'ghost'}
         icon={<Plus size={18} />}
         size="md"
         disabled={disabled}
