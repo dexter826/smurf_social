@@ -139,155 +139,166 @@ export const ReportModal: React.FC = () => {
   const reasonEntries = Object.entries(REPORT_CONFIG.REASONS) as [ReportReason, { label: string; description: string }][];
   const isUserReport = reportContext?.type === ReportType.USER;
 
+  // Footer cố định ngoài vùng cuộn
+  const modalFooter = (
+    <div className="flex flex-col gap-3 w-full">
+      {/* Tùy chọn chặn */}
+      {formData.reason !== '' && (
+        <div className="flex items-start gap-3 p-3 rounded-lg border border-warning/30 bg-warning/5 hover:bg-warning/10 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="flex-shrink-0 mt-0.5">
+              <Checkbox
+                id="report-block-user"
+                checked={shouldBlock}
+                onChange={(e) => setShouldBlock(e.target.checked)}
+              />
+            </div>
+            <label htmlFor="report-block-user" className="cursor-pointer flex-1 min-w-0">
+              <div className="text-sm font-medium text-text-primary">Chặn người dùng này</div>
+              <div className="text-xs text-text-secondary mt-0.5">Họ sẽ không thể nhắn tin hay xem trang cá nhân của bạn</div>
+            </label>
+          </div>
+        
+      )}
+
+      {/* Buttons */}
+      <div className="flex gap-3">
+        <Button
+          type="button"
+          form="report-form"
+          variant="secondary"
+          onClick={handleClose}
+          className="flex-1"
+          disabled={isSubmitting}
+        >
+          Hủy
+        </Button>
+        <Button
+          type="submit"
+          form="report-form"
+          variant="primary"
+          disabled={isSubmitting}
+          isLoading={isSubmitting}
+          className="flex-1"
+          icon={<Flag size={16} />}
+        >
+          {isUploading ? `Đang tải ${selectedImages.length} ảnh...` : 'Gửi báo cáo'}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
       title={isUserReport ? "Báo cáo người dùng" : "Báo cáo vi phạm"}
       maxWidth="sm"
+      footer={modalFooter}
     >
-      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col">
-        {/* Scrollable Content Area */}
-        <div className="overflow-y-auto max-h-[60vh] pr-2 -mr-2 space-y-4 p-1">
-          {/* Header info */}
-          <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
-            <AlertTriangle size={16} className="text-warning flex-shrink-0" />
-            <span>{isUserReport
-              ? "Hãy cho chúng tôi biết người dùng này đang vi phạm điều gì"
-              : "Chọn lý do phù hợp nhất để giúp chúng tôi xử lý nhanh hơn"}
-            </span>
-          </div>
+      <form id="report-form" onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+        {/* Header info */}
+        <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
+          <AlertTriangle size={16} className="text-warning flex-shrink-0" />
+          <span>{isUserReport
+            ? "Hãy cho chúng tôi biết người dùng này đang vi phạm điều gì"
+            : "Chọn lý do phù hợp nhất để giúp chúng tôi xử lý nhanh hơn"}
+          </span>
+        </div>
 
-          {/* Danh sách lý do */}
-          <div className="space-y-2">
-            {reasonEntries.map(([key, value]) => (
-              <label
-                key={key}
-                className={`
-                  flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-base
-                  border ${formData.reason === key
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border-light hover:bg-bg-hover active:bg-bg-active hover:border-border-medium'
-                  }
-                `}
-              >
-                <input
-                  type="radio"
-                  value={key}
-                  {...register('reason')}
-                  className="mt-0.5 accent-primary w-4 h-4"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-text-primary text-sm">{value.label}</div>
-                  <div className="text-xs text-text-secondary mt-0.5">{value.description}</div>
-                </div>
+        {/* Danh sách lý do */}
+        <div className="space-y-2">
+          {reasonEntries.map(([key, value]) => (
+            <label
+              key={key}
+              className={`
+                flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-base
+                border ${formData.reason === key
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-border-light hover:bg-bg-hover active:bg-bg-active hover:border-border-medium'
+                }
+              `}
+            >
+              <input
+                type="radio"
+                value={key}
+                {...register('reason')}
+                className="mt-0.5 accent-primary w-4 h-4"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-text-primary text-sm">{value.label}</div>
+                <div className="text-xs text-text-secondary mt-0.5">{value.description}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {/* Validation Error for Reason */}
+        {errors.reason && (
+          <p className="text-xs text-error mt-1">{errors.reason.message}</p>
+        )}
+
+        {/* Mô tả thêm */}
+        {(formData.reason === ReportReason.OTHER || formData.reason !== '') && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-primary">
+                Mô tả chi tiết {formData.reason === ReportReason.OTHER && <span className="text-text-secondary">(bắt buộc)</span>}
               </label>
-            ))}
-          </div>
-
-          {/* Validation Error for Reason */}
-          {errors.reason && (
-            <p className="text-xs text-error mt-1">{errors.reason.message}</p>
-          )}
-
-          {/* Mô tả thêm */}
-          {(formData.reason === ReportReason.OTHER || formData.reason !== '') && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-text-primary">
-                  Mô tả chi tiết {formData.reason === ReportReason.OTHER && <span className="text-text-secondary">(bắt buộc)</span>}
-                </label>
-                <TextArea
-                  placeholder="Vui lòng mô tả lý do báo cáo..."
-                  {...register('description')}
-                  error={errors.description?.message}
-                  maxLength={REPORT_CONFIG.DESCRIPTION_MAX_LENGTH}
-                  rows={3}
-                  autoFocus
-                />
-              </div>
-
-              {/* Upload Image Section */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-text-primary">
-                    Hình ảnh bằng chứng (Tối đa {REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh)
-                  </label>
-                  <span className="text-xs text-text-tertiary">{selectedImages.length}/{REPORT_CONFIG.MAX_IMAGES_PER_REPORT}</span>
-                </div>
-
-                <div className="grid grid-cols-4 gap-2">
-                  {previewUrls.map((url, index) => (
-                    <div key={index} className="aspect-square relative group rounded-lg overflow-hidden border border-border-light">
-                      <img src={url} alt="Preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base active:bg-black/70"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-
-                  {selectedImages.length < REPORT_CONFIG.MAX_IMAGES_PER_REPORT && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border-light rounded-lg hover:bg-bg-hover active:bg-bg-active hover:border-primary/50 transition-all duration-base text-text-tertiary hover:text-primary"
-                    >
-                      <ImageIcon size={20} />
-                      <span className="text-[10px]">Thêm ảnh</span>
-                    </button>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Tùy chọn chặn người dùng */}
-          {(formData.reason !== '') && (
-            <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-base">
-              <Checkbox
-                label="Chặn người dùng này để tránh các tương tác tiêu cực"
-                checked={shouldBlock}
-                onChange={(e) => setShouldBlock(e.target.checked)}
+              <TextArea
+                placeholder="Vui lòng mô tả lý do báo cáo..."
+                {...register('description')}
+                error={errors.description?.message}
+                maxLength={REPORT_CONFIG.DESCRIPTION_MAX_LENGTH}
+                rows={3}
+                autoFocus
               />
             </div>
-          )}
 
-        </div>
+            {/* Upload Image Section */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-text-primary">
+                  Hình ảnh bằng chứng (Tối đa {REPORT_CONFIG.MAX_IMAGES_PER_REPORT} ảnh)
+                </label>
+                <span className="text-xs text-text-tertiary">{selectedImages.length}/{REPORT_CONFIG.MAX_IMAGES_PER_REPORT}</span>
+              </div>
 
-        {/* Fixed Actions Footer */}
-        <div className="flex gap-3 pt-4 mt-2 border-t border-border-light">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleClose}
-            className="flex-1"
-            disabled={isSubmitting}
-          >
-            Hủy
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isSubmitting}
-            isLoading={isSubmitting}
-            className="flex-1"
-            icon={<Flag size={16} />}
-          >
-            {isUploading ? `Đang tải ${selectedImages.length} ảnh...` : 'Gửi báo cáo'}
-          </Button>
-        </div>
+              <div className="grid grid-cols-4 gap-2">
+                {previewUrls.map((url, index) => (
+                  <div key={index} className="aspect-square relative group rounded-lg overflow-hidden border border-border-light">
+                    <img src={url} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base active:bg-black/70"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+
+                {selectedImages.length < REPORT_CONFIG.MAX_IMAGES_PER_REPORT && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border-light rounded-lg hover:bg-bg-hover active:bg-bg-active hover:border-primary/50 transition-all duration-base text-text-tertiary hover:text-primary"
+                  >
+                    <ImageIcon size={20} />
+                    <span className="text-[10px]">Thêm ảnh</span>
+                  </button>
+                )}
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                multiple
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
+          </div>
+        )}
       </form>
     </Modal>
   );
