@@ -20,9 +20,9 @@ const variants = {
 
 
 const sizes = {
-  sm: "h-9 px-3 text-sm gap-2 rounded-lg",
-  md: "h-10 px-4 text-sm gap-2 rounded-xl",
-  lg: "h-12 px-6 text-base gap-3 rounded-xl"
+  sm: "min-h-[36px] px-3 text-sm gap-2 rounded-lg",
+  md: "min-h-[44px] px-4 text-sm gap-2 rounded-xl",
+  lg: "min-h-[48px] px-6 text-base gap-3 rounded-xl"
 };
 
 export const Button: React.FC<ButtonProps> = ({

@@ -182,7 +182,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex-1 flex flex-col items-center gap-1 py-3 transition-all duration-base relative
+                flex-1 flex flex-col items-center gap-1 py-3.5 transition-all duration-base relative
                 ${activeTab === tab.id
                   ? 'text-primary'
                   : 'text-text-tertiary hover:text-text-secondary'
@@ -199,7 +199,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-safe">
           {renderTabContent()}
         </div>
       </div>

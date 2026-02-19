@@ -60,9 +60,9 @@ export const Select: React.FC<SelectProps> = ({
   };
 
   const sizeClasses = {
-    sm: 'h-9 px-3 text-xs',
-    md: 'h-10 px-4 text-sm',
-    lg: 'h-12 px-6 text-base'
+    sm: 'min-h-[36px] px-3 text-sm',
+    md: 'min-h-[44px] px-4 text-base',
+    lg: 'min-h-[48px] px-6 text-base'
   };
 
   const variantClasses = {
@@ -124,7 +124,7 @@ export const Select: React.FC<SelectProps> = ({
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   className={`
-                    w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors duration-base font-normal hover:bg-bg-hover active:bg-bg-active
+                    w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors duration-base font-normal hover:bg-bg-hover active:bg-bg-active
                     ${option.value === value
                       ? 'bg-primary-light text-primary font-medium'
                       : 'text-text-primary'

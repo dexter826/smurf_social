@@ -210,7 +210,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         footer={
           <div className="w-full">
             {/* Media Actions */}
-            <div className="flex items-center justify-between mb-3 bg-bg-secondary p-2.5 md:p-3 rounded-xl border border-border-light">
+            <div className="flex items-center justify-between mb-4 bg-bg-secondary p-2.5 md:p-3 rounded-xl border border-border-light shadow-sm">
               <span className="text-[13px] md:text-sm font-semibold text-text-secondary leading-none">Thêm vào bài viết</span>
               <div className="flex gap-0.5 md:gap-1">
                 <IconButton
@@ -233,15 +233,15 @@ export const PostModal: React.FC<PostModalProps> = ({
                 />
                 <div className="flex items-center">
                   <EmojiPicker
-                    buttonClassName="hover:bg-bg-hover rounded-full group w-9 h-9 md:w-10 md:h-10 flex items-center justify-center"
+                    buttonClassName="hover:bg-bg-hover rounded-full group w-11 h-11 flex items-center justify-center transition-all duration-base"
                     onEmojiSelect={(emoji) => {
                       insertTextAtCursor(textareaRef, formData.content || '', emoji, (newText) => {
                         setValue('content', newText, { shouldDirty: true });
                       });
                     }}
                     disabled={isSubmitting}
-                    size={20}
-                    buttonSize="md"
+                    size={22}
+                    buttonSize="lg"
                     iconClassName="text-warning transition-all duration-base"
                   />
                 </div>
@@ -352,9 +352,9 @@ export const PostModal: React.FC<PostModalProps> = ({
                               if (vIdx !== -1) handleRemoveVideo(vIdx);
                             }
                           }}
-                          className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90 z-20"
+                          className="absolute top-2 right-2 p-1.5 min-w-[36px] min-h-[36px] flex items-center justify-center bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90 z-30"
                         >
-                          <X size={16} />
+                          <X size={18} />
                         </button>
                       </div>
                     );

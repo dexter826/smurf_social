@@ -65,12 +65,12 @@ export const MobileMenuPage: React.FC = () => {
       </div>
 
       {/* Menu Items */}
-      <div className="flex-1 overflow-y-auto p-3 pb-[80px]">
+      <div className="flex-1 overflow-y-auto p-3 pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <div className="space-y-1">
           {/* Xem hồ sơ */}
           <button
             onClick={() => navigate('/profile')}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 min-h-[60px] rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
               <UserIcon size={22} />
@@ -85,7 +85,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Cài đặt */}
           <button
             onClick={() => navigate('/settings')}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 min-h-[60px] rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               <Settings size={22} />
@@ -100,7 +100,7 @@ export const MobileMenuPage: React.FC = () => {
           {/* Chế độ tối */}
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
+            className="w-full flex items-center gap-3 p-3.5 min-h-[60px] rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-secondary text-text-secondary">
               {mode === 'light' ? <Moon size={22} /> : <Sun size={22} />}
@@ -118,7 +118,7 @@ export const MobileMenuPage: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
+              className="w-full flex items-center gap-3 p-3.5 min-h-[60px] rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
             >
               <div className="w-10 h-10 flex items-center justify-center rounded-full bg-warning/10 text-warning">
                 <Shield size={22} />
@@ -151,13 +151,13 @@ export const MobileMenuPage: React.FC = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-16 z-50 pb-safe shadow-sm">
+      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-stretch z-50 shadow-sm" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`
             }
           >
@@ -172,7 +172,7 @@ export const MobileMenuPage: React.FC = () => {
         ))}
 
         {/* Menu active */}
-        <div className="flex flex-col items-center justify-center w-full h-full space-y-1 text-primary">
+        <div className="flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 text-primary">
           <Menu size={24} />
           <span className="text-[10px] font-medium">Menu</span>
         </div>

@@ -37,7 +37,7 @@ export const Input: React.FC<InputProps> = ({
         )}
         <input
           id={inputId}
-          className={`w-full bg-bg-primary border-2 ${error ? 'border-error' : 'border-border-light'} rounded-xl transition-all duration-base outline-none focus:ring-4 ${error ? 'focus:ring-error/20' : 'focus:ring-primary/20'} ${error ? 'focus:border-error' : 'focus:border-primary'} ${size === 'sm' ? 'h-9 px-3 text-sm' : size === 'lg' ? 'h-12 px-4 text-base' : 'h-10 px-4 text-sm'} ${icon ? 'pl-10' : ''} ${rightElement ? 'pr-10' : ''} ${className}`}
+          className={`w-full bg-bg-primary border-2 ${error ? 'border-error' : 'border-border-light'} rounded-xl transition-all duration-base outline-none focus:ring-4 ${error ? 'focus:ring-error/20' : 'focus:ring-primary/20'} ${error ? 'focus:border-error' : 'focus:border-primary'} ${size === 'sm' ? 'min-h-[36px] px-3 text-sm' : size === 'lg' ? 'min-h-[48px] px-4 text-base' : 'min-h-[44px] px-4 text-base'} ${icon ? 'pl-10' : ''} ${rightElement ? 'pr-10' : ''} ${className}`}
           {...props}
         />
         {rightElement && (

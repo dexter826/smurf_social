@@ -224,8 +224,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                           <Button
                             isLoading={uploading}
                             variant="secondary"
-                            className="shadow-md border-2 border-bg-primary rounded-full w-9 h-9 p-0 flex items-center justify-center bg-bg-card hover:bg-bg-hover"
-                            icon={<Pencil size={16} />}
+                            className="shadow-md border-2 border-bg-primary rounded-full w-11 h-11 p-0 flex items-center justify-center bg-bg-card hover:bg-bg-hover transition-all duration-base active:scale-95"
+                            icon={<Pencil size={18} />}
                           />
                         }
                         align="left"
@@ -278,12 +278,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
                 {/* Stats */}
                 <div className="flex items-center justify-center md:justify-start flex-wrap gap-2 md:gap-4 mt-3 text-sm text-text-secondary">
-                  <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-1.5 rounded-lg border border-border-light">
+                  <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-2 rounded-lg border border-border-light">
                     <FileText size={16} className="text-primary" />
                     <span><strong className="text-text-primary">{stats.postCount}</strong> bài viết</span>
                   </div>
                   {isOwnProfile && (
-                    <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-1.5 rounded-lg border border-border-light">
+                    <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-2 rounded-lg border border-border-light">
                       <Users size={16} className="text-primary" />
                       <span><strong className="text-text-primary">{stats.friendCount}</strong> bạn bè</span>
                     </div>

@@ -138,9 +138,9 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                   disableTriggerScale
                   trigger={
                     <IconButton
-                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base"
-                      icon={<MoreVertical size={16} />}
-                      size="sm"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base min-w-[44px]"
+                      icon={<MoreVertical size={18} />}
+                      size="md"
                     />
                   }
                 >

@@ -293,14 +293,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   </div>
                   {allMedia.length > 1 && (
                     <>
-                      <div className="absolute inset-y-0 left-0 flex items-center px-1">
-                        <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-black/20 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === 0 ? 'invisible' : ''}`}>
-                          <ChevronLeft size={24} strokeWidth={2.5} />
+                      <div className="absolute inset-y-0 left-0 flex items-center px-2">
+                        <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-black/30 backdrop-blur-md text-white rounded-full w-11 h-11 flex items-center justify-center outline-none transition-all active:scale-90 ${mediaIndex === 0 ? 'invisible' : ''}`}>
+                          <ChevronLeft size={28} strokeWidth={2.5} />
                         </button>
                       </div>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-1">
-                        <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-black/20 backdrop-blur-md text-white rounded-full w-10 h-10 flex items-center justify-center outline-none ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
-                          <ChevronRight size={24} strokeWidth={2.5} />
+                      <div className="absolute inset-y-0 right-0 flex items-center px-2">
+                        <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-black/30 backdrop-blur-md text-white rounded-full w-11 h-11 flex items-center justify-center outline-none transition-all active:scale-90 ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
+                          <ChevronRight size={28} strokeWidth={2.5} />
                         </button>
                       </div>
                     </>

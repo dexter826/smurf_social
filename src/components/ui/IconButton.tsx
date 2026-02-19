@@ -24,7 +24,7 @@ const iconVariants = {
 
 const iconButtonSizes = {
   sm: "w-9 h-9 rounded-lg",
-  md: "w-10 h-10 rounded-xl",
+  md: "w-11 h-11 rounded-xl",
   lg: "w-12 h-12 rounded-xl",
 };
 

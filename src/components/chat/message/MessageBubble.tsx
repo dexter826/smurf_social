@@ -226,13 +226,13 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   ) : (
                     <div className="opacity-0 group-hover/message:opacity-100 transition-all duration-base">
                       <button
-                        className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
+                        className="flex items-center justify-center w-8 h-7 bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowReactionSelector(!showReactionSelector);
                         }}
                       >
-                        <Smile size={12} />
+                        <Smile size={14} />
                       </button>
                     </div>
                   )}

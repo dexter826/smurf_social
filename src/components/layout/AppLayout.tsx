@@ -76,7 +76,7 @@ export const AppLayout: React.FC = () => {
   return (
     <div className="flex flex-col h-[100dvh] w-full bg-bg-secondary overflow-hidden transition-theme">
       {/* Desktop Navbar */}
-      <header className="hidden md:flex h-16 w-full items-center bg-bg-primary px-6 z-50 shadow-sm border-b border-border-light transition-theme">
+      <header className="hidden md:flex h-16 w-full items-center bg-bg-primary px-4 lg:px-6 z-50 sticky top-0 shadow-sm border-b border-border-light transition-theme">
         {/* Left: Logo */}
         <div
           className="flex-1 flex items-center cursor-pointer transition-all duration-base hover:opacity-90"
@@ -90,27 +90,27 @@ export const AppLayout: React.FC = () => {
         </div>
 
         {/* Center: Navigation */}
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-0.5">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `px-3.5 h-10 flex items-center justify-center rounded-xl transition-all duration-base relative group border-2 border-transparent ${isActive
+                `px-3 h-11 flex items-center justify-center rounded-xl transition-all duration-base relative group border-2 border-transparent min-w-[44px] ${isActive
                   ? 'bg-primary-light text-primary font-bold'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
                 }`
               }
               title={item.label}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <item.Icon size={20} />
-                <span className="text-sm font-bold">{item.label}</span>
+                <span className="text-sm font-bold hidden lg:inline">{item.label}</span>
                 {item.to === '/' && totalUnread > 0 && (
-                  <span className="absolute top-2 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
+                  <span className="absolute top-2 right-2.5 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
                 )}
                 {item.to === '/contacts' && hasNewRequests && (
-                  <span className="absolute top-2 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
+                  <span className="absolute top-2 right-2.5 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
                 )}
               </div>
             </NavLink>
@@ -118,8 +118,8 @@ export const AppLayout: React.FC = () => {
         </nav>
 
         {/* Right: User Actions */}
-        <div className="flex-1 flex items-center justify-end gap-2">
-          <div className="flex items-center gap-1">
+        <div className="flex-1 flex items-center justify-end gap-1">
+          <div className="flex items-center gap-0.5">
             <NotificationDropdown />
 
             <IconButton
@@ -127,17 +127,17 @@ export const AppLayout: React.FC = () => {
               icon={mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               title="Chế độ tối"
               variant="ghost"
-              className="text-text-secondary hover:text-primary"
+              className="text-text-secondary hover:text-primary min-w-[44px] min-h-[44px]"
             />
           </div>
 
           <div className="w-px h-6 bg-border-light mx-1" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <NavLink
               to="/settings"
               className={({ isActive }) =>
-                `w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-base border-2 border-transparent ${isActive
+                `w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-base border-2 border-transparent ${isActive
                   ? 'bg-primary-light text-primary'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
                 }`
@@ -147,9 +147,7 @@ export const AppLayout: React.FC = () => {
               <Settings size={20} />
             </NavLink>
 
-
-
-            <div className="group relative ml-1" onClick={() => navigate('/profile')}>
+            <div className="group relative" onClick={() => navigate('/profile')}>
               {user && (
                 <UserAvatar
                   userId={user.id}
@@ -166,31 +164,31 @@ export const AppLayout: React.FC = () => {
               icon={<LogOut size={20} />}
               title="Đăng xuất"
               variant="ghost"
-              className="text-text-secondary hover:bg-error/10 hover:text-error"
+              className="text-text-secondary hover:bg-error/10 hover:text-error min-w-[44px] min-h-[44px]"
             />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className={`flex-1 relative flex flex-col h-full overflow-hidden transition-theme md:pb-0 ${isChatRoom ? 'pb-0' : 'pb-[60px]'}`}>
+      <main className={`flex-1 relative flex flex-col h-full overflow-hidden transition-theme md:pb-0 ${isChatRoom ? 'pb-0' : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]'}`}>
         <Outlet />
       </main>
 
       {/* Mobile Navigation */}
       {!isChatRoom && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-center h-16 z-50 pb-safe transition-theme shadow-sm">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-stretch z-50 transition-theme shadow-sm" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           {navItems.filter(item => item.to !== '/admin').map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
+                `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
                 }`
               }
             >
               <div className="relative">
-                <item.Icon size={24} />
+                <item.Icon size={22} />
                 {item.to === '/' && totalUnread > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
                 )}
@@ -198,7 +196,7 @@ export const AppLayout: React.FC = () => {
                   <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
                 )}
               </div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium leading-none">{item.label}</span>
             </NavLink>
           ))}
 
@@ -206,29 +204,29 @@ export const AppLayout: React.FC = () => {
           <NavLink
             to="/notifications"
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
+              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
               }`
             }
           >
             <div className="relative">
-              <Bell size={24} />
+              <Bell size={22} />
               {unreadNotifications > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
               )}
             </div>
-            <span className="text-[10px] font-medium">Thông báo</span>
+            <span className="text-[10px] font-medium leading-none">Thông báo</span>
           </NavLink>
 
           {/* Mobile Menu Button */}
           <NavLink
             to="/menu"
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
+              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary active:text-text-primary'
               }`
             }
           >
-            <Menu size={24} />
-            <span className="text-[10px] font-medium">Menu</span>
+            <Menu size={22} />
+            <span className="text-[10px] font-medium leading-none">Menu</span>
           </NavLink>
         </nav>
       )}

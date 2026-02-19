@@ -96,7 +96,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
         {isOwner ? (
           <Dropdown
-            trigger={<IconButton icon={<MoreHorizontal size={18} />} size="md" />}
+            trigger={<IconButton icon={<MoreHorizontal size={18} />} size="md" className="min-w-[44px] min-h-[44px]" />}
           >
             <DropdownItem
               icon={<Edit size={16} />}
@@ -112,7 +112,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
           </Dropdown>
         ) : (
           <Dropdown
-            trigger={<IconButton icon={<MoreHorizontal size={18} />} size="md" />}
+            trigger={<IconButton icon={<MoreHorizontal size={18} />} size="md" className="min-w-[44px] min-h-[44px]" />}
           >
             <DropdownItem
               icon={<Flag size={16} />}

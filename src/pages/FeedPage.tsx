@@ -71,16 +71,16 @@ const FeedPage: React.FC = () => {
 
   return (
     <div className="flex justify-center h-full w-full overflow-y-auto transition-theme scroll-smooth" id="feed-container">
-      <div className="w-full max-w-[680px] py-4 md:py-6 space-y-3 md:space-y-4 px-2 md:px-0 pb-24 md:pb-8">
+      <div className="w-full max-w-[680px] py-4 md:py-6 space-y-3 md:space-y-4 px-3 sm:px-4 md:px-0 pb-6 md:pb-8">
         <CreatePost currentUser={currentUser} />
 
         {posts.length === 0 ? (
-          <div className="bg-bg-primary rounded-xl p-8 md:p-12 shadow-sm border border-border-light text-center transition-theme mx-2 md:mx-0">
-            <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-              <StickyNote size={32} className="text-text-tertiary opacity-40" />
+          <div className="bg-bg-primary rounded-xl p-6 sm:p-8 md:p-12 shadow-sm border border-border-light text-center transition-theme">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+              <StickyNote size={28} className="text-text-tertiary opacity-40" />
             </div>
-            <p className="text-text-primary text-lg font-semibold">Chưa có bài viết nào</p>
-            <p className="text-text-secondary text-sm mt-2 max-w-[250px] mx-auto">
+            <p className="text-text-primary text-base sm:text-lg font-semibold">Chưa có bài viết nào</p>
+            <p className="text-text-secondary text-sm mt-2 max-w-[260px] mx-auto">
               Hãy kết nối với bạn bè hoặc chia sẻ khoảnh khắc đầu tiên của bạn!
             </p>
           </div>
