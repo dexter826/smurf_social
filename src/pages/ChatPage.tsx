@@ -352,8 +352,10 @@ const ChatPage: React.FC = () => {
           isOpen={showDetails}
           isBlocked={isBlocked}
           onClose={() => setShowDetails(false)}
-          onToggleMute={() => handleMute(selectedConversation.id, !selectedConversation.muted)}
+          onToggleMute={() => handleMute(selectedConversation.id, !selectedConversation.mutedUsers?.[currentUser.id])}
           onTogglePin={() => handlePin(selectedConversation.id, !selectedConversation.pinned)}
+          onToggleArchive={() => handleArchive(selectedConversation.id, !selectedConversation.archived)}
+          onToggleMarkUnread={() => handleMarkUnread(selectedConversation.id, !selectedConversation.markedUnread)}
           onToggleBlock={handleToggleBlock}
           onDelete={() => {
             if (selectedConversation.isGroup && selectedConversation.creatorId === currentUser.id) {

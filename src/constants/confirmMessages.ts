@@ -88,6 +88,16 @@ export const CONFIRM_MESSAGES = {
       TITLE: 'Chặn người dùng',
       MESSAGE: 'Bạn có chắc chắn muốn chặn người này? Cả hai bên sẽ không thể nhắn tin cho nhau.',
       CONFIRM: 'Chặn ngay',
+    },
+    LEAVE_GROUP: {
+      TITLE: 'Rời khỏi nhóm',
+      MESSAGE: 'Bạn có chắc chắn muốn rời khỏi nhóm này? Bạn sẽ không thể xem tin nhắn mới nữa.',
+      CONFIRM: 'Rời nhóm',
+    },
+    DISBAND_GROUP: {
+      TITLE: 'Giải tán nhóm',
+      MESSAGE: 'Bạn có chắc chắn muốn giải tán nhóm này? Tất cả tin nhắn và thành viên sẽ bị xóa vĩnh viễn.',
+      CONFIRM: 'Xóa ngay',
     }
   }
 };

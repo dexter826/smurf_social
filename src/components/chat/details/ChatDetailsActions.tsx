@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { Conversation } from '../../../types';
-import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User, Flag } from 'lucide-react';
+import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User as UserIcon, Flag } from 'lucide-react';
 import { ConfirmDialog, Button } from '../../ui';
 import { useReportStore } from '../../../store/reportStore';
-import { ReportType } from '../../../types';
+import { ReportType, NotificationType, User } from '../../../types';
+import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
+import { Mail, MailCheck, Archive as ArchiveIcon } from 'lucide-react';
 
 interface ChatDetailsActionsProps {
   conversation: Conversation;
   currentUserId: string;
+  partner?: User;
   isBlocked?: boolean;
   onToggleMute?: () => void;
   onTogglePin?: () => void;
   onToggleBlock?: () => void;
+  onToggleArchive?: () => void;
+  onToggleMarkUnread?: () => void;
   onDelete?: () => void;
   onLeaveGroup?: () => void;
   onEditGroup?: () => void;
@@ -21,10 +26,13 @@ interface ChatDetailsActionsProps {
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   conversation,
   currentUserId,
+  partner,
   isBlocked,
   onToggleMute,
   onTogglePin,
   onToggleBlock,
+  onToggleArchive,
+  onToggleMarkUnread,
   onDelete,
   onLeaveGroup,
   onEditGroup,
@@ -43,20 +51,41 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   const actions = [];
 
   // Mute/Unmute - cho cả group và 1-1
+  const isMuted = conversation.mutedUsers?.[currentUserId] === true;
   actions.push({
-    icon: conversation.muted ? <Bell size={20} /> : <BellOff size={20} />,
-    label: conversation.muted ? 'Bật thông báo' : 'Tắt thông báo',
+    icon: isMuted ? <Bell size={20} /> : <BellOff size={20} />,
+    label: isMuted ? 'Bật thông báo' : 'Tắt thông báo',
     onClick: onToggleMute,
     variant: 'default' as const,
   });
 
-  // Pin/Unpin - cho cả group và 1-1
+  // Pin/Unpin
   actions.push({
     icon: conversation.pinned ? <PinOff size={20} /> : <Pin size={20} />,
     label: conversation.pinned ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
     onClick: onTogglePin,
     variant: 'default' as const,
   });
+  
+  // Archive/Unarchive
+  if (onToggleArchive) {
+    actions.push({
+      icon: <ArchiveIcon size={20} />,
+      label: conversation.archived ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện',
+      onClick: onToggleArchive,
+      variant: 'default' as const,
+    });
+  }
+
+  // Mark Read/Unread
+  if (onToggleMarkUnread) {
+    actions.push({
+      icon: conversation.markedUnread ? <MailCheck size={20} /> : <Mail size={20} />,
+      label: conversation.markedUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc',
+      onClick: onToggleMarkUnread,
+      variant: 'default' as const,
+    });
+  }
 
   // Edit group - chỉ cho admin
   if (isGroup && isAdmin && onEditGroup) {
@@ -71,7 +100,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   // Xem trang cá nhân - chỉ cho chat 1-1
   if (!isGroup && onViewProfile) {
     actions.push({
-      icon: <User size={20} />,
+      icon: <UserIcon size={20} />,
       label: 'Xem trang cá nhân',
       onClick: onViewProfile,
       variant: 'default' as const,
@@ -152,12 +181,12 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         isOpen={showBlockConfirm}
         onClose={() => setShowBlockConfirm(false)}
         onConfirm={() => onToggleBlock?.()}
-        title={isBlocked ? 'Bỏ chặn người dùng' : 'Chặn người dùng'}
-        message={isBlocked
-          ? 'Bạn có chắc chắn muốn bỏ chặn người này? Họ sẽ có thể gửi tin nhắn cho bạn.'
-          : 'Bạn có chắc chắn muốn chặn người này? Bạn sẽ không nhận được tin nhắn từ họ.'
+        title={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE : CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE}
+        message={isBlocked 
+          ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(partner?.name || 'Người dùng')
+          : CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(partner?.name || 'Người dùng')
         }
-        confirmLabel={isBlocked ? 'Bỏ chặn' : 'Chặn ngay'}
+        confirmLabel={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM : CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM}
         variant="danger"
       />
 
@@ -165,12 +194,9 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => onDelete?.()}
-        title={isGroup ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}
-        message={isGroup
-          ? 'Bạn có chắc chắn muốn giải tán nhóm này? Tất cả tin nhắn và thành viên sẽ bị xóa vĩnh viễn.'
-          : 'Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Tất cả tin nhắn sẽ bị xóa vĩnh viễn.'
-        }
-        confirmLabel="Xóa ngay"
+        title={isGroup ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.TITLE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
+        message={isGroup ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.MESSAGE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
+        confirmLabel={isGroup ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.CONFIRM : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
         variant="danger"
       />
 
@@ -178,9 +204,9 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         isOpen={showLeaveConfirm}
         onClose={() => setShowLeaveConfirm(false)}
         onConfirm={() => onLeaveGroup?.()}
-        title="Rời khỏi nhóm"
-        message="Bạn có chắc chắn muốn rời khỏi nhóm này? Bạn sẽ không thể xem tin nhắn mới nữa."
-        confirmLabel="Rời nhóm"
+        title={CONFIRM_MESSAGES.CHAT.LEAVE_GROUP.TITLE}
+        message={CONFIRM_MESSAGES.CHAT.LEAVE_GROUP.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.CHAT.LEAVE_GROUP.CONFIRM}
         variant="danger"
       />
     </div>
