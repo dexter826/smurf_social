@@ -24,6 +24,7 @@ interface ConversationListProps {
   onBlock?: (partnerId: string) => void;
   onArchive?: (id: string, archived: boolean) => void;
   onMarkUnread?: (id: string, markedUnread: boolean) => void;
+  onViewProfile?: (userId: string) => void;
   onNewChat?: () => void;
   onNewGroup?: () => void;
   viewMode?: 'normal' | 'archived';
@@ -57,6 +58,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onBlock,
   onArchive,
   onMarkUnread,
+  onViewProfile,
   onNewChat,
   onNewGroup,
   viewMode = 'normal',
@@ -116,11 +118,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         showMessageRequestBadge={false}
         onClick={() => onSelectConversation(conversation.id)}
         onPin={() => onPin(conversation.id, !conversation.pinned)}
-        onMute={() => onMute(conversation.id, !conversation.muted)}
+        onMute={() => onMute(conversation.id, !conversation.mutedUsers?.[currentUserId])}
         onDelete={() => onDelete(conversation.id)}
         onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
         onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archived) : undefined}
         onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
+        onViewProfile={partnerId && onViewProfile ? () => onViewProfile(partnerId) : undefined}
       />
     );
   }, [

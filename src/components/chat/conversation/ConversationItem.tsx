@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2 } from 'lucide-react';
+import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2, User as UserIcon } from 'lucide-react';
 import { Conversation, UserStatus } from '../../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
@@ -32,6 +32,7 @@ interface ConversationItemProps {
   onBlock?: () => void;
   onArchive?: () => void;
   onMarkUnread?: () => void;
+  onViewProfile?: () => void;
 }
 
 const ConversationItemInner: React.FC<ConversationItemProps> = ({
@@ -46,7 +47,8 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   onDelete,
   onBlock,
   onArchive,
-  onMarkUnread
+  onMarkUnread,
+  onViewProfile
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -114,7 +116,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             {conversation.pinned && (
               <Pin size={14} className="text-primary flex-shrink-0" />
             )}
-            {conversation.muted && (
+            {conversation.mutedUsers?.[currentUserId] && (
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
@@ -174,10 +176,17 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={onPin}
             />
           )}
+          {onViewProfile && !conversation.isGroup && (
+            <DropdownItem
+              icon={<UserIcon size={16} />}
+              label="Xem trang cá nhân"
+              onClick={onViewProfile}
+            />
+          )}
           {onMute && (
             <DropdownItem
-              icon={conversation.muted ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              label={conversation.muted ? 'Bật thông báo' : 'Tắt thông báo'}
+              icon={conversation.mutedUsers?.[currentUserId] ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              label={conversation.mutedUsers?.[currentUserId] ? 'Bật thông báo' : 'Tắt thông báo'}
               onClick={onMute}
             />
           )}
@@ -203,10 +212,10 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => setShowBlockConfirm(true)}
             />
           )}
-          {onDelete && (
+          {onDelete && (!conversation.isGroup || conversation.creatorId === currentUserId) && (
             <DropdownItem
               icon={<Trash2 size={16} />}
-              label="Xóa"
+              label={conversation.isGroup ? "Giải tán nhóm" : "Xóa"}
               variant="danger"
               onClick={() => setShowDeleteConfirm(true)}
             />

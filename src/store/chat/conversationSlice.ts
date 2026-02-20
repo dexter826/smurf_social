@@ -58,10 +58,11 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
         conversations.forEach(conv => {
           const lastMsg = conv.lastMessage;
           const isUnread = conv.unreadCount?.[userId] > 0;
+          const isMuted = conv.mutedUsers?.[userId] === true;
           const isViewingThisConv = get().isChatVisible && conv.id === get().selectedConversationId;
 
           if (lastMsg && lastMsg.id !== lastPlayedId && isUnread &&
-            lastMsg.senderId !== userId && !conv.muted && !isViewingThisConv) {
+            lastMsg.senderId !== userId && !isMuted && !isViewingThisConv) {
             lastPlayedId = lastMsg.id || '';
             const audio = new Audio(NotificationSound);
             audio.play().catch(err => console.debug("Autoplay blocked:", err));
@@ -141,11 +142,26 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   toggleMute: async (conversationId: string, muted: boolean) => {
-    set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, muted } : c) }));
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
+    set(state => ({ 
+      conversations: state.conversations.map(c => 
+        c.id === conversationId 
+          ? { ...c, mutedUsers: { ...(c.mutedUsers || {}), [userId]: muted } } 
+          : c
+      ) 
+    }));
     try {
-      await conversationService.toggleMute(conversationId, muted);
+      await conversationService.toggleMute(conversationId, userId, muted);
     } catch (error) {
-      set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, muted: !muted } : c) }));
+      set(state => ({ 
+        conversations: state.conversations.map(c => 
+          c.id === conversationId 
+            ? { ...c, mutedUsers: { ...(c.mutedUsers || {}), [userId]: !muted } } 
+            : c
+        ) 
+      }));
       console.error("Lỗi tắt thông báo:", error);
       throw error;
     }

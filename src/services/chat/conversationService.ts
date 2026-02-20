@@ -66,7 +66,7 @@ export const conversationService = {
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
         pinned: false,
-        muted: false
+        mutedUsers: {}
       };
       
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
@@ -149,11 +149,13 @@ export const conversationService = {
     }
   },
 
-  // Bật hoặc tắt thông báo hội thoại
-  toggleMute: async (conversationId: string, muted: boolean): Promise<void> => {
+  // Bật hoặc tắt thông báo hội thoại cho người dùng cụ thể
+  toggleMute: async (conversationId: string, userId: string, muted: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, { muted });
+      await updateDoc(conversationRef, { 
+        [`mutedUsers.${userId}`]: muted 
+      });
     } catch (error) {
       console.error("Lỗi tắt thông báo hội thoại:", error);
       throw error;

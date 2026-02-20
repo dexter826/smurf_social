@@ -19,6 +19,8 @@ interface ChatDetailsPanelProps {
   onToggleMute?: () => void;
   onTogglePin?: () => void;
   onToggleBlock?: () => void;
+  onToggleArchive?: () => void;
+  onToggleMarkUnread?: () => void;
   onDelete?: () => void;
   onMemberClick?: (userId: string) => void;
   onMessageClick?: (messageId: string) => void;
@@ -44,6 +46,8 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
   onToggleMute,
   onTogglePin,
   onToggleBlock,
+  onToggleArchive,
+  onToggleMarkUnread,
   onDelete,
   onMemberClick,
   onMessageClick,
@@ -105,10 +109,13 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
             <ChatDetailsActions
               conversation={conversation}
               currentUserId={currentUserId}
+              partner={partner || undefined}
               isBlocked={isBlocked}
               onToggleMute={onToggleMute}
               onTogglePin={onTogglePin}
               onToggleBlock={onToggleBlock}
+              onToggleArchive={onToggleArchive}
+              onToggleMarkUnread={onToggleMarkUnread}
               onDelete={onDelete}
               onLeaveGroup={onLeaveGroup}
               onEditGroup={onEditGroup}
