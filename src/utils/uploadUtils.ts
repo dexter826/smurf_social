@@ -1,18 +1,20 @@
 import { API_ENDPOINTS, FILE_LIMITS, FileLimitType, TOAST_MESSAGES } from '../constants';
-import { toast } from '../store/toastStore';
+// Xóa import toastStore để tránh circular dependency
 
-// Kiểm tra dung lượng file
-export const validateFileSize = (file: File, type: FileLimitType): boolean => {
+// Kiểm tra dung lượng file. Trả về object chứa kết quả và lỗi nếu có.
+export const validateFileSize = (file: File, type: FileLimitType): { isValid: boolean; error?: string } => {
   const limit = FILE_LIMITS[type];
   if (file.size > limit) {
     const mbLimit = limit / (1024 * 1024);
     const labels: Record<string, string> = { IMAGE: 'Ảnh', AVATAR: 'Ảnh đại diện', COVER: 'Ảnh bìa', FILE: 'File', VIDEO: 'Video' };
     const typeLabel = labels[type] || 'File';
       
-    toast.error(TOAST_MESSAGES.MEDIA.FILE_TOO_LARGE(file.name, mbLimit, typeLabel));
-    return false;
+    return {
+      isValid: false,
+      error: TOAST_MESSAGES.MEDIA.FILE_TOO_LARGE(file.name, mbLimit, typeLabel)
+    };
   }
-  return true;
+  return { isValid: true };
 };
 
 export interface UploadProgress {

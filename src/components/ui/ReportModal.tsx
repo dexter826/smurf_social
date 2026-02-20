@@ -70,7 +70,14 @@ export const ReportModal: React.FC = () => {
       const files = Array.from(e.target.files) as File[];
       
       // Kiểm tra dung lượng từng file
-      const validFiles = files.filter(file => validateFileSize(file, 'IMAGE'));
+      const validFiles = files.filter(file => {
+        const validation = validateFileSize(file, 'IMAGE');
+        if (!validation.isValid) {
+          if (validation.error) toast.error(validation.error);
+          return false;
+        }
+        return true;
+      });
       if (validFiles.length === 0) return;
 
       const totalImages = selectedImages.length + validFiles.length;

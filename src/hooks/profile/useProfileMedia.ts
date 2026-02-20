@@ -30,7 +30,11 @@ export const useProfileMedia = ({
       toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
       return;
     }
-    if (!validateFileSize(file, 'AVATAR')) return;
+    const validation = validateFileSize(file, 'AVATAR');
+    if (!validation.isValid) {
+      if (validation.error) toast.error(validation.error);
+      return;
+    }
 
     setUploading(true);
     setUploadProgress(0);
@@ -60,7 +64,11 @@ export const useProfileMedia = ({
       toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
       return;
     }
-    if (!validateFileSize(file, 'COVER')) return;
+    const validation = validateFileSize(file, 'COVER');
+    if (!validation.isValid) {
+      if (validation.error) toast.error(validation.error);
+      return;
+    }
 
     setUploading(true);
     setUploadProgress(0);

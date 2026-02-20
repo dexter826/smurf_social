@@ -22,23 +22,13 @@
 - [Cấu Trúc Thư Mục](#-cấu-trúc-thư-mục)
 - [Scripts](#-scripts)
 - [Deployment](#-deployment)
-- [Đóng Góp](#-đóng-góp)
-- [License](#-license)
+- [Liên Hệ](#-liên-hệ)
 
 ---
 
 ## 🎯 Giới Thiệu
 
 **Smurfy** là một ứng dụng mạng xã hội full-featured với khả năng chat realtime, newsfeed, quản lý bạn bè và nhiều tính năng khác. Dự án được xây dựng với mục tiêu tạo ra một nền tảng kết nối cộng đồng hiện đại, nhanh chóng và dễ sử dụng.
-
-### Tại Sao Chọn Smurfy?
-
-- ⚡ **Realtime**: Chat và notifications được cập nhật tức thì
-- 🎨 **Modern UI**: Giao diện đẹp mắt với dark/light mode
-- 📱 **Responsive**: Hoạt động mượt mà trên mọi thiết bị
-- 🔒 **Bảo Mật**: Firebase Authentication & Firestore Security Rules
-- 🚀 **Performance**: Code splitting, lazy loading, image optimization
-- 🧪 **Type-Safe**: TypeScript cho toàn bộ codebase
 
 ---
 
@@ -53,13 +43,14 @@
 
 ### 💬 Chat Realtime
 
-- Chat 1-1 và nhóm
-- Gửi text, images, videos, files, voice messages
-- Reactions, reply, forward, edit, recall messages
-- Typing indicators
-- Read receipts & delivery status
-- Mention users trong nhóm
-- Group management (add/remove members, promote admin...)
+- Chat 1-1 và nhóm (Realtime)
+- Gọi video & audio (Tích hợp ZegoCloud)
+- Gửi tin nhắn văn bản, hình ảnh, video, tệp tin, tin nhắn thoại
+- Cảm xúc tin nhắn, trả lời, chuyển tiếp, chỉnh sửa và thu hồi tin nhắn
+- Trạng thái đang nhập (Typing) & Trạng thái hoạt động (Online/Offline)
+- Xác nhận đã đọc & đã nhận tin nhắn
+- Nhắc tên (@mention) người dùng trong nhóm
+- Quản lý nhóm (thêm/xóa thành viên, quyền trưởng nhóm...)
 
 ### 📰 Newsfeed
 
@@ -113,10 +104,12 @@
 - **React Router DOM 7.13.0** - Routing
 - **Zustand 4.5.5** - State management
 - **Tailwind CSS 3.4.17** - Styling
-- **Styled Components 6.3.8** - CSS-in-JS
+- **ZegoCloud UIKit** - Video & Audio calls
 - **React Hook Form 7.71.1** - Form handling
 - **Zod 4.3.6** - Schema validation
 - **Lucide React** - Icons
+- **Date-fns** - Date formatting
+- **React Loading Skeleton** - Loading states
 - **Emoji Picker React** - Emoji picker
 - **React Easy Crop** - Image cropping
 
@@ -128,6 +121,8 @@
 - **Firebase Storage** - File storage
 - **Firebase Cloud Messaging** - Push notifications
 - **Cloudinary** - Image/video hosting & optimization
+- **ZegoCloud** - Realtime Video & Audio Call service
+- **Provinces API** - Vietnam provinces & cities data
 
 ### Development Tools
 
@@ -162,11 +157,11 @@
                       │
         ┌─────────────┴─────────────┐
         │                           │
-┌───────▼────────┐         ┌────────▼────────┐
-│    Firebase    │         │   Cloudinary    │
-│  - Auth        │         │  - Images       │
-│  - Firestore   │         │  - Videos       │
-│  - RTDB        │         └─────────────────┘
+┌───────▼────────┐         ┌────────▼────────┐         ┌────────▼────────┐
+│    Firebase    │         │   Cloudinary    │         │   ZegoCloud     │
+│  - Auth        │         │  - Images       │         │  - Video Call   │
+│  - Firestore   │         │  - Videos       │         │  - Audio Call   │
+│  - RTDB        │         └─────────────────┘         └─────────────────┘
 │  - Storage     │
 │  - FCM         │
 └────────────────┘
@@ -227,7 +222,12 @@ yarn install
 1. Tạo account tại [Cloudinary](https://cloudinary.com/)
 2. Lấy Cloud Name và Upload Preset từ dashboard
 
-### 3. Environment Variables
+### 3. ZegoCloud Setup
+
+1. Tạo project tại [ZegoCloud Admin Console](https://console.zegocloud.com/)
+2. Lấy AppID và AppSign từ phần dự án đã tạo
+
+### 4. Environment Variables
 
 Tạo file `.env` từ `.env.example`:
 
@@ -252,11 +252,15 @@ VITE_FIREBASE_VAPID_KEY=your_vapid_key_here
 VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 
+# ZegoCloud Configuration
+VITE_ZEGO_APP_ID=your_zegocloud_app_id
+VITE_ZEGO_APP_SIGN=your_zegocloud_app_sign
+
 # API Endpoints
 VITE_PROVINCES_API_URL=https://provinces.open-api.vn/api/
 ```
 
-### 4. Firestore Security Rules
+### 5. Firestore Security Rules
 
 Deploy Firestore rules:
 
@@ -264,7 +268,15 @@ Deploy Firestore rules:
 firebase deploy --only firestore:rules
 ```
 
-### 5. Firestore Indexes
+### 6. Realtime Database Rules
+
+Deploy Realtime Database rules:
+
+```bash
+firebase deploy --only database
+```
+
+### 7. Firestore Indexes
 
 Deploy Firestore indexes:
 
@@ -366,116 +378,16 @@ firebase login
 firebase init
 ```
 
-4. Build và deploy:
-
-```bash
-npm run build
-firebase deploy
-```
-
-### Vercel
-
-1. Install Vercel CLI:
-
-```bash
-npm install -g vercel
-```
-
-2. Deploy:
-
-```bash
-vercel
-```
-
 ---
 
-## 🤝 Đóng Góp
+## 📞 Liên Hệ
 
-Chúng tôi rất hoan nghênh mọi đóng góp!
-
-### Quy Trình Đóng Góp
-
-1. Fork repository
-2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Tạo Pull Request
-
-### Coding Conventions
-
-- Sử dụng TypeScript cho tất cả code
-- Viết JSDoc comments cho public APIs
-
----
-
-## 🐛 Bug Reports & Feature Requests
-
-Nếu bạn phát hiện bug hoặc muốn đề xuất tính năng mới, vui lòng tạo issue tại [GitHub Issues](https://github.com/dexter826/smurf_social/issues).
-
----
-
-## 🗺️ Roadmap
-
-### Q1 2026
-
-- [ ] Video calls (WebRTC)
-- [ ] Stories feature
-- [ ] Advanced search & filters
-- [ ] User mentions trong posts
-
-### Q2 2026
-
-- [ ] Mobile app (React Native)
-- [ ] Desktop app (Electron)
-- [ ] AI-powered content moderation
-- [ ] Multi-language support
-
-### Q3 2026
-
-- [ ] Marketplace feature
-- [ ] Events & groups
-- [ ] Live streaming
-- [ ] Analytics dashboard
-
----
-
-## 👥 Team
-
-- **Lead Developer**: [Dexter](https://github.com/dexter826)
-- **UI/UX Designer**: [Designer Name](https://github.com/designer)
-- **Backend Developer**: [Backend Dev](https://github.com/backend-dev)
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [React](https://reactjs.org/) - UI library
-- [Firebase](https://firebase.google.com/) - Backend services
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-- [Lucide](https://lucide.dev/) - Icon library
-- [Cloudinary](https://cloudinary.com/) - Media hosting
-
----
-
-## 📞 Contact
-
-- **Email**: your.email@example.com
-- **Website**: https://smurf-social.com
-- **Twitter**: [@smurfsocial](https://twitter.com/smurfsocial)
-- **Discord**: [Join our community](https://discord.gg/smurfsocial)
+Mọi chi tiết thắc mắc vui lòng liên hệ qua email: [tcongminh1604@gmail.com](mailto:tcongminh1604@gmail.com)
 
 ---
 
 <div align="center">
 
 **Made with ❤️ by Smurfy Team**
-
-[Website](https://smurf-social.com) • [Report Bug](https://github.com/dexter826/smurf_social/issues) • [Request Feature](https://github.com/dexter826/smurf_social/issues)
 
 </div>

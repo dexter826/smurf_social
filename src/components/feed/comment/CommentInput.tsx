@@ -72,7 +72,9 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!validateFileSize(file, 'IMAGE')) {
+    const validation = validateFileSize(file, 'IMAGE');
+    if (!validation.isValid) {
+      if (validation.error) toast.error(validation.error);
       return;
     }
 

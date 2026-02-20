@@ -149,7 +149,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       else if (type === 'camera') fileType = file.type.startsWith('image/') ? 'image' : 'video';
 
       const limitType = fileType === 'image' ? 'IMAGE' : fileType === 'video' ? 'VIDEO' : 'FILE';
-      if (!validateFileSize(file, limitType)) return;
+      const validation = validateFileSize(file, limitType);
+      if (!validation.isValid) {
+        if (validation.error) toast.error(validation.error);
+        return;
+      }
 
       const preview = (fileType === 'image' || fileType === 'video') ? URL.createObjectURL(file) : undefined;
       newFiles.push({ file, preview, type: fileType });

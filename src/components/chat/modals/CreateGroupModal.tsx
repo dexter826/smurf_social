@@ -8,6 +8,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { Modal, Input, Button, Avatar, UserAvatar, IconButton, ImageCropper } from '../../ui';
 import { groupSchema, GroupFormValues } from '../../../utils/validation';
 import { validateFileSize } from '../../../utils';
+import { toast } from '../../../store/toastStore';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -78,7 +79,11 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!validateFileSize(file, 'AVATAR')) return;
+      const validation = validateFileSize(file, 'AVATAR');
+      if (!validation.isValid) {
+        if (validation.error) toast.error(validation.error);
+        return;
+      }
       const url = URL.createObjectURL(file);
       setCropImage(url);
       setShowCropper(true);
