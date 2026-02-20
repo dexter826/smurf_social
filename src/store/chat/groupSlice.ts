@@ -5,7 +5,7 @@ import { useAuthStore } from '../authStore';
 import { ConversationSlice } from './conversationSlice';
 
 export interface GroupSlice {
-  createGroup: (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => Promise<string>;
+  createGroup: (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: File | string) => Promise<string>;
   updateGroupInfo: (conversationId: string, updates: { groupName?: string; groupAvatar?: string }) => Promise<void>;
   addMember: (conversationId: string, userId: string) => Promise<void>;
   removeMember: (conversationId: string, userId: string) => Promise<void>;
@@ -18,9 +18,29 @@ export interface GroupSlice {
 type GroupSliceWithConversation = GroupSlice & ConversationSlice;
 
 export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], GroupSlice> = (set, get) => ({
-  createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: string) => {
+  createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: File | string) => {
     try {
-      const conversationId = await groupService.createGroupConversation(creatorId, memberIds, groupName, groupAvatar);
+      const avatarUrl = typeof groupAvatar === 'string' ? groupAvatar : undefined;
+      const conversationId = await groupService.createGroupConversation(creatorId, memberIds, groupName, avatarUrl);
+      
+      // Nếu có file ảnh, upload và cập nhật
+      if (groupAvatar instanceof File) {
+        try {
+          const uploadedUrl = await groupService.uploadGroupAvatar(conversationId, groupAvatar);
+          await groupService.updateGroupInfo(conversationId, creatorId, { groupAvatar: uploadedUrl });
+          
+          // Cập nhật state local
+          set((state) => ({
+            conversations: state.conversations.map(c => 
+              c.id === conversationId ? { ...c, groupAvatar: uploadedUrl } : c
+            )
+          }));
+        } catch (uploadError) {
+          console.error("Lỗi upload ảnh nhóm sau khi tạo:", uploadError);
+          // Vẫn tiếp tục vì nhóm đã được tạo thành công
+        }
+      }
+
       set({ selectedConversationId: conversationId });
       return conversationId;
     } catch (error) {

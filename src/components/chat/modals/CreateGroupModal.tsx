@@ -5,14 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from '../../../types';
 import { userService } from '../../../services/userService';
 import { useAuthStore } from '../../../store/authStore';
-import { Modal, Input, Button, Avatar, UserAvatar, IconButton } from '../../ui';
+import { Modal, Input, Button, Avatar, UserAvatar, IconButton, ImageCropper } from '../../ui';
 import { groupSchema, GroupFormValues } from '../../../utils/validation';
+import { validateFileSize } from '../../../utils';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
   currentUserId: string;
   onClose: () => void;
-  onCreateGroup: (memberIds: string[], groupName: string, groupAvatar?: string) => Promise<void>;
+  onCreateGroup: (memberIds: string[], groupName: string, groupAvatar?: File) => Promise<void>;
 }
 
 export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
@@ -24,6 +25,11 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const [step, setStep] = useState<'select' | 'details'>('select');
   const [searchTerm, setSearchTerm] = useState('');
   const [friends, setFriends] = useState<User[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const {
     register,
@@ -48,6 +54,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       loadFriends();
       setStep('select');
       setSearchTerm('');
+      setPreviewUrl(null);
+      setPendingFile(null);
       reset({
         name: '',
         memberIds: []
@@ -65,6 +73,36 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!validateFileSize(file, 'AVATAR')) return;
+      const url = URL.createObjectURL(file);
+      setCropImage(url);
+      setShowCropper(true);
+    }
+    e.target.value = '';
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    const url = URL.createObjectURL(croppedFile);
+    setPreviewUrl(url);
+    setPendingFile(croppedFile);
+    setShowCropper(false);
+    if (cropImage) {
+      URL.revokeObjectURL(cropImage);
+    }
+    setCropImage(null);
+  };
+
+  const handleCropCancel = () => {
+    if (cropImage) {
+      URL.revokeObjectURL(cropImage);
+    }
+    setCropImage(null);
+    setShowCropper(false);
   };
 
   const toggleSelect = (userId: string) => {
@@ -93,7 +131,10 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
   const onFormSubmit = async (data: GroupFormValues) => {
     try {
-      await onCreateGroup(data.memberIds, data.name.trim());
+      await onCreateGroup(data.memberIds, data.name.trim(), pendingFile || undefined);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
       onClose();
     } catch (error) {
       console.error('Lỗi tạo group', error);
@@ -193,10 +234,29 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     return (
       <div className="space-y-6">
         <div className="flex flex-col items-center">
-          <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mb-4">
-            <Users size={32} className="text-primary" />
+          <div className="relative">
+            <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center overflow-hidden">
+              {previewUrl ? (
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <Users size={32} className="text-primary" />
+              )}
+            </div>
+            <IconButton
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-0 right-0 bg-primary text-white hover:bg-primary-dark shadow-sm border-2 border-bg-primary"
+              icon={<Camera size={14} />}
+              size="sm"
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
           </div>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-text-secondary mt-2">
             Nhóm với {totalMembers} thành viên (bao gồm bạn)
           </p>
         </div>
@@ -245,6 +305,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -284,5 +345,17 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     >
       {step === 'select' ? renderSelectStep() : renderDetailsStep()}
     </Modal>
+
+    {showCropper && cropImage && (
+      <ImageCropper
+        isOpen={showCropper}
+        image={cropImage}
+        aspect={1}
+        title="Cắt ảnh nhóm"
+        onCropComplete={handleCropComplete}
+        onCancel={handleCropCancel}
+      />
+    )}
+    </>
   );
 };
