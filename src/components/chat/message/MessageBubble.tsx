@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Smile, Check, CheckCheck } from 'lucide-react';
 
-import { Message, User } from '../../../types';
+import { Message, User, MessageType } from '../../../types';
 import {
   Avatar,
   UserAvatar,
@@ -101,8 +101,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const isRead = otherReaders.length > 0;
   const isDelivered = !!message.deliveredAt;
 
-  // Sử dụng hằng số từ appConfig
-  const canEdit = isMe && !message.isRecalled && (
+  const canEdit = isMe && !message.isRecalled && message.type !== MessageType.CALL && (
     (new Date().getTime() - new Date(message.createdAt).getTime()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
   );
 
@@ -224,7 +223,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               )}
 
               {/* Hiển thị cảm xúc & Bộ chọn Emoji */}
-              {!message.isRecalled && (
+              {!message.isRecalled && message.type !== MessageType.CALL && (
                 <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
                   {hasReactions ? (
                     <ReactionDisplay
