@@ -28,7 +28,7 @@ export const useChatGroups = ({
   const handleCreateGroup = useCallback(async (
     memberIds: string[], 
     groupName: string, 
-    groupAvatar?: string
+    groupAvatar?: File | string
   ) => {
     if (!currentUserId) return;
     await createGroup(currentUserId, memberIds, groupName, groupAvatar);
