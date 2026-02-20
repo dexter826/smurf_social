@@ -140,7 +140,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
       const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-primary');
 
       return (
-        <div className={`flex flex-col gap-1.5 min-w-[160px] max-w-[260px] ${
+        <div className={`flex flex-col gap-1 w-fit max-w-[260px] ${
           isMe ? 'items-end' : 'items-start'
         }`}>
           <div className={`flex items-center gap-2 text-sm font-semibold ${
