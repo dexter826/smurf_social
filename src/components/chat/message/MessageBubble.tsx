@@ -39,6 +39,7 @@ interface MessageBubbleProps {
   isGroup?: boolean;
   lastReadByUsers?: User[];
   isBlocked?: boolean;
+  onCall?: () => void;
 }
 
 const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
@@ -57,7 +58,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   usersMap,
   isGroup = false,
   lastReadByUsers = [],
-  isBlocked = false
+  isBlocked = false,
+  onCall,
 }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -166,17 +168,23 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             </span>
           )}
 
-          <div className="relative group/message">
+              <div className="relative group/message">
             {/* Nội dung tin nhắn */}
             <div
               className={`
                 relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
-                ${(message.type === 'text' || message.isRecalled || message.replyToId) ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
+                ${(message.type === 'text' || message.isRecalled || message.replyToId || message.type === 'call') ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe
-                  ? ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '')
-                  : ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
+                  ? ((message.type === 'text' || message.isRecalled || message.replyToId || message.type === 'call') ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '')
+                  : ((message.type === 'text' || message.isRecalled || message.replyToId || message.type === 'call') ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
                 }
+                ${message.type === 'call' && !message.isRecalled && onCall ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all duration-base' : ''}
               `}
+              onClick={() => {
+                if (message.type === 'call' && !message.isRecalled && onCall) {
+                  onCall();
+                }
+              }}
             >
               {message.replyToId && message.replyToMessage && (
                 <div className={`mb-2 p-2 rounded border-l-4 text-xs ${isMe
@@ -208,7 +216,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               />
 
               {/* Thời gian & Trạng thái */}
-              {(message.type === 'text' || message.isRecalled) && (
+              {(message.type === 'text' || message.type === 'call' || message.isRecalled) && (
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMe ? 'text-white/80' : 'text-text-tertiary'
                   }`}>
                   <span>{formatTimeOnly(message.createdAt)}</span>
@@ -279,7 +287,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
           </div>
 
           {/* Thời gian cho file media */}
-          {message.type !== 'text' && !message.isRecalled && (
+          {message.type !== 'text' && message.type !== 'call' && !message.isRecalled && (
             <span className="text-[10px] text-text-tertiary mt-1">
               {formatTimeOnly(message.createdAt)}
             </span>

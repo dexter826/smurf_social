@@ -40,6 +40,7 @@ export enum MessageType {
   FILE = "file",
   VOICE = "voice",
   SYSTEM = "system",
+  CALL = "call",
 }
 
 export enum NotificationType {

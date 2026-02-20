@@ -12,9 +12,13 @@ import { usePostStore } from '../../store/postStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationDropdown } from '../notifications/NotificationDropdown';
-import { CONFIRM_MESSAGES } from '../../constants';
 import { useUnreadCount } from '../../hooks/utils/useUnreadCount';
 import { useLogout } from '../../hooks/utils/useLogout';
+import { useCallStore } from '../../store/callStore';
+import { useCallSignaling } from '../../hooks/chat/useCallSignaling';
+import { IncomingCallDialog } from '../chat/call/IncomingCallDialog';
+import { CallWindow } from '../chat/call/CallWindow';
+import { CONFIRM_MESSAGES } from '../../constants';
 
 export const AppLayout: React.FC = () => {
   const { user } = useAuthStore();
@@ -35,6 +39,82 @@ export const AppLayout: React.FC = () => {
   const isAdmin = user?.role === 'admin';
 
   const isChatRoom = location.pathname === '/' && !!selectedConversationId;
+
+  // Global Call State
+  const { 
+    callPhase,
+    setCallPhase,
+    callType,
+    setCallType,
+    activeRoomId,
+    setActiveRoomId,
+    otherUserIds,
+    setOtherUserIds,
+    isGroupCall,
+    setIsGroupCall,
+    isCaller,
+    setIsCaller,
+    callStartTime,
+    setCallStartTime,
+    callConversationId,
+    setSignalingActions,
+    resetCall
+  } = useCallStore();
+
+  const sendCallMessage = useChatStore(state => state.sendCallMessage);
+
+  const { incomingCall, startCall, acceptCall, rejectCall, endCall } = useCallSignaling(
+    user?.id || '',
+    {
+      onCallAccepted: (signal) => {
+        if (!signal.isGroupCall) {
+          setActiveRoomId(signal.roomId);
+          setCallType(signal.callType);
+          setCallPhase('in-call');
+          setCallStartTime(Date.now());
+        }
+      },
+      onCallRejected: () => {
+        if (isCaller && callConversationId && user) {
+          sendCallMessage(callConversationId, user.id, callType, 'rejected');
+        }
+        resetCall();
+      },
+      onCallEnded: () => {
+        if (isCaller && callConversationId && user) {
+          if (callPhase === 'outgoing') {
+            sendCallMessage(callConversationId, user.id, callType, 'missed');
+          } else if (callPhase === 'in-call' && callStartTime) {
+            const durationSecs = Math.floor((Date.now() - callStartTime) / 1000);
+            sendCallMessage(callConversationId, user.id, callType, 'ended', durationSecs);
+          }
+        }
+        resetCall();
+      },
+    }
+  );
+
+  useEffect(() => {
+    setSignalingActions({ startCall, acceptCall, rejectCall, endCall });
+  }, [setSignalingActions, startCall, acceptCall, rejectCall, endCall]);
+
+  const handleAcceptIncoming = async () => {
+    if (!incomingCall) return;
+    await acceptCall(incomingCall);
+    setCallType(incomingCall.callType);
+    setActiveRoomId(incomingCall.roomId);
+    setOtherUserIds([incomingCall.callerId]);
+    setIsGroupCall(incomingCall.isGroupCall || false);
+    setIsCaller(false);
+    setCallPhase('in-call');
+    setCallStartTime(Date.now());
+  };
+
+  const handleRejectIncoming = async () => {
+    if (!incomingCall) return;
+    await rejectCall(incomingCall);
+    resetCall();
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -249,6 +329,35 @@ export const AppLayout: React.FC = () => {
           currentUser={user}
           onReact={handlePostReact}
           isLoading={isModalLoading}
+        />
+      )}
+
+      {/* Global Call UI */}
+      {incomingCall && callPhase === 'idle' && (
+        <IncomingCallDialog
+          callerName={incomingCall.callerName}
+          callerId={incomingCall.callerId}
+          callType={incomingCall.callType}
+          isGroupCall={incomingCall.isGroupCall}
+          onAccept={handleAcceptIncoming}
+          onReject={handleRejectIncoming}
+        />
+      )}
+
+      {user && callPhase === 'in-call' && activeRoomId && (
+        <CallWindow
+          roomId={activeRoomId}
+          userId={user.id}
+          userName={user.name}
+          userAvatar={user.avatar}
+          isGroupCall={isGroupCall}
+          callType={callType}
+          onClose={() => {
+            if (endCall) {
+              endCall(otherUserIds);
+            }
+            resetCall();
+          }}
         />
       )}
     </div>

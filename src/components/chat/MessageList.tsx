@@ -15,6 +15,7 @@ interface MessageListProps {
   onForward?: (message: Message) => void;
   onReply?: (message: Message) => void;
   onEdit?: (message: Message) => void;
+  onCall?: (isVideo: boolean) => void;
   chatName: string;
   avatarSrc?: string;
   partner?: User;
@@ -32,6 +33,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
   onForward,
   onReply,
   onEdit,
+  onCall,
   chatName,
   avatarSrc,
   partner,
@@ -196,6 +198,16 @@ const MessageListInner: React.FC<MessageListProps> = ({
                     onForward={onForward}
                     onReply={onReply}
                     onEdit={onEdit}
+                    onCall={() => {
+                       if (onCall) {
+                          let isVideo = false;
+                          try {
+                             const parsed = JSON.parse(msg.content);
+                             isVideo = parsed.callType === 'video';
+                          } catch {}
+                          onCall(isVideo);
+                       }
+                    }}
                     currentUserId={currentUserId}
                     usersMap={usersMap}
                     isGroup={conversation.isGroup}

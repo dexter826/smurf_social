@@ -253,6 +253,52 @@ export const messageService = {
     }
   },
 
+  sendCallMessage: async (
+    conversationId: string,
+    senderId: string,
+    content: string,
+    preGeneratedId?: string,
+  ): Promise<string> => {
+    try {
+      const messageData: Omit<Message, 'id'> = {
+        conversationId,
+        senderId,
+        content,
+        type: MessageType.CALL,
+        createdAt: serverTimestamp() as unknown as Date,
+        readBy: [senderId],
+        deliveredTo: [senderId],
+        deliveredAt: serverTimestamp() as unknown as Date,
+      };
+
+      let finalId = preGeneratedId;
+      if (preGeneratedId) {
+        await setDoc(doc(db, "messages", preGeneratedId), messageData);
+      } else {
+        const docRef = await addDoc(collection(db, "messages"), messageData);
+        finalId = docRef.id;
+      }
+      
+      const parsed = JSON.parse(content);
+      const displayContent = parsed.status === 'ended' 
+        ? `Cuộc gọi ${parsed.callType === 'video' ? 'video' : 'thoại'} kết thúc`
+        : `Cuộc gọi ${parsed.callType === 'video' ? 'video' : 'thoại'} nhỡ/từ chối`;
+
+      await updateConversationAfterMessage(
+        conversationId,
+        senderId,
+        messageData as Partial<Message>,
+        displayContent,
+        finalId!
+      );
+
+      return finalId!;
+    } catch (error) {
+      console.error("Lỗi gửi tin nhắn cuộc gọi", error);
+      throw error;
+    }
+  },
+
   // Gửi tin nhắn văn bản.
   sendTextMessage: async (
     conversationId: string,

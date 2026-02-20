@@ -18,6 +18,7 @@ export const useChatMessages = ({
     sendFileMessage,
     sendVideoMessage,
     sendVoiceMessage,
+    sendCallMessage,
     recallMessage,
     deleteMessageForMe,
     editMessage,
@@ -83,12 +84,22 @@ export const useChatMessages = ({
     await storeReplyToMessage(selectedConversationId, currentUserId, text, replyToId);
   }, [selectedConversationId, currentUserId, storeReplyToMessage]);
 
+  const handleSendCall = useCallback(async (
+    callType: 'voice' | 'video',
+    status: 'ended' | 'missed' | 'rejected',
+    duration?: number
+  ) => {
+    if (!selectedConversationId || !currentUserId) return;
+    await sendCallMessage(selectedConversationId, currentUserId, callType, status, duration);
+  }, [selectedConversationId, currentUserId, sendCallMessage]);
+
   return {
     handleSendText,
     handleSendImage,
     handleSendFile,
     handleSendVideo,
     handleSendVoice,
+    handleSendCall,
     handleEditMessage,
     handleRecallMessage,
     handleDeleteForMe,
