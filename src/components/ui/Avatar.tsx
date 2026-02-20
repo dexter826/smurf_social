@@ -61,20 +61,20 @@ const AvatarInner: React.FC<AvatarProps> = ({
         
         if (total === 2) {
           return index === 0 
-            ? 'w-[65%] h-[65%] top-0 left-0 z-10' 
-            : 'w-[65%] h-[65%] bottom-0 right-0';
+            ? 'w-[62%] h-[62%] top-0 left-0 z-10' 
+            : 'w-[62%] h-[62%] bottom-0 right-0';
         }
 
         if (total === 3) {
-          if (index === 0) return 'w-[58%] h-[58%] top-0 left-1/2 -translate-x-1/2 z-10';
-          if (index === 1) return 'w-[58%] h-[58%] bottom-0 left-0';
-          return 'w-[58%] h-[58%] bottom-0 right-0 z-20';
+          if (index === 0) return 'w-[56%] h-[56%] top-0 left-1/2 -translate-x-1/2 z-10';
+          if (index === 1) return 'w-[56%] h-[56%] bottom-0 left-0';
+          return 'w-[56%] h-[56%] bottom-0 right-0 z-20';
         }
 
-        if (index === 0) return 'w-[58%] h-[58%] top-0 left-0 z-10';
-        if (index === 1) return 'w-[58%] h-[58%] top-0 right-0';
-        if (index === 2) return 'w-[58%] h-[58%] bottom-0 left-0 z-20';
-        return 'w-[58%] h-[58%] bottom-0 right-0 z-30';
+        if (index === 0) return 'w-[54%] h-[54%] top-0 left-0 z-10';
+        if (index === 1) return 'w-[54%] h-[54%] top-0 right-0';
+        if (index === 2) return 'w-[54%] h-[54%] bottom-0 left-0 z-20';
+        return 'w-[54%] h-[54%] bottom-0 right-0 z-30';
       };
 
       return (
@@ -123,7 +123,7 @@ const AvatarInner: React.FC<AvatarProps> = ({
       className={`relative inline-flex flex-shrink-0 ${sizeClasses[size]} rounded-full ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      <div className={`w-full h-full relative rounded-full overflow-hidden bg-bg-secondary ${size !== '2xs' ? 'border border-border-light' : ''} flex items-center justify-center`}>
+      <div className={`w-full h-full relative rounded-full ${!isGroup ? 'overflow-hidden bg-bg-secondary' : 'bg-transparent'} ${size !== '2xs' && !isGroup ? 'border border-border-light' : ''} flex items-center justify-center`}>
         {renderContent()}
       </div>
       {status && (
