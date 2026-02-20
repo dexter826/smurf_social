@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Flag, PenTool } from 'lucide-react';
-import { UserAvatar, LazyImage } from '../../ui';
+import { UserAvatar, LazyImage, Skeleton } from '../../ui';
 import { CommentInput } from './CommentInput';
 import { Comment, User, ReportType } from '../../../types';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
@@ -86,7 +86,9 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline leading-none min-w-0"
                 onClick={onProfileNavigate}
               >
-                {author?.name || 'Người dùng'}
+                {author?.name 
+                  ? author.name 
+                  : <Skeleton width={80} height={12} className="opacity-60" />}
               </h4>
               {comment.userId === postOwnerId && (
                 <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 leading-none mt-[1px] flex items-center gap-0.5">

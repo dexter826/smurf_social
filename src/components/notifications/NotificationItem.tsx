@@ -2,7 +2,7 @@ import React from 'react';
 import { Trash2, Shield } from 'lucide-react';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { AppNotification, NotificationType } from '../../types';
-import { UserAvatar, Button } from '../ui';
+import { UserAvatar, Button, Skeleton } from '../ui';
 import { notificationService } from '../../services/notificationService';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../../store/notificationStore';
@@ -106,7 +106,11 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       <div className="flex-1 min-w-0">
         <p className="text-sm text-text-primary leading-tight">
           {isInteraction && (
-            <span className="font-semibold mr-1">{sender?.name || 'Người dùng'}</span>
+            <span className="font-semibold mr-1">
+              {sender?.name 
+                ? sender.name 
+                : <Skeleton width={72} height={13} className="opacity-60 inline-block align-middle" />}
+            </span>
           )}
           {notificationService.getNotificationText(notification, '')}
         </p>
