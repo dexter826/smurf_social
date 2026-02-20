@@ -48,7 +48,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isPendingVerification: true });
         return;
       }
-      set({ isPendingVerification: false });
+
+      const userData = await userService.getUserById(firebaseUser.uid);
+      if (userData) {
+        if (userData.status === UserStatus.BANNED) {
+          throw new Error('auth/user-disabled');
+        }
+
+        await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
+        const userWithStatus = { ...userData, status: UserStatus.ONLINE };
+        set({
+          user: userWithStatus,
+          isPendingVerification: false,
+          isInitialized: true // Đảm bảo trạng thái đã init
+        });
+        useUserCache.getState().setUser(userWithStatus);
+      } else {
+        set({ isPendingVerification: false });
+      }
     } catch (error) {
       set({ isPendingVerification: false });
       throw error;
