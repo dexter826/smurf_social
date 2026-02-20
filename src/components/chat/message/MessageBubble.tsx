@@ -175,8 +175,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
                 ${(message.type === 'text' || message.isRecalled || message.replyToId || message.type === 'call') ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe
-                  ? ((message.type === 'text' || message.isRecalled || message.replyToId || message.type === 'call') ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : '')
-                  : ((message.type === 'text' || message.isRecalled || message.replyToId || message.type === 'call') ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : '')
+                  ? ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : (message.type === 'call' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm' : ''))
+                  : ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : (message.type === 'call' ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm' : ''))
                 }
                 ${message.type === 'call' && !message.isRecalled && onCall ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all duration-base' : ''}
               `}
