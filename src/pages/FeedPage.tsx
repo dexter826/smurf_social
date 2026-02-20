@@ -5,7 +5,7 @@ import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 import { useLoadingStore } from '../store/loadingStore';
-import { Visibility, UserStatus } from '../types';
+import { Visibility } from '../types';
 import { useFeed } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
 
@@ -87,14 +87,9 @@ const FeedPage: React.FC = () => {
         ) : (
           <>
             {posts.map((post) => {
-              const author = usersMap[post.userId] || {
-                id: post.userId,
-                name: 'Người dùng',
-                avatar: '',
-                email: '',
-                status: UserStatus.OFFLINE,
-                createdAt: new Date()
-              };
+              const author = usersMap[post.userId];
+              // User cache chưa sẵn sàng
+              if (!author) return <PostItem.Skeleton key={post.id} />;
 
               return (
                 <PostItem
