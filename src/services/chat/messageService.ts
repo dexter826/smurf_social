@@ -30,7 +30,6 @@ import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
 import { convertTimestamp } from "../../utils/dateUtils";
 
-// Cập nhật trạng thái hội thoại — dùng increment() tránh race condition
 async function updateConversationAfterMessage(
   conversationId: string,
   senderId: string,
