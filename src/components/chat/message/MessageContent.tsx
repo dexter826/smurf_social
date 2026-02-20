@@ -1,8 +1,9 @@
 import React from 'react';
-import { FileText, Download, Image as ImageIcon, Play, Pause, Mic } from 'lucide-react';
+import { FileText, Download, Image as ImageIcon, Play, Pause, Mic, PhoneIncoming, Phone, PhoneMissed, Video } from 'lucide-react';
 
-import { Message } from '../../../types';
+import { Message, MessageType } from '../../../types';
 import { IconButton, LazyVideo, LazyImage } from '../../ui';
+
 
 interface MessageContentProps {
   message: Message;
@@ -11,6 +12,7 @@ interface MessageContentProps {
   isPlaying: boolean;
   onToggleVoice: (e: React.MouseEvent) => void;
   setShowFullImage: (show: boolean) => void;
+  onCall?: () => void;
 }
 
 const MessageContentInner: React.FC<MessageContentProps> = ({
@@ -20,6 +22,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
   isPlaying,
   onToggleVoice,
   setShowFullImage,
+  onCall,
 }) => {
   if (message.isRecalled) {
     return (
@@ -110,6 +113,56 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
           />
         </div>
       );
+
+    case MessageType.CALL: {
+      let parsed: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected'; duration?: number };
+      try { parsed = JSON.parse(message.content); }
+      catch { parsed = { callType: 'voice', status: 'missed' }; }
+
+      const { callType, status, duration } = parsed;
+      const isVideo = callType === 'video';
+
+      // Nhãn tiêu đề
+      let title = '';
+      if (status === 'ended') title = isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại';
+      else if (status === 'missed') title = isVideo ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ';
+      else title = isVideo ? 'Cuộc gọi video bị từ chối' : 'Cuộc gọi thoại bị từ chối';
+
+      // Thời lượng
+      let durationStr = '';
+      if (duration && duration > 0) {
+        const mins = Math.floor(duration / 60);
+        const secs = duration % 60;
+        durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`;
+      }
+
+      const isMissedOrRejected = status === 'missed' || status === 'rejected';
+      const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-primary');
+
+      return (
+        <div className={`flex flex-col gap-1.5 min-w-[160px] max-w-[260px] ${
+          isMe ? 'items-end' : 'items-start'
+        }`}>
+          <div className={`flex items-center gap-2 text-sm font-semibold ${
+            isMe ? 'text-white' : (isMissedOrRejected ? 'text-red-500' : 'text-text-primary')
+          }`}>
+            {isMissedOrRejected
+              ? <PhoneMissed size={16} className={iconColor} />
+              : (isVideo ? <Video size={16} className={iconColor} /> : <PhoneIncoming size={16} className={iconColor} />)
+            }
+            <span>{title}</span>
+          </div>
+          {durationStr && (
+            <div className={`flex items-center gap-1.5 text-xs ${
+              isMe ? 'text-white/70' : 'text-text-tertiary'
+            }`}>
+              <Phone size={12} />
+              <span>{durationStr}</span>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     case 'voice':
       return (

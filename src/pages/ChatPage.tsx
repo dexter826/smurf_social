@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
 import { friendService } from '../services/friendService';
+import { useChatStore } from '../store/chatStore';
 import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
   TransferAdminModal, ForwardModal, MessengerSkeleton
 } from '../components/chat';
+import { OutgoingCallDialog } from '../components/chat/call/OutgoingCallDialog';
+import { useCallStore } from '../store/callStore';
 import { scrollToMessage } from '../utils';
 
 const ChatPage: React.FC = () => {
@@ -42,6 +45,7 @@ const ChatPage: React.FC = () => {
 
     handleSelectConversation,
     handleSendText,
+    handleSendCall,
     handleEditMessage,
     handleRecallMessage,
     handleDeleteForMe,
@@ -92,6 +96,104 @@ const ChatPage: React.FC = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
+
+  const {
+    callPhase,
+    callType,
+    activeRoomId,
+    otherUserIds,
+    isGroupCall,
+    isCaller,
+    callStartTime,
+    setCallPhase,
+    setCallType,
+    setActiveRoomId,
+    setOtherUserIds,
+    setIsGroupCall,
+    setIsCaller,
+    setCallStartTime,
+    setCallConversationId,
+    resetCall,
+    startCall,
+    endCall,
+  } = useCallStore();
+
+  const partner = selectedConversation?.isGroup
+    ? null
+    : selectedConversation?.participants.find(p => p.id !== currentUser.id);
+
+  const handleInitiateCall = async (type: 'voice' | 'video') => {
+    if (!selectedConversationId) return;
+
+    setCallType(type);
+    setActiveRoomId(selectedConversationId);
+    setCallConversationId(selectedConversationId);
+
+    const isGroup = selectedConversation?.isGroup || false;
+    setIsGroupCall(isGroup);
+
+    if (isGroup) {
+      const groupMembersIds = selectedConversation?.participantIds.filter(id => id !== currentUser.id) || [];
+      if (groupMembersIds.length === 0) return;
+      if (startCall) {
+        setIsCaller(true);
+        setOtherUserIds(groupMembersIds);
+        setCallPhase('in-call');
+        setCallStartTime(Date.now());
+        await startCall(
+          groupMembersIds,
+          currentUser.id,
+          currentUser.name,
+          currentUser.avatar,
+          type,
+          selectedConversationId,
+          true
+        );
+      }
+    } else {
+      if (!partner || !startCall) return;
+      setIsCaller(true);
+      setOtherUserIds([partner.id]);
+      setCallPhase('outgoing');
+      const result = await startCall(
+        [partner.id],
+        currentUser.id,
+        currentUser.name,
+        currentUser.avatar,
+        type,
+        selectedConversationId,
+        false
+      );
+      
+      if (result && !result.success) {
+        if (result.reason === 'busy') {
+          useChatStore.getState().sendCallMessage(selectedConversationId, currentUser.id, type, 'missed');
+          resetCall();
+        }
+      }
+    }
+  };
+
+  const handleCancelOutgoingCall = async () => {
+    if (endCall) await endCall(otherUserIds);
+    resetCall();
+  };
+
+  const handleMissedCallTimeout = async () => {
+    if (endCall) await endCall(otherUserIds);
+    resetCall();
+  };
+
+  const handleEndCall = async () => {
+    if (endCall) {
+      if (!isGroupCall) {
+        await endCall(otherUserIds);
+      } else {
+        await endCall([]); 
+      }
+    }
+    resetCall();
+  };
 
   if (!currentUser) {
     return <MessengerSkeleton />;
@@ -200,6 +302,8 @@ const ChatPage: React.FC = () => {
               isBlocked={isBlocked}
               isBlockedByMe={isBlockedByMe}
               onUnblock={handleToggleBlock}
+              onCall={(isVideo) => handleInitiateCall(isVideo ? 'video' : 'voice')}
+              onVideoCall={() => handleInitiateCall('video')}
             />
             <ChatInput
               key={selectedConversationId}
@@ -322,6 +426,17 @@ const ChatPage: React.FC = () => {
         conversations={conversations}
         usersMap={usersMap}
       />
+
+      {/* Cuộc gọi đi – chờ đối phương bắt máy */}
+      {callPhase === 'outgoing' && partner && (
+        <OutgoingCallDialog
+          calleeName={partner.name || 'Người dùng'}
+          calleeId={partner.id}
+          callType={callType}
+          onCancel={handleCancelOutgoingCall}
+          onTimeout={handleMissedCallTimeout}
+        />
+      )}
     </div>
   );
 };

@@ -11,6 +11,8 @@ interface ChatBoxHeaderProps {
   usersMap: Record<string, User>;
   onBack?: () => void;
   onInfoClick?: () => void;
+  onCall?: () => void;
+  onVideoCall?: () => void;
 }
 
 const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
@@ -20,7 +22,9 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
   partner,
   usersMap,
   onBack,
-  onInfoClick
+  onInfoClick,
+  onCall,
+  onVideoCall,
 }) => {
   return (
     <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-4 h-16 border-b border-border-light bg-bg-primary transition-theme">
@@ -78,7 +82,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
 
       <div className="flex items-center gap-0.5 md:gap-1">
         <IconButton
-          onClick={() => { }}
+          onClick={onCall}
           title="Cuộc gọi âm thanh"
           variant="ghost"
           className="text-text-secondary"
@@ -86,7 +90,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
           size="md"
         />
         <IconButton
-          onClick={() => { }}
+          onClick={onVideoCall}
           title="Cuộc gọi video"
           variant="ghost"
           className="text-text-secondary"

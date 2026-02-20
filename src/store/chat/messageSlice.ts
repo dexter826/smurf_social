@@ -27,6 +27,7 @@ export interface MessageSlice {
   recallMessage: (messageId: string, conversationId: string) => Promise<void>;
   deleteMessageForMe: (messageId: string, userId: string) => Promise<void>;
   forwardMessage: (conversationId: string, senderId: string, message: Message) => Promise<void>;
+  sendCallMessage: (conversationId: string, senderId: string, callType: 'voice' | 'video', status: 'ended' | 'missed' | 'rejected', duration?: number) => Promise<void>;
   replyToMessage: (conversationId: string, senderId: string, content: string, replyToId: string) => Promise<void>;
   editMessage: (messageId: string, content: string) => Promise<void>;
   setTyping: (conversationId: string, userId: string, isTyping: boolean) => Promise<void>;
@@ -192,6 +193,32 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }
   },
 
+
+  sendCallMessage: async (conversationId: string, senderId: string, callType: 'voice' | 'video', status: 'ended' | 'missed' | 'rejected', duration?: number) => {
+    const realId = messageService.generateMessageId();
+    const content = JSON.stringify({ callType, status, duration });
+    const optimisticMessage: Message = {
+      id: realId,
+      conversationId,
+      senderId,
+      content,
+      createdAt: new Date(),
+      type: MessageType.CALL,
+      readBy: [],
+      deliveredTo: [],
+    };
+    set(state => ({
+      messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] }
+    }));
+    try {
+      await messageService.sendCallMessage(conversationId, senderId, content, realId);
+    } catch (error) {
+      set(state => ({
+        messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }
+      }));
+      console.error('Lỗi gửi tin nhắn cuộc gọi:', error);
+    }
+  },
 
   sendImageMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
     sendMediaMessage('image', conversationId, senderId, file, replyToId, set, get);

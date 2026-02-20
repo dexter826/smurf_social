@@ -34,6 +34,8 @@ interface ChatBoxProps {
   isBlocked?: boolean;
   isBlockedByMe?: boolean;
   onUnblock?: () => void;
+  onCall?: (isVideo: boolean) => void;
+  onVideoCall?: () => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -60,7 +62,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onLoadMore,
   isBlocked = false,
   isBlockedByMe = false,
-  onUnblock
+  onUnblock,
+  onCall,
+  onVideoCall,
 }) => {
   const {
     messagesEndRef,
@@ -86,7 +90,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     !conversation.isGroup && partner && !currentUserFriendIds.includes(partner.id)
   , [conversation.isGroup, partner, currentUserFriendIds]);
 
-  // Tính toán tin nhắn cuối cùng mỗi người đã đọc
+  // Tìm tin nhắn cuối đã đọc.
   const lastReadByMap = useMemo(() => {
     const map: Record<string, User[]> = {};
     const reversed = [...messages].reverse();
@@ -129,6 +133,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         usersMap={usersMap}
         onBack={onBack}
         onInfoClick={onInfoClick}
+        onCall={() => onCall && onCall(false)}
+        onVideoCall={onVideoCall}
       />
 
       {isMessageRequest && partner && onAddFriend && onBlock && (
@@ -166,11 +172,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               onDeleteForMe={onDeleteForMe}
               onForward={onForward}
               onReply={onReply}
-              onEdit={onEdit}
               chatName={chatName}
               avatarSrc={avatarSrc}
               partner={partner || undefined}
               isBlocked={isBlocked}
+              onCall={onCall}
+              onEdit={onEdit}
             />
             
             <div ref={messagesEndRef} />
