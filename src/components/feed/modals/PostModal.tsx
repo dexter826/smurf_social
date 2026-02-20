@@ -111,14 +111,20 @@ export const PostModal: React.FC<PostModalProps> = ({
 
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
-        if (validateFileSize(file, 'IMAGE')) {
+        const validation = validateFileSize(file, 'IMAGE');
+        if (validation.isValid) {
           validFiles.push(file);
           newPreviews.push({ url: URL.createObjectURL(file), type: 'image' });
+        } else {
+          if (validation.error) toast.error(validation.error);
         }
       } else if (file.type.startsWith('video/')) {
-        if (validateFileSize(file, 'VIDEO')) {
+        const validation = validateFileSize(file, 'VIDEO');
+        if (validation.isValid) {
           validFiles.push(file);
           newPreviews.push({ url: URL.createObjectURL(file), type: 'video' });
+        } else {
+          if (validation.error) toast.error(validation.error);
         }
       } else {
         toast.error(`Không hỗ trợ định dạng file của "${file.name}"`);

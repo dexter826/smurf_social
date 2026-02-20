@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
 import { FriendStatus } from '../../types';
 import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
+import { toast } from '../../store/toastStore';
 import { Image as ImageIcon } from 'lucide-react';
 import { useReportStore } from '../../store/reportStore';
 import { validateFileSize } from '../../utils/uploadUtils';
@@ -86,7 +87,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!validateFileSize(file, 'AVATAR')) return;
+      const validation = validateFileSize(file, 'AVATAR');
+      if (!validation.isValid) {
+        if (validation.error) toast.error(validation.error);
+        return;
+      }
       const blobUrl = URL.createObjectURL(file);
       setCropState({ isOpen: true, type: 'avatar', image: blobUrl });
     }
@@ -96,7 +101,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!validateFileSize(file, 'COVER')) return;
+      const validation = validateFileSize(file, 'COVER');
+      if (!validation.isValid) {
+        if (validation.error) toast.error(validation.error);
+        return;
+      }
       const blobUrl = URL.createObjectURL(file);
       setCropState({ isOpen: true, type: 'cover', image: blobUrl });
     }
