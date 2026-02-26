@@ -336,7 +336,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                           <img src={item.url} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <>
-                            <video src={item.url} className="w-full h-full object-cover" />
+                            <video src={item.url} className="w-full h-full object-cover" playsInline muted />
                             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                               <Video className="text-white/80" size={32} />
                             </div>

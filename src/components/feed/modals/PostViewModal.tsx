@@ -153,6 +153,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 <video
                   src={allMedia[mediaIndex].url}
                   controls
+                  playsInline
                   className="max-w-full max-h-full object-contain"
                 />
               ) : (
@@ -286,7 +287,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     {allMedia[mediaIndex].type === 'video' ? (
-                      <video src={allMedia[mediaIndex].url} controls className="max-w-full max-h-full" />
+                      <video src={allMedia[mediaIndex].url} controls playsInline className="max-w-full max-h-full" />
                     ) : (
                       <img src={allMedia[mediaIndex].url} alt="" className="max-w-full max-h-full object-contain" />
                     )}

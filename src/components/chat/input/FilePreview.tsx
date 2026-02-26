@@ -27,7 +27,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             {item.preview ? (
               item.type === 'video' ? (
                 <div className="w-full h-full relative">
-                  <video src={item.preview} className="w-full h-full object-cover" />
+                  <video src={item.preview} className="w-full h-full object-cover" playsInline muted />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                     <Video size={20} className="text-white drop-shadow" />
                   </div>
