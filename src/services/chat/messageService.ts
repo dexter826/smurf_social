@@ -109,10 +109,6 @@ async function createAndSendMediaMessage(
     messageData.fileName = file.name;
     messageData.fileSize = file.size;
   }
-  if (type === MessageType.VIDEO) {
-    const thumbnailUrl = fileUrl.replace(/\.[^/.]+$/, ".jpg");
-    messageData.videoThumbnails = { [fileUrl]: thumbnailUrl };
-  }
   if (options.replyToId) {
     messageData.replyToId = options.replyToId;
   }

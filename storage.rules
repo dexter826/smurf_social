@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Avatar người dùng - chủ sở hữu ghi, mọi người đọc
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Ảnh bìa - chủ sở hữu ghi, mọi người đọc
+    match /covers/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Media bài viết (ảnh + video) - chủ sở hữu ghi, mọi người đọc
+    match /posts/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 50 * 1024 * 1024;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Ảnh bình luận - người đã đăng nhập ghi, mọi người đọc
+    match /comments/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // File chat - người đã đăng nhập ghi/đọc
+    match /chats/{conversationId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 50 * 1024 * 1024;
+    }
+
+    // Avatar nhóm - người đã đăng nhập ghi, mọi người đọc
+    match /group-avatars/{conversationId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Ảnh báo cáo - người đã đăng nhập ghi/đọc
+    match /reports/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Video thumbnails - client ghi (extract frame), mọi người đọc
+    match /thumbnails/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null;
+    }
+  }
+}

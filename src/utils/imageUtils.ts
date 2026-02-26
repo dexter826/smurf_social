@@ -10,7 +10,7 @@ const AVATAR_GRADIENTS = [
   ['#642B73', '#C6426E']
 ] as const;
 
-// Lấy chữ cái đầu (tối đa 2 ký tự)
+// Lấy chữ cái đầu (tối đa 2)
 export const getInitials = (name: string): string => {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
@@ -30,7 +30,6 @@ export const getAvatarGradient = (seed: string): string => {
   return `linear-gradient(135deg, ${c1}, ${c2})`;
 };
 
-// Xử lý ảnh và video
 
 interface CompressionOptions {
   maxSizeMB?: number;
@@ -38,14 +37,14 @@ interface CompressionOptions {
   quality?: number;
 }
 
-// Nén ảnh trước khi upload
+// Nén ảnh, bỏ qua nếu đã nhỏ hơn limit
 export const compressImage = async (
   file: File,
   options: CompressionOptions = {}
 ): Promise<File> => {
   const { maxSizeMB = 1, maxWidthOrHeight = 1920, quality = 0.8 } = options;
 
-  // Không nén nếu file đã nhỏ hơn limit
+  // Bỏ qua nếu đã đủ nhỏ
   const maxBytes = maxSizeMB * 1024 * 1024;
   if (file.size <= maxBytes) {
     return file;
@@ -173,4 +172,53 @@ export async function getCroppedImg(
   });
 }
 
+// Capture frame tại giây đầu làm thumbnail
+export const extractVideoThumbnail = (
+  file: File,
+  maxSize = 1280,
+  seekTime = 1,
+): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const objectUrl = URL.createObjectURL(file);
 
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    video.src = objectUrl;
+
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(seekTime, video.duration * 0.1);
+    };
+
+    video.onseeked = () => {
+      URL.revokeObjectURL(objectUrl);
+
+      const ratio = Math.min(maxSize / video.videoWidth, maxSize / video.videoHeight, 1);
+      canvas.width = Math.round(video.videoWidth * ratio);
+      canvas.height = Math.round(video.videoHeight * ratio);
+
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const thumbName = file.name.replace(/\.[^/.]+$/, '_thumb.jpg');
+            resolve(new File([blob], thumbName, { type: 'image/jpeg', lastModified: Date.now() }));
+          } else {
+            reject(new Error('Không tạo được thumbnail'));
+          }
+        },
+        'image/jpeg',
+        0.8
+      );
+    };
+
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Không load được video'));
+    };
+  });
+};

@@ -6,6 +6,7 @@ import {
   persistentMultipleTabManager
 } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+import { getStorage } from "firebase/storage";
 import { getValidatedEnvConfig } from "../utils/validateEnv";
 
 const envConfig = getValidatedEnvConfig();
@@ -32,5 +33,6 @@ export const db = initializeFirestore(app, {
 });
 
 export const rtdb = getDatabase(app);
+export const storage = getStorage(app);
 
 export default app;
