@@ -188,8 +188,10 @@ service cloud.firestore {
 
     // THÔNG BÁO
     match /notifications/{notificationId} {
-      allow read: if isAuthenticated() &&
-        resource.data.receiverId == request.auth.uid;
+      allow read: if isAuthenticated() && (
+        resource.data.receiverId == request.auth.uid ||
+        resource.data.senderId == request.auth.uid
+      );
 
       // Mặc định thông báo chưa đọc.
       allow create: if isNotBanned() &&
