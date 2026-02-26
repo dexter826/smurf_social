@@ -14,6 +14,7 @@ import { PhotosTab } from '../components/profile/PhotosTab';
 import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
 import { User as UserIcon, Lock } from 'lucide-react';
 import { useProfile } from '../hooks';
+import { toDate } from '../utils/dateUtils';
 
 type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover' | 'block';
 
@@ -171,7 +172,7 @@ const ProfilePage: React.FC = () => {
                             <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path></svg>
                             </div>
-                            <span>Sinh ngày <strong className="text-text-primary">{new Date(profile.birthDate).toLocaleDateString('vi-VN')}</strong></span>
+                            <span>Sinh ngày <strong className="text-text-primary">{toDate(profile.birthDate)?.toLocaleDateString('vi-VN')}</strong></span>
                           </div>
                         )}
                         {profile.location && (

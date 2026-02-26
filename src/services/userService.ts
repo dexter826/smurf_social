@@ -8,19 +8,25 @@ import { uploadWithProgress, ProgressCallback, deleteStorageFile } from '../util
 import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
 import { convertTimestamp } from '../utils/dateUtils';
 
+// Helper chuyển đổi Firestore document sang User object
+function convertDocToUser(doc: DocumentSnapshot): User {
+  const data = doc.data();
+  return {
+    ...data,
+    id: doc.id,
+    createdAt: convertTimestamp(data?.createdAt, new Date())!,
+    lastSeen: convertTimestamp(data?.lastSeen),
+    birthDate: convertTimestamp(data?.birthDate),
+  } as User;
+}
+
 export const userService = {
   // Lấy thông tin người dùng theo ID
   getUserById: async (id: string): Promise<User | undefined> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', id));
       if (userDoc.exists()) {
-        const data = userDoc.data();
-        return {
-          ...data,
-          id: userDoc.id,
-          createdAt: convertTimestamp(data.createdAt),
-          lastSeen: convertTimestamp(data.lastSeen),
-        } as User;
+        return convertDocToUser(userDoc);
       }
       return undefined;
     } catch (error) {
@@ -330,13 +336,7 @@ export const userService = {
     const userRef = doc(db, 'users', userId);
     return onSnapshot(userRef, (snapshot) => {
       if (snapshot.exists()) {
-        const data = snapshot.data();
-        callback({
-          ...data,
-          id: snapshot.id,
-          createdAt: convertTimestamp(data.createdAt),
-          lastSeen: convertTimestamp(data.lastSeen),
-        } as User);
+        callback(convertDocToUser(snapshot));
       }
     });
   },
@@ -384,15 +384,7 @@ export const userService = {
       }
 
       const snapshot = await getDocs(q);
-      const users = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: convertTimestamp(data.createdAt),
-          lastSeen: convertTimestamp(data.lastSeen),
-        } as User;
-      });
+      const users = snapshot.docs.map(doc => convertDocToUser(doc));
 
       const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
       return { users, lastDoc };
@@ -436,15 +428,7 @@ export const userService = {
     );
 
     return onSnapshot(q, (snapshot) => {
-      const users = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: convertTimestamp(data.createdAt),
-          lastSeen: convertTimestamp(data.lastSeen),
-        } as User;
-      });
+      const users = snapshot.docs.map(doc => convertDocToUser(doc));
       callback(users);
     }, (error) => {
       if (onError) onError(error);
