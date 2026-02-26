@@ -137,6 +137,7 @@ export const LazyVideo: React.FC<LazyVideoProps> = ({
           className={className}
           controls
           preload="metadata"
+          playsInline
           {...props}
         />
       ) : (

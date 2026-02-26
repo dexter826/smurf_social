@@ -38,6 +38,8 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
             poster={videoThumbnails?.[item.url]}
             className={`w-full h-full object-cover ${isBlob ? 'blur-[2px] opacity-70' : ''}`}
             controls={!isBlob}
+            playsInline
+            muted={isBlob}
           />
         ) : (
           <LazyImage 
@@ -86,6 +88,8 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
               poster={videoThumbnails?.[item.url]}
               className={`relative z-10 w-full h-auto max-h-[600px] object-contain ${isBlob ? 'blur-[2px] opacity-70' : ''}`}
               controls={!isBlob}
+              playsInline
+              muted={isBlob}
             />
           ) : (
             <LazyImage 
