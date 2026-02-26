@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Gender } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
+import { toDate } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
 import { API_ENDPOINTS, TOAST_MESSAGES } from '../../constants';
 import { profileSchema, ProfileFormValues } from '../../utils/validation';
@@ -37,7 +38,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       bio: user.bio || '',
       location: user.location || '',
       gender: user.gender || Gender.MALE,
-      birthDate: user.birthDate?.getTime()
+      birthDate: toDate(user.birthDate)?.getTime()
     }
   });
 
@@ -50,7 +51,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         bio: user.bio || '',
         location: user.location || '',
         gender: user.gender || Gender.MALE,
-        birthDate: user.birthDate?.getTime()
+        birthDate: toDate(user.birthDate)?.getTime()
       });
       fetchProvinces();
     }
