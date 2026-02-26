@@ -146,7 +146,7 @@ const ProfilePage: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4 pt-2 pb-12">
           {activeTab === 'posts' ? (
             <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-              <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 space-y-4 order-2 md:order-1">
+              <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 space-y-4">
                 {/* Khối Giới thiệu */}
                 <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4">
                   <h3 className="font-bold text-lg mb-4 text-text-primary">Giới thiệu</h3>
@@ -197,7 +197,7 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 {/* Khối Ảnh/Video Preview */}
-                <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4">
+                <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4 hidden md:block">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg text-text-primary">Ảnh/Video</h3>
                     <Button
@@ -229,7 +229,7 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0 order-1 md:order-2">
+              <div className="flex-1 min-w-0">
                 <PostsTab userId={profile.id} currentUser={currentUser} />
               </div>
             </div>
