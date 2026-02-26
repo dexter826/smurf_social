@@ -15,7 +15,7 @@ import { db } from '../../firebase/config';
 import { conversationService } from './conversationService';
 import { messageService } from './messageService';
 import { userService } from '../userService';
-import { uploadWithProgress, UploadProgress } from '../../utils/uploadUtils';
+import { uploadWithProgress, UploadProgress, deleteStorageFile } from '../../utils/uploadUtils';
 import { compressImage } from '../../utils/imageUtils';
 import { IMAGE_COMPRESSION } from '../../constants';
 
@@ -232,7 +232,14 @@ export const groupService = {
       const fileName = `group_${conversationId}_${Date.now()}.${fileExt}`;
       const path = `group-avatars/${conversationId}/${fileName}`;
 
+      // Lấy avatar cũ để xóa sau
+      const convSnap = await getDoc(doc(db, 'conversations', conversationId));
+      const oldAvatar = convSnap.exists() ? convSnap.data().groupAvatar : null;
+
       const downloadURL = await uploadWithProgress(path, compressedFile, onProgress);
+
+      if (oldAvatar) await deleteStorageFile(oldAvatar);
+
       return downloadURL;
     } catch (error) {
       console.error("Lỗi upload avatar nhóm:", error);
@@ -244,7 +251,12 @@ export const groupService = {
   disbandGroup: async (conversationId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
+      const convSnap = await getDoc(conversationRef);
+      const groupAvatar = convSnap.exists() ? convSnap.data().groupAvatar : null;
+
       await deleteDoc(conversationRef);
+
+      if (groupAvatar) await deleteStorageFile(groupAvatar);
     } catch (error) {
       console.error("Lỗi giải tán nhóm:", error);
       throw error;

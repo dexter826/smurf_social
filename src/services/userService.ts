@@ -4,7 +4,7 @@ import { User, UserStatus, Visibility, Gender } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
-import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
+import { uploadWithProgress, ProgressCallback, deleteStorageFile } from '../utils/uploadUtils';
 import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
 import { convertTimestamp } from '../utils/dateUtils';
 
@@ -186,17 +186,22 @@ export const userService = {
     onProgress?: ProgressCallback
   ): Promise<string> => {
     try {
-      // Compress ảnh avatar
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.AVATAR);
 
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
       const path = `avatars/${userId}/${fileName}`;
 
+      // Lấy avatar cũ để xóa sau
+      const currentUser = await userService.getUserById(userId);
+      const oldAvatarUrl = currentUser?.avatar;
+
       const downloadURL = await withRetry(() =>
         uploadWithProgress(path, compressedFile, onProgress)
       );
       await userService.updateProfile(userId, { avatar: downloadURL });
+
+      if (oldAvatarUrl) await deleteStorageFile(oldAvatarUrl);
 
       return downloadURL;
     } catch (error) {
@@ -212,17 +217,22 @@ export const userService = {
     onProgress?: ProgressCallback
   ): Promise<string> => {
     try {
-      // Compress ảnh cover
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COVER);
 
       const fileExt = file.name.split('.').pop();
       const fileName = `cover_${userId}_${Date.now()}.${fileExt}`;
       const path = `covers/${userId}/${fileName}`;
 
+      // Lấy cover cũ để xóa sau
+      const currentUser = await userService.getUserById(userId);
+      const oldCoverUrl = currentUser?.coverImage;
+
       const downloadURL = await withRetry(() =>
         uploadWithProgress(path, compressedFile, onProgress)
       );
       await userService.updateProfile(userId, { coverImage: downloadURL });
+
+      if (oldCoverUrl) await deleteStorageFile(oldCoverUrl);
 
       return downloadURL;
     } catch (error) {
@@ -233,6 +243,8 @@ export const userService = {
 
   deleteAvatar: async (userId: string): Promise<void> => {
     try {
+      const currentUser = await userService.getUserById(userId);
+      if (currentUser?.avatar) await deleteStorageFile(currentUser.avatar);
       await userService.updateProfile(userId, { avatar: '' });
     } catch (error) {
       console.error("Lỗi xóa avatar", error);
@@ -242,6 +254,8 @@ export const userService = {
 
   deleteCoverImage: async (userId: string): Promise<void> => {
     try {
+      const currentUser = await userService.getUserById(userId);
+      if (currentUser?.coverImage) await deleteStorageFile(currentUser.coverImage);
       await userService.updateProfile(userId, { coverImage: '' });
     } catch (error) {
       console.error("Lỗi xóa cover image", error);

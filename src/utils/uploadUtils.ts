@@ -1,7 +1,8 @@
-import { API_ENDPOINTS, FILE_LIMITS, FileLimitType, TOAST_MESSAGES } from '../constants';
-// Xóa import toastStore để tránh circular dependency
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase/config';
+import { FILE_LIMITS, FileLimitType, TOAST_MESSAGES } from '../constants';
 
-// Kiểm tra dung lượng file. Trả về object chứa kết quả và lỗi nếu có.
+// Trả về kết quả kiểm tra dung lượng file
 export const validateFileSize = (file: File, type: FileLimitType): { isValid: boolean; error?: string } => {
   const limit = FILE_LIMITS[type];
   if (file.size > limit) {
@@ -32,59 +33,59 @@ export const uploadWithProgress = (
   onProgress?: ProgressCallback,
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const { CLOUD_NAME, UPLOAD_PRESET, UPLOAD_URL } = API_ENDPOINTS.CLOUDINARY;
+    const storageRef = ref(storage, path);
+    const uploadTask = uploadBytesResumable(storageRef, file);
 
-    const url = UPLOAD_URL;
-    const xhr = new XMLHttpRequest();
-    const formData = new FormData();
-
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-
-    const folder = path.substring(0, path.lastIndexOf("/"));
-    formData.append("folder", folder);
-
-    xhr.open("POST", url, true);
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const progress = (event.loaded / event.total) * 100;
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         onProgress?.({
           progress,
-          bytesTransferred: event.loaded,
-          totalBytes: event.total,
-          state: "running",
+          bytesTransferred: snapshot.bytesTransferred,
+          totalBytes: snapshot.totalBytes,
+          state: snapshot.state as UploadProgress['state'],
         });
-      }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText);
-        onProgress?.({
-          progress: 100,
-          bytesTransferred: file.size,
-          totalBytes: file.size,
-          state: "success",
-        });
-        resolve(response.secure_url);
-      } else {
+      },
+      (error) => {
+        reject(new Error(`Lỗi tải lên Firebase Storage: ${error.message}`));
+      },
+      async () => {
         try {
-          const error = JSON.parse(xhr.responseText);
-          reject(new Error(error.error?.message || "Lỗi tải lên Cloudinary"));
-        } catch {
-          reject(new Error(`Lỗi tải lên Cloudinary (status: ${xhr.status})`));
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          onProgress?.({
+            progress: 100,
+            bytesTransferred: file.size,
+            totalBytes: file.size,
+            state: 'success',
+          });
+          resolve(downloadURL);
+        } catch (error) {
+          reject(new Error('Không lấy được URL sau khi tải lên'));
         }
       }
-    };
-
-    xhr.onerror = () => {
-      reject(new Error("Lỗi mạng khi tải lên Cloudinary"));
-    };
-
-    xhr.send(formData);
+    );
   });
 };
+
+// Xóa file trên Storage theo URL (bỏ qua URL không phải Firebase)
+export const deleteStorageFile = async (url: string): Promise<void> => {
+  if (!url || !url.includes('firebasestorage.googleapis.com')) return;
+  try {
+    const { ref: storageRef, deleteObject } = await import('firebase/storage');
+    const path = decodeURIComponent(new URL(url).pathname.split('/o/')[1]?.split('?')[0] ?? '');
+    if (!path) return;
+    const fileRef = storageRef(storage, path);
+    await deleteObject(fileRef);
+  } catch (error) {
+    // Log để debug — không throw để tránh crash flow chính
+    console.error('[Storage] Xóa file thất bại:', url, error);
+  }
+};
+
+// Xóa nhiều file cùng lúc
+export const deleteStorageFiles = (urls: string[]): Promise<void[]> =>
+  Promise.all(urls.filter(Boolean).map(deleteStorageFile));
 
 // Định dạng bytes thành chuỗi dễ đọc
 export const formatBytes = (bytes: number): string => {

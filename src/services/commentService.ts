@@ -28,6 +28,7 @@ import { PAGINATION } from '../constants';
 import { notificationService } from './notificationService';
 import { batchGetUsers } from '../utils/batchUtils';
 import { convertTimestamp } from '../utils/dateUtils';
+import { deleteStorageFile } from '../utils/uploadUtils';
 
 function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<DocumentData>): Comment {
   const data = docSnap.data();
@@ -251,6 +252,13 @@ export const commentService = {
       }
 
       await batch.commit();
+
+      // Xóa ảnh comment + replies khỏi Storage
+      const imageUrls = [
+        commentData.image,
+        ...repliesToDelete.map(r => r.data().image),
+      ].filter(Boolean) as string[];
+      await Promise.all(imageUrls.map(deleteStorageFile));
     } catch (error) {
       console.error("Lỗi xóa comment triệt để:", error);
       throw error;

@@ -10,10 +10,6 @@ interface EnvConfig {
         databaseURL: string;
         vapidKey: string;
     };
-    cloudinary: {
-        cloudName: string;
-        uploadPreset: string;
-    };
     api: {
         provincesUrl: string;
     };
@@ -38,8 +34,6 @@ const requiredEnvVars = [
     'VITE_FIREBASE_APP_ID',
     'VITE_FIREBASE_DATABASE_URL',
     'VITE_FIREBASE_VAPID_KEY',
-    'VITE_CLOUDINARY_CLOUD_NAME',
-    'VITE_CLOUDINARY_UPLOAD_PRESET',
     'VITE_PROVINCES_API_URL',
     'VITE_ZEGO_APP_ID',
     'VITE_ZEGO_APP_SIGN',
@@ -110,10 +104,6 @@ export function getValidatedEnvConfig(): EnvConfig {
             measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
             databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
             vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-        },
-        cloudinary: {
-            cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
         },
         api: {
             provincesUrl: import.meta.env.VITE_PROVINCES_API_URL,

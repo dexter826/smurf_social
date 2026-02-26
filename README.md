@@ -118,9 +118,8 @@
 - **Firebase Authentication** - User authentication
 - **Firestore** - NoSQL database
 - **Firebase Realtime Database** - Presence system
-- **Firebase Storage** - File storage
+- **Firebase Storage** - File & media storage
 - **Firebase Cloud Messaging** - Push notifications
-- **Cloudinary** - Image/video hosting & optimization
 - **ZegoCloud** - Realtime Video & Audio Call service
 - **Provinces API** - Vietnam provinces & cities data
 
@@ -157,11 +156,11 @@
                       │
         ┌─────────────┴─────────────┐
         │                           │
-┌───────▼────────┐         ┌────────▼────────┐         ┌────────▼────────┐
-│    Firebase    │         │   Cloudinary    │         │   ZegoCloud     │
-│  - Auth        │         │  - Images       │         │  - Video Call   │
-│  - Firestore   │         │  - Videos       │         │  - Audio Call   │
-│  - RTDB        │         └─────────────────┘         └─────────────────┘
+┌───────▼────────┐         ┌────────▼────────┐
+│    Firebase    │         │   ZegoCloud     │
+│  - Auth        │         │  - Video Call   │
+│  - Firestore   │         │  - Audio Call   │
+│  - RTDB        │         └─────────────────┘
 │  - Storage     │
 │  - FCM         │
 └────────────────┘
@@ -217,12 +216,7 @@ yarn install
    - Cloud Messaging (optional)
 3. Lấy Firebase config từ Project Settings
 
-### 2. Cloudinary Setup
-
-1. Tạo account tại [Cloudinary](https://cloudinary.com/)
-2. Lấy Cloud Name và Upload Preset từ dashboard
-
-### 3. ZegoCloud Setup
+### 2. ZegoCloud Setup
 
 1. Tạo project tại [ZegoCloud Admin Console](https://console.zegocloud.com/)
 2. Lấy AppID và AppSign từ phần dự án đã tạo
@@ -242,15 +236,11 @@ cp .env.example .env
 VITE_FIREBASE_API_KEY=your_api_key_here
 VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+VITE_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_DATABASE_URL=https://your_project_id-default-rtdb.firebaseio.com
 VITE_FIREBASE_VAPID_KEY=your_vapid_key_here
-
-# Cloudinary Configuration
-VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
-VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 
 # ZegoCloud Configuration
 VITE_ZEGO_APP_ID=your_zegocloud_app_id
@@ -262,23 +252,13 @@ VITE_PROVINCES_API_URL=https://provinces.open-api.vn/api/
 
 ### 5. Firestore Security Rules
 
-Deploy Firestore rules:
+Deploy tất cả rules:
 
 ```bash
-firebase deploy --only firestore:rules
+firebase deploy --only firestore:rules,storage,database
 ```
 
-### 6. Realtime Database Rules
-
-Deploy Realtime Database rules:
-
-```bash
-firebase deploy --only database
-```
-
-### 7. Firestore Indexes
-
-Deploy Firestore indexes:
+### 6. Firestore Indexes
 
 ```bash
 firebase deploy --only firestore:indexes

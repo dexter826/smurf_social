@@ -27,9 +27,9 @@ import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
 import { notificationService } from './notificationService';
-import { compressImage, isImageFile } from '../utils/imageUtils';
+import { compressImage, isImageFile, extractVideoThumbnail } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
-import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
+import { uploadWithProgress, ProgressCallback, deleteStorageFiles } from '../utils/uploadUtils';
 import { convertTimestamp } from '../utils/dateUtils';
 
 // Định dạng dữ liệu Firestore thành Post object.
@@ -319,6 +319,17 @@ export const postService = {
   updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
+
+      // Xóa media bị loại bỏ khi edit
+      const oldSnap = await getDoc(postRef);
+      if (oldSnap.exists()) {
+        const old = oldSnap.data();
+        const removedImages = (old.images || []).filter((u: string) => !images.includes(u));
+        const removedVideos = (old.videos || []).filter((u: string) => !videos.includes(u));
+        const removedThumbs = removedVideos.map((v: string) => old.videoThumbnails?.[v]).filter(Boolean);
+        await deleteStorageFiles([...removedImages, ...removedVideos, ...removedThumbs]);
+      }
+
       await updateDoc(postRef, {
         content,
         images,
@@ -336,6 +347,9 @@ export const postService = {
 
   deletePost: async (postId: string, _images?: string[], _videos?: string[]): Promise<void> => {
     try {
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      const postData = postSnap.exists() ? postSnap.data() : null;
 
       const commentsQuery = query(collection(db, 'comments'), where('postId', '==', postId));
       const commentsSnapshot = await getDocs(commentsQuery);
@@ -358,7 +372,6 @@ export const postService = {
           });
         });
 
-        // Archive reports của comments thuộc bài viết này
         const commentIds = allComments.map(c => c.id);
         if (commentIds.length > 0) {
           const commentReportsQuery = query(
@@ -378,13 +391,21 @@ export const postService = {
         // Bỏ qua lỗi permission
       }
 
-      // Xóa notifications liên quan đến bài viết
       await notificationService.deleteNotificationsByPostId(postId);
       
       allComments.forEach(doc => batch.delete(doc.ref));
       batch.delete(doc(db, 'posts', postId));
 
-      await batch.commit();
+      // Xóa Firestore và Storage song song
+      const storageUrls: string[] = [
+        ...(postData?.images || []),
+        ...(postData?.videos || []),
+        ...Object.values(postData?.videoThumbnails || {}),
+      ];
+      await Promise.all([
+        batch.commit(),
+        deleteStorageFiles(storageUrls),
+      ]);
     } catch (error) {
       console.error("Lỗi xóa bài viết triệt để:", error);
       throw error;
@@ -513,9 +534,15 @@ export const postService = {
         
         if (isVideo) {
           videos.push(url);
-          // Cloudinary tự động tạo thumbnail khi đổi đuôi sang .jpg
-          const thumbnailUrl = url.replace(/\.[^/.]+$/, ".jpg");
-          videoThumbnails[url] = thumbnailUrl;
+          // Thumbnail sẽ được Cloud Function tạo sau khi upload
+          try {
+            const thumbFile = await extractVideoThumbnail(file);
+            const thumbPath = `thumbnails/posts/${userId}/${createdAt}_${file.name.replace(/\.[^/.]+$/, '')}.jpg`;
+            const thumbUrl = await withRetry(() => uploadWithProgress(thumbPath, thumbFile));
+            videoThumbnails[url] = thumbUrl;
+          } catch {
+            // Bỏ qua nếu extract thất bại
+          }
         } else {
           images.push(url);
         }
