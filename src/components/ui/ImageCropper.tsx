@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { Modal, Button, Checkbox } from './index';
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, ImagePlus } from 'lucide-react';
 import { getCroppedImg } from '../../utils/imageUtils';
 
 interface ImageCropperProps {
@@ -10,6 +10,7 @@ interface ImageCropperProps {
   aspect?: number;
   title?: string;
   onCropComplete: (croppedFile: File, shouldShare: boolean) => void;
+  onImageChange?: (file: File) => void;
   onCancel: () => void;
 }
 
@@ -19,6 +20,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   aspect = 1,
   title = 'Cắt ảnh',
   onCropComplete,
+  onImageChange,
   onCancel
 }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -27,6 +29,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [shouldShare, setShouldShare] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onCropChange = useCallback((location: { x: number; y: number }) => {
     setCrop(location);
@@ -64,6 +67,19 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     setShouldShare(true);
   };
 
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onImageChange) {
+      onImageChange(file);
+    }
+    // Reset value để có thể chọn lại cùng 1 file
+    e.target.value = '';
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -82,14 +98,31 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
             />
           </div>
           <div className="flex items-center justify-between w-full">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleReset}
-              icon={<RotateCcw size={16} />}
-            >
-              Đặt lại
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleReset}
+                icon={<RotateCcw size={16} />}
+                title="Đặt lại vị trí"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBrowseClick}
+                icon={<ImagePlus size={16} />}
+                title="Chọn ảnh khác"
+              />
+            </div>
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onCancel}>
                 Hủy
