@@ -21,10 +21,10 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
 
   const handleSearch = async () => {
     if (!currentUser || !searchTerm.trim()) return;
-    
+
     setNotFound(false);
     const results = await searchUsers(searchTerm, currentUser.id);
-    
+
     if (results.length > 0) {
       handleClose();
       navigate(`/profile/${results[0].id}`);

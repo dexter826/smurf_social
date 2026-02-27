@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, UserStatus, FriendRequest, FriendStatus } from '../../types';
 import { friendService } from '../../services/friendService';
 import { toast } from '../../store/toastStore';
@@ -23,6 +23,10 @@ export const useProfileFriend = ({
   const [friendStatus, setFriendStatus] = useState<FriendStatus>(FriendStatus.NOT_FRIEND);
   const [pendingRequestId, setPendingRequestId] = useState<string | undefined>();
 
+  // Dùng chung cho 2 callbacks, không bị stale closure
+  const sentRequestRef = useRef<FriendRequest | null>(null);
+  const receivedRequestRef = useRef<FriendRequest | null>(null);
+
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) return;
 
@@ -32,16 +36,13 @@ export const useProfileFriend = ({
       return;
     }
 
-    let sentRequest: FriendRequest | null = null;
-    let receivedRequest: FriendRequest | null = null;
-
     const updateStatus = () => {
-      if (sentRequest) {
+      if (sentRequestRef.current) {
         setFriendStatus(FriendStatus.PENDING_SENT);
-        setPendingRequestId(sentRequest.id);
-      } else if (receivedRequest) {
+        setPendingRequestId(sentRequestRef.current.id);
+      } else if (receivedRequestRef.current) {
         setFriendStatus(FriendStatus.PENDING_RECEIVED);
-        setPendingRequestId(receivedRequest.id);
+        setPendingRequestId(receivedRequestRef.current.id);
       } else {
         setFriendStatus(FriendStatus.NOT_FRIEND);
         setPendingRequestId(undefined);
@@ -49,18 +50,21 @@ export const useProfileFriend = ({
     };
 
     const unsubscribeSent = friendService.subscribeToSentRequests(currentUser.id, (requests) => {
-      sentRequest = requests.find(r => r.receiverId === profileUserId) || null;
+      sentRequestRef.current = requests.find(r => r.receiverId === profileUserId) || null;
       updateStatus();
     });
 
     const unsubscribeReceived = friendService.subscribeToReceivedRequests(currentUser.id, (requests) => {
-      receivedRequest = requests.find(r => r.senderId === profileUserId) || null;
+      receivedRequestRef.current = requests.find(r => r.senderId === profileUserId) || null;
       updateStatus();
     });
 
     return () => {
       unsubscribeSent();
       unsubscribeReceived();
+      // Xóa data cũ khi profileUserId đổi
+      sentRequestRef.current = null;
+      receivedRequestRef.current = null;
     };
   }, [currentUser, profileUserId, isOwnProfile]);
 

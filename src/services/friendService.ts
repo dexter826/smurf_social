@@ -21,6 +21,22 @@ import { FriendRequest, FriendRequestStatus } from '../types';
 import { convertTimestamp } from '../utils/dateUtils';
 
 export const friendService = {
+  checkFriendRequestExists: async (senderId: string, receiverId: string): Promise<boolean> => {
+    try {
+      const q = query(
+        collection(db, 'friendRequests'),
+        where('senderId', '==', senderId),
+        where('receiverId', '==', receiverId),
+        where('status', '==', FriendRequestStatus.PENDING)
+      );
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error("Lỗi kiểm tra lời mời kết bạn", error);
+      return false;
+    }
+  },
+
   sendFriendRequest: async (senderId: string, receiverId: string, message?: string): Promise<FriendRequest> => {
     try {
       if (senderId === receiverId) {
@@ -39,18 +55,8 @@ export const friendService = {
         throw new Error("Bạn đã chặn người dùng này");
       }
 
-      // Tránh gửi trùng lời mời
-      const q = query(
-        collection(db, 'friendRequests'),
-        where('senderId', '==', senderId),
-        where('receiverId', '==', receiverId),
-        where('status', '==', FriendRequestStatus.PENDING)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        throw new Error("Đã gửi lời mời kết bạn rồi");
-      }
+      const alreadySent = await friendService.checkFriendRequestExists(senderId, receiverId);
+      if (alreadySent) throw new Error("Đã gửi lời mời kết bạn rồi");
 
       const requestData = {
         senderId,
@@ -219,20 +225,4 @@ export const friendService = {
     }
   },
 
-  checkFriendRequestExists: async (senderId: string, receiverId: string): Promise<boolean> => {
-    try {
-      const q = query(
-        collection(db, 'friendRequests'),
-        where('senderId', '==', senderId),
-        where('receiverId', '==', receiverId),
-        where('status', '==', FriendRequestStatus.PENDING)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error("Lỗi kiểm tra lời mời kết bạn", error);
-      return false;
-    }
-  }
 };
