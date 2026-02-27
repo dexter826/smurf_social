@@ -17,8 +17,7 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { FriendRequest, FriendRequestStatus, User, NotificationType } from '../types';
-import { notificationService } from './notificationService';
+import { FriendRequest, FriendRequestStatus } from '../types';
 import { convertTimestamp } from '../utils/dateUtils';
 
 export const friendService = {
@@ -63,13 +62,7 @@ export const friendService = {
       };
 
       const docRef = await addDoc(collection(db, 'friendRequests'), requestData);
-      
-      await notificationService.createNotification({
-        receiverId,
-        senderId,
-        type: NotificationType.FRIEND_REQUEST,
-        data: { friendRequestId: docRef.id }
-      });
+      // Cloud Function onFriendRequestCreated xử lý notification
 
       return {
         id: docRef.id,
@@ -169,34 +162,13 @@ export const friendService = {
     });
   },
 
-  acceptFriendRequest: async (requestId: string, userId: string, friendId: string): Promise<void> => {
+  // Cloud Function onFriendRequestStatusChange cập nhật friendIds và gửi notification
+  acceptFriendRequest: async (requestId: string): Promise<void> => {
     try {
-      const batch = writeBatch(db);
-      
       const requestRef = doc(db, 'friendRequests', requestId);
-      batch.update(requestRef, {
+      await updateDoc(requestRef, {
         status: FriendRequestStatus.ACCEPTED,
         updatedAt: Timestamp.now()
-      });
-
-      const userRef = doc(db, 'users', userId);
-      batch.update(userRef, {
-        friendIds: arrayUnion(friendId)
-      });
-
-      const friendRef = doc(db, 'users', friendId);
-      batch.update(friendRef, {
-        friendIds: arrayUnion(userId)
-      });
-
-      await batch.commit();
-
-      // Gửi thông báo chấp nhận kết bạn
-      await notificationService.createNotification({
-        receiverId: friendId,
-        senderId: userId,
-        type: NotificationType.FRIEND_ACCEPT,
-        data: {}
       });
     } catch (error) {
       console.error("Lỗi chấp nhận kết bạn", error);

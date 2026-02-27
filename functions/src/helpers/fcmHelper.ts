@@ -1,0 +1,84 @@
+import { messaging, db } from '../app';
+import { NotificationType } from '../types';
+
+// Titles cho từng loại notification
+const NOTIFICATION_TITLES: Partial<Record<NotificationType, string>> = {
+  [NotificationType.LIKE_POST]: '❤️ Lượt thích mới',
+  [NotificationType.COMMENT_POST]: '💬 Bình luận mới',
+  [NotificationType.REPLY_COMMENT]: '↩️ Phản hồi mới',
+  [NotificationType.LIKE_COMMENT]: '❤️ Thích bình luận',
+  [NotificationType.FRIEND_REQUEST]: '👋 Lời mời kết bạn',
+  [NotificationType.FRIEND_ACCEPT]: '🤝 Chấp nhận kết bạn',
+  [NotificationType.REPORT_NEW]: '🚨 Báo cáo mới',
+  [NotificationType.REPORT_RESOLVED]: '✅ Báo cáo đã xử lý',
+  [NotificationType.CONTENT_VIOLATION]: '⚠️ Cảnh báo vi phạm',
+};
+
+async function getUserFcmTokens(userId: string): Promise<string[]> {
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return [];
+    return userDoc.data()?.fcmTokens || [];
+  } catch {
+    return [];
+  }
+}
+
+// Tự dọn token khi FCM báo invalid
+async function removeInvalidToken(userId: string, token: string): Promise<void> {
+  try {
+    const { FieldValue } = await import('firebase-admin/firestore');
+    await db.collection('users').doc(userId).update({
+      fcmTokens: FieldValue.arrayRemove(token),
+    });
+  } catch {
+    // Bỏ qua
+  }
+}
+
+interface SendPushOptions {
+  receiverId: string;
+  type: NotificationType;
+  body: string;
+  data?: Record<string, string>;
+}
+
+// Gửi FCM đến tất cả thiết bị của user
+export async function sendPushNotification(opts: SendPushOptions): Promise<void> {
+  const { receiverId, type, body, data = {} } = opts;
+
+  const tokens = await getUserFcmTokens(receiverId);
+  if (tokens.length === 0) return;
+
+  const title = NOTIFICATION_TITLES[type] || '🔔 Thông báo mới';
+
+  const message = {
+    notification: { title, body },
+    data: { type, ...data },
+    tokens,
+  };
+
+  try {
+    const response = await messaging.sendEachForMulticast(message);
+
+    // Dọn token lỗi để tránh spam gửi lại
+    const failedTokens: string[] = [];
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success) {
+        const code = resp.error?.code;
+        if (
+          code === 'messaging/invalid-registration-token' ||
+          code === 'messaging/registration-token-not-registered'
+        ) {
+          failedTokens.push(tokens[idx]);
+        }
+      }
+    });
+
+    if (failedTokens.length > 0) {
+      await Promise.all(failedTokens.map((token) => removeInvalidToken(receiverId, token)));
+    }
+  } catch (error) {
+    console.error('[FCM] Lỗi gửi push notification:', error);
+  }
+}

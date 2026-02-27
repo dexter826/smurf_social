@@ -38,13 +38,8 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (
         // Quyền admin toàn phần.
         isAdmin() ||
-        // Chủ sở hữu không được tự đổi role.
-        (isOwner(userId) && isNotBanned() && !changed().hasAny(['role'])) ||
-        // Chỉ được thêm/xóa chính mình khỏi danh sách bạn.
-        (isNotBanned() &&
-         changed().hasOnly(['friendIds']) &&
-         (request.resource.data.friendIds.hasAll([request.auth.uid]) ||
-          ('friendIds' in resource.data && resource.data.friendIds.hasAll([request.auth.uid]))))
+        // Chủ sở hữu không được tự đổi role hay friendIds (CF xử lý).
+        (isOwner(userId) && isNotBanned() && !changed().hasAny(['role', 'friendIds']))
       );
 
       allow delete: if isAuthenticated() && isOwner(userId) && isNotBanned();
@@ -193,10 +188,8 @@ service cloud.firestore {
         resource.data.senderId == request.auth.uid
       );
 
-      // Mặc định thông báo chưa đọc.
-      allow create: if isNotBanned() &&
-        request.resource.data.senderId == request.auth.uid &&
-        request.resource.data.isRead == false;
+      // Notifications chỉ được tạo bửi Cloud Functions (server-side)
+      allow create: if false;
 
       allow update: if isAuthenticated() &&
         resource.data.receiverId == request.auth.uid &&
@@ -226,20 +219,8 @@ service cloud.firestore {
       );
 
       allow update: if isAuthenticated() && (
-        isAdmin() ||
-        // Đánh dấu báo cáo vô hiệu khi xóa dữ liệu.
-        (resource.data.targetOwnerId == request.auth.uid &&
-         request.resource.data.status == 'orphaned' &&
-         changed().hasOnly(['status', 'resolution'])) ||
-        // Chủ bài viết vô hiệu hóa báo cáo bình luận.
-        (resource.data.targetType == 'comment' &&
-         exists(/databases/$(database)/documents/comments/$(resource.data.targetId)) &&
-         exists(/databases/$(database)/documents/posts/$(
-           get(/databases/$(database)/documents/comments/$(resource.data.targetId)).data.postId)) &&
-         get(/databases/$(database)/documents/posts/$(
-           get(/databases/$(database)/documents/comments/$(resource.data.targetId)).data.postId)).data.userId == request.auth.uid &&
-         request.resource.data.status == 'orphaned' &&
-         changed().hasOnly(['status', 'resolution']))
+        // Chỉ Admin mới được cập nhật (resolve/reject) — CF xử lý orphaned tự động
+        isAdmin()
       );
 
       allow delete: if isAuthenticated() && (

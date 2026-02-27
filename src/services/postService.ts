@@ -18,16 +18,14 @@ import {
   startAfter,
   DocumentSnapshot,
   increment,
-  writeBatch,
   deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, NotificationType, ReportStatus, UserStatus, Visibility } from '../types';
+import { Post, UserStatus, Visibility } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
-import { notificationService } from './notificationService';
-import { compressImage, isImageFile, extractVideoThumbnail } from '../utils/imageUtils';
+import { compressImage, isImageFile } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback, deleteStorageFiles } from '../utils/uploadUtils';
 import { convertTimestamp } from '../utils/dateUtils';
@@ -345,69 +343,12 @@ export const postService = {
     }
   },
 
-  deletePost: async (postId: string, _images?: string[], _videos?: string[]): Promise<void> => {
+  // Cloud Function onPostDeleted xử lý cascade cleanup
+  deletePost: async (postId: string): Promise<void> => {
     try {
-      const postRef = doc(db, 'posts', postId);
-      const postSnap = await getDoc(postRef);
-      const postData = postSnap.exists() ? postSnap.data() : null;
-
-      const commentsQuery = query(collection(db, 'comments'), where('postId', '==', postId));
-      const commentsSnapshot = await getDocs(commentsQuery);
-      const allComments = commentsSnapshot.docs;
-
-      const batch = writeBatch(db);
-
-      // Archive reports thay vì xóa - đánh dấu ORPHANED
-      try {
-        const reportsQuery = query(
-          collection(db, 'reports'), 
-          where('targetType', '==', 'post'),
-          where('targetId', '==', postId)
-        );
-        const reportsSnapshot = await getDocs(reportsQuery);
-        reportsSnapshot.forEach(reportDoc => {
-          batch.update(reportDoc.ref, {
-            status: ReportStatus.ORPHANED,
-            resolution: 'Nội dung đã bị chủ sở hữu xóa'
-          });
-        });
-
-        const commentIds = allComments.map(c => c.id);
-        if (commentIds.length > 0) {
-          const commentReportsQuery = query(
-            collection(db, 'reports'),
-            where('targetType', '==', 'comment'),
-            where('targetId', 'in', commentIds.slice(0, 30))
-          );
-          const commentReportsSnapshot = await getDocs(commentReportsQuery);
-          commentReportsSnapshot.forEach(reportDoc => {
-            batch.update(reportDoc.ref, {
-              status: ReportStatus.ORPHANED,
-              resolution: 'Nội dung đã bị xóa do bài viết gốc bị xóa'
-            });
-          });
-        }
-      } catch (err) {
-        // Bỏ qua lỗi permission
-      }
-
-      await notificationService.deleteNotificationsByPostId(postId);
-      
-      allComments.forEach(doc => batch.delete(doc.ref));
-      batch.delete(doc(db, 'posts', postId));
-
-      // Xóa Firestore và Storage song song
-      const storageUrls: string[] = [
-        ...(postData?.images || []),
-        ...(postData?.videos || []),
-        ...Object.values(postData?.videoThumbnails || {}),
-      ];
-      await Promise.all([
-        batch.commit(),
-        deleteStorageFiles(storageUrls),
-      ]);
+      await deleteDoc(doc(db, 'posts', postId));
     } catch (error) {
-      console.error("Lỗi xóa bài viết triệt để:", error);
+      console.error("Lỗi xóa bài viết", error);
       throw error;
     }
   },
@@ -433,14 +374,7 @@ export const postService = {
           });
         }
 
-        if (reaction !== 'REMOVE' && !currentReaction && data.userId !== userId) {
-          await notificationService.createNotification({
-            receiverId: data.userId,
-            senderId: userId,
-            type: NotificationType.LIKE_POST,
-            data: { postId }
-          });
-        }
+        // Cloud Function onPostReaction xử lý notification
       }
     } catch (error) {
       console.error("Lỗi react bài viết", error);
@@ -534,15 +468,7 @@ export const postService = {
         
         if (isVideo) {
           videos.push(url);
-          // Thumbnail sẽ được Cloud Function tạo sau khi upload
-          try {
-            const thumbFile = await extractVideoThumbnail(file);
-            const thumbPath = `thumbnails/posts/${userId}/${createdAt}_${file.name.replace(/\.[^/.]+$/, '')}.jpg`;
-            const thumbUrl = await withRetry(() => uploadWithProgress(thumbPath, thumbFile));
-            videoThumbnails[url] = thumbUrl;
-          } catch {
-            // Bỏ qua nếu extract thất bại
-          }
+          // Cloud Function generateVideoThumbnail tự động tạo thumbnail
         } else {
           images.push(url);
         }

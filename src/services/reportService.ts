@@ -8,25 +8,19 @@ import {
   orderBy, 
   Timestamp,
   doc,
-  updateDoc,
-  deleteDoc,
   getCountFromServer,
   limit,
   onSnapshot,
-  QueryConstraint,
-  writeBatch
+  QueryConstraint
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Report, ReportType, ReportStatus, NotificationType, Post, Comment } from '../types';
-import { REPORT_CONFIG, PAGINATION } from '../constants';
-import { notificationService } from './notificationService';
-import { postService } from './postService';
-import { commentService } from './commentService';
-import { userService } from './userService';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { Report, ReportType, ReportStatus } from '../types';
+import { PAGINATION } from '../constants';
 import { convertTimestamp } from '../utils/dateUtils';
 
 export const reportService = {
-  // Tạo báo cáo mới
+  // Cloud Function onReportCreated xử lý notification cho admin
   createReport: async (data: Omit<Report, 'id' | 'status' | 'createdAt'>): Promise<string> => {
     try {
       const cleanData = Object.fromEntries(
@@ -38,28 +32,6 @@ export const reportService = {
         status: ReportStatus.PENDING,
         createdAt: Timestamp.now()
       });
-
-      // Gửi thông báo cho tất cả Admin
-      const adminsQuery = query(
-        collection(db, 'users'),
-        where('role', '==', 'admin')
-      );
-      const adminsSnapshot = await getDocs(adminsQuery);
-      
-      for (const adminDoc of adminsSnapshot.docs) {
-        const typeLabel = REPORT_CONFIG.TYPE_LABELS[data.targetType as keyof typeof REPORT_CONFIG.TYPE_LABELS] || data.targetType;
-        const reasonLabel = REPORT_CONFIG.REASONS[data.reason as keyof typeof REPORT_CONFIG.REASONS]?.label || data.reason;
-        
-        await notificationService.createNotification({
-          receiverId: adminDoc.id,
-          senderId: data.reporterId,
-          type: NotificationType.REPORT_NEW,
-          data: { 
-            reportId: docRef.id,
-            contentSnippet: `${typeLabel} - ${reasonLabel}`
-          }
-        });
-      }
 
       return docRef.id;
     } catch (error) {
@@ -160,116 +132,22 @@ export const reportService = {
     });
   },
 
-  // Xử lý báo cáo - xóa nội dung vi phạm (Admin)
+  // Admin xử lý báo cáo qua Cloud Function (có auth check và token revoke)
   resolveReport: async (
-    reportId: string, 
-    adminId: string, 
+    reportId: string,
     resolution: string = 'Đã xử lý',
     action: 'delete_content' | 'warn_user' | 'ban_user' = 'delete_content'
   ): Promise<void> => {
-    try {
-      const reportRef = doc(db, 'reports', reportId);
-      const reportSnap = await getDoc(reportRef);
-      
-      if (!reportSnap.exists()) throw new Error('Báo cáo không tồn tại');
-      
-      const reportData = reportSnap.data();
-
-      // Cập nhật trạng thái xử lý báo cáo
-      await updateDoc(reportRef, {
-        status: ReportStatus.RESOLVED,
-        resolvedAt: Timestamp.now(),
-        resolvedBy: adminId,
-        resolution
-      });
-
-      // Gỡ bỏ nội dung vi phạm triệt để
-      if (reportData.targetType === ReportType.POST) {
-        const post = await postService.getPostByIdForAdmin(reportData.targetId);
-        if (post) {
-          await postService.deletePost(post.id, post.images, post.videos);
-        } else {
-          await deleteDoc(doc(db, 'posts', reportData.targetId));
-        }
-      } else if (reportData.targetType === ReportType.COMMENT) {
-        const comment = await commentService.getCommentById(reportData.targetId);
-        if (comment) {
-          await commentService.deleteComment(comment.id, comment.postId, comment.parentId);
-        } else {
-          await deleteDoc(doc(db, 'comments', reportData.targetId));
-        }
-      }
-      
-      // Xử lý báo cáo người dùng (Cảnh báo hoặc Khóa)
-      if (reportData.targetType === ReportType.USER) {
-        if (action === 'ban_user') {
-           await userService.banUser(reportData.targetId);
-        }
-        // Nếu là warn_user thì chỉ gửi noti ở dưới, không cần làm gì thêm ở bước này
-      }
-
-      // Thông báo người báo cáo
-      await notificationService.createNotification({
-        receiverId: reportData.reporterId,
-        senderId: adminId,
-        type: NotificationType.REPORT_RESOLVED,
-        data: { reportId }
-      });
-
-      // Cảnh cáo người vi phạm
-      await notificationService.createNotification({
-        receiverId: reportData.targetOwnerId,
-        senderId: adminId,
-        type: NotificationType.CONTENT_VIOLATION,
-        data: { contentSnippet: reportData.reason }
-      });
-      
-      // Nếu là cảnh báo người dùng (User Report)
-      if (reportData.targetType === ReportType.USER && action === 'warn_user') {
-         await notificationService.createNotification({
-          receiverId: reportData.targetOwnerId,
-          senderId: adminId,
-          type: NotificationType.CONTENT_VIOLATION, // Tạm dùng type này hoặc tạo type mới SYSTEM_WARNING
-          data: { contentSnippet: `Cảnh báo: Tài khoản của bạn bị báo cáo vì lý do: ${reportData.reason}. Vui lòng tuân thủ quy tắc cộng đồng.` }
-        });
-      }
-    } catch (error) {
-      console.error("Lỗi xử lý báo cáo:", error);
-      throw error;
-    }
+    const functions = getFunctions();
+    const fn = httpsCallable(functions, 'resolveReport');
+    await fn({ reportId, resolution, action });
   },
 
-  // Từ chối báo cáo - không vi phạm (Admin)
-  rejectReport: async (reportId: string, adminId: string): Promise<void> => {
-    try {
-      const reportRef = doc(db, 'reports', reportId);
-      const reportSnap = await getDoc(reportRef);
-      
-      if (!reportSnap.exists()) throw new Error('Báo cáo không tồn tại');
-      
-      const reportData = reportSnap.data();
-
-      await updateDoc(reportRef, {
-        status: ReportStatus.REJECTED,
-        resolvedAt: Timestamp.now(),
-        resolvedBy: adminId,
-        resolution: 'Không phát hiện vi phạm'
-      });
-
-      // Thông báo người báo cáo
-      await notificationService.createNotification({
-        receiverId: reportData.reporterId,
-        senderId: adminId,
-        type: NotificationType.REPORT_RESOLVED,
-        data: { 
-          reportId,
-          contentSnippet: 'Không phát hiện vi phạm'
-        }
-      });
-    } catch (error) {
-      console.error("Lỗi từ chối báo cáo:", error);
-      throw error;
-    }
+  // Admin từ chối báo cáo qua Cloud Function
+  rejectReport: async (reportId: string): Promise<void> => {
+    const functions = getFunctions();
+    const fn = httpsCallable(functions, 'rejectReport');
+    await fn({ reportId });
   },
 
   // Đếm số báo cáo pending (cho badge)

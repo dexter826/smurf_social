@@ -113,14 +113,14 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
-      acceptFriendRequest: async (requestId: string, userId: string, friendId: string) => {
+      acceptFriendRequest: async (requestId: string, _userId?: string, _friendId?: string) => {
         const previousRequests = get().receivedRequests;
         set(state => ({
           receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
         }));
 
         try {
-          await friendService.acceptFriendRequest(requestId, userId, friendId);
+          await friendService.acceptFriendRequest(requestId);
         } catch (error) {
           set({ receivedRequests: previousRequests });
           console.error("Lỗi chấp nhận kết bạn:", error);

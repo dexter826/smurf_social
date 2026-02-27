@@ -2,7 +2,7 @@ import {
   collection, 
   addDoc, 
   getDoc,
-  getDocs, 
+  getDocs,
   query, 
   orderBy, 
   where,
@@ -19,16 +19,13 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
   increment,
-  writeBatch,
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Comment, NotificationType, ReportStatus, UserStatus } from '../types';
+import { Comment, UserStatus } from '../types';
 import { PAGINATION } from '../constants';
-import { notificationService } from './notificationService';
 import { batchGetUsers } from '../utils/batchUtils';
 import { convertTimestamp } from '../utils/dateUtils';
-import { deleteStorageFile } from '../utils/uploadUtils';
 
 function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<DocumentData>): Comment {
   const data = docSnap.data();
@@ -160,29 +157,7 @@ export const commentService = {
         commentCount: increment(1)
       });
 
-      // Thông báo cho chủ bài viết hoặc người phản hồi
-      const postSnap = await getDoc(postRef);
-      const postData = postSnap.data();
-      
-      if (parentId && replyToUserId) {
-        // Thông báo phản hồi bình luận
-        if (replyToUserId !== userId) {
-          await notificationService.createNotification({
-            receiverId: replyToUserId,
-            senderId: userId,
-            type: NotificationType.REPLY_COMMENT,
-            data: { postId, commentId: docRefId!, contentSnippet: content.substring(0, 50) }
-          });
-        }
-      } else if (postData && postData.userId !== userId) {
-        // Thông báo bình luận bài viết
-        await notificationService.createNotification({
-          receiverId: postData.userId,
-          senderId: userId,
-          type: NotificationType.COMMENT_POST,
-          data: { postId, commentId: docRefId!, contentSnippet: content.substring(0, 50) }
-        });
-      }
+      // Cloud Function onCommentCreated xử lý notification
 
       return docRefId!;
     } catch (error) {
@@ -191,76 +166,12 @@ export const commentService = {
     }
   },
 
-  // Xóa bình luận, phản hồi con và dữ liệu liên quan
-  deleteComment: async (commentId: string, postId: string, parentId?: string | null) => {
+  // Cloud Function onCommentDeleted xử lý cascade cleanup
+  deleteComment: async (commentId: string) => {
     try {
-      const commentRef = doc(db, 'comments', commentId);
-      const commentSnap = await getDoc(commentRef);
-      if (!commentSnap.exists()) return;
-      
-      const commentData = commentSnap.data() as Comment;
-      
-      let repliesToDelete: QueryDocumentSnapshot<DocumentData>[] = [];
-      try {
-        const repliesQuery = query(collection(db, 'comments'), where('parentId', '==', commentId));
-        const repliesSnapshot = await getDocs(repliesQuery);
-        repliesToDelete = repliesSnapshot.docs;
-      } catch (err: unknown) {
-        const firestoreError = err as { code?: string };
-        if (firestoreError.code !== 'permission-denied') {
-          console.warn("Lỗi khi lấy phản hồi để xóa:", err);
-        }
-      }
-
-
-      const batch = writeBatch(db);
-
-      // Archive reports thay vì xóa - đánh dấu ORPHANED
-      try {
-        const reportsQuery = query(
-          collection(db, 'reports'), 
-          where('targetType', '==', 'comment'),
-          where('targetId', '==', commentId)
-        );
-        const reportsSnapshot = await getDocs(reportsQuery);
-        reportsSnapshot.forEach(r => {
-          batch.update(r.ref, {
-            status: ReportStatus.ORPHANED,
-            resolution: 'Nội dung đã bị chủ sở hữu xóa'
-          });
-        });
-      } catch (err) {
-        // Bỏ qua lỗi permission
-      }
-
-      repliesToDelete.forEach(replyDoc => {
-        batch.delete(replyDoc.ref);
-      });
-      batch.delete(commentRef);
-
-      const totalDeleted = 1 + repliesToDelete.length;
-      const postRef = doc(db, 'posts', postId);
-      batch.update(postRef, {
-        commentCount: increment(-totalDeleted)
-      });
-
-      if (parentId) {
-        const parentCommentRef = doc(db, 'comments', parentId);
-        batch.update(parentCommentRef, {
-          replyCount: increment(-1)
-        });
-      }
-
-      await batch.commit();
-
-      // Xóa ảnh comment + replies khỏi Storage
-      const imageUrls = [
-        commentData.image,
-        ...repliesToDelete.map(r => r.data().image),
-      ].filter(Boolean) as string[];
-      await Promise.all(imageUrls.map(deleteStorageFile));
+      await deleteDoc(doc(db, 'comments', commentId));
     } catch (error) {
-      console.error("Lỗi xóa comment triệt để:", error);
+      console.error("Lỗi xóa comment:", error);
       throw error;
     }
   },
@@ -286,19 +197,7 @@ export const commentService = {
         likes: isLiked ? arrayRemove(userId) : arrayUnion(userId)
       });
 
-      // Gửi thông báo nếu là like mới
-      if (!isLiked) {
-        const commentSnap = await getDoc(commentRef);
-        const commentData = commentSnap.data();
-        if (commentData && commentData.userId !== userId) {
-          await notificationService.createNotification({
-            receiverId: commentData.userId,
-            senderId: userId,
-            type: NotificationType.LIKE_COMMENT,
-            data: { postId: commentData.postId, commentId }
-          });
-        }
-      }
+      // Cloud Function onCommentLiked xử lý notification
     } catch (error) {
       console.error("Lỗi like comment:", error);
       throw error;
