@@ -98,10 +98,10 @@ export function useAdminReports() {
     setIsProcessing(true);
     try {
       if (actionType === 'resolve') {
-        await reportService.resolveReport(selectedReport.id, user.id);
+        await reportService.resolveReport(selectedReport.id);
         toast.success(TOAST_MESSAGES.REPORT.REPORT_RESOLVED_SUCCESS);
       } else {
-        await reportService.rejectReport(selectedReport.id, user.id);
+        await reportService.rejectReport(selectedReport.id);
         toast.success(TOAST_MESSAGES.REPORT.REPORT_REJECTED_SUCCESS);
       }
     } catch (error) {

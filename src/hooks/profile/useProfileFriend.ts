@@ -78,7 +78,7 @@ export const useProfileFriend = ({
       }
 
       if (friendStatus === FriendStatus.PENDING_RECEIVED && pendingRequestId) {
-        await friendService.acceptFriendRequest(pendingRequestId, currentUser.id, profile.id);
+        await friendService.acceptFriendRequest(pendingRequestId);
         toast.success(TOAST_MESSAGES.FRIEND.ACCEPT_SUCCESS);
         return { needConfirm: false };
       }
