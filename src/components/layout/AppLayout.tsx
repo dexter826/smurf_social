@@ -16,6 +16,7 @@ import { useUnreadCount } from '../../hooks/utils/useUnreadCount';
 import { useLogout } from '../../hooks/utils/useLogout';
 import { useCallStore } from '../../store/callStore';
 import { useCallSignaling } from '../../hooks/chat/useCallSignaling';
+import { useCallSounds } from '../../hooks/chat/useCallSounds';
 import { IncomingCallDialog } from '../chat/call/IncomingCallDialog';
 import { CallWindow } from '../chat/call/CallWindow';
 import { CONFIRM_MESSAGES } from '../../constants';
@@ -63,6 +64,8 @@ export const AppLayout: React.FC = () => {
 
   const sendCallMessage = useChatStore(state => state.sendCallMessage);
 
+  const { playSound } = useCallSounds();
+
   const { incomingCall, startCall, acceptCall, rejectCall, endCall } = useCallSignaling(
     user?.id || '',
     {
@@ -72,22 +75,28 @@ export const AppLayout: React.FC = () => {
           setCallType(signal.callType);
           setCallPhase('in-call');
           setCallStartTime(Date.now());
+          playSound('connected');
         }
       },
       onCallRejected: () => {
         if (isCaller && callConversationId && user) {
           sendCallMessage(callConversationId, user.id, callType, 'rejected');
         }
+        playSound('busy');
         resetCall();
       },
       onCallEnded: () => {
         if (isCaller && callConversationId && user) {
           if (callPhase === 'outgoing') {
             sendCallMessage(callConversationId, user.id, callType, 'missed');
+            playSound('busy');
           } else if (callPhase === 'in-call' && callStartTime) {
             const durationSecs = Math.floor((Date.now() - callStartTime) / 1000);
             sendCallMessage(callConversationId, user.id, callType, 'ended', durationSecs);
+            playSound('ended');
           }
+        } else if (callPhase === 'in-call') {
+          playSound('ended');
         }
         resetCall();
       },

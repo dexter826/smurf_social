@@ -12,6 +12,7 @@ import {
 } from '../components/chat';
 import { OutgoingCallDialog } from '../components/chat/call/OutgoingCallDialog';
 import { useCallStore } from '../store/callStore';
+import { useCallSounds } from '../hooks/chat/useCallSounds';
 import { scrollToMessage } from '../utils';
 
 const ChatPage: React.FC = () => {
@@ -122,6 +123,8 @@ const ChatPage: React.FC = () => {
     ? null
     : selectedConversation?.participants.find(p => p.id !== currentUser.id);
 
+  const { playSound } = useCallSounds();
+
   const handleInitiateCall = async (type: 'voice' | 'video') => {
     if (!selectedConversationId) return;
 
@@ -168,6 +171,7 @@ const ChatPage: React.FC = () => {
       if (result && !result.success) {
         if (result.reason === 'busy') {
           useChatStore.getState().sendCallMessage(selectedConversationId, currentUser.id, type, 'missed');
+          playSound('busy');
           resetCall();
         }
       }
@@ -181,6 +185,7 @@ const ChatPage: React.FC = () => {
 
   const handleMissedCallTimeout = async () => {
     if (endCall) await endCall(otherUserIds);
+    playSound('busy');
     resetCall();
   };
 
@@ -211,7 +216,7 @@ const ChatPage: React.FC = () => {
     const request = receivedRequests.find(r => r.senderId === userId);
     if (request) {
       try {
-        await friendService.acceptFriendRequest(request.id, currentUser.id, userId);
+        await friendService.acceptFriendRequest(request.id);
       } catch (error) {
         console.error('Lỗi chấp nhận kết bạn:', error);
       }
