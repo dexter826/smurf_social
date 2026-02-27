@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
-import { Modal, Button } from './index';
+import { Modal, Button, Checkbox } from './index';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { getCroppedImg } from '../../utils/imageUtils';
 
@@ -9,7 +9,7 @@ interface ImageCropperProps {
   image: string;
   aspect?: number;
   title?: string;
-  onCropComplete: (croppedFile: File) => void;
+  onCropComplete: (croppedFile: File, shouldShare: boolean) => void;
   onCancel: () => void;
 }
 
@@ -26,6 +26,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [shouldShare, setShouldShare] = useState(true);
 
   const onCropChange = useCallback((location: { x: number; y: number }) => {
     setCrop(location);
@@ -48,7 +49,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       const croppedFile = new File([croppedBlob], `cropped_${Date.now()}.jpg`, {
         type: 'image/jpeg'
       });
-      onCropComplete(croppedFile);
+      onCropComplete(croppedFile, shouldShare);
     } catch (error) {
       console.error('Lỗi crop ảnh:', error);
     } finally {
@@ -60,6 +61,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setRotation(0);
+    setShouldShare(true);
   };
 
   return (
@@ -70,26 +72,36 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       maxWidth="lg"
       padding="none"
       footer={
-        <div className="flex items-center justify-between w-full">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            icon={<RotateCcw size={16} />}
-          >
-            Đặt lại
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={onCancel}>
-              Hủy
-            </Button>
+        <div className="flex flex-col w-full gap-4">
+          <div className="flex items-center px-1">
+            <Checkbox
+              id="should-share-to-feed"
+              label="Chia sẻ lên bảng tin"
+              checked={shouldShare}
+              onChange={(e) => setShouldShare(e.target.checked)}
+            />
+          </div>
+          <div className="flex items-center justify-between w-full">
             <Button
-              variant="primary"
-              onClick={handleApply}
-              isLoading={isProcessing}
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+              icon={<RotateCcw size={16} />}
             >
-              Áp dụng
+              Đặt lại
             </Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={onCancel}>
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleApply}
+                isLoading={isProcessing}
+              >
+                Áp dụng
+              </Button>
+            </div>
           </div>
         </div>
       }

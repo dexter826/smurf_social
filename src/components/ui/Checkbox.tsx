@@ -37,7 +37,10 @@ export const Checkbox: React.FC<CheckboxProps> = ({ label, className = '', id, .
         </svg>
       </div>
       {label && (
-        <label htmlFor={checkboxId} className="select-none text-sm font-medium text-text-secondary cursor-pointer">
+        <label 
+          htmlFor={checkboxId} 
+          className="select-none text-sm font-medium text-text-secondary cursor-pointer !p-0 !m-0 leading-none"
+        >
           {label}
         </label>
       )}

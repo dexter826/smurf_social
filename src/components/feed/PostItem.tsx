@@ -3,7 +3,7 @@ import { MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
-import { Post, User, ReportType } from '../../types';
+import { Post, User, ReportType, PostType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
@@ -70,14 +70,19 @@ const PostItemInner: React.FC<PostItemProps> = ({
             initialStatus={author?.status} 
             onClick={handleProfileClick}
           />
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <h3 
                 className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
                 onClick={handleProfileClick}
               >
                 {author?.name || 'Unknown User'}
               </h3>
+              {post.type && post.type !== PostType.NORMAL && (
+                <span className="text-[14px] text-text-secondary font-normal">
+                  {post.content}
+                </span>
+              )}
               {isUploading && !hasMedia && (
                 <span className="text-xs text-info font-medium">
                   Đang đăng...
@@ -124,20 +129,31 @@ const PostItemInner: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      <div 
-        className="px-4 pb-3 relative"
-      >
-        <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
-          <TruncatedText content={post.content} threshold={300} />
-        </p>
+      {(!post.type || post.type === PostType.NORMAL) && (
+        <div 
+          className="px-4 pb-3 relative"
+        >
+          <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
+            <TruncatedText content={post.content} threshold={300} />
+          </p>
 
-        {/* Hiển thị lỗi tải lên */}
-        {error && (
-          <div className="mt-2 p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
+          {/* Hiển thị lỗi tải lên */}
+          {error && (
+            <div className="mt-2 p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
+              <span className="text-xs text-error font-medium">{error}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Vẫn hiển thị lỗi nếu có, kể cả khi ẩn content */}
+      {(post.type && post.type !== PostType.NORMAL && error) && (
+        <div className="px-4 pb-3">
+          <div className="p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
             <span className="text-xs text-error font-medium">{error}</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <PostMediaGrid
         images={post.images}
@@ -165,8 +181,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
         currentUser={currentUser}
         postAuthorId={post.userId}
       />
-
-
     </div>
   );
 };
