@@ -338,9 +338,9 @@ export const usePostStore = create<PostState>()(
         processUpdate();
       },
 
-      deletePost: async (postId: string, images?: string[], videos?: string[]) => {
+      deletePost: async (postId: string, _images?: string[], _videos?: string[]) => {
         try {
-          await postService.deletePost(postId, images, videos);
+          await postService.deletePost(postId);
           set((state) => ({
             posts: state.posts.filter(p => p.id !== postId)
           }));

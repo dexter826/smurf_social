@@ -106,21 +106,14 @@ export const userService = {
     });
   },
 
-  // Tìm kiếm user theo email
+  // Cloud Function searchUsers thay thế full collection scan
   searchUsers: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
-      const usersRef = collection(db, 'users');
-      const querySnapshot = await getDocs(usersRef);
-
-      const users = querySnapshot.docs
-        .map(doc => doc.data() as User)
-        .filter(user =>
-          user.id !== currentUserId &&
-          user.status !== UserStatus.BANNED &&
-          user.email?.toLowerCase() === searchTerm.toLowerCase()
-        );
-
-      return users;
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const functions = getFunctions();
+      const fn = httpsCallable<{ searchTerm: string; currentUserId: string }, { users: User[] }>(functions, 'searchUsers');
+      const result = await fn({ searchTerm, currentUserId });
+      return result.data.users;
     } catch (error) {
       console.error("Lỗi tìm kiếm người dùng", error);
       return [];

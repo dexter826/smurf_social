@@ -363,7 +363,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     });
 
     try {
-      await commentService.deleteComment(commentId, postId, parentId);
+      await commentService.deleteComment(commentId);
     } catch (error) {
       set(previousState);
       console.error('Lỗi xóa bình luận:', error);
