@@ -96,16 +96,16 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
     setIsProcessing(true);
     try {
       if (actionType === 'resolve') {
-        await reportService.resolveReport(report.id, currentUser.id, 'Đã xử lý xóa nội dung', 'delete_content');
+        await reportService.resolveReport(report.id, 'Đã xử lý xóa nội dung', 'delete_content');
         toast.success(TOAST_MESSAGES.REPORT.RESOLVE_SUCCESS);
       } else if (actionType === 'warn') {
-        await reportService.resolveReport(report.id, currentUser.id, 'Đã gửi cảnh báo', 'warn_user');
+        await reportService.resolveReport(report.id, 'Đã gửi cảnh báo', 'warn_user');
         toast.success(TOAST_MESSAGES.REPORT.WARN_SUCCESS);
       } else if (actionType === 'ban') {
-        await reportService.resolveReport(report.id, currentUser.id, 'Đã khóa tài khoản', 'ban_user');
+        await reportService.resolveReport(report.id, 'Đã khóa tài khoản', 'ban_user');
         toast.success(TOAST_MESSAGES.REPORT.BAN_SUCCESS);
       } else if (actionType === 'reject') {
-        await reportService.rejectReport(report.id, currentUser.id);
+        await reportService.rejectReport(report.id);
         toast.success(TOAST_MESSAGES.REPORT.REJECT_SUCCESS);
       }
       onClose();
