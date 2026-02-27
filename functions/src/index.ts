@@ -30,3 +30,6 @@ export { searchUsers } from './search/searchUsers';
 
 // Scheduled Cleanup
 export { cleanupOrphanedReports, cleanupOldNotifications, cleanupExpiredFriendRequests } from './scheduled/cleanup';
+
+// Call
+export { generateZegoToken } from './call/generateZegoToken';
