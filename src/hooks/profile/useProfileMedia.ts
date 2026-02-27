@@ -2,10 +2,12 @@ import { useState, useCallback } from 'react';
 import { User } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
+import { postService } from '../../services/postService';
 import { useUserCache } from '../../store/userCacheStore';
 import { toast } from '../../store/toastStore';
 import { validateFileSize } from '../../utils';
-import { TOAST_MESSAGES } from '../../constants';
+import { TOAST_MESSAGES, SOCIAL_MESSAGES } from '../../constants';
+import { Visibility, PostType } from '../../types';
 
 interface UseProfileMediaProps {
   profile: User | null;
@@ -24,7 +26,7 @@ export const useProfileMedia = ({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleAvatarChange = useCallback(async (file: File) => {
+  const handleAvatarChange = useCallback(async (file: File, shareToFeed: boolean = true) => {
     if (!profile || !isOwnProfile) return;
     if (!file.type.startsWith('image/')) {
       toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
@@ -49,6 +51,18 @@ export const useProfileMedia = ({
       if (currentUser) {
         useAuthStore.getState().updateAvatar(newAvatarUrl);
       }
+
+      // Tạo bài viết nếu có yêu cầu chia sẻ
+      if (shareToFeed) {
+        await postService.createPost({
+          userId: profile.id,
+          content: SOCIAL_MESSAGES.UPDATE_AVATAR,
+          images: [newAvatarUrl],
+          videos: [],
+          visibility: Visibility.PUBLIC,
+          type: PostType.AVATAR_UPDATE
+        });
+      }
     } catch (error) {
       console.error("Lỗi upload avatar", error);
       toast.error(TOAST_MESSAGES.MEDIA.UPLOAD_AVATAR_FAILED);
@@ -58,7 +72,7 @@ export const useProfileMedia = ({
     }
   }, [profile, isOwnProfile, currentUser, setProfile]);
 
-  const handleCoverChange = useCallback(async (file: File) => {
+  const handleCoverChange = useCallback(async (file: File, shareToFeed: boolean = true) => {
     if (!profile || !isOwnProfile) return;
     if (!file.type.startsWith('image/')) {
       toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
@@ -79,6 +93,18 @@ export const useProfileMedia = ({
       const updatedProfile = { ...profile, coverImage: newCoverUrl };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
+
+      // Tạo bài viết nếu có yêu cầu chia sẻ
+      if (shareToFeed) {
+        await postService.createPost({
+          userId: profile.id,
+          content: SOCIAL_MESSAGES.UPDATE_COVER,
+          images: [newCoverUrl],
+          videos: [],
+          visibility: Visibility.PUBLIC,
+          type: PostType.COVER_UPDATE
+        });
+      }
     } catch (error) {
       console.error("Lỗi upload cover", error);
       toast.error(TOAST_MESSAGES.MEDIA.UPLOAD_COVER_FAILED);

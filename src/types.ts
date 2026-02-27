@@ -33,6 +33,12 @@ export enum FriendStatus {
   FRIEND = "friend",
 }
 
+export enum PostType {
+  NORMAL = "normal",
+  AVATAR_UPDATE = "avatar_update",
+  COVER_UPDATE = "cover_update",
+}
+
 export enum MessageType {
   TEXT = "text",
   IMAGE = "image",
@@ -183,6 +189,7 @@ export interface Post extends BaseEntity {
   videoThumbnails?: Record<string, string>;
   commentCount: number;
   visibility: Visibility;
+  type?: PostType;
   isEdited?: boolean;
   editedAt?: Date;
 }

@@ -17,8 +17,8 @@ interface ProfileHeaderProps {
   onEditClick?: () => void;
   onMessageClick?: () => void;
   onFriendClick?: () => void;
-  onAvatarChange?: (file: File) => void;
-  onCoverChange?: (file: File) => void;
+  onAvatarChange?: (file: File, shareToFeed: boolean) => void;
+  onCoverChange?: (file: File, shareToFeed: boolean) => void;
   onAvatarDelete?: () => void;
   onCoverDelete?: () => void;
   onBlockClick?: () => void;
@@ -112,11 +112,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     e.target.value = '';
   };
 
-  const handleCropComplete = (croppedFile: File) => {
+  const handleCropComplete = (croppedFile: File, shouldShare: boolean) => {
     if (cropState?.type === 'avatar' && onAvatarChange) {
-      onAvatarChange(croppedFile);
+      onAvatarChange(croppedFile, shouldShare);
     } else if (cropState?.type === 'cover' && onCoverChange) {
-      onCoverChange(croppedFile);
+      onCoverChange(croppedFile, shouldShare);
     }
     // Cleanup blob URL
     if (cropState?.image) {
