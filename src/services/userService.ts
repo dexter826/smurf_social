@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { User, UserStatus, Visibility, Gender } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
@@ -81,12 +81,12 @@ export const userService = {
       const userData = snapshot.data() as User;
       const friendIds = userData.friendIds || [];
 
-      // Kiểm tra thay đổi ID
+      // Skip fetch khi friendIds chưa thay đổi
       const isIdsChanged = friendIds.length !== previousFriendIds.length ||
         !friendIds.every((id, index) => id === previousFriendIds[index]);
 
       if (!isIdsChanged && previousFriendIds.length > 0) {
-        // ID không đổi thì bỏ qua
+        return;
       }
 
       previousFriendIds = friendIds;
@@ -391,17 +391,16 @@ export const userService = {
   getAdminStats: async (): Promise<{ total: number, active: number, banned: number }> => {
     try {
       const usersRef = collection(db, 'users');
-      const snapshot = await getDocs(usersRef);
+      // 2 count queries song song thay vì tải toàn bộ docs
+      const [totalSnap, bannedSnap] = await Promise.all([
+        getCountFromServer(usersRef),
+        getCountFromServer(query(usersRef, where('status', '==', UserStatus.BANNED)))
+      ]);
 
-      const users = snapshot.docs.map(doc => doc.data() as User);
-      const total = users.length;
-      const banned = users.filter(u => u.status === UserStatus.BANNED).length;
+      const total = totalSnap.data().count;
+      const banned = bannedSnap.data().count;
 
-      return {
-        total,
-        banned,
-        active: total - banned
-      };
+      return { total, banned, active: total - banned };
     } catch (error) {
       console.error("Lỗi lấy thống kê admin", error);
       return { total: 0, active: 0, banned: 0 };
