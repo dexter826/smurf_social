@@ -132,6 +132,25 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     setCropState(null);
   };
 
+  const handleImageChange = (file: File) => {
+    if (!cropState) return;
+
+    const type = cropState.type === 'avatar' ? 'AVATAR' : 'COVER';
+    const validation = validateFileSize(file, type);
+    if (!validation.isValid) {
+      if (validation.error) toast.error(validation.error);
+      return;
+    }
+
+    // Cleanup cũ
+    if (cropState.image) {
+      URL.revokeObjectURL(cropState.image);
+    }
+
+    const blobUrl = URL.createObjectURL(file);
+    setCropState({ ...cropState, image: blobUrl });
+  };
+
   return (
     <>
       <div className="max-w-5xl mx-auto">
@@ -436,6 +455,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           aspect={cropState.type === 'avatar' ? 1 : 16 / 9}
           title={cropState.type === 'avatar' ? 'Cắt ảnh đại diện' : 'Cắt ảnh bìa'}
           onCropComplete={handleCropComplete}
+          onImageChange={handleImageChange}
           onCancel={handleCropCancel}
         />
       )}
