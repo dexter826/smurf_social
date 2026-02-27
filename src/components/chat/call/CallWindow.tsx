@@ -3,6 +3,7 @@ import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../firebase/config";
 import { useUserCache } from "../../../store/userCacheStore";
+import { useCallSounds } from "../../../hooks/chat/useCallSounds";
 
 const ZEGO_APP_ID = Number(import.meta.env.VITE_ZEGO_APP_ID);
 
@@ -28,6 +29,8 @@ export const CallWindow: React.FC<CallWindowProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const zegoRef = useRef<ZegoUIKitPrebuilt | null>(null);
   const onCloseRef = useRef(onClose);
+  const { playSound } = useCallSounds();
+
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
@@ -79,9 +82,11 @@ export const CallWindow: React.FC<CallWindowProps> = ({
         },
         onUserJoin: (users: any[]) => {
           users.forEach((u) => activeUsers.add(u.userID));
+          if (isGroupCall) playSound('action');
         },
         onUserLeave: (users: any[]) => {
           users.forEach((u) => activeUsers.delete(u.userID));
+          if (isGroupCall) playSound('action');
 
           if (isGroupCall) {
             if (activeUsers.size === 0) {
