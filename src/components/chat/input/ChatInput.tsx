@@ -8,7 +8,7 @@ import { ActionsMenu } from './ActionsMenu';
 import { useAudioRecorder } from '../../../hooks/chat/useAudioRecorder';
 import { useMentions } from '../../../hooks/chat/useMentions';
 import { toast } from '../../../store/toastStore';
-import { TOAST_MESSAGES, FILE_LIMITS } from '../../../constants';
+import { TOAST_MESSAGES, FILE_LIMITS, TIME_LIMITS } from '../../../constants';
 import { insertTextAtCursor, validateFileSize } from '../../../utils';
 import { Message, User } from '../../../types';
 
@@ -127,7 +127,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     // Typing indicator
     onTyping(true);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => onTyping(false), 1000);
+    typingTimeoutRef.current = setTimeout(() => onTyping(false), TIME_LIMITS.TYPING_TIMEOUT);
 
     handleMentionInputChange(text, e.target.selectionStart);
   };

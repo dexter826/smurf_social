@@ -8,6 +8,7 @@ import { toast } from '../../../store/toastStore';
 import { commentSchema, CommentFormValues } from '../../../utils/validation';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
 import { useAutoResizeTextarea } from '../../../hooks/utils';
+import { MEDIA_CONSTRAINTS } from '../../../constants';
 
 interface CommentInputProps {
   user: {
@@ -71,6 +72,13 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Kiểm tra giới hạn số ảnh
+    const hasImage = formData.image || previewUrl;
+    if (hasImage && MEDIA_CONSTRAINTS.MAX_IMAGES_PER_COMMENT <= 1) {
+      toast.error(`Chỉ được đăng tối đa ${MEDIA_CONSTRAINTS.MAX_IMAGES_PER_COMMENT} ảnh`);
+      return;
+    }
 
     const validation = validateFileSize(file, 'IMAGE');
     if (!validation.isValid) {
