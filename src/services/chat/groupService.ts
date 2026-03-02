@@ -17,7 +17,7 @@ import { messageService } from './messageService';
 import { userService } from '../userService';
 import { uploadWithProgress, UploadProgress, deleteStorageFile } from '../../utils/uploadUtils';
 import { compressImage } from '../../utils/imageUtils';
-import { IMAGE_COMPRESSION } from '../../constants';
+import { IMAGE_COMPRESSION, GROUP_LIMITS } from '../../constants';
 
 export const groupService = {
   // Tạo hội thoại nhóm mới
@@ -89,6 +89,20 @@ export const groupService = {
   addGroupMember: async (conversationId: string, actorId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationSnap = await getDoc(conversationRef);
+      
+      if (!conversationSnap.exists()) {
+        throw new Error('Nhóm không tồn tại');
+      }
+      
+      const data = conversationSnap.data();
+      const currentMemberCount = (data.participantIds || []).length;
+      
+      // Kiểm tra giới hạn số thành viên
+      if (currentMemberCount >= GROUP_LIMITS.MAX_MEMBERS) {
+        throw new Error(`Nhóm đã đạt tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`);
+      }
+
       await updateDoc(conversationRef, {
         participantIds: arrayUnion(userId),
         [`unreadCount.${userId}`]: 0,
