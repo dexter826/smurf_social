@@ -9,6 +9,7 @@ import { Modal, Input, Button, Avatar, UserAvatar, IconButton, ImageCropper } fr
 import { groupSchema, GroupFormValues } from '../../../utils/validation';
 import { validateFileSize } from '../../../utils';
 import { toast } from '../../../store/toastStore';
+import { GROUP_LIMITS } from '../../../constants';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -112,6 +113,13 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
   const toggleSelect = (userId: string) => {
     const currentIds = formData.memberIds;
+    
+    // Kiểm tra giới hạn số thành viên tối đa
+    if (!currentIds.includes(userId) && currentIds.length >= GROUP_LIMITS.MAX_MEMBERS - 1) {
+      toast.error(`Nhóm tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`);
+      return;
+    }
+    
     const newIds = currentIds.includes(userId) 
       ? currentIds.filter(id => id !== userId)
       : [...currentIds, userId];
@@ -120,7 +128,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   };
 
   const handleNext = () => {
-    if (formData.memberIds.length < 2) return;
+    if (formData.memberIds.length < GROUP_LIMITS.MIN_MEMBERS) return;
     
     // Tự động tạo tên nhóm từ tên thành viên (bao gồm người tạo)
     const { user: currentUser } = useAuthStore.getState();
@@ -331,9 +339,9 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             <Button
               variant="primary"
               onClick={handleNext}
-              disabled={formData.memberIds.length < 2}
+              disabled={formData.memberIds.length < GROUP_LIMITS.MIN_MEMBERS}
             >
-              Tiếp tục ({formData.memberIds.length}/2+)
+              Tiếp tục ({formData.memberIds.length}/{GROUP_LIMITS.MAX_MEMBERS - 1})
             </Button>
           ) : (
             <Button

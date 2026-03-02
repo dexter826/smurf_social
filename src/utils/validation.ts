@@ -114,7 +114,9 @@ export const groupSchema = z.object({
   name: z.string()
     .min(1, 'Tên nhóm không được để trống')
     .max(GROUP_LIMITS.NAME_MAX_LENGTH, `Tên nhóm không được quá ${GROUP_LIMITS.NAME_MAX_LENGTH} ký tự`),
-  memberIds: z.array(z.string()).min(GROUP_LIMITS.MIN_MEMBERS, `Nhóm phải có ít nhất ${GROUP_LIMITS.MIN_MEMBERS} thành viên`),
+  memberIds: z.array(z.string())
+    .min(GROUP_LIMITS.MIN_MEMBERS, `Nhóm phải có ít nhất ${GROUP_LIMITS.MIN_MEMBERS} thành viên`)
+    .max(GROUP_LIMITS.MAX_MEMBERS, `Nhóm tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`),
 });
 
 // Schema cho Bình luận

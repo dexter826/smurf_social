@@ -9,7 +9,6 @@ export const PAGINATION = {
   FRIENDS: 50,
   MESSAGES: 50,
   CHAT_MESSAGES: 20,
-  SEARCH_RESULTS: 20,
   NOTIFICATIONS: 15,
   ADMIN_REPORTS: 50,
   ADMIN_USERS: 50,
@@ -22,7 +21,6 @@ export const PAGINATION = {
 // Giới hạn Firebase
 export const FIREBASE_LIMITS = {
   QUERY_IN_LIMIT: 10,
-  BATCH_WRITE_LIMIT: 500,
 } as const;
 
 // Giới hạn thời gian (ms)
@@ -30,7 +28,6 @@ export const TIME_LIMITS = {
   MESSAGE_EDIT_WINDOW: 5 * 60 * 1000,
   TYPING_TIMEOUT: 3000,
   TOAST_DURATION: 3000,
-  SEARCH_DEBOUNCE: 300,
 } as const;
 
 // Giới hạn Media
@@ -38,7 +35,6 @@ export const MEDIA_CONSTRAINTS = {
   MAX_IMAGES_PER_POST: 10,
   MAX_VIDEOS_PER_POST: 1,
   MAX_IMAGES_PER_COMMENT: 1,
-  PROFILE_MEDIA_PREVIEW: 6,
 } as const;
 
 // Giới hạn nhóm chat
