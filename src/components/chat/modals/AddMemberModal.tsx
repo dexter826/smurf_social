@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Check, Loader2, UserPlus } from 'lucide-react';
+import { Search, Check, Loader2, UserPlus, Users } from 'lucide-react';
 import { User, Conversation } from '../../../types';
 import { userService } from '../../../services/userService';
 import { Modal, Input, Button, Avatar, UserAvatar } from '../../ui';
+import { GROUP_LIMITS } from '../../../constants';
+import { toast } from '../../../store/toastStore';
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -53,12 +55,36 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   };
 
   const toggleSelect = (userId: string) => {
+    // Kiểm tra giới hạn số thành viên tối đa
+    const currentTotal = existingMemberIds.length + selectedIds.length;
+    const isSelecting = !selectedIds.includes(userId);
+    
+    if (isSelecting && currentTotal >= GROUP_LIMITS.MAX_MEMBERS) {
+      toast.error(`Nhóm tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`);
+      return;
+    }
+    
     setSelectedIds(prev => 
       prev.includes(userId) 
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
   };
+
+  const currentTotal = existingMemberIds.length + selectedIds.length;
+  const isAtMax = existingMemberIds.length >= GROUP_LIMITS.MAX_MEMBERS;
+  
+  if (isAtMax) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <Users size={48} className="text-error mb-3" />
+        <p className="text-lg font-medium text-text-primary">Nhóm đã đạt tối đa</p>
+        <p className="text-sm text-text-secondary mt-1">
+          Nhóm hiện có {existingMemberIds.length}/{GROUP_LIMITS.MAX_MEMBERS} thành viên
+        </p>
+      </div>
+    );
+  }
 
   const handleAdd = async () => {
     if (selectedIds.length === 0) return;
@@ -101,6 +127,16 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       }
     >
       <div className="flex flex-col min-h-0">
+        {/* Hiển thị số thành viên hiện tại */}
+        <div className="flex-none mb-3 px-1">
+          <span className="text-sm text-text-secondary">
+            Số thành viên: <span className="font-semibold text-text-primary">{existingMemberIds.length}</span>
+            {existingMemberIds.length >= GROUP_LIMITS.MAX_MEMBERS && (
+              <span className="text-error ml-1"> (Đã đạt tối đa)</span>
+            )}
+          </span>
+        </div>
+
         <div className="flex-none mb-4">
           <Input
             icon={<Search size={16} />}
