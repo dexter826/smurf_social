@@ -87,8 +87,8 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
     });
   }
 
-  // Edit group - chỉ cho admin
-  if (isGroup && isAdmin && onEditGroup) {
+  // Đổi tên/ảnh nhóm — mọi thành viên đều có quyền
+  if (isGroup && onEditGroup) {
     actions.push({
       icon: <Edit3 size={20} />,
       label: 'Chỉnh sửa nhóm',
