@@ -61,8 +61,8 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
 
   // Pin/Unpin
   actions.push({
-    icon: conversation.pinned ? <PinOff size={20} /> : <Pin size={20} />,
-    label: conversation.pinned ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
+    icon: conversation.pinnedBy?.includes(currentUserId) ? <PinOff size={20} /> : <Pin size={20} />,
+    label: conversation.pinnedBy?.includes(currentUserId) ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
     onClick: onTogglePin,
     variant: 'default' as const,
   });
@@ -80,8 +80,8 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   // Mark Read/Unread
   if (onToggleMarkUnread) {
     actions.push({
-      icon: conversation.markedUnread ? <MailCheck size={20} /> : <Mail size={20} />,
-      label: conversation.markedUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc',
+      icon: conversation.markedUnreadBy?.includes(currentUserId) ? <MailCheck size={20} /> : <Mail size={20} />,
+      label: conversation.markedUnreadBy?.includes(currentUserId) ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc',
       onClick: onToggleMarkUnread,
       variant: 'default' as const,
     });

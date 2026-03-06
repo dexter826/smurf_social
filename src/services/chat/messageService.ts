@@ -62,6 +62,7 @@ async function updateConversationAfterMessage(
     const receiverIds = participantIds.filter((pid: string) => pid !== senderId);
     if (receiverIds.length > 0) {
       updates.archivedBy = arrayRemove(...receiverIds);
+      updates.markedUnreadBy = arrayRemove(...receiverIds);
     }
 
     await updateDoc(conversationRef, updates);
@@ -525,6 +526,7 @@ export const messageService = {
         const data = conversationSnap.data();
         const updates: DocumentData = {
           [`unreadCount.${userId}`]: 0,
+          markedUnreadBy: arrayRemove(userId),
         };
 
         if (data.lastMessage && data.lastMessage.senderId !== userId) {

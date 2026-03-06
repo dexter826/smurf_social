@@ -40,8 +40,11 @@ export const useConversationGroups = ({
 
     // Sắp xếp: Ghim ưu tiên, sau đó theo thời gian cập nhật
     const sortFn = (a: Conversation, b: Conversation) => {
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
+      const isAPinned = a.pinnedBy?.includes(currentUserId) || false;
+      const isBPinned = b.pinnedBy?.includes(currentUserId) || false;
+      
+      if (isAPinned && !isBPinned) return -1;
+      if (!isAPinned && isBPinned) return 1;
       return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
     };
 
