@@ -69,11 +69,23 @@ export const useConversationItem = ({
 
   const lastMessagePreview = useMemo(() => {
     if (!lastMessage) return 'Chưa có tin nhắn';
-    if (lastMessage.type === 'text') {
-      return lastMessage.content.replace(/@\[([^\]]+)\]/g, '@$1');
+    
+    let content = lastMessage.content;
+    
+    if (lastMessage.reactorId === currentUserId) {
+      const enumEmojiRegex = /^([A-Z_]+)\s+(.+)\s+(đã bày tỏ cảm xúc)$/;
+      const match = content.match(enumEmojiRegex);
+      if (match) {
+        const [_, type, oldName, suffix] = match;
+        content = `${type} Bạn ${suffix}`;
+      }
     }
-    return lastMessage.content;
-  }, [lastMessage]);
+
+    if (lastMessage.type === 'text') {
+      return content.replace(/@\[([^\]]+)\]/g, '@$1');
+    }
+    return content;
+  }, [lastMessage, currentUserId]);
 
   const typingText = useMemo(() => {
     const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);

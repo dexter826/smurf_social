@@ -147,7 +147,8 @@ export interface Message extends BaseEntity {
   deliveredTo?: string[];
   deliveredAt?: Date;
   mentions?: string[];
-  reactions?: Record<string, string>;
+  reactions?: Record<string, string | ReactionType>;
+  reactorId?: string;
   isRecalled?: boolean;
   recalledAt?: Date;
   deletedBy?: string[];
