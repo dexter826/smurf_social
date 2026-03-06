@@ -140,10 +140,12 @@ export const conversationService = {
   },
 
   // Ghim hoặc bỏ ghim hội thoại
-  togglePin: async (conversationId: string, pinned: boolean): Promise<void> => {
+  togglePin: async (conversationId: string, userId: string, pinned: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, { pinned });
+      await updateDoc(conversationRef, { 
+        pinnedBy: pinned ? arrayUnion(userId) : arrayRemove(userId)
+      });
     } catch (error) {
       console.error("Lỗi ghim hội thoại:", error);
       throw error;
@@ -177,10 +179,12 @@ export const conversationService = {
   },
 
   // Đánh dấu hội thoại là chưa đọc hoặc đã đọc
-  toggleMarkUnread: async (conversationId: string, markedUnread: boolean): Promise<void> => {
+  toggleMarkUnread: async (conversationId: string, userId: string, markedUnread: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, { markedUnread });
+      await updateDoc(conversationRef, { 
+        markedUnreadBy: markedUnread ? arrayUnion(userId) : arrayRemove(userId)
+      });
     } catch (error) {
       console.error("Lỗi đánh dấu chưa đọc:", error);
       throw error;
@@ -218,11 +222,11 @@ export const conversationService = {
         if (data.unreadCount && data.unreadCount[userId] > 0) {
           batch.update(d.ref, {
             [`unreadCount.${userId}`]: 0,
-            markedUnread: false
+            markedUnreadBy: arrayRemove(userId)
           });
           hasUpdates = true;
-        } else if (data.markedUnread) {
-          batch.update(d.ref, { markedUnread: false });
+        } else if (data.markedUnreadBy?.includes(userId)) {
+          batch.update(d.ref, { markedUnreadBy: arrayRemove(userId) });
           hasUpdates = true;
         }
       });

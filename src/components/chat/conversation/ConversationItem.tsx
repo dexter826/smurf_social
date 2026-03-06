@@ -86,7 +86,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-base rounded-xl group
         hover:bg-bg-hover active:bg-bg-active
         ${isActive ? 'bg-primary-light' : ''}
-        ${conversation.pinned && !isActive ? 'bg-bg-secondary' : ''}
+        ${conversation.pinnedBy?.includes(currentUserId) && !isActive ? 'bg-bg-secondary' : ''}
       `}
     >
       <div className="relative flex-shrink-0">
@@ -113,7 +113,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
                 Tin nhắn chờ
               </span>
             )}
-            {conversation.pinned && (
+            {conversation.pinnedBy?.includes(currentUserId) && (
               <Pin size={14} className="text-primary flex-shrink-0" />
             )}
             {conversation.mutedUsers?.[currentUserId] && (
@@ -149,7 +149,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               <span className="flex-shrink-0 bg-error text-text-on-primary text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
               </span>
-            ) : isUnread && conversation.markedUnread ? (
+            ) : isUnread && conversation.markedUnreadBy?.includes(currentUserId) ? (
               <span className="flex-shrink-0 bg-error w-2.5 h-2.5 rounded-full" />
             ) : null}
           </div>
@@ -172,7 +172,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           {onPin && (
             <DropdownItem
               icon={<Pin size={16} />}
-              label={conversation.pinned ? 'Bỏ ghim' : 'Ghim'}
+              label={conversation.pinnedBy?.includes(currentUserId) ? 'Bỏ ghim' : 'Ghim'}
               onClick={onPin}
             />
           )}
@@ -199,8 +199,8 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           )}
           {onMarkUnread && (
             <DropdownItem
-              icon={conversation.markedUnread ? <MailCheck size={16} /> : <Mail size={16} />}
-              label={conversation.markedUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
+              icon={conversation.markedUnreadBy?.includes(currentUserId) ? <MailCheck size={16} /> : <Mail size={16} />}
+              label={conversation.markedUnreadBy?.includes(currentUserId) ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
               onClick={onMarkUnread}
             />
           )}

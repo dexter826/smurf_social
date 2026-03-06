@@ -23,8 +23,9 @@ export const useChatActions = ({
   } = useChatStore();
 
   const handlePin = useCallback(async (id: string, pinned: boolean) => {
-    await togglePin(id, pinned);
-  }, [togglePin]);
+    if (!currentUserId) return;
+    await togglePin(id, currentUserId, pinned);
+  }, [togglePin, currentUserId]);
 
   const handleMute = useCallback(async (id: string, muted: boolean) => {
     await toggleMute(id, muted);
@@ -46,8 +47,9 @@ export const useChatActions = ({
   }, [toggleArchive, currentUserId, selectedConversationId, selectConversation]);
 
   const handleMarkUnread = useCallback(async (id: string, markedUnread: boolean) => {
-    await toggleMarkUnread(id, markedUnread);
-  }, [toggleMarkUnread]);
+    if (!currentUserId) return;
+    await toggleMarkUnread(id, currentUserId, markedUnread);
+  }, [toggleMarkUnread, currentUserId]);
 
   const handleMarkAllRead = useCallback(async () => {
     if (currentUserId) await markAllAsRead(currentUserId);

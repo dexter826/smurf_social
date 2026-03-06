@@ -47,7 +47,7 @@ export const useConversationItem = ({
   );
 
   const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
-  const isUnread = (unreadCount > 0 || conversation.markedUnread) && !isActive;
+  const isUnread = (unreadCount > 0 || conversation.markedUnreadBy?.includes(currentUserId)) && !isActive;
 
   // Lọc tin nhắn theo mốc thời gian
   const lastMessage = useMemo(() => {
