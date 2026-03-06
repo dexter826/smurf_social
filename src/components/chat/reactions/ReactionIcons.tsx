@@ -1,4 +1,5 @@
 import React from 'react';
+import { ReactionType } from '../../../types';
 
 // Import SVG files as React components using ?react suffix
 import SVGLike from '../../../assets/icons/like.svg?react';
@@ -41,14 +42,21 @@ export const IconCancel = ({ size = 24, ...props }: ReactionIconProps) => (
   <SVGCancel width={size} height={size} style={{ overflow: 'visible' }} {...props} />
 );
 
-export const getReactionIcon = (emoji: string, className?: string, size: number | string = 24) => {
-  switch (emoji) {
-    case '👍': return <IconLike className={className} size={size} />;
-    case '❤️': return <IconLove className={className} size={size} />;
-    case '😆': return <IconHaha className={className} size={size} />;
-    case '😮': return <IconWow className={className} size={size} />;
-    case '😢': return <IconSad className={className} size={size} />;
-    case '😡': return <IconAngry className={className} size={size} />;
-    default: return emoji;
+export const getReactionIcon = (type: ReactionType, className?: string, size: number | string = 24) => {
+  switch (type) {
+    case ReactionType.LIKE:
+      return <IconLike className={className} size={size} />;
+    case ReactionType.LOVE:
+      return <IconLove className={className} size={size} />;
+    case ReactionType.HAHA:
+      return <IconHaha className={className} size={size} />;
+    case ReactionType.WOW:
+      return <IconWow className={className} size={size} />;
+    case ReactionType.SAD:
+      return <IconSad className={className} size={size} />;
+    case ReactionType.ANGRY:
+      return <IconAngry className={className} size={size} />;
+    default: 
+      return null;
   }
 };

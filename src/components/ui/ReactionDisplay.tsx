@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
+import { ReactionType } from '../../types';
 
 interface ReactionDisplayProps {
-  reactions?: Record<string, string>;
+  reactions?: Record<string, string | ReactionType>;
   className?: string;
   onClick?: () => void;
   variant?: 'default' | 'minimal';
@@ -16,7 +17,7 @@ const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
   variant = 'default'
 }) => {
   const { sortedEmojis, total } = useMemo(() => {
-    const counts = Object.values(reactions).reduce((acc: Record<string, number>, emoji: string) => {
+    const counts = Object.values(reactions).reduce((acc: Record<string, number>, emoji: string | ReactionType) => {
       acc[emoji] = (acc[emoji] || 0) + 1;
       return acc;
     }, {});
@@ -53,7 +54,7 @@ const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
               style={{ zIndex: 10 - index }} 
               className="flex-shrink-0 flex items-center justify-center overflow-visible"
             >
-              {getReactionIcon(emoji, "overflow-visible", 16)}
+              {getReactionIcon(emoji as ReactionType, "overflow-visible", 16)}
             </div>
           </React.Fragment>
         ))}

@@ -1,13 +1,14 @@
 import React, { useRef, useEffect } from 'react';
+import { ReactionType } from '../../types';
 import { IconCancel } from '../chat/reactions/ReactionIcons';
 import { REACTIONS } from '../../constants';
 import { getReactionIcon } from '../chat/reactions/ReactionIcons';
 
 interface ReactionSelectorProps {
-  onSelect: (emoji: string) => void;
+  onSelect: (emoji: ReactionType | 'REMOVE') => void;
   onClose?: () => void;
   className?: string;
-  currentReaction?: string | null;
+  currentReaction?: string | ReactionType | null;
   size?: 'sm' | 'md';
   autoClose?: boolean;
 }

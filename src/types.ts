@@ -33,6 +33,15 @@ export enum FriendStatus {
   FRIEND = "friend",
 }
 
+export enum ReactionType {
+  LIKE = "LIKE",
+  LOVE = "LOVE",
+  HAHA = "HAHA",
+  WOW = "WOW",
+  SAD = "SAD",
+  ANGRY = "ANGRY",
+}
+
 export enum PostType {
   NORMAL = "normal",
   AVATAR_UPDATE = "avatar_update",
