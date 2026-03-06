@@ -12,7 +12,9 @@ import {
   Modal,
   UserStatusText,
   ConfirmDialog,
-  MediaViewer
+  MediaViewer,
+  BannedBadge,
+  ReactionDetailsModal
 } from '../../ui';
 import { useChatStore } from '../../../store/chatStore';
 import { TIME_LIMITS } from '../../../constants/appConfig';
@@ -67,6 +69,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const [showRecallConfirm, setShowRecallConfirm] = useState(false);
   const [showReaders, setShowReaders] = useState(false);
   const [showReactionSelector, setShowReactionSelector] = useState(false);
+  const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { toggleReaction, uploadProgress } = useChatStore();
@@ -168,6 +171,13 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
           )}
 
               <div className="relative group/message">
+            <ReactionDetailsModal
+        isOpen={showReactionDetails}
+        onClose={() => setShowReactionDetails(false)}
+        reactions={message.reactions || {}}
+        currentUserId={currentUserId}
+      />
+
             {/* Nội dung tin nhắn */}
             <div
               className={`
@@ -224,25 +234,25 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
               {/* Hiển thị cảm xúc & Bộ chọn Emoji */}
               {!message.isRecalled && message.type !== MessageType.CALL && (
-                <div className={`absolute -bottom-3.5 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
-                  {hasReactions ? (
+                <div className={`absolute -bottom-3.5 z-10 flex items-center gap-1 ${isMe ? 'left-1' : 'right-1'}`}>
+                  {hasReactions && (
                     <ReactionDisplay
                       reactions={message.reactions}
-                      onClick={() => setShowReactionSelector(!showReactionSelector)}
+                      onClick={() => setShowReactionDetails(true)}
                     />
-                  ) : (
-                    <div className="opacity-0 group-hover/message:opacity-100 transition-all duration-base">
-                      <button
-                        className="flex items-center justify-center w-7 h-6 bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowReactionSelector(!showReactionSelector);
-                        }}
-                      >
-                        <Smile size={12} strokeWidth={2.5} />
-                      </button>
-                    </div>
                   )}
+
+                  <div className={`${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-all duration-base flex items-center`}>
+                    <button
+                      className="flex items-center justify-center w-8 h-[26px] bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowReactionSelector(!showReactionSelector);
+                      }}
+                    >
+                      <Smile size={12} strokeWidth={2.5} />
+                    </button>
+                  </div>
 
                   {showReactionSelector && (
                     <>

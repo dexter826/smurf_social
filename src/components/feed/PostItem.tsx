@@ -7,7 +7,7 @@ import { Post, User, ReportType, PostType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
-import { PostReactionsModal } from './modals';
+import { ReactionDetailsModal } from '../ui';
 
 interface PostItemProps {
   post: Post;
@@ -174,12 +174,13 @@ const PostItemInner: React.FC<PostItemProps> = ({
         showEmptyDivider
       />
 
-      <PostReactionsModal
+      <ReactionDetailsModal
         isOpen={isReactionsModalOpen}
         onClose={handleCloseReactions}
         reactions={post.reactions || {}}
-        currentUser={currentUser}
-        postAuthorId={post.userId}
+        currentUserId={currentUser.id}
+        context="POST"
+        friendsIds={currentUser.friendIds}
       />
     </div>
   );

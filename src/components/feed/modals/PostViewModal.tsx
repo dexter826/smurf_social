@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
-import { UserAvatar, IconButton, Modal, Dropdown, DropdownItem, Skeleton } from '../../ui';
+import { UserAvatar, IconButton, Modal, Dropdown, DropdownItem, Skeleton, ReactionDetailsModal } from '../../ui';
 import { Post, User, ReportType } from '../../../types';
 import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
@@ -34,6 +34,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const navigate = useNavigate();
   const { openReportModal } = useReportStore();
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
 
   const handleProfileClick = useCallback(() => {
     if (author?.id) {
@@ -322,6 +323,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 myReaction={myReaction}
                 commentCount={post.commentCount}
                 onReact={onReact}
+                onViewReactions={() => setIsReactionsModalOpen(true)}
                 statsClassName="px-5 md:px-6 py-4 flex justify-between items-center border-b border-border-light/60"
                 actionClassName="flex px-2 py-1 border-b border-border-light relative"
                 selectorClassName="z-[var(--z-popover)]"
@@ -330,6 +332,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           }
         />
       </div>
+      <ReactionDetailsModal
+        isOpen={isReactionsModalOpen}
+        onClose={() => setIsReactionsModalOpen(false)}
+        reactions={post.reactions || {}}
+        currentUserId={currentUser.id}
+        context="POST"
+        friendsIds={currentUser.friendIds}
+      />
     </Modal>
   );
 };

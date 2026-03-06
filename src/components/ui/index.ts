@@ -26,3 +26,4 @@ export * from './ReportModal';
 export * from './ConnectionStatus';
 export * from './BannedBadge';
 export * from './ErrorBoundary';
+export * from './ReactionDetailsModal';
