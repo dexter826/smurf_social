@@ -1,19 +1,51 @@
-import React from 'react';
-import { Ban } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { IconCancel } from '../chat/reactions/ReactionIcons';
 import { REACTIONS } from '../../constants';
+import { getReactionIcon } from '../chat/reactions/ReactionIcons';
 
 interface ReactionSelectorProps {
   onSelect: (emoji: string) => void;
   onClose?: () => void;
   className?: string;
   currentReaction?: string | null;
+  size?: 'sm' | 'md';
+  autoClose?: boolean;
 }
 
-const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ onSelect, onClose, className = '', currentReaction }) => {
+const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ 
+  onSelect, onClose, className = '', currentReaction, size = 'sm', autoClose = true 
+}) => {
+  const isSmall = size === 'sm';
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseLeave = () => {
+    if (onClose) {
+      closeTimerRef.current = setTimeout(() => {
+        onClose();
+      }, 300);
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+  
   return (
     <div
-      className={`absolute z-[var(--z-dropdown)] bg-bg-primary border border-divider rounded-full shadow-lg p-1.5 flex gap-1 animate-in fade-in zoom-in duration-base after:content-[''] after:absolute after:left-0 after:-bottom-4 after:w-full after:h-4 after:bg-transparent ${className}`}
-      onMouseLeave={onClose}
+      className={`absolute z-[var(--z-popover)] bg-bg-primary border border-divider rounded-full shadow-dropdown ${isSmall ? 'p-1 flex gap-1.5' : 'p-2 flex gap-2'} animate-in fade-in zoom-in duration-base 
+      before:content-[''] before:absolute before:-top-4 before:-bottom-4 before:-left-4 before:-right-4 before:bg-transparent before:-z-10
+      ${className}`}
+      onMouseLeave={autoClose ? handleMouseLeave : undefined}
+      onMouseEnter={autoClose ? handleMouseEnter : undefined}
     >
       {currentReaction && (
         <button
@@ -22,10 +54,10 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ onSelect, onCl
             onSelect('REMOVE');
             onClose?.();
           }}
-          className="w-9 h-9 flex items-center justify-center text-text-secondary hover:text-error hover:bg-bg-hover active:bg-bg-active transition-all duration-base relative group rounded-full"
+          className={`${isSmall ? 'w-8 h-8' : 'w-10 h-10'} flex items-center justify-center transition-all duration-base relative group hover:scale-125 origin-bottom`}
           title="Gỡ cảm xúc"
         >
-          <Ban size={20} />
+          <IconCancel size={isSmall ? 26 : 34} className="opacity-70 group-hover:opacity-100 transition-opacity" />
         </button>
       )}
       {REACTIONS.map((emoji) => (
@@ -36,9 +68,9 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ onSelect, onCl
             onSelect(emoji);
             onClose?.();
           }}
-          className="w-9 h-9 flex items-center justify-center text-2xl hover:bg-bg-hover active:bg-bg-active transition-all duration-base relative group rounded-full"
+          className={`${isSmall ? 'w-8 h-8' : 'w-10 h-10'} flex items-center justify-center transition-all duration-base relative group hover:scale-125 origin-bottom`}
         >
-          {emoji}
+          {getReactionIcon(emoji, undefined, isSmall ? 28 : 36)}
         </button>
       ))}
     </div>

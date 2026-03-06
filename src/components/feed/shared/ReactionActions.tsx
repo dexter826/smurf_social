@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Heart, MessageCircle } from 'lucide-react';
 import { Button, ReactionSelector, ReactionDisplay } from '../../ui';
 import { REACTION_LABELS } from '../../../constants';
+import { getReactionIcon } from '../../chat/reactions/ReactionIcons';
 
 interface ReactionActionsProps {
   postId: string;
@@ -30,7 +31,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
     <>
       {showStats && (hasStats ? (
         <div className={statsClassName || "px-4 py-1 flex justify-between items-center border-b border-border-light min-h-[40px]"}>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <ReactionDisplay reactions={reactions} variant="minimal" onClick={onViewReactions} />
           </div>
           {commentCount > 0 && (
@@ -56,6 +57,8 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
           {showReactions && (
             <ReactionSelector
               className={`absolute bottom-full left-0 mb-2 ml-4 transform origin-bottom-left ${selectorClassName || ''}`}
+              size="md"
+              autoClose={false}
               onSelect={(emoji) => { onReact(postId, emoji); setShowReactions(false); }}
               onClose={() => setShowReactions(false)}
             />
@@ -66,7 +69,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             onMouseEnter={() => setShowReactions(true)}>
             <div className="flex items-center gap-2">
               {myReaction
-                ? <span className="text-xl animate-in zoom-in spin-in-12 duration-slow">{myReaction}</span>
+                ? <span className="animate-in zoom-in spin-in-12 duration-slow">{getReactionIcon(myReaction, "w-5 h-5", 20)}</span>
                 : <Heart size={20} />}
               <span className={`text-sm font-medium ${myReaction ? `text-${REACTION_LABELS[myReaction]}` : ''}`}>
                 {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}
