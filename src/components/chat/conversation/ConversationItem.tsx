@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2, User as UserIcon } from 'lucide-react';
-import { Conversation, UserStatus } from '../../../types';
+import { Conversation, UserStatus, ReactionType } from '../../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
 import { MessageStatus } from '../message/MessageStatus';
@@ -133,17 +133,16 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
                 {typingText}
               </span>
             ) : (
-              <span className={`flex items-center gap-1 truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u) ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
+              <span className={`flex items-center gap-1 truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : (lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u) || lastMessagePreview.match(/^[A-Z_]+\s/)) ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
                 {isLastMessageMine ? 'Bạn: ' : ''}
                 {(() => {
-                  const emojiRegex = /^([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}][\u{FE00}-\u{FE0F}]?)\s+(.+)$/u;
-                  const match = lastMessagePreview.match(emojiRegex);
+                  const enumEmojiRegex = /^([A-Z_]+)\s+(.+)$/;
+                  const match = lastMessagePreview.match(enumEmojiRegex);
+
                   if (match) {
-                    const [_, emoji, text] = match;
-                    // Lọc emoji để map đúng với key trong getReactionIcon (ví dụ ❤️ có thể chứa \ufe0f)
-                    const normalizedEmoji = emoji.length > 2 ? emoji.substring(0, 2) : emoji;
-                    const icon = getReactionIcon(emoji.includes('❤️') ? '❤️' : normalizedEmoji, "inline-block mb-0.5", 14);
-                    if (typeof icon !== 'string') {
+                    const [_, type, text] = match;
+                    const icon = getReactionIcon(type as ReactionType, "inline-block mb-0.5", 14);
+                    if (icon) {
                       return (
                         <>
                           <span className="flex-shrink-0">{icon}</span>

@@ -21,7 +21,7 @@ import {
   deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, UserStatus, Visibility } from '../types';
+import { Post, UserStatus, Visibility, ReactionType } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
@@ -353,7 +353,7 @@ export const postService = {
     }
   },
 
-  reactToPost: async (postId: string, userId: string, reaction: string): Promise<void> => {
+  reactToPost: async (postId: string, userId: string, reaction: string | ReactionType): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
       const postSnap = await getDoc(postRef);

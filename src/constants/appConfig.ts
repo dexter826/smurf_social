@@ -1,4 +1,5 @@
 import { getValidatedEnvConfig } from '../utils/validateEnv';
+import { ReactionType } from '../types';
 
 // Phân trang
 export const PAGINATION = {
@@ -96,17 +97,22 @@ export const REPORT_CONFIG = {
 } as const;
 
 // Phản ứng (Reactions)
-export const REACTIONS = ['👍', '❤️', '😆', '😮', '😢', '😡'] as const;
-
-export type ReactionType = typeof REACTIONS[number];
+export const REACTIONS = [
+  ReactionType.LIKE,
+  ReactionType.LOVE,
+  ReactionType.HAHA,
+  ReactionType.WOW,
+  ReactionType.SAD,
+  ReactionType.ANGRY
+] as const;
 
 export const REACTION_LABELS: Record<ReactionType, string> = {
-  '👍': 'Thích',
-  '❤️': 'Yêu thích',
-  '😆': 'Haha',
-  '😮': 'Wow',
-  '😢': 'Buồn',
-  '😡': 'Phẫn nộ'
+  [ReactionType.LIKE]: 'Thích',
+  [ReactionType.LOVE]: 'Yêu thích',
+  [ReactionType.HAHA]: 'Haha',
+  [ReactionType.WOW]: 'Wow',
+  [ReactionType.SAD]: 'Buồn',
+  [ReactionType.ANGRY]: 'Phẫn nộ'
 };
 
 // API Endpoints

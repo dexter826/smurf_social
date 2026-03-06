@@ -23,8 +23,8 @@ import {
   setDoc
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { Message, MessageType } from "../../types";
-import { TIME_LIMITS, IMAGE_COMPRESSION } from "../../constants";
+import { Message, MessageType, ReactionType } from "../../types";
+import { TIME_LIMITS, IMAGE_COMPRESSION, REACTION_LABELS } from "../../constants";
 import { compressImage } from "../../utils/imageUtils";
 import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
@@ -771,7 +771,7 @@ export const messageService = {
   toggleReaction: async (
     messageId: string,
     userId: string,
-    emoji: string,
+    emoji: string | ReactionType,
   ): Promise<void> => {
     try {
       const messageRef = doc(db, "messages", messageId);
@@ -792,11 +792,13 @@ export const messageService = {
           const lastName = userName.split(' ').pop();
           
           const conversationRef = doc(db, "conversations", data.conversationId);
+          const reactionLabel = REACTION_LABELS[emoji as ReactionType] || emoji;
+          
           await updateDoc(conversationRef, {
             lastMessage: {
               id: messageId,
               senderId: data.senderId,
-              content: `${emoji} ${lastName} đã bày tỏ cảm xúc`,
+              content: `${emoji} ${lastName} đã bày tỏ cảm xúc "${reactionLabel}"`,
               type: MessageType.TEXT,
               createdAt: new Date()
             },
