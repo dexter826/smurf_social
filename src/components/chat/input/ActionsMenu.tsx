@@ -1,11 +1,11 @@
 import React from 'react';
-import { Image as ImageIcon, Camera, Paperclip, Mic, Plus } from 'lucide-react';
+import { Image as ImageIcon, Paperclip, Mic, Plus } from 'lucide-react';
 import { IconButton } from '../../ui';
 
 interface ActionsMenuProps {
   isOpen: boolean;
   onToggle: () => void;
-  onAction: (type: 'image' | 'camera' | 'file' | 'voice') => void;
+  onAction: (type: 'image' | 'file' | 'voice') => void;
   disabled?: boolean;
 }
 
@@ -39,13 +39,7 @@ export const ActionsMenu: React.FC<ActionsMenuProps> = ({
             icon={<ImageIcon size={18} />}
             size="md"
           />
-          <IconButton
-            type="button"
-            onClick={() => onAction('camera')}
-            title="Chụp ảnh/Quay phim"
-            icon={<Camera size={18} />}
-            size="md"
-          />
+
           <IconButton
             type="button"
             onClick={() => onAction('file')}

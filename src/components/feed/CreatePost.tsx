@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Image as ImageIcon, Video, Camera } from 'lucide-react';
+import { Image as ImageIcon, Video } from 'lucide-react';
 import { PostModal } from './modals/PostModal';
 import { User, Visibility } from '../../types';
 import { Avatar, Button, Skeleton } from '../ui';
@@ -17,8 +17,6 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const cameraPhotoRef = useRef<HTMLInputElement>(null);
-  const cameraVideoRef = useRef<HTMLInputElement>(null);
 
   const onMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -70,14 +68,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
           >
             <span className="text-xs sm:text-[15px] font-semibold">Ảnh</span>
           </Button>
-          <Button
-            variant="ghost"
-            onClick={() => cameraPhotoRef.current?.click()}
-            className="flex-1 group px-2 min-h-[44px]"
-            icon={<Camera className="text-error transition-all duration-base" size={20} />}
-          >
-            <span className="text-xs sm:text-[15px] font-semibold">Máy ảnh</span>
-          </Button>
+
           <Button
             variant="ghost"
             onClick={() => videoInputRef.current?.click()}
@@ -101,22 +92,6 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
           type="file"
           accept="video/*"
           multiple
-          className="hidden"
-          onChange={onMediaSelect}
-        />
-        <input
-          ref={cameraPhotoRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={onMediaSelect}
-        />
-        <input
-          ref={cameraVideoRef}
-          type="file"
-          accept="video/*"
-          capture="environment"
           className="hidden"
           onChange={onMediaSelect}
         />
