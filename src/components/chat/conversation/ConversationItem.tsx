@@ -193,7 +193,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           {onArchive && (
             <DropdownItem
               icon={<Archive size={16} />}
-              label={conversation.archived ? 'Bỏ lưu trữ' : 'Lưu trữ'}
+              label={conversation.archivedBy?.includes(currentUserId) ? 'Bỏ lưu trữ' : 'Lưu trữ'}
               onClick={onArchive}
             />
           )}

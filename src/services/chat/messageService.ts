@@ -59,6 +59,11 @@ async function updateConversationAfterMessage(
       }
     });
 
+    const receiverIds = participantIds.filter((pid: string) => pid !== senderId);
+    if (receiverIds.length > 0) {
+      updates.archivedBy = arrayRemove(...receiverIds);
+    }
+
     await updateDoc(conversationRef, updates);
   }
 }

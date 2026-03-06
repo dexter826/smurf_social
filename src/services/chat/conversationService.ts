@@ -13,7 +13,8 @@ import {
   writeBatch,
   Timestamp,
   limit,
-  arrayUnion
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { Conversation, User } from '../../types';
@@ -163,10 +164,12 @@ export const conversationService = {
   },
 
   // Lưu trữ hoặc bỏ lưu trữ hội thoại
-  toggleArchive: async (conversationId: string, archived: boolean): Promise<void> => {
+  toggleArchive: async (conversationId: string, userId: string, archived: boolean): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, { archived });
+      await updateDoc(conversationRef, { 
+        archivedBy: archived ? arrayUnion(userId) : arrayRemove(userId)
+      });
     } catch (error) {
       console.error("Lỗi lưu trữ hội thoại:", error);
       throw error;

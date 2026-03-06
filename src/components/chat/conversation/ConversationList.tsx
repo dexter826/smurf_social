@@ -121,7 +121,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         onMute={() => onMute(conversation.id, !conversation.mutedUsers?.[currentUserId])}
         onDelete={() => onDelete(conversation.id)}
         onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
-        onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archived) : undefined}
+        onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archivedBy?.includes(currentUserId)) : undefined}
         onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnread) : undefined}
         onViewProfile={partnerId && onViewProfile ? () => onViewProfile(partnerId) : undefined}
       />

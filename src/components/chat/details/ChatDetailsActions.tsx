@@ -71,7 +71,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   if (onToggleArchive) {
     actions.push({
       icon: <ArchiveIcon size={20} />,
-      label: conversation.archived ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện',
+      label: conversation.archivedBy?.includes(currentUserId) ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện',
       onClick: onToggleArchive,
       variant: 'default' as const,
     });

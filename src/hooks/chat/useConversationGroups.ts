@@ -54,7 +54,7 @@ export const useConversationGroups = ({
   // Danh sách hiển thị dựa trên chế độ xem và bộ lọc
   const displayConversations = useMemo(() => {
     if (viewMode === 'archived') {
-      return conversations.filter(c => c.archived).sort((a, b) => 
+      return conversations.filter(c => c.archivedBy?.includes(currentUserId)).sort((a, b) => 
         new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
       );
     }

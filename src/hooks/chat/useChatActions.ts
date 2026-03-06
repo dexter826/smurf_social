@@ -38,11 +38,12 @@ export const useChatActions = ({
   }, [deleteConversation, selectedConversationId, selectConversation]);
 
   const handleArchive = useCallback(async (id: string, archived: boolean) => {
-    await toggleArchive(id, archived);
+    if (!currentUserId) return;
+    await toggleArchive(id, currentUserId, archived);
     if (archived && selectedConversationId === id) {
       selectConversation(null);
     }
-  }, [toggleArchive, selectedConversationId, selectConversation]);
+  }, [toggleArchive, currentUserId, selectedConversationId, selectConversation]);
 
   const handleMarkUnread = useCallback(async (id: string, markedUnread: boolean) => {
     await toggleMarkUnread(id, markedUnread);
