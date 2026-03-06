@@ -56,14 +56,15 @@ export const useChat = () => {
 
   const filteredConversations = useMemo(() =>
     conversations.filter(c => {
-      const isArchivedMatch = viewMode === 'archived' ? c.archived : !c.archived;
+      const isArchived = c.archivedBy?.includes(currentUser?.id || '') || false;
+      const isArchivedMatch = viewMode === 'archived' ? isArchived : !isArchived;
       return isArchivedMatch && !c.deletedBy?.includes(currentUser?.id || '');
     }),
     [conversations, viewMode, currentUser?.id]
   );
 
   const archivedCount = useMemo(
-    () => conversations.filter(c => c.archived).length,
+    () => conversations.filter(c => c.archivedBy?.includes(currentUser?.id || '')).length,
     [conversations]
   );
 

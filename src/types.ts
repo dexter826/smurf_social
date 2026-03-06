@@ -161,7 +161,7 @@ export interface Conversation extends BaseEntity {
   adminIds?: string[];
   pinned?: boolean;
   mutedUsers?: Record<string, boolean>;
-  archived?: boolean;
+  archivedBy?: string[];
   markedUnread?: boolean;
   typingUsers?: string[];
   memberJoinedAt?: Record<string, Date>;

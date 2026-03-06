@@ -24,7 +24,7 @@ export interface ConversationSlice {
   searchConversations: (userId: string, term: string) => Promise<void>;
   togglePin: (conversationId: string, pinned: boolean) => Promise<void>;
   toggleMute: (conversationId: string, muted: boolean) => Promise<void>;
-  toggleArchive: (conversationId: string, archived: boolean) => Promise<void>;
+  toggleArchive: (conversationId: string, userId: string, archived: boolean) => Promise<void>;
   toggleMarkUnread: (conversationId: string, markedUnread: boolean) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
   setSearchFocused: (focused: boolean) => void;
@@ -167,12 +167,32 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     }
   },
 
-  toggleArchive: async (conversationId: string, archived: boolean) => {
-    set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, archived } : c) }));
+  toggleArchive: async (conversationId: string, userId: string, archived: boolean) => {
+    set(state => ({ 
+      conversations: state.conversations.map(c => {
+        if (c.id === conversationId) {
+          const newArchivedBy = archived 
+            ? Array.from(new Set([...(c.archivedBy || []), userId]))
+            : (c.archivedBy || []).filter(id => id !== userId);
+          return { ...c, archivedBy: newArchivedBy };
+        }
+        return c;
+      }) 
+    }));
     try {
-      await conversationService.toggleArchive(conversationId, archived);
+      await conversationService.toggleArchive(conversationId, userId, archived);
     } catch (error) {
-      set(state => ({ conversations: state.conversations.map(c => c.id === conversationId ? { ...c, archived: !archived } : c) }));
+      set(state => ({ 
+        conversations: state.conversations.map(c => {
+          if (c.id === conversationId) {
+            const newArchivedBy = !archived 
+              ? Array.from(new Set([...(c.archivedBy || []), userId]))
+              : (c.archivedBy || []).filter(id => id !== userId);
+            return { ...c, archivedBy: newArchivedBy };
+          }
+          return c;
+        }) 
+      }));
       console.error("Lỗi lưu trữ hội thoại:", error);
       throw error;
     }
