@@ -224,7 +224,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
               {/* Hiển thị cảm xúc & Bộ chọn Emoji */}
               {!message.isRecalled && message.type !== MessageType.CALL && (
-                <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
+                <div className={`absolute -bottom-3.5 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
                   {hasReactions ? (
                     <ReactionDisplay
                       reactions={message.reactions}
@@ -233,13 +233,13 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   ) : (
                     <div className="opacity-0 group-hover/message:opacity-100 transition-all duration-base">
                       <button
-                        className="flex items-center justify-center w-8 h-7 bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
+                        className="flex items-center justify-center w-7 h-6 bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowReactionSelector(!showReactionSelector);
                         }}
                       >
-                        <Smile size={14} />
+                        <Smile size={12} strokeWidth={2.5} />
                       </button>
                     </div>
                   )}
@@ -247,7 +247,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   {showReactionSelector && (
                     <>
                       <div
-                        className="fixed inset-0 z-40 bg-transparent"
+                        className="fixed inset-0 z-[var(--z-dropdown)] bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowReactionSelector(false);
@@ -256,6 +256,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                       <ReactionSelector
                         onSelect={(emoji) => toggleReaction(message.id, currentUserId, emoji)}
                         onClose={() => setShowReactionSelector(false)}
+                        autoClose={false}
                         className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
                         currentReaction={message.reactions?.[currentUserId]}
                       />
