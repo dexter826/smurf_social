@@ -767,7 +767,6 @@ export const messageService = {
     });
   },
 
-  // Cập nhật cảm xúc cho tin nhắn.
   toggleReaction: async (
     messageId: string,
     userId: string,
@@ -798,7 +797,8 @@ export const messageService = {
             lastMessage: {
               id: messageId,
               senderId: data.senderId,
-              content: `${emoji} ${lastName} đã bày tỏ cảm xúc "${reactionLabel}"`,
+              reactorId: userId,
+              content: `${emoji} ${lastName} đã bày tỏ cảm xúc`,
               type: MessageType.TEXT,
               createdAt: new Date()
             },
