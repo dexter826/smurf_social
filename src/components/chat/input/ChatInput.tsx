@@ -59,7 +59,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
@@ -132,7 +131,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     handleMentionInputChange(text, e.target.selectionStart);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file' | 'camera' | 'media') => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file' | 'media') => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
@@ -146,7 +145,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       let fileType: 'image' | 'video' | 'file' = 'file';
       if (type === 'image' || (type === 'media' && file.type.startsWith('image/'))) fileType = 'image';
       else if (type === 'video' || (type === 'media' && file.type.startsWith('video/'))) fileType = 'video';
-      else if (type === 'camera') fileType = file.type.startsWith('image/') ? 'image' : 'video';
 
       const limitType = fileType === 'image' ? 'IMAGE' : fileType === 'video' ? 'VIDEO' : 'FILE';
       const validation = validateFileSize(file, limitType);
@@ -320,7 +318,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             setShowActions(false);
             if (type === 'image') imageInputRef.current?.click();
             else if (type === 'file') fileInputRef.current?.click();
-            else if (type === 'camera') cameraInputRef.current?.click();
             else if (type === 'voice') startRecording();
           }}
           disabled={disabled || isSending || isRecording}
@@ -328,7 +325,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
         <input ref={imageInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => handleFileSelect(e, 'media')} />
         <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => handleFileSelect(e, 'file')} />
-        <input ref={cameraInputRef} type="file" accept="image/*,video/*" capture="environment" className="hidden" onChange={(e) => handleFileSelect(e, 'camera')} />
 
         {isRecording ? (
           <RecordingUI duration={recordingDuration} onCancel={cancelRecording} onStop={stopRecording} />

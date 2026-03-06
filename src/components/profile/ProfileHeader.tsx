@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Camera as CameraIcon, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
+import { Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserStatus, ReportType } from '../../types';
 import { FriendStatus } from '../../types';
@@ -49,8 +49,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const navigate = useNavigate();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
-  const avatarCameraRef = useRef<HTMLInputElement>(null);
-  const coverCameraRef = useRef<HTMLInputElement>(null);
   const { openReportModal } = useReportStore();
 
   // State cho crop modal
@@ -66,21 +64,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
   };
 
-  const handleAvatarCameraClick = () => {
-    if (isOwnProfile && !uploading) {
-      avatarCameraRef.current?.click();
-    }
-  };
-
   const handleCoverClick = () => {
     if (isOwnProfile && !uploading) {
       coverInputRef.current?.click();
-    }
-  };
-
-  const handleCoverCameraClick = () => {
-    if (isOwnProfile && !uploading) {
-      coverCameraRef.current?.click();
     }
   };
 
@@ -185,11 +171,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   label="Tải ảnh lên"
                   onClick={handleCoverClick}
                 />
-                <DropdownItem
-                  icon={<CameraIcon size={16} />}
-                  label="Chụp ảnh ngay"
-                  onClick={handleCoverCameraClick}
-                />
                 {user.coverImage && (
                   <DropdownItem
                     icon={<Trash2 size={16} />}
@@ -206,14 +187,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             ref={coverInputRef}
             type="file"
             accept="image/*"
-            onChange={handleCoverFileChange}
-            className="hidden"
-          />
-          <input
-            ref={coverCameraRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
             onChange={handleCoverFileChange}
             className="hidden"
           />
@@ -266,11 +239,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                           label="Tải ảnh lên"
                           onClick={handleAvatarClick}
                         />
-                        <DropdownItem
-                          icon={<CameraIcon size={16} />}
-                          label="Chụp ảnh ngay"
-                          onClick={handleAvatarCameraClick}
-                        />
                         {user.avatar && (
                           <DropdownItem
                             icon={<Trash2 size={16} />}
@@ -288,14 +256,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   ref={avatarInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleAvatarFileChange}
-                  className="hidden"
-                />
-                <input
-                  ref={avatarCameraRef}
-                  type="file"
-                  accept="image/*"
-                  capture="user"
                   onChange={handleAvatarFileChange}
                   className="hidden"
                 />
