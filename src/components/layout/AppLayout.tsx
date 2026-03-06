@@ -145,6 +145,14 @@ export const AppLayout: React.FC = () => {
 
   const totalUnread = useUnreadCount();
 
+  useEffect(() => {
+    if (totalUnread > 0) {
+      document.title = `(${totalUnread}) Smurfy`;
+    } else {
+      document.title = 'Smurfy';
+    }
+  }, [totalUnread]);
+
   const hasNewRequests = receivedRequests.length > 0;
 
   const handlePostReact = async (postId: string, reaction: string) => {
