@@ -8,10 +8,9 @@ import {
   where,
   updateDoc, 
   deleteDoc,
+  deleteField,
   doc, 
   setDoc,
-  arrayUnion, 
-  arrayRemove,
   Timestamp,
   limit,
   startAfter,
@@ -22,7 +21,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Comment, UserStatus } from '../types';
+import { Comment, ReactionType, UserStatus } from '../types';
 import { PAGINATION } from '../constants';
 import { batchGetUsers } from '../utils/batchUtils';
 import { convertTimestamp } from '../utils/dateUtils';
@@ -133,7 +132,7 @@ export const commentService = {
         replyToUserId: replyToUserId || null,
         image: imageUrl || null,
         createdAt: Timestamp.now(),
-        likes: [],
+        reactions: {},
         replyCount: 0
       };
 
@@ -189,17 +188,27 @@ export const commentService = {
     }
   },
 
-  // Cập nhật trạng thái Thích cho bình luận.
-  likeComment: async (commentId: string, userId: string, isLiked: boolean) => {
+  reactToComment: async (commentId: string, userId: string, reaction: string | ReactionType) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
-      await updateDoc(commentRef, {
-        likes: isLiked ? arrayRemove(userId) : arrayUnion(userId)
-      });
+      const commentSnap = await getDoc(commentRef);
+      if (!commentSnap.exists()) return;
 
-      // Cloud Function onCommentLiked xử lý notification
+      const data = commentSnap.data();
+      const reactions: Record<string, string> = data.reactions || {};
+      const currentReaction = reactions[userId];
+
+      if (reaction === 'REMOVE' || currentReaction === reaction) {
+        await updateDoc(commentRef, {
+          [`reactions.${userId}`]: deleteField()
+        });
+      } else {
+        await updateDoc(commentRef, {
+          [`reactions.${userId}`]: reaction
+        });
+      }
     } catch (error) {
-      console.error("Lỗi like comment:", error);
+      console.error("Lỗi react comment:", error);
       throw error;
     }
   },

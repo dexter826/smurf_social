@@ -86,7 +86,7 @@ export const onPostDeleted = onDocumentDeleted(
         NotificationType.LIKE_POST,
         NotificationType.COMMENT_POST,
         NotificationType.REPLY_COMMENT,
-        NotificationType.LIKE_COMMENT,
+        NotificationType.REACT_COMMENT,
       ];
       await Promise.all(
         notifTypes.map(async (type) => {

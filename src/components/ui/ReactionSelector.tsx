@@ -42,8 +42,8 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({
   
   return (
     <div
-      className={`absolute z-[var(--z-popover)] bg-bg-primary border border-divider rounded-full shadow-dropdown ${isSmall ? 'p-1 flex gap-1.5' : 'p-2 flex gap-2'} animate-in fade-in zoom-in duration-base 
-      before:content-[''] before:absolute before:-top-4 before:-bottom-4 before:-left-4 before:-right-4 before:bg-transparent before:-z-10
+      className={`absolute z-[var(--z-popover)] bg-bg-primary border border-divider rounded-full shadow-dropdown cursor-pointer ${isSmall ? 'p-1 flex gap-1.5' : 'p-2 flex gap-2'} animate-in fade-in zoom-in duration-base 
+      before:content-[''] before:absolute before:-top-4 before:-bottom-4 before:-left-4 before:-right-4 before:bg-transparent before:pointer-events-none before:-z-10
       ${className}`}
       onMouseLeave={autoClose ? handleMouseLeave : undefined}
       onMouseEnter={autoClose ? handleMouseEnter : undefined}

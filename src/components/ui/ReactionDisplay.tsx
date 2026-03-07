@@ -47,19 +47,19 @@ const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
         onClick?.();
       }}
     >
-      <div className={`flex items-center ${isMinimal ? '-space-x-1.5' : '-space-x-1'}`}>
+      <div className={`flex items-center ${isMinimal ? '-space-x-1' : '-space-x-1'}`}>
         {sortedEmojis.map((emoji, index) => (
           <React.Fragment key={emoji}>
             <div 
               style={{ zIndex: 10 - index }} 
               className="flex-shrink-0 flex items-center justify-center overflow-visible"
             >
-              {getReactionIcon(emoji as ReactionType, "overflow-visible", 16)}
+              {getReactionIcon(emoji as ReactionType, "overflow-visible", isMinimal ? 16 : 16)}
             </div>
           </React.Fragment>
         ))}
       </div>
-      <span className={`${isMinimal ? 'text-xs sm:text-[13px] ml-1.5' : 'text-[10px] sm:text-[11px]'} text-text-secondary font-bold flex items-center h-full`}>
+      <span className={`${isMinimal ? 'text-[11px] ml-1' : 'text-[10px] sm:text-[11px]'} text-text-secondary font-bold flex items-center h-full`}>
         {total}
       </span>
     </div>

@@ -6,7 +6,7 @@ const NOTIFICATION_TITLES: Partial<Record<NotificationType, string>> = {
   [NotificationType.LIKE_POST]: '❤️ Lượt thích mới',
   [NotificationType.COMMENT_POST]: '💬 Bình luận mới',
   [NotificationType.REPLY_COMMENT]: '↩️ Phản hồi mới',
-  [NotificationType.LIKE_COMMENT]: '❤️ Thích bình luận',
+  [NotificationType.REACT_COMMENT]: '😊 Cảm xúc bình luận',
   [NotificationType.FRIEND_REQUEST]: '👋 Lời mời kết bạn',
   [NotificationType.FRIEND_ACCEPT]: '🤝 Chấp nhận kết bạn',
   [NotificationType.REPORT_NEW]: '🚨 Báo cáo mới',

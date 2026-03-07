@@ -142,7 +142,7 @@ export const notificationService = {
         NotificationType.LIKE_POST,
         NotificationType.COMMENT_POST,
         NotificationType.REPLY_COMMENT,
-        NotificationType.LIKE_COMMENT
+        NotificationType.REACT_COMMENT
       ];
 
       for (const type of notificationTypes) {
@@ -199,7 +199,7 @@ export const notificationService = {
       NotificationType.LIKE_POST,
       NotificationType.COMMENT_POST,
       NotificationType.REPLY_COMMENT,
-      NotificationType.LIKE_COMMENT,
+      NotificationType.REACT_COMMENT,
       NotificationType.FRIEND_REQUEST,
       NotificationType.FRIEND_ACCEPT
     ].includes(notification.type);
@@ -213,8 +213,8 @@ export const notificationService = {
         return `${prefix}đã bình luận: "${notification.data.contentSnippet}"`;
       case NotificationType.REPLY_COMMENT:
         return `${prefix}đã phản hồi bình luận của bạn.`;
-      case NotificationType.LIKE_COMMENT:
-        return `${prefix}đã thích bình luận của bạn.`;
+      case NotificationType.REACT_COMMENT:
+        return `${prefix}đã bày tỏ cảm xúc về bình luận của bạn.`;
       case NotificationType.FRIEND_REQUEST:
         return `${prefix}đã gửi lời mời kết bạn.`;
       case NotificationType.FRIEND_ACCEPT:
