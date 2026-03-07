@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Comment } from '../types';
+import { Comment, ReactionType } from '../types';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { commentService } from '../services/commentService';
 import { PAGINATION } from '../constants';
@@ -65,7 +65,7 @@ interface CommentState {
   createComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string) => Promise<string>;
   updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null) => Promise<void>;
   deleteComment: (postId: string, commentId: string, parentId?: string | null) => Promise<void>;
-  likeComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
+  reactToComment: (postId: string, commentId: string, userId: string, reaction: string | ReactionType, parentId?: string | null) => Promise<void>;
 
   setRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   addRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
@@ -278,7 +278,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       replyToUserId: replyToUserId || undefined,
       image: imageUrl || undefined,
       createdAt: new Date(),
-      likes: [],
+      reactions: {},
       replyCount: 0
     };
 
@@ -371,61 +371,55 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
   },
 
-  likeComment: async (postId, commentId, userId, parentId) => {
+  reactToComment: async (postId, commentId, userId, reaction, parentId) => {
     const { rootComments, replies } = get();
-    
-    let isLiked = false;
+
+    let currentReaction: string | undefined;
     if (parentId) {
       const comment = replies[postId]?.[parentId]?.find(c => c.id === commentId);
-      isLiked = comment?.likes?.includes(userId) || false;
+      currentReaction = comment?.reactions?.[userId];
     } else {
       const comment = rootComments[postId]?.find(c => c.id === commentId);
-      isLiked = comment?.likes?.includes(userId) || false;
+      currentReaction = comment?.reactions?.[userId];
     }
 
+    const shouldRemove = reaction === 'REMOVE' || currentReaction === reaction;
+
     set((state) => {
+      const updateReactions = (comment: Comment): Comment => {
+        if (comment.id !== commentId) return comment;
+        const currentReactions = { ...(comment.reactions || {}) };
+        if (shouldRemove) {
+          delete currentReactions[userId];
+        } else {
+          currentReactions[userId] = reaction;
+        }
+        return { ...comment, reactions: currentReactions };
+      };
+
       if (parentId) {
         const postReplies = state.replies[postId] || {};
         const parentReplies = postReplies[parentId] || [];
-        const updatedReplies = parentReplies.map(c => {
-          if (c.id === commentId) {
-            const currentLikes = c.likes || [];
-            return {
-              ...c,
-              likes: isLiked 
-                ? currentLikes.filter(id => id !== userId) 
-                : [...currentLikes, userId]
-            };
-          }
-          return c;
-        });
         return {
           replies: {
             ...state.replies,
-            [postId]: { ...postReplies, [parentId]: updatedReplies }
+            [postId]: { ...postReplies, [parentId]: parentReplies.map(updateReactions) }
           }
         };
       } else {
-        const updatedRoot = (state.rootComments[postId] || []).map(c => {
-          if (c.id === commentId) {
-            const currentLikes = c.likes || [];
-            return {
-              ...c,
-              likes: isLiked 
-                ? currentLikes.filter(id => id !== userId) 
-                : [...currentLikes, userId]
-            };
+        return {
+          rootComments: {
+            ...state.rootComments,
+            [postId]: (state.rootComments[postId] || []).map(updateReactions)
           }
-          return c;
-        });
-        return { rootComments: { ...state.rootComments, [postId]: updatedRoot } };
+        };
       }
     });
 
     try {
-      await commentService.likeComment(commentId, userId, isLiked);
+      await commentService.reactToComment(commentId, userId, reaction);
     } catch (error) {
-      console.error('Lỗi thích bình luận:', error);
+      console.error('Lỗi bày tỏ cảm xúc:', error);
       if (parentId) {
         await get().fetchReplies(postId, parentId);
       } else {

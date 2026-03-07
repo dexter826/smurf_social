@@ -115,8 +115,8 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (
         // Chủ comment
         (resource.data.userId == request.auth.uid && isNotBanned()) ||
-        // Chỉ cho phép cập nhật lượt thích/phản hồi.
-        (isNotBanned() && changed().hasOnly(['replyCount', 'likes']))
+        // Chỉ cho phép cập nhật cảm xúc/phản hồi.
+        (isNotBanned() && changed().hasOnly(['replyCount', 'reactions']))
       );
 
       allow delete: if isAuthenticated() && (

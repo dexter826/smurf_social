@@ -56,7 +56,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
         navigate(`/profile/${notification.senderId}`);
         break;
       case NotificationType.REPLY_COMMENT:
-      case NotificationType.LIKE_COMMENT:
+      case NotificationType.REACT_COMMENT:
         if (notification.data.postId && user) {
           fetchPostById(notification.data.postId, user.id, user.friendIds || []);
         }
@@ -79,7 +79,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
     NotificationType.LIKE_POST,
     NotificationType.COMMENT_POST,
     NotificationType.REPLY_COMMENT,
-    NotificationType.LIKE_COMMENT,
+    NotificationType.REACT_COMMENT,
     NotificationType.FRIEND_REQUEST,
     NotificationType.FRIEND_ACCEPT
   ].includes(notification.type);

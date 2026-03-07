@@ -35,8 +35,8 @@ export function buildPushBody(
         : `${senderName} đã bình luận bài viết của bạn.`;
     case NotificationType.REPLY_COMMENT:
       return `${senderName} đã phản hồi bình luận của bạn.`;
-    case NotificationType.LIKE_COMMENT:
-      return `${senderName} đã thích bình luận của bạn.`;
+    case NotificationType.REACT_COMMENT:
+      return `${senderName} đã bày tỏ cảm xúc về bình luận của bạn.`;
     case NotificationType.FRIEND_REQUEST:
       return `${senderName} đã gửi lời mời kết bạn.`;
     case NotificationType.FRIEND_ACCEPT:

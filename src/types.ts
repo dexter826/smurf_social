@@ -62,7 +62,7 @@ export enum NotificationType {
   LIKE_POST = "like_post",
   COMMENT_POST = "comment_post",
   REPLY_COMMENT = "reply_comment",
-  LIKE_COMMENT = "like_comment",
+  REACT_COMMENT = "react_comment",
   FRIEND_REQUEST = "friend_request",
   FRIEND_ACCEPT = "friend_accept",
   REPORT_NEW = "report_new",
@@ -184,7 +184,7 @@ export interface Comment extends BaseEntity {
   userId: string;
   parentId?: string;
   content: string;
-  likes?: string[];
+  reactions?: Record<string, string>;
   image?: string;
   replyCount?: number;
   replyToUserId?: string;
