@@ -248,7 +248,7 @@ Hiện tại:
 
 **Fix:** Thêm index vào `firestore.indexes.json`.
 
-- [ ] Thêm index `notifications`: `receiverId ASC` + `createdAt DESC`
+- [x] Thêm index `notifications`: `receiverId ASC` + `createdAt DESC`
 
 ---
 
@@ -258,8 +258,8 @@ Hiện tại:
 
 **Fix:** Thêm vào `firestore.indexes.json`.
 
-- [ ] Thêm index `reports`: `status ASC` + `createdAt ASC`
-- [ ] Thêm index `reports`: (cho `cleanupOldNotifications` nếu cần) `isRead ASC` + `createdAt ASC` trên `notifications`
+- [x] Thêm index `reports`: `status ASC` + `createdAt ASC`
+- [x] Thêm index `reports`: (cho `cleanupOldNotifications` nếu cần) `isRead ASC` + `createdAt ASC` trên `notifications`
 
 ---
 
@@ -341,8 +341,8 @@ Hiện tại:
 | TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [x]    |
 | TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [x]    |
 | TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [x]    |
-| TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [ ]    |
-| TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [ ]    |
+| TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [x]    |
+| TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [x]    |
 | TASK-15 | Xóa `updatedAt` từ BaseEntity, giữ riêng ở Conversation           | 🔵 DB       | [ ]    |
 | TASK-16 | Làm sạch `Message.reactorId` type                                 | 🟣 TYPE     | [ ]    |
 | TASK-17 | Xóa `ReportReason` import thừa                                    | 🟣 TYPE     | [ ]    |
