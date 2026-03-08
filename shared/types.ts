@@ -99,3 +99,10 @@ export enum CommentStatus {
     ACTIVE = "active",
     DELETED = "deleted",
 }
+
+// ========== SHARED INTERFACES ==========
+
+export interface ReactableEntity {
+    reactionCount: number;
+    reactionSummary: Record<string, number>;
+}

@@ -272,6 +272,8 @@ export const messageService = {
         deliveredTo: [senderId],
         deliveredAt: serverTimestamp() as unknown as Date,
         deletedBy: [],
+        reactionCount: 0,
+        reactionSummary: {},
       };
 
       let finalId = preGeneratedId;
@@ -325,6 +327,8 @@ export const messageService = {
         deliveredAt: serverTimestamp() as unknown as Date,
         deletedBy: [],
         mentions: mentions || [],
+        reactionCount: 0,
+        reactionSummary: {},
       };
 
       if (replyToId) messageData.replyToId = replyToId;

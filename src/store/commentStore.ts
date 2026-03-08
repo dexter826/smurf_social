@@ -49,6 +49,7 @@ const mergeOptimisticComments = (
 interface CommentState {
   rootComments: Record<string, Comment[]>;
   replies: Record<string, Record<string, Comment[]>>;
+  myCommentReactions: Record<string, string>; // commentId -> reactionType
 
   lastRootDoc: Record<string, DocumentSnapshot | null>;
   hasMoreRoot: Record<string, boolean>;
@@ -80,6 +81,7 @@ interface CommentState {
 export const useCommentStore = create<CommentState>((set, get) => ({
   rootComments: {},
   replies: {},
+  myCommentReactions: {},
   lastRootDoc: {},
   hasMoreRoot: {},
   lastReplyDoc: {},
@@ -92,6 +94,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     set({
       rootComments: {},
       replies: {},
+      myCommentReactions: {},
       lastRootDoc: {},
       hasMoreRoot: {},
       lastReplyDoc: {},
@@ -108,6 +111,16 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const lastDoc = loadMore ? lastRootDoc[postId] : undefined;
       const result = await commentService.getRootComments(postId, blockedUserIds, PAGINATION.COMMENTS, lastDoc || undefined);
+
+      // Load myReactions for comments
+      const commentIds = result.comments.map(c => c.id);
+      const currentUserId = get().myCommentReactions ? Object.keys(get().myCommentReactions)[0]?.split('-')[0] : '';
+      if (commentIds.length > 0 && currentUserId) {
+        const myReactions = await commentService.batchLoadMyReactionsForComments(commentIds, currentUserId);
+        set(state => ({
+          myCommentReactions: loadMore ? { ...state.myCommentReactions, ...myReactions } : { ...state.myCommentReactions, ...myReactions }
+        }));
+      }
 
       if (loadMore) {
         get().addRootComments(postId, result.comments, result.lastDoc, result.hasMore);
@@ -129,6 +142,16 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const lastDoc = loadMore ? lastReplyDoc[postId]?.[parentId] : undefined;
       const result = await commentService.getReplies(postId, parentId, blockedUserIds, PAGINATION.REPLIES, lastDoc || undefined);
+
+      // Load myReactions for replies
+      const commentIds = result.replies.map(c => c.id);
+      const currentUserId = get().myCommentReactions ? Object.keys(get().myCommentReactions)[0]?.split('-')[0] : '';
+      if (commentIds.length > 0 && currentUserId) {
+        const myReactions = await commentService.batchLoadMyReactionsForComments(commentIds, currentUserId);
+        set(state => ({
+          myCommentReactions: { ...state.myCommentReactions, ...myReactions }
+        }));
+      }
 
       if (loadMore) {
         get().addReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
@@ -279,7 +302,9 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       image: imageUrl || undefined,
       createdAt: new Date(),
       replyCount: 0,
-      status: CommentStatus.ACTIVE
+      status: CommentStatus.ACTIVE,
+      reactionCount: 0,
+      reactionSummary: {},
     };
 
     const previousState = {
@@ -372,22 +397,23 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   },
 
   reactToComment: async (postId, commentId, userId, reaction, parentId) => {
-    const { rootComments, replies } = get();
+    const { rootComments, replies, myCommentReactions } = get();
 
     const findComment = (): Comment | undefined => parentId
       ? replies[postId]?.[parentId]?.find(c => c.id === commentId)
       : rootComments[postId]?.find(c => c.id === commentId);
 
     const comment = findComment();
-    const prevMyReaction = comment?.myReaction;
+    const prevMyReaction = myCommentReactions[commentId];
     const prevCount = comment?.reactionCount ?? 0;
-    const prevSummary = { ...(comment?.reactionSummary ?? {}) };
+    const prevSummary = { ...comment?.reactionSummary ?? {} };
+
+    const isRemove = reaction === 'REMOVE' || prevMyReaction === reaction;
+    const oldType = prevMyReaction;
 
     const applyOptimistic = (c: Comment): Comment => {
       if (c.id !== commentId) return c;
-      const isRemove = reaction === 'REMOVE' || c.myReaction === reaction;
-      const oldType = c.myReaction;
-      const newSummary = { ...(c.reactionSummary ?? {}) };
+      const newSummary = { ...c.reactionSummary };
       let delta = 0;
 
       if (isRemove && oldType) {
@@ -406,11 +432,18 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
       return {
         ...c,
-        myReaction: isRemove ? undefined : reaction,
-        reactionCount: Math.max(0, (c.reactionCount ?? 0) + delta),
+        reactionCount: Math.max(0, c.reactionCount + delta),
         reactionSummary: newSummary,
       };
     };
+
+    // Update myCommentReactions
+    const newMyReactions = { ...myCommentReactions };
+    if (isRemove) {
+      delete newMyReactions[commentId];
+    } else {
+      newMyReactions[commentId] = reaction;
+    }
 
     set((state) => {
       if (parentId) {
@@ -420,6 +453,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
             ...state.replies,
             [postId]: { ...postReplies, [parentId]: (postReplies[parentId] || []).map(applyOptimistic) },
           },
+          myCommentReactions: newMyReactions,
         };
       }
       return {
@@ -427,6 +461,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           ...state.rootComments,
           [postId]: (state.rootComments[postId] || []).map(applyOptimistic),
         },
+        myCommentReactions: newMyReactions,
       };
     });
 
@@ -436,7 +471,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       console.error('Lỗi bày tỏ cảm xúc:', error);
       // Rollback
       const rollback = (c: Comment): Comment => c.id !== commentId ? c : {
-        ...c, myReaction: prevMyReaction, reactionCount: prevCount, reactionSummary: prevSummary,
+        ...c, reactionCount: prevCount, reactionSummary: prevSummary,
       };
       set(state => ({
         rootComments: { ...state.rootComments, [postId]: (state.rootComments[postId] || []).map(rollback) },
@@ -444,6 +479,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           ...state.replies,
           [postId]: { ...(state.replies[postId] || {}), [parentId]: ((state.replies[postId] || {})[parentId] || []).map(rollback) },
         } : state.replies,
+        myCommentReactions: { ...state.myCommentReactions, [commentId]: prevMyReaction },
       }));
     }
   },

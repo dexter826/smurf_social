@@ -85,13 +85,18 @@
   - [x] Tạo Cloud Function để đồng bộ `replyToSnippet` khi message gốc bị edit/delete
   - [x] Export functions trong `functions/src/index.ts`
 
-- [ ] **8. Refactor Reaction Pattern - Tạo Mixin Interface**
-  - [ ] Tạo `ReactableEntity` interface với `reactionCount`, `reactionSummary`
-  - [ ] Update `Post` để extend `ReactableEntity`
-  - [ ] Update `Comment` để extend `ReactableEntity`
-  - [ ] Update `Message` để extend `ReactableEntity`
-  - [ ] Xóa `myReaction` từ database types (computed field, chỉ ở client)
-  - [ ] Update queries để compute `myReaction` ở client-side
+- [x] **8. Refactor Reaction Pattern - Tạo Mixin Interface**
+  - [x] Tạo `ReactableEntity` interface với `reactionCount`, `reactionSummary`
+  - [x] Update `Post` để extend `ReactableEntity`
+  - [x] Update `Comment` để extend `ReactableEntity`
+  - [x] Update `Message` để extend `ReactableEntity`
+  - [x] Xóa `myReaction` từ database types (computed field, chỉ ở client)
+  - [x] Thêm `myPostReactions`, `myCommentReactions` vào stores
+  - [x] Update queries để compute `myReaction` ở client-side
+  - [x] Update tất cả components để lấy myReaction từ store
+  - [x] Đổi `reactionCount` và `reactionSummary` thành required
+  - [x] Update tất cả nơi tạo Post/Comment/Message để set default values
+  - [x] Fix TypeScript errors
 
 - [ ] **9. Tối ưu Conversation Type**
   - [ ] Đổi `mutedUsers: Record<string, boolean>` thành `mutedBy: string[]`

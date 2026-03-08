@@ -6,6 +6,7 @@ import { Post, User, ReportType } from '../../../types';
 import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
+import { usePostStore } from '../../../store/postStore';
 import { useFriendIds } from '../../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions } from '../shared';
 
@@ -128,7 +129,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     );
   }
 
-  const myReaction = post.myReaction;
+  const myReaction = usePostStore(state => state.myPostReactions[post.id]);
   const isOwner = post.userId === currentUser.id;
   const hasMedia = allMedia.length > 0;
 

@@ -42,7 +42,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const error = uploadState?.error;
   const progress = uploadState?.progress || 0;
 
-  const myReaction = post.myReaction;
+  const myReaction = usePostStore(state => state.myPostReactions[post.id]);
   const isOwner = post.userId === currentUser.id;
 
   const hasMedia = (post.images?.length ?? 0) > 0 || (post.videos?.length ?? 0) > 0;
@@ -64,17 +64,17 @@ const PostItemInner: React.FC<PostItemProps> = ({
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <UserAvatar 
-            userId={author?.id} 
-            src={author?.avatar} 
-            name={author?.name} 
-            size="md" 
-            initialStatus={author?.status} 
+          <UserAvatar
+            userId={author?.id}
+            src={author?.avatar}
+            name={author?.name}
+            size="md"
+            initialStatus={author?.status}
             onClick={handleProfileClick}
           />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 
+              <h3
                 className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
                 onClick={handleProfileClick}
               >
@@ -132,7 +132,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
       </div>
 
       {(!post.type || post.type === PostType.NORMAL) && (
-        <div 
+        <div
           className="px-4 pb-3 relative"
         >
           <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">

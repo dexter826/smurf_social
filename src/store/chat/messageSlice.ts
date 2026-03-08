@@ -92,6 +92,8 @@ const sendMediaMessage = (
     readBy: [senderId],
     deliveredTo: [senderId],
     deletedBy: [],
+    reactionCount: 0,
+    reactionSummary: {},
     ...(isFile ? { fileName: file.name, fileSize: file.size } : { fileUrl: localUrl }),
   };
 
@@ -147,19 +149,12 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       if (firstLoad && currentUserId) {
         firstLoad = false;
         const toLoad = messages
-          .filter(m => (m.reactionCount ?? 0) > 0 && !myMessageReactions[m.id])
+          .filter(m => m.reactionCount > 0 && !myMessageReactions[m.id])
           .map(m => m.id);
         if (toLoad.length > 0) {
           messageService.batchLoadMyReactionsForMessages(toLoad, currentUserId).then(myRxns => {
             set(state => ({
               myMessageReactions: { ...state.myMessageReactions, ...myRxns },
-              messages: {
-                ...state.messages,
-                [conversationId]: (state.messages[conversationId] || []).map(m => ({
-                  ...m,
-                  myReaction: myRxns[m.id] ?? state.myMessageReactions[m.id] ?? m.myReaction
-                }))
-              }
             }));
           });
         }
@@ -193,19 +188,12 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       const currentUserId = useAuthStore.getState().user?.id;
       if (currentUserId) {
         const toLoad = result.messages
-          .filter(m => (m.reactionCount ?? 0) > 0 && !get().myMessageReactions[m.id])
+          .filter(m => m.reactionCount > 0 && !get().myMessageReactions[m.id])
           .map(m => m.id);
         if (toLoad.length > 0) {
           messageService.batchLoadMyReactionsForMessages(toLoad, currentUserId).then(myRxns => {
             set(state => ({
               myMessageReactions: { ...state.myMessageReactions, ...myRxns },
-              messages: {
-                ...state.messages,
-                [conversationId]: (state.messages[conversationId] || []).map(m => ({
-                  ...m,
-                  myReaction: myRxns[m.id] ?? state.myMessageReactions[m.id] ?? m.myReaction
-                }))
-              }
             }));
           });
         }
@@ -229,6 +217,8 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       readBy: [],
       deliveredTo: [],
       deletedBy: [],
+      reactionCount: 0,
+      reactionSummary: {},
     };
 
     set(state => ({
@@ -259,6 +249,8 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       readBy: [],
       deliveredTo: [],
       deletedBy: [],
+      reactionCount: 0,
+      reactionSummary: {},
     };
     set(state => ({
       messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] }
@@ -351,6 +343,8 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       readBy: [],
       deliveredTo: [],
       deletedBy: [],
+      reactionCount: 0,
+      reactionSummary: {},
     };
 
     set(state => ({
@@ -431,7 +425,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
         newSummary[emoji] = (newSummary[emoji] ?? 0) + 1;
         newCount += 1;
       }
-      updatedMessage = { ...prevMessage, myReaction: isRemoving ? undefined : emoji, reactionCount: newCount, reactionSummary: newSummary };
+      updatedMessage = { ...prevMessage, reactionCount: newCount, reactionSummary: newSummary };
     }
 
     const cId = conversationId;
