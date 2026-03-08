@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { TIME_LIMITS } from '../../constants/appConfig';
 
 interface UseAudioRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -40,6 +41,10 @@ export const useAudioRecorder = ({ onRecordingComplete, onError }: UseAudioRecor
       timerRef.current = setInterval(() => {
         durationRef.current += 1;
         setRecordingDuration(durationRef.current);
+
+        if (durationRef.current >= TIME_LIMITS.VOICE_MAX_DURATION / 1000) {
+          stopRecording();
+        }
       }, 1000);
     } catch (err) {
       console.error('Lỗi khi bắt đầu ghi âm:', err);
@@ -48,14 +53,14 @@ export const useAudioRecorder = ({ onRecordingComplete, onError }: UseAudioRecor
   }, [onRecordingComplete, onError]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     }
-  }, [isRecording]);
+  }, []);
 
   const cancelRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
