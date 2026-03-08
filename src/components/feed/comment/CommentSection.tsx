@@ -8,7 +8,7 @@ import { postService } from '../../../services/postService';
 import { useCommentStore } from '../../../store/commentStore';
 import { useUserCache } from '../../../store/userCacheStore';
 import { useReportStore } from '../../../store/reportStore';
-import { useContactStore } from '../../../store/contactStore';
+import { useFriendIds } from '../../../hooks';
 import { CommentSkeleton } from './CommentSkeleton';
 import { CommentInput } from './CommentInput';
 import { CommentItem } from './CommentItem';
@@ -53,7 +53,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const { users, fetchUsers } = useUserCache();
   const { openReportModal } = useReportStore();
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
 
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);

@@ -5,7 +5,7 @@ import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useIntersectionObserver } from './utils/useIntersectionObserver';
 import { useLoadingStore } from '../store/loadingStore';
-import { useContactStore } from '../store/contactStore';
+import { useFriendIds } from './utils';
 
 interface UseFeedReturn {
   posts: Post[];
@@ -21,7 +21,7 @@ interface UseFeedReturn {
 
 export const useFeed = (): UseFeedReturn => {
   const { user: currentUser } = useAuthStore();
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
   const {
     posts,
     hasMore,

@@ -4,6 +4,7 @@ import { MessageSquare } from 'lucide-react';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
 import { useContactStore } from '../store/contactStore';
+import { useFriendIds } from '../hooks';
 import { friendService } from '../services/friendService';
 import { useChatStore } from '../store/chatStore';
 import {
@@ -87,7 +88,7 @@ const ChatPage: React.FC = () => {
     receivedRequests,
   } = useChat();
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
 
   React.useEffect(() => {
     setIsChatVisible(true);
