@@ -1,5 +1,4 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../app';
 
 export const unfriend = onCall(
@@ -15,12 +14,8 @@ export const unfriend = onCall(
 
     try {
       const batch = db.batch();
-      batch.update(db.collection('users').doc(userId), {
-        friendIds: FieldValue.arrayRemove(friendId),
-      });
-      batch.update(db.collection('users').doc(friendId), {
-        friendIds: FieldValue.arrayRemove(userId),
-      });
+      batch.delete(db.collection('users').doc(userId).collection('friends').doc(friendId));
+      batch.delete(db.collection('users').doc(friendId).collection('friends').doc(userId));
       await batch.commit();
       return { success: true };
     } catch (error) {

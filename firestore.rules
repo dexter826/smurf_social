@@ -45,11 +45,17 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (
         // Quyền admin toàn phần.
         isAdmin() ||
-        // Chủ sở hữu không được tự đổi role hay friendIds (CF xử lý).
-        (isOwner(userId) && isNotBanned() && !changed().hasAny(['role', 'friendIds']))
+        // Chủ sở hữu không được tự đổi role (CF xử lý).
+        (isOwner(userId) && isNotBanned() && !changed().hasAny(['role']))
       );
 
       allow delete: if isAuthenticated() && isOwner(userId) && isNotBanned();
+
+      // Bạn bè — chỉ CF write, tất cả authenticated đều có thể đọc
+      match /friends/{friendId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+      }
     }
 
     // LỜI MỜI KẾT BẠN
@@ -85,7 +91,7 @@ service cloud.firestore {
         resource.data.visibility == 'public' ||
         resource.data.userId == request.auth.uid ||
         (resource.data.visibility == 'friends' &&
-         request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.userId)).data.friendIds) ||
+         exists(/databases/$(database)/documents/users/$(resource.data.userId)/friends/$(request.auth.uid))) ||
         isAdmin()
       );
 
@@ -99,7 +105,7 @@ service cloud.firestore {
         // Chủ bài viết
         (resource.data.userId == request.auth.uid && isNotBanned()) ||
         // Chỉ cho phép cập nhật tương tác.
-        (isNotBanned() && changed().hasOnly(['commentCount', 'reactions']))
+        (isNotBanned() && changed().hasOnly(['commentCount', 'reactionCount', 'reactionSummary']))
       );
 
       allow delete: if isAuthenticated() && (
@@ -123,7 +129,7 @@ service cloud.firestore {
         // Chủ comment
         (resource.data.userId == request.auth.uid && isNotBanned()) ||
         // Chỉ cho phép cập nhật cảm xúc/phản hồi.
-        (isNotBanned() && changed().hasOnly(['replyCount', 'reactions']))
+        (isNotBanned() && changed().hasOnly(['replyCount', 'reactionCount', 'reactionSummary']))
       );
 
       allow delete: if isAuthenticated() && (
@@ -181,11 +187,19 @@ service cloud.firestore {
         // Thành viên thực hiện tương tác tin nhắn.
         (request.auth.uid in
           get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participantIds &&
-         changed().hasOnly(['readBy', 'deliveredAt', 'deliveredTo', 'deletedBy', 'reactions']))
+         changed().hasOnly(['readBy', 'deliveredAt', 'deliveredTo', 'deletedBy']))
       );
 
       allow delete: if isAuthenticated() &&
         resource.data.senderId == request.auth.uid && isNotBanned();
+
+      // Reactions subcollection — CF-only write
+      match /reactions/{userId} {
+        allow read: if isAuthenticated() &&
+          request.auth.uid in
+            get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participantIds;
+        allow write: if false;
+      }
     }
 
     // THÔNG BÁO

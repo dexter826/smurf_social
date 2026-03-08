@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
-
+import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
 import { usePostStore } from '../store/postStore';
 import { DocumentSnapshot } from 'firebase/firestore';
@@ -30,6 +30,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   
   const { users, fetchUsers } = useUserCache();
   const { posts: allStorePosts, deletePost: deleteStorePost } = usePostStore();
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
 
   const posts = useMemo(() => {
     if (userId !== currentUser.id) return dbPosts;
@@ -57,7 +58,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
       const result = await postService.getUserPosts(
         userId, 
         currentUser.id,
-        currentUser.friendIds || [],
+        friendIds,
         10, 
         isFirstPage ? undefined : (lastDocRef.current || undefined)
       );
@@ -82,7 +83,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
       if (isFirstPage) setLoading(false);
       setLoadingMore(false);
     }
-  }, [userId, currentUser.id, currentUser.friendIds, fetchUsers]);
+  }, [userId, currentUser.id, friendIds, fetchUsers]);
 
   useEffect(() => {
     loadPosts(true);
@@ -90,7 +91,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     const unsubscribe = postService.subscribeToUserPosts(
       userId,
       currentUser.id,
-      currentUser.friendIds || [],
+      friendIds,
       (newPosts) => {
         setDbPosts(prev => {
           const updatedPosts = [...prev];
@@ -113,7 +114,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     );
 
     return () => unsubscribe();
-  }, [userId, currentUser.id, currentUser.friendIds, loadPosts, fetchUsers]);
+  }, [userId, currentUser.id, friendIds, loadPosts, fetchUsers]);
 
   const handleLoadMore = useCallback(() => {
     if (!loading && !loadingMore && hasMore) {
@@ -125,35 +126,37 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
-    const oldReaction = post.reactions?.[currentUser.id];
+    const oldReaction = post.myReaction;
     const isRemove = oldReaction === reaction;
-    
-    setDbPosts(prev => prev.map(p => {
-      if (p.id !== postId) return p;
-      
-      const newReactions = { ...(p.reactions || {}) };
-      if (isRemove) {
-        delete newReactions[currentUser.id];
-      } else {
-        newReactions[currentUser.id] = reaction;
+
+    const prevSummary = post.reactionSummary ?? {};
+    const newSummary = { ...prevSummary };
+    let newCount = post.reactionCount ?? 0;
+    if (isRemove) {
+      if (oldReaction) {
+        newSummary[oldReaction] = Math.max(0, (newSummary[oldReaction] ?? 0) - 1);
+        if (newSummary[oldReaction] === 0) delete newSummary[oldReaction];
       }
-      return { ...p, reactions: newReactions };
+      newCount = Math.max(0, newCount - 1);
+    } else if (oldReaction) {
+      newSummary[oldReaction] = Math.max(0, (newSummary[oldReaction] ?? 0) - 1);
+      if (newSummary[oldReaction] === 0) delete newSummary[oldReaction];
+      newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
+    } else {
+      newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
+      newCount += 1;
+    }
+
+    setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
+      ...p, myReaction: isRemove ? undefined : reaction, reactionCount: newCount, reactionSummary: newSummary
     }));
 
     try {
       await postService.reactToPost(postId, currentUser.id, isRemove ? 'REMOVE' : reaction);
     } catch (error) {
       // Rollback
-      setDbPosts(prev => prev.map(p => {
-        if (p.id !== postId) return p;
-        
-        const oldReactions = { ...(p.reactions || {}) };
-        if (oldReaction) {
-          oldReactions[currentUser.id] = oldReaction;
-        } else {
-          delete oldReactions[currentUser.id];
-        }
-        return { ...p, reactions: oldReactions };
+      setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
+        ...p, myReaction: oldReaction, reactionCount: post.reactionCount, reactionSummary: prevSummary
       }));
     }
   }, [posts, currentUser.id]);

@@ -197,14 +197,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!user) return;
 
     const currentBlocked = user.blockedUserIds || [];
-    const currentFriends = user.friendIds || [];
 
     if (action === "add") {
       set({
         user: {
           ...user,
           blockedUserIds: [...currentBlocked, targetUserId],
-          friendIds: currentFriends.filter((id) => id !== targetUserId),
         },
       });
     } else {
@@ -217,15 +215,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  unfriendUser: (targetUserId) => {
-    const { user } = get();
-    if (!user) return;
-    set({
-      user: {
-        ...user,
-        friendIds: (user.friendIds || []).filter((id) => id !== targetUserId),
-      },
-    });
+  unfriendUser: (_targetUserId) => {
+    // contactStore.subscribeToFriends tự cập nhật qua snapshot
   },
 
   initialize: () => {
