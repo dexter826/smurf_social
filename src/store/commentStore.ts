@@ -12,11 +12,11 @@ const mergeOptimisticComments = (
   sortOrder: SortOrder
 ): { merged: Comment[]; hasChanges: boolean } => {
   const optimisticMatches = new Set<string>();
-  
+
   const updated = existing.map(e => {
     if (e.id.startsWith('temp-')) {
-      const match = incoming.find(c => 
-        c.userId === e.userId && 
+      const match = incoming.find(c =>
+        c.userId === e.userId &&
         c.content === e.content &&
         Math.abs(c.createdAt.getTime() - e.createdAt.getTime()) < 30000
       );
@@ -28,8 +28,8 @@ const mergeOptimisticComments = (
     return e;
   });
 
-  const newItems = incoming.filter(c => 
-    !optimisticMatches.has(c.id) && 
+  const newItems = incoming.filter(c =>
+    !optimisticMatches.has(c.id) &&
     !existing.some(e => e.id === c.id)
   );
 
@@ -37,25 +37,25 @@ const mergeOptimisticComments = (
     return { merged: existing, hasChanges: false };
   }
 
-  const merged = [...updated, ...newItems].sort((a, b) => 
-    sortOrder === 'desc' 
+  const merged = [...updated, ...newItems].sort((a, b) =>
+    sortOrder === 'desc'
       ? b.createdAt.getTime() - a.createdAt.getTime()
       : a.createdAt.getTime() - b.createdAt.getTime()
   );
-  
+
   return { merged, hasChanges: true };
 };
 
 interface CommentState {
   rootComments: Record<string, Comment[]>;
   replies: Record<string, Record<string, Comment[]>>;
-  
+
   lastRootDoc: Record<string, DocumentSnapshot | null>;
   hasMoreRoot: Record<string, boolean>;
-  
+
   lastReplyDoc: Record<string, Record<string, DocumentSnapshot | null>>;
   hasMoreReply: Record<string, Record<string, boolean>>;
-  
+
   loadingPosts: Record<string, boolean>;
 
   fetchRootComments: (postId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
@@ -108,7 +108,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const lastDoc = loadMore ? lastRootDoc[postId] : undefined;
       const result = await commentService.getRootComments(postId, blockedUserIds, PAGINATION.COMMENTS, lastDoc || undefined);
-      
+
       if (loadMore) {
         get().addRootComments(postId, result.comments, result.lastDoc, result.hasMore);
       } else {
@@ -129,7 +129,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const lastDoc = loadMore ? lastReplyDoc[postId]?.[parentId] : undefined;
       const result = await commentService.getReplies(postId, parentId, blockedUserIds, PAGINATION.REPLIES, lastDoc || undefined);
-      
+
       if (loadMore) {
         get().addReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
       } else {
@@ -150,7 +150,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         set(state => {
           if (action === 'initial') {
             const { comments, lastDoc, hasMore } = data as { comments: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean };
-            return { 
+            return {
               rootComments: { ...state.rootComments, [postId]: comments },
               lastRootDoc: { ...state.lastRootDoc, [postId]: lastDoc },
               hasMoreRoot: { ...state.hasMoreRoot, [postId]: hasMore }
@@ -163,7 +163,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
             if (!hasChanges) return {};
             return { rootComments: { ...state.rootComments, [postId]: merged } };
           }
-          
+
           if (action === 'update') {
             return {
               rootComments: {
@@ -175,7 +175,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
               }
             };
           }
-          
+
           if (action === 'remove') {
             const removedIds = new Set(comments.map(c => c.id));
             return {
@@ -185,7 +185,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
               }
             };
           }
-          
+
           return {};
         });
       }
@@ -281,7 +281,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       replyCount: 0
     };
 
-    const previousState = { 
+    const previousState = {
       rootComments: { ...get().rootComments },
       replies: { ...get().replies }
     };
@@ -296,7 +296,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           },
           rootComments: {
             ...state.rootComments,
-            [postId]: (state.rootComments[postId] || []).map(c => 
+            [postId]: (state.rootComments[postId] || []).map(c =>
               c.id === parentId ? { ...c, replyCount: (c.replyCount || 0) + 1 } : c
             )
           }
@@ -310,7 +310,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
     try {
       await commentService.createComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, realId);
-      
+
       return realId;
     } catch (error) {
       set(previousState);
@@ -330,7 +330,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   },
 
   deleteComment: async (postId, commentId, parentId) => {
-    const previousState = { 
+    const previousState = {
       rootComments: { ...get().rootComments },
       replies: { ...get().replies }
     };
@@ -346,7 +346,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           },
           rootComments: {
             ...state.rootComments,
-            [postId]: (state.rootComments[postId] || []).map(c => 
+            [postId]: (state.rootComments[postId] || []).map(c =>
               c.id === parentId ? { ...c, replyCount: Math.max(0, (c.replyCount || 0) - 1) } : c
             )
           }
@@ -477,9 +477,9 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   addReplies: (postId, parentId, replies, lastDoc, hasMore) => set((state) => ({
     replies: {
       ...state.replies,
-      [postId]: { 
-        ...(state.replies[postId] || {}), 
-        [parentId]: [...(state.replies[postId]?.[parentId] || []), ...replies] 
+      [postId]: {
+        ...(state.replies[postId] || {}),
+        [parentId]: [...(state.replies[postId]?.[parentId] || []), ...replies]
       }
     },
     lastReplyDoc: {
@@ -513,24 +513,26 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     const updateObj = (c: Comment) => ({
       ...c,
       content,
+      isEdited: true,
+      editedAt: new Date(),
       ...(imageUrl !== undefined && { image: imageUrl })
     });
 
     if (!parentId) {
-      const updatedRoot = (state.rootComments[postId] || []).map(c => 
+      const updatedRoot = (state.rootComments[postId] || []).map(c =>
         c.id === commentId ? updateObj(c) : c
       );
       return { rootComments: { ...state.rootComments, [postId]: updatedRoot } };
     } else {
       const postReplies = state.replies[postId] || {};
-      const updatedReplies = (postReplies[parentId] || []).map(r => 
+      const updatedReplies = (postReplies[parentId] || []).map(r =>
         r.id === commentId ? updateObj(r) : r
       );
-      return { 
-        replies: { 
-          ...state.replies, 
-          [postId]: { ...postReplies, [parentId]: updatedReplies } 
-        } 
+      return {
+        replies: {
+          ...state.replies,
+          [postId]: { ...postReplies, [parentId]: updatedReplies }
+        }
       };
     }
   })

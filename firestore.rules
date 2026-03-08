@@ -133,8 +133,12 @@ service cloud.firestore {
         request.resource.data.replyCount == 0;
 
       allow update: if isAuthenticated() && (
-        // Chủ comment
-        (resource.data.userId == request.auth.uid && isNotBanned()) ||
+        // Chủ comment có thể edit content, image, và các edit flags
+        (resource.data.userId == request.auth.uid && isNotBanned() && 
+         changed().hasOnly(['content', 'image', 'isEdited', 'editedAt'])) ||
+        // Chủ comment có thể chỉ edit content
+        (resource.data.userId == request.auth.uid && isNotBanned() && 
+         changed().hasOnly(['content', 'isEdited', 'editedAt'])) ||
         // Chỉ cho phép cập nhật cảm xúc/phản hồi.
         (isNotBanned() && changed().hasOnly(['replyCount', 'reactionCount', 'reactionSummary']))
       );

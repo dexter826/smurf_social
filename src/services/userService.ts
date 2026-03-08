@@ -15,6 +15,7 @@ function convertDocToUser(doc: DocumentSnapshot): User {
     ...data,
     id: doc.id,
     createdAt: convertTimestamp(data?.createdAt, new Date())!,
+    updatedAt: convertTimestamp(data?.updatedAt),
     lastSeen: convertTimestamp(data?.lastSeen),
     birthDate: convertTimestamp(data?.birthDate),
   } as User;
@@ -135,7 +136,11 @@ export const userService = {
 
       let updatedData: User;
       if (userDoc.exists()) {
-        updatedData = { ...userDoc.data() as User, ...data };
+        updatedData = {
+          ...userDoc.data() as User,
+          ...data,
+          updatedAt: new Date()
+        };
       } else {
         updatedData = {
           id: userId,
@@ -147,6 +152,7 @@ export const userService = {
           bio: data.bio || '',
           coverImage: data.coverImage || '',
           createdAt: new Date(),
+          updatedAt: new Date(),
           ...data
         };
       }
@@ -156,7 +162,8 @@ export const userService = {
         Object.entries(updatedData).filter(([k, v]) => v !== undefined && !PRIVATE_FIELDS.includes(k))
       );
 
-      await setDoc(userRef, cleanData, { merge: true });
+      // Thêm serverTimestamp cho updatedAt khi write vào Firestore
+      await setDoc(userRef, { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
       return updatedData;
     } catch (error) {
       console.error("Lỗi cập nhật profile", error);
