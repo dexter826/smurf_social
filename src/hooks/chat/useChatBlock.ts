@@ -7,8 +7,6 @@ import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
 import { TOAST_MESSAGES } from '../../constants';
 
-const EMPTY_IDS: string[] = [];
-
 interface UseChatBlockProps {
   partnerId: string | null;
   currentUser: User | null;
@@ -31,19 +29,14 @@ export const useChatBlock = ({
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
 
-  const myBlockedUserIds = useAuthStore(state => state.user?.blockedUserIds ?? EMPTY_IDS);
+  const myBlockedUserIds = useAuthStore(state => state.blockedUserIds);
 
   const isBlockedByMe = useMemo(() =>
     partnerId ? myBlockedUserIds.includes(partnerId) : false,
     [partnerId, myBlockedUserIds]
   );
 
-  const isBlockedByPartner = useMemo(() =>
-    partner?.blockedUserIds?.includes(currentUser?.id || '') ?? false,
-    [partner?.blockedUserIds, currentUser?.id]
-  );
-
-  const isBlocked = isBlockedByMe || isBlockedByPartner;
+  const isBlocked = isBlockedByMe;
 
   useEffect(() => {
     if (!partnerId) {
@@ -66,10 +59,9 @@ export const useChatBlock = ({
         return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
       }
       if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
-      if (isBlockedByPartner) return 'Bạn không thể gửi tin nhắn cho người này.';
     }
     return undefined;
-  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe, isBlockedByPartner]);
+  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe]);
 
   const blockedMessage = useMemo(() => getBlockedMessage(), [getBlockedMessage]);
 
@@ -103,7 +95,6 @@ export const useChatBlock = ({
   return {
     isBlocked,
     isBlockedByMe,
-    isBlockedByPartner,
     partnerStatus,
     getBlockedMessage,
     handleToggleBlock,

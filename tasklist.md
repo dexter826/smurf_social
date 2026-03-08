@@ -1,441 +1,308 @@
-# Tasklist — Smurf Social Audit & Cleanup
+# Tasklist V2 — Business Process Audit (Smurf Social)
 
-> **Quy tắc:** Không backward-compat. Loại bỏ hoàn toàn, clean code. Mỗi task check `[ ]` khi hoàn thành.
+> **Nguồn gốc:** So sánh `quy_trinh_nghiep_vu.md` với code đã triển khai.
+> **Phân loại:**
+>
+> - MISSING — Tính năng trong spec chưa được viết code
+> - 🟠 DRIFT — Code đúng logic nhưng khác với mô tả trong spec
+> - 🔵 SPEC UPDATE — Spec cần cập nhật để phản ánh đúng thực tế đã triển khai
 
 ---
 
-## 🔴 CRITICAL BUGS — Phá vỡ tính năng
+## MISSING — Tính năng trong spec chưa triển khai
 
-### TASK-01 — `User.friendIds` không bao giờ được ghi vào Firestore
+### MISSING-01 — Kiểm duyệt ảnh bình luận (Sensitive Image Moderation) — **CHƯA TRIỂN KHAI HOÀN TOÀN**
 
-**Vấn đề:** `User.friendIds?: string[]` được dùng rộng rãi trong app nhưng **không có code nào ghi** field này lên user document. Source of truth là subcollection `users/{uid}/friends`. Hệ quả:
+**Spec mô tả (UC-BL01, UC-BL02, UC-BL03):**
 
-- `useFriendIds` hook trả về `[]` mãi mãi
-- `ChatPage` truyền `currentUser.friendIds || []` → `currentUserFriendIds` luôn empty → **TẤT CẢ chat 1-1 bị phân loại là "Tin nhắn chờ"** (`requestConversations`)
-- `useProfileData` truyền `friendIds = []` → `getUserPosts` chỉ lấy PUBLIC posts → profile của bạn bè hiện sai
-- `getUserStats` trả về `friendCount = 0` vì `userDoc.data()?.friendIds` không tồn tại
-- `useConversationGroups` không group đúng
+> "Nếu bình luận kèm ảnh, hệ thống tự động kiểm duyệt và làm mờ nếu phát hiện nội dung nhạy cảm. Người dùng nhấn 'Xem ảnh' → hiện ảnh gốc; tự động làm mờ khi mở lại bình luận."
 
-**Fix:**
+**Hiện trạng:** Không có gì được triển khai:
 
-1. Bỏ `friendIds` khỏi `User` type và user document
-2. Tất cả nơi cần friend IDs → đọc từ `useContactStore(state => state.friends.map(f => f.id))`
-3. Đặt `useFriendIds` hook dùng `contactStore.friends` thay vì `user.friendIds`
+- `Comment` type: không có field `isSensitive: boolean`
+- Cloud Functions (`functions/src/`): không có function nào gọi Vision API hoặc bất kỳ service kiểm duyệt nào
+- `CommentItem.tsx`: ảnh hiển thị trực tiếp, không blur/unblur
+- Không có UI "Xem ảnh" button
+
+**Nhận xét khách quan:** Đây là tính năng phức tạp yêu cầu tích hợp Google Cloud Vision API (hoặc tương đương) và phát sinh chi phí. Nên cân nhắc:
+
+1. Dùng Firebase Extension "Moderate Images" (dễ tích hợp)
+2. Tự implement CF với Cloud Vision API
+3. Bỏ khỏi spec nếu không có kế hoạch triển khai
+
+**Files cần tạo/sửa (nếu triển khai):**
+
+- `src/types.ts` — thêm `isSensitive?: boolean` vào `Comment`
+- `functions/src/comments/onCommentCreated.ts` — sau khi lưu comment có ảnh, gọi Vision API
+- `src/components/feed/comment/CommentItem.tsx` — blur ảnh nhạy cảm, button "Xem ảnh"
+
+- [ ] Thêm `isSensitive?: boolean` vào `Comment` type
+- [ ] Tạo Cloud Function kiểm duyệt ảnh bình luận (Vision API)
+- [ ] Implement blur UI + "Xem ảnh" button trong `CommentItem`
+- [ ] Tương tự cho ảnh bài viết (nếu spec bổ sung)
+
+---
+
+### MISSING-02 — Block không ngăn gửi tin nhắn trong conversation đã tồn tại
+
+**Spec:** "Trường hợp duy nhất không thể nhắn tin là khi một trong hai người **đã chặn** người kia."
+
+**Hiện trạng:**
+
+- `conversationService.getOrCreateConversation` ✅ — kiểm tra block, không tạo conversation mới
+- `messageService.sendTextMessage` / `sendImageMessage` / v.v. — **KHÔNG** kiểm tra block
+- Firestore rules cho `/messages/{id}` — chỉ kiểm tra `participantIds`, không kiểm tra block status
+- Kết quả: nếu conversation đã được tạo trước khi block, người bị chặn vẫn gửi được tin nhắn
+
+**Giải pháp được đề xuất:** Thêm check block trong Firestore security rules cho message create, hoặc thêm Cloud Function `beforeMessageCreate`. Phức tạp vì rules không có quyền đọc `private/security` của user khác.
+
+**Nhận xét khách quan:** Có thể giải quyết bằng:
+
+1. CF Trigger `onMessageCreated` → kiểm tra block → xóa message nếu bị chặn (eventual consistency)
+2. Hoặc giữ nguyên và accept trade-off (UX đơn giản hơn, block trong conversation đã có không hoàn toàn)
 
 **Files cần sửa:**
 
-- `src/types.ts` — xóa `friendIds?: string[]` khỏi `User` interface
-- `src/hooks/utils/useFriendIds.ts` — đọc từ `contactStore` thay vì `authStore`
-- `src/hooks/profile/useProfileData.ts` — thay `currentUser?.friendIds` bằng hook/selector
-- `src/pages/ChatPage.tsx` — thay `currentUser.friendIds || []` bằng `contactStore.friends.map(f=>f.id)`
-- `src/components/ui/UserAvatar.tsx` — thay `currentUser?.friendIds?.includes(userId)` bằng contactStore
-- `src/components/profile/PhotosTab.tsx` — thay `currentUser.friendIds || []`
-- `src/services/userService.ts` — sửa `getUserStats` không dùng `userDoc.data()?.friendIds`
+- `firestore.rules` hoặc tạo `functions/src/messages/onMessageCreated.ts`
 
-- [x] Bỏ `friendIds` khỏi `User` type
-- [x] Sửa `useFriendIds` → đọc contactStore
-- [x] Sửa `useProfileData` → dùng contactStore friendIds
-- [x] Sửa `ChatPage` → truyền contactStore friend IDs
-- [x] Sửa `UserAvatar` → dùng contactStore
-- [x] Sửa `PhotosTab` → dùng contactStore
-- [x] Sửa `getUserStats` → đếm từ subcollection friends, không dùng user doc
+- [ ] Quyết định approach xử lý block trong existing conversations
+- [ ] Implement block enforcement cho message creation
 
 ---
 
-### TASK-02 — Block check trong `conversationService` đọc sai location
+### MISSING-03 — Không có thông báo khi ai đó react vào tin nhắn của bạn
 
-**Vấn đề:** `getOrCreateConversation` kiểm tra block bằng cách đọc `user.data().blockedUserIds` từ **user document chính**. Nhưng `userService.blockUser()` ghi vào `users/{uid}/private/security` — không bao giờ cập nhật field `blockedUserIds` trên user document. Kết quả: **block check LUÔN trả về false** → người bị chặn vẫn tạo được conversation.
+**Spec (UC-NT06 - Cảm xúc tin nhắn):** Không nêu rõ có notification hay không, nhưng đây là gap đáng chú ý so với hành vi react comment (có notification `REACT_COMMENT`).
 
-**Fix:** Đọc block list từ `users/{uid}/private/security` (dùng thêm 2 getDoc) khi tạo conversation.
+**Hiện trạng:**
+
+- `onMessageReactionWrite` CF: cập nhật conversation `lastMessage` hiển thị reaction, nhưng **không tạo AppNotification** cho chủ tin nhắn
+- `NotificationType` enum: không có `REACT_MESSAGE`
+- So sánh: comment reaction → `REACT_COMMENT` notification ✅, message reaction → không có
+
+**Nhận xét khách quan:** Notification cho message reaction có thể gây spam nếu chat nhóm đông người. Có thể giới hạn: chỉ notify trong chat 1-1, hoặc không notify (điều chỉnh spec).
+
+**Files cần sửa (nếu triển khai):**
+
+- `src/types.ts` — thêm `REACT_MESSAGE = "react_message"` vào `NotificationType`
+- `functions/src/notifications/onMessageReactionWrite.ts` — thêm createNotification
+- `src/services/notificationService.ts` — thêm case `REACT_MESSAGE` trong `getNotificationText`
+
+- [ ] Quyết định có notify message reaction hay không
+- [ ] Nếu có: thêm `NotificationType.REACT_MESSAGE` và implement trong CF
+
+---
+
+### MISSING-04 — Notification "lời mời kết bạn" không bị xóa khi sender hủy lời mời
+
+**Vấn đề:** Khi sender gọi `friendService.cancelFriendRequest()` (xóa document khỏi `friendRequests`), không có Cloud Function nào xử lý việc xóa notification tương ứng cho receiver. Receiver vẫn thấy thông báo "X muốn kết bạn với bạn" dù lời mời đã bị hủy. Nhấn vào notification sẽ lỗi vì document không tồn tại.
+
+**Files cần tạo:**
+
+- `functions/src/friends/onFriendRequestDeleted.ts` — Khi `friendRequest` bị xóa, tìm và xóa notification `FRIEND_REQUEST` tương ứng
+
+- [ ] Tạo `onFriendRequestDeleted` CF để cleanup notification khi hủy lời mời
+- [ ] Xử lý navigation trong `NotificationItem` khi click vào notification có data bị xóa
+
+---
+
+## 🟠 DRIFT — Hành vi khác với spec nhưng hợp lý hơn
+
+### DRIFT-01 — Rời nhóm: tự động chuyển owner vs. UI cho chọn
+
+**Spec:** "Là Chủ nhóm: hệ thống yêu cầu chỉ định Chủ nhóm mới trước khi rời."
+
+**Thực tế:**
+
+- UI (`useChatGroups.handleLeaveGroup`) → hiển thị `TransferAdminModal` cho user chọn ✅ (đúng spec)
+- Service (`groupService.leaveGroup`) → cũng có fallback tự động set `creatorId = newAdminIds[0] || newParticipantIds[0]` nếu không qua UI
+
+Behavior thực tế hơi khác: nếu gọi `leaveGroup` trực tiếp mà không qua modal, server sẽ tự assign owner mà không cần user chọn. **Đây là behavior hợp lý** hơn spec (đảm bảo nhóm không mất owner trong bất kỳ trường hợp nào). **Spec nên cập nhật** để phản ánh: "nếu user không chọn, hệ thống tự chỉ định admin đầu tiên làm chủ nhóm mới."
+
+**Đề xuất:** Không cần fix code. **Cập nhật spec.**
+
+- [ ] Cập nhật quy trình nghiệp vụ UC-NT11: bổ sung fallback khi không chọn được owner
+
+---
+
+### DRIFT-02 — Từ chối lời mời kết bạn: document bị update vs. bị xóa
+
+**Spec:** "Từ chối: Lời mời bị hủy, người gửi không nhận được thông báo từ chối." — Không nêu rõ document Firestore bị xóa hay chỉ update status.
+
+**Thực tế:**
+
+- `friendService.rejectFriendRequest` → `updateDoc` với `status: REJECTED` (cập nhật, không xóa)
+- Nhưng `onFriendRequestStatusChange` CF chỉ xử lý `PENDING → ACCEPTED`, không xử lý `PENDING → REJECTED`
+- Kết quả: document với `status: REJECTED` tồn tại mãi trong Firestore + không được dọn dẹp
+
+**Nhận xét:** Nên thêm cleanup cho rejected requests hoặc đổi thành xóa document như cách `cancelFriendRequest` làm.
 
 **Files cần sửa:**
 
-- `src/services/chat/conversationService.ts` — `getOrCreateConversation`: thay đọc `user.data().blockedUserIds` bằng đọc `users/{uid}/private/security`
+- `src/services/friendService.ts` — đổi `rejectFriendRequest` thành `deleteDoc` thay vì `updateDoc`  
+  **HOẶC** tạo scheduled cleanup để xóa các `friendRequests` có status `REJECTED`
 
-- [x] Sửa `getOrCreateConversation` đọc block từ `private/security`
+- [ ] Quyết định approach: delete rejected request document hay scheduled cleanup
 
 ---
 
-### TASK-03 — `userService.banUser/unbanUser` không revoke token
+### DRIFT-03 — Chỉ subscription bắt lời mời chứ không có one-time fetch trong ContactsPage
 
-**Vấn đề:** Admin panel (`UsersView.tsx`) gọi `userService.banUser(userId)` / `userService.unbanUser(userId)` — hàm này **chỉ** cập nhật `status` field trong Firestore, **không set Custom Claims**, **không revoke refresh tokens**. User bị ban vẫn tiếp tục xác thực bình thường. CF `banUser` mới là implementation đúng.
+**Spec:** Không nêu cụ thể realtime hay one-time fetch. Thực tế App dùng `subscribeToSentRequests` / `subscribeToReceivedRequests` — hoàn toàn hợp lý hơn spec, không cần fix.
 
-**Fix:** Thay `userService.banUser/unbanUser` trong `UsersView` bằng callable CF `banUser`. Xóa `banUser`/`unbanUser` khỏi `userService`.
+- [ ] Cập nhật spec: lời mời kết bạn được theo dõi realtime (không cần refresh)
+
+---
+
+## � MISSING (bổ sung)
+
+### MISSING-05 — `searchUsers` CF không lọc user bị chặn khỏi kết quả tìm kiếm
+
+**Spec (Section 9 — Quy trình Chặn Người dùng):** "Tên người bị chặn không xuất hiện trong kết quả tìm kiếm."
+
+**Hiện trạng:** `functions/src/search/searchUsers.ts` chỉ lọc `status != 'banned'` và `id != currentUserId`. Không có bất kỳ logic nào kiểm tra quan hệ block giữa người tìm và kết quả trả về. Kết quả: người dùng có thể tìm thấy và nhìn thấy profile của người đã chặn mình (hoặc người mình đã chặn) qua thanh tìm kiếm.
 
 **Files cần sửa:**
 
-- `src/components/admin/UsersView.tsx` — gọi CF `banUser` thay vì `userService.banUser`
-- `src/services/userService.ts` — xóa `banUser()` và `unbanUser()`
+- `functions/src/search/searchUsers.ts` — sau khi lấy kết quả, đọc `private/security` của `currentUserId` để lọc bỏ các user có quan hệ block với người tìm kiếm
 
-- [x] Sửa `UsersView` gọi CF callable `banUser`
-- [x] Xóa `userService.banUser()` và `userService.unbanUser()`
+- [ ] Sửa `searchUsers` CF: lọc bỏ user có quan hệ block (cả hai chiều) khỏi kết quả tìm kiếm
 
 ---
 
-### TASK-04 — Orphan fields `pinned: false` và `muted: false` khi tạo conversation
+## 🔵 SPEC UPDATE — Cập nhật quy trình nghiệp vụ
 
-**Vấn đề:** `conversationService.getOrCreateConversation` lưu `pinned: false` (boolean). `groupService.createGroupConversation` lưu `pinned: false` và `muted: false`. App không bao giờ đọc field `pinned` hay `muted` — logic dùng `pinnedBy: string[]` và `mutedUsers: Record<string, boolean>`. Đây là dead data được ghi vào mỗi conversation.
+### SPEC-01 — Ghi âm tin nhắn thoại: UI đã có nhưng không được mô tả rõ
 
-**Fix:** Xóa `pinned: false` và `muted: false` khỏi create payload. Khởi tạo đúng: `pinnedBy: []` và `mutedUsers: {}`.
+**Spec:** Bảng loại tin nhắn có "Tin nhắn thoại: Ghi âm và gửi ngay trong ứng dụng" — nhưng không nêu:
 
-**Files cần sửa:**
+- Không có thời gian ghi âm tối đa
+- Không nêu rõ có thể preview trước khi gửi không
 
-- `src/services/chat/conversationService.ts` — xóa `pinned: false`, thêm `pinnedBy: []` nếu cần
-- `src/services/chat/groupService.ts` — xóa `pinned: false`, `muted: false`, thêm `pinnedBy: []`, `mutedUsers: {}`
+**Thực tế:**
 
-- [x] Sửa `conversationService.getOrCreateConversation` payload
-- [x] Sửa `groupService.createGroupConversation` payload
+- `RecordingUI.tsx` hiển thị duration khi đang ghi
+- `ChatInput.tsx`: sau khi dừng ghi, file voice xuất hiện trong preview queue, user xem trước rồi mới gửi
+- `useAudioRecorder` hook xử lý `MediaRecorder` API
 
----
+**Đề xuất:** Bổ sung giới hạn thời gian ghi âm (ví dụ 5 phút) và mô tả flow preview trước khi gửi vào spec.
 
-## 🟡 DEAD CODE — Xóa hoàn toàn
-
-### TASK-05 — Dead methods trong `notificationService`
-
-**Vấn đề:**
-
-- `createNotification()` — Firestore rules `allow create: if false` trên collection `notifications`. Hàm này sẽ luôn throw permission error. Không có nơi nào trong frontend gọi `notificationService.createNotification()`. Chỉ CF mới được tạo notification.
-- `deleteNotificationsByPostId()` — Không có nơi nào gọi hàm này. CF `onPostDeleted` xử lý việc này server-side.
-- `getNotifications()` — Không được gọi ở đâu. Chỉ `subscribeToNotifications` được dùng.
-
-**Fix:** Xóa cả 3 hàm.
-
-**Files cần sửa:**
-
-- `src/services/notificationService.ts` — xóa `createNotification()`, `deleteNotificationsByPostId()`, `getNotifications()`
-
-- [x] Xóa `notificationService.createNotification()`
-- [x] Xóa `notificationService.deleteNotificationsByPostId()`
-- [x] Xóa `notificationService.getNotifications()`
+- [ ] Bổ sung giới hạn thời gian ghi âm vào `appConfig.ts` (hiện chưa có `VOICE_MAX_DURATION`)
+- [ ] Cập nhật spec: flow ghi âm → preview → gửi
 
 ---
 
-### TASK-06 — Dead methods trong `contactStore` và `authStore`
+### SPEC-02 — Cắt ảnh (Image Cropper) khi đổi avatar/ảnh bìa chưa được đề cập
 
-**Vấn đề:**
+**Thực tế:** `ProfileHeader.tsx` mở `ImageCropper` modal trước khi upload, cho phép:
 
-- `contactStore.fetchReceivedRequests()` và `fetchSentRequests()` — không bao giờ được gọi. App chỉ dùng `subscribeToRequests()` (realtime). Hai hàm one-time fetch này là dead code.
-- `authStore.unfriendUser()` — thân hàm trống hoàn toàn, chỉ có comment. Không làm gì.
-- `contactStore.acceptFriendRequest` có params `_userId` và `_friendId` không bao giờ dùng.
+- Crop ảnh với tỷ lệ cố định (avatar: vuông, cover: 16:9)
+- Checkbox "Chia sẻ lên bảng tin" (true/false)
 
-**Fix:** Xóa dead methods, làm gọn signature.
+Spec chỉ nói "Người dùng tải lên ảnh mới", không đề cập đến crop flow. Đây là UX tốt cần document lại.
 
-**Files cần sửa:**
-
-- `src/store/contactStore.ts` — xóa `fetchReceivedRequests`, `fetchSentRequests`, clean `acceptFriendRequest` params
-- `src/store/authStore.ts` — xóa `unfriendUser`
-
-- [x] Xóa `contactStore.fetchReceivedRequests()`
-- [x] Xóa `contactStore.fetchSentRequests()`
-- [x] Xóa `authStore.unfriendUser()`
-- [x] Clean params của `acceptFriendRequest`
+- [ ] Bổ sung bước crop ảnh vào quy trình "Cập nhật ảnh đại diện và ảnh bìa"
 
 ---
 
-### TASK-07 — Dead hook `useFriendIds`
+### SPEC-03 — Tìm kiếm người dùng: chỉ hỗ trợ email chính xác, spec Admin nêu "tên hoặc email"
 
-**Vấn đề:** `useFriendIds` hook ở `src/hooks/utils/useFriendIds.ts` không được import/sử dụng ở bất kỳ component hay hook nào. Chỉ export từ index. Kết hợp với TASK-01: hook này cần được sửa nội dung (dùng contactStore) và sau đó sử dụng thật sự.
+**Spec Section 11 (Admin):** "Tìm kiếm tài khoản theo tên hoặc email."
 
-**Fix (kết hợp với TASK-01):** Sửa nội dung hook dùng `contactStore`, sau đó thay thế tất cả `user.friendIds` logic bằng hook này.
+**Thực tế:** `searchUsers` CF chỉ hỗ trợ tìm kiếm bằng email chính xác (`.where('email', '==', ...)`). Không hỗ trợ tìm theo tên. Admin panel cũng dùng chung logic này nên không thể tìm user theo tên như spec mô tả.
 
-**Files cần sửa:**
-
-- `src/hooks/utils/useFriendIds.ts` — Sửa implementation
-
-- [x] Sửa `useFriendIds` dùng `contactStore` (kết hợp TASK-01)
+- [ ] Cân nhắc bổ sung tìm kiếm theo tên hoặc điều chỉnh spec Admin để chỉ tìm theo email
 
 ---
 
-### TASK-08 — Dead fields trong `Message` type
+### SPEC-04 — Trạng thái online/offline: spec không nhắc đến
 
-**Vấn đề:**
+**Đã triển khai:**
 
-- `Message.videoThumbnails?: Record<string, string>` — Không có code nào trong `messageService` hay store set field này cho messages. Thumbnails chỉ tồn tại trên `posts`, không phải `messages`.
-- `Message.deliveredAt?: Date` — Redundant với `deliveredTo: string[]`. State "đã giao" được track bằng array ID, không cần timestamp riêng. Field này được set trong `createAndSendMediaMessage` nhưng không có logic nào đọc/so sánh nó ở UI.
+- `usePresenceStore` + Realtime Database `/status/{uid}`
+- `UserAvatar` hiển thị dot trạng thái (online/offline)
+- `lastSeen` được cập nhật
 
-**Fix:** Xóa `videoThumbnails` và `deliveredAt` khỏi `Message` type và tất cả nơi set chúng.
+**Đề xuất:** Bổ sung vào spec quy tắc hiển thị trạng thái.
 
-**Files cần sửa:**
-
-- `src/types.ts` — xóa `videoThumbnails?` và `deliveredAt?` khỏi `Message`
-- `src/services/chat/messageService.ts` — xóa `deliveredAt: serverTimestamp()` khi tạo message
-
-- [x] Xóa `Message.videoThumbnails`
-- [x] `Message.deliveredAt` — giữ lại, đang dùng trong delivery tracking logic (`markAsDelivered`, `markAsRead`)
-
----
-
-### TASK-09 — `User.blockedUserIds` trên user document là dead field
-
-**Vấn đề:** `User.blockedUserIds?: string[]` định nghĩa trong type. `authStore` load từ `private/security` vào `user.blockedUserIds` khi init — OK. Nhưng field này **không** tồn tại trên user Firestore document (chỉ trong `private/security`). Exposing private data qua public User type gây nhầm lẫn.
-
-Hiện tại:
-
-- `batchGetUsers` trả về User objects — sẽ không có `blockedUserIds` (vì không trên doc)
-- `authStore` merge `blockedUserIds` vào user state từ `private/security` — đây là runtime state, không phải Firestore field
-- Các component đọc `currentUser.blockedUserIds` — chỉ hoạt động do authStore merge
-
-**Fix:** Tách riêng `blockedUserIds` khỏi `User` interface. Tạo `AuthUser extends User { blockedUserIds: string[] }` hoặc dùng separate state trong authStore.
-
-**Files cần sửa:**
-
-- `src/types.ts` — tách `blockedUserIds` ra khỏi `User`, đặt riêng trong authStore state
-- `src/store/authStore.ts` — lưu `blockedUserIds` như state riêng, không merge vào user object
-- Tất cả places dùng `user.blockedUserIds` → đọc từ authStore state riêng
-
-- [x] Tách `blockedUserIds` ra khỏi User type
-- [x] Sửa authStore lưu blockedUserIds riêng
-- [x] Update tất cả consumers
-
----
-
-## 🟠 CODE DUPLICATION — Refactor
-
-### TASK-10 — `extractStoragePath` + `deleteStorageFile` định nghĩa 2 lần
-
-**Vấn đề:** Hai functions `extractStoragePath` và `deleteStorageFile` được copy-paste giống hệt trong:
-
-- `functions/src/posts/onPostDeleted.ts`
-- `functions/src/comments/onCommentDeleted.ts`
-
-**Fix:** Tạo `functions/src/helpers/storageHelper.ts`, export 2 functions, import ở cả 2 file.
-
-**Files cần sửa:**
-
-- Tạo `functions/src/helpers/storageHelper.ts`
-- `functions/src/posts/onPostDeleted.ts` — import từ helper
-- `functions/src/comments/onCommentDeleted.ts` — import từ helper
-
-- [x] Tạo `storageHelper.ts` trong functions/helpers
-- [x] Refactor `onPostDeleted` dùng helper
-- [x] Refactor `onCommentDeleted` dùng helper
-
----
-
-### TASK-11 — `batchGetUsers` bỏ sót conversion `birthDate`
-
-**Vấn đề:** `userService.convertDocToUser()` convert `birthDate: convertTimestamp(data?.birthDate)` nhưng `batchGetUsers` trong `batchUtils.ts` **không** convert `birthDate`. User objects từ `batchGetUsers` có `birthDate` là Firestore Timestamp thay vì JS Date — gây lỗi tiềm ẩn khi so sánh/render date.
-
-**Fix:** Thêm `birthDate: convertTimestamp(doc.data().birthDate)` vào `batchGetUsers`.
-
-**Files cần sửa:**
-
-- `src/utils/batchUtils.ts` — thêm `birthDate` conversion
-
-- [x] Thêm `birthDate` conversion vào `batchGetUsers`
-
----
-
-### TASK-12 — `getUserStats` đếm friendCount sai
-
-**Vấn đề:** `getUserStats` tính `friendCount` bằng `userDoc.data()?.friendIds || []`. Field `friendIds` không tồn tại trên user document → luôn trả về 0. Nên đếm từ subcollection `users/{userId}/friends`.
-
-**Fix:** Thay `userDoc.data()?.friendIds` bằng `getCountFromServer(collection(db, 'users', userId, 'friends'))`.
-
-**Files cần sửa:**
-
-- `src/services/userService.ts` — sửa `getUserStats` dùng `getCountFromServer` trên friends subcollection
-
-- [x] Sửa `getUserStats` đếm từ subcollection
-
----
-
-## 🔵 SCHEMA & INDEX — Database
-
-### TASK-13 — Thiếu Composite Index cho `notifications`
-
-**Vấn đề:** `subscribeToNotifications` và `getNotifications` query: `where('receiverId', '...).orderBy('createdAt', 'desc')`. Firestore cần composite index cho query này nhưng không có trong `firestore.indexes.json`.
-
-**Fix:** Thêm index vào `firestore.indexes.json`.
-
-- [x] Thêm index `notifications`: `receiverId ASC` + `createdAt DESC`
-
----
-
-### TASK-14 — Thiếu Composite Index cho `reports` cleanup
-
-**Vấn đề:** Scheduled cleanup `cleanupOrphanedReports` query: `where('status', '==', 'orphaned').where('createdAt', '<', date)`. Cần composite index.
-
-**Fix:** Thêm vào `firestore.indexes.json`.
-
-- [x] Thêm index `reports`: `status ASC` + `createdAt ASC`
-- [x] Thêm index `reports`: (cho `cleanupOldNotifications` nếu cần) `isRead ASC` + `createdAt ASC` trên `notifications`
-
----
-
-### TASK-15 — Làm sạch `BaseEntity.updatedAt` inconsistency
-
-**Vấn đề:** `BaseEntity` định nghĩa `updatedAt?: Date` nhưng nhiều entities không set field này khi update. `posts` dùng `isEdited/editedAt`, `comments` không có `updatedAt`, `users` không set `updatedAt`. Field này là optional noise không mang lại giá trị nhất quán.
-
-**Fix:** Xóa `updatedAt` khỏi `BaseEntity`. Giữ lại nơi thực sự cần (conversations đã dùng `updatedAt` cho sort — cần giữ riêng trong `Conversation` type).
-
-**Files cần sửa:**
-
-- `src/types.ts` — xóa `updatedAt?` khỏi `BaseEntity`, thêm `updatedAt: Date` riêng vào `Conversation` interface
-
-- [x] Xóa `updatedAt` từ `BaseEntity`
-- [x] Thêm `updatedAt` trực tiếp vào `Conversation` interface
-
----
-
-## 🟣 TYPE CLEANUP — Tinh gọn types
-
-### TASK-16 — `Message.reactorId` chỉ là lastMessage preview field
-
-**Vấn đề:** `Message.reactorId?: string` trong type chính. Field này chỉ được set trong `onMessageReactionWrite` CF khi cập nhật `lastMessage` snapshot trong conversation document — không phải trên message document thật. Nó không phải thuộc tính của Message entity.
-
-**Fix:** Xóa `reactorId` khỏi `Message` interface. Tạo type riêng `LastMessagePreview` trong `Conversation` để phản ánh đúng cấu trúc.
-
-**Files cần sửa:**
-
-- `src/types.ts` — xóa `reactorId?` khỏi `Message`, thêm inline type cho `lastMessage` trong `Conversation`
-- `src/hooks/chat/useConversationItem.ts` — điều chỉnh type access
-
-- [x] Xóa `Message.reactorId`
-- [x] Tạo `LastMessagePreview` type cho `Conversation.lastMessage`
-- [x] Cập nhật `useConversationItem` type access
-
----
-
-### TASK-17 — `ReportReason` import trong `notificationService` không dùng
-
-**Vấn đề:** `notificationService.ts` import `ReportReason` từ types nhưng không dùng trong file này (chỉ dùng `REPORT_CONFIG` cho labels).
-
-**Fix:** Xóa import thừa.
-
-**Files cần sửa:**
-
-- `src/services/notificationService.ts` — xóa `ReportReason` import
-
-- [x] Xóa `ReportReason` import thừa trong notificationService
-
----
-
-### TASK-18 — `contactStore` interface thừa `addFriend`/`removeFriend` methods
-
-**Vấn đề:** `ContactState` interface khai báo `addFriend(friend: User)` và `removeFriend(friendId: string)` nhưng thực tế không có implementation nào trong store (subscribeToFriends tự update qua snapshot). Cần kiểm tra xem có implementation hay chỉ là dead interface declaration.
-
-**Fix:** Kiểm tra và xóa nếu không có implementation.
-
-**Files cần sửa:**
-
-- `src/store/contactStore.ts` — kiểm tra và xóa dead interface methods
-
-- [x] Kiểm tra và xóa `addFriend`/`removeFriend` nếu không implemented
+- [ ] Bổ sung quy tắc hiển thị online/offline vào spec
 
 ---
 
 ## ✅ CHECKLIST HOÀN THÀNH
 
-| Task    | Mô tả ngắn                                                        | Priority    | Status |
-| ------- | ----------------------------------------------------------------- | ----------- | ------ |
-| TASK-01 | Fix `user.friendIds` không được populate — thay bằng contactStore | 🔴 CRITICAL | [x]    |
-| TASK-02 | Fix block check trong conversation đọc sai location               | 🔴 CRITICAL | [x]    |
-| TASK-03 | Fix admin ban dùng sai API — thay bằng CF callable                | 🔴 CRITICAL | [x]    |
-| TASK-04 | Xóa orphan fields `pinned/muted` khi tạo conversation             | 🔴 CRITICAL | [x]    |
-| TASK-05 | Xóa 3 dead methods trong notificationService                      | 🟡 HIGH     | [x]    |
-| TASK-06 | Xóa dead methods contactStore + authStore                         | 🟡 HIGH     | [x]    |
-| TASK-07 | Sửa `useFriendIds` hook (kết hợp TASK-01)                         | 🟡 HIGH     | [x]    |
-| TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [x]    |
-| TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [x]    |
-| TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [x]    |
-| TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [x]    |
-| TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [x]    |
-| TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [x]    |
-| TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [x]    |
-| TASK-15 | Xóa `updatedAt` từ BaseEntity, giữ riêng ở Conversation           | 🔵 DB       | [x]    |
-| TASK-16 | Làm sạch `Message.reactorId` type                                 | 🟣 TYPE     | [x]    |
-| TASK-17 | Xóa `ReportReason` import thừa                                    | 🟣 TYPE     | [x]    |
-| TASK-18 | Kiểm tra `addFriend`/`removeFriend` trong contactStore            | 🟣 TYPE     | [x]    |
+| Task       | Mô tả ngắn                                                    | Priority   | Status |
+| ---------- | ------------------------------------------------------------- | ---------- | ------ |
+| MISSING-01 | Triển khai kiểm duyệt ảnh nhạy cảm (Vision API)               | 🟡 MISSING | [ ]    |
+| MISSING-02 | Block phải ngăn message trong existing conversation           | 🟡 MISSING | [ ]    |
+| MISSING-03 | Notification khi react message                                | 🟡 MISSING | [ ]    |
+| MISSING-04 | Cleanup notification khi hủy lời mời kết bạn                  | 🟡 MISSING | [ ]    |
+| MISSING-05 | `searchUsers` CF không lọc user bị chặn khỏi kết quả tìm kiếm | 🟡 MISSING | [ ]    |
+| DRIFT-01   | Spec về rời nhóm: cập nhật fallback auto-assign owner         | 🟠 DRIFT   | [ ]    |
+| DRIFT-02   | Reject friend request: xóa document thay vì update            | 🟠 DRIFT   | [ ]    |
+| DRIFT-03   | Spec: ghi nhận realtime subscription cho friend request       | 🟠 DRIFT   | [ ]    |
+| SPEC-01    | Bổ sung giới hạn ghi âm + cập nhật flow                       | 🔵 SPEC    | [ ]    |
+| SPEC-02    | Bổ sung bước Image Cropper vào flow đổi avatar/cover          | 🔵 SPEC    | [ ]    |
+| SPEC-03    | Điều chỉnh search Admin: tên hoặc email vs. chỉ email         | 🔵 SPEC    | [ ]    |
+| SPEC-04    | Bổ sung quy tắc online/offline vào spec                       | 🔵 SPEC    | [ ]    |
 
 ---
 
-## 📊 DATABASE DESIGN — Đánh giá hiện tại
+## 📋 GHI CHÚ PHÂN TÍCH
 
-### Collections Schema (Đã triển khai và đúng)
+### Những thứ HOẠT ĐỘNG ĐÚNG với spec
 
-```
-users/{uid}
-  name, avatar, email, status, bio, coverImage
-  location?, gender?, birthDate?, lastSeen?, createdAt
-
-users/{uid}/friends/{friendId}           ← Source of truth cho friends
-  friendId, createdAt
-
-users/{uid}/private/security             ← Private, chỉ owner đọc
-  blockedUserIds[]
-
-users/{uid}/private/fcm                  ← CF-only write
-  tokens[]
-
-posts/{id}
-  userId, content, images[], videos[], videoThumbnails{}
-  commentCount, reactionCount, reactionSummary{}
-  visibility, type?, isEdited, editedAt?, createdAt
-
-posts/{id}/reactions/{userId}
-  type (reaction enum)
-
-comments/{id}
-  postId, userId, parentId?, replyToUserId?
-  content, image?, replyCount, reactionCount, reactionSummary{}
-  createdAt
-
-comments/{id}/reactions/{userId}
-  type
-
-conversations/{id}
-  participantIds[], isGroup
-  groupName?, groupAvatar?, creatorId?, adminIds[]
-  unreadCount{userId: number}, lastMessage{}
-  pinnedBy[], mutedUsers{userId: bool}, archivedBy[]
-  markedUnreadBy[], memberJoinedAt{userId: Timestamp}
-  deletedBy[], deletedAt{userId: Timestamp}
-  updatedAt, createdAt
-
-messages/{id}
-  conversationId, senderId, content, type
-  fileUrl?, fileName?, fileSize?
-  readBy[], deliveredTo[]
-  replyToId?, replyToSnippet{}
-  isRecalled?, recalledAt?, isEdited?, editedAt?
-  deletedBy[], isForwarded?, mentions[]
-  reactionCount, reactionSummary{}
-  createdAt
-
-messages/{id}/reactions/{userId}
-  type
-
-notifications/{id}                       ← CF-only create
-  receiverId, senderId, type, data{}, isRead, createdAt
-
-friendRequests/{id}
-  senderId, receiverId, status, message?, createdAt, updatedAt?
-
-reports/{id}
-  reporterId, targetType, targetId, targetOwnerId
-  reason, description?, images[]
-  status, resolvedAt?, resolvedBy?, resolution?
-  createdAt
-
-config/admins
-  adminIds[]
-```
-
-### Realtime Database
-
-```
-/status/{uid}                  ← Presence (online/offline)
-  status, lastSeen
-
-/callNotifications/{userId}    ← WebRTC/ZegoCloud signaling
-```
-
-### Đánh giá thiết kế
-
-- **Tốt:** Reactions dùng subcollection → không array-contains limit, CF trigger clean
-- **Tốt:** Private data trong subcollection `private/*` → security rules rõ ràng
-- **Tốt:** Custom Claims cho admin/banned → không Firestore read trong rules
-- **Cần fix:** `friendIds` trên user doc không được maintain (TASK-01)
-- **Cần fix:** `blockedUserIds` không trên user doc nhưng code đọc từ đó (TASK-02, TASK-09)
-- **Cần fix:** Orphan fields trong conversations mới tạo (TASK-04)
+| Quy trình                                                        | Trạng thái                            |
+| ---------------------------------------------------------------- | ------------------------------------- |
+| Đăng ký → Xác thực email → Đăng nhập                             | ✅ Hoàn toàn đúng                     |
+| Quên mật khẩu (email reset)                                      | ✅ Đúng                               |
+| Tài khoản bị ban → BannedPage                                    | ✅ Đúng                               |
+| Ghi nhớ email đăng nhập (rememberMe)                             | ✅ Đúng                               |
+| Chỉnh sửa thông tin cá nhân                                      | ✅ Đúng                               |
+| Đổi avatar/cover → tạo bài viết (với lựa chọn người dùng)        | ✅ Đúng                               |
+| Xóa avatar/cover                                                 | ✅ Đúng                               |
+| Gửi/Hủy/Chấp nhận/Từ chối lời mời kết bạn                        | ✅ Đúng                               |
+| Không notify khi bị từ chối kết bạn                              | ✅ Đúng (spec yêu cầu)                |
+| Tạo/Sửa/Xóa bài viết                                             | ✅ Đúng                               |
+| Visibility PUBLIC/FRIENDS/PRIVATE cho bài viết                   | ✅ Đúng                               |
+| Feed realtime, pagination vô hạn                                 | ✅ Đúng                               |
+| Không hiển thị bài viết của user bị ban/bị chặn                  | ✅ Đúng                               |
+| 6 loại reaction cho bài viết                                     | ✅ Đúng                               |
+| Bình luận 2 cấp (root + reply)                                   | ✅ Đúng                               |
+| Max 1 ảnh / bình luận                                            | ✅ Đúng                               |
+| Sửa/Xóa bình luận                                                | ✅ Đúng                               |
+| React bình luận + notify tác giả                                 | ✅ Đúng                               |
+| Báo cáo bình luận + check đã báo cáo chưa                        | ✅ Đúng                               |
+| Lọc bình luận từ user bị ban/bị chặn                             | ✅ Đúng                               |
+| Chat 1-1: nhắn tin với anyone, không cần là bạn                  | ✅ Đúng                               |
+| Stranger messages → "Tin nhắn chờ" section                       | ✅ Đúng                               |
+| MessageRequestBanner trong ChatBox với trạng thái friend request | ✅ Đúng                               |
+| Không nhắn tin khi TẠO conversation mới với người đã chặn        | ✅ Đúng                               |
+| Trạng thái Đã gửi → Đã nhận → Đã xem                             | ✅ Đúng                               |
+| Thu hồi tin nhắn (hiện "Tin nhắn đã được thu hồi")               | ✅ Đúng                               |
+| Chỉnh sửa tin nhắn trong 5 phút                                  | ✅ Đúng                               |
+| Reply / Forward / React tin nhắn                                 | ✅ Đúng                               |
+| Xóa tin nhắn phía mình (deletedBy)                               | ✅ Đúng                               |
+| @mention trong nhóm                                              | ✅ Đúng                               |
+| Chặn/Bỏ chặn từ profile và ChatBox (UC_Block_User)               | ✅ Đúng                               |
+| Block: tự động unfriend + ẩn khỏi search                         | ✅ Đúng (trừ search — xem MISSING-05) |
+| Ghim hội thoại (UC-NT14)                                         | ✅ Đúng                               |
+| Tắt/bật thông báo hội thoại (UC-NT15)                            | ✅ Đúng                               |
+| Lưu trữ/bỏ lưu trữ hội thoại (UC-NT16)                           | ✅ Đúng                               |
+| Đánh dấu chưa/đã đọc hội thoại (UC-NT17)                         | ✅ Đúng                               |
+| Xóa hội thoại phía mình (UC-NT18, soft delete)                   | ✅ Đúng                               |
+| Cập nhật thông tin nhóm (UC-NT13)                                | ✅ Đúng                               |
+| Gọi âm thanh/video 1-1 (UC-GD01, qua ZegoCloud)                  | ✅ Đúng                               |
+| Gọi nhóm (UC-GD02, tất cả thành viên)                            | ✅ Đúng                               |
+| Ghi âm và gửi tin nhắn thoại                                     | ✅ Đúng                               |
+| Max 10 file / lần gửi                                            | ✅ Đúng                               |
+| Tạo nhóm (min 2, max 100 thành viên)                             | ✅ Đúng                               |
+| Thêm/xóa thành viên nhóm (chỉ admin/owner)                       | ✅ Đúng                               |
+| Gán/thu hồi quyền admin                                          | ✅ Đúng                               |
+| Rời nhóm (tự động assign owner mới nếu owner rời)                | ✅ Đúng (có UI chọn + fallback)       |
+| Giải tán nhóm (chỉ owner)                                        | ✅ Đúng                               |
+| Tin nhắn hệ thống cho tất cả thay đổi nhóm                       | ✅ Đúng                               |
+| Push notification (FCM) cho reactions, comments, friends         | ✅ Triển khai                         |
+| Ban/Unban user (CF callable với token revoke)                    | ✅ Đúng                               |
+| Resolve/Reject report (CF callable)                              | ✅ Đúng                               |
+| Kiểm tra đã báo cáo trước chưa (`hasUserReported`)               | ✅ Đúng                               |

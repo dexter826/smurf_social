@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Message, User, Conversation, FriendStatus, FriendRequest } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
+import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
 import { friendService } from '../services/friendService';
@@ -89,11 +90,12 @@ export const useChat = () => {
     return () => { unsubSent(); unsubReceived(); };
   }, [currentUser?.id]);
 
-  // Tính trạng thái bạn bè với partner từ friendIds
+  // Tính trạng thái bạn bè với partner từ contactStore
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
   const partnerFriendStatus = useMemo(() => {
-    if (!partnerId || !currentUser?.friendIds) return undefined;
-    return currentUser.friendIds.includes(partnerId) ? FriendStatus.FRIEND : undefined;
-  }, [partnerId, currentUser?.friendIds]);
+    if (!partnerId) return undefined;
+    return friendIds.includes(partnerId) ? FriendStatus.FRIEND : undefined;
+  }, [partnerId, friendIds]);
 
   // Tìm pending request ID giữa currentUser và partner
   const partnerPendingRequestId = useMemo(() => {

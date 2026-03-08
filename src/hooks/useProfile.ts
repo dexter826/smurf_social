@@ -110,7 +110,6 @@ export const useProfile = () => {
 
     // Block
     isBlockedByMe: block.isBlockedByMe,
-    isBlockedByThem: block.isBlockedByThem,
     canViewContent: block.canViewContent,
     handleBlockUser: block.handleBlockUser,
     handleUnblockUser: block.handleUnblockUser,
