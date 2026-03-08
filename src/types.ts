@@ -100,14 +100,6 @@ export interface BaseEntity {
   updatedAt?: Date;
 }
 
-export interface MediaAttachment {
-  url: string;
-  type: MessageType | "media";
-  thumbnailUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-}
-
 // ========== CORE INTERFACES ==========
 
 export interface User extends BaseEntity {
