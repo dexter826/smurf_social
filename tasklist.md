@@ -75,8 +75,12 @@
 
 ## Phase 3: Optimization & Scalability (Priority: MEDIUM)
 
-- [ ] **7. Dư thừa và bất đồng bộ dữ liệu**
-  - [ ] Xóa `participants: User[]` từ `Conversation` interface (đã có `participantIds`)
+- [x] **7. Dư thừa và bất đồng bộ dữ liệu**
+  - [x] Xóa `participants: User[]` từ `Conversation` interface (đã có `participantIds`)
+  - [x] Tạo `useConversationParticipants` hook để fetch participants từ `participantIds`
+  - [x] Update tất cả components để dùng hook thay vì `conversation.participants`
+  - [x] Xóa populate logic trong `conversationService.ts`
+  - [x] Verified: Không còn reference nào đến `conversation.participants` trong codebase
   - [ ] Tạo Cloud Function để đồng bộ `lastMessagePreview` khi message bị edit/delete
   - [ ] Tạo Cloud Function để đồng bộ `replyToSnippet` khi message gốc bị edit/delete
   - [ ] Test cascade updates

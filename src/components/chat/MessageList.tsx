@@ -9,6 +9,7 @@ interface MessageListProps {
   currentUserId: string;
   usersMap: Record<string, User>;
   conversation: Conversation;
+  participants: User[];
   lastReadByMap: Record<string, User[]>;
   onRecall?: (messageId: string) => void;
   onDeleteForMe?: (messageId: string) => void;
@@ -27,6 +28,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
   currentUserId,
   usersMap,
   conversation,
+  participants,
   lastReadByMap,
   onRecall,
   onDeleteForMe,
@@ -85,7 +87,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
             name={chatName}
             size="xl"
             isGroup={conversation.isGroup}
-            members={conversation.participants}
+            members={participants}
             initialStatus={partner?.status}
             showStatus={false}
           />
@@ -193,14 +195,14 @@ const MessageListInner: React.FC<MessageListProps> = ({
                     onReply={onReply}
                     onEdit={onEdit}
                     onCall={() => {
-                       if (onCall) {
-                          let isVideo = false;
-                          try {
-                             const parsed = JSON.parse(msg.content);
-                             isVideo = parsed.callType === 'video';
-                          } catch {}
-                          onCall(isVideo);
-                       }
+                      if (onCall) {
+                        let isVideo = false;
+                        try {
+                          const parsed = JSON.parse(msg.content);
+                          isVideo = parsed.callType === 'video';
+                        } catch { }
+                        onCall(isVideo);
+                      }
                     }}
                     currentUserId={currentUserId}
                     usersMap={usersMap}

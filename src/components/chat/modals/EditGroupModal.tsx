@@ -6,6 +6,7 @@ import { groupService } from '../../../services/chat/groupService';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES } from '../../../constants';
 import { validateFileSize } from '../../../utils';
+import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
 interface EditGroupModalProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [showCropper, setShowCropper] = useState(false);
+
+  const participants = useConversationParticipants(conversation.participantIds);
   const [cropImage, setCropImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,19 +86,19 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
     setIsSaving(true);
     try {
       const updates: { groupName?: string; groupAvatar?: string } = {};
-      
+
       if (trimmedName !== conversation.groupName) {
         updates.groupName = trimmedName;
       }
-      
+
       // Upload avatar nếu có file mới
       if (pendingFile) {
         const avatarUrl = await groupService.uploadGroupAvatar(conversation.id, pendingFile);
         updates.groupAvatar = avatarUrl;
       }
-      
+
       await onSave(updates);
-      
+
       // Cleanup
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -113,80 +116,80 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
 
   return (
     <>
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Chỉnh sửa nhóm"
-      maxWidth="sm"
-      footer={
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={onClose}>
-            Hủy
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={!groupName.trim() || !hasChanges || isSaving}
-            isLoading={isSaving}
-          >
-            Lưu thay đổi
-          </Button>
-        </div>
-      }
-    >
-      <div className="space-y-6">
-        {/* Avatar */}
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-primary-light flex items-center justify-center">
-              {previewUrl || groupAvatar ? (
-                <img 
-                  src={previewUrl || groupAvatar} 
-                  alt="Group avatar" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Users size={40} className="text-primary" />
-              )}
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Chỉnh sửa nhóm"
+        maxWidth="sm"
+        footer={
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={onClose}>
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              disabled={!groupName.trim() || !hasChanges || isSaving}
+              isLoading={isSaving}
+            >
+              Lưu thay đổi
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-6">
+          {/* Avatar */}
+          <div className="flex flex-col items-center">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-primary-light flex items-center justify-center">
+                {previewUrl || groupAvatar ? (
+                  <img
+                    src={previewUrl || groupAvatar}
+                    alt="Group avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Users size={40} className="text-primary" />
+                )}
+              </div>
+              <IconButton
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 bg-primary text-white hover:bg-primary-dark shadow-lg"
+                icon={<Camera size={16} />}
+                size="sm"
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
             </div>
-            <IconButton
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 bg-primary text-white hover:bg-primary-dark shadow-lg"
-              icon={<Camera size={16} />}
-              size="sm"
-            />
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
+            <p className="text-xs text-text-tertiary mt-2">
+              Nhấn để thay đổi ảnh nhóm
+            </p>
+          </div>
+
+          {/* Tên nhóm */}
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Tên nhóm
+            </label>
+            <Input
+              placeholder="Nhập tên nhóm..."
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              className="bg-bg-secondary"
             />
           </div>
-          <p className="text-xs text-text-tertiary mt-2">
-            Nhấn để thay đổi ảnh nhóm
-          </p>
-        </div>
 
-        {/* Tên nhóm */}
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">
-            Tên nhóm
-          </label>
-          <Input
-            placeholder="Nhập tên nhóm..."
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            className="bg-bg-secondary"
-          />
+          {/* Thông tin */}
+          <div className="text-center text-sm text-text-tertiary">
+            {participants.length} thành viên
+          </div>
         </div>
-
-        {/* Thông tin */}
-        <div className="text-center text-sm text-text-tertiary">
-          {conversation.participants?.length || 0} thành viên
-        </div>
-      </div>
-    </Modal>
+      </Modal>
 
       {/* Image Cropper Modal */}
       {showCropper && cropImage && (

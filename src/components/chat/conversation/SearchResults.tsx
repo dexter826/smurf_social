@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, X, Clock } from 'lucide-react';
 import { Button, Skeleton, Avatar, UserAvatar } from '../../ui';
 import { Conversation, User, UserStatus } from '../../../types';
+import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
 interface SearchResultsProps {
   searchTerm: string;
@@ -74,70 +75,59 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
             if ('status' in item) {
               return item.status !== UserStatus.BANNED;
             }
-            if ('participants' in item) {
-              return !item.participants.some(p => p.status === UserStatus.BANNED);
+            if ('participantIds' in item) {
+              // Không filter ở đây, để component con xử lý
+              return true;
             }
             return true;
           }).map((item) => {
             const isConversation = 'participantIds' in item;
 
-            // Đồng bộ dữ liệu mới nhất cho hội thoại
-            let displayItem = item;
             if (isConversation) {
-              const latestConv = conversations.find(c => c.id === item.id);
-              if (latestConv) displayItem = latestConv;
-            }
-
-            const itemAsConv = displayItem as Conversation;
-            const itemAsUser = displayItem as User;
-
-            const displayName = isConversation
-              ? (itemAsConv.isGroup ? itemAsConv.groupName : itemAsConv.participants.find(p => p.id !== currentUserId)?.name)
-              : itemAsUser.name;
-            const avatar = isConversation
-              ? (itemAsConv.isGroup ? itemAsConv.groupAvatar : itemAsConv.participants.find(p => p.id !== currentUserId)?.avatar)
-              : itemAsUser.avatar;
-
-            return (
-              <div
-                key={item.id}
-                className="group flex items-center gap-3 px-3 py-2 hover:bg-bg-hover active:bg-bg-active cursor-pointer transition-all duration-base rounded-xl relative"
-                onClick={() => isConversation ? onSelectConversation(item.id) : onSelectUser(item as User)}
-              >
-                {isConversation ? (
-                  <Avatar
-                    src={avatar}
-                    name={displayName || ''}
-                    size="md"
-                    isGroup={itemAsConv.isGroup}
-                    members={itemAsConv.participants}
-                  />
-                ) : (
-                  <UserAvatar
-                    userId={displayItem.id}
-                    src={avatar}
-                    name={displayName || ''}
-                    size="md"
-                    initialStatus={itemAsUser.status}
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-text-primary truncate">
-                    {displayName}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveFromHistory(item.id);
-                  }}
-                  className="text-text-tertiary opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-bg-tertiary active:bg-bg-active rounded-full transition-all duration-base"
-                  icon={<X size={14} />}
+              // Đồng bộ dữ liệu mới nhất cho hội thoại
+              const latestConv = conversations.find(c => c.id === item.id) || item as Conversation;
+              return (
+                <HistoryConversationItem
+                  key={item.id}
+                  conversation={latestConv}
+                  currentUserId={currentUserId}
+                  onSelect={() => onSelectConversation(item.id)}
+                  onRemove={() => onRemoveFromHistory(item.id)}
                 />
-              </div>
-            );
+              );
+            } else {
+              const user = item as User;
+              return (
+                <div
+                  key={item.id}
+                  className="group flex items-center gap-3 px-3 py-2 hover:bg-bg-hover active:bg-bg-active cursor-pointer transition-all duration-base rounded-xl relative"
+                  onClick={() => onSelectUser(user)}
+                >
+                  <UserAvatar
+                    userId={user.id}
+                    src={user.avatar}
+                    name={user.name || ''}
+                    size="md"
+                    initialStatus={user.status}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-text-primary truncate">
+                      {user.name}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveFromHistory(item.id);
+                    }}
+                    className="text-text-tertiary opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-bg-tertiary active:bg-bg-active rounded-full transition-all duration-base"
+                    icon={<X size={14} />}
+                  />
+                </div>
+              );
+            }
           })}
         </div>
       </div>
@@ -188,6 +178,55 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
           </div>
         ))}
       </div>
+    </div>
+  );
+};
+
+interface HistoryConversationItemProps {
+  conversation: Conversation;
+  currentUserId: string;
+  onSelect: () => void;
+  onRemove: () => void;
+}
+
+const HistoryConversationItem: React.FC<HistoryConversationItemProps> = ({
+  conversation,
+  currentUserId,
+  onSelect,
+  onRemove
+}) => {
+  const participants = useConversationParticipants(conversation.participantIds);
+  const partner = participants.find(p => p.id !== currentUserId);
+  const displayName = conversation.isGroup ? conversation.groupName : partner?.name;
+  const avatar = conversation.isGroup ? conversation.groupAvatar : partner?.avatar;
+
+  return (
+    <div
+      className="group flex items-center gap-3 px-3 py-2 hover:bg-bg-hover active:bg-bg-active cursor-pointer transition-all duration-base rounded-xl relative"
+      onClick={onSelect}
+    >
+      <Avatar
+        src={avatar}
+        name={displayName || ''}
+        size="md"
+        isGroup={conversation.isGroup}
+        members={participants}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-text-primary truncate">
+          {displayName}
+        </div>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="text-text-tertiary opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-bg-tertiary active:bg-bg-active rounded-full transition-all duration-base"
+        icon={<X size={14} />}
+      />
     </div>
   );
 };

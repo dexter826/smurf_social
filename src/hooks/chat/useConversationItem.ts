@@ -3,6 +3,7 @@ import { Conversation, LastMessagePreview, User, UserStatus } from '../../types'
 import { formatChatTime, toDate } from '../../utils/dateUtils';
 import { getLastName } from '../../utils/uiUtils';
 import { useUserCache } from '../../store/userCacheStore';
+import { useConversationParticipants } from './useConversationParticipants';
 
 interface UseConversationItemProps {
   conversation: Conversation;
@@ -20,17 +21,18 @@ export const useConversationItem = ({
 }: UseConversationItemProps) => {
 
   const { users: usersMap } = useUserCache();
+  const participants = useConversationParticipants(conversation.participantIds);
 
-  const partnerId = useMemo(() => 
-    conversation.isGroup 
-      ? null 
-      : conversation.participants.find(p => p.id !== currentUserId)?.id,
+  const partnerId = useMemo(() =>
+    conversation.isGroup
+      ? null
+      : conversation.participantIds.find(id => id !== currentUserId),
     [conversation, currentUserId]
   );
 
-  const partner = useMemo(() => 
-    partnerId ? (usersMap[partnerId] || conversation.participants.find(p => p.id === partnerId)) : null,
-    [partnerId, usersMap, conversation.participants]
+  const partner = useMemo(() =>
+    partnerId ? (usersMap[partnerId] || participants.find(p => p.id === partnerId)) : null,
+    [partnerId, usersMap, participants]
   );
 
   const isDataMissing = !conversation.isGroup && (!partner || !partner.name);
@@ -41,7 +43,7 @@ export const useConversationItem = ({
     status: partner?.status
   }), [conversation, partner]);
 
-  const isMessageRequest = useMemo(() => 
+  const isMessageRequest = useMemo(() =>
     !conversation.isGroup && partner && !currentUserFriendIds.includes(partner.id),
     [conversation.isGroup, partner, currentUserFriendIds]
   );
@@ -53,7 +55,7 @@ export const useConversationItem = ({
   const lastMessage = useMemo((): LastMessagePreview | undefined => {
     const joinedAt = conversation.memberJoinedAt?.[currentUserId];
     const deletedAt = conversation.deletedAt?.[currentUserId];
-    
+
     let startTime = toDate(joinedAt);
     const delDate = toDate(deletedAt);
     if (delDate && (!startTime || delDate > startTime)) {
@@ -63,15 +65,15 @@ export const useConversationItem = ({
     if (!conversation.lastMessage) return undefined;
     const lastMsgDate = toDate(conversation.lastMessage.createdAt);
     if (startTime && lastMsgDate && lastMsgDate < startTime) return undefined;
-    
+
     return conversation.lastMessage;
   }, [conversation, currentUserId]);
 
   const lastMessagePreview = useMemo(() => {
     if (!lastMessage) return 'Chưa có tin nhắn';
-    
+
     let content = lastMessage.content;
-    
+
     if (lastMessage.reactorId === currentUserId) {
       const enumEmojiRegex = /^([A-Z_]+)\s+(.+)\s+(đã bày tỏ cảm xúc)$/;
       const match = content.match(enumEmojiRegex);
@@ -91,30 +93,31 @@ export const useConversationItem = ({
     const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
     if (typingUserIds.length === 0) return null;
 
-    const typingUsers = typingUserIds.map(uid => conversation.participants.find(p => p.id === uid)).filter(Boolean);
+    const typingUsers = typingUserIds.map(uid => participants.find(p => p.id === uid)).filter(Boolean);
 
     if (typingUsers.length === 1) return `${getLastName(typingUsers[0]?.name) || 'Ai đó'} đang soạn tin...`;
     if (typingUsers.length === 2) return `${getLastName(typingUsers[0]?.name)} và ${getLastName(typingUsers[1]?.name)} đang soạn tin...`;
     return `${getLastName(typingUsers[0]?.name)} và ${typingUsers.length - 1} người khác đang soạn tin...`;
-  }, [conversation.typingUsers, conversation.participants, currentUserId]);
+  }, [conversation.typingUsers, participants, currentUserId]);
 
-  const readers = useMemo(() => 
+  const readers = useMemo(() =>
     (lastMessage?.readBy || [])
       .filter(uid => uid !== currentUserId)
-      .map(uid => conversation.participants.find(p => p.id === uid))
+      .map(uid => participants.find(p => p.id === uid))
       .filter((u): u is User => !!u),
-    [lastMessage, conversation.participants, currentUserId]
+    [lastMessage, participants, currentUserId]
   );
 
   const displayTime = useMemo(() => {
-    const time = (!lastMessage && conversation.isGroup && conversation.memberJoinedAt?.[currentUserId]) 
-      ? conversation.memberJoinedAt[currentUserId] 
+    const time = (!lastMessage && conversation.isGroup && conversation.memberJoinedAt?.[currentUserId])
+      ? conversation.memberJoinedAt[currentUserId]
       : conversation.updatedAt;
     return time ? formatChatTime(time) : '';
   }, [lastMessage, conversation, currentUserId]);
 
   return {
     partner,
+    participants,
     isDataMissing,
     chatInfo,
     isMessageRequest,
