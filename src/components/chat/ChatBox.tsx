@@ -12,6 +12,7 @@ import { TypingIndicator } from './TypingIndicator';
 interface ChatBoxProps {
   conversation: Conversation;
   messages: Message[];
+  participants: User[];
   currentUserId: string;
   currentUserFriendIds?: string[];
   friendRequestStatus?: 'none' | 'sent' | 'received';
@@ -41,6 +42,7 @@ interface ChatBoxProps {
 export const ChatBox: React.FC<ChatBoxProps> = ({
   conversation,
   messages,
+  participants,
   currentUserId,
   currentUserFriendIds = [],
   friendRequestStatus = 'none',
@@ -79,23 +81,23 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     onLoadMore
   });
 
-  const partner = useMemo(() => 
-    conversation.isGroup ? null : conversation.participants.find(p => p.id !== currentUserId)
-  , [conversation, currentUserId]);
+  const partner = useMemo(() =>
+    conversation.isGroup ? null : participants.find(p => p.id !== currentUserId)
+    , [conversation.isGroup, participants, currentUserId]);
 
   const chatName = conversation.isGroup ? conversation.groupName : partner?.name || 'Không rõ';
   const avatarSrc = conversation.isGroup ? conversation.groupAvatar : partner?.avatar;
 
-  const isMessageRequest = useMemo(() => 
+  const isMessageRequest = useMemo(() =>
     !conversation.isGroup && partner && !currentUserFriendIds.includes(partner.id)
-  , [conversation.isGroup, partner, currentUserFriendIds]);
+    , [conversation.isGroup, partner, currentUserFriendIds]);
 
   // Tìm tin nhắn cuối đã đọc.
   const lastReadByMap = useMemo(() => {
     const map: Record<string, User[]> = {};
     const reversed = [...messages].reverse();
     if (!conversation.isGroup && messages.length > 0) {
-      const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
+      const partnerId = conversation.participantIds.find(id => id !== currentUserId);
       const isFriend = partnerId && currentUserFriendIds.includes(partnerId);
       if (partnerId && isFriend) {
         const lastReadMsg = reversed.find(m => m.readBy?.includes(partnerId));
@@ -127,6 +129,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     <div className="relative flex-1 flex flex-col min-h-0 bg-secondary transition-theme">
       <ChatBoxHeader
         conversation={conversation}
+        participants={participants}
         chatName={chatName}
         avatarSrc={avatarSrc}
         partner={partner || undefined}
@@ -167,6 +170,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               currentUserId={currentUserId}
               usersMap={usersMap}
               conversation={conversation}
+              participants={participants}
               lastReadByMap={lastReadByMap}
               onRecall={onRecall}
               onDeleteForMe={onDeleteForMe}
@@ -179,7 +183,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               onCall={onCall}
               onEdit={onEdit}
             />
-            
+
             <div ref={messagesEndRef} />
           </div>
         )}

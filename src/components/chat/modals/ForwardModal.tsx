@@ -3,6 +3,7 @@ import { Search, Send } from 'lucide-react';
 import { Modal, Avatar, UserAvatar, Input, Button } from '../../ui';
 import { Message, Conversation, User } from '../../../types';
 import { useChatStore } from '../../../store/chatStore';
+import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
 interface ForwardModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
   const filteredConversations = conversations.filter(conv => {
     const name = conv.isGroup
       ? conv.groupName
-      : conv.participants.find(p => p.id !== currentUserId)?.name || '';
+      : usersMap[conv.participantIds.find(id => id !== currentUserId) || '']?.name || '';
     return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -89,40 +90,15 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         <div className="overflow-y-auto space-y-1 pr-2 -mr-2 custom-scrollbar min-h-0">
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv) => {
-              const partner = conv.participants.find(p => p.id !== currentUserId);
-              const name = conv.isGroup ? conv.groupName : partner?.name || 'Unknown';
-              const avatar = conv.isGroup ? conv.groupAvatar : partner?.avatar;
-              const hasSent = sentIds.has(conv.id);
-
-              return (
-                <div
-                  key={conv.id}
-                  className="flex items-center justify-between p-2 hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all duration-base group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <UserAvatar
-                      userId={conv.isGroup ? '' : partner?.id || ''}
-                      src={avatar}
-                      name={name}
-                      size="sm"
-                      isGroup={conv.isGroup}
-                      members={conv.participants}
-                    />
-                    <span className="text-sm font-medium text-text-primary truncate">{name}</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={hasSent ? "secondary" : "ghost"}
-                    isLoading={sendingTo === conv.id}
-                    disabled={hasSent}
-                    onClick={() => handleForward(conv.id)}
-                    icon={!hasSent && <Send size={14} className="text-primary" />}
-                    className={hasSent ? "" : "opacity-0 group-hover:opacity-100 transition-all duration-base"}
-                  >
-                    {hasSent ? 'Đã gửi' : 'Gửi'}
-                  </Button>
-                </div>
-              );
+              return <ConversationForwardItem
+                key={conv.id}
+                conversation={conv}
+                currentUserId={currentUserId}
+                usersMap={usersMap}
+                hasSent={sentIds.has(conv.id)}
+                isSending={sendingTo === conv.id}
+                onForward={() => handleForward(conv.id)}
+              />;
             })
           ) : (
             <div className="py-8 text-center text-text-tertiary text-sm">
@@ -132,5 +108,55 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         </div>
       </div>
     </Modal>
+  );
+};
+
+interface ConversationForwardItemProps {
+  conversation: Conversation;
+  currentUserId: string;
+  usersMap: Record<string, User>;
+  hasSent: boolean;
+  isSending: boolean;
+  onForward: () => void;
+}
+
+const ConversationForwardItem: React.FC<ConversationForwardItemProps> = ({
+  conversation,
+  currentUserId,
+  usersMap,
+  hasSent,
+  isSending,
+  onForward
+}) => {
+  const participants = useConversationParticipants(conversation.participantIds);
+  const partner = participants.find(p => p.id !== currentUserId);
+  const name = conversation.isGroup ? conversation.groupName : partner?.name || 'Unknown';
+  const avatar = conversation.isGroup ? conversation.groupAvatar : partner?.avatar;
+
+  return (
+    <div className="flex items-center justify-between p-2 hover:bg-bg-hover active:bg-bg-active rounded-xl transition-all duration-base group">
+      <div className="flex items-center gap-3 min-w-0">
+        <UserAvatar
+          userId={conversation.isGroup ? '' : partner?.id || ''}
+          src={avatar}
+          name={name}
+          size="sm"
+          isGroup={conversation.isGroup}
+          members={participants}
+        />
+        <span className="text-sm font-medium text-text-primary truncate">{name}</span>
+      </div>
+      <Button
+        size="sm"
+        variant={hasSent ? "secondary" : "ghost"}
+        isLoading={isSending}
+        disabled={hasSent}
+        onClick={onForward}
+        icon={!hasSent && <Send size={14} className="text-primary" />}
+        className={hasSent ? "" : "opacity-0 group-hover:opacity-100 transition-all duration-base"}
+      >
+        {hasSent ? 'Đã gửi' : 'Gửi'}
+      </Button>
+    </div>
   );
 };

@@ -10,6 +10,7 @@ import { Mail, MailCheck, Archive as ArchiveIcon } from 'lucide-react';
 interface ChatDetailsActionsProps {
   conversation: Conversation;
   currentUserId: string;
+  participants: User[];
   partner?: User;
   isBlocked?: boolean;
   onToggleMute?: () => void;
@@ -26,6 +27,7 @@ interface ChatDetailsActionsProps {
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   conversation,
   currentUserId,
+  participants,
   partner,
   isBlocked,
   onToggleMute,
@@ -66,7 +68,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
     onClick: onTogglePin,
     variant: 'default' as const,
   });
-  
+
   // Archive/Unarchive
   if (onToggleArchive) {
     actions.push({
@@ -116,7 +118,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
       variant: 'danger' as const,
     });
 
-    const partnerId = conversation.participants.find(p => p.id !== currentUserId)?.id;
+    const partnerId = conversation.participantIds.find(id => id !== currentUserId);
     if (partnerId) {
       actions.push({
         icon: <Flag size={20} />,
@@ -182,7 +184,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         onClose={() => setShowBlockConfirm(false)}
         onConfirm={() => onToggleBlock?.()}
         title={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE : CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE}
-        message={isBlocked 
+        message={isBlocked
           ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(partner?.name || 'Người dùng')
           : CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(partner?.name || 'Người dùng')
         }

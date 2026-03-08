@@ -7,6 +7,7 @@ import { ChatDetailsMemberList } from './ChatDetailsMemberList';
 import { ChatDetailsMedia } from './ChatDetailsMedia';
 import { ChatDetailsSearch } from './ChatDetailsSearch';
 import { ChatDetailsActions } from './ChatDetailsActions';
+import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
 interface ChatDetailsPanelProps {
   conversation: Conversation;
@@ -62,9 +63,11 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const participants = useConversationParticipants(conversation.participantIds);
+
   const partnerId = conversation.isGroup
     ? null
-    : conversation.participants.find(p => p.id !== currentUserId)?.id;
+    : conversation.participantIds.find(id => id !== currentUserId);
 
   const partner = partnerId ? usersMap[partnerId] : null;
 
@@ -104,11 +107,13 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
             <ChatDetailsHeader
               conversation={conversation}
               currentUserId={currentUserId}
+              participants={participants}
               partner={partner || undefined}
             />
             <ChatDetailsActions
               conversation={conversation}
               currentUserId={currentUserId}
+              participants={participants}
               partner={partner || undefined}
               isBlocked={isBlocked}
               onToggleMute={onToggleMute}
@@ -128,6 +133,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
           <ChatDetailsMemberList
             conversation={conversation}
             currentUserId={currentUserId}
+            participants={participants}
             onMemberClick={onMemberClick}
             onAddMember={onAddMember}
             onRemoveMember={onRemoveMember}

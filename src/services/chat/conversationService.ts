@@ -17,8 +17,7 @@ import {
   arrayRemove
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { Conversation, User } from '../../types';
-import { batchGetUsers } from '../../utils/batchUtils';
+import { Conversation } from '../../types';
 import { convertTimestamp } from '../../utils/dateUtils';
 
 export const conversationService = {
@@ -93,38 +92,12 @@ export const conversationService = {
     );
 
     return onSnapshot(q, async (snapshot) => {
-      const allParticipantIds = new Set<string>();
-      snapshot.docs.forEach(d => {
-        const data = d.data();
-        data.participantIds.forEach((id: string) => {
-          if (id !== userId) allParticipantIds.add(id);
-        });
-      });
-
-      // Lấy thông tin cache cho tất cả người tham gia
-      const usersMap = await batchGetUsers([...allParticipantIds, userId]);
-
       const conversations = snapshot.docs.map((d) => {
         const data = d.data();
-
-        let participants;
-        if (data.isGroup) {
-          // Lấy tất cả thành viên bao gồm cả người dùng hiện tại
-          participants = data.participantIds
-            .map((id: string) => usersMap[id])
-            .filter((p: User | undefined) => !!p);
-        } else {
-          // Chỉ lấy thông tin đối phương trong chat 1-1
-          const otherParticipantIds = data.participantIds.filter((id: string) => id !== userId);
-          participants = otherParticipantIds
-            .map((id: string) => usersMap[id])
-            .filter((p: User | undefined) => !!p);
-        }
 
         return {
           ...data,
           id: d.id,
-          participants,
           updatedAt: convertTimestamp(data.updatedAt, new Date())!,
           createdAt: convertTimestamp(data.createdAt, new Date())!,
           memberJoinedAt: data.memberJoinedAt ? Object.keys(data.memberJoinedAt).reduce((acc, uid) => ({

@@ -57,6 +57,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
 
   const {
     partner,
+    participants,
     isDataMissing,
     chatInfo,
     isMessageRequest,
@@ -98,7 +99,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           size="md"
           initialStatus={chatInfo.status}
           isGroup={conversation.isGroup}
-          members={conversation.participants}
+          members={participants}
         />
       </div>
 

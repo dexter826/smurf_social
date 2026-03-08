@@ -7,6 +7,7 @@ import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMin
 interface ChatDetailsMemberListProps {
   conversation: Conversation;
   currentUserId: string;
+  participants: User[];
   onMemberClick?: (userId: string) => void;
   onAddMember?: () => void;
   onRemoveMember?: (userId: string) => void;
@@ -17,6 +18,7 @@ interface ChatDetailsMemberListProps {
 export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
   conversation,
   currentUserId,
+  participants,
   onMemberClick,
   onAddMember,
   onRemoveMember,
@@ -29,7 +31,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
 
   if (!conversation.isGroup) return null;
 
-  const members = conversation.participants.filter(m => m.status !== UserStatus.BANNED);
+  const members = participants.filter(m => m.status !== UserStatus.BANNED);
   const creatorId = conversation.creatorId;
   const adminIds = conversation.adminIds || [];
   const isCurrentUserAdmin = adminIds.includes(currentUserId);

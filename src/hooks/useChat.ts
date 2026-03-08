@@ -10,6 +10,7 @@ import { useChatActions } from './chat/useChatActions';
 import { useChatMessages } from './chat/useChatMessages';
 import { useChatBlock } from './chat/useChatBlock';
 import { useChatGroups } from './chat/useChatGroups';
+import { useConversationParticipants } from './chat/useConversationParticipants';
 
 const EMPTY_MESSAGES: Message[] = [];
 const EMPTY_TYPING: string[] = [];
@@ -76,8 +77,11 @@ export const useChat = () => {
   const isLoadingMore = selectedConversationId ? (storeIsLoadingMore[selectedConversationId] || false) : false;
   const hasMoreMessages = selectedConversationId ? (storeHasMoreMessages[selectedConversationId] || false) : false;
 
+  // Get participants for selected conversation
+  const participants = useConversationParticipants(selectedConversation?.participantIds || []);
+
   const partnerId = selectedConversation && !selectedConversation.isGroup
-    ? selectedConversation.participants.find(p => p.id !== currentUser?.id)?.id ?? null
+    ? selectedConversation.participantIds.find(id => id !== currentUser?.id) ?? null
     : null;
 
   const partner = partnerId ? (usersMap[partnerId] ?? null) : null;
@@ -175,7 +179,7 @@ export const useChat = () => {
     if (msgs.length === 0) return;
     const userIds = [...new Set(msgs.map(m => m.senderId))];
     const conv = conversations.find(c => c.id === selectedConversationId);
-    if (conv) conv.participants.forEach(p => userIds.push(p.id));
+    if (conv) conv.participantIds.forEach(id => userIds.push(id));
     fetchUsers(userIds);
   }, [messages, selectedConversationId, currentUser, conversations, fetchUsers]);
 
@@ -209,6 +213,7 @@ export const useChat = () => {
     selectedConversationId,
     currentMessages,
     currentTypingUsers,
+    participants,
     usersMap,
     archivedCount,
     isLoading: chatIsLoading,

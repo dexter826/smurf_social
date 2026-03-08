@@ -5,12 +5,14 @@ import { UserAvatar, Avatar, UserStatusText, BannedBadge } from '../../ui';
 interface ChatDetailsHeaderProps {
   conversation: Conversation;
   currentUserId: string;
+  participants: User[];
   partner?: User;
 }
 
 export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
   conversation,
   currentUserId,
+  participants,
   partner
 }) => {
   const isGroup = conversation.isGroup;
@@ -20,26 +22,26 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
   return (
     <div className="flex flex-col items-center py-6 px-4 border-b border-border-light">
       {isGroup ? (
-        <Avatar src={avatarSrc} name={displayName} size="xl" isGroup members={conversation.participants} />
+        <Avatar src={avatarSrc} name={displayName} size="xl" isGroup members={participants} />
       ) : (
-        <UserAvatar 
-          userId={partner?.id ?? ''} 
-          src={avatarSrc} 
-          name={displayName} 
-          size="xl" 
+        <UserAvatar
+          userId={partner?.id ?? ''}
+          src={avatarSrc}
+          name={displayName}
+          size="xl"
           initialStatus={partner?.status}
           showStatus={false}
         />
       )}
-      
+
       <h2 className="mt-4 text-lg font-bold text-text-primary text-center flex items-center gap-2">
         {displayName}
         {!isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="lg" />}
       </h2>
-      
+
       {!isGroup && partner && (
-        <UserStatusText 
-          userId={partner.id} 
+        <UserStatusText
+          userId={partner.id}
           initialStatus={partner.status}
           className="text-sm text-text-secondary mt-1"
         />
@@ -47,7 +49,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
 
       {isGroup && (
         <p className="text-sm text-text-secondary mt-1">
-          {conversation.participants.length} thành viên
+          {participants.length} thành viên
         </p>
       )}
 

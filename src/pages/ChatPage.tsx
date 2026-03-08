@@ -87,6 +87,7 @@ const ChatPage: React.FC = () => {
     friendRequestStatus,
     currentReceivedRequest,
     receivedRequests,
+    participants,
   } = useChat();
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
   const friendIds = useFriendIds();
@@ -172,7 +173,7 @@ const ChatPage: React.FC = () => {
         selectedConversationId,
         false
       );
-      
+
       if (result && !result.success) {
         if (result.reason === 'busy') {
           useChatStore.getState().sendCallMessage(selectedConversationId, currentUser.id, type, 'missed');
@@ -199,7 +200,7 @@ const ChatPage: React.FC = () => {
       if (!isGroupCall) {
         await endCall(otherUserIds);
       } else {
-        await endCall([]); 
+        await endCall([]);
       }
     }
     resetCall();
@@ -284,6 +285,7 @@ const ChatPage: React.FC = () => {
             <ChatBox
               conversation={selectedConversation}
               messages={currentMessages}
+              participants={participants}
               currentUserId={currentUser.id}
               currentUserFriendIds={friendIds}
               friendRequestStatus={friendRequestStatus}
@@ -328,7 +330,7 @@ const ChatPage: React.FC = () => {
               editingMessage={editingMessage}
               currentUserId={currentUser.id}
               usersMap={usersMap}
-              participants={selectedConversation.participants}
+              participants={participants}
               isGroup={selectedConversation.isGroup}
               onCancelAction={() => {
                 setReplyingTo(null);

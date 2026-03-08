@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LogOut, Loader2, Users } from 'lucide-react';
 import { User, Conversation } from '../../../types';
 import { Modal, Button, UserAvatar, Select } from '../../ui';
+import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
 interface TransferAdminModalProps {
   isOpen: boolean;
@@ -21,8 +22,10 @@ export const TransferAdminModal: React.FC<TransferAdminModalProps> = ({
   const [selectedId, setSelectedId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const participants = useConversationParticipants(conversation.participantIds);
+
   // Lấy danh sách thành viên khác để chọn làm admin mới
-  const otherMembers = conversation.participants.filter(p => p.id !== currentUserId);
+  const otherMembers = participants.filter(p => p.id !== currentUserId);
 
   const options = otherMembers.map(member => ({
     value: member.id,
@@ -31,7 +34,7 @@ export const TransferAdminModal: React.FC<TransferAdminModalProps> = ({
 
   const handleConfirm = async () => {
     if (!selectedId) return;
-    
+
     setIsSubmitting(true);
     try {
       await onConfirm(selectedId);

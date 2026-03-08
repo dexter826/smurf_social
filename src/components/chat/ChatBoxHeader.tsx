@@ -5,6 +5,7 @@ import { Avatar, UserAvatar, UserStatusText, IconButton, Button, BannedBadge } f
 
 interface ChatBoxHeaderProps {
   conversation: Conversation;
+  participants: User[];
   chatName: string;
   avatarSrc?: string;
   partner?: User;
@@ -17,6 +18,7 @@ interface ChatBoxHeaderProps {
 
 const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
   conversation,
+  participants,
   chatName,
   avatarSrc,
   partner,
@@ -47,7 +49,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
               name={chatName}
               size="md"
               isGroup
-              members={conversation.participants}
+              members={participants}
             />
           ) : (
             <UserAvatar
@@ -74,7 +76,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
           )}
           {conversation.isGroup && (
             <span className="text-xs text-text-tertiary truncate leading-tight">
-              {conversation.participants.length} thành viên
+              {participants.length} thành viên
             </span>
           )}
         </div>
