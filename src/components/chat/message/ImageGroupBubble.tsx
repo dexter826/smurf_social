@@ -54,7 +54,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
   if (validMessages.length === 0) return null;
 
   const lastMsg = validMessages[validMessages.length - 1];
-  const hasReactions = lastMsg.reactions && Object.keys(lastMsg.reactions).length > 0;
+  const hasReactions = lastMsg.reactionCount > 0;
 
   const toggleMenu = () => {
     if (!showMenu && menuButtonRef.current) {
@@ -135,7 +135,8 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
           <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
             {hasReactions ? (
               <ReactionDisplay
-                reactions={lastMsg.reactions}
+                reactionSummary={lastMsg.reactionSummary}
+                reactionCount={lastMsg.reactionCount}
                 onClick={() => setShowReactionSelector(!showReactionSelector)}
               />
             ) : (
@@ -165,7 +166,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
                   onSelect={(emoji) => toggleReaction(lastMsg.id, currentUserId, emoji)}
                   onClose={() => setShowReactionSelector(false)}
                   className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
-                  currentReaction={lastMsg.reactions?.[currentUserId]}
+                  currentReaction={useChatStore.getState().myMessageReactions[lastMsg.id]}
                 />
               </>
             )}

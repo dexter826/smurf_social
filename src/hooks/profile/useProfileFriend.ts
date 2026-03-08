@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, UserStatus, FriendRequest, FriendStatus } from '../../types';
 import { friendService } from '../../services/friendService';
 import { toast } from '../../store/toastStore';
+import { useFriendIds } from '../utils';
 import { TOAST_MESSAGES } from '../../constants';
 
 interface UseProfileFriendProps {
@@ -22,6 +23,7 @@ export const useProfileFriend = ({
 }: UseProfileFriendProps) => {
   const [friendStatus, setFriendStatus] = useState<FriendStatus>(FriendStatus.NOT_FRIEND);
   const [pendingRequestId, setPendingRequestId] = useState<string | undefined>();
+  const friendIds = useFriendIds();
 
   // Dùng chung cho 2 callbacks, không bị stale closure
   const sentRequestRef = useRef<FriendRequest | null>(null);
@@ -30,7 +32,7 @@ export const useProfileFriend = ({
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) return;
 
-    if (currentUser.friendIds?.includes(profileUserId)) {
+    if (friendIds.includes(profileUserId)) {
       setFriendStatus(FriendStatus.FRIEND);
       setPendingRequestId(undefined);
       return;

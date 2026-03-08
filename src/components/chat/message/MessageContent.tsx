@@ -108,7 +108,6 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         <div className="rounded-lg overflow-hidden max-w-[300px] border border-border-light shadow-sm">
           <LazyVideo
             src={videoUrl}
-            thumbnail={message.videoThumbnails?.[videoUrl]}
             className="w-full h-auto max-h-[400px] object-contain"
           />
         </div>
@@ -140,12 +139,10 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
       const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-primary');
 
       return (
-        <div className={`flex flex-col gap-1 w-fit max-w-[260px] ${
-          isMe ? 'items-end' : 'items-start'
-        }`}>
-          <div className={`flex items-center gap-2 text-sm font-semibold ${
-            isMe ? 'text-white' : (isMissedOrRejected ? 'text-red-500' : 'text-text-primary')
+        <div className={`flex flex-col gap-1 w-fit max-w-[260px] ${isMe ? 'items-end' : 'items-start'
           }`}>
+          <div className={`flex items-center gap-2 text-sm font-semibold ${isMe ? 'text-white' : (isMissedOrRejected ? 'text-red-500' : 'text-text-primary')
+            }`}>
             {isMissedOrRejected
               ? <PhoneMissed size={16} className={iconColor} />
               : (isVideo ? <Video size={16} className={iconColor} /> : <PhoneIncoming size={16} className={iconColor} />)
@@ -153,9 +150,8 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
             <span>{title}</span>
           </div>
           {durationStr && (
-            <div className={`flex items-center gap-1.5 text-xs ${
-              isMe ? 'text-white/70' : 'text-text-tertiary'
-            }`}>
+            <div className={`flex items-center gap-1.5 text-xs ${isMe ? 'text-white/70' : 'text-text-tertiary'
+              }`}>
               <Phone size={12} />
               <span>{durationStr}</span>
             </div>

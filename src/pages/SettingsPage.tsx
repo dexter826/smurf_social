@@ -17,6 +17,7 @@ import { UserAvatar, ConfirmDialog, Button, Skeleton } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 import { userService } from '../services/userService';
+import { friendService } from '../services/friendService';
 
 type SettingSection = 'appearance' | 'security' | 'blocked';
 
@@ -86,28 +87,34 @@ const SettingsPage: React.FC = () => {
 
   useEffect(() => {
     const loadBlockedUsers = async () => {
-      const blockedIds = currentUser?.blockedUserIds || [];
-      if (blockedIds.length === 0) {
-        setBlockedUsers([]);
-        setLoading('settings', false);
-        return;
-      }
+      if (!currentUser) return;
 
       try {
+        const blockedIds = await userService.getBlockedUserIds(currentUser.id);
+        if (blockedIds.length === 0) {
+          setBlockedUsers([]);
+          setLoading('settings', false);
+          return;
+        }
         await fetchUsers(blockedIds);
+        const users = blockedIds.map(id => userCache[id]).filter((u): u is User => !!u);
+        setBlockedUsers(users);
       } finally {
         setLoading('settings', false);
       }
     };
 
     loadBlockedUsers();
-  }, [currentUser?.blockedUserIds, fetchUsers]);
+  }, [currentUser?.id, fetchUsers]);
 
   useEffect(() => {
-    const blockedIds = currentUser?.blockedUserIds || [];
-    const users = blockedIds.map(id => userCache[id]).filter((u): u is User => !!u);
-    setBlockedUsers(users);
-  }, [userCache, currentUser?.blockedUserIds]);
+    if (!currentUser) return;
+
+    userService.getBlockedUserIds(currentUser.id).then(blockedIds => {
+      const users = blockedIds.map(id => userCache[id]).filter((u): u is User => !!u);
+      setBlockedUsers(users);
+    });
+  }, [userCache, currentUser?.id]);
 
   const handleUnblock = async () => {
     if (!unblockUserId || !currentUser) return;
