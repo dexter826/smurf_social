@@ -135,7 +135,6 @@ export interface Message extends BaseEntity {
   deliveredTo?: string[];
   deliveredAt?: Date;
   mentions?: string[];
-  reactorId?: string;
   reactionCount?: number;
   reactionSummary?: Record<string, number>;
   myReaction?: string;
@@ -149,11 +148,22 @@ export interface Message extends BaseEntity {
   editedAt?: Date;
 }
 
+export interface LastMessagePreview {
+  id: string;
+  senderId: string;
+  content: string;
+  type: MessageType;
+  createdAt: Date;
+  reactorId?: string;
+  readBy?: string[];
+  deliveredAt?: Date;
+}
+
 export interface Conversation extends BaseEntity {
   updatedAt: Date;
   participantIds: string[];
   participants: User[];
-  lastMessage?: Message;
+  lastMessage?: LastMessagePreview;
   unreadCount: Record<string, number>;
   isGroup: boolean;
   groupName?: string;

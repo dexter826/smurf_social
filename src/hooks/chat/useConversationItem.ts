@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Conversation, User, UserStatus } from '../../types';
+import { Conversation, LastMessagePreview, User, UserStatus } from '../../types';
 import { formatChatTime, toDate } from '../../utils/dateUtils';
 import { getLastName } from '../../utils/uiUtils';
 import { useUserCache } from '../../store/userCacheStore';
@@ -50,7 +50,7 @@ export const useConversationItem = ({
   const isUnread = (unreadCount > 0 || conversation.markedUnreadBy?.includes(currentUserId)) && !isActive;
 
   // Lọc tin nhắn theo mốc thời gian
-  const lastMessage = useMemo(() => {
+  const lastMessage = useMemo((): LastMessagePreview | undefined => {
     const joinedAt = conversation.memberJoinedAt?.[currentUserId];
     const deletedAt = conversation.deletedAt?.[currentUserId];
     
