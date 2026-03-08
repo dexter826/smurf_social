@@ -17,8 +17,6 @@ import {
   limit,
   startAfter,
   DocumentSnapshot,
-  increment,
-  deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Post, UserStatus, Visibility, ReactionType } from '../types';
@@ -355,31 +353,42 @@ export const postService = {
 
   reactToPost: async (postId: string, userId: string, reaction: string | ReactionType): Promise<void> => {
     try {
-      const postRef = doc(db, 'posts', postId);
-      const postSnap = await getDoc(postRef);
+      const reactionRef = doc(db, 'posts', postId, 'reactions', userId);
+      const snap = await getDoc(reactionRef);
+      const current = snap.exists() ? snap.data().type : null;
 
-      if (postSnap.exists()) {
-        const data = postSnap.data();
-        const reactions: Record<string, string> = data.reactions || {};
-        const currentReaction = reactions[userId];
-        
-        // Cập nhật trạng thái cảm xúc
-        if (reaction === 'REMOVE' || currentReaction === reaction) {
-          await updateDoc(postRef, {
-            [`reactions.${userId}`]: deleteField()
-          });
-        } else {
-          await updateDoc(postRef, {
-            [`reactions.${userId}`]: reaction
-          });
-        }
-
-        // Cloud Function onPostReaction xử lý notification
+      if (reaction === 'REMOVE' || current === reaction) {
+        await deleteDoc(reactionRef);
+      } else {
+        await setDoc(reactionRef, { type: reaction });
       }
+      // CF onPostReactionWrite xử lý counter + notification
     } catch (error) {
       console.error("Lỗi react bài viết", error);
       throw error;
     }
+  },
+
+  // Lấy reaction của user hiện tại trên một post.
+  getMyReactionForPost: async (postId: string, userId: string): Promise<string | null> => {
+    try {
+      const snap = await getDoc(doc(db, 'posts', postId, 'reactions', userId));
+      return snap.exists() ? snap.data().type : null;
+    } catch {
+      return null;
+    }
+  },
+
+  // Batch load myReaction cho danh sách posts.
+  batchLoadMyReactions: async (postIds: string[], userId: string): Promise<Record<string, string>> => {
+    const results: Record<string, string> = {};
+    await Promise.all(
+      postIds.map(async (postId) => {
+        const snap = await getDoc(doc(db, 'posts', postId, 'reactions', userId));
+        if (snap.exists()) results[postId] = snap.data().type;
+      })
+    );
+    return results;
   },
 
   getPostById: async (postId: string, currentUserId: string, friendIds: string[]): Promise<Post | null> => {

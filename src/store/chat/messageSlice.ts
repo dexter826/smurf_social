@@ -36,6 +36,7 @@ export interface MessageSlice {
   clearMessages: (conversationId: string) => void;
   setUploadProgress: (messageId: string, progress: number) => void;
   setUploadError: (messageId: string, isError: boolean) => void;
+  myMessageReactions: Record<string, string>;
 }
 
 const LIMIT_PER_PAGE = PAGINATION.CHAT_MESSAGES;
@@ -121,19 +122,47 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   isLoadingMore: {},
   typingUsers: {},
   uploadProgress: {},
+  myMessageReactions: {},
 
   subscribeToMessages: (conversationId: string) => {
     const { conversations } = get();
     const conversation = conversations.find((c: Conversation) => c.id === conversationId);
     const currentUserId = useAuthStore.getState().user?.id || '';
     const joinedAt = getEffectiveJoinedAt(conversation, currentUserId);
+    let firstLoad = true;
 
     const unsubscribe = messageService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
+      const { myMessageReactions } = get();
+      const merged = messages.map((m: Message) => ({
+        ...m,
+        myReaction: myMessageReactions[m.id]
+      }));
       set((state) => ({
-        messages: { ...state.messages, [conversationId]: messages },
+        messages: { ...state.messages, [conversationId]: merged },
         lastMessageDocs: { ...state.lastMessageDocs, [conversationId]: lastDoc },
         hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: messages.length >= LIMIT_PER_PAGE }
       }));
+
+      if (firstLoad && currentUserId) {
+        firstLoad = false;
+        const toLoad = messages
+          .filter(m => (m.reactionCount ?? 0) > 0 && !myMessageReactions[m.id])
+          .map(m => m.id);
+        if (toLoad.length > 0) {
+          messageService.batchLoadMyReactionsForMessages(toLoad, currentUserId).then(myRxns => {
+            set(state => ({
+              myMessageReactions: { ...state.myMessageReactions, ...myRxns },
+              messages: {
+                ...state.messages,
+                [conversationId]: (state.messages[conversationId] || []).map(m => ({
+                  ...m,
+                  myReaction: myRxns[m.id] ?? state.myMessageReactions[m.id] ?? m.myReaction
+                }))
+              }
+            }));
+          });
+        }
+      }
     }, joinedAt);
     return unsubscribe;
   },
@@ -159,6 +188,27 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
         hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: result.hasMore },
         isLoadingMore: { ...state.isLoadingMore, [conversationId]: false }
       }));
+
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (currentUserId) {
+        const toLoad = result.messages
+          .filter(m => (m.reactionCount ?? 0) > 0 && !get().myMessageReactions[m.id])
+          .map(m => m.id);
+        if (toLoad.length > 0) {
+          messageService.batchLoadMyReactionsForMessages(toLoad, currentUserId).then(myRxns => {
+            set(state => ({
+              myMessageReactions: { ...state.myMessageReactions, ...myRxns },
+              messages: {
+                ...state.messages,
+                [conversationId]: (state.messages[conversationId] || []).map(m => ({
+                  ...m,
+                  myReaction: myRxns[m.id] ?? state.myMessageReactions[m.id] ?? m.myReaction
+                }))
+              }
+            }));
+          });
+        }
+      }
     } catch (error) {
       console.error("Lỗi tải thêm tin nhắn:", error);
       set((state) => ({ isLoadingMore: { ...state.isLoadingMore, [conversationId]: false } }));
@@ -341,9 +391,74 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   },
 
   toggleReaction: async (messageId: string, userId: string, emoji: string) => {
+    const state = get();
+    const currentReaction = state.myMessageReactions[messageId];
+    const isRemoving = emoji === 'REMOVE' || currentReaction === emoji;
+
+    // Tìm tin nhắn để update optimistic
+    let prevMessage: Message | undefined;
+    let conversationId: string | undefined;
+    for (const [convId, msgs] of Object.entries(state.messages)) {
+      const msg = msgs.find(m => m.id === messageId);
+      if (msg) { prevMessage = { ...msg }; conversationId = convId; break; }
+    }
+
+    // Tính state mới
+    const newMyReactions = isRemoving
+      ? (() => { const r = { ...state.myMessageReactions }; delete r[messageId]; return r; })()
+      : { ...state.myMessageReactions, [messageId]: emoji };
+
+    let updatedMessage: Message | undefined;
+    if (prevMessage) {
+      const prevSummary = prevMessage.reactionSummary ?? {};
+      const newSummary = { ...prevSummary };
+      let newCount = prevMessage.reactionCount ?? 0;
+      if (isRemoving) {
+        if (currentReaction) {
+          newSummary[currentReaction] = Math.max(0, (newSummary[currentReaction] ?? 0) - 1);
+          if (newSummary[currentReaction] === 0) delete newSummary[currentReaction];
+        }
+        newCount = Math.max(0, newCount - 1);
+      } else if (currentReaction) {
+        newSummary[currentReaction] = Math.max(0, (newSummary[currentReaction] ?? 0) - 1);
+        if (newSummary[currentReaction] === 0) delete newSummary[currentReaction];
+        newSummary[emoji] = (newSummary[emoji] ?? 0) + 1;
+      } else {
+        newSummary[emoji] = (newSummary[emoji] ?? 0) + 1;
+        newCount += 1;
+      }
+      updatedMessage = { ...prevMessage, myReaction: isRemoving ? undefined : emoji, reactionCount: newCount, reactionSummary: newSummary };
+    }
+
+    const cId = conversationId;
+    set((state) => {
+      const partial: Partial<import('../chatStore').ChatState> = { myMessageReactions: newMyReactions };
+      if (cId && updatedMessage) {
+        partial.messages = {
+          ...state.messages,
+          [cId]: state.messages[cId].map(m => m.id === messageId ? updatedMessage! : m)
+        };
+      }
+      return partial;
+    });
+
     try {
       await messageService.toggleReaction(messageId, userId, emoji);
     } catch (error) {
+      // Rollback
+      set((state) => {
+        const restored = currentReaction
+          ? { ...state.myMessageReactions, [messageId]: currentReaction }
+          : (() => { const r = { ...state.myMessageReactions }; delete r[messageId]; return r; })();
+        const partial: Partial<import('../chatStore').ChatState> = { myMessageReactions: restored };
+        if (cId && prevMessage) {
+          partial.messages = {
+            ...state.messages,
+            [cId]: state.messages[cId].map(m => m.id === messageId ? prevMessage! : m)
+          };
+        }
+        return partial;
+      });
       console.error("Lỗi thả cảm xúc:", error);
       throw error;
     }

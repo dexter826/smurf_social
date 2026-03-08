@@ -15,16 +15,16 @@ import {
   arrayRemove,
   limit,
   startAfter,
-  deleteField,
   increment,
   DocumentSnapshot,
   QueryDocumentSnapshot,
   DocumentData,
-  setDoc
+  setDoc,
+  deleteDoc
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { Message, MessageType, ReactionType } from "../../types";
-import { TIME_LIMITS, IMAGE_COMPRESSION, REACTION_LABELS } from "../../constants";
+import { TIME_LIMITS, IMAGE_COMPRESSION } from "../../constants";
 import { compressImage } from "../../utils/imageUtils";
 import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
@@ -773,43 +773,34 @@ export const messageService = {
     emoji: string | ReactionType,
   ): Promise<void> => {
     try {
-      const messageRef = doc(db, "messages", messageId);
-      const messageSnap = await getDoc(messageRef);
-      
-      if (messageSnap.exists()) {
-        const data = messageSnap.data();
-        const currentReaction = data.reactions?.[userId];
-        const isRemoving = emoji === 'REMOVE' || currentReaction === emoji;
-        
-        await updateDoc(messageRef, {
-          [`reactions.${userId}`]: isRemoving ? deleteField() : emoji
-        });
+      const reactionRef = doc(db, "messages", messageId, "reactions", userId);
+      const reactionSnap = await getDoc(reactionRef);
+      const currentReaction = reactionSnap.exists() ? reactionSnap.data().type : null;
+      const isRemoving = emoji === 'REMOVE' || currentReaction === emoji;
 
-        if (!isRemoving) {
-          const userSnap = await getDoc(doc(db, "users", userId));
-          const userName = userSnap.exists() ? userSnap.data().name : "Ai đó";
-          const lastName = userName.split(' ').pop();
-          
-          const conversationRef = doc(db, "conversations", data.conversationId);
-          const reactionLabel = REACTION_LABELS[emoji as ReactionType] || emoji;
-          
-          await updateDoc(conversationRef, {
-            lastMessage: {
-              id: messageId,
-              senderId: data.senderId,
-              reactorId: userId,
-              content: `${emoji} ${lastName} đã bày tỏ cảm xúc`,
-              type: MessageType.TEXT,
-              createdAt: new Date()
-            },
-            updatedAt: serverTimestamp()
-          });
-        }
+      if (isRemoving) {
+        await deleteDoc(reactionRef);
+      } else {
+        await setDoc(reactionRef, { type: emoji });
       }
     } catch (error) {
       console.error("Lỗi toggle reaction", error);
       throw error;
     }
+  },
+
+  getMyReactionForMessage: async (messageId: string, userId: string): Promise<string | null> => {
+    const snap = await getDoc(doc(db, "messages", messageId, "reactions", userId));
+    return snap.exists() ? snap.data().type : null;
+  },
+
+  batchLoadMyReactionsForMessages: async (messageIds: string[], userId: string): Promise<Record<string, string>> => {
+    const result: Record<string, string> = {};
+    await Promise.all(messageIds.map(async (messageId) => {
+      const snap = await getDoc(doc(db, "messages", messageId, "reactions", userId));
+      if (snap.exists()) result[messageId] = snap.data().type;
+    }));
+    return result;
   },
 
   // Gửi tin nhắn từ hệ thống.

@@ -108,7 +108,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     (new Date().getTime() - new Date(message.createdAt).getTime()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
   );
 
-  const hasReactions = message.reactions && Object.keys(message.reactions).length > 0;
+  const hasReactions = (message.reactionCount ?? 0) > 0;
 
   const handleToggleVoice = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -174,7 +174,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             <ReactionDetailsModal
         isOpen={showReactionDetails}
         onClose={() => setShowReactionDetails(false)}
-        reactions={message.reactions || {}}
+        sourceId={message.id}
+        sourceType="message"
         currentUserId={currentUserId}
       />
 
@@ -237,7 +238,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 <div className={`absolute -bottom-3.5 z-10 flex items-center gap-1 ${isMe ? 'left-1' : 'right-1'}`}>
                   {hasReactions && (
                     <ReactionDisplay
-                      reactions={message.reactions}
+                      reactionSummary={message.reactionSummary}
+                      reactionCount={message.reactionCount}
                       onClick={() => setShowReactionDetails(true)}
                     />
                   )}
@@ -268,7 +270,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                         onClose={() => setShowReactionSelector(false)}
                         autoClose={false}
                         className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
-                        currentReaction={message.reactions?.[currentUserId]}
+                        currentReaction={message.myReaction}
                       />
                     </>
                   )}

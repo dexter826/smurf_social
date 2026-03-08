@@ -38,6 +38,7 @@ export const useChatStore = create<ChatState>()(
           isChatVisible: false,
           isLoadingMore: {},
           uploadProgress: {},
+          myMessageReactions: {},
         });
       },
     }),

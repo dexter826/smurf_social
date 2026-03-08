@@ -137,8 +137,10 @@ export interface Message extends BaseEntity {
   deliveredTo?: string[];
   deliveredAt?: Date;
   mentions?: string[];
-  reactions?: Record<string, string | ReactionType>;
   reactorId?: string;
+  reactionCount?: number;
+  reactionSummary?: Record<string, number>;
+  myReaction?: string;
   isRecalled?: boolean;
   recalledAt?: Date;
   deletedBy?: string[];
@@ -174,7 +176,9 @@ export interface Comment extends BaseEntity {
   userId: string;
   parentId?: string;
   content: string;
-  reactions?: Record<string, string>;
+  reactionCount?: number;
+  reactionSummary?: Record<string, number>;
+  myReaction?: string;
   image?: string;
   replyCount?: number;
   replyToUserId?: string;
@@ -185,7 +189,9 @@ export interface Post extends BaseEntity {
   content: string;
   images?: string[];
   videos?: string[];
-  reactions?: Record<string, string>;
+  reactionCount?: number;
+  reactionSummary?: Record<string, number>;
+  myReaction?: string;
   videoThumbnails?: Record<string, string>;
   commentCount: number;
   visibility: Visibility;

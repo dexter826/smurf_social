@@ -8,7 +8,6 @@ import {
   where,
   updateDoc, 
   deleteDoc,
-  deleteField,
   doc,
   setDoc,
   Timestamp,
@@ -176,27 +175,42 @@ export const commentService = {
 
   reactToComment: async (commentId: string, userId: string, reaction: string | ReactionType) => {
     try {
-      const commentRef = doc(db, 'comments', commentId);
-      const commentSnap = await getDoc(commentRef);
-      if (!commentSnap.exists()) return;
+      const reactionRef = doc(db, 'comments', commentId, 'reactions', userId);
+      const snap = await getDoc(reactionRef);
+      const current = snap.exists() ? snap.data().type : null;
 
-      const data = commentSnap.data();
-      const reactions: Record<string, string> = data.reactions || {};
-      const currentReaction = reactions[userId];
-
-      if (reaction === 'REMOVE' || currentReaction === reaction) {
-        await updateDoc(commentRef, {
-          [`reactions.${userId}`]: deleteField()
-        });
+      if (reaction === 'REMOVE' || current === reaction) {
+        await deleteDoc(reactionRef);
       } else {
-        await updateDoc(commentRef, {
-          [`reactions.${userId}`]: reaction
-        });
+        await setDoc(reactionRef, { type: reaction });
       }
+      // CF onCommentReactionWrite xử lý counter + notification
     } catch (error) {
       console.error("Lỗi react comment:", error);
       throw error;
     }
+  },
+
+  // Lấy reaction của user hiện tại trên một comment.
+  getMyReactionForComment: async (commentId: string, userId: string): Promise<string | null> => {
+    try {
+      const snap = await getDoc(doc(db, 'comments', commentId, 'reactions', userId));
+      return snap.exists() ? snap.data().type : null;
+    } catch {
+      return null;
+    }
+  },
+
+  // Batch load myReaction cho danh sách comments.
+  batchLoadMyReactionsForComments: async (commentIds: string[], userId: string): Promise<Record<string, string>> => {
+    const results: Record<string, string> = {};
+    await Promise.all(
+      commentIds.map(async (commentId) => {
+        const snap = await getDoc(doc(db, 'comments', commentId, 'reactions', userId));
+        if (snap.exists()) results[commentId] = snap.data().type;
+      })
+    );
+    return results;
   },
 
   // Lấy bình luận theo ID

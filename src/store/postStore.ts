@@ -185,7 +185,6 @@ export const usePostStore = create<PostState>()(
           images: [...(images || []), ...previewImages],
           videos: [...(videos || []), ...previewVideos],
           videoThumbnails: videoThumbnails || {},
-          reactions: {},
           visibility,
           commentCount: 0,
           createdAt: new Date()
@@ -222,7 +221,6 @@ export const usePostStore = create<PostState>()(
               images: finalImages,
               videos: finalVideos,
               videoThumbnails: finalThumbnails,
-              reactions: {},
               visibility
             }, postId);
 
@@ -353,42 +351,54 @@ export const usePostStore = create<PostState>()(
       },
 
       reactToPost: async (postId: string, userId: string, reaction: string) => {
-        const post = get().posts.find(p => p.id === postId);
+        const post = get().posts.find(p => p.id === postId) ?? get().selectedPost;
         if (!post) return;
 
-        const previousReactions = { ...(post.reactions || {}) };
-        const previousSelectedPost = get().selectedPost;
+        const prevMyReaction = post.myReaction;
+        const prevCount = post.reactionCount ?? 0;
+        const prevSummary = { ...(post.reactionSummary ?? {}) };
+        const prevSelectedPost = get().selectedPost;
 
-        set((state) => {
-          const updateReactions = (p: Post) => {
-            const newReactions = { ...(p.reactions ?? {}) };
-            if (reaction === 'REMOVE' || newReactions[userId] === reaction) {
-              delete newReactions[userId];
+        const applyOptimistic = (p: Post): Post => {
+          const isRemove = reaction === 'REMOVE' || p.myReaction === reaction;
+          const oldType = p.myReaction;
+          const newSummary = { ...(p.reactionSummary ?? {}) };
+          let delta = 0;
+
+          if (isRemove && oldType) {
+            newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
+            if (newSummary[oldType] === 0) delete newSummary[oldType];
+            delta = -1;
+          } else if (!isRemove) {
+            if (oldType) {
+              newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
+              if (newSummary[oldType] === 0) delete newSummary[oldType];
             } else {
-              newReactions[userId] = reaction;
+              delta = 1;
             }
-            return { ...p, reactions: newReactions };
-          };
-
-          const updatedPosts = state.posts.map(p => p.id === postId ? updateReactions(p) : p);
-
-          const updatedSelectedPost = state.selectedPost?.id === postId
-            ? updateReactions(state.selectedPost)
-            : state.selectedPost;
+            newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
+          }
 
           return {
-            posts: updatedPosts,
-            selectedPost: updatedSelectedPost
+            ...p,
+            myReaction: isRemove ? undefined : reaction,
+            reactionCount: Math.max(0, (p.reactionCount ?? 0) + delta),
+            reactionSummary: newSummary,
           };
-        });
+        };
+
+        set((state) => ({
+          posts: state.posts.map(p => p.id === postId ? applyOptimistic(p) : p),
+          selectedPost: state.selectedPost?.id === postId ? applyOptimistic(state.selectedPost) : state.selectedPost,
+        }));
 
         try {
           await postService.reactToPost(postId, userId, reaction);
         } catch (error) {
           console.error("Lỗi react bài viết:", error);
           set((state) => ({
-            posts: state.posts.map(p => p.id === postId ? { ...p, reactions: previousReactions } : p),
-            selectedPost: previousSelectedPost
+            posts: state.posts.map(p => p.id === postId ? { ...p, myReaction: prevMyReaction, reactionCount: prevCount, reactionSummary: prevSummary } : p),
+            selectedPost: prevSelectedPost,
           }));
         }
       },
