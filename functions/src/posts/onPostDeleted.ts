@@ -51,36 +51,47 @@ export const onPostDeleted = onDocumentDeleted(
         await batch.commit();
       }
 
-      const reportsQuery = db
+      const postReportsSnap = await db
         .collection('reports')
         .where('targetType', '==', 'post')
-        .where('targetId', '==', postId);
-      const commentReportsPromises = commentIds.length > 0
-        ? db.collection('reports')
-            .where('targetType', '==', 'comment')
-            .where('targetId', 'in', commentIds.slice(0, 30))
-            .get()
-        : Promise.resolve(null);
+        .where('targetId', '==', postId)
+        .get();
 
-      const [reportsSnap, commentReportsSnap] = await Promise.all([
-        reportsQuery.get(),
-        commentReportsPromises,
-      ]);
+      if (!postReportsSnap.empty) {
+        const batch = db.batch();
+        postReportsSnap.docs.forEach((d) =>
+          batch.update(d.ref, { status: ReportStatus.ORPHANED, resolution: 'Nội dung đã bị xóa' })
+        );
+        await batch.commit();
+      }
 
-      const reportBatch = db.batch();
-      reportsSnap.docs.forEach((d) =>
-        reportBatch.update(d.ref, {
-          status: ReportStatus.ORPHANED,
-          resolution: 'Nội dung đã bị xóa',
-        })
-      );
-      commentReportsSnap?.docs.forEach((d) =>
-        reportBatch.update(d.ref, {
-          status: ReportStatus.ORPHANED,
-          resolution: 'Nội dung đã bị xóa do bài viết gốc bị xóa',
-        })
-      );
-      await reportBatch.commit();
+      if (commentIds.length > 0) {
+        const CHUNK_SIZE = 30;
+        const chunks: string[][] = [];
+        for (let i = 0; i < commentIds.length; i += CHUNK_SIZE) {
+          chunks.push(commentIds.slice(i, i + CHUNK_SIZE));
+        }
+        const commentReportSnaps = await Promise.all(
+          chunks.map((chunk) =>
+            db.collection('reports')
+              .where('targetType', '==', 'comment')
+              .where('targetId', 'in', chunk)
+              .get()
+          )
+        );
+        const commentReportDocs = commentReportSnaps.flatMap((s) => s.docs);
+        const BATCH_SIZE_REPORTS = 400;
+        for (let i = 0; i < commentReportDocs.length; i += BATCH_SIZE_REPORTS) {
+          const batch = db.batch();
+          commentReportDocs.slice(i, i + BATCH_SIZE_REPORTS).forEach((d) =>
+            batch.update(d.ref, {
+              status: ReportStatus.ORPHANED,
+              resolution: 'Nội dung đã bị xóa do bài viết gốc bị xóa',
+            })
+          );
+          await batch.commit();
+        }
+      }
 
       const notifTypes = [
         NotificationType.LIKE_POST,
