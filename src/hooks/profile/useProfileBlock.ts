@@ -7,8 +7,6 @@ import { toast } from '../../store/toastStore';
 import { FriendStatus } from '../../types';
 import { TOAST_MESSAGES } from '../../constants';
 
-const EMPTY_IDS: string[] = [];
-
 interface UseProfileBlockProps {
   currentUser: User | null;
   profile: User | null;
@@ -27,19 +25,14 @@ export const useProfileBlock = ({
   friendStatus,
   pendingRequestId
 }: UseProfileBlockProps) => {
-  const blockedUserIds = useAuthStore(state => state.user?.blockedUserIds ?? EMPTY_IDS);
-  
-  const isBlockedByMe = useMemo(() => 
+  const blockedUserIds = useAuthStore(state => state.blockedUserIds);
+
+  const isBlockedByMe = useMemo(() =>
     blockedUserIds.includes(profileUserId || ''),
     [blockedUserIds, profileUserId]
   );
 
-  const isBlockedByThem = useMemo(() => 
-    profile?.blockedUserIds?.includes(currentUser?.id || '') || false,
-    [profile?.blockedUserIds, currentUser?.id]
-  );
-
-  const canViewContent = !isBlockedByMe && !isBlockedByThem;
+  const canViewContent = !isBlockedByMe;
 
   const handleBlockUser = useCallback(async () => {
     if (!currentUser || !profile || isOwnProfile) return;
@@ -77,7 +70,6 @@ export const useProfileBlock = ({
 
   return {
     isBlockedByMe,
-    isBlockedByThem,
     canViewContent,
     handleBlockUser,
     handleUnblockUser,
