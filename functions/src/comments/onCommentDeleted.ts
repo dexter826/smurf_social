@@ -1,28 +1,8 @@
 import { onDocumentDeleted } from 'firebase-functions/v2/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
 import { db } from '../app';
 import { ReportStatus } from '../types';
-
-function extractStoragePath(url: string): string | null {
-  if (!url || !url.includes('firebasestorage.googleapis.com')) return null;
-  try {
-    const path = decodeURIComponent(new URL(url).pathname.split('/o/')[1]?.split('?')[0] ?? '');
-    return path || null;
-  } catch {
-    return null;
-  }
-}
-
-async function deleteStorageFile(url: string): Promise<void> {
-  const path = extractStoragePath(url);
-  if (!path) return;
-  try {
-    await getStorage().bucket().file(path).delete();
-  } catch {
-    // Bỏ qua
-  }
-}
+import { deleteStorageFile } from '../helpers/storageHelper';
 
 export const onCommentDeleted = onDocumentDeleted(
   { document: 'comments/{commentId}', region: 'us-central1' },

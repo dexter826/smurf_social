@@ -206,9 +206,9 @@ Hiện tại:
 - `functions/src/posts/onPostDeleted.ts` — import từ helper
 - `functions/src/comments/onCommentDeleted.ts` — import từ helper
 
-- [ ] Tạo `storageHelper.ts` trong functions/helpers
-- [ ] Refactor `onPostDeleted` dùng helper
-- [ ] Refactor `onCommentDeleted` dùng helper
+- [x] Tạo `storageHelper.ts` trong functions/helpers
+- [x] Refactor `onPostDeleted` dùng helper
+- [x] Refactor `onCommentDeleted` dùng helper
 
 ---
 
@@ -338,7 +338,7 @@ Hiện tại:
 | TASK-07 | Sửa `useFriendIds` hook (kết hợp TASK-01)                         | 🟡 HIGH     | [x]    |
 | TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [x]    |
 | TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [x]    |
-| TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [ ]    |
+| TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [x]    |
 | TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [ ]    |
 | TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [ ]    |
 | TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [ ]    |

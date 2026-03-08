@@ -1,29 +1,7 @@
 import { onDocumentDeleted } from 'firebase-functions/v2/firestore';
-import { getStorage } from 'firebase-admin/storage';
 import { db } from '../app';
 import { NotificationType, ReportStatus } from '../types';
-
-// Trích xuất Storage path từ download URL
-function extractStoragePath(url: string): string | null {
-  if (!url || !url.includes('firebasestorage.googleapis.com')) return null;
-  try {
-    const path = decodeURIComponent(new URL(url).pathname.split('/o/')[1]?.split('?')[0] ?? '');
-    return path || null;
-  } catch {
-    return null;
-  }
-}
-
-// Xóa file trên Storage, bỏ qua lỗi
-async function deleteStorageFile(url: string): Promise<void> {
-  const path = extractStoragePath(url);
-  if (!path) return;
-  try {
-    await getStorage().bucket().file(path).delete();
-  } catch {
-    // Bỏ qua — file có thể đã bị xóa trước đó
-  }
-}
+import { deleteStorageFile } from '../helpers/storageHelper';
 
 // Trigger khi post bị xóa → dọn dẹp toàn bộ dữ liệu liên quan
 export const onPostDeleted = onDocumentDeleted(
