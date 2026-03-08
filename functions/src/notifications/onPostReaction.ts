@@ -1,9 +1,9 @@
-import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { NotificationType } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 
-export const onPostReaction = onDocumentWritten(
+export const onPostReaction = onDocumentUpdated(
   { document: 'posts/{postId}', region: 'us-central1' },
   async (event) => {
     const before = event.data?.before?.data();
@@ -16,8 +16,8 @@ export const onPostReaction = onDocumentWritten(
     const beforeReactions: Record<string, string> = before.reactions || {};
     const afterReactions: Record<string, string> = after.reactions || {};
 
-    for (const [userId, reaction] of Object.entries(afterReactions)) {
-      if (beforeReactions[userId] === reaction) continue;
+    for (const [userId] of Object.entries(afterReactions)) {
+      if (beforeReactions[userId]) continue;
       if (userId === postOwnerId) continue;
 
       try {

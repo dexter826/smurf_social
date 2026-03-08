@@ -18,6 +18,7 @@ export const onFriendRequestStatusChange = onDocumentUpdated(
     }
 
     const { senderId, receiverId } = after;
+    const reqId = event.params.reqId;
 
     try {
       const batch = db.batch();
@@ -29,6 +30,9 @@ export const onFriendRequestStatusChange = onDocumentUpdated(
       batch.update(db.collection('users').doc(receiverId), {
         friendIds: FieldValue.arrayUnion(senderId),
       });
+
+      // Xóa request sau khi xử lý — không còn cần thiết
+      batch.delete(db.collection('friendRequests').doc(reqId));
 
       await batch.commit();
     } catch (error) {

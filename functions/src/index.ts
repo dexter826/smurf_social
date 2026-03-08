@@ -7,6 +7,7 @@ export { onReportCreated } from './notifications/onReportCreated';
 
 // Friend Triggers
 export { onFriendRequestStatusChange } from './friends/onFriendRequestStatusChange';
+export { unfriend } from './friends/unfriend';
 
 // Post Triggers
 export { onPostDeleted } from './posts/onPostDeleted';

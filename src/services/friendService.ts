@@ -1,7 +1,6 @@
 import { 
   doc, 
   getDoc, 
-  setDoc, 
   collection, 
   getDocs, 
   query, 
@@ -9,12 +8,9 @@ import {
   orderBy,
   updateDoc,
   deleteDoc,
-  arrayUnion,
-  arrayRemove,
   Timestamp,
   addDoc,
-  onSnapshot,
-  writeBatch
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { FriendRequest, FriendRequestStatus } from '../types';
@@ -204,21 +200,11 @@ export const friendService = {
     }
   },
 
-  unfriend: async (userId: string, friendId: string): Promise<void> => {
+  unfriend: async (_userId: string, friendId: string): Promise<void> => {
     try {
-      const batch = writeBatch(db);
-      
-      const userRef = doc(db, 'users', userId);
-      batch.update(userRef, {
-        friendIds: arrayRemove(friendId)
-      });
-
-      const friendRef = doc(db, 'users', friendId);
-      batch.update(friendRef, {
-        friendIds: arrayRemove(userId)
-      });
-
-      await batch.commit();
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const fn = httpsCallable(getFunctions(), 'unfriend');
+      await fn({ friendId });
     } catch (error) {
       console.error("Lỗi hủy kết bạn", error);
       throw error;

@@ -34,6 +34,29 @@ export const onCommentDeleted = onDocumentDeleted(
     const { postId, parentId, image } = commentData;
 
     try {
+      // Cascade delete — parent đã bị xóa, tránh double-decrement commentCount
+      if (parentId) {
+        const parentSnap = await db.collection('comments').doc(parentId).get();
+        if (!parentSnap.exists) {
+          const reportsSnap = await db
+            .collection('reports')
+            .where('targetType', '==', 'comment')
+            .where('targetId', '==', commentId)
+            .get();
+
+          if (!reportsSnap.empty) {
+            const batch = db.batch();
+            reportsSnap.docs.forEach((d) =>
+              batch.update(d.ref, { status: ReportStatus.ORPHANED, resolution: 'Nội dung đã bị xóa' })
+            );
+            await batch.commit();
+          }
+
+          if (image) await deleteStorageFile(image);
+          return;
+        }
+      }
+
       const repliesSnap = await db
         .collection('comments')
         .where('parentId', '==', commentId)
@@ -42,11 +65,12 @@ export const onCommentDeleted = onDocumentDeleted(
       const replyImageUrls: string[] = repliesSnap.docs
         .map((d) => d.data().image)
         .filter(Boolean);
-      const totalDeleted = 1 + repliesSnap.docs.length;
 
-      if (!repliesSnap.empty) {
+      // Chunk batch xóa replies — tránh vượt giới hạn 500/batch
+      const BATCH_SIZE = 400;
+      for (let i = 0; i < repliesSnap.docs.length; i += BATCH_SIZE) {
         const batch = db.batch();
-        repliesSnap.docs.forEach((d) => batch.delete(d.ref));
+        repliesSnap.docs.slice(i, i + BATCH_SIZE).forEach((d) => batch.delete(d.ref));
         await batch.commit();
       }
 
@@ -66,6 +90,9 @@ export const onCommentDeleted = onDocumentDeleted(
         );
         await batch.commit();
       }
+
+      // Replies đã tính vào totalDeleted — chúng sẽ early-return do cascade check
+      const totalDeleted = 1 + repliesSnap.docs.length;
 
       await Promise.all([
         db.collection('posts').doc(postId).update({
