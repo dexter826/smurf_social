@@ -16,6 +16,9 @@ export { onPostDeleted } from './posts/onPostDeleted';
 // Comment Triggers
 export { onCommentDeleted } from './comments/onCommentDeleted';
 
+// Message Triggers
+export { onMessageRecalled } from './messages/onMessageRecalled';
+
 // Admin Callable Functions
 export { resolveReport } from './admin/resolveReport';
 export { rejectReport } from './admin/rejectReport';
