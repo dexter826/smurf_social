@@ -67,13 +67,11 @@
   - [x] Xóa `cleanupOrphanedReports` Cloud Function
   - [x] Update UI logic bỏ orphaned stats trong `useAdminReports.ts`
 
-- [ ] **6. Document Relationships với JSDoc**
-  - [ ] Thêm JSDoc cho `Comment.postId` (CASCADE DELETE)
-  - [ ] Thêm JSDoc cho `Comment.userId` (SET NULL)
-  - [ ] Thêm JSDoc cho `Comment.parentId` (CASCADE DELETE)
-  - [ ] Thêm JSDoc cho `FriendRequest.senderId` và `receiverId`
-  - [ ] Thêm JSDoc cho `Message.conversationId`
-  - [ ] Thêm JSDoc cho `Report.targetId` và `targetOwnerId`
+- [x] **6. Notification Cleanup khi Soft Delete**
+  - [x] Update `postService.deletePost()` để cleanup notifications liên quan (postId)
+  - [x] Update `commentService.deleteComment()` để cleanup notifications liên quan (commentId)
+  - [x] User bị ban: hiển thị bình thường (name/avatar), chỉ không login được
+  - [x] Không cần UserStatus.DELETED (ứng dụng không có tính năng user tự xóa account)
 
 ## Phase 3: Optimization & Scalability (Priority: MEDIUM)
 
