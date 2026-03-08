@@ -9,7 +9,7 @@ export interface GroupSlice {
   updateGroupInfo: (conversationId: string, updates: { groupName?: string; groupAvatar?: string }) => Promise<void>;
   addMember: (conversationId: string, userId: string) => Promise<void>;
   removeMember: (conversationId: string, userId: string) => Promise<void>;
-  leaveGroup: (conversationId: string, userId: string) => Promise<void>;
+  leaveGroup: (conversationId: string, userId: string, newAdminId?: string) => Promise<void>;
   promoteToAdmin: (conversationId: string, userId: string) => Promise<void>;
   demoteFromAdmin: (conversationId: string, userId: string) => Promise<void>;
   disbandGroup: (conversationId: string) => Promise<void>;
@@ -86,13 +86,13 @@ export const createGroupSlice: StateCreator<GroupSliceWithConversation, [], [], 
     }
   },
 
-  leaveGroup: async (conversationId: string, userId: string) => {
+  leaveGroup: async (conversationId: string, userId: string, newAdminId?: string) => {
     set((state) => ({
       conversations: state.conversations.filter((c: Conversation) => c.id !== conversationId),
       selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
     }));
     try {
-      await groupService.leaveGroup(conversationId, userId);
+      await groupService.leaveGroup(conversationId, userId, newAdminId);
     } catch (error) {
       console.error("Lỗi rời nhóm:", error);
       throw error;

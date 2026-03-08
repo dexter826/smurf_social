@@ -61,10 +61,8 @@ export const useChatGroups = ({
 
   const handleAssignAdminAndLeave = useCallback(async (newAdminId: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    
-    await promoteToAdmin(selectedConversationId, newAdminId);
-    await leaveGroup(selectedConversationId, currentUserId);
-  }, [selectedConversationId, currentUserId, promoteToAdmin, leaveGroup]);
+    await leaveGroup(selectedConversationId, currentUserId, newAdminId);
+  }, [selectedConversationId, currentUserId, leaveGroup]);
 
   const handlePromoteToAdmin = useCallback(async (userId: string) => {
     if (!selectedConversationId) return;
