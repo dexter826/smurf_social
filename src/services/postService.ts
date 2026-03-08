@@ -360,6 +360,16 @@ export const postService = {
         deletedAt: serverTimestamp(),
         deletedBy: userId
       });
+
+      // Cleanup related notifications
+      const notifQuery = query(
+        collection(db, 'notifications'),
+        where('data.postId', '==', postId)
+      );
+
+      const snapshot = await getDocs(notifQuery);
+      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
     } catch (error) {
       console.error("Lỗi xóa bài viết", error);
       throw error;

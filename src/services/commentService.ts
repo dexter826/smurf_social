@@ -164,6 +164,16 @@ export const commentService = {
         deletedAt: serverTimestamp(),
         deletedBy: userId
       });
+
+      // Cleanup related notifications
+      const notifQuery = query(
+        collection(db, 'notifications'),
+        where('data.commentId', '==', commentId)
+      );
+
+      const snapshot = await getDocs(notifQuery);
+      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
     } catch (error) {
       console.error("Lỗi xóa comment:", error);
       throw error;
