@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, UserStatus } from '../../types';
 import { useAuthStore } from '../../store/authStore';
+import { useContactStore } from '../../store/contactStore';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { useUserCache } from '../../store/userCacheStore';
@@ -23,6 +24,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
   const [latestMedia, setLatestMedia] = useState<string[]>([]);
 
   const isOwnProfile = currentUser?.id === profileUserId;
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
 
   const loadProfile = useCallback(async () => {
     if (!profileUserId) return;
@@ -31,8 +33,8 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
     try {
       const [userData, userStats, userPosts] = await Promise.all([
         userService.getUserById(profileUserId),
-        userService.getUserStats(profileUserId, currentUser?.id, currentUser?.friendIds || []),
-        postService.getUserPosts(profileUserId, currentUser?.id || '', currentUser?.friendIds || [], 20)
+        userService.getUserStats(profileUserId, currentUser?.id, friendIds),
+        postService.getUserPosts(profileUserId, currentUser?.id || '', friendIds, 20)
       ]);
 
       setProfile(userData || null);
@@ -50,7 +52,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
     } finally {
       setLoading(false);
     }
-  }, [profileUserId, currentUser?.id, currentUser?.friendIds]);
+  }, [profileUserId, currentUser?.id, friendIds]);
 
   useEffect(() => {
     loadProfile();

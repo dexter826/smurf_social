@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { useAuthStore } from '../../store/authStore';
+import { useContactStore } from '../../store/contactStore';
 
-// Lấy danh sách friendIds của user hiện tại
+// Source of truth: subcollection users/{uid}/friends qua contactStore
 export const useFriendIds = () => {
-  const { user } = useAuthStore();
-  return useMemo(() => user?.friendIds || [], [user?.friendIds]);
+  const friends = useContactStore(state => state.friends);
+  return useMemo(() => friends.map(f => f.id), [friends]);
 };

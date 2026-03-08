@@ -4,6 +4,7 @@ import { postService } from '../../services/postService';
 import { Skeleton, MediaViewer, LazyImage } from '../ui';
 import { Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useContactStore } from '../../store/contactStore';
 import { DocumentSnapshot } from 'firebase/firestore';
 
 const MEDIA_PAGE_SIZE = 15;
@@ -21,6 +22,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const { user: currentUser } = useAuthStore();
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
   const lastDocRef = useRef<DocumentSnapshot | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +44,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
       const { posts, lastDoc } = await postService.getUserPosts(
         userId,
         currentUser.id,
-        currentUser.friendIds || [],
+        friendIds,
         MEDIA_PAGE_SIZE,
         isLoadMore ? lastDocRef.current ?? undefined : undefined
       );

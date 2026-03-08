@@ -250,15 +250,13 @@ export const userService = {
   // Lấy thống kê số lượng bạn bè và bài viết
   getUserStats: async (userId: string, currentUserId?: string, friendIds?: string[]): Promise<{ friendCount: number, postCount: number }> => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      const friendCount = userId === currentUserId
-        ? (userDoc.data()?.friendIds || []).length
-        : 0;
-
       const isOwner = userId === currentUserId;
       const isFriend = friendIds?.includes(userId) || false;
 
-      // Đếm bài viết theo visibility mà người xem có thể thấy
+      const friendCountQuery = isOwner
+        ? getCountFromServer(collection(db, 'users', userId, 'friends'))
+        : Promise.resolve(null);
+
       let visibilityFilter: string[];
       if (isOwner) {
         visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
@@ -273,12 +271,18 @@ export const userService = {
         where('userId', '==', userId),
         where('visibility', 'in', visibilityFilter)
       );
-      const postsSnapshot = await getDocs(postsQuery);
-      const postCount = postsSnapshot.size;
 
-      return { friendCount, postCount };
+      const [friendCountSnap, postsSnapshot] = await Promise.all([
+        friendCountQuery,
+        getCountFromServer(postsQuery),
+      ]);
+
+      return {
+        friendCount: friendCountSnap ? friendCountSnap.data().count : 0,
+        postCount: postsSnapshot.data().count,
+      };
     } catch (error) {
-      console.error("Lỗi lấy thông kê user", error);
+      console.error("Lỗi lấy thống kê user", error);
       return { friendCount: 0, postCount: 0 };
     }
   },
