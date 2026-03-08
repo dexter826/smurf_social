@@ -307,7 +307,7 @@ Hiện tại:
 
 - `src/services/notificationService.ts` — xóa `ReportReason` import
 
-- [ ] Xóa `ReportReason` import thừa trong notificationService
+- [x] Xóa `ReportReason` import thừa trong notificationService
 
 ---
 
@@ -321,7 +321,7 @@ Hiện tại:
 
 - `src/store/contactStore.ts` — kiểm tra và xóa dead interface methods
 
-- [ ] Kiểm tra và xóa `addFriend`/`removeFriend` nếu không implemented
+- [x] Kiểm tra và xóa `addFriend`/`removeFriend` nếu không implemented
 
 ---
 
@@ -345,8 +345,8 @@ Hiện tại:
 | TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [x]    |
 | TASK-15 | Xóa `updatedAt` từ BaseEntity, giữ riêng ở Conversation           | 🔵 DB       | [x]    |
 | TASK-16 | Làm sạch `Message.reactorId` type                                 | 🟣 TYPE     | [x]    |
-| TASK-17 | Xóa `ReportReason` import thừa                                    | 🟣 TYPE     | [ ]    |
-| TASK-18 | Kiểm tra `addFriend`/`removeFriend` trong contactStore            | 🟣 TYPE     | [ ]    |
+| TASK-17 | Xóa `ReportReason` import thừa                                    | 🟣 TYPE     | [x]    |
+| TASK-18 | Kiểm tra `addFriend`/`removeFriend` trong contactStore            | 🟣 TYPE     | [x]    |
 
 ---
 
