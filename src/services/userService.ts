@@ -143,6 +143,7 @@ export const userService = {
           avatar: data.avatar || '',
           email: data.email || '',
           status: UserStatus.ONLINE,
+          role: 'user',
           bio: data.bio || '',
           coverImage: data.coverImage || '',
           createdAt: new Date(),
@@ -300,7 +301,7 @@ export const userService = {
         { blockedUserIds: arrayUnion(blockedUserId) },
         { merge: true }
       );
-      
+
       const participantIds = [userId, blockedUserId].sort();
       const q = query(
         collection(db, 'conversations'),
@@ -324,7 +325,7 @@ export const userService = {
         { blockedUserIds: arrayRemove(blockedUserId) },
         { merge: true }
       );
-      
+
       const participantIds = [userId, blockedUserId].sort();
       const q = query(
         collection(db, 'conversations'),

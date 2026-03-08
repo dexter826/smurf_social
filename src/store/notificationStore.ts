@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { AppNotification } from '../types';
+import { Notification } from '../types';
 import { notificationService } from '../services/notificationService';
 import { PAGINATION } from '../constants/appConfig';
 import { useLoadingStore } from './loadingStore';
 
 interface NotificationState {
-  notifications: AppNotification[];
+  notifications: Notification[];
   unreadCount: number;
   currentLimit: number;
-  setNotifications: (notifications: AppNotification[]) => void;
-  addNotification: (notification: AppNotification) => void;
+  setNotifications: (notifications: Notification[]) => void;
+  addNotification: (notification: Notification) => void;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;

@@ -1,96 +1,38 @@
+// ========== IMPORTS FROM SHARED ==========
+import {
+  UserStatus,
+  Gender,
+  Visibility,
+  FriendRequestStatus,
+  FriendStatus,
+  ReactionType,
+  PostType,
+  MessageType,
+  NotificationType,
+  ReportType,
+  ReportReason,
+  ReportStatus,
+} from "../shared/types";
+
+// Re-export for consumers
+export {
+  UserStatus,
+  Gender,
+  Visibility,
+  FriendRequestStatus,
+  FriendStatus,
+  ReactionType,
+  PostType,
+  MessageType,
+  NotificationType,
+  ReportType,
+  ReportReason,
+  ReportStatus,
+};
+
+// ========== FRONTEND-SPECIFIC TYPES ==========
+
 export type ThemeMode = "light" | "dark";
-
-// ========== ENUMS ==========
-
-export enum UserStatus {
-  ONLINE = "online",
-  OFFLINE = "offline",
-  BANNED = "banned",
-}
-
-export enum Gender {
-  MALE = "male",
-  FEMALE = "female",
-  OTHER = "other",
-}
-
-export enum Visibility {
-  PUBLIC = "public",
-  FRIENDS = "friends",
-  PRIVATE = "private",
-}
-
-export enum FriendRequestStatus {
-  PENDING = "pending",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-}
-
-export enum FriendStatus {
-  NOT_FRIEND = "not_friend",
-  PENDING_SENT = "pending_sent",
-  PENDING_RECEIVED = "pending_received",
-  FRIEND = "friend",
-}
-
-export enum ReactionType {
-  LIKE = "LIKE",
-  LOVE = "LOVE",
-  HAHA = "HAHA",
-  WOW = "WOW",
-  SAD = "SAD",
-  ANGRY = "ANGRY",
-}
-
-export enum PostType {
-  NORMAL = "normal",
-  AVATAR_UPDATE = "avatar_update",
-  COVER_UPDATE = "cover_update",
-}
-
-export enum MessageType {
-  TEXT = "text",
-  IMAGE = "image",
-  VIDEO = "video",
-  FILE = "file",
-  VOICE = "voice",
-  SYSTEM = "system",
-  CALL = "call",
-}
-
-export enum NotificationType {
-  LIKE_POST = "like_post",
-  COMMENT_POST = "comment_post",
-  REPLY_COMMENT = "reply_comment",
-  REACT_COMMENT = "react_comment",
-  FRIEND_REQUEST = "friend_request",
-  FRIEND_ACCEPT = "friend_accept",
-  REPORT_NEW = "report_new",
-  REPORT_RESOLVED = "report_resolved",
-  CONTENT_VIOLATION = "content_violation",
-}
-
-export enum ReportType {
-  POST = "post",
-  COMMENT = "comment",
-  USER = "user",
-}
-
-export enum ReportReason {
-  SPAM = "spam",
-  HARASSMENT_VIOLENCE = "harassment_violence",
-  HATE_SPEECH = "hate_speech",
-  SENSITIVE = "sensitive",
-  SCAM_IMPERSONATION = "scam_impersonation",
-  OTHER = "other",
-}
-
-export enum ReportStatus {
-  PENDING = "pending",
-  RESOLVED = "resolved",
-  REJECTED = "rejected",
-  ORPHANED = "orphaned",
-}
 
 // ========== BASE ENTITIES ==========
 
@@ -112,7 +54,7 @@ export interface User extends BaseEntity {
   bio?: string;
   coverImage?: string;
   lastSeen?: Date;
-  role?: 'admin' | 'user';
+  role: 'admin' | 'user';
 }
 
 export interface FriendRequest extends BaseEntity {
@@ -131,8 +73,8 @@ export interface Message extends BaseEntity {
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;
-  readBy?: string[];
-  deliveredTo?: string[];
+  readBy: string[];
+  deliveredTo: string[];
   deliveredAt?: Date;
   mentions?: string[];
   reactionCount?: number;
@@ -140,7 +82,7 @@ export interface Message extends BaseEntity {
   myReaction?: string;
   isRecalled?: boolean;
   recalledAt?: Date;
-  deletedBy?: string[];
+  deletedBy: string[];
   isForwarded?: boolean;
   replyToId?: string;
   replyToSnippet?: { senderId: string; content: string; type: MessageType; isRecalled?: boolean };
@@ -168,17 +110,17 @@ export interface Conversation extends BaseEntity {
   isGroup: boolean;
   groupName?: string;
   groupAvatar?: string;
-  creatorId?: string;
-  adminIds?: string[];
-  pinnedBy?: string[];
+  creatorId: string;
+  adminIds: string[];
+  pinnedBy: string[];
   mutedUsers?: Record<string, boolean>;
-  archivedBy?: string[];
-  markedUnreadBy?: string[];
+  archivedBy: string[];
+  markedUnreadBy: string[];
   typingUsers?: string[];
   memberJoinedAt?: Record<string, Date>;
-  deletedBy?: string[];
+  deletedBy: string[];
   deletedAt?: Record<string, Date>;
-  blockedBy?: string[];
+  blockedBy: string[];
 }
 
 export interface Comment extends BaseEntity {
@@ -205,12 +147,12 @@ export interface Post extends BaseEntity {
   videoThumbnails?: Record<string, string>;
   commentCount: number;
   visibility: Visibility;
-  type?: PostType;
+  type: PostType;
   isEdited?: boolean;
   editedAt?: Date;
 }
 
-export interface AppNotification extends BaseEntity {
+export interface Notification extends BaseEntity {
   receiverId: string;
   senderId: string;
   type: NotificationType;

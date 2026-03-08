@@ -1,9 +1,9 @@
-import { 
-  collection, 
-  addDoc, 
-  getDoc, 
-  doc, 
-  updateDoc, 
+import {
+  collection,
+  addDoc,
+  getDoc,
+  doc,
+  updateDoc,
   deleteDoc,
   deleteField,
   serverTimestamp,
@@ -29,7 +29,7 @@ export const groupService = {
   ): Promise<string> => {
     try {
       const participantIds = [creatorId, ...memberIds.filter(id => id !== creatorId)];
-      
+
       const conversationData = {
         participantIds,
         isGroup: true,
@@ -42,15 +42,19 @@ export const groupService = {
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
         pinnedBy: [],
+        archivedBy: [],
+        markedUnreadBy: [],
+        deletedBy: [],
+        blockedBy: [],
         mutedUsers: {}
       };
-      
+
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
-      
+
       // Thông báo tạo nhóm
       const creator = await userService.getUserById(creatorId);
       await messageService.sendSystemMessage(docRef.id, `${creator?.name || 'Ai đó'} đã tạo nhóm "${groupName}"`);
-      
+
       return docRef.id;
     } catch (error) {
       console.error("Lỗi tạo nhóm:", error);
@@ -74,7 +78,7 @@ export const groupService = {
       // Thông báo cập nhật thông tin (tên/ảnh)
       if (updates.groupName || updates.groupAvatar) {
         const actor = await userService.getUserById(actorId);
-        const content = updates.groupName 
+        const content = updates.groupName
           ? `${actor?.name || 'Ai đó'} đã đổi tên nhóm thành "${updates.groupName}"`
           : `${actor?.name || 'Ai đó'} đã cập nhật ảnh đại diện của nhóm`;
         await messageService.sendSystemMessage(conversationId, content);
@@ -90,14 +94,14 @@ export const groupService = {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (!conversationSnap.exists()) {
         throw new Error('Nhóm không tồn tại');
       }
-      
+
       const data = conversationSnap.data();
       const currentMemberCount = (data.participantIds || []).length;
-      
+
       // Kiểm tra giới hạn số thành viên
       if (currentMemberCount >= GROUP_LIMITS.MAX_MEMBERS) {
         throw new Error(`Nhóm đã đạt tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`);
@@ -126,7 +130,7 @@ export const groupService = {
   removeGroupMember: async (conversationId: string, actorId: string, userId: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
-      
+
       await updateDoc(conversationRef, {
         participantIds: arrayRemove(userId),
         adminIds: arrayRemove(userId),
@@ -151,10 +155,10 @@ export const groupService = {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
-      
+
       if (conversationSnap.exists()) {
         const data = conversationSnap.data();
-        
+
         // Giải tán nếu nhóm chỉ còn 1 người
         if (data.participantIds.length <= 1) {
           await groupService.disbandGroup(conversationId);
@@ -163,14 +167,14 @@ export const groupService = {
 
         const newParticipantIds = data.participantIds.filter((id: string) => id !== userId);
         let newAdminIds = (data.adminIds || []).filter((id: string) => id !== userId);
-        
+
         const updates: Record<string, unknown> = {
           participantIds: newParticipantIds,
           [`unreadCount.${userId}`]: deleteField(),
           [`memberJoinedAt.${userId}`]: deleteField(),
           updatedAt: serverTimestamp()
         };
-        
+
         // Bắt buộc phải có Chủ nhóm mới
         if (data.creatorId === userId) {
           if (!newAdminId) {
@@ -180,19 +184,19 @@ export const groupService = {
             throw new Error("Quản trị viên mới không nằm trong nhóm.");
           }
           updates.creatorId = newAdminId;
-          
+
           if (!newAdminIds.includes(newAdminId)) {
             newAdminIds.push(newAdminId);
           }
         }
-        
+
         updates.adminIds = newAdminIds;
-        
+
         await updateDoc(conversationRef, updates);
 
         const user = await userService.getUserById(userId);
         await messageService.sendSystemMessage(conversationId, `${user?.name || 'Ai đó'} đã rời khỏi nhóm`);
-        
+
         if (updates.creatorId && updates.creatorId !== data.creatorId) {
           const newOwner = await userService.getUserById(updates.creatorId as string);
           await messageService.sendSystemMessage(conversationId, `${newOwner?.name || 'Ai đó'} đã trở thành chủ nhóm mới`);
@@ -252,7 +256,7 @@ export const groupService = {
   ): Promise<string> => {
     try {
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.AVATAR);
-      
+
       const fileExt = file.name.split('.').pop();
       const fileName = `group_${conversationId}_${Date.now()}.${fileExt}`;
       const path = `group-avatars/${conversationId}/${fileName}`;
@@ -271,7 +275,7 @@ export const groupService = {
       throw error;
     }
   },
-  
+
   // Giải tán nhóm (Xóa toàn bộ hội thoại cho tất cả thành viên)
   disbandGroup: async (conversationId: string): Promise<void> => {
     try {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trash2, Shield } from 'lucide-react';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
-import { AppNotification, NotificationType } from '../../types';
+import { Notification, NotificationType } from '../../types';
 import { UserAvatar, Button, Skeleton } from '../ui';
 import { notificationService } from '../../services/notificationService';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ import { useUserCache } from '../../store/userCacheStore';
 import { useEffect } from 'react';
 
 interface NotificationItemProps {
-  notification: AppNotification;
+  notification: Notification;
   onClick?: () => void;
 }
 
@@ -107,8 +107,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
         <p className="text-sm text-text-primary leading-tight">
           {isInteraction && (
             <span className="font-semibold mr-1">
-              {sender?.name 
-                ? sender.name 
+              {sender?.name
+                ? sender.name
                 : <Skeleton width={72} height={13} className="opacity-60 inline-block align-middle" />}
             </span>
           )}

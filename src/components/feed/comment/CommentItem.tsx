@@ -105,8 +105,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline leading-none min-w-0"
                     onClick={onProfileNavigate}
                   >
-                    {author?.name 
-                      ? author.name 
+                    {author?.name
+                      ? author.name
                       : <Skeleton width={80} height={12} className="opacity-60" />}
                   </h4>
                   {comment.userId === postOwnerId && (
@@ -205,7 +205,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 )}
                 <button
                   onMouseEnter={() => setShowReactions(true)}
-                  onClick={() => handleReact(myReaction ? 'REMOVE' : 'LIKE')}
+                  onClick={() => handleReact(myReaction ? 'REMOVE' : ReactionType.LIKE)}
                   className={`hover:underline active:underline transition-all duration-base cursor-pointer ${myReaction ? 'text-primary' : ''}`}
                 >
                   Thích
