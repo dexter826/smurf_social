@@ -29,6 +29,7 @@ export const TIME_LIMITS = {
   MESSAGE_EDIT_WINDOW: 5 * 60 * 1000,
   TYPING_TIMEOUT: 3000,
   TOAST_DURATION: 3000,
+  VOICE_MAX_DURATION: 5 * 60 * 1000,
 } as const;
 
 // Giới hạn Media
