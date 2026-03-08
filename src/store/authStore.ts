@@ -29,7 +29,6 @@ interface AuthState {
   updateUserProfile: (updates: Partial<User>) => void;
   updateAvatar: (avatarUrl: string) => void;
   updateBlockList: (action: "add" | "remove", targetUserId: string) => void;
-  unfriendUser: (targetUserId: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -213,10 +212,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         },
       });
     }
-  },
-
-  unfriendUser: (_targetUserId) => {
-    // contactStore.subscribeToFriends tự cập nhật qua snapshot
   },
 
   initialize: () => {

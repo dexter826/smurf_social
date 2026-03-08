@@ -12,13 +12,11 @@ interface ContactState {
   searchResults: User[];
 
   subscribeToFriends: (userId: string) => () => void;
-  fetchReceivedRequests: (userId: string) => Promise<void>;
-  fetchSentRequests: (userId: string) => Promise<void>;
   subscribeToRequests: (userId: string) => () => void;
   searchUsers: (searchTerm: string, userId: string) => Promise<User[]>;
 
   sendFriendRequest: (senderId: string, receiverId: string, message?: string) => Promise<void>;
-  acceptFriendRequest: (requestId: string, userId: string, friendId: string) => Promise<void>;
+  acceptFriendRequest: (requestId: string) => Promise<void>;
   rejectFriendRequest: (requestId: string) => Promise<void>;
   cancelFriendRequest: (requestId: string) => Promise<void>;
   unfriend: (userId: string, friendId: string) => Promise<void>;
@@ -53,24 +51,6 @@ export const useContactStore = create<ContactState>()(
           set({ friends });
           useLoadingStore.getState().setLoading('contacts.friends', false);
         });
-      },
-
-      fetchReceivedRequests: async (userId: string) => {
-        try {
-          const data = await friendService.getReceivedRequests(userId);
-          set({ receivedRequests: data });
-        } catch (error) {
-          console.error("Lỗi tải lời mời kết bạn:", error);
-        }
-      },
-
-      fetchSentRequests: async (userId: string) => {
-        try {
-          const data = await friendService.getSentRequests(userId);
-          set({ sentRequests: data });
-        } catch (error) {
-          console.error("Lỗi tải lời mời đã gửi:", error);
-        }
       },
 
       subscribeToRequests: (userId: string) => {
@@ -113,7 +93,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
-      acceptFriendRequest: async (requestId: string, _userId?: string, _friendId?: string) => {
+      acceptFriendRequest: async (requestId: string) => {
         const previousRequests = get().receivedRequests;
         set(state => ({
           receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)

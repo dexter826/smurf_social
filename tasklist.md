@@ -125,10 +125,10 @@
 - `src/store/contactStore.ts` — xóa `fetchReceivedRequests`, `fetchSentRequests`, clean `acceptFriendRequest` params
 - `src/store/authStore.ts` — xóa `unfriendUser`
 
-- [ ] Xóa `contactStore.fetchReceivedRequests()`
-- [ ] Xóa `contactStore.fetchSentRequests()`
-- [ ] Xóa `authStore.unfriendUser()`
-- [ ] Clean params của `acceptFriendRequest`
+- [x] Xóa `contactStore.fetchReceivedRequests()`
+- [x] Xóa `contactStore.fetchSentRequests()`
+- [x] Xóa `authStore.unfriendUser()`
+- [x] Clean params của `acceptFriendRequest`
 
 ---
 
@@ -334,7 +334,7 @@ Hiện tại:
 | TASK-03 | Fix admin ban dùng sai API — thay bằng CF callable                | 🔴 CRITICAL | [x]    |
 | TASK-04 | Xóa orphan fields `pinned/muted` khi tạo conversation             | 🔴 CRITICAL | [x]    |
 | TASK-05 | Xóa 3 dead methods trong notificationService                      | 🟡 HIGH     | [x]    |
-| TASK-06 | Xóa dead methods contactStore + authStore                         | 🟡 HIGH     | [ ]    |
+| TASK-06 | Xóa dead methods contactStore + authStore                         | 🟡 HIGH     | [x]    |
 | TASK-07 | Sửa `useFriendIds` hook (kết hợp TASK-01)                         | 🟡 HIGH     | [ ]    |
 | TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [ ]    |
 | TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [ ]    |
