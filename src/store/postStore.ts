@@ -9,6 +9,7 @@ import { useLoadingStore } from './loadingStore';
 
 interface PostState {
   posts: Post[];
+  myPostReactions: Record<string, string>; // postId -> reactionType
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
@@ -35,6 +36,7 @@ export const usePostStore = create<PostState>()(
   persist(
     (set, get) => ({
       posts: [],
+      myPostReactions: {},
       hasMore: true,
       lastDoc: null,
       abortController: null,
@@ -48,6 +50,7 @@ export const usePostStore = create<PostState>()(
 
         set({
           posts: [],
+          myPostReactions: {},
           hasMore: true,
           lastDoc: null,
           abortController: null,
@@ -89,8 +92,13 @@ export const usePostStore = create<PostState>()(
 
           if (newController.signal.aborted) return;
 
+          // Load myReactions for posts
+          const postIds = result.posts.map(p => p.id);
+          const myReactions = await postService.batchLoadMyReactions(postIds, currentUserId);
+
           set({
             posts: loadMore ? [...posts, ...result.posts] : result.posts,
+            myPostReactions: loadMore ? { ...get().myPostReactions, ...myReactions } : myReactions,
             lastDoc: result.lastDoc,
             hasMore: result.hasMore,
             abortController: null,
@@ -189,7 +197,9 @@ export const usePostStore = create<PostState>()(
           commentCount: 0,
           createdAt: new Date(),
           status: PostStatus.ACTIVE,
-          type: PostType.NORMAL
+          type: PostType.NORMAL,
+          reactionCount: 0,
+          reactionSummary: {},
         };
 
         set(state => ({
@@ -224,7 +234,9 @@ export const usePostStore = create<PostState>()(
               videos: finalVideos,
               videoThumbnails: finalThumbnails,
               visibility,
-              type: PostType.NORMAL
+              type: PostType.NORMAL,
+              reactionCount: 0,
+              reactionSummary: {},
             }, postId);
 
             set(state => {
@@ -357,15 +369,16 @@ export const usePostStore = create<PostState>()(
         const post = get().posts.find(p => p.id === postId) ?? get().selectedPost;
         if (!post) return;
 
-        const prevMyReaction = post.myReaction;
-        const prevCount = post.reactionCount ?? 0;
-        const prevSummary = { ...(post.reactionSummary ?? {}) };
+        const prevMyReaction = get().myPostReactions[postId];
+        const prevCount = post.reactionCount;
+        const prevSummary = { ...post.reactionSummary };
         const prevSelectedPost = get().selectedPost;
 
+        const isRemove = reaction === 'REMOVE' || prevMyReaction === reaction;
+        const oldType = prevMyReaction;
+
         const applyOptimistic = (p: Post): Post => {
-          const isRemove = reaction === 'REMOVE' || p.myReaction === reaction;
-          const oldType = p.myReaction;
-          const newSummary = { ...(p.reactionSummary ?? {}) };
+          const newSummary = { ...p.reactionSummary };
           let delta = 0;
 
           if (isRemove && oldType) {
@@ -384,15 +397,23 @@ export const usePostStore = create<PostState>()(
 
           return {
             ...p,
-            myReaction: isRemove ? undefined : reaction,
-            reactionCount: Math.max(0, (p.reactionCount ?? 0) + delta),
+            reactionCount: Math.max(0, p.reactionCount + delta),
             reactionSummary: newSummary,
           };
         };
 
+        // Update myPostReactions
+        const newMyReactions = { ...get().myPostReactions };
+        if (isRemove) {
+          delete newMyReactions[postId];
+        } else {
+          newMyReactions[postId] = reaction;
+        }
+
         set((state) => ({
           posts: state.posts.map(p => p.id === postId ? applyOptimistic(p) : p),
           selectedPost: state.selectedPost?.id === postId ? applyOptimistic(state.selectedPost) : state.selectedPost,
+          myPostReactions: newMyReactions,
         }));
 
         try {
@@ -400,8 +421,9 @@ export const usePostStore = create<PostState>()(
         } catch (error) {
           console.error("Lỗi react bài viết:", error);
           set((state) => ({
-            posts: state.posts.map(p => p.id === postId ? { ...p, myReaction: prevMyReaction, reactionCount: prevCount, reactionSummary: prevSummary } : p),
+            posts: state.posts.map(p => p.id === postId ? { ...p, reactionCount: prevCount, reactionSummary: prevSummary } : p),
             selectedPost: prevSelectedPost,
+            myPostReactions: { ...state.myPostReactions, [postId]: prevMyReaction },
           }));
         }
       },
@@ -423,7 +445,12 @@ export const usePostStore = create<PostState>()(
         useLoadingStore.getState().setLoading('feed', true);
         try {
           const post = await postService.getPostById(postId, currentUserId, friendIds);
-          set({ selectedPost: post });
+          const myReaction = await postService.getMyReactionForPost(postId, currentUserId);
+
+          set({
+            selectedPost: post,
+            myPostReactions: { ...get().myPostReactions, [postId]: myReaction || '' }
+          });
         } catch (error) {
           console.error("Lỗi lấy chi tiết bài viết:", error);
         } finally {

@@ -14,6 +14,7 @@ import {
   ReportStatus,
   PostStatus,
   CommentStatus,
+  ReactableEntity,
 } from "../shared/types";
 
 // Re-export for consumers
@@ -33,6 +34,8 @@ export {
   PostStatus,
   CommentStatus,
 };
+
+export type { ReactableEntity };
 
 // ========== FRONTEND-SPECIFIC TYPES ==========
 
@@ -75,7 +78,7 @@ export interface FriendRequest extends BaseEntity {
   updatedAt?: Date;
 }
 
-export interface Message extends BaseEntity {
+export interface Message extends BaseEntity, ReactableEntity {
   conversationId: string;
   senderId: string;
   content: string;
@@ -87,9 +90,6 @@ export interface Message extends BaseEntity {
   deliveredTo: string[];
   deliveredAt?: Date;
   mentions?: string[];
-  reactionCount?: number;
-  reactionSummary?: Record<string, number>;
-  myReaction?: string;
   isRecalled?: boolean;
   recalledAt?: Date;
   deletedBy: string[];
@@ -133,15 +133,12 @@ export interface Conversation extends BaseEntity {
   blockedBy: string[];
 }
 
-export interface Comment extends BaseEntity {
+export interface Comment extends BaseEntity, ReactableEntity {
   postId: string;
   userId: string;
   parentId?: string;
   content: string;
   status: CommentStatus;
-  reactionCount?: number;
-  reactionSummary?: Record<string, number>;
-  myReaction?: string;
   image?: string;
   replyCount?: number;
   replyToUserId?: string;
@@ -151,15 +148,12 @@ export interface Comment extends BaseEntity {
   deletedBy?: string;
 }
 
-export interface Post extends BaseEntity {
+export interface Post extends BaseEntity, ReactableEntity {
   userId: string;
   content: string;
   status: PostStatus;
   images?: string[];
   videos?: string[];
-  reactionCount?: number;
-  reactionSummary?: Record<string, number>;
-  myReaction?: string;
   videoThumbnails?: Record<string, string>;
   commentCount: number;
   visibility: Visibility;

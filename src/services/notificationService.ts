@@ -16,7 +16,8 @@ import {
 } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
-import { Notification, NotificationType, ReportReason } from '../types';
+import type { Notification } from '../types';
+import { NotificationType, ReportReason } from '../types';
 import { REPORT_CONFIG } from '../constants/appConfig';
 import { getValidatedEnvConfig } from '../utils/validateEnv';
 import { convertTimestamp } from '../utils/dateUtils';

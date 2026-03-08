@@ -108,7 +108,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     (new Date().getTime() - new Date(message.createdAt).getTime()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
   );
 
-  const hasReactions = (message.reactionCount ?? 0) > 0;
+  const hasReactions = (message.reactionCount) > 0;
+  const myReaction = useChatStore(state => state.myMessageReactions[message.id]);
 
   const handleToggleVoice = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -170,14 +171,14 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             </span>
           )}
 
-              <div className="relative group/message">
+          <div className="relative group/message">
             <ReactionDetailsModal
-        isOpen={showReactionDetails}
-        onClose={() => setShowReactionDetails(false)}
-        sourceId={message.id}
-        sourceType="message"
-        currentUserId={currentUserId}
-      />
+              isOpen={showReactionDetails}
+              onClose={() => setShowReactionDetails(false)}
+              sourceId={message.id}
+              sourceType="message"
+              currentUserId={currentUserId}
+            />
 
             {/* Nội dung tin nhắn */}
             <div
@@ -270,7 +271,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                         onClose={() => setShowReactionSelector(false)}
                         autoClose={false}
                         className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
-                        currentReaction={message.myReaction}
+                        currentReaction={myReaction}
                       />
                     </>
                   )}

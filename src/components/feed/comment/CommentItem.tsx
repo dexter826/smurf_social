@@ -81,8 +81,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
     }
   }, [comment.userId, onProfileClick, navigate]);
 
-  const myReaction = comment.myReaction;
-  const reactionCount = comment.reactionCount ?? 0;
+  const myReaction = useCommentStore(state => state.myCommentReactions[comment.id]);
+  const reactionCount = comment.reactionCount;
 
   const handleReact = useCallback((reaction: string | ReactionType) => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);

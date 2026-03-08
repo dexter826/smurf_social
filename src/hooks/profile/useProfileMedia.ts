@@ -60,7 +60,9 @@ export const useProfileMedia = ({
           images: [newAvatarUrl],
           videos: [],
           visibility: Visibility.PUBLIC,
-          type: PostType.AVATAR_UPDATE
+          type: PostType.AVATAR_UPDATE,
+          reactionCount: 0,
+          reactionSummary: {},
         });
       }
     } catch (error) {
@@ -102,7 +104,9 @@ export const useProfileMedia = ({
           images: [newCoverUrl],
           videos: [],
           visibility: Visibility.PUBLIC,
-          type: PostType.COVER_UPDATE
+          type: PostType.COVER_UPDATE,
+          reactionCount: 0,
+          reactionSummary: {},
         });
       }
     } catch (error) {

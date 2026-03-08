@@ -24,10 +24,10 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  
+
   const lastDocRef = useRef<DocumentSnapshot | null>(null);
   const hasMoreRef = useRef(true);
-  
+
   const { users, fetchUsers } = useUserCache();
   const { posts: allStorePosts, deletePost: deleteStorePost } = usePostStore();
   const friendIds = useFriendIds();
@@ -36,7 +36,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     if (userId !== currentUser.id) return dbPosts;
 
     const dbPostIds = new Set(dbPosts.map(p => p.id));
-    const uploadingPosts = allStorePosts.filter(p => 
+    const uploadingPosts = allStorePosts.filter(p =>
       p.userId === userId && !dbPostIds.has(p.id)
     );
 
@@ -45,7 +45,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
 
   const loadPosts = useCallback(async (isFirstPage: boolean = false) => {
     if (!isFirstPage && !hasMoreRef.current) return;
-    
+
     if (isFirstPage) {
       setLoading(true);
       lastDocRef.current = null;
@@ -56,13 +56,13 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
 
     try {
       const result = await postService.getUserPosts(
-        userId, 
+        userId,
         currentUser.id,
         friendIds,
-        10, 
+        10,
         isFirstPage ? undefined : (lastDocRef.current || undefined)
       );
-      
+
       const newPosts = result.posts;
       lastDocRef.current = result.lastDoc;
       hasMoreRef.current = result.posts.length === 10;
@@ -73,7 +73,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
       } else {
         setDbPosts(prev => [...prev, ...newPosts]);
       }
-      
+
       const userIds = [...new Set(newPosts.map(p => p.userId))];
       fetchUsers(userIds);
 
@@ -87,7 +87,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
 
   useEffect(() => {
     loadPosts(true);
-    
+
     const unsubscribe = postService.subscribeToUserPosts(
       userId,
       currentUser.id,
@@ -126,12 +126,14 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
-    const oldReaction = post.myReaction;
+    const { myPostReactions } = usePostStore.getState();
+    const oldReaction = myPostReactions[postId];
     const isRemove = oldReaction === reaction;
 
-    const prevSummary = post.reactionSummary ?? {};
+    const prevSummary = post.reactionSummary;
     const newSummary = { ...prevSummary };
-    let newCount = post.reactionCount ?? 0;
+    let newCount = post.reactionCount;
+
     if (isRemove) {
       if (oldReaction) {
         newSummary[oldReaction] = Math.max(0, (newSummary[oldReaction] ?? 0) - 1);
@@ -148,16 +150,26 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     }
 
     setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
-      ...p, myReaction: isRemove ? undefined : reaction, reactionCount: newCount, reactionSummary: newSummary
+      ...p, reactionCount: newCount, reactionSummary: newSummary
     }));
+
+    // Update myPostReactions in store
+    const newMyReactions = { ...myPostReactions };
+    if (isRemove) {
+      delete newMyReactions[postId];
+    } else {
+      newMyReactions[postId] = reaction;
+    }
+    usePostStore.setState({ myPostReactions: newMyReactions });
 
     try {
       await postService.reactToPost(postId, currentUser.id, isRemove ? 'REMOVE' : reaction);
     } catch (error) {
       // Rollback
       setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
-        ...p, myReaction: oldReaction, reactionCount: post.reactionCount, reactionSummary: prevSummary
+        ...p, reactionCount: post.reactionCount, reactionSummary: prevSummary
       }));
+      usePostStore.setState({ myPostReactions: { ...usePostStore.getState().myPostReactions, [postId]: oldReaction } });
     }
   }, [posts, currentUser.id]);
 
