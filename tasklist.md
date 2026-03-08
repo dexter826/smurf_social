@@ -222,7 +222,7 @@ Hiện tại:
 
 - `src/utils/batchUtils.ts` — thêm `birthDate` conversion
 
-- [ ] Thêm `birthDate` conversion vào `batchGetUsers`
+- [x] Thêm `birthDate` conversion vào `batchGetUsers`
 
 ---
 
@@ -339,7 +339,7 @@ Hiện tại:
 | TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [x]    |
 | TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [x]    |
 | TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [x]    |
-| TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [ ]    |
+| TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [x]    |
 | TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [ ]    |
 | TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [ ]    |
 | TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [ ]    |
