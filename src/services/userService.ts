@@ -253,10 +253,6 @@ export const userService = {
       const isOwner = userId === currentUserId;
       const isFriend = friendIds?.includes(userId) || false;
 
-      const friendCountQuery = isOwner
-        ? getCountFromServer(collection(db, 'users', userId, 'friends'))
-        : Promise.resolve(null);
-
       let visibilityFilter: string[];
       if (isOwner) {
         visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
@@ -273,12 +269,12 @@ export const userService = {
       );
 
       const [friendCountSnap, postsSnapshot] = await Promise.all([
-        friendCountQuery,
+        getCountFromServer(collection(db, 'users', userId, 'friends')),
         getCountFromServer(postsQuery),
       ]);
 
       return {
-        friendCount: friendCountSnap ? friendCountSnap.data().count : 0,
+        friendCount: friendCountSnap.data().count,
         postCount: postsSnapshot.data().count,
       };
     } catch (error) {
