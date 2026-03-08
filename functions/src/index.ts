@@ -12,6 +12,7 @@ export { unfriend } from './friends/unfriend';
 
 // Message Triggers
 export { onMessageRecalled } from './messages/onMessageRecalled';
+export { onMessageUpdated, syncReplyToSnippet } from './messages/onMessageUpdated';
 
 // Admin Callable Functions
 export { resolveReport } from './admin/resolveReport';

