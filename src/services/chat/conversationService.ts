@@ -24,15 +24,14 @@ import { convertTimestamp } from '../../utils/dateUtils';
 export const conversationService = {
   getOrCreateConversation: async (user1Id: string, user2Id: string): Promise<string> => {
     try {
-      // Kiểm tra block lẫn nhau
-      const [user1Snap, user2Snap] = await Promise.all([
-        getDoc(doc(db, 'users', user1Id)),
-        getDoc(doc(db, 'users', user2Id)),
+      const [sec1Snap, sec2Snap] = await Promise.all([
+        getDoc(doc(db, 'users', user1Id, 'private', 'security')),
+        getDoc(doc(db, 'users', user2Id, 'private', 'security')),
       ]);
-      if (user1Snap.exists() && user1Snap.data().blockedUserIds?.includes(user2Id)) {
+      if (sec1Snap.data()?.blockedUserIds?.includes(user2Id)) {
         throw new Error('Bạn đã chặn người dùng này');
       }
-      if (user2Snap.exists() && user2Snap.data().blockedUserIds?.includes(user1Id)) {
+      if (sec2Snap.data()?.blockedUserIds?.includes(user1Id)) {
         throw new Error('Không thể nhắn tin cho người dùng này');
       }
 
