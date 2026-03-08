@@ -16,14 +16,14 @@ import {
 } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
-import { AppNotification, NotificationType, ReportReason } from '../types';
+import { Notification, NotificationType, ReportReason } from '../types';
 import { REPORT_CONFIG } from '../constants/appConfig';
 import { getValidatedEnvConfig } from '../utils/validateEnv';
 import { convertTimestamp } from '../utils/dateUtils';
 
 export const notificationService = {
   // Theo dõi thông báo mới nhất.
-  subscribeToNotifications: (userId: string, callback: (notifications: AppNotification[]) => void, limitCount: number = 20) => {
+  subscribeToNotifications: (userId: string, callback: (notifications: Notification[]) => void, limitCount: number = 20) => {
     const q = query(
       collection(db, 'notifications'),
       where('receiverId', '==', userId),
@@ -36,7 +36,7 @@ export const notificationService = {
         id: doc.id,
         ...doc.data(),
         createdAt: convertTimestamp(doc.data().createdAt, new Date()),
-      } as AppNotification));
+      } as Notification));
       callback(notifications);
     });
   },
@@ -128,7 +128,7 @@ export const notificationService = {
   },
 
   // Helper để lấy text hiển thị ngắn gọn cho thông báo
-  getNotificationText: (notification: AppNotification, senderName: string): string => {
+  getNotificationText: (notification: Notification, senderName: string): string => {
     const isInteraction = [
       NotificationType.LIKE_POST,
       NotificationType.COMMENT_POST,

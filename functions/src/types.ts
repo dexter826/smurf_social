@@ -1,53 +1,28 @@
-// Enums và types dùng chung — mirror từ src/types.ts
+// ========== IMPORTS FROM SHARED ==========
+// Enums và types dùng chung — import từ shared/types.ts
 
-export enum UserStatus {
-  ONLINE = 'online',
-  OFFLINE = 'offline',
-  BANNED = 'banned',
-}
+import {
+  UserStatus,
+  PostType,
+  Visibility,
+  NotificationType,
+  ReportType,
+  ReportStatus,
+  FriendRequestStatus,
+} from "../../shared/types";
 
-export enum PostType {
-  NORMAL = 'normal',
-  AVATAR_UPDATE = 'avatar_update',
-  COVER_UPDATE = 'cover_update',
-}
+// Re-export for consumers
+export {
+  UserStatus,
+  PostType,
+  Visibility,
+  NotificationType,
+  ReportType,
+  ReportStatus,
+  FriendRequestStatus,
+};
 
-export enum Visibility {
-  PUBLIC = 'public',
-  FRIENDS = 'friends',
-  PRIVATE = 'private',
-}
-
-export enum NotificationType {
-  LIKE_POST = 'like_post',
-  COMMENT_POST = 'comment_post',
-  REPLY_COMMENT = 'reply_comment',
-  REACT_COMMENT = 'react_comment',
-  FRIEND_REQUEST = 'friend_request',
-  FRIEND_ACCEPT = 'friend_accept',
-  REPORT_NEW = 'report_new',
-  REPORT_RESOLVED = 'report_resolved',
-  CONTENT_VIOLATION = 'content_violation',
-}
-
-export enum ReportType {
-  POST = 'post',
-  COMMENT = 'comment',
-  USER = 'user',
-}
-
-export enum ReportStatus {
-  PENDING = 'pending',
-  RESOLVED = 'resolved',
-  REJECTED = 'rejected',
-  ORPHANED = 'orphaned',
-}
-
-export enum FriendRequestStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
-}
+// ========== BACKEND-SPECIFIC TYPES ==========
 
 export interface NotificationData {
   receiverId: string;

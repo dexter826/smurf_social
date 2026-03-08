@@ -85,16 +85,16 @@ async function createAndSendMediaMessage(
   }
 ): Promise<string> {
   let uploadFile: File = file;
-  
+
   // Giảm dung lượng ảnh trước khi tải.
   if (options.compress && type === MessageType.IMAGE) {
     uploadFile = await compressImage(file, IMAGE_COMPRESSION.CHAT);
   }
-  
+
   const createdAt = Date.now();
   const path = `chats/${conversationId}/${createdAt}_${file.name}`;
-  
-  const fileUrl = await withRetry(() => 
+
+  const fileUrl = await withRetry(() =>
     uploadWithProgress(path, uploadFile, options.onProgress)
   );
 
@@ -108,6 +108,7 @@ async function createAndSendMediaMessage(
     readBy: [senderId],
     deliveredTo: [senderId],
     deliveredAt: serverTimestamp() as unknown as Date,
+    deletedBy: [],
   };
 
   // Lưu thông tin bổ sung tùy loại tin nhắn.
@@ -129,7 +130,7 @@ async function createAndSendMediaMessage(
     const docRef = await addDoc(collection(db, "messages"), messageData);
     finalId = docRef.id;
   }
-  
+
   await updateConversationAfterMessage(
     conversationId,
     senderId,
@@ -176,7 +177,7 @@ export const messageService = {
       { includeMetadataChanges: true },
       (snapshot) => {
         if (snapshot.metadata.hasPendingWrites && snapshot.docs.length === 0) return;
-        
+
         const messages = snapshot.docs
           .map((doc) => {
             const data = doc.data();
@@ -270,6 +271,7 @@ export const messageService = {
         readBy: [senderId],
         deliveredTo: [senderId],
         deliveredAt: serverTimestamp() as unknown as Date,
+        deletedBy: [],
       };
 
       let finalId = preGeneratedId;
@@ -279,9 +281,9 @@ export const messageService = {
         const docRef = await addDoc(collection(db, "messages"), messageData);
         finalId = docRef.id;
       }
-      
+
       const parsed = JSON.parse(content);
-      const displayContent = parsed.status === 'ended' 
+      const displayContent = parsed.status === 'ended'
         ? `Cuộc gọi ${parsed.callType === 'video' ? 'video' : 'thoại'} kết thúc`
         : `Cuộc gọi ${parsed.callType === 'video' ? 'video' : 'thoại'} nhỡ/từ chối`;
 
@@ -321,6 +323,7 @@ export const messageService = {
         readBy: [senderId],
         deliveredTo: [senderId],
         deliveredAt: serverTimestamp() as unknown as Date,
+        deletedBy: [],
         mentions: mentions || [],
       };
 
@@ -648,6 +651,7 @@ export const messageService = {
         readBy: [senderId],
         deliveredTo: [senderId],
         deliveredAt: serverTimestamp() as unknown as Date,
+        deletedBy: [],
         isForwarded: true,
       };
 
@@ -704,6 +708,7 @@ export const messageService = {
         readBy: [senderId],
         deliveredTo: [senderId],
         deliveredAt: null,
+        deletedBy: [],
       };
 
       let finalId = preGeneratedId;
@@ -815,6 +820,9 @@ export const messageService = {
         content,
         type: MessageType.SYSTEM,
         createdAt: serverTimestamp(),
+        readBy: [],
+        deliveredTo: [],
+        deletedBy: [],
       };
 
       const docRef = await addDoc(collection(db, 'messages'), messageData);

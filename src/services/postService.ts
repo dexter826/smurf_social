@@ -1,16 +1,16 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
+import {
+  collection,
+  addDoc,
+  getDocs,
   getDoc,
-  query, 
-  orderBy, 
+  query,
+  orderBy,
   where,
-  updateDoc, 
+  updateDoc,
   deleteDoc,
-  doc, 
+  doc,
   setDoc,
-  arrayUnion, 
+  arrayUnion,
   arrayRemove,
   Timestamp,
   onSnapshot,
@@ -19,7 +19,7 @@ import {
   DocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, UserStatus, Visibility, ReactionType } from '../types';
+import { Post, UserStatus, Visibility, ReactionType, PostType } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
@@ -59,24 +59,24 @@ export const postService = {
 
       // Loại bỏ người bị chặn
       const validFriendIds = friendIds.filter(id => !!id && !blockedUserIds.includes(id));
-      
+
       let ownerQuery = query(
         collection(db, 'posts'),
         where('userId', '==', currentUserId),
         orderBy('createdAt', 'desc'),
-        limit(limitCount + 1) 
+        limit(limitCount + 1)
       );
       if (lastDoc) ownerQuery = query(ownerQuery, startAfter(lastDoc));
-      
+
       const ownerSnapshot = await getDocs(ownerQuery);
       const ownerPosts = ownerSnapshot.docs.map(convertDocToPost);
-      
+
       let friendPosts: Post[] = [];
       let friendDocs: DocumentSnapshot[] = [];
-      
+
       if (validFriendIds.length > 0) {
         const chunks = chunkArray(validFriendIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
-        
+
         const friendResults = await Promise.all(
           chunks.map(async (chunk) => {
             let q = query(
@@ -87,7 +87,7 @@ export const postService = {
               limit(limitCount + 1)
             );
             if (lastDoc) q = query(q, startAfter(lastDoc));
-            
+
             const snapshot = await getDocs(q);
             return {
               docs: snapshot.docs,
@@ -95,7 +95,7 @@ export const postService = {
             };
           })
         );
-        
+
         friendPosts = friendResults.flatMap(r => r.posts);
         friendDocs = friendResults.flatMap(r => r.docs);
       }
@@ -105,12 +105,12 @@ export const postService = {
 
       const authorIds = [...new Set(allPosts.map(p => p.userId))];
       const usersMap = await batchGetUsers(authorIds);
-      
+
       const filteredPosts = allPosts.filter(p => usersMap[p.userId]?.status !== UserStatus.BANNED);
-      
+
       const hasMore = filteredPosts.length > limitCount;
       const finalPosts = filteredPosts.slice(0, limitCount);
-      
+
       const allDocs = [...ownerSnapshot.docs, ...friendDocs];
       const lastPost = finalPosts[finalPosts.length - 1];
       const lastVisible = lastPost ? allDocs.find(d => d.id === lastPost.id) || null : null;
@@ -123,16 +123,16 @@ export const postService = {
   },
 
   subscribeToFeed: (
-    currentUserId: string, 
-    friendIds: string[], 
+    currentUserId: string,
+    friendIds: string[],
     blockedUserIds: string[] = [],
-    callback: (action: 'initial' | 'add' | 'update' | 'remove', posts: Post[]) => void, 
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', posts: Post[]) => void,
     limitCount: number = PAGINATION.FEED_POSTS
   ) => {
     if (!currentUserId) {
       console.warn("subscribeToFeed: thiếu currentUserId");
       callback('initial', []);
-      return () => {};
+      return () => { };
     }
 
     // Lọc blocked users
@@ -150,11 +150,11 @@ export const postService = {
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
-    
+
     unsubscribers.push(
       onSnapshot(ownerQuery, (snapshot) => {
         if (isInitialLoad) return;
-        
+
         snapshot.docChanges().forEach(change => {
           const post = convertDocToPost(change.doc);
           if (change.type === 'added') {
@@ -174,7 +174,7 @@ export const postService = {
     // Query 2: Posts của bạn bè (chỉ visibility='friends')
     if (validFriendIds.length > 0) {
       const chunks = chunkArray(validFriendIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
-      
+
       chunks.forEach(chunk => {
         const friendQuery = query(
           collection(db, 'posts'),
@@ -183,11 +183,11 @@ export const postService = {
           orderBy('createdAt', 'desc'),
           limit(limitCount)
         );
-        
+
         unsubscribers.push(
           onSnapshot(friendQuery, (snapshot) => {
             if (isInitialLoad) return;
-            
+
             snapshot.docChanges().forEach(change => {
               const post = convertDocToPost(change.doc);
               if (change.type === 'added') {
@@ -213,7 +213,7 @@ export const postService = {
       isInitialLoad = false;
       callback('initial', result.posts);
     };
-    
+
     loadInitial();
 
     return () => {
@@ -299,6 +299,7 @@ export const postService = {
       const postRef = customId ? doc(db, 'posts', customId) : doc(collection(db, 'posts'));
       await setDoc(postRef, {
         ...postData,
+        type: postData.type || PostType.NORMAL,
         commentCount: 0,
         createdAt: Timestamp.now(),
         isEdited: false
@@ -395,9 +396,9 @@ export const postService = {
     try {
       const postRef = doc(db, 'posts', postId);
       const postSnap = await getDoc(postRef);
-      
+
       if (!postSnap.exists()) return null;
-      
+
       const data = postSnap.data();
       const isOwner = data.userId === currentUserId;
       const isFriend = friendIds?.includes(data.userId) || false;
@@ -427,9 +428,9 @@ export const postService = {
     try {
       const postRef = doc(db, 'posts', postId);
       const postSnap = await getDoc(postRef);
-      
+
       if (!postSnap.exists()) return null;
-      
+
       const data = postSnap.data();
       return {
         ...data,
@@ -444,7 +445,7 @@ export const postService = {
   },
 
   uploadPostMedia: async (
-    files: File[], 
+    files: File[],
     userId: string,
     onProgress?: (progress: number, fileIndex: number, totalFiles: number) => void
   ): Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }> => {
@@ -467,14 +468,14 @@ export const postService = {
           file = await compressImage(file, IMAGE_COMPRESSION.POST);
         }
 
-        const url = await withRetry(() => 
+        const url = await withRetry(() =>
           uploadWithProgress(path, file, (progress) => {
             const fileProgress = progress.progress / 100;
             const overallProgress = ((i + fileProgress) / totalFiles) * 100;
             onProgress?.(overallProgress, i, totalFiles);
           })
         );
-        
+
         if (isVideo) {
           videos.push(url);
           // Cloud Function generateVideoThumbnail tự động tạo thumbnail
@@ -491,18 +492,18 @@ export const postService = {
   },
 
   uploadCommentImage: async (
-    file: File, 
+    file: File,
     userId: string,
     onProgress?: ProgressCallback
   ): Promise<string> => {
     try {
       // Compress ảnh
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COMMENT);
-      
+
       const createdAt = Date.now();
       const fileName = `comment_img_${createdAt}_${file.name}`;
       const path = `comments/${userId}/images/${fileName}`;
-      
+
       return await withRetry(() => uploadWithProgress(path, compressedFile, onProgress));
     } catch (error) {
       console.error("Lỗi upload ảnh bình luận", error);
