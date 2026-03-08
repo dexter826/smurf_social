@@ -54,6 +54,7 @@ export interface User extends BaseEntity {
   bio?: string;
   coverImage?: string;
   lastSeen?: Date;
+  updatedAt?: Date;
   role: 'admin' | 'user';
 }
 
@@ -134,6 +135,8 @@ export interface Comment extends BaseEntity {
   image?: string;
   replyCount?: number;
   replyToUserId?: string;
+  isEdited?: boolean;
+  editedAt?: Date;
 }
 
 export interface Post extends BaseEntity {

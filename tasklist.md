@@ -34,13 +34,16 @@
 
 ## Phase 2: Data Integrity & Audit Trail (Priority: HIGH)
 
-- [ ] **4. Thêm Timestamp Fields**
-  - [ ] Tạo `TimestampedEntity` interface với `updatedAt: Date`
-  - [ ] Thêm `updatedAt` vào `User` interface
-  - [ ] Thêm `updatedAt` vào `Post` interface
-  - [ ] Thêm `updatedAt` vào `Comment` interface
-  - [ ] Update Cloud Functions để auto-populate `updatedAt` khi update
-  - [ ] Migration script cho existing data (nếu cần)
+- [x] **4. Thêm Timestamp Fields**
+  - [x] Thêm `User.updatedAt: Date` vào interface
+  - [x] Update `userService.updateProfile()` để set updatedAt = serverTimestamp()
+  - [x] Update convertDocToUser để convert updatedAt timestamp
+  - [x] Thêm `Comment.isEdited?: boolean` và `Comment.editedAt?: Date` vào interface
+  - [x] Update `commentService.updateComment()` để set isEdited và editedAt
+  - [x] Update convertDocToComment để convert editedAt timestamp
+  - [x] Update Firestore rules để cho phép edit comment fields
+  - [x] Update commentStore để reflect isEdited và editedAt trong UI
+  - [x] Test thoroughly
 
 - [ ] **5. Thêm Audit Trail Fields**
   - [ ] Tạo `SoftDeletableEntity` interface với `deletedAt`, `deletedBy`

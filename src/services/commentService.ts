@@ -1,16 +1,17 @@
-import { 
-  collection, 
-  addDoc, 
+import {
+  collection,
+  addDoc,
   getDoc,
   getDocs,
-  query, 
-  orderBy, 
+  query,
+  orderBy,
   where,
-  updateDoc, 
+  updateDoc,
   deleteDoc,
   doc,
   setDoc,
   Timestamp,
+  serverTimestamp,
   limit,
   startAfter,
   DocumentSnapshot,
@@ -30,6 +31,7 @@ function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<D
     ...data,
     id: docSnap.id,
     createdAt: convertTimestamp(data?.createdAt, new Date())!,
+    editedAt: convertTimestamp(data?.editedAt),
   } as Comment;
 }
 
@@ -113,9 +115,9 @@ export const commentService = {
 
   // Tạo bình luận mới
   createComment: async (
-    postId: string, 
-    userId: string, 
-    content: string, 
+    postId: string,
+    userId: string,
+    content: string,
     parentId: string | null = null,
     replyToUserId?: string,
     imageUrl?: string,
@@ -163,7 +165,11 @@ export const commentService = {
   updateComment: async (commentId: string, content: string, imageUrl?: string | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
-      const updateData: Partial<Comment> = { content };
+      const updateData: Partial<Comment> = {
+        content,
+        isEdited: true,
+        editedAt: serverTimestamp() as unknown as Date
+      };
       if (imageUrl !== undefined) updateData.image = imageUrl;
       await updateDoc(commentRef, updateData as DocumentData);
     } catch (error) {
@@ -217,9 +223,9 @@ export const commentService = {
     try {
       const commentRef = doc(db, 'comments', commentId);
       const commentSnap = await getDoc(commentRef);
-      
+
       if (!commentSnap.exists()) return null;
-      
+
       const data = commentSnap.data();
       return {
         ...data,
@@ -252,7 +258,7 @@ export const commentService = {
 
     return onSnapshot(rootQuery, { includeMetadataChanges: true }, async (snapshot) => {
       if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
-      
+
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
       const usersMap = await batchGetUsers(authorIds);
 
@@ -263,11 +269,11 @@ export const commentService = {
         const comments = docsToProcess
           .map(convertDocToComment)
           .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
-        
-        callback('initial', { 
-          comments, 
-          lastDoc: docsToProcess[docsToProcess.length - 1] || null, 
-          hasMore 
+
+        callback('initial', {
+          comments,
+          lastDoc: docsToProcess[docsToProcess.length - 1] || null,
+          hasMore
         });
         isInitialLoad = false;
         return;
@@ -314,7 +320,7 @@ export const commentService = {
 
     return onSnapshot(q, { includeMetadataChanges: true }, async (snapshot) => {
       if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
-      
+
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
       const usersMap = await batchGetUsers(authorIds);
 
@@ -325,7 +331,7 @@ export const commentService = {
         const replies = docsToProcess
           .map(convertDocToComment)
           .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
-        
+
         callback('initial', {
           replies,
           lastDoc: docsToProcess[docsToProcess.length - 1] || null,
