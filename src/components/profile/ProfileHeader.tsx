@@ -303,23 +303,28 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     </Button>
                   </>
                 ) : user.status === UserStatus.BANNED ? (
-                  <Dropdown
-                    trigger={
-                      <Button
-                        variant="secondary"
-                        icon={<MoreHorizontal size={18} />}
-                        className="border-border-medium text-text-primary hover:bg-bg-hover"
+                  <div className="flex items-center gap-2">
+                    <div className="px-4 py-2 rounded-lg bg-error/10 text-error text-sm font-medium">
+                      Tài khoản đã bị khóa
+                    </div>
+                    <Dropdown
+                      trigger={
+                        <Button
+                          variant="secondary"
+                          icon={<MoreHorizontal size={18} />}
+                          className="border-border-medium text-text-primary hover:bg-bg-hover"
+                        />
+                      }
+                      align="right"
+                    >
+                      <DropdownItem
+                        icon={<Flag size={16} />}
+                        label="Báo cáo"
+                        variant="danger"
+                        onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
                       />
-                    }
-                    align="right"
-                  >
-                    <DropdownItem
-                      icon={<Flag size={16} />}
-                      label="Báo cáo"
-                      variant="danger"
-                      onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
-                    />
-                  </Dropdown>
+                    </Dropdown>
+                  </div>
                 ) : (
                   <>
                     <Button

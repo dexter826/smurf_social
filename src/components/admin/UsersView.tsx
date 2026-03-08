@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Users, 
-  Search, 
-  Lock, 
-  Unlock, 
+import {
+  Users,
+  Search,
+  Lock,
+  Unlock,
   Eye,
   CheckCircle,
   Plus,
@@ -45,7 +45,7 @@ export const UsersView: React.FC = () => {
   useEffect(() => {
     setIsLoading(true);
     const unsubscribe = userService.subscribeToAdminUsers(
-      undefined, 
+      undefined,
       (fetchedUsers) => {
         setUsers(fetchedUsers);
         setIsLoading(false);
@@ -81,7 +81,7 @@ export const UsersView: React.FC = () => {
     const { type, userId, userName } = confirmDialog;
     try {
       const fn = httpsCallable(getFunctions(), 'banUser');
-      await fn({ userId, ban: type === 'ban' });
+      await fn({ userId, action: type });
       if (type === 'ban') {
         toast.success(TOAST_MESSAGES.ADMIN.BAN_SUCCESS(userName));
       } else {
@@ -95,14 +95,14 @@ export const UsersView: React.FC = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchSearch = !searchTerm || 
+    const matchSearch = !searchTerm ||
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchStatus = statusFilter === 'all' ||
       (statusFilter === 'banned' && user.status === UserStatus.BANNED) ||
       (statusFilter === 'active' && user.status !== UserStatus.BANNED);
-    
+
     return matchSearch && matchStatus;
   });
 
@@ -121,7 +121,7 @@ export const UsersView: React.FC = () => {
               className="bg-bg-secondary border border-border-light text-sm"
             />
           </div>
-          
+
           <div className="flex-1 sm:flex-initial min-w-[160px]">
             <Select
               value={statusFilter}
@@ -147,21 +147,21 @@ export const UsersView: React.FC = () => {
             ))
           ) : filteredUsers.length === 0 ? (
             <div className="col-span-full text-center py-20 bg-bg-primary rounded-2xl border border-border-light border-dashed">
-               <Users size={48} className="mx-auto text-text-tertiary opacity-20 mb-4" />
-               <p className="text-text-secondary font-medium">Không tìm thấy người dùng</p>
+              <Users size={48} className="mx-auto text-text-tertiary opacity-20 mb-4" />
+              <p className="text-text-secondary font-medium">Không tìm thấy người dùng</p>
             </div>
           ) : (
             filteredUsers.map(user => (
-              <div 
+              <div
                 key={user.id}
                 className="bg-bg-primary p-5 rounded-xl border border-border-light shadow-sm hover:border-primary/20 active:bg-bg-hover transition-all flex items-center justify-between group"
               >
                 <div className="flex items-center gap-4 overflow-hidden">
-                  <UserAvatar 
+                  <UserAvatar
                     userId={user.id}
-                    src={user.avatar} 
-                    name={user.name} 
-                    size="md" 
+                    src={user.avatar}
+                    name={user.name}
+                    size="md"
                     className="shrink-0"
                     onClick={() => navigate(`/profile/${user.id}`)}
                   />
@@ -230,7 +230,7 @@ export const UsersView: React.FC = () => {
         onConfirm={handleConfirmAction}
         title={confirmDialog.type === 'ban' ? CONFIRM_MESSAGES.ADMIN.BAN_USER.TITLE : CONFIRM_MESSAGES.ADMIN.UNBAN_USER.TITLE}
         message={
-          confirmDialog.type === 'ban' 
+          confirmDialog.type === 'ban'
             ? CONFIRM_MESSAGES.ADMIN.BAN_USER.MESSAGE
             : CONFIRM_MESSAGES.ADMIN.UNBAN_USER.MESSAGE
         }
