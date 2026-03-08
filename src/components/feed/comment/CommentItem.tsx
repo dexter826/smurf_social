@@ -79,8 +79,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
     }
   }, [comment.userId, onProfileClick, navigate]);
 
-  const myReaction = comment.reactions?.[currentUser.id];
-  const reactionCount = Object.keys(comment.reactions || {}).length;
+  const myReaction = comment.myReaction;
+  const reactionCount = comment.reactionCount ?? 0;
 
   const handleReact = useCallback((reaction: string | ReactionType) => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);
@@ -212,7 +212,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
               <button onClick={() => handleReplyClick(comment)} className="hover:underline active:underline transition-all duration-base cursor-pointer">Trả lời</button>
               {reactionCount > 0 && (
                 <ReactionDisplay
-                  reactions={comment.reactions}
+                  reactionSummary={comment.reactionSummary}
+                  reactionCount={reactionCount}
                   variant="minimal"
                   onClick={() => setShowReactionDetails(true)}
                 />
@@ -293,7 +294,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
         <ReactionDetailsModal
           isOpen={showReactionDetails}
           onClose={() => setShowReactionDetails(false)}
-          reactions={comment.reactions || {}}
+          sourceId={comment.id}
+          sourceType="comment"
           currentUserId={currentUser.id}
           context="POST"
           friendsIds={currentUser.friendIds || []}

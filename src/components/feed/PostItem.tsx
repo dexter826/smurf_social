@@ -40,7 +40,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const error = uploadState?.error;
   const progress = uploadState?.progress || 0;
 
-  const myReaction = post.reactions?.[currentUser.id];
+  const myReaction = post.myReaction;
   const isOwner = post.userId === currentUser.id;
 
   const hasMedia = (post.images?.length ?? 0) > 0 || (post.videos?.length ?? 0) > 0;
@@ -165,7 +165,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
       <ReactionActions
         postId={post.id}
-        reactions={post.reactions}
+        reactionSummary={post.reactionSummary}
+        reactionCount={post.reactionCount}
         myReaction={myReaction}
         commentCount={post.commentCount}
         onReact={onReact}
@@ -177,7 +178,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
       <ReactionDetailsModal
         isOpen={isReactionsModalOpen}
         onClose={handleCloseReactions}
-        reactions={post.reactions || {}}
+        sourceId={post.id}
+        sourceType="post"
         currentUserId={currentUser.id}
         context="POST"
         friendsIds={currentUser.friendIds}

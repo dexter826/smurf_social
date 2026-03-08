@@ -3,11 +3,16 @@ import { Modal, UserAvatar, Skeleton } from './index';
 import { User, ReactionType } from '../../types';
 import { batchGetUsers } from '../../utils/batchUtils';
 import { getReactionIcon } from '../chat/reactions/ReactionIcons';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 interface ReactionDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  reactions: Record<string, string | ReactionType>;
+  // CHAT: truyền reactions map. POST/COMMENT/MESSAGE: truyền sourceId + sourceType
+  reactions?: Record<string, string | ReactionType>;
+  sourceId?: string;
+  sourceType?: 'post' | 'comment' | 'message';
   currentUserId: string;
   context?: 'POST' | 'CHAT';
   friendsIds?: string[];
@@ -16,7 +21,9 @@ interface ReactionDetailsModalProps {
 export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
   isOpen,
   onClose,
-  reactions,
+  reactions: reactionsProp,
+  sourceId,
+  sourceType,
   currentUserId,
   context = 'CHAT',
   friendsIds = [],
@@ -24,6 +31,27 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'ALL' | ReactionType>('ALL');
+  // Map {userId: reactionType} — cho cả 2 mode
+  const [reactions, setReactions] = useState<Record<string, string | ReactionType>>(reactionsProp ?? {});
+
+  // Tải từ subcollection khi POST/COMMENT context
+  useEffect(() => {
+    if (!isOpen) return;
+    if (sourceId && sourceType) {
+      const colPath = sourceType === 'post'
+        ? `posts/${sourceId}/reactions`
+        : sourceType === 'comment'
+          ? `comments/${sourceId}/reactions`
+          : `messages/${sourceId}/reactions`;
+      getDocs(collection(db, colPath)).then(snap => {
+        const map: Record<string, string> = {};
+        snap.forEach(d => { map[d.id] = d.data().type; });
+        setReactions(map);
+      }).catch(() => setReactions({}));
+    } else if (reactionsProp) {
+      setReactions(reactionsProp);
+    }
+  }, [isOpen, sourceId, sourceType, reactionsProp]);
 
   const reactionEntries = useMemo(() => Object.entries(reactions), [reactions]);
   

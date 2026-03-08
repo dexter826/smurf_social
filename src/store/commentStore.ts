@@ -278,7 +278,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       replyToUserId: replyToUserId || undefined,
       image: imageUrl || undefined,
       createdAt: new Date(),
-      reactions: {},
       replyCount: 0
     };
 
@@ -374,57 +373,77 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   reactToComment: async (postId, commentId, userId, reaction, parentId) => {
     const { rootComments, replies } = get();
 
-    let currentReaction: string | undefined;
-    if (parentId) {
-      const comment = replies[postId]?.[parentId]?.find(c => c.id === commentId);
-      currentReaction = comment?.reactions?.[userId];
-    } else {
-      const comment = rootComments[postId]?.find(c => c.id === commentId);
-      currentReaction = comment?.reactions?.[userId];
-    }
+    const findComment = (): Comment | undefined => parentId
+      ? replies[postId]?.[parentId]?.find(c => c.id === commentId)
+      : rootComments[postId]?.find(c => c.id === commentId);
 
-    const shouldRemove = reaction === 'REMOVE' || currentReaction === reaction;
+    const comment = findComment();
+    const prevMyReaction = comment?.myReaction;
+    const prevCount = comment?.reactionCount ?? 0;
+    const prevSummary = { ...(comment?.reactionSummary ?? {}) };
+
+    const applyOptimistic = (c: Comment): Comment => {
+      if (c.id !== commentId) return c;
+      const isRemove = reaction === 'REMOVE' || c.myReaction === reaction;
+      const oldType = c.myReaction;
+      const newSummary = { ...(c.reactionSummary ?? {}) };
+      let delta = 0;
+
+      if (isRemove && oldType) {
+        newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
+        if (newSummary[oldType] === 0) delete newSummary[oldType];
+        delta = -1;
+      } else if (!isRemove) {
+        if (oldType) {
+          newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
+          if (newSummary[oldType] === 0) delete newSummary[oldType];
+        } else {
+          delta = 1;
+        }
+        newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
+      }
+
+      return {
+        ...c,
+        myReaction: isRemove ? undefined : reaction,
+        reactionCount: Math.max(0, (c.reactionCount ?? 0) + delta),
+        reactionSummary: newSummary,
+      };
+    };
 
     set((state) => {
-      const updateReactions = (comment: Comment): Comment => {
-        if (comment.id !== commentId) return comment;
-        const currentReactions = { ...(comment.reactions || {}) };
-        if (shouldRemove) {
-          delete currentReactions[userId];
-        } else {
-          currentReactions[userId] = reaction;
-        }
-        return { ...comment, reactions: currentReactions };
-      };
-
       if (parentId) {
         const postReplies = state.replies[postId] || {};
-        const parentReplies = postReplies[parentId] || [];
         return {
           replies: {
             ...state.replies,
-            [postId]: { ...postReplies, [parentId]: parentReplies.map(updateReactions) }
-          }
-        };
-      } else {
-        return {
-          rootComments: {
-            ...state.rootComments,
-            [postId]: (state.rootComments[postId] || []).map(updateReactions)
-          }
+            [postId]: { ...postReplies, [parentId]: (postReplies[parentId] || []).map(applyOptimistic) },
+          },
         };
       }
+      return {
+        rootComments: {
+          ...state.rootComments,
+          [postId]: (state.rootComments[postId] || []).map(applyOptimistic),
+        },
+      };
     });
 
     try {
       await commentService.reactToComment(commentId, userId, reaction);
     } catch (error) {
       console.error('Lỗi bày tỏ cảm xúc:', error);
-      if (parentId) {
-        await get().fetchReplies(postId, parentId);
-      } else {
-        await get().fetchRootComments(postId);
-      }
+      // Rollback
+      const rollback = (c: Comment): Comment => c.id !== commentId ? c : {
+        ...c, myReaction: prevMyReaction, reactionCount: prevCount, reactionSummary: prevSummary,
+      };
+      set(state => ({
+        rootComments: { ...state.rootComments, [postId]: (state.rootComments[postId] || []).map(rollback) },
+        replies: parentId ? {
+          ...state.replies,
+          [postId]: { ...(state.replies[postId] || {}), [parentId]: ((state.replies[postId] || {})[parentId] || []).map(rollback) },
+        } : state.replies,
+      }));
     }
   },
 

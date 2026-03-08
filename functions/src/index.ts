@@ -1,7 +1,8 @@
 // Notification Triggers
-export { onPostReaction } from './notifications/onPostReaction';
+export { onPostReactionWrite } from './notifications/onPostReactionWrite';
+export { onCommentReactionWrite } from './notifications/onCommentReactionWrite';
+export { onMessageReactionWrite } from './notifications/onMessageReactionWrite';
 export { onCommentCreated } from './notifications/onCommentCreated';
-export { onCommentReacted } from './notifications/onCommentLiked';
 export { onFriendRequestCreated, onFriendRequestUpdated } from './notifications/onFriendRequest';
 export { onReportCreated } from './notifications/onReportCreated';
 

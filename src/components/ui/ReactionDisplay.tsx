@@ -1,37 +1,31 @@
 import React, { useMemo } from 'react';
 import { ReactionType } from '../../types';
+import { getReactionIcon } from '../chat/reactions/ReactionIcons';
 
 interface ReactionDisplayProps {
-  reactions?: Record<string, string | ReactionType>;
+  reactionSummary?: Record<string, number>;
+  reactionCount?: number;
   className?: string;
   onClick?: () => void;
   variant?: 'default' | 'minimal';
 }
 
-import { getReactionIcon } from '../chat/reactions/ReactionIcons';
-
 const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
-  reactions = {},
+  reactionSummary = {},
+  reactionCount = 0,
   className = '',
   onClick,
   variant = 'default'
 }) => {
-  const { sortedEmojis, total } = useMemo(() => {
-    const counts = Object.values(reactions).reduce((acc: Record<string, number>, emoji: string | ReactionType) => {
-      acc[emoji] = (acc[emoji] || 0) + 1;
-      return acc;
-    }, {});
-
-    const sorted = Object.entries(counts)
+  const sortedEmojis = useMemo(() =>
+    Object.entries(reactionSummary)
       .sort(([, a], [, b]) => b - a)
       .map(([emoji]) => emoji)
-      .slice(0, 3);
+      .slice(0, 3),
+    [reactionSummary]
+  );
 
-    const sum = Object.values(counts).reduce((a, b) => a + b, 0);
-    return { sortedEmojis: sorted, total: sum };
-  }, [reactions]);
-
-  if (total === 0) return null;
+  if (reactionCount === 0) return null;
 
   const isMinimal = variant === 'minimal';
 
@@ -60,7 +54,7 @@ const ReactionDisplayInner: React.FC<ReactionDisplayProps> = ({
         ))}
       </div>
       <span className={`${isMinimal ? 'text-[11px] ml-1' : 'text-[10px] sm:text-[11px]'} text-text-secondary font-bold flex items-center h-full`}>
-        {total}
+        {reactionCount}
       </span>
     </div>
   );

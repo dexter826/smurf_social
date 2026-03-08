@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Heart, MessageCircle } from 'lucide-react';
 import { Button, ReactionSelector, ReactionDisplay } from '../../ui';
+import { ReactionType } from '../../../types';
 import { REACTION_LABELS } from '../../../constants';
 import { getReactionIcon } from '../../chat/reactions/ReactionIcons';
 
 interface ReactionActionsProps {
   postId: string;
-  reactions?: Record<string, string>;
+  reactionSummary?: Record<string, number>;
+  reactionCount?: number;
   myReaction?: string;
   commentCount?: number;
   onReact: (postId: string, reaction: string) => void;
@@ -20,19 +22,19 @@ interface ReactionActionsProps {
 }
 
 export const ReactionActions: React.FC<ReactionActionsProps> = ({
-  postId, reactions, myReaction, commentCount = 0,
+  postId, reactionSummary, reactionCount = 0, myReaction, commentCount = 0,
   onReact, onCommentClick, onViewReactions, showStats = true,
   showEmptyDivider = false, statsClassName, actionClassName, selectorClassName
 }) => {
   const [showReactions, setShowReactions] = useState(false);
-  const hasStats = (reactions && Object.keys(reactions).length > 0) || commentCount > 0;
+  const hasStats = reactionCount > 0 || commentCount > 0;
 
   return (
     <>
       {showStats && (hasStats ? (
         <div className={statsClassName || "px-4 py-1 flex justify-between items-center border-b border-border-light min-h-[40px]"}>
           <div className="flex items-center gap-2">
-            <ReactionDisplay reactions={reactions} variant="minimal" onClick={onViewReactions} />
+            <ReactionDisplay reactionSummary={reactionSummary} reactionCount={reactionCount} variant="minimal" onClick={onViewReactions} />
           </div>
           {commentCount > 0 && (
             onCommentClick ? (
@@ -69,7 +71,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             onMouseEnter={() => setShowReactions(true)}>
             <div className="flex items-center gap-2">
               {myReaction
-                ? <span className="animate-in zoom-in spin-in-12 duration-slow">{getReactionIcon(myReaction, "w-5 h-5", 20)}</span>
+                ? <span className="animate-in zoom-in spin-in-12 duration-slow">{getReactionIcon(myReaction as ReactionType, "w-5 h-5", 20)}</span>
                 : <Heart size={20} />}
               <span className={`text-sm font-medium ${myReaction ? `text-${REACTION_LABELS[myReaction]}` : ''}`}>
                 {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}

@@ -126,7 +126,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     );
   }
 
-  const myReaction = post.reactions?.[currentUser.id];
+  const myReaction = post.myReaction;
   const isOwner = post.userId === currentUser.id;
   const hasMedia = allMedia.length > 0;
 
@@ -319,7 +319,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
               <ReactionActions
                 postId={post.id}
-                reactions={post.reactions}
+                reactionSummary={post.reactionSummary}
+                reactionCount={post.reactionCount}
                 myReaction={myReaction}
                 commentCount={post.commentCount}
                 onReact={onReact}
@@ -335,7 +336,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       <ReactionDetailsModal
         isOpen={isReactionsModalOpen}
         onClose={() => setIsReactionsModalOpen(false)}
-        reactions={post.reactions || {}}
+        sourceId={post.id}
+        sourceType="post"
         currentUserId={currentUser.id}
         context="POST"
         friendsIds={currentUser.friendIds}
