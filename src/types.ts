@@ -132,7 +132,6 @@ export interface Message extends BaseEntity {
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;
-  videoThumbnails?: Record<string, string>;
   readBy?: string[];
   deliveredTo?: string[];
   deliveredAt?: Date;

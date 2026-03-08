@@ -160,8 +160,8 @@
 - `src/types.ts` — xóa `videoThumbnails?` và `deliveredAt?` khỏi `Message`
 - `src/services/chat/messageService.ts` — xóa `deliveredAt: serverTimestamp()` khi tạo message
 
-- [ ] Xóa `Message.videoThumbnails`
-- [ ] Xóa `Message.deliveredAt` và nơi set nó
+- [x] Xóa `Message.videoThumbnails`
+- [x] `Message.deliveredAt` — giữ lại, đang dùng trong delivery tracking logic (`markAsDelivered`, `markAsRead`)
 
 ---
 
@@ -336,7 +336,7 @@ Hiện tại:
 | TASK-05 | Xóa 3 dead methods trong notificationService                      | 🟡 HIGH     | [x]    |
 | TASK-06 | Xóa dead methods contactStore + authStore                         | 🟡 HIGH     | [x]    |
 | TASK-07 | Sửa `useFriendIds` hook (kết hợp TASK-01)                         | 🟡 HIGH     | [x]    |
-| TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [ ]    |
+| TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [x]    |
 | TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [ ]    |
 | TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [ ]    |
 | TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [ ]    |
