@@ -31,9 +31,47 @@ export const searchUsers = onCall(
         .limit(10)
         .get();
 
-      const users: SearchResult[] = snap.docs
+      let users: SearchResult[] = snap.docs
         .map((d) => ({ id: d.id, ...d.data() } as SearchResult))
         .filter((u) => u.id !== currentUserId);
+
+      if (currentUserId && users.length > 0) {
+        const currentUserSecurityDoc = await db
+          .collection('users')
+          .doc(currentUserId)
+          .collection('private')
+          .doc('security')
+          .get();
+        
+        const myBlockedUsers: string[] = currentUserSecurityDoc.exists 
+          ? (currentUserSecurityDoc.data()?.blockedUsers || []) 
+          : [];
+
+        users = users.filter((u) => !myBlockedUsers.includes(u.id));
+
+        if (users.length > 0) {
+          const safeUsers: SearchResult[] = [];
+          
+          for (const targetUser of users) {
+             const targetUserSecurityDoc = await db
+              .collection('users')
+              .doc(targetUser.id)
+              .collection('private')
+              .doc('security')
+              .get();
+              
+             const theirBlockedUsers: string[] = targetUserSecurityDoc.exists
+              ? (targetUserSecurityDoc.data()?.blockedUsers || [])
+              : [];
+              
+             if (!theirBlockedUsers.includes(currentUserId)) {
+               safeUsers.push(targetUser);
+             }
+          }
+          
+          users = safeUsers;
+        }
+      }
 
       return { users };
     } catch (error) {
