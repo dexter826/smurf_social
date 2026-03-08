@@ -111,7 +111,6 @@ export interface User extends BaseEntity {
   birthDate?: Date;
   status: UserStatus;
   bio?: string;
-  blockedUserIds?: string[];
   coverImage?: string;
   lastSeen?: Date;
   role?: 'admin' | 'user';

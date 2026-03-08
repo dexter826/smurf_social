@@ -16,6 +16,7 @@ import { usePresenceStore } from "./presenceStore";
 
 interface AuthState {
   user: User | null;
+  blockedUserIds: string[];
   isPendingVerification: boolean;
   isInitialized: boolean;
   login: (email: string, pass: string) => Promise<void>;
@@ -33,6 +34,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
+  blockedUserIds: [],
   isPendingVerification: false,
   isInitialized: false,
 
@@ -164,8 +166,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               firebaseUser.uid,
               UserStatus.ONLINE,
             );
-            const userWithStatus = { ...userData, status: UserStatus.ONLINE, blockedUserIds };
-            set({ user: userWithStatus });
+            const userWithStatus = { ...userData, status: UserStatus.ONLINE };
+            set({ user: userWithStatus, blockedUserIds });
             useUserCache.getState().setUser(userWithStatus);
           }
         } catch (error) {
@@ -192,25 +194,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   updateBlockList: (action, targetUserId) => {
-    const { user } = get();
-    if (!user) return;
-
-    const currentBlocked = user.blockedUserIds || [];
-
+    const currentBlocked = get().blockedUserIds;
     if (action === "add") {
-      set({
-        user: {
-          ...user,
-          blockedUserIds: [...currentBlocked, targetUserId],
-        },
-      });
+      set({ blockedUserIds: [...currentBlocked, targetUserId] });
     } else {
-      set({
-        user: {
-          ...user,
-          blockedUserIds: currentBlocked.filter((id) => id !== targetUserId),
-        },
-      });
+      set({ blockedUserIds: currentBlocked.filter((id) => id !== targetUserId) });
     }
   },
 
@@ -248,9 +236,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               firebaseUser.uid,
               UserStatus.ONLINE,
             );
-            const initialUser = { ...userData, status: UserStatus.ONLINE, blockedUserIds };
+            const initialUser = { ...userData, status: UserStatus.ONLINE };
             set({
               user: initialUser,
+              blockedUserIds,
               isPendingVerification: false,
               isInitialized: true,
             });
@@ -265,10 +254,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                   return;
                 }
 
-                const currentBlocked = get().user?.blockedUserIds;
+                const currentBlocked = get().blockedUserIds;
                 const currentStatus = get().user?.status || UserStatus.ONLINE;
-                const newUser = { ...updatedUser, status: currentStatus, blockedUserIds: currentBlocked };
-                set({ user: newUser });
+                const newUser = { ...updatedUser, status: currentStatus };
+                set({ user: newUser, blockedUserIds: currentBlocked });
                 useUserCache.getState().setUser(newUser);
               },
             );

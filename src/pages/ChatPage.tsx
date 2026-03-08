@@ -5,6 +5,7 @@ import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
 import { useContactStore } from '../store/contactStore';
 import { useFriendIds } from '../hooks';
+import { useBlockedUsers } from '../hooks';
 import { friendService } from '../services/friendService';
 import { useChatStore } from '../store/chatStore';
 import {
@@ -89,6 +90,7 @@ const ChatPage: React.FC = () => {
   } = useChat();
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
   const friendIds = useFriendIds();
+  const { blockedUserIds } = useBlockedUsers();
 
   React.useEffect(() => {
     setIsChatVisible(true);
@@ -239,7 +241,7 @@ const ChatPage: React.FC = () => {
           selectedId={selectedConversationId}
           currentUserId={currentUser.id}
           currentUserFriendIds={friendIds}
-          blockedUserIds={currentUser.blockedUserIds || []}
+          blockedUserIds={blockedUserIds}
           isLoading={isLoading}
           isSearching={isSearching}
           viewMode={viewMode}

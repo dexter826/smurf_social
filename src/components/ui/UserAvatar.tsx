@@ -5,6 +5,7 @@ import { usePresence } from '../../hooks/usePresence';
 import { useAuthStore } from '../../store/authStore';
 import { useContactStore } from '../../store/contactStore';
 import { useUserCache } from '../../store/userCacheStore';
+import { useBlockedUsers } from '../../hooks';
 
 interface UserAvatarProps {
   userId: string;
@@ -34,6 +35,7 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
   const presence = usePresence(isGroup ? undefined : userId, initialStatus);
   const currentUser = useAuthStore(state => state.user);
   const isFriend = useContactStore(state => state.friends.some(f => f.id === userId));
+  const { isBlocked: checkBlocked } = useBlockedUsers();
   const cachedUser = useUserCache(state => userId ? state.users[userId] : undefined);
   const fetchUsers = useUserCache(state => state.fetchUsers);
 
@@ -51,10 +53,10 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
     if (!showStatus || !status || status === UserStatus.BANNED) return undefined;
     if (userId === currentUser?.id) return status;
 
-    const isBlocked = currentUser?.blockedUserIds?.includes(userId);
+    const isBlocked = checkBlocked(userId);
     // Chỉ hiện status của bạn bè không bị chặn
     return (isFriend && !isBlocked) ? status : undefined;
-  }, [presence?.status, showStatus, userId, currentUser?.id, isFriend, currentUser?.blockedUserIds]);
+  }, [presence?.status, showStatus, userId, currentUser?.id, isFriend, checkBlocked]);
 
   return (
     <Avatar
