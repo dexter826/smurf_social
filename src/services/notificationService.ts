@@ -1,6 +1,5 @@
 import {
   collection,
-  addDoc,
   getDocs,
   query,
   where,
@@ -23,42 +22,6 @@ import { getValidatedEnvConfig } from '../utils/validateEnv';
 import { convertTimestamp } from '../utils/dateUtils';
 
 export const notificationService = {
-  // Tạo thông báo mới và lưu vào Firestore
-  createNotification: async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'isRead'>): Promise<string> => {
-    try {
-      const docRef = await addDoc(collection(db, 'notifications'), {
-        ...notificationData,
-        isRead: false,
-        createdAt: Timestamp.now()
-      });
-      return docRef.id;
-    } catch (error) {
-      console.error("Lỗi tạo thông báo:", error);
-      throw error;
-    }
-  },
-
-  // Lấy danh sách thông báo của người dùng
-  getNotifications: async (userId: string, limitCount: number = 20): Promise<AppNotification[]> => {
-    try {
-      const q = query(
-        collection(db, 'notifications'),
-        where('receiverId', '==', userId),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: convertTimestamp(doc.data().createdAt, new Date()),
-      } as AppNotification));
-    } catch (error) {
-      console.error("Lỗi lấy danh sách thông báo:", error);
-      return [];
-    }
-  },
-
   // Theo dõi thông báo mới nhất.
   subscribeToNotifications: (userId: string, callback: (notifications: AppNotification[]) => void, limitCount: number = 20) => {
     const q = query(
@@ -133,37 +96,6 @@ export const notificationService = {
     } catch (error) {
       console.error("Lỗi xóa tất cả thông báo:", error);
       throw error;
-    }
-  },
-
-  // Xóa notifications liên quan đến một bài viết
-  deleteNotificationsByPostId: async (postId: string): Promise<void> => {
-    try {
-      const notificationTypes = [
-        NotificationType.LIKE_POST,
-        NotificationType.COMMENT_POST,
-        NotificationType.REPLY_COMMENT,
-        NotificationType.REACT_COMMENT
-      ];
-
-      for (const type of notificationTypes) {
-        const q = query(
-          collection(db, 'notifications'),
-          where('type', '==', type),
-          where('data.postId', '==', postId)
-        );
-        const snapshot = await getDocs(q);
-
-        if (!snapshot.empty) {
-          const batch = writeBatch(db);
-          snapshot.docs.forEach(docSnap => {
-            batch.delete(docSnap.ref);
-          });
-          await batch.commit();
-        }
-      }
-    } catch (error) {
-      console.error("Lỗi xóa notifications theo postId:", error);
     }
   },
 
