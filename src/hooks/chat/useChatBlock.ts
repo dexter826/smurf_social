@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { User, UserStatus, FriendStatus } from '../../types';
+import { User, UserStatus, FriendStatus, Conversation } from '../../types';
 import { userService } from '../../services/userService';
 import { friendService } from '../../services/friendService';
 import { useUserCache } from '../../store/userCacheStore';
@@ -15,6 +15,7 @@ interface UseChatBlockProps {
   usersMap: Record<string, User>;
   friendStatus?: FriendStatus;
   pendingRequestId?: string;
+  conversation?: Conversation;
 }
 
 // Xử lý logic block/unblock trong chat
@@ -26,6 +27,7 @@ export const useChatBlock = ({
   usersMap,
   friendStatus,
   pendingRequestId,
+  conversation,
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
 
@@ -59,9 +61,12 @@ export const useChatBlock = ({
         return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
       }
       if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
+      if (conversation?.blockedBy && conversation.blockedBy.length > 0) {
+        return 'Bạn không thể gửi tin nhắn lúc này.';
+      }
     }
     return undefined;
-  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe]);
+  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe, conversation?.blockedBy]);
 
   const blockedMessage = useMemo(() => getBlockedMessage(), [getBlockedMessage]);
 

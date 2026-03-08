@@ -190,7 +190,10 @@ service cloud.firestore {
         request.auth.uid in
           get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data.participantIds &&
         (request.resource.data.senderId == request.auth.uid ||
-         (request.resource.data.senderId == 'system' && request.resource.data.type == 'system'));
+         (request.resource.data.senderId == 'system' && request.resource.data.type == 'system')) &&
+        // Chặn gửi tin nhắn nếu hội thoại bị block (có ai đó nằm trong mảng blockedBy)
+        (!('blockedBy' in get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data) ||
+         get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data.blockedBy.size() == 0);
 
       allow update: if isAuthenticated() && (
         // Người gửi được thu hồi hoặc sửa tin nhắn.
