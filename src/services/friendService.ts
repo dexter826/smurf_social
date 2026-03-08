@@ -182,10 +182,7 @@ export const friendService = {
   rejectFriendRequest: async (requestId: string): Promise<void> => {
     try {
       const requestRef = doc(db, 'friendRequests', requestId);
-      await updateDoc(requestRef, {
-        status: FriendRequestStatus.REJECTED,
-        updatedAt: Timestamp.now()
-      });
+      await deleteDoc(requestRef);
     } catch (error) {
       console.error("Lỗi từ chối kết bạn", error);
       throw error;
