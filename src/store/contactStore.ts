@@ -22,8 +22,6 @@ interface ContactState {
   unfriend: (userId: string, friendId: string) => Promise<void>;
   blockUser: (userId: string, blockedUserId: string) => Promise<void>;
 
-  addFriend: (friend: User) => void;
-  removeFriend: (friendId: string) => void;
   clearSearchResults: () => void;
   reset: () => void;
 }
@@ -168,15 +166,6 @@ export const useContactStore = create<ContactState>()(
           throw error;
         }
       },
-
-      addFriend: (friend) => set((state) => {
-        if (state.friends.some(f => f.id === friend.id)) return state;
-        return { friends: [...state.friends, friend] };
-      }),
-
-      removeFriend: (friendId) => set((state) => ({
-        friends: state.friends.filter(f => f.id !== friendId)
-      })),
 
       clearSearchResults: () => set({ searchResults: [] }),
     }),
