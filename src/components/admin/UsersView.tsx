@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { User, UserStatus } from '../../types';
 import { userService } from '../../services/userService';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Button, UserAvatar, Skeleton, IconButton, Select, Input, ConfirmDialog } from '../ui';
 import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
@@ -79,11 +80,11 @@ export const UsersView: React.FC = () => {
   const handleConfirmAction = async () => {
     const { type, userId, userName } = confirmDialog;
     try {
+      const fn = httpsCallable(getFunctions(), 'banUser');
+      await fn({ userId, ban: type === 'ban' });
       if (type === 'ban') {
-        await userService.banUser(userId);
         toast.success(TOAST_MESSAGES.ADMIN.BAN_SUCCESS(userName));
       } else {
-        await userService.unbanUser(userId);
         toast.success(TOAST_MESSAGES.ADMIN.UNBAN_SUCCESS(userName));
       }
     } catch (error) {

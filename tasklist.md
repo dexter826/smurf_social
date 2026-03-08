@@ -52,7 +52,7 @@
 
 - `src/services/chat/conversationService.ts` — `getOrCreateConversation`: thay đọc `user.data().blockedUserIds` bằng đọc `users/{uid}/private/security`
 
-- [ ] Sửa `getOrCreateConversation` đọc block từ `private/security`
+- [x] Sửa `getOrCreateConversation` đọc block từ `private/security`
 
 ---
 
@@ -67,8 +67,8 @@
 - `src/components/admin/UsersView.tsx` — gọi CF `banUser` thay vì `userService.banUser`
 - `src/services/userService.ts` — xóa `banUser()` và `unbanUser()`
 
-- [ ] Sửa `UsersView` gọi CF callable `banUser`
-- [ ] Xóa `userService.banUser()` và `userService.unbanUser()`
+- [x] Sửa `UsersView` gọi CF callable `banUser`
+- [x] Xóa `userService.banUser()` và `userService.unbanUser()`
 
 ---
 
@@ -330,8 +330,8 @@ Hiện tại:
 | Task    | Mô tả ngắn                                                        | Priority    | Status |
 | ------- | ----------------------------------------------------------------- | ----------- | ------ |
 | TASK-01 | Fix `user.friendIds` không được populate — thay bằng contactStore | 🔴 CRITICAL | [x]    |
-| TASK-02 | Fix block check trong conversation đọc sai location               | 🔴 CRITICAL | [ ]    |
-| TASK-03 | Fix admin ban dùng sai API — thay bằng CF callable                | 🔴 CRITICAL | [ ]    |
+| TASK-02 | Fix block check trong conversation đọc sai location               | 🔴 CRITICAL | [x]    |
+| TASK-03 | Fix admin ban dùng sai API — thay bằng CF callable                | 🔴 CRITICAL | [x]    |
 | TASK-04 | Xóa orphan fields `pinned/muted` khi tạo conversation             | 🔴 CRITICAL | [ ]    |
 | TASK-05 | Xóa 3 dead methods trong notificationService                      | 🟡 HIGH     | [ ]    |
 | TASK-06 | Xóa dead methods contactStore + authStore                         | 🟡 HIGH     | [ ]    |
