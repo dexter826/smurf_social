@@ -45,14 +45,27 @@
   - [x] Update commentStore để reflect isEdited và editedAt trong UI
   - [x] Test thoroughly
 
-- [ ] **5. Thêm Audit Trail Fields**
-  - [ ] Tạo `SoftDeletableEntity` interface với `deletedAt`, `deletedBy`
-  - [ ] Tạo `EditableEntity` interface với `isEdited`, `editedAt`, `editedBy`
-  - [ ] Thêm soft delete fields vào `Post`
-  - [ ] Thêm soft delete fields vào `Comment`
-  - [ ] Thêm `editedBy` vào `Post` và `Comment`
-  - [ ] Update delete logic để soft delete thay vì hard delete
-  - [ ] Update queries để filter out deleted items
+- [x] **5. Thêm Audit Trail Fields (Soft Delete với Status)**
+  - [x] Tạo `PostStatus` enum (ACTIVE, DELETED) trong shared/types.ts
+  - [x] Tạo `CommentStatus` enum (ACTIVE, DELETED) trong shared/types.ts
+  - [x] Tạo `SoftDeletableEntity` interface với `deletedAt`, `deletedBy`
+  - [x] Thêm `status: PostStatus` field vào `Post` (required, default ACTIVE)
+  - [x] Thêm `status: CommentStatus` field vào `Comment` (required, default ACTIVE)
+  - [x] Thêm soft delete fields (`deletedAt`, `deletedBy`) vào `Post` và `Comment`
+  - [x] Update `postService.deletePost()` để soft delete (set status = DELETED)
+  - [x] Update `commentService.deleteComment()` để soft delete (set status = DELETED)
+  - [x] Update `postService.createPost()` để set status = ACTIVE
+  - [x] Update `commentService.createComment()` để set status = ACTIVE
+  - [x] Update TẤT CẢ post queries để filter `where('status', '==', PostStatus.ACTIVE)`
+  - [x] Update TẤT CẢ comment queries để filter `where('status', '==', CommentStatus.ACTIVE)`
+  - [x] Update Firestore rules để validate status field
+  - [x] Update convert functions để parse deletedAt timestamps
+  - [x] Update `functions/src/admin/resolveReport.ts` để dùng soft delete
+  - [x] Xóa `functions/src/posts/onPostDeleted.ts` (không còn trigger với soft delete)
+  - [x] Xóa `functions/src/comments/onCommentDeleted.ts` (không còn trigger với soft delete)
+  - [x] Xóa `ReportStatus.ORPHANED` enum (không còn orphaned data với soft delete)
+  - [x] Xóa `cleanupOrphanedReports` Cloud Function
+  - [x] Update UI logic bỏ orphaned stats trong `useAdminReports.ts`
 
 - [ ] **6. Document Relationships với JSDoc**
   - [ ] Thêm JSDoc cho `Comment.postId` (CASCADE DELETE)
@@ -102,16 +115,13 @@
   - [ ] Test security rules với Firebase Emulator
 
 - [ ] **12. Quản lý dọn dẹp rác dữ liệu (Orphaned Data)**
-  - [ ] Tạo Cloud Function `onPostDeleted` để xóa cascade:
-    - [ ] Xóa tất cả comments của post
-    - [ ] Xóa tất cả reactions của post
-    - [ ] Xóa notifications liên quan
+  - [ ] Tạo Cloud Function để cleanup soft-deleted posts/comments sau 90 ngày:
+    - [ ] Query posts với `status == DELETED` và `deletedAt < 90 days ago`
+    - [ ] Query comments với `status == DELETED` và `deletedAt < 90 days ago`
+    - [ ] Hard delete các documents này để giải phóng storage
   - [ ] Tạo Cloud Function `onConversationDeleted` để xóa cascade:
     - [ ] Xóa tất cả messages trong conversation
     - [ ] Xóa message reactions
-  - [ ] Tạo Cloud Function `onCommentDeleted` để xóa cascade:
-    - [ ] Xóa tất cả replies (nested comments)
-    - [ ] Xóa comment reactions
   - [ ] Tạo Cloud Function `onUserDeleted` để cleanup:
     - [ ] Anonymize user's posts/comments (hoặc delete)
     - [ ] Delete user's friend requests

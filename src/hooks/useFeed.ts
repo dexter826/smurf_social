@@ -97,8 +97,9 @@ export const useFeed = (): UseFeedReturn => {
     images?: string[],
     videos?: string[]
   ) => {
-    await deletePost(postId, images, videos);
-  }, [deletePost]);
+    if (!currentUser) return;
+    await deletePost(postId, currentUser.id, images, videos);
+  }, [deletePost, currentUser]);
 
   return {
     posts,

@@ -5,20 +5,28 @@ import { NotificationType, ReportType, ReportStatus } from '../types';
 import { createNotification } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 
-// Xóa post — trigger onPostDeleted cascade cleanup
-async function deletePostById(postId: string): Promise<void> {
+// Soft delete post — set status to DELETED
+async function deletePostById(postId: string, adminId: string): Promise<void> {
   const postSnap = await db.collection('posts').doc(postId).get();
   if (!postSnap.exists) return;
 
-  await db.collection('posts').doc(postId).delete();
+  await db.collection('posts').doc(postId).update({
+    status: 'deleted',
+    deletedAt: FieldValue.serverTimestamp(),
+    deletedBy: adminId,
+  });
 }
 
-// Xóa comment — trigger onCommentDeleted cascade cleanup
-async function deleteCommentById(commentId: string): Promise<void> {
+// Soft delete comment — set status to DELETED
+async function deleteCommentById(commentId: string, adminId: string): Promise<void> {
   const commentSnap = await db.collection('comments').doc(commentId).get();
   if (!commentSnap.exists) return;
 
-  await db.collection('comments').doc(commentId).delete();
+  await db.collection('comments').doc(commentId).update({
+    status: 'deleted',
+    deletedAt: FieldValue.serverTimestamp(),
+    deletedBy: adminId,
+  });
 }
 
 export const resolveReport = onCall(
@@ -51,9 +59,9 @@ export const resolveReport = onCall(
     });
 
     if (reportData.targetType === ReportType.POST && action === 'delete_content') {
-      await deletePostById(reportData.targetId);
+      await deletePostById(reportData.targetId, adminId);
     } else if (reportData.targetType === ReportType.COMMENT && action === 'delete_content') {
-      await deleteCommentById(reportData.targetId);
+      await deleteCommentById(reportData.targetId, adminId);
     } else if (reportData.targetType === ReportType.USER && action === 'ban_user') {
       await db.collection('users').doc(reportData.targetId).update({ status: 'banned' });
       // Custom Claim ban: token mới sau revoke sẽ mang claim này

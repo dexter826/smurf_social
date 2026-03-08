@@ -1,4 +1,4 @@
-import { Post, Visibility } from '../types';
+import { Post, Visibility, PostStatus, PostType } from '../types';
 import { postService } from '../services/postService';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { toast } from './toastStore';
@@ -19,7 +19,7 @@ interface PostState {
   subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
   createPost: (userId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
   updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
-  deletePost: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
+  deletePost: (postId: string, userId: string, images?: string[], videos?: string[]) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
 
@@ -187,7 +187,9 @@ export const usePostStore = create<PostState>()(
           videoThumbnails: videoThumbnails || {},
           visibility,
           commentCount: 0,
-          createdAt: new Date()
+          createdAt: new Date(),
+          status: PostStatus.ACTIVE,
+          type: PostType.NORMAL
         };
 
         set(state => ({
@@ -221,7 +223,8 @@ export const usePostStore = create<PostState>()(
               images: finalImages,
               videos: finalVideos,
               videoThumbnails: finalThumbnails,
-              visibility
+              visibility,
+              type: PostType.NORMAL
             }, postId);
 
             set(state => {
@@ -263,16 +266,16 @@ export const usePostStore = create<PostState>()(
         set(state => ({
           posts: state.posts.map(p =>
             p.id === postId
-              ? { 
-                  ...p, 
-                  content, 
-                  images: [...images, ...previewImages], 
-                  videos: [...videos, ...previewVideos], 
-                  visibility, 
-                  videoThumbnails, 
-                  isEdited: true, 
-                  editedAt: new Date() 
-                }
+              ? {
+                ...p,
+                content,
+                images: [...images, ...previewImages],
+                videos: [...videos, ...previewVideos],
+                visibility,
+                videoThumbnails,
+                isEdited: true,
+                editedAt: new Date()
+              }
               : p
           ),
           uploadingStates: pendingFiles && pendingFiles.length > 0
@@ -336,9 +339,9 @@ export const usePostStore = create<PostState>()(
         processUpdate();
       },
 
-      deletePost: async (postId: string, _images?: string[], _videos?: string[]) => {
+      deletePost: async (postId: string, userId: string, _images?: string[], _videos?: string[]) => {
         try {
-          await postService.deletePost(postId);
+          await postService.deletePost(postId, userId);
           set((state) => ({
             posts: state.posts.filter(p => p.id !== postId)
           }));

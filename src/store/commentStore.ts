@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Comment, ReactionType } from '../types';
+import { Comment, ReactionType, CommentStatus } from '../types';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { commentService } from '../services/commentService';
 import { PAGINATION } from '../constants';
@@ -64,7 +64,7 @@ interface CommentState {
   subscribeToReplies: (postId: string, parentId: string, blockedUserIds?: string[]) => () => void;
   createComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string) => Promise<string>;
   updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null) => Promise<void>;
-  deleteComment: (postId: string, commentId: string, parentId?: string | null) => Promise<void>;
+  deleteComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
   reactToComment: (postId: string, commentId: string, userId: string, reaction: string | ReactionType, parentId?: string | null) => Promise<void>;
 
   setRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
@@ -278,7 +278,8 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       replyToUserId: replyToUserId || undefined,
       image: imageUrl || undefined,
       createdAt: new Date(),
-      replyCount: 0
+      replyCount: 0,
+      status: CommentStatus.ACTIVE
     };
 
     const previousState = {
@@ -329,7 +330,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
   },
 
-  deleteComment: async (postId, commentId, parentId) => {
+  deleteComment: async (postId, commentId, userId, parentId) => {
     const previousState = {
       rootComments: { ...get().rootComments },
       replies: { ...get().replies }
@@ -362,7 +363,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     });
 
     try {
-      await commentService.deleteComment(commentId);
+      await commentService.deleteComment(commentId, userId);
     } catch (error) {
       set(previousState);
       console.error('Lỗi xóa bình luận:', error);

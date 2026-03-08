@@ -51,9 +51,9 @@ const getEffectiveJoinedAt = (conversation: Conversation | undefined, userId: st
 
 type MediaType = 'image' | 'video' | 'file' | 'voice';
 
-const mediaConfig: Record<MediaType, { 
-  prefix: string; 
-  messageType: MessageType; 
+const mediaConfig: Record<MediaType, {
+  prefix: string;
+  messageType: MessageType;
   serviceFn: keyof typeof messageService;
   errorMsg: string;
 }> = {
@@ -91,6 +91,7 @@ const sendMediaMessage = (
     replyToSnippet: targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined,
     readBy: [senderId],
     deliveredTo: [senderId],
+    deletedBy: [],
     ...(isFile ? { fileName: file.name, fileSize: file.size } : { fileUrl: localUrl }),
   };
 
@@ -170,7 +171,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   loadMoreMessages: async (conversationId: string) => {
     const { lastMessageDocs, isLoadingMore, hasMoreMessages, conversations } = get();
     const lastDoc = lastMessageDocs[conversationId];
-    
+
     if (!lastDoc || isLoadingMore[conversationId] || hasMoreMessages[conversationId] === false) return;
 
     const conversation = conversations.find((c: Conversation) => c.id === conversationId);
@@ -181,7 +182,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
     try {
       const result = await messageService.getMoreMessages(conversationId, lastDoc, LIMIT_PER_PAGE, joinedAt);
-      
+
       set((state) => ({
         messages: { ...state.messages, [conversationId]: [...result.messages, ...(state.messages[conversationId] || [])] },
         lastMessageDocs: { ...state.lastMessageDocs, [conversationId]: result.lastDoc },
@@ -227,6 +228,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       mentions: mentions || [],
       readBy: [],
       deliveredTo: [],
+      deletedBy: [],
     };
 
     set(state => ({
@@ -256,6 +258,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       type: MessageType.CALL,
       readBy: [],
       deliveredTo: [],
+      deletedBy: [],
     };
     set(state => ({
       messages: { ...state.messages, [conversationId]: [...(state.messages[conversationId] || []), optimisticMessage] }
@@ -347,6 +350,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       replyToSnippet: targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined,
       readBy: [],
       deliveredTo: [],
+      deletedBy: [],
     };
 
     set(state => ({

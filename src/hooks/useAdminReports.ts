@@ -12,7 +12,6 @@ interface Stats {
   pending: number;
   resolved: number;
   rejected: number;
-  orphaned: number;
 }
 
 export function useAdminReports() {
@@ -26,7 +25,7 @@ export function useAdminReports() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<ReportStatus | 'pending'>('pending');
   const [typeFilter, setTypeFilter] = useState<ReportType | 'all'>('all');
-  const [stats, setStats] = useState<Stats>({ pending: 0, resolved: 0, rejected: 0, orphaned: 0 });
+  const [stats, setStats] = useState<Stats>({ pending: 0, resolved: 0, rejected: 0 });
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [actionType, setActionType] = useState<'resolve' | 'reject' | null>(null);
 
@@ -50,8 +49,7 @@ export function useAdminReports() {
           setStats({
             pending: allReports.filter(r => r.status === ReportStatus.PENDING).length,
             resolved: allReports.filter(r => r.status === ReportStatus.RESOLVED).length,
-            rejected: allReports.filter(r => r.status === ReportStatus.REJECTED).length,
-            orphaned: allReports.filter(r => r.status === ReportStatus.ORPHANED).length
+            rejected: allReports.filter(r => r.status === ReportStatus.REJECTED).length
           });
 
           // Lọc theo status filter

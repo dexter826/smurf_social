@@ -100,11 +100,14 @@ service cloud.firestore {
         request.resource.data.userId == request.auth.uid &&
         request.resource.data.visibility in ['public', 'friends', 'private'] &&
         request.resource.data.type in ['normal', 'avatar_update', 'cover_update'] &&
+        request.resource.data.status == 'active' &&
         request.resource.data.commentCount == 0;
 
       allow update: if isAuthenticated() && (
-        // Chủ bài viết
-        (resource.data.userId == request.auth.uid && isNotBanned()) ||
+        // Chủ bài viết có thể edit hoặc soft delete
+        (resource.data.userId == request.auth.uid && isNotBanned() &&
+         (changed().hasOnly(['content', 'images', 'videos', 'visibility', 'isEdited', 'editedAt', 'videoThumbnails']) ||
+          changed().hasOnly(['status', 'deletedAt', 'deletedBy']))) ||
         // Chỉ cho phép cập nhật tương tác.
         (isNotBanned() && changed().hasOnly(['commentCount', 'reactionCount', 'reactionSummary']))
       );
@@ -130,6 +133,7 @@ service cloud.firestore {
       allow create: if isNotBanned() &&
         request.resource.data.userId == request.auth.uid &&
         request.resource.data.postId is string &&
+        request.resource.data.status == 'active' &&
         request.resource.data.replyCount == 0;
 
       allow update: if isAuthenticated() && (
@@ -139,6 +143,9 @@ service cloud.firestore {
         // Chủ comment có thể chỉ edit content
         (resource.data.userId == request.auth.uid && isNotBanned() && 
          changed().hasOnly(['content', 'isEdited', 'editedAt'])) ||
+        // Chủ comment có thể soft delete
+        (resource.data.userId == request.auth.uid && isNotBanned() &&
+         changed().hasOnly(['status', 'deletedAt', 'deletedBy'])) ||
         // Chỉ cho phép cập nhật cảm xúc/phản hồi.
         (isNotBanned() && changed().hasOnly(['replyCount', 'reactionCount', 'reactionSummary']))
       );

@@ -20,7 +20,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Comment, ReactionType, UserStatus } from '../types';
+import { Comment, ReactionType, UserStatus, CommentStatus } from '../types';
 import { PAGINATION } from '../constants';
 import { batchGetUsers } from '../utils/batchUtils';
 import { convertTimestamp } from '../utils/dateUtils';
@@ -32,6 +32,7 @@ function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<D
     id: docSnap.id,
     createdAt: convertTimestamp(data?.createdAt, new Date())!,
     editedAt: convertTimestamp(data?.editedAt),
+    deletedAt: convertTimestamp(data?.deletedAt),
   } as Comment;
 }
 
@@ -46,6 +47,7 @@ export const commentService = {
         collection(db, 'comments'),
         where('postId', '==', postId),
         where('parentId', '==', null),
+        where('status', '==', CommentStatus.ACTIVE),
         orderBy('createdAt', 'desc'),
         limit(limitCount + 1)
       );
@@ -83,6 +85,7 @@ export const commentService = {
         collection(db, 'comments'),
         where('postId', '==', postId),
         where('parentId', '==', commentId),
+        where('status', '==', CommentStatus.ACTIVE),
         orderBy('createdAt', 'asc'),
         limit(limitCount + 1)
       );
@@ -128,6 +131,7 @@ export const commentService = {
         postId,
         userId,
         content,
+        status: CommentStatus.ACTIVE,
         parentId,
         replyToUserId: replyToUserId || null,
         image: imageUrl || null,
@@ -151,10 +155,15 @@ export const commentService = {
     }
   },
 
-  // Cloud Function onCommentDeleted xử lý cascade cleanup
-  deleteComment: async (commentId: string) => {
+  // Soft delete - đánh dấu xóa thay vì xóa hẳn
+  deleteComment: async (commentId: string, userId: string) => {
     try {
-      await deleteDoc(doc(db, 'comments', commentId));
+      const commentRef = doc(db, 'comments', commentId);
+      await updateDoc(commentRef, {
+        status: CommentStatus.DELETED,
+        deletedAt: serverTimestamp(),
+        deletedBy: userId
+      });
     } catch (error) {
       console.error("Lỗi xóa comment:", error);
       throw error;
@@ -250,6 +259,7 @@ export const commentService = {
       collection(db, 'comments'),
       where('postId', '==', postId),
       where('parentId', '==', null),
+      where('status', '==', CommentStatus.ACTIVE),
       orderBy('createdAt', 'desc'),
       limit(limitCount + 1)
     );
@@ -312,6 +322,7 @@ export const commentService = {
       collection(db, 'comments'),
       where('postId', '==', postId),
       where('parentId', '==', parentId),
+      where('status', '==', CommentStatus.ACTIVE),
       orderBy('createdAt', 'asc'),
       limit(limitCount + 1)
     );
