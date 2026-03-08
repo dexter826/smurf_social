@@ -273,8 +273,8 @@ Hiện tại:
 
 - `src/types.ts` — xóa `updatedAt?` khỏi `BaseEntity`, thêm `updatedAt: Date` riêng vào `Conversation` interface
 
-- [ ] Xóa `updatedAt` từ `BaseEntity`
-- [ ] Thêm `updatedAt` trực tiếp vào `Conversation` interface
+- [x] Xóa `updatedAt` từ `BaseEntity`
+- [x] Thêm `updatedAt` trực tiếp vào `Conversation` interface
 
 ---
 
@@ -343,7 +343,7 @@ Hiện tại:
 | TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [x]    |
 | TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [x]    |
 | TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [x]    |
-| TASK-15 | Xóa `updatedAt` từ BaseEntity, giữ riêng ở Conversation           | 🔵 DB       | [ ]    |
+| TASK-15 | Xóa `updatedAt` từ BaseEntity, giữ riêng ở Conversation           | 🔵 DB       | [x]    |
 | TASK-16 | Làm sạch `Message.reactorId` type                                 | 🟣 TYPE     | [ ]    |
 | TASK-17 | Xóa `ReportReason` import thừa                                    | 🟣 TYPE     | [ ]    |
 | TASK-18 | Kiểm tra `addFriend`/`removeFriend` trong contactStore            | 🟣 TYPE     | [ ]    |
