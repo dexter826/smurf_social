@@ -9,6 +9,7 @@ import { useNotificationStore } from '../../store/notificationStore';
 import { usePostStore } from '../../store/postStore';
 import { useAuthStore } from '../../store/authStore';
 import { useUserCache } from '../../store/userCacheStore';
+import { useFriendIds } from '../../hooks';
 import { useEffect } from 'react';
 
 interface NotificationItemProps {
@@ -22,6 +23,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
   const deleteNotification = useNotificationStore(state => state.deleteNotification);
   const { getUser, fetchUser } = useUserCache();
   const sender = getUser(notification.senderId);
+  const friendIds = useFriendIds();
 
   useEffect(() => {
     if (!sender) {
@@ -46,7 +48,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       case NotificationType.LIKE_POST:
       case NotificationType.COMMENT_POST:
         if (notification.data.postId && user) {
-          fetchPostById(notification.data.postId, user.id, user.friendIds || []);
+          fetchPostById(notification.data.postId, user.id, friendIds);
         }
         break;
       case NotificationType.FRIEND_REQUEST:
@@ -58,7 +60,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       case NotificationType.REPLY_COMMENT:
       case NotificationType.REACT_COMMENT:
         if (notification.data.postId && user) {
-          fetchPostById(notification.data.postId, user.id, user.friendIds || []);
+          fetchPostById(notification.data.postId, user.id, friendIds);
         }
         break;
       case NotificationType.REPORT_NEW:
