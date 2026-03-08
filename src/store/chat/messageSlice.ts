@@ -87,7 +87,7 @@ const sendMediaMessage = (
     createdAt: new Date(),
     type: config.messageType,
     replyToId,
-    replyToMessage: targetMessage,
+    replyToSnippet: targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined,
     readBy: [senderId],
     deliveredTo: [senderId],
     ...(isFile ? { fileName: file.name, fileSize: file.size } : { fileUrl: localUrl }),
@@ -100,7 +100,7 @@ const sendMediaMessage = (
 
   const serviceFn = messageService[config.serviceFn] as any;
 
-  serviceFn(conversationId, senderId, file, replyToId, targetMessage, (p: { progress: number }) => {
+  serviceFn(conversationId, senderId, file, replyToId, targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined, (p: { progress: number }) => {
     get().setUploadProgress(realId, p.progress);
   }, realId).then(() => {
     set(state => {
@@ -294,7 +294,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       createdAt: new Date(),
       type: MessageType.TEXT,
       replyToId,
-      replyToMessage: targetMessage,
+      replyToSnippet: targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined,
       readBy: [],
       deliveredTo: [],
     };
@@ -304,7 +304,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }));
 
     try {
-      await messageService.replyToMessage(conversationId, senderId, content, replyToId, targetMessage, realId);
+      await messageService.replyToMessage(conversationId, senderId, content, replyToId, targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined, realId);
     } catch (error) {
       set(state => ({
         messages: { ...state.messages, [conversationId]: (state.messages[conversationId] || []).filter(m => m.id !== realId) }

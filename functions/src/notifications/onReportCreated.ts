@@ -21,24 +21,25 @@ export const onReportCreated = onDocumentCreated(
     const { reporterId, targetType, reason } = report;
 
     try {
-      const adminsSnap = await db.collection('users').where('role', '==', 'admin').get();
-      if (adminsSnap.empty) return;
+      const configDoc = await db.collection('config').doc('admins').get();
+      const adminIds: string[] = configDoc.data()?.adminIds || [];
+      if (adminIds.length === 0) return;
 
       const typeLabel = REPORT_TYPE_LABELS[targetType] || targetType;
       const contentSnippet = `${typeLabel} - ${reason}`;
 
-      const notifications = adminsSnap.docs.map((adminDoc) =>
+      const notifications = adminIds.map((adminId) =>
         createNotification({
-          receiverId: adminDoc.id,
+          receiverId: adminId,
           senderId: reporterId,
           type: NotificationType.REPORT_NEW,
           data: { reportId, contentSnippet },
         })
       );
 
-      const pushNotifications = adminsSnap.docs.map((adminDoc) =>
+      const pushNotifications = adminIds.map((adminId) =>
         sendPushNotification({
-          receiverId: adminDoc.id,
+          receiverId: adminId,
           type: NotificationType.REPORT_NEW,
           body: `Có báo cáo mới: ${contentSnippet}`,
           data: { reportId },

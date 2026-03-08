@@ -156,13 +156,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isPendingVerification: false });
 
         try {
-          const userData = await userService.getUserById(firebaseUser.uid);
+          const [userData, blockedUserIds] = await Promise.all([
+            userService.getUserById(firebaseUser.uid),
+            userService.getBlockedUserIds(firebaseUser.uid),
+          ]);
           if (userData) {
             await userService.updateUserStatus(
               firebaseUser.uid,
               UserStatus.ONLINE,
             );
-            const userWithStatus = { ...userData, status: UserStatus.ONLINE };
+            const userWithStatus = { ...userData, status: UserStatus.ONLINE, blockedUserIds };
             set({ user: userWithStatus });
             useUserCache.getState().setUser(userWithStatus);
           }
@@ -242,7 +245,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         try {
-          const userData = await userService.getUserById(firebaseUser.uid);
+          const [userData, blockedUserIds] = await Promise.all([
+            userService.getUserById(firebaseUser.uid),
+            userService.getBlockedUserIds(firebaseUser.uid),
+          ]);
 
           if (userData) {
             if (userData.status === UserStatus.BANNED) {
@@ -256,7 +262,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               firebaseUser.uid,
               UserStatus.ONLINE,
             );
-            const initialUser = { ...userData, status: UserStatus.ONLINE };
+            const initialUser = { ...userData, status: UserStatus.ONLINE, blockedUserIds };
             set({
               user: initialUser,
               isPendingVerification: false,
@@ -273,8 +279,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                   return;
                 }
 
+                const currentBlocked = get().user?.blockedUserIds;
                 const currentStatus = get().user?.status || UserStatus.ONLINE;
-                const newUser = { ...updatedUser, status: currentStatus };
+                const newUser = { ...updatedUser, status: currentStatus, blockedUserIds: currentBlocked };
                 set({ user: newUser });
                 useUserCache.getState().setUser(newUser);
               },

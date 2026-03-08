@@ -10,16 +10,13 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
+    // Admin và banned dùng Custom Claims — không cần Firestore read
     function isAdmin() {
-      return isAuthenticated() && getUserData().role == 'admin';
+      return isAuthenticated() && request.auth.token.admin == true;
     }
 
     function isNotBanned() {
-      return isAuthenticated() && getUserData().status != 'banned';
+      return isAuthenticated() && request.auth.token.banned != true;
     }
 
     // Danh sách các trường dữ liệu thay đổi.
@@ -29,11 +26,21 @@ service cloud.firestore {
 
     // QUẢN LÝ NGƯỜI DÙNG
     match /users/{userId} {
+      // Dữ liệu nhạy cảm — chỉ owner
+      match /private/security {
+        allow read, write: if isOwner(userId) && isNotBanned();
+      }
+      // FCM tokens — CF-only write
+      match /private/fcm {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
       allow read: if isAuthenticated();
 
       allow create: if isAuthenticated() && isOwner(userId) &&
         request.resource.data.status in ['online', 'offline'] &&
-        (!('role' in request.resource.data) || request.resource.data.role == 'user');
+        // Role chỉ được set qua Custom Claims — chặn ghi trực tiếp
+        !('role' in request.resource.data);
 
       allow update: if isAuthenticated() && (
         // Quyền admin toàn phần.
@@ -200,6 +207,12 @@ service cloud.firestore {
         resource.data.senderId == request.auth.uid ||
         isAdmin()
       );
+    }
+
+    // CẤU HÌNH HỆ THỐNG (CF-only write)
+    match /config/{document} {
+      allow read: if isAuthenticated();
+      allow write: if false;
     }
 
     // BÁO CÁO VI PHẠM

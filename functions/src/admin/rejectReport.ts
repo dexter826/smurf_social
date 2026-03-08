@@ -10,11 +10,7 @@ export const rejectReport = onCall(
   { region: 'us-central1' },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
-
-    const callerDoc = await db.collection('users').doc(request.auth.uid).get();
-    if (callerDoc.data()?.role !== 'admin') {
-      throw new HttpsError('permission-denied', 'Không có quyền Admin');
-    }
+    if (!request.auth.token.admin) throw new HttpsError('permission-denied', 'Không có quyền Admin');
 
     const { reportId } = request.data as { reportId: string };
     if (!reportId) throw new HttpsError('invalid-argument', 'Thiếu reportId');

@@ -45,13 +45,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
 
     const processedMessages = messages
       .filter(msg => !msg.deletedBy?.includes(currentUserId))
-      .map(msg => {
-        if (msg.replyToId && !msg.replyToMessage) {
-          const replyToMessage = messages.find(m => m.id === msg.replyToId);
-          return { ...msg, replyToMessage };
-        }
-        return msg;
-      });
+      .map(msg => msg);
 
     processedMessages.forEach((msg) => {
       const msgDate = new Date(msg.createdAt).toLocaleDateString('vi-VN');

@@ -25,11 +25,8 @@ export const resolveReport = onCall(
   { region: 'us-central1' },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
+    if (!request.auth.token.admin) throw new HttpsError('permission-denied', 'Không có quyền Admin');
 
-    const callerDoc = await db.collection('users').doc(request.auth.uid).get();
-    if (callerDoc.data()?.role !== 'admin') {
-      throw new HttpsError('permission-denied', 'Không có quyền Admin');
-    }
 
     const { reportId, resolution = 'Đã xử lý', action = 'delete_content' } = request.data as {
       reportId: string;
@@ -58,9 +55,9 @@ export const resolveReport = onCall(
     } else if (reportData.targetType === ReportType.COMMENT && action === 'delete_content') {
       await deleteCommentById(reportData.targetId);
     } else if (reportData.targetType === ReportType.USER && action === 'ban_user') {
-      await db.collection('users').doc(reportData.targetId).update({
-        status: 'banned',
-      });
+      await db.collection('users').doc(reportData.targetId).update({ status: 'banned' });
+      // Custom Claim ban: token mới sau revoke sẽ mang claim này
+      await auth.setCustomUserClaims(reportData.targetId, { banned: true });
       await auth.revokeRefreshTokens(reportData.targetId);
     }
 

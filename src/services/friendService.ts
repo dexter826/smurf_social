@@ -39,15 +39,16 @@ export const friendService = {
         throw new Error("Không thể gửi lời mời kết bạn cho chính mình");
       }
 
-      // Kiểm tra block lẫn nhau
-      const receiverSnap = await getDoc(doc(db, 'users', receiverId));
+      const [receiverSnap, receiverSec, senderSec] = await Promise.all([
+        getDoc(doc(db, 'users', receiverId)),
+        getDoc(doc(db, 'users', receiverId, 'private', 'security')),
+        getDoc(doc(db, 'users', senderId, 'private', 'security')),
+      ]);
       if (!receiverSnap.exists()) throw new Error("Người dùng không tồn tại");
-      const receiverData = receiverSnap.data();
-      if (receiverData.blockedUserIds?.includes(senderId)) {
+      if (receiverSec.data()?.blockedUserIds?.includes(senderId)) {
         throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
       }
-      const senderSnap = await getDoc(doc(db, 'users', senderId));
-      if (senderSnap.exists() && senderSnap.data().blockedUserIds?.includes(receiverId)) {
+      if (senderSec.data()?.blockedUserIds?.includes(receiverId)) {
         throw new Error("Bạn đã chặn người dùng này");
       }
 

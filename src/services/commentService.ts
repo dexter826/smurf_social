@@ -9,7 +9,7 @@ import {
   updateDoc, 
   deleteDoc,
   deleteField,
-  doc, 
+  doc,
   setDoc,
   Timestamp,
   limit,
@@ -17,7 +17,6 @@ import {
   DocumentSnapshot,
   QueryDocumentSnapshot,
   DocumentData,
-  increment,
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -144,19 +143,6 @@ export const commentService = {
         docRefId = docRef.id;
       }
 
-      if (parentId) {
-        const parentRef = doc(db, 'comments', parentId);
-        await updateDoc(parentRef, {
-          replyCount: increment(1)
-        });
-      }
-
-      const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        commentCount: increment(1)
-      });
-
-      // Cloud Function onCommentCreated xử lý notification
 
       return docRefId!;
     } catch (error) {

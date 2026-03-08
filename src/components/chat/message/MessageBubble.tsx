@@ -195,7 +195,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 }
               }}
             >
-              {message.replyToId && message.replyToMessage && (
+              {message.replyToId && message.replyToSnippet && (
                 <div className={`mb-2 p-2 rounded border-l-4 text-xs ${isMe
                   ? 'bg-white/10 border-white/50 text-white/90'
                   : 'bg-bg-secondary border-primary text-text-secondary'
@@ -203,14 +203,14 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   onClick={() => scrollToMessage(message.replyToId!)}
                 >
                   <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
-                    {message.replyToMessage.senderId === currentUserId
+                    {message.replyToSnippet.senderId === currentUserId
                       ? 'Bạn'
-                      : usersMap[message.replyToMessage.senderId]?.name || 'Người dùng'}
+                      : usersMap[message.replyToSnippet.senderId]?.name || 'Người dùng'}
                   </div>
                   <div className="truncate">
-                    {message.replyToMessage.type === 'text'
-                      ? message.replyToMessage.content.replace(/@\[([^\]]+)\]/g, '@$1')
-                      : `[${message.replyToMessage.type}]`}
+                    {message.replyToSnippet.type === 'text'
+                      ? message.replyToSnippet.content.replace(/@\[([^\]]+)\]/g, '@$1')
+                      : `[${message.replyToSnippet.type}]`}
                   </div>
                 </div>
               )}
