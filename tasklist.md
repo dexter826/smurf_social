@@ -236,7 +236,7 @@ Hiện tại:
 
 - `src/services/userService.ts` — sửa `getUserStats` dùng `getCountFromServer` trên friends subcollection
 
-- [ ] Sửa `getUserStats` đếm từ subcollection
+- [x] Sửa `getUserStats` đếm từ subcollection
 
 ---
 
@@ -340,7 +340,7 @@ Hiện tại:
 | TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [x]    |
 | TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [x]    |
 | TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [x]    |
-| TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [ ]    |
+| TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [x]    |
 | TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [ ]    |
 | TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [ ]    |
 | TASK-15 | Xóa `updatedAt` từ BaseEntity, giữ riêng ở Conversation           | 🔵 DB       | [ ]    |
