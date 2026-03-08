@@ -5,6 +5,7 @@ import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useIntersectionObserver } from './utils/useIntersectionObserver';
 import { useLoadingStore } from '../store/loadingStore';
+import { useContactStore } from '../store/contactStore';
 
 interface UseFeedReturn {
   posts: Post[];
@@ -20,6 +21,7 @@ interface UseFeedReturn {
 
 export const useFeed = (): UseFeedReturn => {
   const { user: currentUser } = useAuthStore();
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
   const {
     posts,
     hasMore,
@@ -36,8 +38,8 @@ export const useFeed = (): UseFeedReturn => {
   const handleLoadMore = useCallback(() => {
     if (!currentUser || feedPostsLoading || feedLoadMoreLoading || !hasMore) return;
     const blockedUserIds = currentUser.blockedUserIds || [];
-    fetchPosts(currentUser.id, currentUser.friendIds || [], blockedUserIds, true);
-  }, [currentUser, hasMore, fetchPosts, feedPostsLoading, feedLoadMoreLoading]);
+    fetchPosts(currentUser.id, friendIds, blockedUserIds, true);
+  }, [currentUser, hasMore, fetchPosts, feedPostsLoading, feedLoadMoreLoading, friendIds]);
 
   const observerRef = useIntersectionObserver(handleLoadMore, {
     enabled: hasMore && !feedPostsLoading && !feedLoadMoreLoading && !!currentUser
@@ -47,15 +49,13 @@ export const useFeed = (): UseFeedReturn => {
 
   const handleSubscribeToPosts = useCallback(() => {
     if (!currentUser) return;
-    const friendIds = currentUser.friendIds || [];
     const blockedUserIds = currentUser.blockedUserIds || [];
     return subscribeToPosts(currentUser.id, friendIds, blockedUserIds);
-  }, [currentUser, subscribeToPosts]);
+  }, [currentUser, subscribeToPosts, friendIds]);
 
   useEffect(() => {
     if (!currentUser) return;
 
-    const friendIds = currentUser.friendIds || [];
     const blockedUserIds = currentUser.blockedUserIds || [];
 
     if (posts.length === 0 || !feedPostsLoading) {
@@ -67,7 +67,7 @@ export const useFeed = (): UseFeedReturn => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [currentUser?.id, currentUser?.blockedUserIds?.length]);
+  }, [currentUser?.id, currentUser?.blockedUserIds?.length, friendIds.length]);
 
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {

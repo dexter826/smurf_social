@@ -51,14 +51,9 @@ export const userService = {
   // Lấy toàn bộ bạn bè
   getAllFriends: async (currentUserId: string): Promise<User[]> => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', currentUserId));
-      if (!userDoc.exists()) return [];
-
-      const userData = userDoc.data() as User;
-      const friendIds = userData.friendIds || [];
-
+      const snap = await getDocs(collection(db, 'users', currentUserId, 'friends'));
+      const friendIds = snap.docs.map(d => d.id);
       if (friendIds.length === 0) return [];
-
       const friendsMap = await batchGetUsers(friendIds);
       return Object.values(friendsMap).filter(u => u.status !== UserStatus.BANNED);
     } catch (error) {
@@ -69,26 +64,17 @@ export const userService = {
 
   // Đăng ký nhận cập nhật danh sách bạn bè
   subscribeToFriends: (userId: string, callback: (friends: User[]) => void): (() => void) => {
-    const userRef = doc(db, 'users', userId);
+    const friendsRef = collection(db, 'users', userId, 'friends');
     let previousFriendIds: string[] = [];
 
-    return onSnapshot(userRef, async (snapshot) => {
-      if (!snapshot.exists()) {
-        callback([]);
-        return;
-      }
-
-      const userData = snapshot.data() as User;
-      const friendIds = userData.friendIds || [];
+    return onSnapshot(friendsRef, async (snapshot) => {
+      const friendIds = snapshot.docs.map(d => d.id);
 
       // Skip fetch khi friendIds chưa thay đổi
       const isIdsChanged = friendIds.length !== previousFriendIds.length ||
-        !friendIds.every((id, index) => id === previousFriendIds[index]);
+        !friendIds.every((id) => previousFriendIds.includes(id));
 
-      if (!isIdsChanged && previousFriendIds.length > 0) {
-        return;
-      }
-
+      if (!isIdsChanged && previousFriendIds.length > 0) return;
       previousFriendIds = friendIds;
 
       if (friendIds.length === 0) {
@@ -123,10 +109,8 @@ export const userService = {
   // Tìm kiếm trong danh sách bạn bè
   searchFriends: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', currentUserId));
-      if (!userDoc.exists()) return [];
-
-      const friendIds = (userDoc.data() as User).friendIds || [];
+      const snap = await getDocs(collection(db, 'users', currentUserId, 'friends'));
+      const friendIds = snap.docs.map(d => d.id);
       if (friendIds.length === 0) return [];
 
       const friendsMap = await batchGetUsers(friendIds);

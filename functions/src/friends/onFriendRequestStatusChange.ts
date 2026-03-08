@@ -22,13 +22,16 @@ export const onFriendRequestStatusChange = onDocumentUpdated(
 
     try {
       const batch = db.batch();
+      const now = FieldValue.serverTimestamp();
 
-      batch.update(db.collection('users').doc(senderId), {
-        friendIds: FieldValue.arrayUnion(receiverId),
+      batch.set(db.collection('users').doc(senderId).collection('friends').doc(receiverId), {
+        friendId: receiverId,
+        createdAt: now,
       });
 
-      batch.update(db.collection('users').doc(receiverId), {
-        friendIds: FieldValue.arrayUnion(senderId),
+      batch.set(db.collection('users').doc(receiverId).collection('friends').doc(senderId), {
+        friendId: senderId,
+        createdAt: now,
       });
 
       // Xóa request sau khi xử lý — không còn cần thiết
@@ -36,7 +39,7 @@ export const onFriendRequestStatusChange = onDocumentUpdated(
 
       await batch.commit();
     } catch (error) {
-      console.error('[onFriendRequestStatusChange] Lỗi cập nhật friendIds:', error);
+      console.error('[onFriendRequestStatusChange] Lỗi cập nhật friends subcollection:', error);
     }
   }
 );
