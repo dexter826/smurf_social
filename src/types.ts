@@ -178,6 +178,7 @@ export interface Conversation extends BaseEntity {
   memberJoinedAt?: Record<string, Date>;
   deletedBy?: string[];
   deletedAt?: Record<string, Date>;
+  blockedBy?: string[];
 }
 
 export interface Comment extends BaseEntity {

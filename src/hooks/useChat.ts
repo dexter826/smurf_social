@@ -140,6 +140,7 @@ export const useChat = () => {
     usersMap,
     friendStatus: partnerFriendStatus,
     pendingRequestId: partnerPendingRequestId,
+    conversation: selectedConversation,
   });
 
   const groups = useChatGroups({

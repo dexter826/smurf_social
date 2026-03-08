@@ -300,6 +300,17 @@ export const userService = {
         { blockedUserIds: arrayUnion(blockedUserId) },
         { merge: true }
       );
+      
+      const participantIds = [userId, blockedUserId].sort();
+      const q = query(
+        collection(db, 'conversations'),
+        where('participantIds', '==', participantIds),
+        where('isGroup', '==', false)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        await updateDoc(querySnapshot.docs[0].ref, { blockedBy: arrayUnion(userId) });
+      }
     } catch (error) {
       console.error("Lỗi chặn người dùng", error);
       throw error;
@@ -313,6 +324,17 @@ export const userService = {
         { blockedUserIds: arrayRemove(blockedUserId) },
         { merge: true }
       );
+      
+      const participantIds = [userId, blockedUserId].sort();
+      const q = query(
+        collection(db, 'conversations'),
+        where('participantIds', '==', participantIds),
+        where('isGroup', '==', false)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        await updateDoc(querySnapshot.docs[0].ref, { blockedBy: arrayRemove(userId) });
+      }
     } catch (error) {
       console.error("Lỗi bỏ chặn người dùng", error);
       throw error;
