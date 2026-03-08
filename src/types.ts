@@ -114,6 +114,7 @@ export interface User extends BaseEntity {
   blockedUserIds?: string[];
   coverImage?: string;
   lastSeen?: Date;
+  role?: 'admin' | 'user';
 }
 
 export interface FriendRequest extends BaseEntity {
