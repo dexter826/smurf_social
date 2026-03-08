@@ -115,8 +115,6 @@ export interface User extends BaseEntity {
   blockedUserIds?: string[];
   coverImage?: string;
   lastSeen?: Date;
-  fcmTokens?: string[];
-  role?: "user" | "admin";
 }
 
 export interface FriendRequest extends BaseEntity {
@@ -146,7 +144,7 @@ export interface Message extends BaseEntity {
   deletedBy?: string[];
   isForwarded?: boolean;
   replyToId?: string;
-  replyToMessage?: Message;
+  replyToSnippet?: { senderId: string; content: string; type: MessageType; isRecalled?: boolean };
   isEdited?: boolean;
   editedAt?: Date;
 }

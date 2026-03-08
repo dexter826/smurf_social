@@ -166,8 +166,9 @@ export const userService = {
         };
       }
 
+      const PRIVATE_FIELDS = ['blockedUserIds', 'fcmTokens'];
       const cleanData = Object.fromEntries(
-        Object.entries(updatedData).filter(([_, v]) => v !== undefined)
+        Object.entries(updatedData).filter(([k, v]) => v !== undefined && !PRIVATE_FIELDS.includes(k))
       );
 
       await setDoc(userRef, cleanData, { merge: true });
@@ -298,26 +299,36 @@ export const userService = {
     }
   },
 
-  // Thêm người dùng vào danh sách chặn
+  // Lấy danh sách bị chặn từ subcollection riêng tư
+  getBlockedUserIds: async (userId: string): Promise<string[]> => {
+    try {
+      const secDoc = await getDoc(doc(db, 'users', userId, 'private', 'security'));
+      return secDoc.data()?.blockedUserIds || [];
+    } catch {
+      return [];
+    }
+  },
+
   blockUser: async (userId: string, blockedUserId: string): Promise<void> => {
     try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        blockedUserIds: arrayUnion(blockedUserId)
-      });
+      await setDoc(
+        doc(db, 'users', userId, 'private', 'security'),
+        { blockedUserIds: arrayUnion(blockedUserId) },
+        { merge: true }
+      );
     } catch (error) {
       console.error("Lỗi chặn người dùng", error);
       throw error;
     }
   },
 
-  // Xóa người dùng khỏi danh sách chặn
   unblockUser: async (userId: string, blockedUserId: string): Promise<void> => {
     try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        blockedUserIds: arrayRemove(blockedUserId)
-      });
+      await setDoc(
+        doc(db, 'users', userId, 'private', 'security'),
+        { blockedUserIds: arrayRemove(blockedUserId) },
+        { merge: true }
+      );
     } catch (error) {
       console.error("Lỗi bỏ chặn người dùng", error);
       throw error;

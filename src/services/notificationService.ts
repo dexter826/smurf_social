@@ -8,6 +8,7 @@ import {
   Timestamp,
   doc,
   updateDoc,
+  setDoc,
   onSnapshot,
   writeBatch,
   limit,
@@ -179,10 +180,11 @@ export const notificationService = {
         });
 
         if (token) {
-          const userRef = doc(db, 'users', userId);
-          await updateDoc(userRef, {
-            fcmTokens: arrayUnion(token)
-          });
+          await setDoc(
+            doc(db, 'users', userId, 'private', 'fcm'),
+            { tokens: arrayUnion(token) },
+            { merge: true }
+          );
           return token;
         }
       }

@@ -16,9 +16,10 @@ const NOTIFICATION_TITLES: Partial<Record<NotificationType, string>> = {
 
 async function getUserFcmTokens(userId: string): Promise<string[]> {
   try {
-    const userDoc = await db.collection('users').doc(userId).get();
-    if (!userDoc.exists) return [];
-    return userDoc.data()?.fcmTokens || [];
+    const fcmDoc = await db.collection('users').doc(userId)
+      .collection('private').doc('fcm').get();
+    if (!fcmDoc.exists) return [];
+    return fcmDoc.data()?.tokens || [];
   } catch {
     return [];
   }
@@ -28,9 +29,9 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
 async function removeInvalidToken(userId: string, token: string): Promise<void> {
   try {
     const { FieldValue } = await import('firebase-admin/firestore');
-    await db.collection('users').doc(userId).update({
-      fcmTokens: FieldValue.arrayRemove(token),
-    });
+    await db.collection('users').doc(userId)
+      .collection('private').doc('fcm')
+      .update({ tokens: FieldValue.arrayRemove(token) });
   } catch {
     // Bỏ qua
   }
