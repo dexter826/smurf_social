@@ -147,44 +147,55 @@ export const groupService = {
   },
 
   // Rời khỏi nhóm và xử lý quyền trưởng nhóm
-  leaveGroup: async (conversationId: string, userId: string): Promise<void> => {
+  leaveGroup: async (conversationId: string, userId: string, newAdminId?: string): Promise<void> => {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       const conversationSnap = await getDoc(conversationRef);
       
       if (conversationSnap.exists()) {
         const data = conversationSnap.data();
-        const newParticipantIds = data.participantIds.filter((id: string) => id !== userId);
-        const newAdminIds = (data.adminIds || []).filter((id: string) => id !== userId);
         
-        if (newParticipantIds.length === 0) {
-          await conversationService.deleteConversation(conversationId, userId);
-        } else {
-          const updates: Record<string, unknown> = {
-            participantIds: newParticipantIds,
-            adminIds: newAdminIds,
-            [`unreadCount.${userId}`]: deleteField(),
-            [`memberJoinedAt.${userId}`]: deleteField(),
-            updatedAt: serverTimestamp()
-          };
-          
-          // Chỉ định admin mới nếu trưởng nhóm cũ rời đi
-          if (data.creatorId === userId) {
-            updates.creatorId = newAdminIds[0] || newParticipantIds[0];
-            if (newAdminIds.length === 0) {
-              updates.adminIds = [newParticipantIds[0]];
-            }
-          }
-          
-          await updateDoc(conversationRef, updates);
+        // Giải tán nếu nhóm chỉ còn 1 người
+        if (data.participantIds.length <= 1) {
+          await groupService.disbandGroup(conversationId);
+          return;
+        }
 
-          const user = await userService.getUserById(userId);
-          await messageService.sendSystemMessage(conversationId, `${user?.name || 'Ai đó'} đã rời khỏi nhóm`);
-          
-          if (updates.creatorId && updates.creatorId !== data.creatorId) {
-            const newOwner = await userService.getUserById(updates.creatorId as string);
-            await messageService.sendSystemMessage(conversationId, `${newOwner?.name || 'Ai đó'} đã trở thành chủ nhóm mới`);
+        const newParticipantIds = data.participantIds.filter((id: string) => id !== userId);
+        let newAdminIds = (data.adminIds || []).filter((id: string) => id !== userId);
+        
+        const updates: Record<string, unknown> = {
+          participantIds: newParticipantIds,
+          [`unreadCount.${userId}`]: deleteField(),
+          [`memberJoinedAt.${userId}`]: deleteField(),
+          updatedAt: serverTimestamp()
+        };
+        
+        // Bắt buộc phải có Chủ nhóm mới
+        if (data.creatorId === userId) {
+          if (!newAdminId) {
+            throw new Error("Bắt buộc chỉ định quản trị viên mới trước khi rời nhóm.");
           }
+          if (!newParticipantIds.includes(newAdminId)) {
+            throw new Error("Quản trị viên mới không nằm trong nhóm.");
+          }
+          updates.creatorId = newAdminId;
+          
+          if (!newAdminIds.includes(newAdminId)) {
+            newAdminIds.push(newAdminId);
+          }
+        }
+        
+        updates.adminIds = newAdminIds;
+        
+        await updateDoc(conversationRef, updates);
+
+        const user = await userService.getUserById(userId);
+        await messageService.sendSystemMessage(conversationId, `${user?.name || 'Ai đó'} đã rời khỏi nhóm`);
+        
+        if (updates.creatorId && updates.creatorId !== data.creatorId) {
+          const newOwner = await userService.getUserById(updates.creatorId as string);
+          await messageService.sendSystemMessage(conversationId, `${newOwner?.name || 'Ai đó'} đã trở thành chủ nhóm mới`);
         }
       }
     } catch (error) {
