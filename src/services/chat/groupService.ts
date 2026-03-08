@@ -41,8 +41,8 @@ export const groupService = {
         memberJoinedAt: participantIds.reduce((acc, id) => ({ ...acc, [id]: serverTimestamp() }), {}),
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
-        pinned: false,
-        muted: false
+        pinnedBy: [],
+        mutedUsers: {}
       };
       
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);

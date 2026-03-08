@@ -65,7 +65,7 @@ export const conversationService = {
         },
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
-        pinned: false,
+        pinnedBy: [],
         mutedUsers: {}
       };
       
