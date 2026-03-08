@@ -53,7 +53,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const userData = await userService.getUserById(firebaseUser.uid);
       if (userData) {
         if (userData.status === UserStatus.BANNED) {
-          throw new Error("auth/user-disabled");
+          await authService.logout();
+          throw new Error("Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng. Vui lòng liên hệ admin để biết thêm chi tiết.");
         }
 
         await userService.updateUserStatus(firebaseUser.uid, UserStatus.ONLINE);
@@ -116,10 +117,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useReportStore.getState().reset();
       useLoadingStore.getState().setMultipleLoading(
         ['chat', 'chat.messages', 'chat.send', 'chat.loadMore',
-         'feed', 'feed.posts', 'feed.loadMore', 'feed.create', 'feed.update', 'feed.delete',
-         'contacts', 'contacts.friends', 'contacts.requests', 'contacts.search',
-         'profile', 'profile.data', 'profile.upload', 'profile.update',
-         'notifications', 'settings', 'admin.reports', 'admin.users'],
+          'feed', 'feed.posts', 'feed.loadMore', 'feed.create', 'feed.update', 'feed.delete',
+          'contacts', 'contacts.friends', 'contacts.requests', 'contacts.search',
+          'profile', 'profile.data', 'profile.upload', 'profile.update',
+          'notifications', 'settings', 'admin.reports', 'admin.users'],
         false
       );
 
