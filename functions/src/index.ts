@@ -10,12 +10,6 @@ export { onReportCreated } from './notifications/onReportCreated';
 export { onFriendRequestStatusChange } from './friends/onFriendRequestStatusChange';
 export { unfriend } from './friends/unfriend';
 
-// Post Triggers
-export { onPostDeleted } from './posts/onPostDeleted';
-
-// Comment Triggers
-export { onCommentDeleted } from './comments/onCommentDeleted';
-
 // Message Triggers
 export { onMessageRecalled } from './messages/onMessageRecalled';
 
@@ -35,7 +29,7 @@ export { onUserProfileUpdated } from './profile/onUserProfileUpdated';
 export { searchUsers } from './search/searchUsers';
 
 // Scheduled Cleanup
-export { cleanupOrphanedReports, cleanupOldNotifications, cleanupExpiredFriendRequests } from './scheduled/cleanup';
+export { cleanupOldNotifications, cleanupExpiredFriendRequests } from './scheduled/cleanup';
 
 // Call
 export { generateZegoToken } from './call/generateZegoToken';

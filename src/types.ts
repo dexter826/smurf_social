@@ -12,6 +12,8 @@ import {
   ReportType,
   ReportReason,
   ReportStatus,
+  PostStatus,
+  CommentStatus,
 } from "../shared/types";
 
 // Re-export for consumers
@@ -28,6 +30,8 @@ export {
   ReportType,
   ReportReason,
   ReportStatus,
+  PostStatus,
+  CommentStatus,
 };
 
 // ========== FRONTEND-SPECIFIC TYPES ==========
@@ -39,6 +43,11 @@ export type ThemeMode = "light" | "dark";
 export interface BaseEntity {
   id: string;
   createdAt: Date;
+}
+
+export interface SoftDeletableEntity {
+  deletedAt?: Date;
+  deletedBy?: string;
 }
 
 // ========== CORE INTERFACES ==========
@@ -129,6 +138,7 @@ export interface Comment extends BaseEntity {
   userId: string;
   parentId?: string;
   content: string;
+  status: CommentStatus;
   reactionCount?: number;
   reactionSummary?: Record<string, number>;
   myReaction?: string;
@@ -137,11 +147,14 @@ export interface Comment extends BaseEntity {
   replyToUserId?: string;
   isEdited?: boolean;
   editedAt?: Date;
+  deletedAt?: Date;
+  deletedBy?: string;
 }
 
 export interface Post extends BaseEntity {
   userId: string;
   content: string;
+  status: PostStatus;
   images?: string[];
   videos?: string[];
   reactionCount?: number;
@@ -153,6 +166,8 @@ export interface Post extends BaseEntity {
   type: PostType;
   isEdited?: boolean;
   editedAt?: Date;
+  deletedAt?: Date;
+  deletedBy?: string;
 }
 
 export interface Notification extends BaseEntity {

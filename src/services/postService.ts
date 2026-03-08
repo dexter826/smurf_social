@@ -13,13 +13,14 @@ import {
   arrayUnion,
   arrayRemove,
   Timestamp,
+  serverTimestamp,
   onSnapshot,
   limit,
   startAfter,
   DocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, UserStatus, Visibility, ReactionType, PostType } from '../types';
+import { Post, UserStatus, Visibility, ReactionType, PostType, PostStatus } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
@@ -36,6 +37,7 @@ function convertDocToPost(doc: DocumentSnapshot): Post {
     id: doc.id,
     createdAt: convertTimestamp(data?.createdAt, new Date())!,
     editedAt: convertTimestamp(data?.editedAt),
+    deletedAt: convertTimestamp(data?.deletedAt),
   } as Post;
 }
 
@@ -63,6 +65,7 @@ export const postService = {
       let ownerQuery = query(
         collection(db, 'posts'),
         where('userId', '==', currentUserId),
+        where('status', '==', PostStatus.ACTIVE),
         orderBy('createdAt', 'desc'),
         limit(limitCount + 1)
       );
@@ -82,6 +85,7 @@ export const postService = {
             let q = query(
               collection(db, 'posts'),
               where('userId', 'in', chunk),
+              where('status', '==', PostStatus.ACTIVE),
               where('visibility', 'in', [Visibility.FRIENDS, Visibility.PUBLIC]),
               orderBy('createdAt', 'desc'),
               limit(limitCount + 1)
@@ -147,6 +151,7 @@ export const postService = {
     const ownerQuery = query(
       collection(db, 'posts'),
       where('userId', '==', currentUserId),
+      where('status', '==', PostStatus.ACTIVE),
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
@@ -179,6 +184,7 @@ export const postService = {
         const friendQuery = query(
           collection(db, 'posts'),
           where('userId', 'in', chunk),
+          where('status', '==', PostStatus.ACTIVE),
           where('visibility', 'in', [Visibility.FRIENDS, Visibility.PUBLIC]),
           orderBy('createdAt', 'desc'),
           limit(limitCount)
@@ -230,6 +236,7 @@ export const postService = {
       let q = query(
         collection(db, 'posts'),
         where('userId', '==', userId),
+        where('status', '==', PostStatus.ACTIVE),
         where('visibility', 'in', visibilityFilter),
         orderBy('createdAt', 'desc'),
         limit(limitCount)
@@ -264,6 +271,7 @@ export const postService = {
     const q = query(
       collection(db, 'posts'),
       where('userId', '==', userId),
+      where('status', '==', PostStatus.ACTIVE),
       where('visibility', 'in', visibilityFilter),
       orderBy('createdAt', 'desc'),
       limit(limitCount)
@@ -294,12 +302,13 @@ export const postService = {
     };
   },
 
-  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount'>, customId?: string): Promise<string> => {
+  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status'>, customId?: string): Promise<string> => {
     try {
       const postRef = customId ? doc(db, 'posts', customId) : doc(collection(db, 'posts'));
       await setDoc(postRef, {
         ...postData,
         type: postData.type || PostType.NORMAL,
+        status: PostStatus.ACTIVE,
         commentCount: 0,
         createdAt: Timestamp.now(),
         isEdited: false
@@ -342,10 +351,15 @@ export const postService = {
     }
   },
 
-  // Cloud Function onPostDeleted xử lý cascade cleanup
-  deletePost: async (postId: string): Promise<void> => {
+  // Soft delete - đánh dấu xóa thay vì xóa hẳn
+  deletePost: async (postId: string, userId: string): Promise<void> => {
     try {
-      await deleteDoc(doc(db, 'posts', postId));
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        status: PostStatus.DELETED,
+        deletedAt: serverTimestamp(),
+        deletedBy: userId
+      });
     } catch (error) {
       console.error("Lỗi xóa bài viết", error);
       throw error;

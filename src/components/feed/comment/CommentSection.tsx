@@ -205,11 +205,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const handleDeleteConfirm = useCallback(async () => {
     if (!commentToDelete) return;
     try {
-      await deleteComment(postId, commentToDelete.id, commentToDelete.parentId);
+      await deleteComment(postId, commentToDelete.id, currentUser.id, commentToDelete.parentId);
       setCommentToDelete(null);
     } catch (error) {
     }
-  }, [commentToDelete, postId, deleteComment]);
+  }, [commentToDelete, postId, currentUser.id, deleteComment]);
 
   const handleUploadMedia = useCallback(async (file: File) => {
     setUploadProgress(0);

@@ -88,5 +88,14 @@ export enum ReportStatus {
     PENDING = "pending",
     RESOLVED = "resolved",
     REJECTED = "rejected",
-    ORPHANED = "orphaned",
+}
+
+export enum PostStatus {
+    ACTIVE = "active",
+    DELETED = "deleted",
+}
+
+export enum CommentStatus {
+    ACTIVE = "active",
+    DELETED = "deleted",
 }
