@@ -6,7 +6,7 @@ import { Post, User, ReportType } from '../../../types';
 import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
-import { useContactStore } from '../../../store/contactStore';
+import { useFriendIds } from '../../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions } from '../shared';
 
 interface PostViewModalProps {
@@ -34,7 +34,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { openReportModal } = useReportStore();
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, UserStatus } from '../../types';
 import { useAuthStore } from '../../store/authStore';
-import { useContactStore } from '../../store/contactStore';
+import { useFriendIds } from '../utils';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { useUserCache } from '../../store/userCacheStore';
@@ -24,7 +24,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
   const [latestMedia, setLatestMedia] = useState<string[]>([]);
 
   const isOwnProfile = currentUser?.id === profileUserId;
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
 
   const loadProfile = useCallback(async () => {
     if (!profileUserId) return;

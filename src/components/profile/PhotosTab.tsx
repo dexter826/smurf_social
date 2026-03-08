@@ -4,7 +4,7 @@ import { postService } from '../../services/postService';
 import { Skeleton, MediaViewer, LazyImage } from '../ui';
 import { Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { useContactStore } from '../../store/contactStore';
+import { useFriendIds } from '../../hooks';
 import { DocumentSnapshot } from 'firebase/firestore';
 
 const MEDIA_PAGE_SIZE = 15;
@@ -22,7 +22,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const { user: currentUser } = useAuthStore();
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
   const lastDocRef = useRef<DocumentSnapshot | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
 

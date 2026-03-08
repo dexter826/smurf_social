@@ -7,7 +7,7 @@ import { Comment, User, ReactionType, ReportType } from '../../../types';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { TruncatedText } from '../shared';
 import { useCommentStore } from '../../../store/commentStore';
-import { useContactStore } from '../../../store/contactStore';
+import { useFriendIds } from '../../../hooks';
 
 interface CommentItemProps {
   comment: Comment;
@@ -62,7 +62,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
 }) => {
   const navigate = useNavigate();
   const { reactToComment } = useCommentStore();
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
 
   const [showReactions, setShowReactions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);

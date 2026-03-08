@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Post, User } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
-import { useContactStore } from '../store/contactStore';
+import { useFriendIds } from './utils';
 import { useUserCache } from '../store/userCacheStore';
 import { usePostStore } from '../store/postStore';
 import { DocumentSnapshot } from 'firebase/firestore';
@@ -30,7 +30,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   
   const { users, fetchUsers } = useUserCache();
   const { posts: allStorePosts, deletePost: deleteStorePost } = usePostStore();
-  const friendIds = useContactStore(state => state.friends.map(f => f.id));
+  const friendIds = useFriendIds();
 
   const posts = useMemo(() => {
     if (userId !== currentUser.id) return dbPosts;

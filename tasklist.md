@@ -142,7 +142,7 @@
 
 - `src/hooks/utils/useFriendIds.ts` — Sửa implementation
 
-- [ ] Sửa `useFriendIds` dùng `contactStore` (kết hợp TASK-01)
+- [x] Sửa `useFriendIds` dùng `contactStore` (kết hợp TASK-01)
 
 ---
 
@@ -335,7 +335,7 @@ Hiện tại:
 | TASK-04 | Xóa orphan fields `pinned/muted` khi tạo conversation             | 🔴 CRITICAL | [x]    |
 | TASK-05 | Xóa 3 dead methods trong notificationService                      | 🟡 HIGH     | [x]    |
 | TASK-06 | Xóa dead methods contactStore + authStore                         | 🟡 HIGH     | [x]    |
-| TASK-07 | Sửa `useFriendIds` hook (kết hợp TASK-01)                         | 🟡 HIGH     | [ ]    |
+| TASK-07 | Sửa `useFriendIds` hook (kết hợp TASK-01)                         | 🟡 HIGH     | [x]    |
 | TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [ ]    |
 | TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [ ]    |
 | TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [ ]    |
