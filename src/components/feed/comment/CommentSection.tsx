@@ -8,6 +8,7 @@ import { postService } from '../../../services/postService';
 import { useCommentStore } from '../../../store/commentStore';
 import { useUserCache } from '../../../store/userCacheStore';
 import { useReportStore } from '../../../store/reportStore';
+import { useContactStore } from '../../../store/contactStore';
 import { CommentSkeleton } from './CommentSkeleton';
 import { CommentInput } from './CommentInput';
 import { CommentItem } from './CommentItem';
@@ -52,6 +53,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const { users, fetchUsers } = useUserCache();
   const { openReportModal } = useReportStore();
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
 
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -71,13 +73,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const isLoading = isLoadingPost(postId);
   const blockedUserIds = currentUser.blockedUserIds || [];
 
-  // Lọc bình luận theo quyền riêng tư (chỉ xem của mình, tác giả, hoặc bạn bè)
   const filteredRootComments = useMemo(() =>
     currentRootComments.filter(c =>
       c.userId === currentUser.id ||
       c.userId === postOwnerId ||
-      currentUser.friendIds?.includes(c.userId)
-    ), [currentRootComments, currentUser.id, currentUser.friendIds, postOwnerId]
+      friendIds.includes(c.userId)
+    ), [currentRootComments, currentUser.id, friendIds, postOwnerId]
   );
 
   // Cuộn tới ô nhập liệu khi active

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
+import { useContactStore } from '../store/contactStore';
 import { friendService } from '../services/friendService';
 import { useChatStore } from '../store/chatStore';
 import {
@@ -86,6 +87,7 @@ const ChatPage: React.FC = () => {
     receivedRequests,
   } = useChat();
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
 
   React.useEffect(() => {
     setIsChatVisible(true);
@@ -235,7 +237,7 @@ const ChatPage: React.FC = () => {
           conversations={filteredConversations}
           selectedId={selectedConversationId}
           currentUserId={currentUser.id}
-          currentUserFriendIds={currentUser.friendIds || []}
+          currentUserFriendIds={friendIds}
           blockedUserIds={currentUser.blockedUserIds || []}
           isLoading={isLoading}
           isSearching={isSearching}
@@ -280,7 +282,7 @@ const ChatPage: React.FC = () => {
               conversation={selectedConversation}
               messages={currentMessages}
               currentUserId={currentUser.id}
-              currentUserFriendIds={currentUser.friendIds || []}
+              currentUserFriendIds={friendIds}
               friendRequestStatus={friendRequestStatus}
               usersMap={usersMap}
               typingUsers={currentTypingUsers}

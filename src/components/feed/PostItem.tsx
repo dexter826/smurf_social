@@ -6,6 +6,7 @@ import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui'
 import { Post, User, ReportType, PostType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
+import { useContactStore } from '../../store/contactStore';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
 import { ReactionDetailsModal } from '../ui';
 
@@ -35,6 +36,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const { openReportModal } = useReportStore();
 
   const { uploadingStates } = usePostStore();
+  const friendIds = useContactStore(state => state.friends.map(f => f.id));
   const uploadState = uploadingStates[post.id];
   const isUploading = !!uploadState && !uploadState.error;
   const error = uploadState?.error;
@@ -182,7 +184,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         sourceType="post"
         currentUserId={currentUser.id}
         context="POST"
-        friendsIds={currentUser.friendIds}
+        friendsIds={friendIds}
       />
     </div>
   );
