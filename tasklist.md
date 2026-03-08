@@ -291,9 +291,9 @@ Hiện tại:
 - `src/types.ts` — xóa `reactorId?` khỏi `Message`, thêm inline type cho `lastMessage` trong `Conversation`
 - `src/hooks/chat/useConversationItem.ts` — điều chỉnh type access
 
-- [ ] Xóa `Message.reactorId`
-- [ ] Tạo `LastMessagePreview` type cho `Conversation.lastMessage`
-- [ ] Cập nhật `useConversationItem` type access
+- [x] Xóa `Message.reactorId`
+- [x] Tạo `LastMessagePreview` type cho `Conversation.lastMessage`
+- [x] Cập nhật `useConversationItem` type access
 
 ---
 
@@ -344,7 +344,7 @@ Hiện tại:
 | TASK-13 | Thêm missing Firestore index cho `notifications`                  | 🔵 DB       | [x]    |
 | TASK-14 | Thêm missing Firestore indexes cho `reports` cleanup              | 🔵 DB       | [x]    |
 | TASK-15 | Xóa `updatedAt` từ BaseEntity, giữ riêng ở Conversation           | 🔵 DB       | [x]    |
-| TASK-16 | Làm sạch `Message.reactorId` type                                 | 🟣 TYPE     | [ ]    |
+| TASK-16 | Làm sạch `Message.reactorId` type                                 | 🟣 TYPE     | [x]    |
 | TASK-17 | Xóa `ReportReason` import thừa                                    | 🟣 TYPE     | [ ]    |
 | TASK-18 | Kiểm tra `addFriend`/`removeFriend` trong contactStore            | 🟣 TYPE     | [ ]    |
 
