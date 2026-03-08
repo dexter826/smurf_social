@@ -1,4 +1,4 @@
-import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
 import { NotificationType, FriendRequestStatus } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
@@ -69,6 +69,36 @@ export const onFriendRequestUpdated = onDocumentUpdated(
       });
     } catch (error) {
       console.error('[onFriendRequestUpdated] Lỗi:', error);
+    }
+  }
+);
+
+export const onFriendRequestDeleted = onDocumentDeleted(
+  { document: 'friendRequests/{reqId}', region: 'us-central1' },
+  async (event) => {
+    const reqId = event.params.reqId;
+
+    try {
+      const { db } = await import('../app');
+      
+      const notificationsSnapshot = await db.collection('notifications')
+        .where('type', '==', NotificationType.FRIEND_REQUEST)
+        .where('data.friendRequestId', '==', reqId)
+        .get();
+
+      if (notificationsSnapshot.empty) {
+        return;
+      }
+
+      const batch = db.batch();
+      notificationsSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit();
+      console.log(`[onFriendRequestDeleted] Đã xóa ${notificationsSnapshot.size} thông báo rác cho request ${reqId}`);
+    } catch (error) {
+      console.error('[onFriendRequestDeleted] Lỗi xóa thông báo:', error);
     }
   }
 );
