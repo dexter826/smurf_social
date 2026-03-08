@@ -112,6 +112,12 @@ service cloud.firestore {
         (resource.data.userId == request.auth.uid && isNotBanned()) ||
         isAdmin()
       );
+
+      // Reactions subcollection — client ghi trực tiếp theo userId
+      match /reactions/{reactorId} {
+        allow read: if isAuthenticated();
+        allow write: if isNotBanned() && reactorId == request.auth.uid;
+      }
     }
 
     // BÌNH LUẬN
@@ -142,6 +148,12 @@ service cloud.firestore {
          get(/databases/$(database)/documents/comments/$(resource.data.parentId)).data.userId == request.auth.uid) ||
         isAdmin()
       );
+
+      // Reactions subcollection — client ghi trực tiếp theo userId
+      match /reactions/{reactorId} {
+        allow read: if isAuthenticated();
+        allow write: if isNotBanned() && reactorId == request.auth.uid;
+      }
     }
 
     // CUỘC TRÒ CHUYỆN
@@ -193,12 +205,10 @@ service cloud.firestore {
       allow delete: if isAuthenticated() &&
         resource.data.senderId == request.auth.uid && isNotBanned();
 
-      // Reactions subcollection — CF-only write
-      match /reactions/{userId} {
-        allow read: if isAuthenticated() &&
-          request.auth.uid in
-            get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participantIds;
-        allow write: if false;
+      // Reactions subcollection — client ghi trực tiếp theo userId
+      match /reactions/{reactorId} {
+        allow read: if isAuthenticated();
+        allow write: if isNotBanned() && reactorId == request.auth.uid;
       }
     }
 

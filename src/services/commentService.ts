@@ -130,7 +130,6 @@ export const commentService = {
         replyToUserId: replyToUserId || null,
         image: imageUrl || null,
         createdAt: Timestamp.now(),
-        reactions: {},
         replyCount: 0
       };
 
