@@ -99,7 +99,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         setPendingFiles([]);
       }
     }
-  }, [isOpen, isEdit, initialPost?.id, initialPost?.updatedAt, initialFiles, reset]);
+  }, [isOpen, isEdit, initialPost?.id, initialPost?.editedAt, initialFiles, reset]);
 
   useAutoResizeTextarea(textareaRef, formData.content || '', isOpen);
 

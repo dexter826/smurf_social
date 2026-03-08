@@ -97,7 +97,6 @@ export enum ReportStatus {
 export interface BaseEntity {
   id: string;
   createdAt: Date;
-  updatedAt?: Date;
 }
 
 // ========== CORE INTERFACES ==========
@@ -121,6 +120,7 @@ export interface FriendRequest extends BaseEntity {
   receiverId: string;
   status: FriendRequestStatus;
   message?: string;
+  updatedAt?: Date;
 }
 
 export interface Message extends BaseEntity {
@@ -150,6 +150,7 @@ export interface Message extends BaseEntity {
 }
 
 export interface Conversation extends BaseEntity {
+  updatedAt: Date;
   participantIds: string[];
   participants: User[];
   lastMessage?: Message;
