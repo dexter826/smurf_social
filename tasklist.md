@@ -183,9 +183,9 @@ Hiện tại:
 - `src/store/authStore.ts` — lưu `blockedUserIds` như state riêng, không merge vào user object
 - Tất cả places dùng `user.blockedUserIds` → đọc từ authStore state riêng
 
-- [ ] Tách `blockedUserIds` ra khỏi User type
-- [ ] Sửa authStore lưu blockedUserIds riêng
-- [ ] Update tất cả consumers
+- [x] Tách `blockedUserIds` ra khỏi User type
+- [x] Sửa authStore lưu blockedUserIds riêng
+- [x] Update tất cả consumers
 
 ---
 
@@ -337,7 +337,7 @@ Hiện tại:
 | TASK-06 | Xóa dead methods contactStore + authStore                         | 🟡 HIGH     | [x]    |
 | TASK-07 | Sửa `useFriendIds` hook (kết hợp TASK-01)                         | 🟡 HIGH     | [x]    |
 | TASK-08 | Xóa `Message.videoThumbnails` và `Message.deliveredAt`            | 🟡 HIGH     | [x]    |
-| TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [ ]    |
+| TASK-09 | Tách `blockedUserIds` ra khỏi User type                           | 🟡 HIGH     | [x]    |
 | TASK-10 | Tách storage helpers thành file dùng chung (functions)            | 🟠 MEDIUM   | [ ]    |
 | TASK-11 | Fix `batchGetUsers` thiếu `birthDate` conversion                  | 🟠 MEDIUM   | [ ]    |
 | TASK-12 | Fix `getUserStats` đếm friendCount từ subcollection               | 🟠 MEDIUM   | [ ]    |

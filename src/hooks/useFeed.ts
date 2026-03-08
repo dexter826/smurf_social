@@ -6,6 +6,7 @@ import { useUserCache } from '../store/userCacheStore';
 import { useIntersectionObserver } from './utils/useIntersectionObserver';
 import { useLoadingStore } from '../store/loadingStore';
 import { useFriendIds } from './utils';
+import { useBlockedUsers } from './utils';
 
 interface UseFeedReturn {
   posts: Post[];
@@ -22,6 +23,7 @@ interface UseFeedReturn {
 export const useFeed = (): UseFeedReturn => {
   const { user: currentUser } = useAuthStore();
   const friendIds = useFriendIds();
+  const { blockedUserIds } = useBlockedUsers();
   const {
     posts,
     hasMore,
@@ -37,9 +39,8 @@ export const useFeed = (): UseFeedReturn => {
 
   const handleLoadMore = useCallback(() => {
     if (!currentUser || feedPostsLoading || feedLoadMoreLoading || !hasMore) return;
-    const blockedUserIds = currentUser.blockedUserIds || [];
     fetchPosts(currentUser.id, friendIds, blockedUserIds, true);
-  }, [currentUser, hasMore, fetchPosts, feedPostsLoading, feedLoadMoreLoading, friendIds]);
+  }, [currentUser, hasMore, fetchPosts, feedPostsLoading, feedLoadMoreLoading, friendIds, blockedUserIds]);
 
   const observerRef = useIntersectionObserver(handleLoadMore, {
     enabled: hasMore && !feedPostsLoading && !feedLoadMoreLoading && !!currentUser
@@ -49,14 +50,11 @@ export const useFeed = (): UseFeedReturn => {
 
   const handleSubscribeToPosts = useCallback(() => {
     if (!currentUser) return;
-    const blockedUserIds = currentUser.blockedUserIds || [];
     return subscribeToPosts(currentUser.id, friendIds, blockedUserIds);
-  }, [currentUser, subscribeToPosts, friendIds]);
+  }, [currentUser, subscribeToPosts, friendIds, blockedUserIds]);
 
   useEffect(() => {
     if (!currentUser) return;
-
-    const blockedUserIds = currentUser.blockedUserIds || [];
 
     if (posts.length === 0 || !feedPostsLoading) {
       fetchPosts(currentUser.id, friendIds, blockedUserIds, false);
@@ -67,7 +65,7 @@ export const useFeed = (): UseFeedReturn => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [currentUser?.id, currentUser?.blockedUserIds?.length, friendIds.length]);
+  }, [currentUser?.id, blockedUserIds.length, friendIds.length]);
 
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {
