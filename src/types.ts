@@ -125,8 +125,7 @@ export interface Conversation extends BaseEntity {
   adminIds: string[];
 }
 
-export interface ConversationMember extends BaseEntity {
-  conversationId: string;
+export interface ConversationMember {
   userId: string;
   joinedAt: Timestamp;
   isPinned: boolean;

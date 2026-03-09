@@ -16,7 +16,7 @@ import {
   setDoc,
   deleteDoc,
   increment
-, Timestamp} from 'firebase/firestore';
+} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { Conversation, ConversationMember } from '../../types';
 
@@ -81,15 +81,13 @@ export const conversationService = {
       participantIds.forEach(userId => {
         const memberRef = doc(db, 'conversations', docRef.id, 'members', userId);
         batch.set(memberRef, {
-          conversationId: docRef.id,
           userId,
           joinedAt: now,
           isPinned: false,
           isMuted: false,
           isArchived: false,
           markedUnread: false,
-          unreadCount: 0,
-          createdAt: now
+          unreadCount: 0
         });
       });
 
@@ -142,8 +140,7 @@ export const conversationService = {
       const data = memberSnap.data();
       return {
         ...data,
-        id: memberSnap.id,
-        createdAt: data.createdAt as Timestamp,
+        userId: data.userId,
         joinedAt: data.joinedAt as Timestamp,
         deletedAt: data.deletedAt as Timestamp | undefined
       } as ConversationMember;
@@ -169,8 +166,7 @@ export const conversationService = {
       const data = snapshot.data();
       const member: ConversationMember = {
         ...data,
-        id: snapshot.id,
-        createdAt: data.createdAt as Timestamp,
+        userId: data.userId,
         joinedAt: data.joinedAt as Timestamp,
         deletedAt: data.deletedAt as Timestamp | undefined
       } as ConversationMember;

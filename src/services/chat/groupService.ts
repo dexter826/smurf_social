@@ -44,6 +44,7 @@ export const groupService = {
       // Tạo member docs trong subcollection cho tất cả participants
       const memberPromises = participantIds.map(userId =>
         setDoc(doc(db, 'conversations', docRef.id, 'members', userId), {
+          userId,
           joinedAt: serverTimestamp(),
           isPinned: false,
           isMuted: false,
@@ -118,6 +119,7 @@ export const groupService = {
 
       // Tạo member doc trong subcollection
       await setDoc(doc(db, 'conversations', conversationId, 'members', userId), {
+        userId,
         joinedAt: serverTimestamp(),
         isPinned: false,
         isMuted: false,
