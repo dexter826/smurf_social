@@ -1,8 +1,7 @@
-import { getDocs, query, collection, where, documentId } from 'firebase/firestore';
+import { getDocs, query, collection, where, documentId, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { User } from '../types';
 import { FIREBASE_LIMITS } from '../constants/appConfig';
-import { convertTimestamp } from './dateUtils';
 
 export const chunkArray = <T,>(array: T[], size: number): T[][] => {
   const chunks: T[][] = [];
@@ -17,7 +16,7 @@ export const batchGetUsers = async (userIds: string[]): Promise<Record<string, U
 
   const uniqueIds = [...new Set(userIds)];
   const chunks = chunkArray(uniqueIds, FIREBASE_LIMITS.QUERY_IN_LIMIT);
-  
+
   try {
     const results = await Promise.all(
       chunks.map(async (chunk) => {
@@ -29,9 +28,9 @@ export const batchGetUsers = async (userIds: string[]): Promise<Record<string, U
         return snapshot.docs.map(doc => ({
           ...doc.data(),
           id: doc.id,
-          createdAt: convertTimestamp(doc.data().createdAt),
-          lastSeen: convertTimestamp(doc.data().lastSeen),
-          birthDate: convertTimestamp(doc.data().birthDate),
+          createdAt: doc.data().createdAt as Timestamp,
+          lastSeen: doc.data().lastSeen as Timestamp | undefined,
+          birthDate: doc.data().birthDate as Timestamp | undefined,
         })) as User[];
       })
     );

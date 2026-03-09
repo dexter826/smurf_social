@@ -18,21 +18,20 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
   onSnapshot
-} from 'firebase/firestore';
+, Timestamp} from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Comment, ReactionType, UserStatus, CommentStatus } from '../types';
 import { PAGINATION } from '../constants';
 import { batchGetUsers } from '../utils/batchUtils';
-import { convertTimestamp } from '../utils/dateUtils';
 
 function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<DocumentData>): Comment {
   const data = docSnap.data();
   return {
     ...data,
     id: docSnap.id,
-    createdAt: convertTimestamp(data?.createdAt, new Date())!,
-    editedAt: convertTimestamp(data?.editedAt),
-    deletedAt: convertTimestamp(data?.deletedAt),
+    createdAt: data?.createdAt as Timestamp,
+    editedAt: data?.editedAt as Timestamp | undefined,
+    deletedAt: data?.deletedAt as Timestamp | undefined,
   } as Comment;
 }
 
@@ -249,7 +248,7 @@ export const commentService = {
       return {
         ...data,
         id: commentSnap.id,
-        createdAt: convertTimestamp(data.createdAt, new Date())!,
+        createdAt: data.createdAt as Timestamp,
       } as Comment;
     } catch (error) {
       console.error("Lỗi lấy comment:", error);
@@ -377,3 +376,5 @@ export const commentService = {
     }, (error) => console.error("Lỗi subscribe replies:", error));
   }
 };
+
+

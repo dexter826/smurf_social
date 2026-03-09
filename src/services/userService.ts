@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot, getCountFromServer } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { User, UserStatus, Visibility, Gender } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
@@ -6,18 +6,16 @@ import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback, deleteStorageFile } from '../utils/uploadUtils';
 import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
-import { convertTimestamp } from '../utils/dateUtils';
 
-// Helper chuyển đổi Firestore document sang User object
 function convertDocToUser(doc: DocumentSnapshot): User {
   const data = doc.data();
   return {
     ...data,
     id: doc.id,
-    createdAt: convertTimestamp(data?.createdAt, new Date())!,
-    updatedAt: convertTimestamp(data?.updatedAt),
-    lastSeen: convertTimestamp(data?.lastSeen),
-    birthDate: convertTimestamp(data?.birthDate),
+    createdAt: data?.createdAt as Timestamp,
+    updatedAt: data?.updatedAt as Timestamp | undefined,
+    lastSeen: data?.lastSeen as Timestamp | undefined,
+    birthDate: data?.birthDate as Timestamp | undefined,
   } as User;
 }
 
@@ -139,7 +137,7 @@ export const userService = {
         updatedData = {
           ...userDoc.data() as User,
           ...data,
-          updatedAt: new Date()
+          updatedAt: Timestamp.now()
         };
       } else {
         updatedData = {
@@ -151,8 +149,8 @@ export const userService = {
           role: 'user',
           bio: data.bio || '',
           coverImage: data.coverImage || '',
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
           ...data
         };
       }
@@ -162,7 +160,6 @@ export const userService = {
         Object.entries(updatedData).filter(([k, v]) => v !== undefined && !PRIVATE_FIELDS.includes(k))
       );
 
-      // Thêm serverTimestamp cho updatedAt khi write vào Firestore
       await setDoc(userRef, { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
       return updatedData;
     } catch (error) {

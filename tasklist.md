@@ -1,218 +1,243 @@
-# Database Types Audit Report - Báo Cáo Đánh Giá Types
+# Database Types Audit Report - Báo Cáo Đánh Giá Database Types
 
 ## 📋 Tổng Quan
-Audit toàn bộ database types và cấu trúc dữ liệu của hệ thống social network. Phát hiện nhiều vấn đề nghiêm trọng về thiết kế, tổ chức, và triển khai.
+Dự án: Social Network Application (Firebase/Firestore)
+Ngày audit: 2026-03-09
+Phạm vi: `src/types.ts`, `shared/types.ts` và toàn bộ database schema
 
 ---
 
-## 🔴 CÁC VẤN ĐỀ NGHIÊM TRỌNG
+## 🔴 VẤN ĐỀ NGHIÊM TRỌNG CẦN SỬA NGAY
 
-### 1. ~~THIẾU CONSISTENCY TRONG TIMESTAMP FIELDS~~ ✅ RESOLVED
-**Mức độ:** ~~🔴 Critical~~ → ✅ Not an issue
-
-**Kết luận sau thảo luận:**
-- Post/Comment/Message có `editedAt` - track user content edits (đủ cho use case)
-- User/FriendRequest/Conversation có `updatedAt` - track any changes (cần thiết)
-- Không cần consistency - mỗi entity có needs khác nhau
-- Không có use case thực tế cần `updatedAt` cho Post/Comment/Message
-- YAGNI principle - không thêm complexity không cần thiết
-
-**Quyết định:**
-- [x] Giữ nguyên thiết kế hiện tại
-- [x] Không thêm `updatedAt` vào Post/Comment/Message
-
----
-
-### 2. ~~SOFT DELETE KHÔNG NHẤT QUÁN~~ ✅ RESOLVED
-**Mức độ:** ~~🔴 Critical~~ → ✅ Not an issue
-
-**Kết luận sau thảo luận:**
-- Có 2 loại deletion khác nhau về business logic:
-  - **Global deletion** (Post/Comment): Xóa cho TẤT CẢ users → `status` enum
-  - **Per-user deletion** (Message/Conversation): Mỗi user tự xóa → `deletedBy[]`
-- Message không cần `deletedAt` vì:
-  - `memberJoinedAt` đã handle rejoin scenarios (conversation-level cutoff)
-  - `deletedBy[]` đủ cho per-message deletion trong session
-  - Không có cleanup job cho messages
-- Conversation cần `deletedAt` vì:
-  - Dùng làm cutoff point: `effectiveJoinedAt = max(joinedAt, deletedAt)`
-  - Logic rejoin: chỉ thấy messages sau khi rejoin
-- Design là intentional và correct, hoạt động tốt
-
-**Quyết định:**
-- [x] Giữ nguyên thiết kế hiện tại
-- [x] Không cần chuẩn hóa - mỗi entity có needs khác nhau
-
----
-
-### 3. ~~THIẾU INDEXES VÀ COMPOSITE KEYS~~ ✅ COMPLETED
-**Mức độ:** ~~🔴 Critical~~ → ✅ Fixed
-
-**Vấn đề đã phát hiện:**
-- Posts queries thiếu `status` field trong indexes
-- Comments queries thiếu `status` field trong indexes
-- Một số indexes không match với queries thực tế
-- Thiếu documentation về indexes
-
-**Ảnh hưởng nếu không fix:**
-- Firestore sẽ throw error khi production: "The query requires an index"
-- Performance kém, scan toàn bộ documents
-- Chi phí read operations cao
-
-**Đã triển khai:**
-- [x] Scan toàn bộ queries trong codebase
-- [x] Generate complete `firestore.indexes.json` với 14 composite indexes
-- [x] Thêm indexes cho Posts: `userId + status + createdAt`
-- [x] Thêm indexes cho Posts: `userId + status + visibility + createdAt`
-- [x] Thêm indexes cho Comments: `postId + parentId + status + createdAt DESC`
-- [x] Thêm indexes cho Comments: `postId + parentId + status + createdAt ASC`
-- [x] Tạo `INDEXES_DOCUMENTATION.md` với:
-  - Chi tiết từng index và use case
-  - Query examples
-  - Deployment instructions
-  - Troubleshooting guide
-
-**Next steps:**
-- [ ] Deploy indexes: `firebase deploy --only firestore:indexes`
-- [ ] Monitor index creation status in Firebase Console
-- [ ] Test queries after indexes are enabled
-
----
-
-### 4. ~~REACTION SYSTEM THIẾT KẾ SAI~~ ⏭️ SKIPPED
-**Mức độ:** ~~🔴 Critical~~ → ⏭️ Bỏ qua
-
-**Lý do skip:**
-- Design hiện tại acceptable cho social app
-- FieldValue.increment() là atomic → không có race condition
-- CF reliability cao, failure rate thấp
-- Performance tốt với aggregated data
-- Eventual consistency acceptable
-
-**Quyết định:**
-- [x] Giữ nguyên thiết kế hiện tại
-- [ ] Optional: Thêm verification tool (nếu cần sau này)
-
----
-
-### 5. ~~CONVERSATION STRUCTURE QUÁ PHỨC TẠP~~ ✅ COMPLETED
-**Mức độ:** ~~🔴 Critical~~ → ✅ Fixed
-
-**Vấn đề đã phát hiện:**
-```typescript
-interface Conversation {
-  participantIds: string[];
-  participants: User[];  // ❌ Denormalized data - KHÔNG TỒN TẠI TRONG FIRESTORE
-  unreadCount: Record<string, number>;  // ❌ Write contention risk
-  pinnedBy: string[];  // ❌ Quá nhiều arrays
-  mutedBy: string[];
-  archivedBy: string[];
-  markedUnreadBy: string[];
-  memberJoinedAt?: Record<string, Date>;
-  deletedBy: string[];
-  deletedAt?: Record<string, Date>;
-  blockedBy: string[];
-}
-```
-
-**Vấn đề cụ thể:**
-- TypeScript interface có `participants: User[]` nhưng KHÔNG TỒN TẠI trong Firestore
-- Quá nhiều per-user arrays → write contention (Firestore limit: 1 write/second per document)
-- Không thể query per-user settings (phải load all, filter client-side)
-- Document size lớn khi group có nhiều members
-
-**Giải pháp đã triển khai:**
-- [x] XÓA field `participants: User[]` khỏi Conversation interface
-- [x] Tách per-user settings ra subcollection `conversations/{convId}/members/{userId}`:
-  ```typescript
-  interface ConversationMember {
-    conversationId: string;
-    userId: string;
-    joinedAt: Date;
-    isPinned: boolean;
-    isMuted: boolean;
-    isArchived: boolean;
-    markedUnread: boolean;
-    unreadCount: number;
-    deletedAt?: Date;
-    createdAt: Date;
-  }
-  ```
-- [x] Refactor `conversationService.ts`:
-  - `getMemberSettings()` - fetch member settings
-  - `subscribeMemberSettings()` - realtime updates
-  - `incrementUnreadCount()`, `resetUnreadCount()`
-  - All toggle methods update subcollection
-- [x] Refactor `groupService.ts`:
-  - `createGroupConversation()` - tạo member docs cho all participants
-  - `addGroupMember()` - tạo member doc trong subcollection
-  - `removeGroupMember()` - xóa member doc
-  - `leaveGroup()` - xóa member doc
-- [x] Refactor `messageService.ts`:
-  - `updateConversationAfterMessage()` - update unreadCount trong member subcollection
-  - `markAsRead()` - reset unreadCount trong member subcollection
-- [x] Refactor `messageSlice.ts`:
-  - `getEffectiveJoinedAt()` - fetch từ member subcollection
-  - `subscribeToMessages()` - sử dụng async joinedAt
-  - `loadMoreMessages()` - sử dụng async joinedAt
-- [x] Refactor `conversationSlice.ts`:
-  - Loại bỏ optimistic updates với arrays
-  - Chỉ gọi service, để Firestore realtime update tự động
-  - `subscribeToConversations()` - load member settings để check unread/muted
-  - `selectConversation()` - gọi `resetUnreadCount()`
-  - All toggle methods chỉ gọi service
-- [x] Refactor `useConversationItem.ts`:
-  - Subscribe to member settings
-  - Sử dụng member settings thay vì arrays
-- [x] Tạo `useConversationMemberSettings.ts` hook
-- [x] Refactor components:
-  - `ConversationItem.tsx` - sử dụng member settings hook
-  - `ChatDetailsActions.tsx` - sử dụng member settings hook
-  - `ChatPage.tsx` - sử dụng member settings hook
-  - `ConversationList.tsx` - callbacks không cần tính toán giá trị
-
-**Lợi ích:**
-- ✅ Không còn write contention
-- ✅ Query được per-user settings
-- ✅ Document size nhỏ hơn
-- ✅ Scalable cho group chat lớn
-- ✅ Clean code, loại bỏ logic cũ hoàn toàn
-
----
-
-### 6. MESSAGE TYPE THIẾU METADATA
-**Mức độ:** 🟡 High
+### 1. TIMESTAMP INCONSISTENCY - Vấn đề nghiêm trọng nhất
+**Mức độ:** 🔴 CRITICAL
 
 **Vấn đề:**
+- Types định nghĩa `Date` nhưng Firestore lưu `Timestamp`
+- Conversion logic không nhất quán giữa các services
+- Có nơi dùng `serverTimestamp()`, có nơi dùng `Timestamp.now()`, có nơi dùng `new Date()`
+- Type casting không an toàn: `serverTimestamp() as unknown as Date`
+
+**Ví dụ lỗi:**
 ```typescript
-interface Message {
-  type: MessageType; // TEXT, IMAGE, VIDEO, FILE, VOICE, SYSTEM, CALL
+// types.ts - định nghĩa Date
+interface BaseEntity {
+  createdAt: Date;
+}
+
+// friendService.ts - lưu Timestamp
+createdAt: Timestamp.now()
+
+// messageService.ts - lưu serverTimestamp
+createdAt: serverTimestamp() as unknown as Date  // ❌ Type casting nguy hiểm
+
+// userService.ts - lưu cả 2 cách
+createdAt: new Date()  // Client-side
+updatedAt: serverTimestamp()  // Server-side
+```
+
+**Hậu quả:**
+- Runtime errors khi access timestamp methods
+- Data inconsistency
+- Khó debug và maintain
+
+---
+
+### 2. MISSING REQUIRED FIELDS
+**Mức độ:** 🔴 CRITICAL
+
+**Vấn đề:**
+- `BaseEntity.createdAt` là required nhưng nhiều nơi không set
+- `Conversation.updatedAt` là required nhưng có thể undefined khi query
+- `ConversationMember` thiếu `id` field trong type definition
+
+**Ví dụ lỗi:**
+```typescript
+// types.ts
+interface BaseEntity {
+  id: string;
+  createdAt: Date;  // Required
+}
+
+// Nhưng khi create:
+const messageData = {
+  conversationId,
+  senderId,
+  content,
+  // ❌ Thiếu createdAt, id
+};
+await addDoc(collection(db, 'messages'), messageData);
+```
+
+---
+
+### 3. SOFT DELETE KHÔNG NHẤT QUÁN
+**Mức độ:** 🔴 CRITICAL
+
+**Vấn đề:**
+- `SoftDeletableEntity` interface tồn tại nhưng không được sử dụng đúng cách
+- Một số entity có `deletedAt`, một số không
+- Logic soft delete không consistent
+
+**Ví dụ:**
+```typescript
+// types.ts - Có interface nhưng không extend
+interface SoftDeletableEntity {
+  deletedAt?: Date;
+  deletedBy?: string;
+}
+
+// Post, Comment có deletedAt + deletedBy
+interface Post extends BaseEntity {
+  deletedAt?: Date;
+  deletedBy?: string;  // ✅
+}
+
+// Message chỉ có deletedBy array
+interface Message extends BaseEntity {
+  deletedBy: string[];  // ❌ Khác logic
+}
+
+// ConversationMember có deletedAt nhưng không có deletedBy
+interface ConversationMember {
+  deletedAt?: Date;  // ❌ Thiếu deletedBy
+}
+
+// FriendRequest không có soft delete, dùng hard delete
+// ❌ Không consistent
+```
+
+---
+
+### 4. REACTION SYSTEM KHÔNG CHUẨN
+**Mức độ:** 🔴 CRITICAL
+
+**Vấn đề:**
+- `ReactableEntity` interface nhưng không có subcollection type definition
+- Reaction data structure không được type-safe
+- Reaction counter logic phụ thuộc Cloud Functions nhưng không có backup
+
+**Ví dụ:**
+```typescript
+// types.ts
+interface ReactableEntity {
+  reactionCount: number;
+  reactionSummary: Record<string, number>;  // ❌ Không type-safe
+}
+
+// Service layer - không có type cho reaction document
+await setDoc(reactionRef, { type: reaction });  // ❌ Không có type
+```
+
+---
+
+### 5. CONVERSATION MEMBER SUBCOLLECTION THIẾT KẾ SAI
+**Mức độ:** 🔴 CRITICAL
+
+**Vấn đề:**
+- `ConversationMember` là subcollection nhưng có `conversationId` redundant
+- Thiếu `id` field trong type
+- Mixing conversation-level data với member-level data
+
+**Ví dụ:**
+```typescript
+// types.ts
+interface ConversationMember extends BaseEntity {  // ❌ Extend BaseEntity nhưng không có id
+  conversationId: string;  // ❌ Redundant - đã là subcollection
+  userId: string;
+  joinedAt: Date;
+  isPinned: boolean;  // ✅ Member-specific
+  isMuted: boolean;   // ✅ Member-specific
+  isArchived: boolean;  // ✅ Member-specific
+  markedUnread: boolean;  // ✅ Member-specific
+  unreadCount: number;  // ✅ Member-specific
+  deletedAt?: Date;
+}
+
+// Firestore structure:
+// conversations/{conversationId}/members/{userId}
+// => conversationId là redundant
+```
+
+---
+
+### 6. MESSAGE TYPE DEFINITION KHÔNG ĐẦY ĐỦ
+**Mức độ:** 🟡 HIGH
+
+**Vấn đề:**
+- `Message` interface có quá nhiều optional fields không rõ ràng
+- Không có discriminated union cho các message types khác nhau
+- File-related fields không được group
+
+**Ví dụ:**
+```typescript
+interface Message extends BaseEntity, ReactableEntity {
+  conversationId: string;
+  senderId: string;
+  content: string;
+  type: MessageType;
+  
+  // File-related - nên group lại
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;
-  // ❌ Thiếu: mimeType, duration (voice/video), dimensions (image)
+  
+  // Reply-related - nên group lại
+  replyToId?: string;
+  replyToSnippet?: { senderId: string; content: string; type: MessageType; isRecalled?: boolean };
+  
+  // Status fields - không rõ ràng
+  readBy: string[];
+  deliveredTo: string[];
+  deliveredAt?: Date;
+  mentions?: string[];
+  isRecalled?: boolean;
+  recalledAt?: Date;
+  deletedBy: string[];
+  isForwarded?: boolean;
+  isEdited?: boolean;
+  editedAt?: Date;
 }
 ```
 
-**Ảnh hưởng:**
-- Không thể hiển thị đúng UI cho từng loại file
-- Không validate được file types
-- Thiếu thông tin cho media player
+---
 
-**Giải pháp:**
-- [ ] Thêm `mimeType?: string`
-- [ ] Thêm `duration?: number` (cho voice/video)
-- [ ] Thêm `dimensions?: {width: number, height: number}` (cho image/video)
-- [ ] Thêm `thumbnailUrl?: string` (cho video)
+### 7. ENUM VS STRING LITERAL KHÔNG NHẤT QUÁN
+**Mức độ:** 🟡 HIGH
+
+**Vấn đề:**
+- Một số dùng enum, một số dùng string literal
+- `User.role` dùng string literal `'admin' | 'user'` thay vì enum
+
+**Ví dụ:**
+```typescript
+// Dùng enum
+export enum UserStatus {
+  ONLINE = "online",
+  OFFLINE = "offline",
+  BANNED = "banned",
+}
+
+// Nhưng role dùng string literal
+interface User extends BaseEntity {
+  role: 'admin' | 'user';  // ❌ Không consistent
+}
+```
 
 ---
 
-### 7. NOTIFICATION DATA STRUCTURE KHÔNG TYPE-SAFE
-**Mức độ:** 🟡 High
+### 8. NOTIFICATION DATA STRUCTURE KHÔNG TYPE-SAFE
+**Mức độ:** 🟡 HIGH
 
 **Vấn đề:**
+- `Notification.data` là object với optional fields không rõ ràng
+- Không có discriminated union theo `NotificationType`
+
+**Ví dụ:**
 ```typescript
-interface Notification {
+interface Notification extends BaseEntity {
+  receiverId: string;
+  senderId: string;
   type: NotificationType;
   data: {  // ❌ Không type-safe
     postId?: string;
@@ -221,204 +246,162 @@ interface Notification {
     contentSnippet?: string;
     reportId?: string;
   };
+  isRead: boolean;
 }
-```
-
-**Vấn đề cụ thể:**
-- Mỗi `NotificationType` cần data khác nhau nhưng không enforce
-- Có thể có data không liên quan (vd: LIKE_POST có reportId)
-- Khó validate và debug
-
-**Ảnh hưởng:**
-- Runtime errors khi access wrong fields
-- Khó maintain khi thêm notification types mới
-- TypeScript không catch được lỗi
-
-**Giải pháp:**
-- [ ] Dùng discriminated unions:
-```typescript
-type NotificationData = 
-  | { type: 'LIKE_POST', postId: string, contentSnippet?: string }
-  | { type: 'COMMENT_POST', postId: string, commentId: string, contentSnippet: string }
-  | { type: 'FRIEND_REQUEST', friendRequestId: string }
-  | { type: 'REPORT_NEW', reportId: string }
-  // ...
 ```
 
 ---
 
-### 8. THIẾU VALIDATION CONSTRAINTS
-**Mức độ:** 🟡 High
+### 9. MISSING INDEXES & QUERY OPTIMIZATION
+**Mức độ:** 🟡 HIGH
 
 **Vấn đề:**
-- Không có min/max length cho strings
-- Không có limits cho arrays (images, videos)
-- Không có validation cho enums
-- Không có format validation (email, URL)
+- Nhiều compound queries nhưng không document indexes
+- Query patterns không optimal
 
-**Ảnh hưởng:**
-- Users có thể upload quá nhiều files
-- Content có thể quá dài → performance issues
-- Invalid data có thể được lưu
-
-**Giải pháp:**
-- [ ] Document constraints trong JSDoc comments:
+**Ví dụ:**
 ```typescript
-interface Post {
-  /** @minLength 1 @maxLength 5000 */
-  content: string;
-  /** @maxItems 10 */
-  images?: string[];
-  /** @maxItems 5 */
-  videos?: string[];
-}
+// friendService.ts - Compound query cần index
+query(
+  collection(db, 'friendRequests'),
+  where('senderId', '==', senderId),
+  where('receiverId', '==', receiverId),
+  where('status', '==', FriendRequestStatus.PENDING)
+);
+
+// commentService.ts - Compound query cần index
+query(
+  collection(db, 'comments'),
+  where('postId', '==', postId),
+  where('parentId', '==', null),
+  where('status', '==', CommentStatus.ACTIVE),
+  orderBy('createdAt', 'desc')
+);
 ```
-- [ ] Tạo validation schemas (Zod/Yup)
 
 ---
 
-### 9. ENUM NAMING KHÔNG CONSISTENT
-**Mức độ:** 🟡 Medium
+### 10. SECURITY & VALIDATION
+**Mức độ:** 🟡 HIGH
 
 **Vấn đề:**
+- Không có validation types (Zod, Yup)
+- Security checks scattered trong services
+- Blocked users logic không centralized
+
+**Ví dụ:**
 ```typescript
-// Một số dùng UPPER_SNAKE_CASE
-enum UserStatus { ONLINE, OFFLINE, BANNED }
-
-// Một số dùng lowercase
-enum Gender { MALE = "male", FEMALE = "female" }
-
-// Một số dùng snake_case values
-enum ReportReason { 
-  HARASSMENT_VIOLENCE = "harassment_violence"
+// Scattered security checks
+const [receiverSec, senderSec] = await Promise.all([
+  getDoc(doc(db, 'users', receiverId, 'private', 'security')),
+  getDoc(doc(db, 'users', senderId, 'private', 'security')),
+]);
+if (receiverSec.data()?.blockedUserIds?.includes(senderId)) {
+  throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
 }
 ```
 
-**Giải pháp:**
-- [ ] Chuẩn hóa: Enum keys = UPPER_SNAKE_CASE, values = lowercase
-
 ---
 
-### 10. THIẾU SECURITY & PRIVACY FIELDS
-**Mức độ:** 🟡 High
+## 🟢 VẤN ĐỀ KHÁC CẦN CẢI THIỆN
+
+### 11. NAMING CONVENTIONS
+**Mức độ:** 🟢 MEDIUM
 
 **Vấn đề:**
-- User không có `isPrivate` flag
-- Không có `blockedUsers` list
-- Không có `reportCount` để track spam users
-- Không có `verifiedAt` cho email verification
-
-**Giải pháp:**
-- [ ] Thêm vào User interface:
-```typescript
-interface User {
-  isPrivate?: boolean;
-  blockedUserIds?: string[];
-  reportCount?: number;
-  emailVerified?: boolean;
-  emailVerifiedAt?: Date;
-  phoneNumber?: string;
-  phoneVerified?: boolean;
-}
-```
+- Mix giữa camelCase và snake_case
+- Một số tên không rõ nghĩa
 
 ---
 
-### 11. MISSING AUDIT TRAIL
-**Mức độ:** 🟡 High
+### 12. MISSING DOCUMENTATION
+**Mức độ:** 🟢 MEDIUM
 
 **Vấn đề:**
-- Không track được WHO made changes
-- Không có version history
-- Không có change logs
-
-**Giải pháp:**
-- [ ] Thêm audit fields:
-```typescript
-interface AuditableEntity {
-  createdBy: string;
-  updatedBy?: string;
-  version?: number;
-}
-```
+- Không có JSDoc comments
+- Không document collection structure
+- Không document subcollections
 
 ---
 
-### 12. REACTABLE ENTITY THIẾU THÔNG TIN
-**Mức độ:** 🟡 Medium
+### 13. TYPE EXPORTS KHÔNG TỐI ƯU
+**Mức độ:** 🟢 LOW
 
 **Vấn đề:**
-```typescript
-interface ReactableEntity {
-  reactionCount: number;
-  reactionSummary: Record<string, number>;
-  // ❌ Thiếu: topReactors, lastReactionAt
-}
-```
-
-**Giải pháp:**
-- [ ] Thêm metadata hữu ích:
-```typescript
-interface ReactableEntity {
-  reactionCount: number;
-  reactionSummary: Record<ReactionType, number>;
-  lastReactionAt?: Date;
-  topReactorIds?: string[]; // Top 3 reactors
-}
-```
+- Re-export từ shared không cần thiết
+- Có thể dùng `export * from` thay vì list từng item
 
 ---
 
-## 📊 THỐNG KÊ VẤN ĐỀ
+## 📊 THỐNG KÊ
 
-| Mức độ | Số lượng | Ưu tiên |
-|--------|----------|---------|
-| 🔴 Critical | 5 | P0 - Fix ngay |
-| 🟡 High | 5 | P1 - Fix trong sprint |
-| 🟡 Medium | 2 | P2 - Fix khi có thời gian |
+| Loại vấn đề | Số lượng | Mức độ |
+|-------------|----------|--------|
+| Critical | 5 | 🔴 |
+| High | 5 | 🟡 |
+| Medium | 2 | 🟢 |
+| Low | 1 | 🟢 |
+| **Tổng** | **13** | |
 
 ---
 
-## 🎯 KHUYẾN NGHỊ HÀNH ĐỘNG
+## 🎯 ƯU TIÊN THỰC HIỆN
 
-### Phase 1: Critical Fixes (Week 1-2)
-- [ ] Fix soft delete inconsistency
-- [ ] Refactor Conversation structure
-- [ ] Fix reaction system design
-- [ ] Add missing timestamps
+### Phase 1: Critical Fixes (Tuần 1-2)
+- [ ] Fix timestamp inconsistency
+- [ ] Fix soft delete pattern
+- [ ] Fix ConversationMember structure
+- [ ] Add missing required fields
+- [ ] Fix reaction system
+
+### Phase 2: High Priority (Tuần 3-4)
+- [ ] Refactor Message types
+- [ ] Fix Notification data structure
+- [ ] Standardize enums
 - [ ] Document indexes
+- [ ] Add security layer
 
-### Phase 2: High Priority (Week 3-4)
-- [ ] Add validation constraints
-- [ ] Fix Notification type safety
-- [ ] Add security fields
-- [ ] Add audit trail
-- [ ] Enhance Message metadata
+### Phase 3: Improvements (Tuần 5-6)
+- [ ] Add JSDoc documentation
+- [ ] Optimize exports
+- [ ] Add validation schemas
+- [ ] Naming conventions cleanup
 
-### Phase 3: Medium Priority (Week 5-6)
-- [ ] Standardize enum naming
-- [ ] Add ReactableEntity metadata
-- [ ] Create comprehensive documentation
+---
+
+## ✅ CHECKLIST HOÀN THÀNH
+
+### Critical Issues
+- [ ] Timestamp inconsistency fixed
+- [ ] Missing required fields added
+- [ ] Soft delete pattern standardized
+- [ ] Reaction system refactored
+- [ ] ConversationMember structure fixed
+
+### High Priority Issues
+- [ ] Message types refactored
+- [ ] Enum standardization complete
+- [ ] Notification data type-safe
+- [ ] Indexes documented
+- [ ] Security layer added
+
+### Medium Priority Issues
+- [ ] Naming conventions applied
+- [ ] Documentation added
+
+### Low Priority Issues
+- [ ] Exports optimized
 
 ---
 
 ## 📝 GHI CHÚ
 
-**Nguyên tắc refactoring:**
-- ✅ Không thay đổi logic nghiệp vụ hiện tại
-- ✅ Không cần backward compatibility (làm mới hoàn toàn)
-- ✅ Clean code, loại bỏ technical debt
-- ✅ Chuẩn hóa naming conventions
-- ✅ Type-safe và maintainable
-
-**Rủi ro:**
-- Migration data sẽ phức tạp (cần script migration)
-- Cloud Functions cần update theo
-- Frontend code cần refactor
-- Testing cần comprehensive
+1. **Không backward compatible**: Theo yêu cầu, tất cả changes sẽ là breaking changes
+2. **Clean slate approach**: Loại bỏ hoàn toàn logic cũ, thiết kế lại từ đầu
+3. **Type-first design**: Ưu tiên type safety và developer experience
+4. **Production ready**: Đảm bảo scalability và maintainability
 
 ---
 
-**Người đánh giá:** Senior FullStack Developer  
-**Ngày:** 2024  
-**Trạng thái:** ⏳ Chờ approval để bắt đầu implementation
+**Người thực hiện audit:** Kiro AI Assistant
+**Ngày hoàn thành:** 2026-03-09

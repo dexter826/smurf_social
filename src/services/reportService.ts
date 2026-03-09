@@ -1,11 +1,11 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
+import {
+  collection,
+  addDoc,
+  getDocs,
   getDoc,
-  query, 
-  where, 
-  orderBy, 
+  query,
+  where,
+  orderBy,
   Timestamp,
   doc,
   getCountFromServer,
@@ -17,7 +17,6 @@ import { db } from '../firebase/config';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Report, ReportType, ReportStatus } from '../types';
 import { PAGINATION } from '../constants';
-import { convertTimestamp } from '../utils/dateUtils';
 
 export const reportService = {
   // Cloud Function onReportCreated xử lý notification cho admin
@@ -42,8 +41,8 @@ export const reportService = {
 
   // Kiểm tra user đã báo cáo nội dung này chưa
   hasUserReported: async (
-    reporterId: string, 
-    targetType: ReportType, 
+    reporterId: string,
+    targetType: ReportType,
     targetId: string
   ): Promise<boolean> => {
     try {
@@ -75,7 +74,7 @@ export const reportService = {
       return snapshot.docs.map(docSnap => ({
         id: docSnap.id,
         ...docSnap.data(),
-        createdAt: convertTimestamp(docSnap.data().createdAt)
+        createdAt: docSnap.data().createdAt as Timestamp
       })) as Report[];
     } catch (error) {
       console.error("Lỗi lấy báo cáo:", error);
@@ -95,8 +94,8 @@ export const reportService = {
       return snapshot.docs.map(docSnap => ({
         id: docSnap.id,
         ...docSnap.data(),
-        createdAt: convertTimestamp(docSnap.data().createdAt),
-        resolvedAt: convertTimestamp(docSnap.data().resolvedAt)
+        createdAt: docSnap.data().createdAt as Timestamp,
+        resolvedAt: docSnap.data().resolvedAt as Timestamp | undefined
       })) as Report[];
     } catch (error) {
       console.error("Lỗi lấy báo cáo:", error);
@@ -114,19 +113,19 @@ export const reportService = {
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     ];
-    
+
     if (statusFilter) {
       constraints.unshift(where('status', '==', statusFilter));
     }
-    
+
     const q = query(collection(db, 'reports'), ...constraints);
-    
+
     return onSnapshot(q, (snapshot) => {
       const reports = snapshot.docs.map(docSnap => ({
         id: docSnap.id,
         ...docSnap.data(),
-        createdAt: convertTimestamp(docSnap.data().createdAt),
-        resolvedAt: convertTimestamp(docSnap.data().resolvedAt)
+        createdAt: docSnap.data().createdAt as Timestamp,
+        resolvedAt: docSnap.data().resolvedAt as Timestamp | undefined
       })) as Report[];
       callback(reports);
     });
@@ -169,12 +168,12 @@ export const reportService = {
     try {
       const reportSnap = await getDoc(doc(db, 'reports', reportId));
       if (!reportSnap.exists()) return null;
-      
+
       return {
         id: reportSnap.id,
         ...reportSnap.data(),
-        createdAt: convertTimestamp(reportSnap.data().createdAt),
-        resolvedAt: convertTimestamp(reportSnap.data().resolvedAt)
+        createdAt: reportSnap.data().createdAt as Timestamp,
+        resolvedAt: reportSnap.data().resolvedAt as Timestamp | undefined
       } as Report;
     } catch (error) {
       console.error("Lỗi lấy báo cáo:", error);

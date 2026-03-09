@@ -16,10 +16,9 @@ import {
   setDoc,
   deleteDoc,
   increment
-} from 'firebase/firestore';
+, Timestamp} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { Conversation, ConversationMember } from '../../types';
-import { convertTimestamp } from '../../utils/dateUtils';
 
 export const conversationService = {
   getOrCreateConversation: async (user1Id: string, user2Id: string): Promise<string> => {
@@ -118,11 +117,11 @@ export const conversationService = {
         return {
           ...data,
           id: d.id,
-          updatedAt: convertTimestamp(data.updatedAt, new Date())!,
-          createdAt: convertTimestamp(data.createdAt, new Date())!,
+          updatedAt: data.updatedAt as Timestamp,
+          createdAt: data.createdAt as Timestamp,
           lastMessage: data.lastMessage ? {
             ...data.lastMessage,
-            createdAt: convertTimestamp(data.lastMessage.createdAt, new Date())!
+            createdAt: data.lastMessage.createdAt as Timestamp
           } : undefined
         } as Conversation;
       }).filter(c => c !== null) as Conversation[];
@@ -144,9 +143,9 @@ export const conversationService = {
       return {
         ...data,
         id: memberSnap.id,
-        createdAt: convertTimestamp(data.createdAt, new Date())!,
-        joinedAt: convertTimestamp(data.joinedAt, new Date())!,
-        deletedAt: convertTimestamp(data.deletedAt)
+        createdAt: data.createdAt as Timestamp,
+        joinedAt: data.joinedAt as Timestamp,
+        deletedAt: data.deletedAt as Timestamp | undefined
       } as ConversationMember;
     } catch (error) {
       console.error("Lỗi lấy member settings:", error);
@@ -171,9 +170,9 @@ export const conversationService = {
       const member: ConversationMember = {
         ...data,
         id: snapshot.id,
-        createdAt: convertTimestamp(data.createdAt, new Date())!,
-        joinedAt: convertTimestamp(data.joinedAt, new Date())!,
-        deletedAt: convertTimestamp(data.deletedAt)
+        createdAt: data.createdAt as Timestamp,
+        joinedAt: data.joinedAt as Timestamp,
+        deletedAt: data.deletedAt as Timestamp | undefined
       } as ConversationMember;
 
       callback(member);
@@ -304,3 +303,5 @@ export const conversationService = {
     }
   }
 };
+
+

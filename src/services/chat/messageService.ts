@@ -17,10 +17,10 @@ import {
   startAfter,
   increment,
   DocumentSnapshot,
-  QueryDocumentSnapshot,
   DocumentData,
   setDoc,
-  deleteDoc
+  deleteDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { Message, MessageType, ReactionType } from "../../types";
@@ -28,7 +28,6 @@ import { TIME_LIMITS, IMAGE_COMPRESSION } from "../../constants";
 import { compressImage } from "../../utils/imageUtils";
 import { withRetry } from "../../utils/retryUtils";
 import { uploadWithProgress, ProgressCallback } from "../../utils/uploadUtils";
-import { convertTimestamp } from "../../utils/dateUtils";
 
 async function updateConversationAfterMessage(
   conversationId: string,
@@ -43,18 +42,16 @@ async function updateConversationAfterMessage(
   if (conversationSnap.exists()) {
     const participantIds = conversationSnap.data().participantIds || [];
 
-    // Update conversation document
     await updateDoc(conversationRef, {
       lastMessage: {
         ...messageData,
         id: messageId,
-        createdAt: new Date(),
+        createdAt: Timestamp.now(),
         content: displayContent,
       },
       updatedAt: serverTimestamp()
     });
 
-    // Update unreadCount và reset archived/markedUnread trong member subcollection
     const memberUpdates = participantIds
       .filter((pid: string) => pid !== senderId)
       .map((pid: string) =>
@@ -104,11 +101,13 @@ async function createAndSendMediaMessage(
     content: type === MessageType.FILE ? file.name : fileUrl,
     type,
     fileUrl,
-    createdAt: serverTimestamp() as unknown as Date,
+    createdAt: Timestamp.now(),
     readBy: [senderId],
     deliveredTo: [senderId],
-    deliveredAt: serverTimestamp() as unknown as Date,
+    deliveredAt: Timestamp.now(),
     deletedBy: [],
+    reactionCount: 0,
+    reactionSummary: {},
   };
 
   // Lưu thông tin bổ sung tùy loại tin nhắn.
@@ -153,7 +152,7 @@ export const messageService = {
     conversationId: string,
     limitCount: number,
     callback: (messages: Message[], lastDoc: DocumentSnapshot | null) => void,
-    joinedAt?: Date,
+    joinedAt?: Timestamp,
   ) => {
     let q = query(
       collection(db, "messages"),
@@ -184,8 +183,8 @@ export const messageService = {
             return {
               ...data,
               id: doc.id,
-              createdAt: convertTimestamp(data.createdAt, new Date())!,
-              deliveredAt: convertTimestamp(data.deliveredAt),
+              createdAt: data.createdAt as Timestamp,
+              deliveredAt: data.deliveredAt as Timestamp | undefined,
               readBy: data.readBy || [],
               deliveredTo: data.deliveredTo || [],
               mentions: data.mentions || [],
@@ -206,7 +205,7 @@ export const messageService = {
     conversationId: string,
     lastVisibleDoc: DocumentSnapshot,
     limitCount: number,
-    joinedAt?: Date,
+    joinedAt?: Timestamp,
   ): Promise<{ messages: Message[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }> => {
     try {
       let q = query(
@@ -238,8 +237,8 @@ export const messageService = {
           return {
             ...data,
             id: doc.id,
-            createdAt: convertTimestamp(data.createdAt, new Date())!,
-            deliveredAt: convertTimestamp(data.deliveredAt),
+            createdAt: data.createdAt as Timestamp,
+            deliveredAt: data.deliveredAt as Timestamp | undefined,
             readBy: data.readBy || [],
             deliveredTo: data.deliveredTo || [],
             mentions: data.mentions || [],
@@ -267,10 +266,10 @@ export const messageService = {
         senderId,
         content,
         type: MessageType.CALL,
-        createdAt: serverTimestamp() as unknown as Date,
+        createdAt: Timestamp.now(),
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp() as unknown as Date,
+        deliveredAt: Timestamp.now(),
         deletedBy: [],
         reactionCount: 0,
         reactionSummary: {},
@@ -321,10 +320,10 @@ export const messageService = {
         senderId,
         content,
         type: MessageType.TEXT,
-        createdAt: serverTimestamp() as unknown as Date,
+        createdAt: Timestamp.now(),
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp() as unknown as Date,
+        deliveredAt: Timestamp.now(),
         deletedBy: [],
         mentions: mentions || [],
         reactionCount: 0,
@@ -615,17 +614,14 @@ export const messageService = {
         throw new Error("Chỉ người gửi mới được chỉnh sửa tin nhắn");
       }
 
-      const createdAt = convertTimestamp(data.createdAt);
+      const createdAt = data.createdAt as Timestamp;
+      const now = Timestamp.now();
+      const diffInMillis = now.toMillis() - createdAt.toMillis();
 
-      if (createdAt) {
-        const now = new Date();
-        const diffInMinutes = now.getTime() - createdAt.getTime();
-
-        if (diffInMinutes > TIME_LIMITS.MESSAGE_EDIT_WINDOW) {
-          throw new Error(
-            `Đã hết thời gian chỉnh sửa (tối đa ${TIME_LIMITS.MESSAGE_EDIT_WINDOW / (1000 * 60)} phút)`,
-          );
-        }
+      if (diffInMillis > TIME_LIMITS.MESSAGE_EDIT_WINDOW) {
+        throw new Error(
+          `Đã hết thời gian chỉnh sửa (tối đa ${TIME_LIMITS.MESSAGE_EDIT_WINDOW / (1000 * 60)} phút)`,
+        );
       }
 
       await updateDoc(messageRef, {
@@ -651,10 +647,10 @@ export const messageService = {
         senderId,
         content: originalMessage.content,
         type: originalMessage.type,
-        createdAt: serverTimestamp() as unknown as Date,
+        createdAt: Timestamp.now(),
         readBy: [senderId],
         deliveredTo: [senderId],
-        deliveredAt: serverTimestamp() as unknown as Date,
+        deliveredAt: Timestamp.now(),
         deletedBy: [],
         isForwarded: true,
       };
@@ -798,7 +794,7 @@ export const messageService = {
         lastMessage: {
           ...messageData,
           id: docRef.id,
-          createdAt: new Date(),
+          createdAt: Timestamp.now(),
         },
         updatedAt: serverTimestamp(),
       });
