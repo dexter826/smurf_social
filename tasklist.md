@@ -348,9 +348,9 @@ if (receiverSec.data()?.blockedUserIds?.includes(senderId)) {
 ## 🎯 ƯU TIÊN THỰC HIỆN
 
 ### Phase 1: Critical Fixes (Tuần 1-2)
-- [ ] Fix timestamp inconsistency
+- [x] Fix timestamp inconsistency
+- [x] Fix ConversationMember structure
 - [ ] Fix soft delete pattern
-- [ ] Fix ConversationMember structure
 - [ ] Add missing required fields
 - [ ] Fix reaction system
 
@@ -372,11 +372,11 @@ if (receiverSec.data()?.blockedUserIds?.includes(senderId)) {
 ## ✅ CHECKLIST HOÀN THÀNH
 
 ### Critical Issues
-- [ ] Timestamp inconsistency fixed
+- [x] Timestamp inconsistency fixed
+- [x] ConversationMember structure fixed
 - [ ] Missing required fields added
 - [ ] Soft delete pattern standardized
 - [ ] Reaction system refactored
-- [ ] ConversationMember structure fixed
 
 ### High Priority Issues
 - [ ] Message types refactored

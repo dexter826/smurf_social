@@ -72,13 +72,13 @@ export const useConversationItem = ({
     const deletedAt = memberSettings?.deletedAt;
 
     let startTime = joinedAt;
-    if (deletedAt && (!startTime || deletedAt > startTime)) {
+    if (deletedAt && (!startTime || deletedAt.toMillis() > startTime.toMillis())) {
       startTime = deletedAt;
     }
 
     if (!conversation.lastMessage) return undefined;
     const lastMsgDate = toDate(conversation.lastMessage.createdAt);
-    if (startTime && lastMsgDate && lastMsgDate < startTime) return undefined;
+    if (startTime && lastMsgDate && lastMsgDate < toDate(startTime)) return undefined;
 
     return conversation.lastMessage;
   }, [conversation, memberSettings]);
