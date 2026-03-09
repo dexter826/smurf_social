@@ -99,7 +99,7 @@ Bài viết của tài khoản bị khóa hoặc của người đã bị chặn
 
 1. ## **_Chỉnh sửa bài viết_**
 
-Người dùng chọn “Chỉnh sửa” trên bài viết của mình để thay đổi nội dung văn bản, hình ảnh, video hoặc mức độ hiển thị. Bài viết sau khi chỉnh sửa được đánh dấu là “đã chỉnh sửa”.
+Người dùng chọn “Chỉnh sửa” trên bài viết của mình để thay đổi nội dung văn bản, hình ảnh, video hoặc mức độ hiển thị. Bài viết sau khi chỉnh sửa sẽ được cập nhật nội dung mới.
 
 ![][image7]
 
@@ -378,7 +378,7 @@ _Sơ đồ tuần tự \- Gửi tin nhắn_
 | Tác nhân             | Người gửi tin nhắn                                                  |
 | Mô tả                | Người gửi chỉnh sửa nội dung tin nhắn văn bản trong vòng 5 phút     |
 | Điều kiện tiên quyết | Là tác giả; tin nhắn là loại văn bản; chưa quá 5 phút kể từ khi gửi |
-| Điều kiện sau        | Tin nhắn hiển thị nội dung mới, được đánh dấu "_Đã chỉnh sửa_"      |
+| Điều kiện sau        | Tin nhắn hiển thị nội dung mới      |
 
 **Luồng sự kiện chính:**
 
@@ -386,7 +386,7 @@ _Sơ đồ tuần tự \- Gửi tin nhắn_
 2. Hệ thống kiểm tra còn trong thời hạn 5 phút.
 3. Ô nhập liệu mở với nội dung cũ.
 4. Người dùng sửa nội dung và xác nhận.
-5. Hệ thống cập nhật, đánh dấu "_Đã chỉnh sửa_".
+5. Hệ thống cập nhật nội dung mới.
 
 **Luồng thay thế:**
 
