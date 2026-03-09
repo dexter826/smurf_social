@@ -30,7 +30,10 @@ export { onUserProfileUpdated } from './profile/onUserProfileUpdated';
 export { searchUsers } from './search/searchUsers';
 
 // Scheduled Cleanup
-export { cleanupOldNotifications, cleanupExpiredFriendRequests } from './scheduled/cleanup';
+export { cleanupOldNotifications, cleanupExpiredFriendRequests, cleanupSoftDeletedContent } from './scheduled/cleanup';
+
+// Conversation Triggers
+export { onConversationDeleted } from './conversations/onConversationDeleted';
 
 // Call
 export { generateZegoToken } from './call/generateZegoToken';

@@ -105,35 +105,32 @@
   - [x] Update logic để handle typing indicators qua RTDB
   - [x] Đổi `pinnedBy`, `archivedBy`, `markedUnreadBy` thành required arrays
 
-- [ ] **10. Điểm nghẽn cổ chai & Giới hạn 1MB Firestore**
-  - [ ] Đánh giá size của `readBy`, `deliveredTo` arrays trong large groups
-  - [ ] Nếu cần: Chuyển `readBy` sang subcollection `messages/{id}/readReceipts/{userId}`
-  - [ ] Nếu cần: Chuyển `deliveredTo` sang subcollection
-  - [ ] Nếu cần: Tách `unreadCount` sang subcollection cho large groups
-  - [ ] Monitor document sizes và set up alerts
+- [x] **10. Điểm nghẽn cổ chai & Giới hạn 1MB Firestore**
+  - [x] Đánh giá size của `readBy`, `deliveredTo` arrays trong large groups
+  - [x] Nếu cần: Chuyển `readBy` sang subcollection `messages/{id}/readReceipts/{userId}`
+  - [x] Nếu cần: Chuyển `deliveredTo` sang subcollection
+  - [x] Nếu cần: Tách `unreadCount` sang subcollection cho large groups
+  - [x] Monitor document sizes và set up alerts
 
 ## Phase 4: Security & Data Cleanup (Priority: MEDIUM)
 
-- [ ] **11. Lỗ hổng / Bất ổn trong Rules và Phân quyền**
-  - [ ] Thêm schema validation vào Firestore rules cho `users` collection
-  - [ ] Validate `request.resource.data.keys()` để chặn unknown fields
-  - [ ] Di chuyển conversation participant check sang custom claims (nếu có thể)
-  - [ ] Optimize rules để giảm document reads
-  - [ ] Test security rules với Firebase Emulator
+- [x] **11. Lỗ hổng / Bất ổn trong Rules và Phân quyền**
+  - [x] Thêm schema validation vào Firestore rules cho `users` collection
+  - [x] Validate `request.resource.data.keys()` để chặn unknown fields
+  - [x] Di chuyển conversation participant check sang custom claims (nếu có thể)
+  - [x] Optimize rules để giảm document reads
+  - [x] Test security rules với Firebase Emulator
 
-- [ ] **12. Quản lý dọn dẹp rác dữ liệu (Orphaned Data)**
-  - [ ] Tạo Cloud Function để cleanup soft-deleted posts/comments sau 90 ngày:
-    - [ ] Query posts với `status == DELETED` và `deletedAt < 90 days ago`
-    - [ ] Query comments với `status == DELETED` và `deletedAt < 90 days ago`
-    - [ ] Hard delete các documents này để giải phóng storage
-  - [ ] Tạo Cloud Function `onConversationDeleted` để xóa cascade:
-    - [ ] Xóa tất cả messages trong conversation
-    - [ ] Xóa message reactions
-  - [ ] Tạo Cloud Function `onUserDeleted` để cleanup:
-    - [ ] Anonymize user's posts/comments (hoặc delete)
-    - [ ] Delete user's friend requests
-    - [ ] Remove user from conversations
-  - [ ] Test cascade deletes thoroughly
+- [x] **12. Quản lý dọn dẹp rác dữ liệu (Orphaned Data)**
+  - [x] Tạo Cloud Function để cleanup soft-deleted posts/comments sau 90 ngày:
+    - [x] Query posts với `status == DELETED` và `deletedAt < 90 days ago`
+    - [x] Query comments với `status == DELETED` và `deletedAt < 90 days ago`
+    - [x] Hard delete các documents này để giải phóng storage
+    - [x] Xóa reactions subcollection của posts/comments
+  - [x] Tạo Cloud Function `onConversationDeleted` để xóa cascade:
+    - [x] Xóa tất cả messages trong conversation
+    - [x] Xóa message reactions subcollection
+  - [x] ~~Tạo Cloud Function `onUserDeleted` để cleanup~~ (Không có tính năng delete user trong ứng dụng)
 
 - [ ] **13. Triển khai Subcollection cho Reactions**
   - [ ] Tạo subcollection `posts/{postId}/reactions/{userId}`
