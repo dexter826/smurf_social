@@ -1,7 +1,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../app';
-import { PostType, Visibility } from '../types';
+import { PostType, PostStatus, Visibility } from '../types';
 
 // Trigger khi user cập nhật avatar hoặc coverImage → tự động tạo post thông báo
 export const onUserProfileUpdated = onDocumentUpdated(
@@ -33,6 +33,7 @@ export const onUserProfileUpdated = onDocumentUpdated(
         commentCount: 0,
         reactionCount: 0,
         reactionSummary: {},
+        status: PostStatus.ACTIVE,
         visibility: Visibility.PUBLIC,
         type: postType,
         isEdited: false,

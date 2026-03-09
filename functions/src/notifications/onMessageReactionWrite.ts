@@ -1,6 +1,7 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { db } from '../app';
 import { FieldValue } from 'firebase-admin/firestore';
+import { MessageType } from '../types';
 
 export const onMessageReactionWrite = onDocumentWritten(
   { document: 'messages/{messageId}/reactions/{userId}', region: 'us-central1' },
@@ -51,7 +52,7 @@ export const onMessageReactionWrite = onDocumentWritten(
           senderId,
           reactorId: userId,
           content: `${afterData!.type} ${lastName} đã bày tỏ cảm xúc`,
-          type: 'text',
+          type: MessageType.TEXT,
           createdAt: new Date(),
         },
         updatedAt: FieldValue.serverTimestamp(),

@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { FieldValue } from 'firebase-admin/firestore';
 import { db, auth } from '../app';
-import { NotificationType, ReportType, ReportStatus } from '../types';
+import { NotificationType, ReportType, ReportStatus, PostStatus, CommentStatus, UserStatus } from '../types';
 import { createNotification } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 
@@ -11,7 +11,7 @@ async function deletePostById(postId: string, adminId: string): Promise<void> {
   if (!postSnap.exists) return;
 
   await db.collection('posts').doc(postId).update({
-    status: 'deleted',
+    status: PostStatus.DELETED,
     deletedAt: FieldValue.serverTimestamp(),
     deletedBy: adminId,
   });
@@ -23,7 +23,7 @@ async function deleteCommentById(commentId: string, adminId: string): Promise<vo
   if (!commentSnap.exists) return;
 
   await db.collection('comments').doc(commentId).update({
-    status: 'deleted',
+    status: CommentStatus.DELETED,
     deletedAt: FieldValue.serverTimestamp(),
     deletedBy: adminId,
   });
@@ -63,7 +63,7 @@ export const resolveReport = onCall(
     } else if (reportData.targetType === ReportType.COMMENT && action === 'delete_content') {
       await deleteCommentById(reportData.targetId, adminId);
     } else if (reportData.targetType === ReportType.USER && action === 'ban_user') {
-      await db.collection('users').doc(reportData.targetId).update({ status: 'banned' });
+      await db.collection('users').doc(reportData.targetId).update({ status: UserStatus.BANNED });
       // Custom Claim ban: token mới sau revoke sẽ mang claim này
       await auth.setCustomUserClaims(reportData.targetId, { banned: true });
       await auth.revokeRefreshTokens(reportData.targetId);

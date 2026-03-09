@@ -7,6 +7,11 @@ export enum UserStatus {
     BANNED = "banned",
 }
 
+export enum UserRole {
+    ADMIN = "admin",
+    USER = "user",
+}
+
 export enum Gender {
     MALE = "male",
     FEMALE = "female",
@@ -23,13 +28,6 @@ export enum FriendRequestStatus {
     PENDING = "pending",
     ACCEPTED = "accepted",
     REJECTED = "rejected",
-}
-
-export enum FriendStatus {
-    NOT_FRIEND = "not_friend",
-    PENDING_SENT = "pending_sent",
-    PENDING_RECEIVED = "pending_received",
-    FRIEND = "friend",
 }
 
 export enum ReactionType {
@@ -104,16 +102,13 @@ export enum CommentStatus {
 
 export interface ReactableEntity {
     reactionCount: number;
-    reactionSummary: Record<string, number>;
+    reactionSummary: Partial<Record<ReactionType, number>>;
 }
 
-// ========== REALTIME STATE INTERFACES ==========
-// Ephemeral data không persist vào Firestore
-
-export interface ConversationRealtimeState {
-    conversationId: string;
-    typingUsers: {
-        userId: string;
-        timestamp: number;
-    }[];
+export interface NotificationPayload {
+    postId?: string;
+    commentId?: string;
+    friendRequestId?: string;
+    contentSnippet?: string;
+    reportId?: string;
 }

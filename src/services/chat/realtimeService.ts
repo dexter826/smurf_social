@@ -1,6 +1,6 @@
 import { ref, set, onValue, off, serverTimestamp, onDisconnect } from 'firebase/database';
 import { rtdb } from '../../firebase/config';
-import { ConversationRealtimeState } from '../../../shared/types';
+import { ConversationRealtimeState } from '../../types';
 
 export const realtimeService = {
     /**

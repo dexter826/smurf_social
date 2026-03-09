@@ -4,10 +4,10 @@ import { Timestamp } from 'firebase/firestore';
 // ========== IMPORTS FROM SHARED ==========
 import {
   UserStatus,
+  UserRole,
   Gender,
   Visibility,
   FriendRequestStatus,
-  FriendStatus,
   ReactionType,
   PostType,
   MessageType,
@@ -18,15 +18,16 @@ import {
   PostStatus,
   CommentStatus,
   ReactableEntity,
+  NotificationPayload,
 } from "../shared/types";
 
 // Re-export for consumers
 export {
   UserStatus,
+  UserRole,
   Gender,
   Visibility,
   FriendRequestStatus,
-  FriendStatus,
   ReactionType,
   PostType,
   MessageType,
@@ -38,11 +39,28 @@ export {
   CommentStatus,
 };
 
-export type { ReactableEntity };
+export type { ReactableEntity, NotificationPayload };
+
+// ========== FRONTEND-SPECIFIC ENUMS ==========
+
+export enum FriendStatus {
+  NOT_FRIEND = "not_friend",
+  PENDING_SENT = "pending_sent",
+  PENDING_RECEIVED = "pending_received",
+  FRIEND = "friend",
+}
 
 // ========== FRONTEND-SPECIFIC TYPES ==========
 
 export type ThemeMode = "light" | "dark";
+
+export interface ConversationRealtimeState {
+  conversationId: string;
+  typingUsers: {
+    userId: string;
+    timestamp: number;
+  }[];
+}
 
 // ========== BASE ENTITIES ==========
 
@@ -70,7 +88,7 @@ export interface User extends BaseEntity {
   coverImage?: string;
   lastSeen?: Timestamp;
   updatedAt?: Timestamp;
-  role: 'admin' | 'user';
+  role: UserRole;
 }
 
 export interface FriendRequest extends BaseEntity {
@@ -136,7 +154,7 @@ export interface ConversationMember {
   deletedAt?: Timestamp;
 }
 
-export interface Comment extends BaseEntity, ReactableEntity {
+export interface Comment extends BaseEntity, ReactableEntity, SoftDeletableEntity {
   postId: string;
   userId: string;
   parentId?: string;
@@ -147,11 +165,9 @@ export interface Comment extends BaseEntity, ReactableEntity {
   replyToUserId?: string;
   isEdited?: boolean;
   editedAt?: Timestamp;
-  deletedAt?: Timestamp;
-  deletedBy?: string;
 }
 
-export interface Post extends BaseEntity, ReactableEntity {
+export interface Post extends BaseEntity, ReactableEntity, SoftDeletableEntity {
   userId: string;
   content: string;
   status: PostStatus;
@@ -163,21 +179,13 @@ export interface Post extends BaseEntity, ReactableEntity {
   type: PostType;
   isEdited?: boolean;
   editedAt?: Timestamp;
-  deletedAt?: Timestamp;
-  deletedBy?: string;
 }
 
 export interface Notification extends BaseEntity {
   receiverId: string;
   senderId: string;
   type: NotificationType;
-  data: {
-    postId?: string;
-    commentId?: string;
-    friendRequestId?: string;
-    contentSnippet?: string;
-    reportId?: string;
-  };
+  data: NotificationPayload;
   isRead: boolean;
 }
 
