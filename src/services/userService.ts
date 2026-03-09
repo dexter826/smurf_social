@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { User, UserStatus, Visibility, Gender } from '../types';
+import { User, UserStatus, UserRole, Visibility, Gender } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
@@ -137,7 +137,7 @@ export const userService = {
         updatedData = {
           ...userDoc.data() as User,
           ...data,
-          updatedAt: Timestamp.now()
+          updatedAt: Timestamp.now(),
         };
       } else {
         updatedData = {
@@ -146,7 +146,7 @@ export const userService = {
           avatar: data.avatar || '',
           email: data.email || '',
           status: UserStatus.ONLINE,
-          role: 'user',
+          role: UserRole.USER,
           bio: data.bio || '',
           coverImage: data.coverImage || '',
           createdAt: Timestamp.now(),
