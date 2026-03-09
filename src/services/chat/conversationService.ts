@@ -130,26 +130,6 @@ export const conversationService = {
     });
   },
 
-  getMemberSettings: async (conversationId: string, userId: string): Promise<ConversationMember | null> => {
-    try {
-      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
-      const memberSnap = await getDoc(memberRef);
-
-      if (!memberSnap.exists()) return null;
-
-      const data = memberSnap.data();
-      return {
-        ...data,
-        userId: data.userId,
-        joinedAt: data.joinedAt as Timestamp,
-        deletedAt: data.deletedAt as Timestamp | undefined
-      } as ConversationMember;
-    } catch (error) {
-      console.error("Lỗi lấy member settings:", error);
-      return null;
-    }
-  },
-
   subscribeMemberSettings: (
     conversationId: string,
     userId: string,

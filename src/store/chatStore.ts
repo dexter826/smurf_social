@@ -27,6 +27,7 @@ export const useChatStore = create<ChatState>()(
         set({
           conversations: [],
           selectedConversationId: null,
+          memberSettings: {},
           messages: {},
           lastMessageDocs: {},
           hasMoreMessages: {},

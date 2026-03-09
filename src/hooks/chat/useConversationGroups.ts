@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Conversation } from '../../types';
+import { useChatStore } from '../../store/chatStore';
 
 interface UseConversationGroupsProps {
   conversations: Conversation[];
@@ -20,6 +21,7 @@ export const useConversationGroups = ({
   activeFilter
 }: UseConversationGroupsProps) => {
 
+  const memberSettings = useChatStore(state => state.memberSettings);
   const { friendConversations, requestConversations } = useMemo(() => {
     const friends: Conversation[] = [];
     const requests: Conversation[] = [];
@@ -40,25 +42,23 @@ export const useConversationGroups = ({
 
     // Sắp xếp: Ghim ưu tiên, sau đó theo thời gian cập nhật
     const sortFn = (a: Conversation, b: Conversation) => {
-      const isAPinned = a.pinnedBy.includes(currentUserId);
-      const isBPinned = b.pinnedBy.includes(currentUserId);
-
-      if (isAPinned && !isBPinned) return -1;
+        const isAPinned = memberSettings[a.id]?.isPinned ?? false;
+        const isBPinned = memberSettings[b.id]?.isPinned ?? false;
       if (!isAPinned && isBPinned) return 1;
-      return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+      return (b.updatedAt?.toMillis() ?? 0) - (a.updatedAt?.toMillis() ?? 0);
     };
 
     return {
       friendConversations: friends.sort(sortFn),
       requestConversations: requests.sort(sortFn)
     };
-  }, [conversations, currentUserId, currentUserFriendIds]);
+  }, [conversations, currentUserId, currentUserFriendIds, memberSettings]);
 
   // Danh sách hiển thị dựa trên chế độ xem và bộ lọc
   const displayConversations = useMemo(() => {
     if (viewMode === 'archived') {
-      return conversations.filter(c => c.archivedBy.includes(currentUserId)).sort((a, b) =>
-        new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+      return conversations.filter(c => memberSettings[c.id]?.isArchived).sort((a, b) =>
+        (b.updatedAt?.toMillis() ?? 0) - (a.updatedAt?.toMillis() ?? 0)
       );
     }
 
@@ -67,7 +67,7 @@ export const useConversationGroups = ({
       list = list.filter(c => c.isGroup);
     }
     return list;
-  }, [viewMode, friendConversations, conversations, activeFilter]);
+  }, [viewMode, friendConversations, conversations, activeFilter, memberSettings]);
 
   return {
     friendConversations,
