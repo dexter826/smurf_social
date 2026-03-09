@@ -1,3 +1,6 @@
+// ========== IMPORTS FROM FIREBASE ==========
+import { Timestamp } from 'firebase/firestore';
+
 // ========== IMPORTS FROM SHARED ==========
 import {
   UserStatus,
@@ -45,11 +48,11 @@ export type ThemeMode = "light" | "dark";
 
 export interface BaseEntity {
   id: string;
-  createdAt: Date;
+  createdAt: Timestamp;
 }
 
 export interface SoftDeletableEntity {
-  deletedAt?: Date;
+  deletedAt?: Timestamp;
   deletedBy?: string;
 }
 
@@ -61,12 +64,12 @@ export interface User extends BaseEntity {
   email: string;
   location?: string;
   gender?: Gender;
-  birthDate?: Date;
+  birthDate?: Timestamp;
   status: UserStatus;
   bio?: string;
   coverImage?: string;
-  lastSeen?: Date;
-  updatedAt?: Date;
+  lastSeen?: Timestamp;
+  updatedAt?: Timestamp;
   role: 'admin' | 'user';
 }
 
@@ -75,7 +78,7 @@ export interface FriendRequest extends BaseEntity {
   receiverId: string;
   status: FriendRequestStatus;
   message?: string;
-  updatedAt?: Date;
+  updatedAt?: Timestamp;
 }
 
 export interface Message extends BaseEntity, ReactableEntity {
@@ -88,16 +91,16 @@ export interface Message extends BaseEntity, ReactableEntity {
   fileSize?: number;
   readBy: string[];
   deliveredTo: string[];
-  deliveredAt?: Date;
+  deliveredAt?: Timestamp;
   mentions?: string[];
   isRecalled?: boolean;
-  recalledAt?: Date;
+  recalledAt?: Timestamp;
   deletedBy: string[];
   isForwarded?: boolean;
   replyToId?: string;
   replyToSnippet?: { senderId: string; content: string; type: MessageType; isRecalled?: boolean };
   isEdited?: boolean;
-  editedAt?: Date;
+  editedAt?: Timestamp;
 }
 
 export interface LastMessagePreview {
@@ -105,14 +108,14 @@ export interface LastMessagePreview {
   senderId: string;
   content: string;
   type: MessageType;
-  createdAt: Date;
+  createdAt: Timestamp;
   reactorId?: string;
   readBy?: string[];
-  deliveredAt?: Date;
+  deliveredAt?: Timestamp;
 }
 
 export interface Conversation extends BaseEntity {
-  updatedAt: Date;
+  updatedAt: Timestamp;
   participantIds: string[];
   lastMessage?: LastMessagePreview;
   isGroup: boolean;
@@ -125,13 +128,13 @@ export interface Conversation extends BaseEntity {
 export interface ConversationMember extends BaseEntity {
   conversationId: string;
   userId: string;
-  joinedAt: Date;
+  joinedAt: Timestamp;
   isPinned: boolean;
   isMuted: boolean;
   isArchived: boolean;
   markedUnread: boolean;
   unreadCount: number;
-  deletedAt?: Date;
+  deletedAt?: Timestamp;
 }
 
 export interface Comment extends BaseEntity, ReactableEntity {
@@ -144,8 +147,8 @@ export interface Comment extends BaseEntity, ReactableEntity {
   replyCount?: number;
   replyToUserId?: string;
   isEdited?: boolean;
-  editedAt?: Date;
-  deletedAt?: Date;
+  editedAt?: Timestamp;
+  deletedAt?: Timestamp;
   deletedBy?: string;
 }
 
@@ -160,8 +163,8 @@ export interface Post extends BaseEntity, ReactableEntity {
   visibility: Visibility;
   type: PostType;
   isEdited?: boolean;
-  editedAt?: Date;
-  deletedAt?: Date;
+  editedAt?: Timestamp;
+  deletedAt?: Timestamp;
   deletedBy?: string;
 }
 
@@ -188,7 +191,7 @@ export interface Report extends BaseEntity {
   description?: string;
   images?: string[];
   status: ReportStatus;
-  resolvedAt?: Date;
+  resolvedAt?: Timestamp;
   resolvedBy?: string;
   resolution?: string;
 }

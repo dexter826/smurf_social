@@ -4,7 +4,7 @@ import { messageService } from '../../services/chat/messageService';
 import { conversationService } from '../../services/chat/conversationService';
 import { realtimeService } from '../../services/chat/realtimeService';
 import { useAuthStore } from '../authStore';
-import { DocumentSnapshot } from 'firebase/firestore';
+import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import type { ChatState } from '../chatStore';
 import { PAGINATION } from '../../constants';
 
@@ -43,14 +43,14 @@ export interface MessageSlice {
 
 const LIMIT_PER_PAGE = PAGINATION.CHAT_MESSAGES;
 
-const getEffectiveJoinedAt = async (conversationId: string, userId: string): Promise<Date | undefined> => {
+const getEffectiveJoinedAt = async (conversationId: string, userId: string): Promise<Timestamp | undefined> => {
   const member = await conversationService.getMemberSettings(conversationId, userId);
   if (!member) return undefined;
 
   const joinedAt = member.joinedAt;
   const deletedAt = member.deletedAt;
 
-  if (deletedAt && (!joinedAt || deletedAt > joinedAt)) {
+  if (deletedAt && (!joinedAt || deletedAt.toMillis() > joinedAt.toMillis())) {
     return deletedAt;
   }
 
@@ -93,7 +93,7 @@ const sendMediaMessage = (
     conversationId,
     senderId,
     content: isFile ? file.name : localUrl!,
-    createdAt: new Date(),
+    createdAt: Timestamp.now(),
     type: config.messageType,
     replyToId,
     replyToSnippet: targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined,
@@ -227,7 +227,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       conversationId,
       senderId,
       content,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
       type: MessageType.TEXT,
       mentions: mentions || [],
       readBy: [],
@@ -260,7 +260,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       conversationId,
       senderId,
       content,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
       type: MessageType.CALL,
       readBy: [],
       deliveredTo: [],
@@ -352,7 +352,7 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
       conversationId,
       senderId,
       content,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
       type: MessageType.TEXT,
       replyToId,
       replyToSnippet: targetMessage ? { senderId: targetMessage.senderId, content: targetMessage.content, type: targetMessage.type, isRecalled: targetMessage.isRecalled } : undefined,
@@ -504,4 +504,5 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
     }));
   },
 });
+
 

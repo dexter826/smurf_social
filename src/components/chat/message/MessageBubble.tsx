@@ -105,7 +105,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const isDelivered = !!message.deliveredAt;
 
   const canEdit = isMe && !message.isRecalled && message.type !== MessageType.CALL && (
-    (new Date().getTime() - new Date(message.createdAt).getTime()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
+    (Date.now() - message.createdAt.toMillis()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
   );
 
   const hasReactions = (message.reactionCount) > 0;

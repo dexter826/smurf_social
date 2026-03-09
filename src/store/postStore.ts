@@ -1,6 +1,6 @@
 import { Post, Visibility, PostStatus, PostType } from '../types';
 import { postService } from '../services/postService';
-import { DocumentSnapshot } from 'firebase/firestore';
+import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { toast } from './toastStore';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -195,7 +195,7 @@ export const usePostStore = create<PostState>()(
           videoThumbnails: videoThumbnails || {},
           visibility,
           commentCount: 0,
-          createdAt: new Date(),
+          createdAt: Timestamp.now(),
           status: PostStatus.ACTIVE,
           type: PostType.NORMAL,
           reactionCount: 0,
@@ -286,7 +286,7 @@ export const usePostStore = create<PostState>()(
                 visibility,
                 videoThumbnails,
                 isEdited: true,
-                editedAt: new Date()
+                editedAt: Timestamp.now()
               }
               : p
           ),
@@ -465,3 +465,4 @@ export const usePostStore = create<PostState>()(
     }
   )
 );
+

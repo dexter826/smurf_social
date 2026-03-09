@@ -27,17 +27,15 @@ import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
 import { compressImage, isImageFile } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback, deleteStorageFiles } from '../utils/uploadUtils';
-import { convertTimestamp } from '../utils/dateUtils';
 
-// Định dạng dữ liệu Firestore thành Post object.
 function convertDocToPost(doc: DocumentSnapshot): Post {
   const data = doc.data();
   return {
     ...data,
     id: doc.id,
-    createdAt: convertTimestamp(data?.createdAt, new Date())!,
-    editedAt: convertTimestamp(data?.editedAt),
-    deletedAt: convertTimestamp(data?.deletedAt),
+    createdAt: data?.createdAt as Timestamp,
+    editedAt: data?.editedAt as Timestamp | undefined,
+    deletedAt: data?.deletedAt as Timestamp | undefined,
   } as Post;
 }
 
@@ -105,7 +103,7 @@ export const postService = {
       }
 
       const allPosts = [...ownerPosts, ...friendPosts];
-      allPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      allPosts.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
       const authorIds = [...new Set(allPosts.map(p => p.userId))];
       const usersMap = await batchGetUsers(authorIds);
@@ -438,8 +436,8 @@ export const postService = {
       return {
         ...data,
         id: postSnap.id,
-        createdAt: convertTimestamp(data.createdAt, new Date())!,
-        editedAt: convertTimestamp(data.editedAt),
+        createdAt: data.createdAt as Timestamp,
+        editedAt: data.editedAt as Timestamp | undefined,
       } as Post;
     } catch (error) {
       console.error("Lỗi lấy chi tiết bài viết", error);
@@ -459,8 +457,8 @@ export const postService = {
       return {
         ...data,
         id: postSnap.id,
-        createdAt: convertTimestamp(data.createdAt, new Date())!,
-        editedAt: convertTimestamp(data.editedAt),
+        createdAt: data.createdAt as Timestamp,
+        editedAt: data.editedAt as Timestamp | undefined,
       } as Post;
     } catch (error) {
       console.error("Lỗi lấy chi tiết bài viết", error);
@@ -535,3 +533,4 @@ export const postService = {
     }
   }
 };
+

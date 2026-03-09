@@ -1,10 +1,10 @@
-import { 
-  doc, 
-  getDoc, 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  where,
   orderBy,
   updateDoc,
   deleteDoc,
@@ -14,7 +14,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { FriendRequest, FriendRequestStatus } from '../types';
-import { convertTimestamp } from '../utils/dateUtils';
 
 export const friendService = {
   checkFriendRequestExists: async (senderId: string, receiverId: string): Promise<boolean> => {
@@ -65,13 +64,10 @@ export const friendService = {
       };
 
       const docRef = await addDoc(collection(db, 'friendRequests'), requestData);
-      // Cloud Function onFriendRequestCreated xử lý notification
 
       return {
         id: docRef.id,
         ...requestData,
-        createdAt: convertTimestamp(requestData.createdAt),
-        updatedAt: convertTimestamp(requestData.updatedAt)
       } as FriendRequest;
     } catch (error) {
       console.error("Lỗi gửi lời mời kết bạn", error);
@@ -87,13 +83,13 @@ export const friendService = {
         where('status', '==', FriendRequestStatus.PENDING),
         orderBy('createdAt', 'desc')
       );
-      
+
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: convertTimestamp(doc.data().createdAt),
-        updatedAt: convertTimestamp(doc.data().updatedAt)
+        createdAt: doc.data().createdAt as Timestamp,
+        updatedAt: doc.data().updatedAt as Timestamp | undefined
       } as FriendRequest));
     } catch (error) {
       console.error("Lỗi lấy lời mời kết bạn", error);
@@ -108,13 +104,13 @@ export const friendService = {
       where('status', '==', FriendRequestStatus.PENDING),
       orderBy('createdAt', 'desc')
     );
-    
+
     return onSnapshot(q, (snapshot) => {
       const requests = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: convertTimestamp(doc.data().createdAt),
-        updatedAt: convertTimestamp(doc.data().updatedAt)
+        createdAt: doc.data().createdAt as Timestamp,
+        updatedAt: doc.data().updatedAt as Timestamp | undefined
       } as FriendRequest));
       callback(requests);
     }, (error) => {
@@ -130,13 +126,13 @@ export const friendService = {
         where('status', '==', FriendRequestStatus.PENDING),
         orderBy('createdAt', 'desc')
       );
-      
+
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: convertTimestamp(doc.data().createdAt),
-        updatedAt: convertTimestamp(doc.data().updatedAt)
+        createdAt: doc.data().createdAt as Timestamp,
+        updatedAt: doc.data().updatedAt as Timestamp | undefined
       } as FriendRequest));
     } catch (error) {
       console.error("Lỗi lấy lời mời đã gửi", error);
@@ -151,13 +147,13 @@ export const friendService = {
       where('status', '==', FriendRequestStatus.PENDING),
       orderBy('createdAt', 'desc')
     );
-    
+
     return onSnapshot(q, (snapshot) => {
       const requests = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: convertTimestamp(doc.data().createdAt),
-        updatedAt: convertTimestamp(doc.data().updatedAt)
+        createdAt: doc.data().createdAt as Timestamp,
+        updatedAt: doc.data().updatedAt as Timestamp | undefined
       } as FriendRequest));
       callback(requests);
     }, (error) => {
@@ -165,7 +161,6 @@ export const friendService = {
     });
   },
 
-  // Cloud Function onFriendRequestStatusChange cập nhật friendIds và gửi notification
   acceptFriendRequest: async (requestId: string): Promise<void> => {
     try {
       const requestRef = doc(db, 'friendRequests', requestId);
@@ -208,5 +203,4 @@ export const friendService = {
       throw error;
     }
   },
-
 };
