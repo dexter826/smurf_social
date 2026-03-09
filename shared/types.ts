@@ -106,3 +106,14 @@ export interface ReactableEntity {
     reactionCount: number;
     reactionSummary: Record<string, number>;
 }
+
+// ========== REALTIME STATE INTERFACES ==========
+// Ephemeral data không persist vào Firestore
+
+export interface ConversationRealtimeState {
+    conversationId: string;
+    typingUsers: {
+        userId: string;
+        timestamp: number;
+    }[];
+}

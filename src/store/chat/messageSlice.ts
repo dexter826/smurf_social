@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
 import { Message, MessageType, Conversation } from '../../types';
 import { messageService } from '../../services/chat/messageService';
+import { realtimeService } from '../../services/chat/realtimeService';
 import { useAuthStore } from '../authStore';
 import { DocumentSnapshot } from 'firebase/firestore';
 import type { ChatState } from '../chatStore';
@@ -375,14 +376,14 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
 
   setTyping: async (conversationId: string, userId: string, isTyping: boolean) => {
     try {
-      await messageService.setTypingStatus(conversationId, userId, isTyping);
+      await realtimeService.setTypingStatus(conversationId, userId, isTyping);
     } catch (error) {
       console.error("Lỗi cập nhật trạng thái soạn tin:", error);
     }
   },
 
   subscribeToTyping: (conversationId: string) => {
-    const unsubscribe = messageService.subscribeToTypingStatus(conversationId, (typingUsers) => {
+    const unsubscribe = realtimeService.subscribeToTyping(conversationId, (typingUsers) => {
       set((state) => ({ typingUsers: { ...state.typingUsers, [conversationId]: typingUsers } }));
     });
     return unsubscribe;

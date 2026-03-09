@@ -46,7 +46,7 @@ export const groupService = {
         markedUnreadBy: [],
         deletedBy: [],
         blockedBy: [],
-        mutedUsers: {}
+        mutedBy: []
       };
 
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);

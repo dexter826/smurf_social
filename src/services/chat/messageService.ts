@@ -738,44 +738,6 @@ export const messageService = {
     }
   },
 
-  // Cập nhật trạng thái đang soạn bài.
-  setTypingStatus: async (
-    conversationId: string,
-    userId: string,
-    isTyping: boolean,
-  ): Promise<void> => {
-    try {
-      const conversationRef = doc(db, "conversations", conversationId);
-
-      if (isTyping) {
-        await updateDoc(conversationRef, {
-          typingUsers: arrayUnion(userId),
-        });
-      } else {
-        await updateDoc(conversationRef, {
-          typingUsers: arrayRemove(userId),
-        });
-      }
-    } catch (error) {
-      console.error("Lỗi set typing status", error);
-    }
-  },
-
-  // Theo dõi trạng thái đang soạn bài.
-  subscribeToTypingStatus: (
-    conversationId: string,
-    callback: (typingUsers: string[]) => void,
-  ) => {
-    const conversationRef = doc(db, "conversations", conversationId);
-
-    return onSnapshot(conversationRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        callback(data.typingUsers || []);
-      }
-    });
-  },
-
   toggleReaction: async (
     messageId: string,
     userId: string,

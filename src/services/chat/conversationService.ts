@@ -47,7 +47,7 @@ export const conversationService = {
       if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
         const data = docSnap.data();
-        if (data.deletedBy?.includes(user1Id)) {
+        if (data.deletedBy && data.deletedBy.includes(user1Id)) {
           const newDeletedBy = data.deletedBy.filter((id: string) => id !== user1Id);
           await updateDoc(docSnap.ref, { deletedBy: newDeletedBy });
         }
@@ -71,7 +71,7 @@ export const conversationService = {
         markedUnreadBy: [],
         deletedBy: [],
         blockedBy: [],
-        mutedUsers: {}
+        mutedBy: []
       };
 
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
@@ -135,7 +135,7 @@ export const conversationService = {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, {
-        [`mutedUsers.${userId}`]: muted
+        mutedBy: muted ? arrayUnion(userId) : arrayRemove(userId)
       });
     } catch (error) {
       console.error("Lỗi tắt thông báo hội thoại:", error);
@@ -203,7 +203,7 @@ export const conversationService = {
             markedUnreadBy: arrayRemove(userId)
           });
           hasUpdates = true;
-        } else if (data.markedUnreadBy?.includes(userId)) {
+        } else if (data.markedUnreadBy && data.markedUnreadBy.includes(userId)) {
           batch.update(d.ref, { markedUnreadBy: arrayRemove(userId) });
           hasUpdates = true;
         }

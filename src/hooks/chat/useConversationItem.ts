@@ -49,7 +49,7 @@ export const useConversationItem = ({
   );
 
   const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
-  const isUnread = (unreadCount > 0 || conversation.markedUnreadBy?.includes(currentUserId)) && !isActive;
+  const isUnread = (unreadCount > 0 || conversation.markedUnreadBy.includes(currentUserId)) && !isActive;
 
   // Lọc tin nhắn theo mốc thời gian
   const lastMessage = useMemo((): LastMessagePreview | undefined => {
@@ -89,17 +89,6 @@ export const useConversationItem = ({
     return content;
   }, [lastMessage, currentUserId]);
 
-  const typingText = useMemo(() => {
-    const typingUserIds = (conversation.typingUsers || []).filter(id => id !== currentUserId);
-    if (typingUserIds.length === 0) return null;
-
-    const typingUsers = typingUserIds.map(uid => participants.find(p => p.id === uid)).filter(Boolean);
-
-    if (typingUsers.length === 1) return `${getLastName(typingUsers[0]?.name) || 'Ai đó'} đang soạn tin...`;
-    if (typingUsers.length === 2) return `${getLastName(typingUsers[0]?.name)} và ${getLastName(typingUsers[1]?.name)} đang soạn tin...`;
-    return `${getLastName(typingUsers[0]?.name)} và ${typingUsers.length - 1} người khác đang soạn tin...`;
-  }, [conversation.typingUsers, participants, currentUserId]);
-
   const readers = useMemo(() =>
     (lastMessage?.readBy || [])
       .filter(uid => uid !== currentUserId)
@@ -126,7 +115,6 @@ export const useConversationItem = ({
     lastMessage,
     lastMessagePreview,
     isLastMessageMine: lastMessage?.senderId === currentUserId,
-    typingText,
     readers,
     isLastMessageRead: readers.length > 0,
     isLastMessageDelivered: !!lastMessage?.deliveredAt,

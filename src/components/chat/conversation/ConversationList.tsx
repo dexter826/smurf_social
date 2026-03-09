@@ -117,12 +117,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         currentUserFriendIds={currentUserFriendIds}
         showMessageRequestBadge={false}
         onClick={() => onSelectConversation(conversation.id)}
-        onPin={() => onPin(conversation.id, !conversation.pinnedBy?.includes(currentUserId))}
-        onMute={() => onMute(conversation.id, !conversation.mutedUsers?.[currentUserId])}
+        onPin={() => onPin(conversation.id, !conversation.pinnedBy.includes(currentUserId))}
+        onMute={() => onMute(conversation.id, !conversation.mutedBy.includes(currentUserId))}
         onDelete={() => onDelete(conversation.id)}
         onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
-        onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archivedBy?.includes(currentUserId)) : undefined}
-        onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnreadBy?.includes(currentUserId)) : undefined}
+        onArchive={onArchive ? () => onArchive(conversation.id, !conversation.archivedBy.includes(currentUserId)) : undefined}
+        onMarkUnread={onMarkUnread ? () => onMarkUnread(conversation.id, !conversation.markedUnreadBy.includes(currentUserId)) : undefined}
         onViewProfile={partnerId && onViewProfile ? () => onViewProfile(partnerId) : undefined}
       />
     );

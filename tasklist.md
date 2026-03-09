@@ -98,12 +98,12 @@
   - [x] Update tất cả nơi tạo Post/Comment/Message để set default values
   - [x] Fix TypeScript errors
 
-- [ ] **9. Tối ưu Conversation Type**
-  - [ ] Đổi `mutedUsers: Record<string, boolean>` thành `mutedBy: string[]`
-  - [ ] Tách `typingUsers` ra khỏi Firestore (dùng RTDB hoặc ephemeral state)
-  - [ ] Tạo `ConversationRealtimeState` interface riêng cho real-time data
-  - [ ] Update logic để handle typing indicators qua RTDB
-  - [ ] Đổi `pinnedBy`, `archivedBy`, `markedUnreadBy` thành required arrays
+- [x] **9. Tối ưu Conversation Type**
+  - [x] Đổi `mutedUsers: Record<string, boolean>` thành `mutedBy: string[]`
+  - [x] Tách `typingUsers` ra khỏi Firestore (dùng RTDB hoặc ephemeral state)
+  - [x] Tạo `ConversationRealtimeState` interface riêng cho real-time data
+  - [x] Update logic để handle typing indicators qua RTDB
+  - [x] Đổi `pinnedBy`, `archivedBy`, `markedUnreadBy` thành required arrays
 
 - [ ] **10. Điểm nghẽn cổ chai & Giới hạn 1MB Firestore**
   - [ ] Đánh giá size của `readBy`, `deliveredTo` arrays trong large groups

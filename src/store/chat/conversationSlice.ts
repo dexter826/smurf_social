@@ -58,7 +58,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
         conversations.forEach(conv => {
           const lastMsg = conv.lastMessage;
           const isUnread = conv.unreadCount?.[userId] > 0;
-          const isMuted = conv.mutedUsers?.[userId] === true;
+          const isMuted = conv.mutedBy.includes(userId);
           const isViewingThisConv = get().isChatVisible && conv.id === get().selectedConversationId;
 
           if (lastMsg && lastMsg.id !== lastPlayedId && isUnread &&
@@ -131,7 +131,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   togglePin: async (conversationId: string, userId: string, pinned: boolean) => {
-    set(state => ({ 
+    set(state => ({
       conversations: state.conversations.map(c => {
         if (c.id === conversationId) {
           const newPinnedBy = pinned
@@ -145,7 +145,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     try {
       await conversationService.togglePin(conversationId, userId, pinned);
     } catch (error) {
-      set(state => ({ 
+      set(state => ({
         conversations: state.conversations.map(c => {
           if (c.id === conversationId) {
             const newPinnedBy = !pinned
@@ -165,22 +165,30 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
 
-    set(state => ({ 
-      conversations: state.conversations.map(c => 
-        c.id === conversationId 
-          ? { ...c, mutedUsers: { ...(c.mutedUsers || {}), [userId]: muted } } 
-          : c
-      ) 
+    set(state => ({
+      conversations: state.conversations.map(c => {
+        if (c.id === conversationId) {
+          const newMutedBy = muted
+            ? Array.from(new Set([...(c.mutedBy || []), userId]))
+            : (c.mutedBy || []).filter(id => id !== userId);
+          return { ...c, mutedBy: newMutedBy };
+        }
+        return c;
+      })
     }));
     try {
       await conversationService.toggleMute(conversationId, userId, muted);
     } catch (error) {
-      set(state => ({ 
-        conversations: state.conversations.map(c => 
-          c.id === conversationId 
-            ? { ...c, mutedUsers: { ...(c.mutedUsers || {}), [userId]: !muted } } 
-            : c
-        ) 
+      set(state => ({
+        conversations: state.conversations.map(c => {
+          if (c.id === conversationId) {
+            const newMutedBy = !muted
+              ? Array.from(new Set([...(c.mutedBy || []), userId]))
+              : (c.mutedBy || []).filter(id => id !== userId);
+            return { ...c, mutedBy: newMutedBy };
+          }
+          return c;
+        })
       }));
       console.error("Lỗi tắt thông báo:", error);
       throw error;
@@ -188,30 +196,30 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   toggleArchive: async (conversationId: string, userId: string, archived: boolean) => {
-    set(state => ({ 
+    set(state => ({
       conversations: state.conversations.map(c => {
         if (c.id === conversationId) {
-          const newArchivedBy = archived 
+          const newArchivedBy = archived
             ? Array.from(new Set([...(c.archivedBy || []), userId]))
             : (c.archivedBy || []).filter(id => id !== userId);
           return { ...c, archivedBy: newArchivedBy };
         }
         return c;
-      }) 
+      })
     }));
     try {
       await conversationService.toggleArchive(conversationId, userId, archived);
     } catch (error) {
-      set(state => ({ 
+      set(state => ({
         conversations: state.conversations.map(c => {
           if (c.id === conversationId) {
-            const newArchivedBy = !archived 
+            const newArchivedBy = !archived
               ? Array.from(new Set([...(c.archivedBy || []), userId]))
               : (c.archivedBy || []).filter(id => id !== userId);
             return { ...c, archivedBy: newArchivedBy };
           }
           return c;
-        }) 
+        })
       }));
       console.error("Lỗi lưu trữ hội thoại:", error);
       throw error;
@@ -219,7 +227,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   toggleMarkUnread: async (conversationId: string, userId: string, markedUnread: boolean) => {
-    set(state => ({ 
+    set(state => ({
       conversations: state.conversations.map(c => {
         if (c.id === conversationId) {
           const newMarkedUnreadBy = markedUnread
@@ -233,7 +241,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     try {
       await conversationService.toggleMarkUnread(conversationId, userId, markedUnread);
     } catch (error) {
-      set(state => ({ 
+      set(state => ({
         conversations: state.conversations.map(c => {
           if (c.id === conversationId) {
             const newMarkedUnreadBy = !markedUnread
