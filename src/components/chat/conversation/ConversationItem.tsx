@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2, User as UserIcon } from 'lucide-react';
 import { Conversation, UserStatus, ReactionType } from '../../../types';
-import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, Avatar, BannedBadge } from '../../ui';
+import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
 import { MessageStatus } from '../message/MessageStatus';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 import { getReactionIcon } from '../reactions/ReactionIcons';
+import { useChatStore } from '../../../store/chatStore';
+import { getLastName } from '../../../utils/uiUtils';
 
 const ConversationItemSkeleton: React.FC = () => (
   <div className="flex items-center gap-3 p-3.5 mx-2.5 my-1.5 rounded-xl animate-pulse">
@@ -55,6 +57,8 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
+  const typingUsers = useChatStore(state => state.typingUsers[conversation.id] || []);
+
   const {
     partner,
     participants,
@@ -65,7 +69,6 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
     unreadCount,
     lastMessagePreview,
     isLastMessageMine,
-    typingText,
     readers,
     isLastMessageRead,
     isLastMessageDelivered,
@@ -76,6 +79,23 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
     isActive,
     currentUserFriendIds
   });
+
+  const typingText = useMemo(() => {
+    const activeTypingUsers = typingUsers.filter(id => id !== currentUserId);
+    if (activeTypingUsers.length === 0) return null;
+
+    const typingUserObjects = activeTypingUsers
+      .map(uid => participants.find(p => p.id === uid))
+      .filter(Boolean);
+
+    if (typingUserObjects.length === 1) {
+      return `${getLastName(typingUserObjects[0]?.name) || 'Ai đó'} đang soạn tin...`;
+    }
+    if (typingUserObjects.length === 2) {
+      return `${getLastName(typingUserObjects[0]?.name)} và ${getLastName(typingUserObjects[1]?.name)} đang soạn tin...`;
+    }
+    return `${getLastName(typingUserObjects[0]?.name)} và ${typingUserObjects.length - 1} người khác đang soạn tin...`;
+  }, [typingUsers, participants, currentUserId]);
 
   if (isDataMissing) {
     return <ConversationItemSkeleton />;
@@ -88,7 +108,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-base rounded-xl group
         hover:bg-bg-hover active:bg-bg-active
         ${isActive ? 'bg-primary-light' : ''}
-        ${conversation.pinnedBy?.includes(currentUserId) && !isActive ? 'bg-bg-secondary' : ''}
+        ${conversation.pinnedBy.includes(currentUserId) && !isActive ? 'bg-bg-secondary' : ''}
       `}
     >
       <div className="relative flex-shrink-0">
@@ -115,10 +135,10 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
                 Tin nhắn chờ
               </span>
             )}
-            {conversation.pinnedBy?.includes(currentUserId) && (
+            {conversation.pinnedBy.includes(currentUserId) && (
               <Pin size={14} className="text-primary flex-shrink-0" />
             )}
-            {conversation.mutedUsers?.[currentUserId] && (
+            {conversation.mutedBy.includes(currentUserId) && (
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
@@ -169,7 +189,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               <span className="flex-shrink-0 bg-error text-text-on-primary text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
               </span>
-            ) : isUnread && conversation.markedUnreadBy?.includes(currentUserId) ? (
+            ) : isUnread && conversation.markedUnreadBy.includes(currentUserId) ? (
               <span className="flex-shrink-0 bg-error w-2.5 h-2.5 rounded-full" />
             ) : null}
           </div>
@@ -192,7 +212,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           {onPin && (
             <DropdownItem
               icon={<Pin size={16} />}
-              label={conversation.pinnedBy?.includes(currentUserId) ? 'Bỏ ghim' : 'Ghim'}
+              label={conversation.pinnedBy.includes(currentUserId) ? 'Bỏ ghim' : 'Ghim'}
               onClick={onPin}
             />
           )}
@@ -205,22 +225,22 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           )}
           {onMute && (
             <DropdownItem
-              icon={conversation.mutedUsers?.[currentUserId] ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              label={conversation.mutedUsers?.[currentUserId] ? 'Bật thông báo' : 'Tắt thông báo'}
+              icon={conversation.mutedBy.includes(currentUserId) ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              label={conversation.mutedBy.includes(currentUserId) ? 'Bật thông báo' : 'Tắt thông báo'}
               onClick={onMute}
             />
           )}
           {onArchive && (
             <DropdownItem
               icon={<Archive size={16} />}
-              label={conversation.archivedBy?.includes(currentUserId) ? 'Bỏ lưu trữ' : 'Lưu trữ'}
+              label={conversation.archivedBy.includes(currentUserId) ? 'Bỏ lưu trữ' : 'Lưu trữ'}
               onClick={onArchive}
             />
           )}
           {onMarkUnread && (
             <DropdownItem
-              icon={conversation.markedUnreadBy?.includes(currentUserId) ? <MailCheck size={16} /> : <Mail size={16} />}
-              label={conversation.markedUnreadBy?.includes(currentUserId) ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
+              icon={conversation.markedUnreadBy.includes(currentUserId) ? <MailCheck size={16} /> : <Mail size={16} />}
+              label={conversation.markedUnreadBy.includes(currentUserId) ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
               onClick={onMarkUnread}
             />
           )}

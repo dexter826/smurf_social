@@ -40,9 +40,9 @@ export const useConversationGroups = ({
 
     // Sắp xếp: Ghim ưu tiên, sau đó theo thời gian cập nhật
     const sortFn = (a: Conversation, b: Conversation) => {
-      const isAPinned = a.pinnedBy?.includes(currentUserId) || false;
-      const isBPinned = b.pinnedBy?.includes(currentUserId) || false;
-      
+      const isAPinned = a.pinnedBy.includes(currentUserId);
+      const isBPinned = b.pinnedBy.includes(currentUserId);
+
       if (isAPinned && !isBPinned) return -1;
       if (!isAPinned && isBPinned) return 1;
       return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
@@ -57,7 +57,7 @@ export const useConversationGroups = ({
   // Danh sách hiển thị dựa trên chế độ xem và bộ lọc
   const displayConversations = useMemo(() => {
     if (viewMode === 'archived') {
-      return conversations.filter(c => c.archivedBy?.includes(currentUserId)).sort((a, b) => 
+      return conversations.filter(c => c.archivedBy.includes(currentUserId)).sort((a, b) =>
         new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
       );
     }

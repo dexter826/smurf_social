@@ -50,7 +50,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const { toggleReaction } = useChatStore();
 
-  const validMessages = messages.filter(m => !m.isRecalled && !m.deletedBy?.includes(currentUserId));
+  const validMessages = messages.filter(m => !m.isRecalled && !m.deletedBy.includes(currentUserId));
   if (validMessages.length === 0) return null;
 
   const lastMsg = validMessages[validMessages.length - 1];

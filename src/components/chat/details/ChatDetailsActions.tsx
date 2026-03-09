@@ -53,7 +53,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   const actions = [];
 
   // Mute/Unmute - cho cả group và 1-1
-  const isMuted = conversation.mutedUsers?.[currentUserId] === true;
+  const isMuted = conversation.mutedBy.includes(currentUserId);
   actions.push({
     icon: isMuted ? <Bell size={20} /> : <BellOff size={20} />,
     label: isMuted ? 'Bật thông báo' : 'Tắt thông báo',
@@ -63,8 +63,8 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
 
   // Pin/Unpin
   actions.push({
-    icon: conversation.pinnedBy?.includes(currentUserId) ? <PinOff size={20} /> : <Pin size={20} />,
-    label: conversation.pinnedBy?.includes(currentUserId) ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
+    icon: conversation.pinnedBy.includes(currentUserId) ? <PinOff size={20} /> : <Pin size={20} />,
+    label: conversation.pinnedBy.includes(currentUserId) ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
     onClick: onTogglePin,
     variant: 'default' as const,
   });
@@ -73,7 +73,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   if (onToggleArchive) {
     actions.push({
       icon: <ArchiveIcon size={20} />,
-      label: conversation.archivedBy?.includes(currentUserId) ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện',
+      label: conversation.archivedBy.includes(currentUserId) ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện',
       onClick: onToggleArchive,
       variant: 'default' as const,
     });
@@ -82,8 +82,8 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   // Mark Read/Unread
   if (onToggleMarkUnread) {
     actions.push({
-      icon: conversation.markedUnreadBy?.includes(currentUserId) ? <MailCheck size={20} /> : <Mail size={20} />,
-      label: conversation.markedUnreadBy?.includes(currentUserId) ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc',
+      icon: conversation.markedUnreadBy.includes(currentUserId) ? <MailCheck size={20} /> : <Mail size={20} />,
+      label: conversation.markedUnreadBy.includes(currentUserId) ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc',
       onClick: onToggleMarkUnread,
       variant: 'default' as const,
     });

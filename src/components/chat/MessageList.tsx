@@ -46,7 +46,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
     let currentDate = '';
 
     const processedMessages = messages
-      .filter(msg => !msg.deletedBy?.includes(currentUserId))
+      .filter(msg => !msg.deletedBy.includes(currentUserId))
       .map(msg => msg);
 
     processedMessages.forEach((msg) => {
@@ -134,7 +134,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
                       nextMsg.senderId === msg.senderId &&
                       !nextMsg.isRecalled &&
                       !nextMsg.replyToId &&
-                      !nextMsg.deletedBy?.includes(currentUserId) &&
+                      !nextMsg.deletedBy.includes(currentUserId) &&
                       timeDiff < MAX_GROUP_TIME
                     ) {
                       imageGroup.push(nextMsg);
