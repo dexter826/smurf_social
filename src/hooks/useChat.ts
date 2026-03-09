@@ -20,6 +20,7 @@ export const useChat = () => {
   const { user: currentUser } = useAuthStore();
   const {
     conversations,
+    memberSettings,
     selectedConversationId,
     messages,
     typingUsers,
@@ -58,16 +59,17 @@ export const useChat = () => {
 
   const filteredConversations = useMemo(() =>
     conversations.filter(c => {
-      const isArchived = c.archivedBy.includes(currentUser?.id || '');
-      const isArchivedMatch = viewMode === 'archived' ? isArchived : !isArchived;
-      return isArchivedMatch && !c.deletedBy.includes(currentUser?.id || '');
+      const ms = memberSettings[c.id];
+      if (ms?.deletedAt) return false;
+      const isArchived = ms?.isArchived ?? false;
+      return viewMode === 'archived' ? isArchived : !isArchived;
     }),
-    [conversations, viewMode, currentUser?.id]
+    [conversations, memberSettings, viewMode]
   );
 
   const archivedCount = useMemo(
-    () => conversations.filter(c => c.archivedBy.includes(currentUser?.id || '')).length,
-    [conversations]
+    () => conversations.filter(c => memberSettings[c.id]?.isArchived).length,
+    [conversations, memberSettings]
   );
 
   const currentMessages = selectedConversationId ? (messages[selectedConversationId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES;

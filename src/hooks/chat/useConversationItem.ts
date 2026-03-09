@@ -1,10 +1,10 @@
-import { useMemo, useEffect, useState } from 'react';
-import { Conversation, LastMessagePreview, User, UserStatus, ConversationMember } from '../../types';
+import { useMemo } from 'react';
+import { Conversation, LastMessagePreview, User, UserStatus } from '../../types';
 import { formatChatTime, toDate } from '../../utils/dateUtils';
 import { getLastName } from '../../utils/uiUtils';
 import { useUserCache } from '../../store/userCacheStore';
 import { useConversationParticipants } from './useConversationParticipants';
-import { conversationService } from '../../services/chat/conversationService';
+import { useChatStore } from '../../store/chatStore';
 
 interface UseConversationItemProps {
   conversation: Conversation;
@@ -23,20 +23,7 @@ export const useConversationItem = ({
 
   const { users: usersMap } = useUserCache();
   const participants = useConversationParticipants(conversation.participantIds);
-  const [memberSettings, setMemberSettings] = useState<ConversationMember | null>(null);
-
-  // Subscribe to member settings
-  useEffect(() => {
-    const unsubscribe = conversationService.subscribeMemberSettings(
-      conversation.id,
-      currentUserId,
-      (member) => {
-        setMemberSettings(member);
-      }
-    );
-
-    return unsubscribe;
-  }, [conversation.id, currentUserId]);
+  const memberSettings = useChatStore(state => state.memberSettings[conversation.id] ?? null);
 
   const partnerId = useMemo(() =>
     conversation.isGroup

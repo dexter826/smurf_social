@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { Conversation, User } from '../../types';
+import { Conversation, User, ConversationMember } from '../../types';
 import { conversationService } from '../../services/chat/conversationService';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../authStore';
@@ -7,10 +7,14 @@ import { useLoadingStore } from '../loadingStore';
 import NotificationSound from '../../assets/sounds/message-notification.mp3';
 import type { ChatState } from '../chatStore';
 
+// Subscription cleanup refs cho member settings
+const memberUnsubs: Record<string, () => void> = {};
+
 let lastPlayedId = '';
 
 export interface ConversationSlice {
   conversations: Conversation[];
+  memberSettings: Record<string, ConversationMember | null>;
   selectedConversationId: string | null;
   searchTerm: string;
   isSearchFocused: boolean;
@@ -38,6 +42,7 @@ export interface ConversationSlice {
 
 export const createConversationSlice: StateCreator<ChatState, [], [], ConversationSlice> = (set, get) => ({
   conversations: [],
+  memberSettings: {},
   selectedConversationId: null,
   searchTerm: '',
   isSearchFocused: false,
@@ -46,43 +51,56 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   isChatVisible: false,
 
   subscribeToConversations: (userId: string) => {
-    const { conversations } = get();
-    const hasCache = conversations.length > 0;
-
+    const hasCache = get().conversations.length > 0;
     useLoadingStore.getState().setLoading('chat', !hasCache);
 
-    const unsubscribe = conversationService.subscribeToConversations(userId, async (conversations) => {
+    const unsubConvs = conversationService.subscribeToConversations(userId, (conversations) => {
+      // Sound notification dùng memberSettings hiện có trong state
       const prevConversations = get().conversations;
-
-      // Load member settings for each conversation to check unread/muted status
-      const conversationsWithSettings = await Promise.all(
-        conversations.map(async (conv) => {
-          const memberSettings = await conversationService.getMemberSettings(conv.id, userId);
-          return { conv, memberSettings };
-        })
-      );
-
       if (prevConversations.length > 0) {
-        conversationsWithSettings.forEach(({ conv, memberSettings }) => {
+        const currentSettings = get().memberSettings;
+        conversations.forEach(conv => {
+          const ms = currentSettings[conv.id];
           const lastMsg = conv.lastMessage;
-          const isUnread = memberSettings?.unreadCount && memberSettings.unreadCount > 0;
-          const isMuted = memberSettings?.isMuted || false;
+          const isUnread = ms?.unreadCount && ms.unreadCount > 0;
+          const isMuted = ms?.isMuted || false;
           const isViewingThisConv = get().isChatVisible && conv.id === get().selectedConversationId;
 
           if (lastMsg && lastMsg.id !== lastPlayedId && isUnread &&
             lastMsg.senderId !== userId && !isMuted && !isViewingThisConv) {
             lastPlayedId = lastMsg.id || '';
-            const audio = new Audio(NotificationSound);
-            audio.play().catch(err => console.debug("Autoplay blocked:", err));
+            new Audio(NotificationSound).play().catch(err => console.debug("Autoplay blocked:", err));
           }
         });
       }
+
+      // Đồng bộ subscriptions theo danh sách conversation mới
+      const newIds = new Set(conversations.map(c => c.id));
+
+      Object.keys(memberUnsubs).forEach(id => {
+        if (!newIds.has(id)) {
+          memberUnsubs[id]();
+          delete memberUnsubs[id];
+        }
+      });
+
+      conversations.forEach(conv => {
+        if (!memberUnsubs[conv.id]) {
+          memberUnsubs[conv.id] = conversationService.subscribeMemberSettings(conv.id, userId, (member) => {
+            set(state => ({ memberSettings: { ...state.memberSettings, [conv.id]: member } }));
+          });
+        }
+      });
 
       set({ conversations });
       useLoadingStore.getState().setLoading('chat', false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubConvs();
+      Object.values(memberUnsubs).forEach(u => u());
+      Object.keys(memberUnsubs).forEach(k => delete memberUnsubs[k]);
+    };
   },
 
   selectConversation: (conversationId: string | null) => {

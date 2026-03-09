@@ -178,12 +178,7 @@ service cloud.firestore {
         request.auth.uid in request.resource.data.participantIds &&
         request.resource.data.participantIds.size() >= 2 &&
         request.resource.data.creatorId is string &&
-        request.resource.data.adminIds is list &&
-        request.resource.data.pinnedBy is list &&
-        request.resource.data.archivedBy is list &&
-        request.resource.data.markedUnreadBy is list &&
-        request.resource.data.deletedBy is list &&
-        request.resource.data.blockedBy is list;
+        request.resource.data.adminIds is list;
 
       allow update: if isAuthenticated() &&
         request.auth.uid in resource.data.participantIds && (
@@ -196,6 +191,22 @@ service cloud.firestore {
 
       allow delete: if isAuthenticated() &&
         request.auth.uid in resource.data.participantIds;
+
+      // Cài đặt riêng của từng thành viên (pin, mute, archive...)
+      match /members/{memberId} {
+        allow read: if isAuthenticated() &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+
+        // Participant tạo member doc khi tạo conversation (batch)
+        allow create: if isNotBanned() &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+
+        // Chỉ chủ sở hữu cập nhật settings của mình
+        allow update: if isNotBanned() && memberId == request.auth.uid &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+
+        allow delete: if false;
+      }
     }
 
     // TIN NHẮN
@@ -212,10 +223,7 @@ service cloud.firestore {
          (request.resource.data.senderId == 'system' && request.resource.data.type == 'system')) &&
         request.resource.data.readBy is list &&
         request.resource.data.deliveredTo is list &&
-        request.resource.data.deletedBy is list &&
-        // Chặn gửi tin nhắn nếu hội thoại bị block (có ai đó nằm trong mảng blockedBy)
-        (!('blockedBy' in get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data) ||
-         get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data.blockedBy.size() == 0);
+        request.resource.data.deletedBy is list;
 
       allow update: if isAuthenticated() && (
         // Người gửi được thu hồi hoặc sửa tin nhắn.
