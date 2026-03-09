@@ -1,4 +1,4 @@
-import { Post, Visibility, PostStatus, PostType } from '../types';
+import { Post, Visibility, PostStatus, PostType, ReactionType } from '../types';
 import { postService } from '../services/postService';
 import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { toast } from './toastStore';
@@ -148,7 +148,7 @@ export const usePostStore = create<PostState>()(
                 if (newPosts.length === 0 && duplicates.length === 0) return {};
 
                 return {
-                  posts: [...newPosts, ...currentPosts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                  posts: [...newPosts, ...currentPosts].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
                 };
               }
 
@@ -382,17 +382,17 @@ export const usePostStore = create<PostState>()(
           let delta = 0;
 
           if (isRemove && oldType) {
-            newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
-            if (newSummary[oldType] === 0) delete newSummary[oldType];
+            newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
+            if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
             delta = -1;
           } else if (!isRemove) {
             if (oldType) {
-              newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
-              if (newSummary[oldType] === 0) delete newSummary[oldType];
+              newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
+              if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
             } else {
               delta = 1;
             }
-            newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
+            newSummary[reaction as ReactionType] = (newSummary[reaction as ReactionType] ?? 0) + 1;
           }
 
           return {

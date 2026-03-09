@@ -417,17 +417,17 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       let delta = 0;
 
       if (isRemove && oldType) {
-        newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
-        if (newSummary[oldType] === 0) delete newSummary[oldType];
+        newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
+        if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
         delta = -1;
       } else if (!isRemove) {
         if (oldType) {
-          newSummary[oldType] = Math.max(0, (newSummary[oldType] ?? 1) - 1);
-          if (newSummary[oldType] === 0) delete newSummary[oldType];
+          newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
+          if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
         } else {
           delta = 1;
         }
-        newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
+        newSummary[reaction as ReactionType] = (newSummary[reaction as ReactionType] ?? 0) + 1;
       }
 
       return {

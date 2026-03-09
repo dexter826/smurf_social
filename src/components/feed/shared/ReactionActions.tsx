@@ -7,7 +7,7 @@ import { getReactionIcon } from '../../chat/reactions/ReactionIcons';
 
 interface ReactionActionsProps {
   postId: string;
-  reactionSummary?: Record<string, number>;
+  reactionSummary?: Partial<Record<ReactionType, number>>;
   reactionCount?: number;
   myReaction?: string;
   commentCount?: number;

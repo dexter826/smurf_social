@@ -1,5 +1,6 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { db } from '../app';
+import { FriendRequestStatus, PostStatus, CommentStatus } from '../types';
 
 // Hàng tuần: xóa notifications đã đọc > 90 ngày
 export const cleanupOldNotifications = onSchedule(
@@ -38,7 +39,7 @@ export const cleanupExpiredFriendRequests = onSchedule(
     try {
       const snap = await db
         .collection('friendRequests')
-        .where('status', '==', 'pending')
+        .where('status', '==', FriendRequestStatus.PENDING)
         .where('createdAt', '<', thirtyDaysAgo)
         .get();
 
@@ -68,7 +69,7 @@ export const cleanupSoftDeletedContent = onSchedule(
       // Cleanup soft-deleted posts
       const postsSnap = await db
         .collection('posts')
-        .where('status', '==', 'deleted')
+        .where('status', '==', PostStatus.DELETED)
         .where('deletedAt', '<', ninetyDaysAgo)
         .get();
 
@@ -94,11 +95,9 @@ export const cleanupSoftDeletedContent = onSchedule(
       // Cleanup soft-deleted comments
       const commentsSnap = await db
         .collection('comments')
-        .where('status', '==', 'deleted')
+        .where('status', '==', CommentStatus.DELETED)
         .where('deletedAt', '<', ninetyDaysAgo)
-        .get();
-
-      if (!commentsSnap.empty) {
+        .get(); {
         for (let i = 0; i < commentsSnap.docs.length; i += BATCH_SIZE) {
           const batch = db.batch();
           const commentDocs = commentsSnap.docs.slice(i, i + BATCH_SIZE);

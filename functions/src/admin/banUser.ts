@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { FieldValue } from 'firebase-admin/firestore';
 import { db, auth } from '../app';
-import { NotificationType } from '../types';
+import { NotificationType, UserStatus, FriendRequestStatus } from '../types';
 import { createNotification } from '../helpers/notificationHelper';
 
 // Admin khóa/mở khóa tài khoản người dùng
@@ -24,7 +24,7 @@ export const banUser = onCall(
     if (action === 'ban') {
       // Update user status
       await db.collection('users').doc(userId).update({
-        status: 'banned',
+        status: UserStatus.BANNED,
         lastSeen: FieldValue.serverTimestamp()
       });
 
@@ -37,11 +37,11 @@ export const banUser = onCall(
       // Cleanup friend requests (sent + received)
       const sentRequestsQuery = db.collection('friendRequests')
         .where('senderId', '==', userId)
-        .where('status', '==', 'pending');
+        .where('status', '==', FriendRequestStatus.PENDING);
 
       const receivedRequestsQuery = db.collection('friendRequests')
         .where('receiverId', '==', userId)
-        .where('status', '==', 'pending');
+        .where('status', '==', FriendRequestStatus.PENDING);
 
       const [sentSnapshot, receivedSnapshot] = await Promise.all([
         sentRequestsQuery.get(),
@@ -86,7 +86,7 @@ export const banUser = onCall(
     } else {
       // Unban user
       await db.collection('users').doc(userId).update({
-        status: 'offline'
+        status: UserStatus.OFFLINE
       });
 
       // Remove banned claim properly
