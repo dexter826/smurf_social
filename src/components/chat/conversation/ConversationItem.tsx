@@ -3,6 +3,7 @@ import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volu
 import { Conversation, UserStatus, ReactionType } from '../../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
+import { useConversationMemberSettings } from '../../../hooks/chat/useConversationMemberSettings';
 import { MessageStatus } from '../message/MessageStatus';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 import { getReactionIcon } from '../reactions/ReactionIcons';
@@ -29,12 +30,12 @@ interface ConversationItemProps {
   currentUserFriendIds?: string[];
   showMessageRequestBadge?: boolean;
   onClick: () => void;
-  onPin?: () => void;
-  onMute?: () => void;
+  onPin?: (conversationId: string, pinned: boolean) => void;
+  onMute?: (conversationId: string, muted: boolean) => void;
   onDelete?: () => void;
   onBlock?: () => void;
-  onArchive?: () => void;
-  onMarkUnread?: () => void;
+  onArchive?: (conversationId: string, archived: boolean) => void;
+  onMarkUnread?: (conversationId: string, markedUnread: boolean) => void;
   onViewProfile?: () => void;
 }
 
@@ -58,6 +59,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
   const typingUsers = useChatStore(state => state.typingUsers[conversation.id] || []);
+  const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
 
   const {
     partner,
@@ -108,7 +110,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-base rounded-xl group
         hover:bg-bg-hover active:bg-bg-active
         ${isActive ? 'bg-primary-light' : ''}
-        ${conversation.pinnedBy.includes(currentUserId) && !isActive ? 'bg-bg-secondary' : ''}
+        ${memberSettings?.isPinned && !isActive ? 'bg-bg-secondary' : ''}
       `}
     >
       <div className="relative flex-shrink-0">
@@ -135,10 +137,10 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
                 Tin nhắn chờ
               </span>
             )}
-            {conversation.pinnedBy.includes(currentUserId) && (
+            {memberSettings?.isPinned && (
               <Pin size={14} className="text-primary flex-shrink-0" />
             )}
-            {conversation.mutedBy.includes(currentUserId) && (
+            {memberSettings?.isMuted && (
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
@@ -189,7 +191,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               <span className="flex-shrink-0 bg-error text-text-on-primary text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
               </span>
-            ) : isUnread && conversation.markedUnreadBy.includes(currentUserId) ? (
+            ) : isUnread && memberSettings?.markedUnread ? (
               <span className="flex-shrink-0 bg-error w-2.5 h-2.5 rounded-full" />
             ) : null}
           </div>
@@ -212,8 +214,8 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           {onPin && (
             <DropdownItem
               icon={<Pin size={16} />}
-              label={conversation.pinnedBy.includes(currentUserId) ? 'Bỏ ghim' : 'Ghim'}
-              onClick={onPin}
+              label={memberSettings?.isPinned ? 'Bỏ ghim' : 'Ghim'}
+              onClick={() => onPin(conversation.id, !(memberSettings?.isPinned || false))}
             />
           )}
           {onViewProfile && !conversation.isGroup && (
@@ -225,23 +227,23 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           )}
           {onMute && (
             <DropdownItem
-              icon={conversation.mutedBy.includes(currentUserId) ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              label={conversation.mutedBy.includes(currentUserId) ? 'Bật thông báo' : 'Tắt thông báo'}
-              onClick={onMute}
+              icon={memberSettings?.isMuted ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              label={memberSettings?.isMuted ? 'Bật thông báo' : 'Tắt thông báo'}
+              onClick={() => onMute(conversation.id, !(memberSettings?.isMuted || false))}
             />
           )}
           {onArchive && (
             <DropdownItem
               icon={<Archive size={16} />}
-              label={conversation.archivedBy.includes(currentUserId) ? 'Bỏ lưu trữ' : 'Lưu trữ'}
-              onClick={onArchive}
+              label={memberSettings?.isArchived ? 'Bỏ lưu trữ' : 'Lưu trữ'}
+              onClick={() => onArchive(conversation.id, !(memberSettings?.isArchived || false))}
             />
           )}
           {onMarkUnread && (
             <DropdownItem
-              icon={conversation.markedUnreadBy.includes(currentUserId) ? <MailCheck size={16} /> : <Mail size={16} />}
-              label={conversation.markedUnreadBy.includes(currentUserId) ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
-              onClick={onMarkUnread}
+              icon={memberSettings?.markedUnread ? <MailCheck size={16} /> : <Mail size={16} />}
+              label={memberSettings?.markedUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
+              onClick={() => onMarkUnread(conversation.id, !(memberSettings?.markedUnread || false))}
             />
           )}
           {onBlock && !conversation.isGroup && (

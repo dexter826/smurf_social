@@ -51,14 +51,22 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
 
     useLoadingStore.getState().setLoading('chat', !hasCache);
 
-    const unsubscribe = conversationService.subscribeToConversations(userId, (conversations) => {
+    const unsubscribe = conversationService.subscribeToConversations(userId, async (conversations) => {
       const prevConversations = get().conversations;
 
+      // Load member settings for each conversation to check unread/muted status
+      const conversationsWithSettings = await Promise.all(
+        conversations.map(async (conv) => {
+          const memberSettings = await conversationService.getMemberSettings(conv.id, userId);
+          return { conv, memberSettings };
+        })
+      );
+
       if (prevConversations.length > 0) {
-        conversations.forEach(conv => {
+        conversationsWithSettings.forEach(({ conv, memberSettings }) => {
           const lastMsg = conv.lastMessage;
-          const isUnread = conv.unreadCount?.[userId] > 0;
-          const isMuted = conv.mutedBy.includes(userId);
+          const isUnread = memberSettings?.unreadCount && memberSettings.unreadCount > 0;
+          const isMuted = memberSettings?.isMuted || false;
           const isViewingThisConv = get().isChatVisible && conv.id === get().selectedConversationId;
 
           if (lastMsg && lastMsg.id !== lastPlayedId && isUnread &&
@@ -70,13 +78,7 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
         });
       }
 
-      set({
-        conversations: conversations.map(c =>
-          (c.id === get().selectedConversationId && get().isChatVisible)
-            ? { ...c, unreadCount: { ...c.unreadCount, [userId]: 0 }, markedUnreadBy: (c.markedUnreadBy || []).filter(id => id !== userId) }
-            : c
-        )
-      });
+      set({ conversations });
       useLoadingStore.getState().setLoading('chat', false);
     });
 
@@ -86,16 +88,13 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   selectConversation: (conversationId: string | null) => {
     set({ selectedConversationId: conversationId });
 
+    // Mark as read when selecting conversation
     if (conversationId) {
       const { user } = useAuthStore.getState();
       if (user) {
-        set((state) => ({
-          conversations: state.conversations.map(c =>
-            c.id === conversationId
-              ? { ...c, unreadCount: { ...c.unreadCount, [user.id]: 0 }, markedUnreadBy: (c.markedUnreadBy || []).filter(id => id !== user.id) }
-              : c
-          )
-        }));
+        conversationService.resetUnreadCount(conversationId, user.id).catch(err => {
+          console.error("Lỗi reset unread count:", err);
+        });
       }
     }
   },
@@ -131,31 +130,9 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   togglePin: async (conversationId: string, userId: string, pinned: boolean) => {
-    set(state => ({
-      conversations: state.conversations.map(c => {
-        if (c.id === conversationId) {
-          const newPinnedBy = pinned
-            ? Array.from(new Set([...(c.pinnedBy || []), userId]))
-            : (c.pinnedBy || []).filter(id => id !== userId);
-          return { ...c, pinnedBy: newPinnedBy };
-        }
-        return c;
-      })
-    }));
     try {
       await conversationService.togglePin(conversationId, userId, pinned);
     } catch (error) {
-      set(state => ({
-        conversations: state.conversations.map(c => {
-          if (c.id === conversationId) {
-            const newPinnedBy = !pinned
-              ? Array.from(new Set([...(c.pinnedBy || []), userId]))
-              : (c.pinnedBy || []).filter(id => id !== userId);
-            return { ...c, pinnedBy: newPinnedBy };
-          }
-          return c;
-        })
-      }));
       console.error("Lỗi ghim hội thoại:", error);
       throw error;
     }
@@ -165,93 +142,27 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
     const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
 
-    set(state => ({
-      conversations: state.conversations.map(c => {
-        if (c.id === conversationId) {
-          const newMutedBy = muted
-            ? Array.from(new Set([...(c.mutedBy || []), userId]))
-            : (c.mutedBy || []).filter(id => id !== userId);
-          return { ...c, mutedBy: newMutedBy };
-        }
-        return c;
-      })
-    }));
     try {
       await conversationService.toggleMute(conversationId, userId, muted);
     } catch (error) {
-      set(state => ({
-        conversations: state.conversations.map(c => {
-          if (c.id === conversationId) {
-            const newMutedBy = !muted
-              ? Array.from(new Set([...(c.mutedBy || []), userId]))
-              : (c.mutedBy || []).filter(id => id !== userId);
-            return { ...c, mutedBy: newMutedBy };
-          }
-          return c;
-        })
-      }));
       console.error("Lỗi tắt thông báo:", error);
       throw error;
     }
   },
 
   toggleArchive: async (conversationId: string, userId: string, archived: boolean) => {
-    set(state => ({
-      conversations: state.conversations.map(c => {
-        if (c.id === conversationId) {
-          const newArchivedBy = archived
-            ? Array.from(new Set([...(c.archivedBy || []), userId]))
-            : (c.archivedBy || []).filter(id => id !== userId);
-          return { ...c, archivedBy: newArchivedBy };
-        }
-        return c;
-      })
-    }));
     try {
       await conversationService.toggleArchive(conversationId, userId, archived);
     } catch (error) {
-      set(state => ({
-        conversations: state.conversations.map(c => {
-          if (c.id === conversationId) {
-            const newArchivedBy = !archived
-              ? Array.from(new Set([...(c.archivedBy || []), userId]))
-              : (c.archivedBy || []).filter(id => id !== userId);
-            return { ...c, archivedBy: newArchivedBy };
-          }
-          return c;
-        })
-      }));
       console.error("Lỗi lưu trữ hội thoại:", error);
       throw error;
     }
   },
 
   toggleMarkUnread: async (conversationId: string, userId: string, markedUnread: boolean) => {
-    set(state => ({
-      conversations: state.conversations.map(c => {
-        if (c.id === conversationId) {
-          const newMarkedUnreadBy = markedUnread
-            ? Array.from(new Set([...(c.markedUnreadBy || []), userId]))
-            : (c.markedUnreadBy || []).filter(id => id !== userId);
-          return { ...c, markedUnreadBy: newMarkedUnreadBy };
-        }
-        return c;
-      })
-    }));
     try {
       await conversationService.toggleMarkUnread(conversationId, userId, markedUnread);
     } catch (error) {
-      set(state => ({
-        conversations: state.conversations.map(c => {
-          if (c.id === conversationId) {
-            const newMarkedUnreadBy = !markedUnread
-              ? Array.from(new Set([...(c.markedUnreadBy || []), userId]))
-              : (c.markedUnreadBy || []).filter(id => id !== userId);
-            return { ...c, markedUnreadBy: newMarkedUnreadBy };
-          }
-          return c;
-        })
-      }));
       console.error("Lỗi đánh dấu chưa đọc:", error);
       throw error;
     }
@@ -321,14 +232,6 @@ export const createConversationSlice: StateCreator<ChatState, [], [], Conversati
   },
 
   markAllAsRead: async (userId: string) => {
-    set(state => ({
-      conversations: state.conversations.map(c => ({
-        ...c,
-        unreadCount: { ...c.unreadCount, [userId]: 0 },
-        markedUnreadBy: (c.markedUnreadBy || []).filter(id => id !== userId)
-      }))
-    }));
-
     try {
       await conversationService.markAllConversationsAsRead(userId);
     } catch (error) {

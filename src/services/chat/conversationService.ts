@@ -13,11 +13,12 @@ import {
   writeBatch,
   Timestamp,
   limit,
-  arrayUnion,
-  arrayRemove
+  setDoc,
+  deleteDoc,
+  increment
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { Conversation } from '../../types';
+import { Conversation, ConversationMember } from '../../types';
 import { convertTimestamp } from '../../utils/dateUtils';
 
 export const conversationService = {
@@ -45,36 +46,56 @@ export const conversationService = {
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        const docSnap = querySnapshot.docs[0];
-        const data = docSnap.data();
-        if (data.deletedBy && data.deletedBy.includes(user1Id)) {
-          const newDeletedBy = data.deletedBy.filter((id: string) => id !== user1Id);
-          await updateDoc(docSnap.ref, { deletedBy: newDeletedBy });
+        const convId = querySnapshot.docs[0].id;
+
+        // Check if user1 deleted this conversation
+        const memberRef = doc(db, 'conversations', convId, 'members', user1Id);
+        const memberSnap = await getDoc(memberRef);
+
+        if (memberSnap.exists() && memberSnap.data().deletedAt) {
+          // Restore conversation: remove deletedAt
+          await updateDoc(memberRef, {
+            deletedAt: null,
+            joinedAt: serverTimestamp()
+          });
         }
 
-        return docSnap.id;
+        return convId;
       }
 
+      // Create new conversation
       const conversationData = {
         participantIds,
         isGroup: false,
         creatorId: user1Id,
         adminIds: [],
-        unreadCount: {
-          [user1Id]: 0,
-          [user2Id]: 0
-        },
         updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        pinnedBy: [],
-        archivedBy: [],
-        markedUnreadBy: [],
-        deletedBy: [],
-        blockedBy: [],
-        mutedBy: []
+        createdAt: serverTimestamp()
       };
 
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
+
+      // Create member documents for both users
+      const batch = writeBatch(db);
+      const now = serverTimestamp();
+
+      participantIds.forEach(userId => {
+        const memberRef = doc(db, 'conversations', docRef.id, 'members', userId);
+        batch.set(memberRef, {
+          conversationId: docRef.id,
+          userId,
+          joinedAt: now,
+          isPinned: false,
+          isMuted: false,
+          isArchived: false,
+          markedUnread: false,
+          unreadCount: 0,
+          createdAt: now
+        });
+      });
+
+      await batch.commit();
+
       return docRef.id;
     } catch (error) {
       console.error("Lỗi tạo hội thoại:", error);
@@ -82,13 +103,12 @@ export const conversationService = {
     }
   },
 
-  // Đăng ký nhận cập nhật danh sách hội thoại theo thời gian thực
   subscribeToConversations: (userId: string, callback: (conversations: Conversation[]) => void) => {
     const q = query(
       collection(db, 'conversations'),
       where('participantIds', 'array-contains', userId),
       orderBy('updatedAt', 'desc'),
-      limit(50) // Giới hạn 50 hội thoại gần nhất
+      limit(50)
     );
 
     return onSnapshot(q, async (snapshot) => {
@@ -100,10 +120,6 @@ export const conversationService = {
           id: d.id,
           updatedAt: convertTimestamp(data.updatedAt, new Date())!,
           createdAt: convertTimestamp(data.createdAt, new Date())!,
-          memberJoinedAt: data.memberJoinedAt ? Object.keys(data.memberJoinedAt).reduce((acc, uid) => ({
-            ...acc,
-            [uid]: convertTimestamp(data.memberJoinedAt[uid], new Date())!
-          }), {}) : undefined,
           lastMessage: data.lastMessage ? {
             ...data.lastMessage,
             createdAt: convertTimestamp(data.lastMessage.createdAt, new Date())!
@@ -117,12 +133,60 @@ export const conversationService = {
     });
   },
 
-  // Ghim hoặc bỏ ghim hội thoại
+  getMemberSettings: async (conversationId: string, userId: string): Promise<ConversationMember | null> => {
+    try {
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      const memberSnap = await getDoc(memberRef);
+
+      if (!memberSnap.exists()) return null;
+
+      const data = memberSnap.data();
+      return {
+        ...data,
+        id: memberSnap.id,
+        createdAt: convertTimestamp(data.createdAt, new Date())!,
+        joinedAt: convertTimestamp(data.joinedAt, new Date())!,
+        deletedAt: convertTimestamp(data.deletedAt)
+      } as ConversationMember;
+    } catch (error) {
+      console.error("Lỗi lấy member settings:", error);
+      return null;
+    }
+  },
+
+  subscribeMemberSettings: (
+    conversationId: string,
+    userId: string,
+    callback: (member: ConversationMember | null) => void
+  ) => {
+    const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+
+    return onSnapshot(memberRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null);
+        return;
+      }
+
+      const data = snapshot.data();
+      const member: ConversationMember = {
+        ...data,
+        id: snapshot.id,
+        createdAt: convertTimestamp(data.createdAt, new Date())!,
+        joinedAt: convertTimestamp(data.joinedAt, new Date())!,
+        deletedAt: convertTimestamp(data.deletedAt)
+      } as ConversationMember;
+
+      callback(member);
+    }, (error) => {
+      console.error("Lỗi subscribe member settings:", error);
+    });
+  },
+
   togglePin: async (conversationId: string, userId: string, pinned: boolean): Promise<void> => {
     try {
-      const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, {
-        pinnedBy: pinned ? arrayUnion(userId) : arrayRemove(userId)
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      await updateDoc(memberRef, {
+        isPinned: pinned
       });
     } catch (error) {
       console.error("Lỗi ghim hội thoại:", error);
@@ -130,12 +194,11 @@ export const conversationService = {
     }
   },
 
-  // Bật hoặc tắt thông báo hội thoại cho người dùng cụ thể
   toggleMute: async (conversationId: string, userId: string, muted: boolean): Promise<void> => {
     try {
-      const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, {
-        mutedBy: muted ? arrayUnion(userId) : arrayRemove(userId)
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      await updateDoc(memberRef, {
+        isMuted: muted
       });
     } catch (error) {
       console.error("Lỗi tắt thông báo hội thoại:", error);
@@ -143,12 +206,11 @@ export const conversationService = {
     }
   },
 
-  // Lưu trữ hoặc bỏ lưu trữ hội thoại
   toggleArchive: async (conversationId: string, userId: string, archived: boolean): Promise<void> => {
     try {
-      const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, {
-        archivedBy: archived ? arrayUnion(userId) : arrayRemove(userId)
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      await updateDoc(memberRef, {
+        isArchived: archived
       });
     } catch (error) {
       console.error("Lỗi lưu trữ hội thoại:", error);
@@ -156,12 +218,11 @@ export const conversationService = {
     }
   },
 
-  // Đánh dấu hội thoại là chưa đọc hoặc đã đọc
   toggleMarkUnread: async (conversationId: string, userId: string, markedUnread: boolean): Promise<void> => {
     try {
-      const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, {
-        markedUnreadBy: markedUnread ? arrayUnion(userId) : arrayRemove(userId)
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      await updateDoc(memberRef, {
+        markedUnread: markedUnread
       });
     } catch (error) {
       console.error("Lỗi đánh dấu chưa đọc:", error);
@@ -169,13 +230,11 @@ export const conversationService = {
     }
   },
 
-  // Ẩn hội thoại và lưu thời điểm xóa (Soft delete)
   deleteConversation: async (conversationId: string, userId: string): Promise<void> => {
     try {
-      const conversationRef = doc(db, 'conversations', conversationId);
-      await updateDoc(conversationRef, {
-        deletedBy: arrayUnion(userId),
-        [`deletedAt.${userId}`]: serverTimestamp()
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      await updateDoc(memberRef, {
+        deletedAt: serverTimestamp()
       });
     } catch (error) {
       console.error("Lỗi xóa hội thoại:", error);
@@ -183,31 +242,58 @@ export const conversationService = {
     }
   },
 
-  // Đánh dấu tất cả hội thoại là đã đọc cho người dùng hiện tại
+  incrementUnreadCount: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      await updateDoc(memberRef, {
+        unreadCount: increment(1)
+      });
+    } catch (error) {
+      console.error("Lỗi tăng unread count:", error);
+      throw error;
+    }
+  },
+
+  resetUnreadCount: async (conversationId: string, userId: string): Promise<void> => {
+    try {
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      await updateDoc(memberRef, {
+        unreadCount: 0,
+        markedUnread: false
+      });
+    } catch (error) {
+      console.error("Lỗi reset unread count:", error);
+      throw error;
+    }
+  },
+
   markAllConversationsAsRead: async (userId: string): Promise<void> => {
     try {
-      const q = query(
+      // Query all conversations where user is participant
+      const conversationsQuery = query(
         collection(db, 'conversations'),
         where('participantIds', 'array-contains', userId)
       );
 
-      const querySnapshot = await getDocs(q);
+      const conversationsSnap = await getDocs(conversationsQuery);
       const batch = writeBatch(db);
       let hasUpdates = false;
 
-      querySnapshot.docs.forEach(d => {
-        const data = d.data();
-        if (data.unreadCount && data.unreadCount[userId] > 0) {
-          batch.update(d.ref, {
-            [`unreadCount.${userId}`]: 0,
-            markedUnreadBy: arrayRemove(userId)
-          });
-          hasUpdates = true;
-        } else if (data.markedUnreadBy && data.markedUnreadBy.includes(userId)) {
-          batch.update(d.ref, { markedUnreadBy: arrayRemove(userId) });
-          hasUpdates = true;
+      for (const convDoc of conversationsSnap.docs) {
+        const memberRef = doc(db, 'conversations', convDoc.id, 'members', userId);
+        const memberSnap = await getDoc(memberRef);
+
+        if (memberSnap.exists()) {
+          const data = memberSnap.data();
+          if (data.unreadCount > 0 || data.markedUnread) {
+            batch.update(memberRef, {
+              unreadCount: 0,
+              markedUnread: false
+            });
+            hasUpdates = true;
+          }
         }
-      });
+      }
 
       if (hasUpdates) {
         await batch.commit();
