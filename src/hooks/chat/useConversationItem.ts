@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
-import { Conversation, LastMessagePreview, User, UserStatus } from '../../types';
+import { useMemo, useEffect, useState } from 'react';
+import { Conversation, LastMessagePreview, User, UserStatus, ConversationMember } from '../../types';
 import { formatChatTime, toDate } from '../../utils/dateUtils';
 import { getLastName } from '../../utils/uiUtils';
 import { useUserCache } from '../../store/userCacheStore';
 import { useConversationParticipants } from './useConversationParticipants';
+import { conversationService } from '../../services/chat/conversationService';
 
 interface UseConversationItemProps {
   conversation: Conversation;
@@ -22,6 +23,20 @@ export const useConversationItem = ({
 
   const { users: usersMap } = useUserCache();
   const participants = useConversationParticipants(conversation.participantIds);
+  const [memberSettings, setMemberSettings] = useState<ConversationMember | null>(null);
+
+  // Subscribe to member settings
+  useEffect(() => {
+    const unsubscribe = conversationService.subscribeMemberSettings(
+      conversation.id,
+      currentUserId,
+      (member) => {
+        setMemberSettings(member);
+      }
+    );
+
+    return unsubscribe;
+  }, [conversation.id, currentUserId]);
 
   const partnerId = useMemo(() =>
     conversation.isGroup
@@ -48,18 +63,17 @@ export const useConversationItem = ({
     [conversation.isGroup, partner, currentUserFriendIds]
   );
 
-  const unreadCount = conversation.unreadCount?.[currentUserId] || 0;
-  const isUnread = (unreadCount > 0 || conversation.markedUnreadBy.includes(currentUserId)) && !isActive;
+  const unreadCount = memberSettings?.unreadCount || 0;
+  const isUnread = (unreadCount > 0 || memberSettings?.markedUnread) && !isActive;
 
   // Lọc tin nhắn theo mốc thời gian
   const lastMessage = useMemo((): LastMessagePreview | undefined => {
-    const joinedAt = conversation.memberJoinedAt?.[currentUserId];
-    const deletedAt = conversation.deletedAt?.[currentUserId];
+    const joinedAt = memberSettings?.joinedAt;
+    const deletedAt = memberSettings?.deletedAt;
 
-    let startTime = toDate(joinedAt);
-    const delDate = toDate(deletedAt);
-    if (delDate && (!startTime || delDate > startTime)) {
-      startTime = delDate;
+    let startTime = joinedAt;
+    if (deletedAt && (!startTime || deletedAt > startTime)) {
+      startTime = deletedAt;
     }
 
     if (!conversation.lastMessage) return undefined;
@@ -67,7 +81,7 @@ export const useConversationItem = ({
     if (startTime && lastMsgDate && lastMsgDate < startTime) return undefined;
 
     return conversation.lastMessage;
-  }, [conversation, currentUserId]);
+  }, [conversation, memberSettings]);
 
   const lastMessagePreview = useMemo(() => {
     if (!lastMessage) return 'Chưa có tin nhắn';
@@ -98,11 +112,11 @@ export const useConversationItem = ({
   );
 
   const displayTime = useMemo(() => {
-    const time = (!lastMessage && conversation.isGroup && conversation.memberJoinedAt?.[currentUserId])
-      ? conversation.memberJoinedAt[currentUserId]
+    const time = (!lastMessage && conversation.isGroup && memberSettings?.joinedAt)
+      ? memberSettings.joinedAt
       : conversation.updatedAt;
     return time ? formatChatTime(time) : '';
-  }, [lastMessage, conversation, currentUserId]);
+  }, [lastMessage, conversation, memberSettings]);
 
   return {
     partner,

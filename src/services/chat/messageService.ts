@@ -42,30 +42,30 @@ async function updateConversationAfterMessage(
 
   if (conversationSnap.exists()) {
     const participantIds = conversationSnap.data().participantIds || [];
-    const updates: Record<string, unknown> = {
+
+    // Update conversation document
+    await updateDoc(conversationRef, {
       lastMessage: {
         ...messageData,
         id: messageId,
         createdAt: new Date(),
         content: displayContent,
       },
-      updatedAt: serverTimestamp(),
-      deletedBy: []
-    };
-
-    participantIds.forEach((pid: string) => {
-      if (pid !== senderId) {
-        updates[`unreadCount.${pid}`] = increment(1);
-      }
+      updatedAt: serverTimestamp()
     });
 
-    const receiverIds = participantIds.filter((pid: string) => pid !== senderId);
-    if (receiverIds.length > 0) {
-      updates.archivedBy = arrayRemove(...receiverIds);
-      updates.markedUnreadBy = arrayRemove(...receiverIds);
-    }
+    // Update unreadCount và reset archived/markedUnread trong member subcollection
+    const memberUpdates = participantIds
+      .filter((pid: string) => pid !== senderId)
+      .map((pid: string) =>
+        updateDoc(doc(db, 'conversations', conversationId, 'members', pid), {
+          unreadCount: increment(1),
+          isArchived: false,
+          markedUnread: false
+        })
+      );
 
-    await updateDoc(conversationRef, updates);
+    await Promise.all(memberUpdates);
   }
 }
 
@@ -531,22 +531,22 @@ export const messageService = {
 
       if (conversationSnap.exists()) {
         const data = conversationSnap.data();
-        const updates: DocumentData = {
-          [`unreadCount.${userId}`]: 0,
-          markedUnreadBy: arrayRemove(userId),
-        };
 
         if (data.lastMessage && data.lastMessage.senderId !== userId) {
-          updates["lastMessage.readBy"] = arrayUnion(userId);
-          updates["lastMessage.deliveredTo"] = arrayUnion(userId);
-
-          if (!data.lastMessage.deliveredAt) {
-            updates["lastMessage.deliveredAt"] = serverTimestamp();
-          }
+          batch.update(conversationRef, {
+            "lastMessage.readBy": arrayUnion(userId),
+            "lastMessage.deliveredTo": arrayUnion(userId),
+            "lastMessage.deliveredAt": data.lastMessage.deliveredAt || serverTimestamp()
+          });
         }
-
-        batch.update(conversationRef, updates);
       }
+
+      // Reset unreadCount và markedUnread trong member subcollection
+      const memberRef = doc(db, 'conversations', conversationId, 'members', userId);
+      batch.update(memberRef, {
+        unreadCount: 0,
+        markedUnread: false
+      });
 
       await batch.commit();
     } catch (error) {

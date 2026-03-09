@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
-import { Message, MessageType, Conversation } from '../../types';
+import { Message, MessageType, ConversationMember } from '../../types';
 import { messageService } from '../../services/chat/messageService';
+import { conversationService } from '../../services/chat/conversationService';
 import { realtimeService } from '../../services/chat/realtimeService';
 import { useAuthStore } from '../authStore';
 import { DocumentSnapshot } from 'firebase/firestore';
@@ -42,11 +43,17 @@ export interface MessageSlice {
 
 const LIMIT_PER_PAGE = PAGINATION.CHAT_MESSAGES;
 
-const getEffectiveJoinedAt = (conversation: Conversation | undefined, userId: string): Date | undefined => {
-  if (!conversation) return undefined;
-  const joinedAt = conversation.memberJoinedAt?.[userId];
-  const deletedAt = conversation.deletedAt?.[userId];
-  if (deletedAt && (!joinedAt || deletedAt > joinedAt)) return deletedAt;
+const getEffectiveJoinedAt = async (conversationId: string, userId: string): Promise<Date | undefined> => {
+  const member = await conversationService.getMemberSettings(conversationId, userId);
+  if (!member) return undefined;
+
+  const joinedAt = member.joinedAt;
+  const deletedAt = member.deletedAt;
+
+  if (deletedAt && (!joinedAt || deletedAt > joinedAt)) {
+    return deletedAt;
+  }
+
   return joinedAt;
 };
 
@@ -129,50 +136,58 @@ export const createMessageSlice: StateCreator<ChatState, [], [], MessageSlice> =
   myMessageReactions: {},
 
   subscribeToMessages: (conversationId: string) => {
-    const { conversations } = get();
-    const conversation = conversations.find((c: Conversation) => c.id === conversationId);
     const currentUserId = useAuthStore.getState().user?.id || '';
-    const joinedAt = getEffectiveJoinedAt(conversation, currentUserId);
     let firstLoad = true;
+    let actualUnsubscribe: (() => void) | null = null;
 
-    const unsubscribe = messageService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
-      const { myMessageReactions } = get();
-      const merged = messages.map((m: Message) => ({
-        ...m,
-        myReaction: myMessageReactions[m.id]
-      }));
-      set((state) => ({
-        messages: { ...state.messages, [conversationId]: merged },
-        lastMessageDocs: { ...state.lastMessageDocs, [conversationId]: lastDoc },
-        hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: messages.length >= LIMIT_PER_PAGE }
-      }));
+    // Fetch joinedAt asynchronously and setup subscription
+    getEffectiveJoinedAt(conversationId, currentUserId).then(joinedAt => {
+      actualUnsubscribe = messageService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (messages, lastDoc) => {
+        const { myMessageReactions } = get();
+        const merged = messages.map((m: Message) => ({
+          ...m,
+          myReaction: myMessageReactions[m.id]
+        }));
+        set((state) => ({
+          messages: { ...state.messages, [conversationId]: merged },
+          lastMessageDocs: { ...state.lastMessageDocs, [conversationId]: lastDoc },
+          hasMoreMessages: { ...state.hasMoreMessages, [conversationId]: messages.length >= LIMIT_PER_PAGE }
+        }));
 
-      if (firstLoad && currentUserId) {
-        firstLoad = false;
-        const toLoad = messages
-          .filter(m => m.reactionCount > 0 && !myMessageReactions[m.id])
-          .map(m => m.id);
-        if (toLoad.length > 0) {
-          messageService.batchLoadMyReactionsForMessages(toLoad, currentUserId).then(myRxns => {
-            set(state => ({
-              myMessageReactions: { ...state.myMessageReactions, ...myRxns },
-            }));
-          });
+        if (firstLoad && currentUserId) {
+          firstLoad = false;
+          const toLoad = messages
+            .filter(m => m.reactionCount > 0 && !myMessageReactions[m.id])
+            .map(m => m.id);
+          if (toLoad.length > 0) {
+            messageService.batchLoadMyReactionsForMessages(toLoad, currentUserId).then(myRxns => {
+              set(state => ({
+                myMessageReactions: { ...state.myMessageReactions, ...myRxns },
+              }));
+            });
+          }
         }
+      }, joinedAt);
+    }).catch(error => {
+      console.error("Lỗi subscribe messages:", error);
+    });
+
+    // Return unsubscribe function that will call actual unsubscribe when available
+    return () => {
+      if (actualUnsubscribe) {
+        actualUnsubscribe();
       }
-    }, joinedAt);
-    return unsubscribe;
+    };
   },
 
   loadMoreMessages: async (conversationId: string) => {
-    const { lastMessageDocs, isLoadingMore, hasMoreMessages, conversations } = get();
+    const { lastMessageDocs, isLoadingMore, hasMoreMessages } = get();
     const lastDoc = lastMessageDocs[conversationId];
 
     if (!lastDoc || isLoadingMore[conversationId] || hasMoreMessages[conversationId] === false) return;
 
-    const conversation = conversations.find((c: Conversation) => c.id === conversationId);
     const currentUserId = useAuthStore.getState().user?.id || '';
-    const joinedAt = getEffectiveJoinedAt(conversation, currentUserId);
+    const joinedAt = await getEffectiveJoinedAt(conversationId, currentUserId);
 
     set((state) => ({ isLoadingMore: { ...state.isLoadingMore, [conversationId]: true } }));
 

@@ -5,14 +5,12 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  deleteField,
   serverTimestamp,
   arrayUnion,
   arrayRemove,
-  writeBatch
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { conversationService } from './conversationService';
 import { messageService } from './messageService';
 import { userService } from '../userService';
 import { uploadWithProgress, UploadProgress, deleteStorageFile } from '../../utils/uploadUtils';
@@ -37,19 +35,24 @@ export const groupService = {
         groupAvatar: groupAvatar || null,
         creatorId,
         adminIds: [creatorId],
-        unreadCount: participantIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {}),
-        memberJoinedAt: participantIds.reduce((acc, id) => ({ ...acc, [id]: serverTimestamp() }), {}),
         updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        pinnedBy: [],
-        archivedBy: [],
-        markedUnreadBy: [],
-        deletedBy: [],
-        blockedBy: [],
-        mutedBy: []
+        createdAt: serverTimestamp()
       };
 
       const docRef = await addDoc(collection(db, 'conversations'), conversationData);
+
+      // Tạo member docs trong subcollection cho tất cả participants
+      const memberPromises = participantIds.map(userId =>
+        setDoc(doc(db, 'conversations', docRef.id, 'members', userId), {
+          joinedAt: serverTimestamp(),
+          isPinned: false,
+          isMuted: false,
+          isArchived: false,
+          markedUnread: false,
+          unreadCount: 0
+        })
+      );
+      await Promise.all(memberPromises);
 
       // Thông báo tạo nhóm
       const creator = await userService.getUserById(creatorId);
@@ -107,11 +110,20 @@ export const groupService = {
         throw new Error(`Nhóm đã đạt tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`);
       }
 
+      // Update conversation participantIds
       await updateDoc(conversationRef, {
         participantIds: arrayUnion(userId),
-        [`unreadCount.${userId}`]: 0,
-        [`memberJoinedAt.${userId}`]: serverTimestamp(),
         updatedAt: serverTimestamp()
+      });
+
+      // Tạo member doc trong subcollection
+      await setDoc(doc(db, 'conversations', conversationId, 'members', userId), {
+        joinedAt: serverTimestamp(),
+        isPinned: false,
+        isMuted: false,
+        isArchived: false,
+        markedUnread: false,
+        unreadCount: 0
       });
 
       // Thông báo thêm thành viên
@@ -131,13 +143,15 @@ export const groupService = {
     try {
       const conversationRef = doc(db, 'conversations', conversationId);
 
+      // Update conversation participantIds và adminIds
       await updateDoc(conversationRef, {
         participantIds: arrayRemove(userId),
         adminIds: arrayRemove(userId),
-        [`unreadCount.${userId}`]: deleteField(),
-        [`memberJoinedAt.${userId}`]: deleteField(),
         updatedAt: serverTimestamp()
       });
+
+      // Xóa member doc từ subcollection
+      await deleteDoc(doc(db, 'conversations', conversationId, 'members', userId));
 
       const [actor, user] = await Promise.all([
         userService.getUserById(actorId),
@@ -170,8 +184,6 @@ export const groupService = {
 
         const updates: Record<string, unknown> = {
           participantIds: newParticipantIds,
-          [`unreadCount.${userId}`]: deleteField(),
-          [`memberJoinedAt.${userId}`]: deleteField(),
           updatedAt: serverTimestamp()
         };
 
@@ -193,6 +205,9 @@ export const groupService = {
         updates.adminIds = newAdminIds;
 
         await updateDoc(conversationRef, updates);
+
+        // Xóa member doc từ subcollection
+        await deleteDoc(doc(db, 'conversations', conversationId, 'members', userId));
 
         const user = await userService.getUserById(userId);
         await messageService.sendSystemMessage(conversationId, `${user?.name || 'Ai đó'} đã rời khỏi nhóm`);

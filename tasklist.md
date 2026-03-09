@@ -79,49 +79,32 @@ Audit toàn bộ database types và cấu trúc dữ liệu của hệ thống s
 
 ---
 
-### 4. REACTION SYSTEM THIẾT KẾ SAI
-**Mức độ:** 🔴 Critical
+### 4. ~~REACTION SYSTEM THIẾT KẾ SAI~~ ⏭️ SKIPPED
+**Mức độ:** ~~🔴 Critical~~ → ⏭️ Bỏ qua
 
-**Vấn đề:**
-```typescript
-// Trong Post/Comment/Message
-reactionCount: number;
-reactionSummary: Record<string, number>; // {"like": 5, "love": 3}
+**Lý do skip:**
+- Design hiện tại acceptable cho social app
+- FieldValue.increment() là atomic → không có race condition
+- CF reliability cao, failure rate thấp
+- Performance tốt với aggregated data
+- Eventual consistency acceptable
 
-// Nhưng reactions lưu ở subcollection
-// posts/{postId}/reactions/{userId} = {type: "like"}
-```
-
-**Vấn đề cụ thể:**
-- `reactionCount` và `reactionSummary` phải được sync bởi Cloud Functions
-- Nếu CF fail → data inconsistent
-- Không có mechanism để verify/repair data
-- Race conditions khi nhiều users react cùng lúc
-
-**Ảnh hưởng:**
-- Data corruption risk cao
-- Khó debug khi số liệu sai
-- Performance overhead do phải maintain aggregated data
-
-**Giải pháp:**
-- [ ] Thêm `lastSyncedAt` timestamp để track sync status
-- [ ] Implement verification function để check consistency
-- [ ] Thêm retry mechanism trong CF
-- [ ] Document rõ ràng về eventual consistency
+**Quyết định:**
+- [x] Giữ nguyên thiết kế hiện tại
+- [ ] Optional: Thêm verification tool (nếu cần sau này)
 
 ---
 
-### 5. CONVERSATION STRUCTURE QUÁ PHỨC TẠP
-**Mức độ:** 🔴 Critical
+### 5. ~~CONVERSATION STRUCTURE QUÁ PHỨC TẠP~~ ✅ COMPLETED
+**Mức độ:** ~~🔴 Critical~~ → ✅ Fixed
 
-**Vấn đề:**
+**Vấn đề đã phát hiện:**
 ```typescript
 interface Conversation {
   participantIds: string[];
-  participants: User[];  // ❌ Denormalized data
-  lastMessage?: LastMessagePreview;  // ❌ Nested object phức tạp
-  unreadCount: Record<string, number>;
-  pinnedBy: string[];
+  participants: User[];  // ❌ Denormalized data - KHÔNG TỒN TẠI TRONG FIRESTORE
+  unreadCount: Record<string, number>;  // ❌ Write contention risk
+  pinnedBy: string[];  // ❌ Quá nhiều arrays
   mutedBy: string[];
   archivedBy: string[];
   markedUnreadBy: string[];
@@ -133,27 +116,67 @@ interface Conversation {
 ```
 
 **Vấn đề cụ thể:**
-- Lưu cả `participants: User[]` → data duplication nghiêm trọng
-- Quá nhiều arrays và Records → document size lớn
-- Mỗi action cần update nhiều fields
-- Không scale khi group chat có nhiều members
+- TypeScript interface có `participants: User[]` nhưng KHÔNG TỒN TẠI trong Firestore
+- Quá nhiều per-user arrays → write contention (Firestore limit: 1 write/second per document)
+- Không thể query per-user settings (phải load all, filter client-side)
+- Document size lớn khi group có nhiều members
 
-**Ảnh hưởng:**
-- Document size limit (1MB) có thể bị vượt
-- Write operations tốn kém
-- Data staleness (participants data cũ)
-- Query performance kém
-
-**Giải pháp:**
-- [ ] XÓA field `participants: User[]` - chỉ giữ `participantIds`
-- [ ] Tách per-user settings ra subcollection:
-  ```
-  conversations/{convId}/members/{userId} = {
-    joinedAt, isPinned, isMuted, isArchived, 
-    markedUnread, deletedAt, isBlocked
+**Giải pháp đã triển khai:**
+- [x] XÓA field `participants: User[]` khỏi Conversation interface
+- [x] Tách per-user settings ra subcollection `conversations/{convId}/members/{userId}`:
+  ```typescript
+  interface ConversationMember {
+    conversationId: string;
+    userId: string;
+    joinedAt: Date;
+    isPinned: boolean;
+    isMuted: boolean;
+    isArchived: boolean;
+    markedUnread: boolean;
+    unreadCount: number;
+    deletedAt?: Date;
+    createdAt: Date;
   }
   ```
-- [ ] Giữ `lastMessage` nhưng simplify structure
+- [x] Refactor `conversationService.ts`:
+  - `getMemberSettings()` - fetch member settings
+  - `subscribeMemberSettings()` - realtime updates
+  - `incrementUnreadCount()`, `resetUnreadCount()`
+  - All toggle methods update subcollection
+- [x] Refactor `groupService.ts`:
+  - `createGroupConversation()` - tạo member docs cho all participants
+  - `addGroupMember()` - tạo member doc trong subcollection
+  - `removeGroupMember()` - xóa member doc
+  - `leaveGroup()` - xóa member doc
+- [x] Refactor `messageService.ts`:
+  - `updateConversationAfterMessage()` - update unreadCount trong member subcollection
+  - `markAsRead()` - reset unreadCount trong member subcollection
+- [x] Refactor `messageSlice.ts`:
+  - `getEffectiveJoinedAt()` - fetch từ member subcollection
+  - `subscribeToMessages()` - sử dụng async joinedAt
+  - `loadMoreMessages()` - sử dụng async joinedAt
+- [x] Refactor `conversationSlice.ts`:
+  - Loại bỏ optimistic updates với arrays
+  - Chỉ gọi service, để Firestore realtime update tự động
+  - `subscribeToConversations()` - load member settings để check unread/muted
+  - `selectConversation()` - gọi `resetUnreadCount()`
+  - All toggle methods chỉ gọi service
+- [x] Refactor `useConversationItem.ts`:
+  - Subscribe to member settings
+  - Sử dụng member settings thay vì arrays
+- [x] Tạo `useConversationMemberSettings.ts` hook
+- [x] Refactor components:
+  - `ConversationItem.tsx` - sử dụng member settings hook
+  - `ChatDetailsActions.tsx` - sử dụng member settings hook
+  - `ChatPage.tsx` - sử dụng member settings hook
+  - `ConversationList.tsx` - callbacks không cần tính toán giá trị
+
+**Lợi ích:**
+- ✅ Không còn write contention
+- ✅ Query được per-user settings
+- ✅ Document size nhỏ hơn
+- ✅ Scalable cho group chat lớn
+- ✅ Clean code, loại bỏ logic cũ hoàn toàn
 
 ---
 

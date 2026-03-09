@@ -8,6 +8,7 @@ import { useFriendIds } from '../hooks';
 import { useBlockedUsers } from '../hooks';
 import { friendService } from '../services/friendService';
 import { useChatStore } from '../store/chatStore';
+import { useConversationMemberSettings } from '../hooks/chat/useConversationMemberSettings';
 import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
@@ -93,6 +94,12 @@ const ChatPage: React.FC = () => {
   const friendIds = useFriendIds();
   const { blockedUserIds } = useBlockedUsers();
 
+  // Get member settings for selected conversation
+  const selectedMemberSettings = useConversationMemberSettings(
+    selectedConversationId || '',
+    currentUser?.id || ''
+  );
+
   React.useEffect(() => {
     setIsChatVisible(true);
     return () => setIsChatVisible(false);
@@ -127,7 +134,7 @@ const ChatPage: React.FC = () => {
 
   const partner = selectedConversation?.isGroup
     ? null
-    : selectedConversation?.participants.find(p => p.id !== currentUser.id);
+    : participants.find(p => p.id !== currentUser.id);
 
   const { playSound } = useCallSounds();
 
@@ -364,10 +371,10 @@ const ChatPage: React.FC = () => {
           isOpen={showDetails}
           isBlocked={isBlocked}
           onClose={() => setShowDetails(false)}
-          onToggleMute={() => handleMute(selectedConversation.id, !selectedConversation.mutedBy.includes(currentUser.id))}
-          onTogglePin={() => handlePin(selectedConversation.id, !selectedConversation.pinnedBy.includes(currentUser.id))}
-          onToggleArchive={() => handleArchive(selectedConversation.id, !selectedConversation.archivedBy.includes(currentUser.id))}
-          onToggleMarkUnread={() => handleMarkUnread(selectedConversation.id, !selectedConversation.markedUnreadBy.includes(currentUser.id))}
+          onToggleMute={() => handleMute(selectedConversation.id, !(selectedMemberSettings?.isMuted || false))}
+          onTogglePin={() => handlePin(selectedConversation.id, !(selectedMemberSettings?.isPinned || false))}
+          onToggleArchive={() => handleArchive(selectedConversation.id, !(selectedMemberSettings?.isArchived || false))}
+          onToggleMarkUnread={() => handleMarkUnread(selectedConversation.id, !(selectedMemberSettings?.markedUnread || false))}
           onToggleBlock={handleToggleBlock}
           onDelete={() => {
             if (selectedConversation.isGroup && selectedConversation.creatorId === currentUser.id) {

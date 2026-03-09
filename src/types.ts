@@ -114,22 +114,24 @@ export interface LastMessagePreview {
 export interface Conversation extends BaseEntity {
   updatedAt: Date;
   participantIds: string[];
-  participants: User[];
   lastMessage?: LastMessagePreview;
-  unreadCount: Record<string, number>;
   isGroup: boolean;
   groupName?: string;
   groupAvatar?: string;
   creatorId: string;
   adminIds: string[];
-  pinnedBy: string[];
-  mutedBy: string[];
-  archivedBy: string[];
-  markedUnreadBy: string[];
-  memberJoinedAt?: Record<string, Date>;
-  deletedBy: string[];
-  deletedAt?: Record<string, Date>;
-  blockedBy: string[];
+}
+
+export interface ConversationMember extends BaseEntity {
+  conversationId: string;
+  userId: string;
+  joinedAt: Date;
+  isPinned: boolean;
+  isMuted: boolean;
+  isArchived: boolean;
+  markedUnread: boolean;
+  unreadCount: number;
+  deletedAt?: Date;
 }
 
 export interface Comment extends BaseEntity, ReactableEntity {
