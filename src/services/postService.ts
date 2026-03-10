@@ -20,7 +20,7 @@ import {
   DocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, UserStatus, Visibility, ReactionType, PostType, PostStatus } from '../types';
+import { Post, Visibility, ReactionType, PostStatus, MediaObject } from '../types';
 import { chunkArray, batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
 import { PAGINATION, FIREBASE_LIMITS, IMAGE_COMPRESSION } from '../constants';
@@ -50,6 +50,136 @@ function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] 
 }
 
 export const postService = {
+  // ========== FAN-OUT FEED METHODS ==========
+
+  getFeedFromFanout: async (userId: string, limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
+    try {
+      if (!userId) {
+        console.warn("getFeedFromFanout: userId is missing");
+        return { posts: [], lastDoc: null, hasMore: false };
+      }
+
+      // Query feeds subcollection
+      let feedQuery = query(
+        collection(db, 'users', userId, 'feeds'),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount + 1)
+      );
+
+      if (lastDoc) {
+        feedQuery = query(feedQuery, startAfter(lastDoc));
+      }
+
+      const feedSnapshot = await getDocs(feedQuery);
+
+      if (feedSnapshot.empty) {
+        return { posts: [], lastDoc: null, hasMore: false };
+      }
+
+      // Lấy postIds
+      const postIds = feedSnapshot.docs.map(doc => doc.data().postId);
+
+      // Batch fetch posts
+      const posts: Post[] = [];
+      const chunkSize = 10; // Firestore 'in' query limit
+
+      for (let i = 0; i < postIds.length; i += chunkSize) {
+        const chunk = postIds.slice(i, i + chunkSize);
+        const postsQuery = query(
+          collection(db, 'posts'),
+          where('__name__', 'in', chunk),
+          where('status', '==', PostStatus.ACTIVE)
+        );
+
+        const postsSnapshot = await getDocs(postsQuery);
+        posts.push(...postsSnapshot.docs.map(convertDocToPost));
+      }
+
+      // Sort by createdAt
+      posts.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+
+      // Filter banned users
+      const authorIds = [...new Set(posts.map(p => p.authorId))];
+      const usersMap = await batchGetUsers(authorIds);
+      const filteredPosts = posts.filter(p => usersMap[p.authorId]?.status !== 'banned');
+
+      const hasMore = filteredPosts.length > limitCount;
+      const finalPosts = filteredPosts.slice(0, limitCount);
+
+      const lastPost = finalPosts[finalPosts.length - 1];
+      const lastVisible = lastPost ? feedSnapshot.docs.find(d => d.data().postId === lastPost.id) || null : null;
+
+      return { posts: finalPosts, lastDoc: lastVisible, hasMore };
+    } catch (error) {
+      console.error("Lỗi lấy feed từ fan-out", error);
+      return { posts: [], lastDoc: null, hasMore: false };
+    }
+  },
+
+  subscribeToFeedFanout: (
+    userId: string,
+    callback: (action: 'initial' | 'add' | 'update' | 'remove', posts: Post[]) => void,
+    limitCount: number = PAGINATION.FEED_POSTS
+  ) => {
+    if (!userId) {
+      console.warn("subscribeToFeedFanout: thiếu userId");
+      callback('initial', []);
+      return () => { };
+    }
+
+    let isInitialLoad = true;
+    let allCurrentPosts: Post[] = [];
+    const postCache = new Map<string, Post>();
+
+    const feedQuery = query(
+      collection(db, 'users', userId, 'feeds'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+
+    const unsubscribe = onSnapshot(feedQuery, async (snapshot) => {
+      if (isInitialLoad) {
+        // Initial load
+        const result = await postService.getFeedFromFanout(userId, limitCount);
+        allCurrentPosts = result.posts;
+        result.posts.forEach(p => postCache.set(p.id, p));
+        isInitialLoad = false;
+        callback('initial', result.posts);
+        return;
+      }
+
+      // Handle changes
+      for (const change of snapshot.docChanges()) {
+        const feedData = change.doc.data();
+        const postId = feedData.postId;
+
+        if (change.type === 'added') {
+          // Fetch post detail
+          const postDoc = await getDoc(doc(db, 'posts', postId));
+          if (postDoc.exists() && postDoc.data().status === PostStatus.ACTIVE) {
+            const post = convertDocToPost(postDoc);
+            postCache.set(postId, post);
+            allCurrentPosts = [post, ...allCurrentPosts.filter(p => p.id !== postId)];
+            callback('add', [post]);
+          }
+        } else if (change.type === 'removed') {
+          const post = postCache.get(postId);
+          if (post) {
+            postCache.delete(postId);
+            allCurrentPosts = allCurrentPosts.filter(p => p.id !== postId);
+            callback('remove', [post]);
+          }
+        }
+      }
+    }, (error) => {
+      console.error("Lỗi subscribe feed fan-out", error);
+    });
+
+    return unsubscribe;
+  },
+
+  // ========== LEGACY FEED METHODS (Fallback) ==========
+
   getFeed: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
     try {
       if (!currentUserId) {
@@ -62,7 +192,7 @@ export const postService = {
 
       let ownerQuery = query(
         collection(db, 'posts'),
-        where('userId', '==', currentUserId),
+        where('authorId', '==', currentUserId),
         where('status', '==', PostStatus.ACTIVE),
         orderBy('createdAt', 'desc'),
         limit(limitCount + 1)
@@ -82,7 +212,7 @@ export const postService = {
           chunks.map(async (chunk) => {
             let q = query(
               collection(db, 'posts'),
-              where('userId', 'in', chunk),
+              where('authorId', 'in', chunk),
               where('status', '==', PostStatus.ACTIVE),
               where('visibility', 'in', [Visibility.FRIENDS, Visibility.PUBLIC]),
               orderBy('createdAt', 'desc'),
@@ -105,10 +235,10 @@ export const postService = {
       const allPosts = [...ownerPosts, ...friendPosts];
       allPosts.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
-      const authorIds = [...new Set(allPosts.map(p => p.userId))];
+      const authorIds = [...new Set(allPosts.map(p => p.authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-      const filteredPosts = allPosts.filter(p => usersMap[p.userId]?.status !== UserStatus.BANNED);
+      const filteredPosts = allPosts.filter(p => usersMap[p.authorId]?.status !== 'banned');
 
       const hasMore = filteredPosts.length > limitCount;
       const finalPosts = filteredPosts.slice(0, limitCount);
@@ -148,7 +278,7 @@ export const postService = {
     // Query 1: Posts của owner
     const ownerQuery = query(
       collection(db, 'posts'),
-      where('userId', '==', currentUserId),
+      where('authorId', '==', currentUserId),
       where('status', '==', PostStatus.ACTIVE),
       orderBy('createdAt', 'desc'),
       limit(limitCount)
@@ -181,7 +311,7 @@ export const postService = {
       chunks.forEach(chunk => {
         const friendQuery = query(
           collection(db, 'posts'),
-          where('userId', 'in', chunk),
+          where('authorId', 'in', chunk),
           where('status', '==', PostStatus.ACTIVE),
           where('visibility', 'in', [Visibility.FRIENDS, Visibility.PUBLIC]),
           orderBy('createdAt', 'desc'),
@@ -233,7 +363,7 @@ export const postService = {
 
       let q = query(
         collection(db, 'posts'),
-        where('userId', '==', userId),
+        where('authorId', '==', userId),
         where('status', '==', PostStatus.ACTIVE),
         where('visibility', 'in', visibilityFilter),
         orderBy('createdAt', 'desc'),
@@ -245,7 +375,7 @@ export const postService = {
       }
 
       const user = await userService.getUserById(userId);
-      if (user?.status === UserStatus.BANNED) {
+      if (user?.status === 'banned') {
         return { posts: [], lastDoc: null };
       }
 
@@ -268,7 +398,7 @@ export const postService = {
 
     const q = query(
       collection(db, 'posts'),
-      where('userId', '==', userId),
+      where('authorId', '==', userId),
       where('status', '==', PostStatus.ACTIVE),
       where('visibility', 'in', visibilityFilter),
       orderBy('createdAt', 'desc'),
@@ -279,7 +409,7 @@ export const postService = {
 
     const setup = async () => {
       const user = await userService.getUserById(userId);
-      if (user?.status === UserStatus.BANNED) {
+      if (user?.status === 'banned') {
         callback([]);
         return;
       }
@@ -300,14 +430,14 @@ export const postService = {
     };
   },
 
-  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status'>, customId?: string): Promise<string> => {
+  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status' | 'reactions'>): Promise<string> => {
     try {
-      const postRef = customId ? doc(db, 'posts', customId) : doc(collection(db, 'posts'));
+      const postRef = doc(collection(db, 'posts'));
       await setDoc(postRef, {
         ...postData,
-        type: postData.type || PostType.NORMAL,
         status: PostStatus.ACTIVE,
         commentCount: 0,
+        reactions: {},
         createdAt: Timestamp.now(),
         isEdited: false
       });
@@ -320,7 +450,7 @@ export const postService = {
 
   generatePostId: () => doc(collection(db, 'posts')).id,
 
-  updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>): Promise<void> => {
+  updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
 
@@ -328,17 +458,18 @@ export const postService = {
       const oldSnap = await getDoc(postRef);
       if (oldSnap.exists()) {
         const old = oldSnap.data();
-        const removedImages = (old.images || []).filter((u: string) => !images.includes(u));
-        const removedVideos = (old.videos || []).filter((u: string) => !videos.includes(u));
-        const removedThumbs = removedVideos.map((v: string) => old.videoThumbnails?.[v]).filter(Boolean);
-        await deleteStorageFiles([...removedImages, ...removedVideos, ...removedThumbs]);
+        const oldMediaUrls = (old.media || []).map((m: MediaObject) => m.url);
+        const newMediaUrls = media.map(m => m.url);
+        const removedUrls = oldMediaUrls.filter((u: string) => !newMediaUrls.includes(u));
+
+        if (removedUrls.length > 0) {
+          await deleteStorageFiles(removedUrls);
+        }
       }
 
       await updateDoc(postRef, {
         content,
-        images,
-        videos: videos || [],
-        videoThumbnails: videoThumbnails || {},
+        media,
         visibility,
         isEdited: true,
         editedAt: Timestamp.now()
@@ -383,9 +514,9 @@ export const postService = {
       if (reaction === 'REMOVE' || current === reaction) {
         await deleteDoc(reactionRef);
       } else {
-        await setDoc(reactionRef, { type: reaction });
+        await setDoc(reactionRef, { type: reaction, createdAt: serverTimestamp() });
       }
-      // CF onPostReactionWrite xử lý counter + notification
+      // CF onPostReactionWrite xử lý update Map reactions + notification
     } catch (error) {
       console.error("Lỗi react bài viết", error);
       throw error;
@@ -422,8 +553,8 @@ export const postService = {
       if (!postSnap.exists()) return null;
 
       const data = postSnap.data();
-      const isOwner = data.userId === currentUserId;
-      const isFriend = friendIds?.includes(data.userId) || false;
+      const isOwner = data.authorId === currentUserId;
+      const isFriend = friendIds?.includes(data.authorId) || false;
 
       // Kiểm tra quyền xem
       if (data.visibility === Visibility.PRIVATE && !isOwner) {
@@ -470,11 +601,9 @@ export const postService = {
     files: File[],
     userId: string,
     onProgress?: (progress: number, fileIndex: number, totalFiles: number) => void
-  ): Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }> => {
+  ): Promise<MediaObject[]> => {
     try {
-      const images: string[] = [];
-      const videos: string[] = [];
-      const videoThumbnails: Record<string, string> = {};
+      const media: MediaObject[] = [];
       const totalFiles = files.length;
 
       for (let i = 0; i < totalFiles; i++) {
@@ -498,15 +627,23 @@ export const postService = {
           })
         );
 
+        const mediaObject: MediaObject = {
+          url,
+          fileName,
+          mimeType: file.type,
+          size: file.size,
+          isSensitive: false,
+        };
+
+        // Nếu là video, Cloud Function generateVideoThumbnail sẽ tạo thumbnail
         if (isVideo) {
-          videos.push(url);
-          // Cloud Function generateVideoThumbnail tự động tạo thumbnail
-        } else {
-          images.push(url);
+          mediaObject.thumbnailUrl = undefined; // CF sẽ update sau
         }
+
+        media.push(mediaObject);
       }
 
-      return { images, videos, videoThumbnails };
+      return media;
     } catch (error) {
       console.error("Lỗi upload media", error);
       throw error;
@@ -517,7 +654,7 @@ export const postService = {
     file: File,
     userId: string,
     onProgress?: ProgressCallback
-  ): Promise<string> => {
+  ): Promise<MediaObject> => {
     try {
       // Compress ảnh
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COMMENT);
@@ -526,7 +663,15 @@ export const postService = {
       const fileName = `comment_img_${createdAt}_${file.name}`;
       const path = `comments/${userId}/images/${fileName}`;
 
-      return await withRetry(() => uploadWithProgress(path, compressedFile, onProgress));
+      const url = await withRetry(() => uploadWithProgress(path, compressedFile, onProgress));
+
+      return {
+        url,
+        fileName,
+        mimeType: file.type,
+        size: compressedFile.size,
+        isSensitive: false,
+      };
     } catch (error) {
       console.error("Lỗi upload ảnh bình luận", error);
       throw error;

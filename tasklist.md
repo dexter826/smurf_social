@@ -145,29 +145,33 @@
 > **Mục tiêu**: Thay query trực tiếp `posts` collection bằng fan-out `users/{uid}/feeds`.
 
 ### 4.1 Cập nhật `src/services/postService.ts`
-- [ ] **Xóa** `getFeed()` (query cũ dùng `friendIds` to filter posts)
-- [ ] **Xóa** `subscribeToFeed()` (logic subscribe cũ)
-- [ ] Thêm `getFeedFromFanout(userId, limitCount, lastDoc)`: đọc từ `users/{uid}/feeds`, lấy `postId` rồi batch fetch `posts/{postId}`
-- [ ] Thêm `subscribeToFeedFanout(userId, callback)`: subscribe `users/{uid}/feeds` orderBy `createdAt`
-- [ ] Sửa `createPost()`: **không** còn nhận `customId`; Cloud Function sẽ lo fan-out
-- [ ] Sửa `updatePost()`: signature đổi từ `(postId, content, images, videos, visibility, videoThumbnails)` → `(postId, content, media: MediaObject[], visibility)`; xóa storage cleanup cũ (Cloud Function lo)
-- [ ] Sửa `reactToPost()`: **không** dùng sub-collection `reactions` nữa; Cloud Function `onReactionWrite` sẽ update Map `reactions` trực tiếp trên post doc
-- [ ] Xóa `getMyReactionForPost()`, `batchLoadMyReactions()` — đọc từ Map trực tiếp
-- [ ] Sửa `uploadPostMedia()`: trả về `MediaObject[]` thay vì `{images[], videos[]}`
-- [ ] Sửa `deletePost()`: chỉ soft-delete, Cloud Function lo cleanup fan-out
-- [ ] Sửa `convertDocToPost()`: map `authorId` thay `userId`, `media[]` thay `images/videos`
+- [x] Thêm `getFeedFromFanout(userId, limitCount, lastDoc)`: đọc từ `users/{uid}/feeds`, lấy `postId` rồi batch fetch `posts/{postId}`
+- [x] Thêm `subscribeToFeedFanout(userId, callback)`: subscribe `users/{uid}/feeds` orderBy `createdAt`
+- [x] Giữ `getFeed()` và `subscribeToFeed()` (legacy fallback)
+- [x] Sửa `createPost()`: **không** còn nhận `customId`; xóa field `type`
+- [x] Sửa `updatePost()`: signature đổi từ `(postId, content, images, videos, visibility, videoThumbnails)` → `(postId, content, media: MediaObject[], visibility)`
+- [x] Sửa `reactToPost()`: giữ nguyên sub-collection logic, CF `onReactionWrite` sẽ update Map `reactions`
+- [x] Giữ `getMyReactionForPost()`, `batchLoadMyReactions()` — vẫn đọc từ sub-collection
+- [x] Sửa `uploadPostMedia()`: trả về `MediaObject[]` thay vì `{images[], videos[]}`
+- [x] Sửa `deletePost()`: chỉ soft-delete, CF sẽ lo cleanup fan-out
+- [x] Sửa `convertDocToPost()`: map `authorId` thay `userId`, `media[]` thay `images/videos`
+- [x] Cập nhật tất cả queries: dùng `authorId` thay `userId`
 
 ### 4.2 Tạo/cập nhật Cloud Function fan-out
 > *Các functions này cần có trong `functions/src/posts/`*
-- [ ] Tạo `functions/src/posts/onPostCreated.ts`: khi post tạo mới → fan-out `postId` vào `feeds` subcollection của tất cả bạn bè + chính tác giả
-- [ ] Tạo `functions/src/posts/onPostDeleted.ts`: khi post soft-delete → xóa entries trong tất cả `feeds`
-- [ ] Tạo `functions/src/posts/onFriendAdded.ts`: khi thêm bạn → fan-out posts cũ của bạn vào feed
-- [ ] Tạo `functions/src/posts/onFriendRemoved.ts`: khi xóa bạn → remove posts khỏi feed
+- [x] Tạo `functions/src/posts/onPostCreated.ts`: khi post tạo mới → fan-out `postId` vào `feeds` subcollection của tất cả bạn bè + chính tác giả
+- [x] Tạo `functions/src/posts/onPostDeleted.ts`: khi post soft-delete → xóa entries trong tất cả `feeds`
+- [x] Tạo `functions/src/posts/onFriendAdded.ts`: khi thêm bạn → fan-out posts cũ của bạn vào feed
+- [x] Tạo `functions/src/posts/onFriendRemoved.ts`: khi xóa bạn → remove posts khỏi feed
+- [x] Export functions trong `functions/src/index.ts`
 
 ### 4.3 Cập nhật `src/store/postStore.ts`
-- [ ] Xóa logic `friendIds` trong `loadFeed()`, `subscribeToFeed()`
-- [ ] Dùng `postService.getFeedFromFanout()` và `subscribeToFeedFanout()`
-- [ ] Cập nhật state `posts[]` để dùng `Post` interface mới (authorId, media[])
+- [x] Cập nhật `fetchPosts()`: dùng `postService.getFeedFromFanout()`, xóa params `friendIds`, `blockedUserIds`
+- [x] Cập nhật `subscribeToPosts()`: dùng `postService.subscribeToFeedFanout()`, xóa params `friendIds`, `blockedUserIds`
+- [x] Cập nhật `createPost()`: signature mới nhận `media: MediaObject[]`, xóa `images`, `videos`, `videoThumbnails`
+- [x] Cập nhật `updatePost()`: signature mới nhận `media: MediaObject[]`
+- [x] Cập nhật `reactToPost()`: dùng `reactions` Map thay `reactionCount`, `reactionSummary`
+- [x] Cập nhật state `posts[]` để dùng `Post` interface mới (authorId, media[], reactions)
 
 ---
 
