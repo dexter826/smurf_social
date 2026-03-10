@@ -15,7 +15,7 @@ interface UseUserPostsReturn {
   users: Record<string, User>;
   handleLoadMore: () => void;
   handleReact: (postId: string, reaction: string) => Promise<void>;
-  handleDelete: (postId: string, images?: string[]) => Promise<void>;
+  handleDelete: (postId: string, media?: any[]) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -37,7 +37,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
 
     const dbPostIds = new Set(dbPosts.map(p => p.id));
     const uploadingPosts = allStorePosts.filter(p =>
-      p.userId === userId && !dbPostIds.has(p.id)
+      p.authorId === userId && !dbPostIds.has(p.id)
     );
 
     return [...uploadingPosts, ...dbPosts];
@@ -74,7 +74,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
         setDbPosts(prev => [...prev, ...newPosts]);
       }
 
-      const userIds = [...new Set(newPosts.map(p => p.userId))];
+      const userIds = [...new Set(newPosts.map(p => p.authorId))];
       fetchUsers(userIds);
 
     } catch (error) {
@@ -109,7 +109,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
           return updatedPosts;
         });
 
-        fetchUsers(newPosts.map(p => p.userId));
+        fetchUsers(newPosts.map(p => p.authorId));
       }
     );
 
@@ -130,27 +130,26 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     const oldReaction = myPostReactions[postId];
     const isRemove = oldReaction === reaction;
 
-    const prevSummary = post.reactionSummary;
-    const newSummary = { ...prevSummary };
-    let newCount = post.reactionCount;
+    const prevReactions = post.reactions || {};
+    const newReactions = { ...prevReactions };
 
     if (isRemove) {
-      if (oldReaction) {
-        newSummary[oldReaction] = Math.max(0, (newSummary[oldReaction] ?? 0) - 1);
-        if (newSummary[oldReaction] === 0) delete newSummary[oldReaction];
+      if (oldReaction && newReactions[oldReaction]) {
+        newReactions[oldReaction] = Math.max(0, newReactions[oldReaction] - 1);
+        if (newReactions[oldReaction] === 0) delete newReactions[oldReaction];
       }
-      newCount = Math.max(0, newCount - 1);
     } else if (oldReaction) {
-      newSummary[oldReaction] = Math.max(0, (newSummary[oldReaction] ?? 0) - 1);
-      if (newSummary[oldReaction] === 0) delete newSummary[oldReaction];
-      newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
+      if (newReactions[oldReaction]) {
+        newReactions[oldReaction] = Math.max(0, newReactions[oldReaction] - 1);
+        if (newReactions[oldReaction] === 0) delete newReactions[oldReaction];
+      }
+      newReactions[reaction] = (newReactions[reaction] ?? 0) + 1;
     } else {
-      newSummary[reaction] = (newSummary[reaction] ?? 0) + 1;
-      newCount += 1;
+      newReactions[reaction] = (newReactions[reaction] ?? 0) + 1;
     }
 
     setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
-      ...p, reactionCount: newCount, reactionSummary: newSummary
+      ...p, reactions: newReactions
     }));
 
     // Update myPostReactions in store
@@ -167,16 +166,16 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     } catch (error) {
       // Rollback
       setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
-        ...p, reactionCount: post.reactionCount, reactionSummary: prevSummary
+        ...p, reactions: prevReactions
       }));
       usePostStore.setState({ myPostReactions: { ...usePostStore.getState().myPostReactions, [postId]: oldReaction } });
     }
   }, [posts, currentUser.id]);
 
-  const handleDelete = useCallback(async (postId: string, images?: string[]) => {
+  const handleDelete = useCallback(async (postId: string, media?: any[]) => {
     try {
       // Gọi hàm xóa từ store để cập nhật trạng thái toàn cục
-      await deleteStorePost(postId, currentUser.id, images);
+      await deleteStorePost(postId, currentUser.id, media);
       // Cập nhật trạng thái local
       setDbPosts(prev => prev.filter(p => p.id !== postId));
     } catch (error) {

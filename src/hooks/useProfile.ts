@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { User, UserStatus } from '../types';
+import { User } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
-import { conversationService } from '../services/chat/conversationService';
+import { rtdbConversationService } from '../services/chat/rtdbConversationService';
 import { toast } from '../store/toastStore';
 import { useUserCache } from '../store/userCacheStore';
 import { TOAST_MESSAGES } from '../constants';
@@ -48,16 +48,16 @@ export const useProfile = () => {
     pendingRequestId: friend.pendingRequestId,
   });
 
-  const isBannedProfile = profile?.status === UserStatus.BANNED;
+  const isBannedProfile = profile?.status === 'banned';
 
   const handleMessage = useCallback(async () => {
     if (!currentUser || !profile) return;
-    if (profile.status === UserStatus.BANNED) {
+    if (profile.status === 'banned') {
       toast.error(TOAST_MESSAGES.CHAT.BLOCKED_USER);
       return;
     }
     try {
-      const conversationId = await conversationService.getOrCreateConversation(currentUser.id, profile.id);
+      const conversationId = await rtdbConversationService.getOrCreateDirect(currentUser.id, profile.id);
       navigate(`/?conv=${conversationId}`);
     } catch {
       toast.error(TOAST_MESSAGES.CHAT.OPEN_FAILED);

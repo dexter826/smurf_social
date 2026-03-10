@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, UserStatus, Gender } from '../types';
+import { User, Gender } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
@@ -67,12 +67,12 @@ const ProfilePage: React.FC = () => {
     return <ProfileSkeleton />;
   }
 
-  const isBannedProfile = profile.status === UserStatus.BANNED;
+  const isBannedProfile = profile.status === 'banned';
 
   const confirmConfig: Record<ConfirmType, { title: string; message: string; confirmLabel: string }> = {
     unfriend: {
       title: CONFIRM_MESSAGES.FRIEND.UNFRIEND.TITLE,
-      message: CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(profile?.name || ''),
+      message: CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(profile?.fullName || ''),
       confirmLabel: CONFIRM_MESSAGES.FRIEND.UNFRIEND.CONFIRM,
     },
     deleteAvatar: {
@@ -87,7 +87,7 @@ const ProfilePage: React.FC = () => {
     },
     block: {
       title: CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE,
-      message: CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(profile?.name || ''),
+      message: CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(profile?.fullName || ''),
       confirmLabel: CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM,
     },
   };
@@ -292,7 +292,7 @@ const ProfilePage: React.FC = () => {
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
         post={selectedPost}
-        author={selectedPost?.userId === profile?.id ? profile : null}
+        author={selectedPost?.authorId === profile?.id ? profile : null}
         currentUser={currentUser}
         onReact={async (postId, reaction) => {
           await usePostStore.getState().reactToPost(postId, currentUser.id, reaction);

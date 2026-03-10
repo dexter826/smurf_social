@@ -186,11 +186,11 @@ const SettingsPage: React.FC = () => {
                     <UserAvatar
                       userId={user.id}
                       src={user.avatar}
-                      name={user.name}
+                      name={user.fullName}
                       size="md"
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-text-primary truncate">{user.name}</h3>
+                      <h3 className="font-medium text-text-primary truncate">{user.fullName}</h3>
                       <p className="text-sm text-text-tertiary truncate">
                         @{user.email?.split('@')[0]}
                       </p>
@@ -287,7 +287,7 @@ const SettingsPage: React.FC = () => {
         onClose={() => setUnblockUserId(null)}
         onConfirm={handleUnblock}
         title={CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE}
-        message={CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(blockedUsers.find(u => u.id === unblockUserId)?.name || 'người này')}
+        message={CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(blockedUsers.find(u => u.id === unblockUserId)?.fullName || 'người này')}
         confirmLabel={CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM}
       />
       <ChangePasswordModal

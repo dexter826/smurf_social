@@ -322,25 +322,25 @@
 > **Mục tiêu**: Cập nhật toàn bộ tầng UI để dùng data model mới.
 
 ### 10.1 Components liên quan Media
-- [ ] `AvatarComponent`: nhận `MediaObject` thay `string`; fallback khi `isSensitive: true`
-- [ ] `PostMediaGrid`: nhận `media: MediaObject[]` thay `images[], videos[]`
-- [ ] `CommentImagePreview`: nhận `MediaObject`
+- [x] `AvatarComponent`: nhận `MediaObject` thay `string`; fallback khi `isSensitive: true`
+- [x] `PostMediaGrid`: nhận `media: MediaObject[]` thay `images[], videos[]`
+- [x] `CommentImagePreview`: nhận `MediaObject`
 
 ### 10.2 Pages
-- [ ] `ProfilePage.tsx`: dùng `user.fullName`, `user.avatar.url`, `user.cover.url`, `user.dob`; xóa `friendCount` display
-- [ ] `FeedPage.tsx`: subscribe feed qua fan-out; dùng `post.authorId`, `post.media[]`
-- [ ] `ChatPage.tsx`: toàn bộ thay thế Firestore listeners bằng RTDB listeners
-- [ ] `ContactsPage.tsx`: dùng `fullName`, block từ subcollection `blockedUsers`
-- [ ] `SettingsPage.tsx`: xóa avatar/cover upload trả về string, dùng `MediaObject`
-- [ ] `NotificationsPage.tsx`: dùng `actorId` thay `senderId`
+- [x] `ProfilePage.tsx`: dùng `user.fullName`, `user.avatar.url`, `user.cover.url`, `user.dob`; xóa `friendCount` display
+- [x] `FeedPage.tsx`: subscribe feed qua fan-out; dùng `post.authorId`, `post.media[]`
+- [x] `ChatPage.tsx`: toàn bộ thay thế Firestore listeners bằng RTDB listeners
+- [x] `ContactsPage.tsx`: dùng `fullName`, block từ subcollection `blockedUsers`
+- [x] `SettingsPage.tsx`: xóa avatar/cover upload trả về string, dùng `MediaObject`
+- [x] `NotificationsPage.tsx`: dùng `actorId` thay `senderId`
 
 ### 10.3 Hooks
-- [ ] `useFeed.ts`: dùng `postService.getFeedFromFanout()`
-- [ ] `useUserPosts.ts`: dùng `authorId` thay `userId`
-- [ ] `useChat.ts`: toàn bộ rewrite dùng RTDB services
-- [ ] `usePresence.ts`: dùng `presenceService`
-- [ ] `useProfile.ts`: dùng `fullName`, `MediaObject`
-- [ ] `useContacts.ts`: dùng `blockedUsers` subcollection
+- [x] `useFeed.ts`: dùng `postService.getFeedFromFanout()`
+- [x] `useUserPosts.ts`: dùng `authorId` thay `userId`
+- [x] `useChat.ts`: toàn bộ rewrite dùng RTDB services
+- [x] `usePresence.ts`: dùng `presenceService`
+- [x] `useProfile.ts`: dùng `fullName`, `MediaObject`
+- [x] `useContacts.ts`: dùng `blockedUsers` subcollection
 
 ---
 

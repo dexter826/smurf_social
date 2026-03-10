@@ -43,7 +43,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const progress = uploadState?.progress || 0;
 
   const myReaction = usePostStore(state => state.myPostReactions[post.id]);
-  const isOwner = post.userId === currentUser.id;
+  const isOwner = post.authorId === currentUser.id;
 
   const hasMedia = (post.images?.length ?? 0) > 0 || (post.videos?.length ?? 0) > 0;
 
@@ -67,7 +67,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
           <UserAvatar
             userId={author?.id}
             src={author?.avatar}
-            name={author?.name}
+            name={author?.fullName}
             size="md"
             initialStatus={author?.status}
             onClick={handleProfileClick}
@@ -78,7 +78,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
                 className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
                 onClick={handleProfileClick}
               >
-                {author?.name || 'Unknown User'}
+                {author?.fullName || 'Unknown User'}
               </h3>
               {post.type && post.type !== PostType.NORMAL && (
                 <span className="text-[14px] text-text-secondary font-normal">
@@ -125,7 +125,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
               icon={<Flag size={16} />}
               label="Báo cáo"
               variant="danger"
-              onClick={() => openReportModal(ReportType.POST, post.id, post.userId)}
+              onClick={() => openReportModal(ReportType.POST, post.id, post.authorId)}
             />
           </Dropdown>
         )}
@@ -165,8 +165,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
       <ReactionActions
         postId={post.id}
-        reactionSummary={post.reactionSummary}
-        reactionCount={post.reactionCount}
+        reactionSummary={post.reactions || {}}
+        reactionCount={Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0)}
         myReaction={myReaction}
         commentCount={post.commentCount}
         onReact={onReact}

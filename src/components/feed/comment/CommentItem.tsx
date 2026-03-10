@@ -67,7 +67,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   const [showReactions, setShowReactions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
 
-  const author = users[comment.userId];
+  const author = users[comment.authorId];
   const commentReplies = replies[comment.id] || [];
   const hasMoreR = hasMoreReply[comment.id];
   const isLoadingR = isLoadingReplyMap[comment.id];
@@ -75,14 +75,14 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   const isReplying = activeInputId === comment.id && inputMode === 'reply';
 
   const onProfileNavigate = useCallback(() => {
-    if (comment.userId) {
+    if (comment.authorId) {
       onProfileClick?.();
-      navigate(`/profile/${comment.userId}`);
+      navigate(`/profile/${comment.authorId}`);
     }
-  }, [comment.userId, onProfileClick, navigate]);
+  }, [comment.authorId, onProfileClick, navigate]);
 
   const myReaction = useCommentStore(state => state.myCommentReactions[comment.id]);
-  const reactionCount = comment.reactionCount;
+  const reactionCount = Object.values(comment.reactions || {}).reduce((sum, count) => sum + count, 0);
 
   const handleReact = useCallback((reaction: string | ReactionType) => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);
@@ -92,7 +92,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   return (
     <div className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
       <div className="flex gap-3">
-        <UserAvatar userId={comment.userId} src={author?.avatar} name={author?.name} size={isReply ? 'xs' : 'sm'} onClick={onProfileNavigate} />
+        <UserAvatar userId={comment.authorId} src={author?.avatar} name={author?.fullName} size={isReply ? 'xs' : 'sm'} onClick={onProfileNavigate} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-1.5 group/comment">
             <div className="relative inline-block max-w-full">
@@ -105,27 +105,27 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline leading-none min-w-0"
                     onClick={onProfileNavigate}
                   >
-                    {author?.name
-                      ? author.name
+                    {author?.fullName
+                      ? author.fullName
                       : <Skeleton width={80} height={12} className="opacity-60" />}
                   </h4>
-                  {comment.userId === postOwnerId && (
+                  {comment.authorId === postOwnerId && (
                     <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 leading-none mt-[1px] flex items-center gap-0.5">
                       <PenTool size={10} className="stroke-[2.5px]" />
                       Tác giả
                     </span>
                   )}
-                  {isReply && comment.replyToUserId && users[comment.replyToUserId] && (comment.replyToUserId !== rootAuthorId || comment.replyToUserId === comment.userId) && (
+                  {isReply && comment.parentId && users[comment.parentId] && (comment.parentId !== rootAuthorId || comment.parentId === comment.authorId) && (
                     <>
                       <ChevronRight size={12} className="text-text-tertiary flex-shrink-0 mx-0.5" />
                       <h4
                         className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline"
                         onClick={() => {
                           onProfileClick?.();
-                          navigate(`/profile/${comment.replyToUserId}`);
+                          navigate(`/profile/${comment.parentId}`);
                         }}
                       >
-                        {users[comment.replyToUserId].name}
+                        {users[comment.parentId].fullName}
                       </h4>
                     </>
                   )}
@@ -154,7 +154,11 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     </div>
                     {comment.image && (
                       <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
-                        <LazyImage src={comment.image} className="max-h-60 w-full object-contain" alt="attach" />
+                        <LazyImage
+                          src={typeof comment.image === 'string' ? comment.image : comment.image.url}
+                          className={`max-h-60 w-full object-contain ${typeof comment.image === 'object' && comment.image.isSensitive ? 'blur-md' : ''}`}
+                          alt="attach"
+                        />
                       </div>
                     )}
                   </>
@@ -176,13 +180,13 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                   align="right"
                   menuClassName="z-[var(--z-popover)]"
                 >
-                  {comment.userId === currentUser.id ? (
+                  {comment.authorId === currentUser.id ? (
                     <>
                       <DropdownItem icon={<Pencil size={14} />} label="Chỉnh sửa" onClick={() => handleEditClick(comment)} />
                       <DropdownItem icon={<Trash2 size={14} />} label="Xóa" variant="danger" onClick={() => handleDeleteClick(comment)} />
                     </>
                   ) : (
-                    <DropdownItem icon={<Flag size={14} />} label="Báo cáo" onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.userId)} />
+                    <DropdownItem icon={<Flag size={14} />} label="Báo cáo" onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.authorId)} />
                   )}
                 </Dropdown>
               </div>
@@ -214,7 +218,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
               <button onClick={() => handleReplyClick(comment)} className="hover:underline active:underline transition-all duration-base cursor-pointer">Trả lời</button>
               {reactionCount > 0 && (
                 <ReactionDisplay
-                  reactionSummary={comment.reactionSummary}
+                  reactionSummary={comment.reactions || {}}
                   reactionCount={reactionCount}
                   variant="minimal"
                   onClick={() => setShowReactionDetails(true)}
@@ -227,7 +231,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
             <div className="mt-3 pl-2">
               <CommentInput
                 user={currentUser}
-                placeholder={`Trả lời ${author?.name}...`}
+                placeholder={`Trả lời ${author?.fullName}...`}
                 onSubmit={handleCommentSubmit}
                 onCancel={resetInput}
                 onUploadMedia={handleUploadMedia}
@@ -262,7 +266,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                         activeInputId={activeInputId}
                         inputMode={inputMode}
                         isReply
-                        rootAuthorId={comment.userId}
+                        rootAuthorId={comment.authorId}
                         handleReplyClick={handleReplyClick}
                         handleEditClick={handleEditClick}
                         handleCommentSubmit={handleCommentSubmit}

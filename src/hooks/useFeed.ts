@@ -15,8 +15,8 @@ interface UseFeedReturn {
   usersMap: Record<string, User>;
   handleLoadMore: () => void;
   handleReact: (postId: string, reaction: string) => Promise<void>;
-  handleUpdate: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
-  handleDelete: (postId: string, images?: string[], videos?: string[]) => Promise<void>;
+  handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility) => Promise<void>;
+  handleDelete: (postId: string, media?: any[]) => Promise<void>;
   observerRef: RefObject<HTMLDivElement | null>;
 }
 
@@ -70,7 +70,7 @@ export const useFeed = (): UseFeedReturn => {
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {
     if (posts.length > 0) {
-      const userIds = [...new Set(posts.map(p => p.userId))];
+      const userIds = [...new Set(posts.map(p => p.authorId))];
       fetchUsers(userIds);
     }
   }, [posts, fetchUsers]);
@@ -83,22 +83,18 @@ export const useFeed = (): UseFeedReturn => {
   const handleUpdate = useCallback(async (
     postId: string,
     content: string,
-    images: string[],
-    videos: string[],
-    visibility: Visibility,
-    videoThumbnails?: Record<string, string>,
-    pendingFiles?: File[]
+    media: any[],
+    visibility: Visibility
   ) => {
-    await updatePost(postId, content, images, videos, visibility, videoThumbnails, pendingFiles);
+    await updatePost(postId, content, media, visibility);
   }, [updatePost]);
 
   const handleDelete = useCallback(async (
     postId: string,
-    images?: string[],
-    videos?: string[]
+    media?: any[]
   ) => {
     if (!currentUser) return;
-    await deletePost(postId, currentUser.id, images, videos);
+    await deletePost(postId, currentUser.id, media);
   }, [deletePost, currentUser]);
 
   return {

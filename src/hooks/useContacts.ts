@@ -87,14 +87,14 @@ export const useContacts = (): UseContactsReturn => {
   }, [receivedRequests, sentRequests, fetchUsers]);
 
   const filteredFriends = useMemo(() => friends.filter(friend =>
-    friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    friend.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
   ), [friends, searchTerm]);
 
   const groupedFriends = useMemo(() => {
     const groups: Record<string, User[]> = {};
     filteredFriends.forEach(friend => {
-      const firstLetter = friend.name.charAt(0).toUpperCase();
+      const firstLetter = friend.fullName.charAt(0).toUpperCase();
       if (!groups[firstLetter]) groups[firstLetter] = [];
       groups[firstLetter].push(friend);
     });
@@ -106,8 +106,8 @@ export const useContacts = (): UseContactsReturn => {
       letter,
       friends: groups[letter].sort((a, b) => {
         return sortOrder === 'asc'
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
+          ? a.fullName.localeCompare(b.fullName)
+          : b.fullName.localeCompare(a.fullName);
       })
     }));
   }, [filteredFriends, sortOrder]);
