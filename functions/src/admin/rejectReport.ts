@@ -32,13 +32,13 @@ export const rejectReport = onCall(
     // Thông báo người báo cáo
     await createNotification({
       receiverId: reportData.reporterId,
-      senderId: adminId,
-      type: NotificationType.REPORT_RESOLVED,
+      actorId: adminId,
+      type: NotificationType.SYSTEM,
       data: { reportId, contentSnippet: 'Không phát hiện vi phạm' },
     });
     await sendPushNotification({
       receiverId: reportData.reporterId,
-      type: NotificationType.REPORT_RESOLVED,
+      type: NotificationType.SYSTEM,
       body: 'Báo cáo của bạn đã được xem xét và không phát hiện vi phạm.',
       data: { reportId },
     });

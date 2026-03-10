@@ -76,8 +76,8 @@ export const banUser = onCall(
       // Send notification to banned user
       await createNotification({
         receiverId: userId,
-        senderId: adminId,
-        type: NotificationType.CONTENT_VIOLATION,
+        actorId: adminId,
+        type: NotificationType.SYSTEM,
         data: {
           contentSnippet: 'Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng. Vui lòng liên hệ admin để biết thêm chi tiết.'
         }
@@ -86,7 +86,7 @@ export const banUser = onCall(
     } else {
       // Unban user
       await db.collection('users').doc(userId).update({
-        status: UserStatus.OFFLINE
+        status: 'active'
       });
 
       // Remove banned claim properly
@@ -95,8 +95,8 @@ export const banUser = onCall(
       // Send notification to unbanned user
       await createNotification({
         receiverId: userId,
-        senderId: adminId,
-        type: NotificationType.CONTENT_VIOLATION,
+        actorId: adminId,
+        type: NotificationType.SYSTEM,
         data: {
           contentSnippet: 'Tài khoản của bạn đã được mở khóa. Bạn có thể đăng nhập lại.'
         }

@@ -204,19 +204,19 @@
 > **Mục tiêu**: Align notification với schema mới (actorId, type gọn, targetId).
 
 ### 6.1 Cập nhật Cloud Functions notifications
-- [ ] Sửa `onPostReactionWrite.ts`: tạo notification type `reaction` (không phải `like_post`)
-- [ ] Sửa `onCommentCreated.ts`: tạo notification type `comment` (gộp `comment_post` + `reply_comment`)
-- [ ] Sửa `onFriendRequest.ts`: tạo notification type `friend_request`
-- [ ] Xóa `onMessageReactionWrite.ts` — chat reaction không dùng notifications Firestore
-- [ ] Cập nhật tất cả functions: dùng `actorId` thay `senderId`
+- [x] Sửa `onPostReactionWrite.ts`: tạo notification type `reaction` (không phải `like_post`)
+- [x] Sửa `onCommentCreated.ts`: tạo notification type `comment` (gộp `comment_post` + `reply_comment`)
+- [x] Sửa `onFriendRequest.ts`: tạo notification type `friend_request`
+- [x] Xóa `onMessageReactionWrite.ts` — chat reaction không dùng notifications Firestore
+- [x] Cập nhật tất cả functions: dùng `actorId` thay `senderId`
 
 ### 6.2 Cập nhật `src/services/notificationService.ts`
-- [ ] Sửa mapper: đọc `actorId` thay `senderId`
-- [ ] Cập nhật routing theo type mới: `reaction`, `comment`, `friend_request`, `system`
+- [x] Sửa mapper: đọc `actorId` thay `senderId`
+- [x] Cập nhật routing theo type mới: `reaction`, `comment`, `friend_request`, `system`
 
 ### 6.3 Cập nhật `src/store/notificationStore.ts`
-- [ ] Thay `n.senderId` → `n.actorId` ở mọi nơi
-- [ ] Cập nhật switch/case theo `NotificationType` mới
+- [x] Thay `n.senderId` → `n.actorId` ở mọi nơi
+- [x] Cập nhật switch/case theo `NotificationType` mới
 
 ---
 
