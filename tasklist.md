@@ -180,20 +180,22 @@
 > **Mục tiêu**: Align comment với schema mới (authorId, image: MediaObject, reactions Map).
 
 ### 5.1 Cập nhật `src/services/commentService.ts`
-- [ ] Sửa `convertDocToComment()`: map `authorId` thay `userId`
-- [ ] Sửa `createComment()`: ghi `authorId` thay `userId`; `image` là `MediaObject` thay string
-- [ ] Xóa `replyToUserId` khỏi commentData (không có trong schema mới)
-- [ ] Sửa `reactToComment()`: không dùng sub-collection nữa, CF `onCommentReactionWrite` update Map
-- [ ] Xóa `getMyReactionForComment()`, `batchLoadMyReactionsForComments()`
-- [ ] Xóa `uploadCommentImage()` từ `postService` — gộp vào comment module
-- [ ] Tạo `uploadCommentImage(file, userId)` trong `commentService`: trả về `MediaObject`
+- [x] Sửa `convertDocToComment()`: map `authorId` thay `userId`
+- [x] Sửa `createComment()`: ghi `authorId` thay `userId`; `image` là `MediaObject` thay string; xóa `replyToUserId`; thêm `reactions: {}`
+- [x] Xóa `replyToUserId` khỏi commentData (không có trong schema mới)
+- [x] Sửa `reactToComment()`: giữ sub-collection, CF `onCommentReactionWrite` update Map
+- [x] Giữ `getMyReactionForComment()`, `batchLoadMyReactionsForComments()`
+- [x] Tạo `uploadCommentImage(file, userId)` trong `commentService`: trả về `MediaObject`
+- [x] Cập nhật tất cả queries và filters: dùng `authorId`, `status !== 'banned'`
 
 ### 5.2 Cập nhật Cloud Functions comments
-- [ ] Sửa `onCommentReactionWrite.ts`: cập nhật Map `reactions` trực tiếp lên comment doc (tương tự post)
+- [x] Sửa `onCommentReactionWrite.ts`: cập nhật Map `reactions` trực tiếp lên comment doc (tương tự post)
+- [x] Cập nhật `functions/src/types.ts`: đổi `senderId` → `actorId` trong `NotificationData`
 
 ### 5.3 Cập nhật `src/store/commentStore.ts`
-- [ ] Thay `c.userId` bằng `c.authorId` trong toàn bộ store
-- [ ] Cập nhật `addComment()` payload: không còn `replyToUserId`
+- [x] Thay `c.userId` bằng `c.authorId` trong toàn bộ store
+- [x] Cập nhật `addComment()` payload: không còn `replyToUserId`
+- [x] Cập nhật signatures: `image` thay `imageUrl`
 
 ---
 
