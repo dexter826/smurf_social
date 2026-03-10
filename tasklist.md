@@ -347,18 +347,18 @@
 ## PHASE 11 — FIRESTORE RULES & INDEXES
 
 ### 11.1 Cập nhật `firestore.rules`
-- [ ] Thêm rules cho `users/{uid}/friends` subcollection
-- [ ] Thêm rules cho `users/{uid}/blockedUsers` subcollection  
-- [ ] Thêm rules cho `users/{uid}/feeds` subcollection
-- [ ] Xóa rules cho `conversations`, `messages` collections (chuyển sang RTDB)
-- [ ] Cập nhật rules `posts`: `authorId` thay `userId`
-- [ ] Cập nhật rules `comments`: `authorId` thay `userId`
+- [x] Thêm rules cho `users/{uid}/friends` subcollection
+- [x] Thêm rules cho `users/{uid}/blockedUsers` subcollection  
+- [x] Thêm rules cho `users/{uid}/feeds` subcollection
+- [x] Xóa rules cho `conversations`, `messages` collections (chuyển sang RTDB)
+- [x] Cập nhật rules `posts`: `authorId` thay `userId`
+- [x] Cập nhật rules `comments`: `authorId` thay `userId`
 
 ### 11.2 Cập nhật `firestore.indexes.json`
-- [ ] Xóa indexes cho `messages`, `conversations` collections
-- [ ] Thêm composite index: `comments(postId, parentId, status, createdAt)`
-- [ ] Thêm composite index: `posts(authorId, status, visibility, createdAt)`
-- [ ] Thêm composite index: `notifications(receiverId, createdAt)`
+- [x] Xóa indexes cho `messages`, `conversations` collections
+- [x] Thêm composite index: `comments(postId, parentId, status, createdAt)`
+- [x] Thêm composite index: `posts(authorId, status, visibility, createdAt)`
+- [x] Thêm composite index: `notifications(receiverId, createdAt)`
 
 ---
 
