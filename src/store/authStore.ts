@@ -5,7 +5,7 @@ import { User } from "../types";
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
 import { useUserCache } from "./userCacheStore";
-import { useChatStore } from "./chatStore";
+import { useRtdbChatStore } from "./rtdbChatStore";
 import { usePostStore } from "./postStore";
 import { useContactStore } from "./contactStore";
 import { useNotificationStore } from "./notificationStore";
@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Giữ userCache — tránh flash data khi login lại
       usePresenceStore.getState().reset();
-      useChatStore.getState().reset();
+      useRtdbChatStore.getState().reset();
       usePostStore.getState().reset();
       useContactStore.getState().reset();
       useNotificationStore.getState().reset();

@@ -9,7 +9,7 @@ export const usePresence = (userId: string | undefined, initialStatus?: 'active'
 
   useEffect(() => {
     if (!userId) return;
-    subscribe(userId, initialStatus);
+    subscribe(userId);
     return () => unsubscribe(userId);
   }, [userId, subscribe, unsubscribe]);
 

@@ -286,7 +286,7 @@ const ContactsPage: React.FC = () => {
         onClose={() => setUnfriendId(null)}
         onConfirm={onUnfriendConfirm}
         title={CONFIRM_MESSAGES.FRIEND.UNFRIEND.TITLE}
-        message={CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(userCache[unfriendId || '']?.name || 'người này')}
+        message={CONFIRM_MESSAGES.FRIEND.UNFRIEND.MESSAGE(userCache[unfriendId || '']?.fullName || 'người này')}
         confirmLabel={CONFIRM_MESSAGES.FRIEND.UNFRIEND.CONFIRM}
         variant="danger"
       />
@@ -296,7 +296,7 @@ const ContactsPage: React.FC = () => {
         onClose={() => setBlockUserId(null)}
         onConfirm={onBlockConfirm}
         title={CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE}
-        message={CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(userCache[blockUserId || '']?.name || 'người dùng này')}
+        message={CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(userCache[blockUserId || '']?.fullName || 'người dùng này')}
         confirmLabel={CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM}
         variant="danger"
       />

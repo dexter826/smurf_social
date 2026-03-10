@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2, User as UserIcon } from 'lucide-react';
-import { Conversation, UserStatus, ReactionType } from '../../../types';
+import { RtdbConversation, RtdbUserChat, ReactionType } from '../../../types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
 import { useConversationMemberSettings } from '../../../hooks/chat/useConversationMemberSettings';
 import { MessageStatus } from '../message/MessageStatus';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 import { getReactionIcon } from '../reactions/ReactionIcons';
-import { useChatStore } from '../../../store/chatStore';
+import { useRtdbChatStore } from '../../../store';
 import { getLastName } from '../../../utils/uiUtils';
 
 const ConversationItemSkeleton: React.FC = () => (
@@ -24,7 +24,7 @@ const ConversationItemSkeleton: React.FC = () => (
 );
 
 interface ConversationItemProps {
-  conversation: Conversation;
+  conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
   isActive: boolean;
   currentUserId: string;
   currentUserFriendIds?: string[];
@@ -58,7 +58,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
-  const typingUsers = useChatStore(state => state.typingUsers[conversation.id] || []);
+  const typingUsers: string[] = [];
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
 
   const {
@@ -73,7 +73,6 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
     isLastMessageMine,
     readers,
     isLastMessageRead,
-    isLastMessageDelivered,
     displayTime
   } = useConversationItem({
     conversation,
@@ -91,12 +90,12 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
       .filter(Boolean);
 
     if (typingUserObjects.length === 1) {
-      return `${getLastName(typingUserObjects[0]?.name) || 'Ai đó'} đang soạn tin...`;
+      return `${getLastName(typingUserObjects[0]?.fullName) || 'Ai đó'} đang soạn tin...`;
     }
     if (typingUserObjects.length === 2) {
-      return `${getLastName(typingUserObjects[0]?.name)} và ${getLastName(typingUserObjects[1]?.name)} đang soạn tin...`;
+      return `${getLastName(typingUserObjects[0]?.fullName)} và ${getLastName(typingUserObjects[1]?.fullName)} đang soạn tin...`;
     }
-    return `${getLastName(typingUserObjects[0]?.name)} và ${typingUserObjects.length - 1} người khác đang soạn tin...`;
+    return `${getLastName(typingUserObjects[0]?.fullName)} và ${typingUserObjects.length - 1} người khác đang soạn tin...`;
   }, [typingUsers, participants, currentUserId]);
 
   if (isDataMissing) {
@@ -115,12 +114,9 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
     >
       <div className="relative flex-shrink-0">
         <UserAvatar
-          userId={conversation.isGroup ? '' : partner?.id}
-          src={chatInfo.avatar}
-          name={chatInfo.name}
+          userId={conversation.data.isGroup ? '' : partner?.id}
           size="md"
-          initialStatus={chatInfo.status}
-          isGroup={conversation.isGroup}
+          isGroup={conversation.data.isGroup}
           members={participants}
         />
       </div>
@@ -131,7 +127,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatInfo.name}
             </h3>
-            {!conversation.isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="sm" />}
+            {!conversation.data.isGroup && partner?.status === 'banned' && <BannedBadge size="sm" />}
             {showMessageRequestBadge && isMessageRequest && (
               <span className="text-[10px] text-warning bg-warning-light px-1.5 py-0.5 rounded-full border border-warning/30 flex-shrink-0">
                 Tin nhắn chờ
@@ -184,14 +180,14 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             <MessageStatus
               isMine={isLastMessageMine && !isUnread && !typingText}
               isRead={isLastMessageRead}
-              isDelivered={isLastMessageDelivered}
+              isDelivered={false}
               readers={readers}
             />
             {isUnread && unreadCount > 0 ? (
               <span className="flex-shrink-0 bg-error text-text-on-primary text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                 {unreadCount}
               </span>
-            ) : isUnread && memberSettings?.markedUnread ? (
+            ) : isUnread ? (
               <span className="flex-shrink-0 bg-error w-2.5 h-2.5 rounded-full" />
             ) : null}
           </div>
@@ -218,7 +214,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onPin(conversation.id, !(memberSettings?.isPinned || false))}
             />
           )}
-          {onViewProfile && !conversation.isGroup && (
+          {onViewProfile && !conversation.data.isGroup && (
             <DropdownItem
               icon={<UserIcon size={16} />}
               label="Xem trang cá nhân"
@@ -239,14 +235,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onArchive(conversation.id, !(memberSettings?.isArchived || false))}
             />
           )}
-          {onMarkUnread && (
-            <DropdownItem
-              icon={memberSettings?.markedUnread ? <MailCheck size={16} /> : <Mail size={16} />}
-              label={memberSettings?.markedUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
-              onClick={() => onMarkUnread(conversation.id, !(memberSettings?.markedUnread || false))}
-            />
-          )}
-          {onBlock && !conversation.isGroup && (
+          {onBlock && !conversation.data.isGroup && (
             <DropdownItem
               icon={<Ban size={16} />}
               label="Chặn"
@@ -254,10 +243,10 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => setShowBlockConfirm(true)}
             />
           )}
-          {onDelete && (!conversation.isGroup || conversation.creatorId === currentUserId) && (
+          {onDelete && (!conversation.data.isGroup || conversation.data.creatorId === currentUserId) && (
             <DropdownItem
               icon={<Trash2 size={16} />}
-              label={conversation.isGroup ? "Giải tán nhóm" : "Xóa"}
+              label={conversation.data.isGroup ? "Giải tán nhóm" : "Xóa"}
               variant="danger"
               onClick={() => setShowDeleteConfirm(true)}
             />

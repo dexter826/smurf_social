@@ -29,8 +29,12 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
   const extractMedia = useCallback((posts: any[]): MediaItem[] => {
     const items: MediaItem[] = [];
     posts.forEach(post => {
-      post.images?.forEach((url: string) => items.push({ url, type: MessageType.IMAGE }));
-      post.videos?.forEach((url: string) => items.push({ url, type: MessageType.VIDEO }));
+      post.media?.forEach((mediaObj: any) => {
+        items.push({
+          url: mediaObj.url,
+          type: mediaObj.mimeType?.startsWith('video/') ? MessageType.VIDEO : MessageType.IMAGE
+        });
+      });
     });
     return items;
   }, []);

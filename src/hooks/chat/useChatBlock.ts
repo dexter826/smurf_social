@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { User, UserStatus, FriendStatus, Conversation } from '../../types';
+import { User, FriendStatus, RtdbConversation } from '../../types';
 import { userService } from '../../services/userService';
 import { friendService } from '../../services/friendService';
 import { useUserCache } from '../../store/userCacheStore';
@@ -15,7 +15,7 @@ interface UseChatBlockProps {
   usersMap: Record<string, User>;
   friendStatus?: FriendStatus;
   pendingRequestId?: string;
-  conversation?: Conversation;
+  conversation?: RtdbConversation;
 }
 
 // Xử lý logic block/unblock trong chat
@@ -29,7 +29,7 @@ export const useChatBlock = ({
   pendingRequestId,
   conversation,
 }: UseChatBlockProps) => {
-  const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
+  const [partnerStatus, setPartnerStatus] = useState<'active' | 'banned' | undefined>();
 
   const myBlockedUserIds = useAuthStore(state => state.blockedUserIds);
 
@@ -57,16 +57,14 @@ export const useChatBlock = ({
     if (!isGroup && partnerId) {
       const currentStatus = partnerStatus || partner?.status || usersMap[partnerId]?.status;
 
-      if (currentStatus === UserStatus.BANNED) {
+      if (currentStatus === 'banned') {
         return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
       }
       if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
-      if (conversation?.blockedBy && conversation.blockedBy.length > 0) {
-        return 'Bạn không thể gửi tin nhắn lúc này.';
-      }
+      // RTDB doesn't have blockedBy field in conversation
     }
     return undefined;
-  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe, conversation?.blockedBy]);
+  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe]);
 
   const blockedMessage = useMemo(() => getBlockedMessage(), [getBlockedMessage]);
 

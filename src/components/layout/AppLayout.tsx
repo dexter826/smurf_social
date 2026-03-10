@@ -3,11 +3,12 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { MessageCircle, Users, LayoutGrid, Settings, LogOut, User as UserIcon, Moon, Sun, Bell, Flag, Menu, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
-import { useChatStore } from '../../store/chatStore';
+import { useRtdbChatStore } from '../../store';
 import { useContactStore } from '../../store/contactStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
 import { PostViewModal } from '../feed';
+import { auth } from '../../firebase/config';
 import { usePostStore } from '../../store/postStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { useNotificationStore } from '../../store/notificationStore';
@@ -24,7 +25,7 @@ import { CONFIRM_MESSAGES } from '../../constants';
 export const AppLayout: React.FC = () => {
   const { user } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
-  const { subscribeToConversations, selectedConversationId } = useChatStore();
+  const { subscribeToConversations, selectedConversationId } = useRtdbChatStore();
   const { receivedRequests, subscribeToRequests } = useContactStore();
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
 
@@ -36,13 +37,24 @@ export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const isAdmin = user?.role === 'admin';
+  // Check admin status from custom claims
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const tokenResult = await currentUser.getIdTokenResult();
+        setIsAdmin(!!tokenResult.claims.admin);
+      }
+    };
+    checkAdminStatus();
+  }, [user?.id]);
 
   const isChatRoom = location.pathname === '/' && !!selectedConversationId;
 
   // Global Call State
-  const { 
+  const {
     callPhase,
     setCallPhase,
     callType,
@@ -62,8 +74,6 @@ export const AppLayout: React.FC = () => {
     resetCall
   } = useCallStore();
 
-  const sendCallMessage = useChatStore(state => state.sendCallMessage);
-
   const { playSound } = useCallSounds();
 
   const { incomingCall, startCall, acceptCall, rejectCall, endCall } = useCallSignaling(
@@ -79,23 +89,11 @@ export const AppLayout: React.FC = () => {
         }
       },
       onCallRejected: () => {
-        if (isCaller && callConversationId && user) {
-          sendCallMessage(callConversationId, user.id, callType, 'rejected');
-        }
         playSound('busy');
         resetCall();
       },
       onCallEnded: () => {
-        if (isCaller && callConversationId && user) {
-          if (callPhase === 'outgoing') {
-            sendCallMessage(callConversationId, user.id, callType, 'missed');
-            playSound('busy');
-          } else if (callPhase === 'in-call' && callStartTime) {
-            const durationSecs = Math.floor((Date.now() - callStartTime) / 1000);
-            sendCallMessage(callConversationId, user.id, callType, 'ended', durationSecs);
-            playSound('ended');
-          }
-        } else if (callPhase === 'in-call') {
+        if (callPhase === 'in-call') {
           playSound('ended');
         }
         resetCall();
@@ -138,8 +136,8 @@ export const AppLayout: React.FC = () => {
   }, [user, subscribeToConversations, subscribeToRequests, initNotifications]);
 
   useEffect(() => {
-    if (selectedPost && !usersMap[selectedPost.userId]) {
-      fetchUsers([selectedPost.userId]);
+    if (selectedPost && !usersMap[selectedPost.authorId]) {
+      fetchUsers([selectedPost.authorId]);
     }
   }, [selectedPost, usersMap, fetchUsers]);
 
@@ -248,7 +246,7 @@ export const AppLayout: React.FC = () => {
               {user && (
                 <UserAvatar
                   userId={user.id}
-                  src={user.avatar}
+                  src={user.avatar.url}
                   size="sm"
                   className="cursor-pointer ring-2 ring-transparent group-hover:ring-primary/30 transition-all duration-base"
                   initialStatus={user.status}
@@ -342,7 +340,7 @@ export const AppLayout: React.FC = () => {
           isOpen={!!selectedPost || isModalLoading}
           onClose={() => setSelectedPost(null)}
           post={selectedPost}
-          author={selectedPost ? usersMap[selectedPost.userId] : null}
+          author={selectedPost ? usersMap[selectedPost.authorId] : null}
           currentUser={user}
           onReact={handlePostReact}
           isLoading={isModalLoading}
@@ -365,8 +363,8 @@ export const AppLayout: React.FC = () => {
         <CallWindow
           roomId={activeRoomId}
           userId={user.id}
-          userName={user.name}
-          userAvatar={user.avatar}
+          userName={user.fullName}
+          userAvatar={user.avatar.url}
           isGroupCall={isGroupCall}
           callType={callType}
           onClose={() => {

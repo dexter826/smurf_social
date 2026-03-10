@@ -11,7 +11,7 @@ import { validateFileSize } from '../../utils/uploadUtils';
 
 interface ProfileHeaderProps {
   user: User;
-  stats: { friendCount: number; postCount: number };
+  stats: { postCount: number };
   isOwnProfile: boolean;
   friendStatus?: FriendStatus;
   onEditClick?: () => void;
@@ -145,7 +145,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {/* Background Image Layer */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-active md:rounded-b-2xl overflow-hidden">
             <LazyImage
-              src={typeof user.cover === 'string' ? user.cover : user.cover?.url || '/cover-image.jpg'}
+              src={user.cover?.url || '/cover-image.jpg'}
               className="w-full h-full object-cover transition-all duration-base"
               alt="Cover"
             />
@@ -203,7 +203,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   <div className="p-1 bg-bg-primary rounded-full transition-theme">
                     <UserAvatar
                       userId={user.id}
-                      src={user.avatar}
+                      src={user.avatar.url}
                       name={user.fullName}
                       size="2xl"
                       className="border-4 border-bg-primary shadow-lg"
@@ -275,8 +275,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   </div>
                   {isOwnProfile && (
                     <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-2 rounded-lg border border-border-light">
-                      <Users size={16} className="text-primary" />
-                      <span><strong className="text-text-primary">{stats.friendCount}</strong> bạn bè</span>
+                      <FileText size={16} className="text-primary" />
+                      <span><strong className="text-text-primary">{stats.postCount}</strong> bài viết</span>
                     </div>
                   )}
                 </div>

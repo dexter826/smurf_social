@@ -46,17 +46,15 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
   }, [userId, name, cachedUser, fetchUsers]);
 
   const displayName = name || cachedUser?.fullName;
-  const avatarUrl = src || (userId === currentUser?.id ? currentUser?.avatar : cachedUser?.avatar);
+  const avatarUrl = src || (userId === currentUser?.id ? currentUser?.avatar.url : cachedUser?.avatar.url);
 
-  const statusToDisplay = useMemo(() => {
-    const status = presence?.status;
-    if (!showStatus || !status || status === 'banned') return undefined;
-    if (userId === currentUser?.id) return status;
+  const statusToDisplay = useMemo((): 'active' | 'banned' | undefined => {
+    if (!showStatus || initialStatus === 'banned') return undefined;
+    if (userId === currentUser?.id) return presence && 'isOnline' in presence && presence.isOnline ? 'active' : undefined;
 
     const isBlocked = checkBlocked(userId);
-    // Chỉ hiện status của bạn bè không bị chặn
-    return (isFriend && !isBlocked) ? status : undefined;
-  }, [presence?.status, showStatus, userId, currentUser?.id, isFriend, checkBlocked]);
+    return (isFriend && !isBlocked && presence && 'isOnline' in presence && presence.isOnline) ? 'active' : undefined;
+  }, [presence, showStatus, userId, currentUser?.id, isFriend, checkBlocked, initialStatus]);
 
   return (
     <Avatar

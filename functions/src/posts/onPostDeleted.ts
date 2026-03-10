@@ -1,18 +1,21 @@
-import * as functions from 'firebase-functions';
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 
 /**
  * Xóa post entries khỏi tất cả feeds khi post bị soft-delete
  * Trigger: onUpdate posts/{postId} (khi status = DELETED)
  */
-export const onPostDeleted = functions
-    .region('asia-southeast1')
-    .firestore
-    .document('posts/{postId}')
-    .onUpdate(async (change, context) => {
-        const postId = context.params.postId;
-        const beforeData = change.before.data();
-        const afterData = change.after.data();
+export const onPostDeleted = onDocumentUpdated(
+    { document: 'posts/{postId}', region: 'asia-southeast1' },
+    async (event) => {
+        const postId = event.params.postId;
+        const beforeData = event.data?.before.data();
+        const afterData = event.data?.after.data();
+
+        if (!beforeData || !afterData) {
+            console.error('Post data is null');
+            return;
+        }
 
         // Chỉ xử lý khi post chuyển sang DELETED
         if (beforeData.status !== 'deleted' && afterData.status === 'deleted') {
@@ -59,4 +62,5 @@ export const onPostDeleted = functions
                 console.error('Error removing post from feeds:', error);
             }
         }
-    });
+    }
+);

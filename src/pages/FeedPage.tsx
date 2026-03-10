@@ -30,21 +30,18 @@ const FeedPage: React.FC = () => {
 
   const handleEditPost = useCallback(async (
     content: string,
-    images: string[],
-    videos: string[],
-    visibility: Visibility,
-    videoThumbnails?: Record<string, string>,
-    pendingFiles?: File[]
+    media: any[],
+    visibility: Visibility
   ) => {
     if (!showEditModal) return;
-    await handleUpdate(showEditModal, content, images, videos, visibility, videoThumbnails, pendingFiles);
+    await handleUpdate(showEditModal, content, media, visibility);
     setShowEditModal(null);
   }, [showEditModal, handleUpdate]);
 
   const handleDeletePost = useCallback(async () => {
     if (!postToDelete) return;
     const post = posts.find(p => p.id === postToDelete);
-    await handleDelete(postToDelete, post?.images, post?.videos);
+    await handleDelete(postToDelete, post?.media);
     setPostToDelete(null);
   }, [postToDelete, posts, handleDelete]);
 
@@ -87,7 +84,7 @@ const FeedPage: React.FC = () => {
         ) : (
           <>
             {posts.map((post) => {
-              const author = usersMap[post.userId];
+              const author = usersMap[post.authorId];
               // User cache chưa sẵn sàng
               if (!author) return <PostItem.Skeleton key={post.id} />;
 
@@ -137,7 +134,7 @@ const FeedPage: React.FC = () => {
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
         post={selectedPost}
-        author={selectedPost ? usersMap[selectedPost.userId] : null}
+        author={selectedPost ? usersMap[selectedPost.authorId] : null}
         currentUser={currentUser}
         onReact={handleReact}
       />

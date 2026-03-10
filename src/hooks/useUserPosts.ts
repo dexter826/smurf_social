@@ -100,8 +100,8 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
             if (index !== -1) {
               updatedPosts[index] = npm;
             } else {
-              const firstPostTime = updatedPosts[0]?.createdAt?.getTime() || 0;
-              if (npm.createdAt.getTime() > firstPostTime) {
+              const firstPostTime = updatedPosts[0]?.createdAt?.toMillis() || 0;
+              if (npm.createdAt.toMillis() > firstPostTime) {
                 updatedPosts.unshift(npm);
               }
             }

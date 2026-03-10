@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Users, ChevronDown, MessageCircle, Archive } from 'lucide-react';
-import { Conversation, User } from '../../../types';
+import { RtdbConversation, RtdbUserChat, User } from '../../../types';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
 import { Skeleton } from '../../ui/Skeleton';
@@ -9,7 +9,7 @@ import { ConversationHeader } from './ConversationHeader';
 import { ConversationFilters, FilterType } from './ConversationFilters';
 
 interface ConversationListProps {
-  conversations: Conversation[];
+  conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>;
   selectedId: string | null;
   currentUserId: string;
   currentUserFriendIds?: string[];
@@ -34,10 +34,10 @@ interface ConversationListProps {
   onSearchFocus?: (focused: boolean) => void;
   onSelectUser?: (user: User) => void;
   searchResults?: {
-    conversations: Conversation[];
+    conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>;
     users: User[];
   };
-  searchHistory?: (Conversation | User)[];
+  searchHistory?: (User | { id: string; data: RtdbConversation; userChat: RtdbUserChat })[];
   onRemoveFromHistory?: (id: string) => void;
   onClearHistory?: () => void;
   onMarkAllRead?: () => void;
@@ -103,10 +103,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     onSearchFocus?.(false);
   };
 
-  const renderConversationItem = useCallback((conversation: Conversation) => {
-    const partnerId = conversation.isGroup
+  const renderConversationItem = useCallback((conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat }) => {
+    const participantIds = Object.keys(conversation.data.members);
+    const partnerId = conversation.data.isGroup
       ? null
-      : conversation.participantIds.find(id => id !== currentUserId);
+      : participantIds.find(id => id !== currentUserId);
 
     return (
       <ConversationItem

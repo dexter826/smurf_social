@@ -54,7 +54,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
   }, [isOpen, sourceId, sourceType, reactionsProp]);
 
   const reactionEntries = useMemo(() => Object.entries(reactions), [reactions]);
-  
+
   const reactionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     reactionEntries.forEach(([, type]) => {
@@ -97,20 +97,20 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
       .filter(item => !!item.user);
 
     if (context === 'POST') {
-      const friends = list.filter(item => 
+      const friends = list.filter(item =>
         item.userId === currentUserId || friendsIds.includes(item.userId)
       );
       const othersCount = list.length - friends.length;
-      
-      return { 
+
+      return {
         displayList: friends.filter(item => activeTab === 'ALL' || item.type === activeTab),
-        othersCount 
+        othersCount
       };
     }
 
-    return { 
+    return {
       displayList: list.filter(item => activeTab === 'ALL' || item.type === activeTab),
-      othersCount: 0 
+      othersCount: 0
     };
   }, [usersMap, reactionEntries, activeTab, context, currentUserId, friendsIds]);
 
@@ -132,11 +132,10 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`py-3 px-1 border-b-2 transition-all text-sm font-bold whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === tab 
-                    ? 'border-primary text-primary' 
+                className={`py-3 px-1 border-b-2 transition-all text-sm font-bold whitespace-nowrap flex items-center gap-1.5 ${activeTab === tab
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-text-secondary hover:text-text-primary'
-                }`}
+                  }`}
               >
                 {tab === 'ALL' ? (
                   'Tất cả'
@@ -161,7 +160,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                 </div>
               ))}
             </div>
-           ) : displayList.length > 0 ? (
+          ) : displayList.length > 0 ? (
             <div className="space-y-1">
               {displayList.map(({ user, type, userId }) => (
                 <div
@@ -172,8 +171,8 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                     <div className="relative">
                       <UserAvatar
                         userId={userId}
-                        src={user.avatar}
-                        name={user.name}
+                        src={typeof user.avatar === 'string' ? user.avatar : user.avatar.url}
+                        name={user.fullName}
                         size="md"
                         showStatus={false}
                       />
@@ -183,7 +182,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                     </div>
                     <div>
                       <div className="text-sm font-bold text-text-primary group-hover:text-primary transition-colors">
-                        {userId === currentUserId ? 'Bạn' : user.name}
+                        {userId === currentUserId ? 'Bạn' : user.fullName}
                       </div>
                     </div>
                   </div>
@@ -193,7 +192,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
               {context === 'POST' && othersCount > 0 && (
                 <div className="px-4 py-4 text-center border-t border-divider mt-2">
                   <p className="text-xs text-text-tertiary italic">
-                    {displayList.length > 0 
+                    {displayList.length > 0
                       ? `và ${othersCount} người khác đã bày tỏ cảm xúc`
                       : `${othersCount} người đã bày tỏ cảm xúc`}
                   </p>

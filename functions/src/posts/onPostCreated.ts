@@ -1,17 +1,20 @@
-import * as functions from 'firebase-functions';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 
 /**
  * Fan-out post ID vào feeds subcollection của tất cả bạn bè + chính tác giả
  * Trigger: onCreate posts/{postId}
  */
-export const onPostCreated = functions
-    .region('asia-southeast1')
-    .firestore
-    .document('posts/{postId}')
-    .onCreate(async (snapshot, context) => {
-        const postId = context.params.postId;
-        const postData = snapshot.data();
+export const onPostCreated = onDocumentCreated(
+    { document: 'posts/{postId}', region: 'asia-southeast1' },
+    async (event) => {
+        const postId = event.params.postId;
+        const postData = event.data?.data();
+
+        if (!postData) {
+            console.error('Post data is null');
+            return;
+        }
         const authorId = postData.authorId;
 
         if (!authorId) {
@@ -60,4 +63,5 @@ export const onPostCreated = functions
         } catch (error) {
             console.error('Error fan-out post:', error);
         }
-    });
+    }
+);

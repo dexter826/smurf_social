@@ -290,21 +290,19 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     );
   },
 
-  createComment: async (postId, userId, content, parentId, replyToUserId, imageUrl) => {
+  createComment: async (postId: string, userId: string, content: string, parentId?: string, image?: any) => {
     const realId = commentService.generateCommentId();
     const optimisticComment: Comment = {
       id: realId,
       postId,
-      userId,
+      authorId: userId,
       content,
       parentId: parentId || undefined,
-      replyToUserId: replyToUserId || undefined,
-      image: imageUrl || undefined,
+      image: image || undefined,
       createdAt: Timestamp.now(),
       replyCount: 0,
       status: CommentStatus.ACTIVE,
-      reactionCount: 0,
-      reactionSummary: {},
+      reactions: {},
     };
 
     const previousState = {
@@ -335,7 +333,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
 
     try {
-      await commentService.createComment(postId, userId, content, parentId || null, replyToUserId, imageUrl, realId);
+      await commentService.createComment(postId, userId, content, parentId || null, image, realId);
 
       return realId;
     } catch (error) {
@@ -345,10 +343,10 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
   },
 
-  updateComment: async (postId, commentId, content, parentId, imageUrl) => {
+  updateComment: async (postId: string, commentId: string, content: string, parentId?: string, image?: any) => {
     try {
-      await commentService.updateComment(commentId, content, imageUrl);
-      get().updateCommentInStore(postId, commentId, content, parentId, imageUrl);
+      await commentService.updateComment(commentId, content, image);
+      get().updateCommentInStore(postId, commentId, content, parentId, image);
     } catch (error) {
       console.error('Lỗi cập nhật bình luận:', error);
       throw error;
@@ -405,35 +403,29 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
     const comment = findComment();
     const prevMyReaction = myCommentReactions[commentId];
-    const prevCount = comment?.reactionCount ?? 0;
-    const prevSummary = { ...comment?.reactionSummary ?? {} };
+    const prevReactions = { ...(comment?.reactions ?? {}) };
 
     const isRemove = reaction === 'REMOVE' || prevMyReaction === reaction;
     const oldType = prevMyReaction;
 
     const applyOptimistic = (c: Comment): Comment => {
       if (c.id !== commentId) return c;
-      const newSummary = { ...c.reactionSummary };
-      let delta = 0;
+      const newReactions = { ...c.reactions };
 
       if (isRemove && oldType) {
-        newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
-        if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
-        delta = -1;
+        newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
+        if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
       } else if (!isRemove) {
         if (oldType) {
-          newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
-          if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
-        } else {
-          delta = 1;
+          newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
+          if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
         }
-        newSummary[reaction as ReactionType] = (newSummary[reaction as ReactionType] ?? 0) + 1;
+        newReactions[reaction as ReactionType] = (newReactions[reaction as ReactionType] ?? 0) + 1;
       }
 
       return {
         ...c,
-        reactionCount: Math.max(0, c.reactionCount + delta),
-        reactionSummary: newSummary,
+        reactions: newReactions,
       };
     };
 
@@ -471,7 +463,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       console.error('Lỗi bày tỏ cảm xúc:', error);
       // Rollback
       const rollback = (c: Comment): Comment => c.id !== commentId ? c : {
-        ...c, reactionCount: prevCount, reactionSummary: prevSummary,
+        ...c, reactions: prevReactions,
       };
       set(state => ({
         rootComments: { ...state.rootComments, [postId]: (state.rootComments[postId] || []).map(rollback) },

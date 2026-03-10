@@ -257,5 +257,58 @@ export const rtdbConversationService = {
             console.error('[rtdbConversationService] Lỗi markAllAsRead:', error);
             throw error;
         }
+    },
+
+    /**
+     * Mark conversation as unread (set unreadCount to 1)
+     */
+    markAsUnread: async (uid: string, convId: string): Promise<void> => {
+        try {
+            const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
+            await update(userChatRef, {
+                unreadCount: 1
+            });
+        } catch (error) {
+            console.error('[rtdbConversationService] Lỗi markAsUnread:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Set typing indicator for user in conversation
+     */
+    setTyping: async (convId: string, uid: string, isTyping: boolean): Promise<void> => {
+        try {
+            const typingRef = ref(rtdb, `conversations/${convId}/typing/${uid}`);
+            if (isTyping) {
+                await set(typingRef, Date.now());
+            } else {
+                await remove(typingRef);
+            }
+        } catch (error) {
+            console.error('[rtdbConversationService] Lỗi setTyping:', error);
+        }
+    },
+
+    /**
+     * Subscribe to typing indicators in conversation
+     */
+    subscribeToTyping: (convId: string, callback: (typingUserIds: string[]) => void): (() => void) => {
+        const typingRef = ref(rtdb, `conversations/${convId}/typing`);
+
+        const unsubscribe = onValue(typingRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const typingData = snapshot.val();
+                const now = Date.now();
+                const activeTypingUsers = Object.entries(typingData)
+                    .filter(([_, timestamp]) => (now - (timestamp as number)) < 5000)
+                    .map(([uid]) => uid);
+                callback(activeTypingUsers);
+            } else {
+                callback([]);
+            }
+        });
+
+        return unsubscribe;
     }
 };

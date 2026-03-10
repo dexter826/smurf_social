@@ -3,7 +3,7 @@ import { User, FriendRequest } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
-import { useChatStore } from '../store/chatStore';
+import { useRtdbChatStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
 
 type TabType = 'all' | 'requests' | 'sent';
@@ -54,7 +54,7 @@ export const useContacts = (): UseContactsReturn => {
   } = useContactStore();
 
   const { users: userCache, fetchUsers } = useUserCache();
-  const { getOrCreateConversation } = useChatStore();
+  const { getOrCreateConversation } = useRtdbChatStore();
   const contactsLoading = useLoadingStore(state => state.loadingStates['contacts.friends'] ?? false);
 
   const [activeTab, setActiveTab] = useState<TabType>('all');
