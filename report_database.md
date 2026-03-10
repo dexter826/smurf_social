@@ -1,138 +1,136 @@
 # BÁO CÁO THIẾT KẾ CƠ SỞ DỮ LIỆU (DATABASE SCHEMA)
 
-**Dự án:** Ứng dụng Mạng Xã Hội
-**Nền tảng:** Mobile & Web
-**Backend:** Firebase (Firestore, Realtime Database, Cloud Storage, Cloud Functions)
+**Dự án:** Ứng dụng Mạng Xã Hội (Mobile & Web)
+**Kiến trúc Dữ liệu:** Hybrid (Firestore + Realtime Database)
+
+## I. TỔNG QUAN KIẾN TRÚC
+
+1. **Cloud Firestore:** Dùng để lưu trữ dữ liệu tĩnh, cấu trúc phức tạp, cần query nhiều chiều (Người dùng, Bảng tin, Bài viết, Bình luận, Báo cáo, Thông báo). Áp dụng kiến trúc **Fan-out** cho Bảng tin.
+2. **Realtime Database (RTDB):** Dùng chuyên biệt cho **Hệ thống Chat và Hiện diện** (Trạng thái Online, Tin nhắn, Đã xem/Đang gõ, Signaling cuộc gọi). Giúp hệ thống chịu tải hàng triệu tin nhắn mà không bị quá giới hạn quota đọc/ghi của Firestore.
+3. **Cloud Storage:** Lưu trữ file vật lý.
 
 ---
 
-## I. TỔNG QUAN KIẾN TRÚC LƯU TRỮ
+## II. ĐẶC TẢ OBJECT MEDIA (DÙNG CHUNG)
 
-Hệ thống sử dụng kết hợp hai loại cơ sở dữ liệu của Firebase nhằm tối ưu hiệu năng và chi phí:
-
-1. **Cloud Firestore:** Lưu trữ dữ liệu tĩnh, cấu trúc phức tạp và cần truy vấn nhiều chiều (Người dùng, Bài viết, Bình luận, Báo cáo, Thông báo). Sử dụng kiến trúc **Fan-out** cho Bảng tin để tối ưu tốc độ đọc.
-2. **Realtime Database (RTDB):** Lưu trữ dữ liệu đòi hỏi tốc độ cập nhật thời gian thực cao, độ trễ thấp (Trạng thái Online, Nhắn tin, Typing, Cấu hình hội thoại cá nhân).
-3. **Cloud Storage:** Lưu trữ file vật lý (Ảnh, Video, Tệp đính kèm). Metadata của file được lưu trữ kèm cờ `isSensitive` để phục vụ chức năng tự động làm mờ ảnh nhạy cảm.
-
----
-
-## II. ĐẶC TẢ OBJECT MEDIA DÙNG CHUNG
-
-Để đáp ứng các giới hạn khắt khe về file upload, mọi tệp tin lưu vào database đều sử dụng chung một cấu trúc Object Metadata sau:
+Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạng Object này để quản lý giới hạn và tự động làm mờ ảnh nhạy cảm (thông qua Cloud Vision API).
 
 ```json
 {
   "url": "https://firebasestorage...",
-  "fileName": "tailieu.pdf",
+  "fileName": "tailieu_hoctap.pdf",
   "mimeType": "application/pdf",
-  "size": 2048576,
-  "thumbnailUrl": "...",
-  "isSensitive": false
+  "size": 2048576, // Dùng để chặn nếu Ảnh > 5MB, Video > 50MB, File > 10MB
+  "thumbnailUrl": "...", // (Chỉ có ở Video)
+  "isSensitive": false // Cờ đánh dấu nội dung nhạy cảm
 }
 ```
 
-_Ghi chú:_
-
-- `size`: Kích thước file (bytes) để validate các giới hạn (5MB ảnh, 50MB video, 10MB file chat).
-- `thumbnailUrl`: URL ảnh thu nhỏ (dành riêng cho video).
-- `isSensitive`: Cờ đánh dấu nội dung nhạy cảm (Được Cloud Vision API cập nhật tự động).
-
 ---
 
-## III. FIRESTORE SCHEMA (Dữ liệu tĩnh & Truy vấn)
+## III. FIRESTORE SCHEMA (Dữ liệu Core & Mạng Xã Hội)
 
-### 1. Collection `Users`
+### 1. Collection `users` (Quản lý Hồ sơ)
 
-Quản lý thông tin cá nhân, định danh người dùng.
+- `uid` (String): Document ID (Firebase Auth UID).
+- `email` (String): Dùng để đăng nhập và tìm kiếm chính xác duy nhất.
+- `fullName` (String): Tên hiển thị (Max 50 ký tự).
+- `bio` (String): Tiểu sử (Max 500 ký tự).
+- `avatar` (MediaObject): Ảnh đại diện.
+- `cover` (MediaObject): Ảnh bìa.
+- `dob` (Timestamp): Ngày sinh.
+- `gender` (String): `male`, `female`, `other`.
+- `location` (String): Vị trí.
+- `status` (String): `active`, `banned`.
+- `createdAt` / `updatedAt` / `deletedAt` (Timestamp).
 
-- `uid` (String): Document ID (Trùng với Firebase Auth UID).
-- `email` (String): Email đăng nhập và dùng để tìm kiếm chính xác.
-- `fullName` (String): Tên người dùng (Tối đa 50 ký tự).
-- `bio` (String): Tiểu sử giới thiệu (Tối đa 500 ký tự).
-- `gender` (String): Giới tính.
-- `dob` (Timestamp): Ngày tháng năm sinh.
-- `location` (String): Địa điểm.
-- `avatar` (Map): Chứa Object Media (Kích thước tối đa 5MB, nén max 512px).
-- `cover` (Map): Chứa Object Media (Kích thước tối đa 10MB, nén max 1920px).
-- `status` (String): `active` hoặc `locked` (do Admin quản lý).
-- `createdAt` / `updatedAt` (Timestamp).
+_(Lưu ý: Quyền Admin sẽ được set bằng Firebase Auth Custom Claims, không lưu ở đây để bảo mật)._
 
-**1.1. Sub-collection `Relationships` (Bên trong `Users/{uid}`)**
-Lưu trữ trạng thái kết bạn và danh sách chặn.
+**1.1. Sub-collection `friends` (Bên trong `users/{uid}`)**
 
-- `targetUid` (String): ID người dùng đích (Làm Document ID).
-- `status` (String): `friends`, `pending_sent`, `pending_received`, `blocked`.
+- `friendId` (String): Document ID.
 - `createdAt` (Timestamp).
 
-**1.2. Sub-collection `Feeds` (Bên trong `Users/{uid}`)**
-Kiến trúc Fan-out để load bảng tin nhanh.
+**1.2. Sub-collection `blockedUsers` (Bên trong `users/{uid}`)**
 
-- `postId` (String): ID bài viết (Làm Document ID).
-- `authorId` (String): ID người đăng.
-- `createdAt` (Timestamp): Dùng để sắp xếp mới nhất.
+- `blockedUid` (String): Document ID.
+- `createdAt` (Timestamp).
 
-### 2. Collection `Posts`
+**1.3. Sub-collection `feeds` (Bên trong `users/{uid}` - Bảng tin Fan-out)**
 
-Lưu trữ bài đăng mạng xã hội.
+- `postId` (String): Document ID.
+- `authorId` (String).
+- `createdAt` (Timestamp).
+
+### 2. Collection `friendRequests`
+
+Quản lý luồng gửi/nhận lời mời độc lập.
 
 - `id` (String): Document ID.
-- `authorId` (String): UID người đăng.
-- `content` (String): Nội dung bài viết (Tối đa 5,000 ký tự).
-- `visibility` (String): Mức độ hiển thị (`public`, `friends`, `private`).
-- `media` (Array of Maps): Mảng các Object Media. Tối đa 10 ảnh hoặc 1 video.
-- `isEdited` (Boolean): Đánh dấu đã chỉnh sửa.
-- `reactions` (Map): Bộ đếm cảm xúc `{ like: 0, love: 0, haha: 0... }`.
-- `commentCount` (Number): Tổng số bình luận.
+- `senderId` (String): UID người gửi.
+- `receiverId` (String): UID người nhận.
+- `status` (String): `pending`, `accepted`, `rejected`.
 - `createdAt` / `updatedAt` (Timestamp).
 
-_(Lưu ý: Collection con `Reactions` nằm trong mỗi Post để lưu UID người dùng và loại cảm xúc)._
+### 3. Collection `posts`
 
-### 3. Collection `Comments`
-
-Root Collection lưu trữ bình luận.
+Hỗ trợ giới hạn 5000 ký tự, Soft-delete và kiểm duyệt.
 
 - `id` (String): Document ID.
-- `postId` (String): ID bài viết chứa bình luận.
-- `authorId` (String): UID người bình luận.
-- `parentId` (String): ID bình luận gốc (`null` nếu là bình luận gốc).
-- `content` (String): Nội dung (Tối đa 2,000 ký tự).
-- `image` (Map): 1 Object Media đính kèm (Tối đa 0.5MB, nén max 1280px).
+- `authorId` (String).
+- `content` (String).
+- `visibility` (String): `public`, `friends`, `private`.
+- `media` (Array of MediaObject): Tối đa 10 file.
+- `reactions` (Map): `{ like: 10, love: 5, haha: 2... }`.
+- `commentCount` (Number).
 - `isEdited` (Boolean).
-- `replyCount` (Number): Đếm số lượng phản hồi.
-- `reactions` (Map): Bộ đếm cảm xúc.
-- `createdAt` / `updatedAt` (Timestamp).
+- `status` (String): `active`, `deleted`.
+- `createdAt` / `updatedAt` / `deletedAt` (Timestamp).
 
-### 4. Collection `Reports`
+### 4. Collection `comments`
 
-Lưu trữ báo cáo vi phạm, phân hệ Admin xử lý.
-
-- `id` (String): Document ID.
-- `reporterId` (String): UID người gửi báo cáo.
-- `targetType` (String): `post`, `comment`, hoặc `user`.
-- `targetId` (String): ID của đối tượng bị báo cáo.
-- `reason` (String): Lý do (`spam`, `harassment`, `hate_speech`, `sensitive`, `scam`, `other`).
-- `description` (String): Mô tả chi tiết (Tối đa 500 ký tự).
-- `images` (Array of Maps): Tối đa 5 ảnh bằng chứng.
-- `status` (String): Trạng thái (`pending`, `resolved`, `rejected`, `deleted`).
-- `createdAt` / `updatedAt` (Timestamp).
-
-### 5. Collection `Notifications`
-
-Quản lý thông báo in-app.
+Thiết kế Root Collection để dễ phân trang (5 comment/trang theo yêu cầu).
 
 - `id` (String): Document ID.
-- `userId` (String): ID người nhận thông báo.
-- `type` (String): `reaction`, `comment`, `friend_request`, `report_update`.
-- `actorId` (String): ID người kích hoạt sự kiện.
-- `targetId` (String): ID bài viết/bình luận/người dùng liên quan.
+- `postId` (String).
+- `authorId` (String).
+- `parentId` (String): `null` nếu là bình luận gốc.
+- `content` (String): Max 2000 ký tự.
+- `image` (MediaObject): Tối đa 1 ảnh.
+- `reactions` (Map).
+- `replyCount` (Number).
+- `isEdited` (Boolean).
+- `status` (String): `active`, `deleted`.
+- `createdAt` / `updatedAt` / `deletedAt` (Timestamp).
+
+### 5. Collection `reports` (Quản trị viên)
+
+- `id` (String): Document ID.
+- `reporterId` (String).
+- `targetType` (String): `post`, `comment`, `user`.
+- `targetId` (String).
+- `reason` (String): `spam`, `harassment`, `hate_speech`, `sensitive`...
+- `description` (String): Max 500 ký tự.
+- `images` (Array of MediaObject): Tối đa 5 ảnh bằng chứng.
+- `status` (String): `pending`, `resolved`, `rejected`.
+- `resolution` (String): Hướng xử lý của Admin.
+- `createdAt` / `updatedAt` / `resolvedAt` (Timestamp).
+
+### 6. Collection `notifications`
+
+- `id` (String): Document ID.
+- `receiverId` (String).
+- `type` (String): `reaction`, `comment`, `friend_request`, `system`.
+- `actorId` (String).
+- `targetId` (String): Post/Comment ID liên quan.
 - `isRead` (Boolean).
 - `createdAt` (Timestamp).
 
 ---
 
-## IV. REALTIME DATABASE SCHEMA (Dữ liệu thời gian thực)
+## IV. REALTIME DATABASE SCHEMA (Hệ thống Chat & Tốc độ cao)
 
-Được thiết kế theo kiến trúc Flatten (phẳng) để tối ưu Listeners.
+Được thiết kế theo kiến trúc Flatten (phẳng) để tối ưu Listeners. Giải quyết toàn bộ bài toán Mention, Trả lời, Chuyển tiếp, Xóa tin nhắn, Đã xem...
 
 ```json
 {
@@ -145,14 +143,20 @@ Quản lý thông báo in-app.
 
   "conversations": {
     "conv_id_1": {
-      "type": "group",
-      "name": "Nhóm Đồ Án",
+      "isGroup": true,
+      "name": "Nhóm Đồ Án", // Tối đa 50 ký tự
       "avatar": { "url": "...", "isSensitive": false },
+      "creatorId": "uid_1",
       "members": {
         "uid_1": "admin",
         "uid_2": "member"
       },
-      "memberCount": 2,
+      "lastMessage": {
+        "senderId": "uid_1",
+        "content": "Chào mọi người",
+        "type": "text",
+        "timestamp": 1678900000
+      },
       "createdAt": 1678900000,
       "updatedAt": 1678900000
     }
@@ -162,15 +166,42 @@ Quản lý thông báo in-app.
     "conv_id_1": {
       "msg_id_1": {
         "senderId": "uid_1",
-        "type": "text",
-        "content": "Nội dung...",
+        "type": "text", // text, image, video, file, voice, system, call
+        "content": "Nội dung tin nhắn...", // Max 5000 ký tự
         "media": [
-          // Array of Object Media.
+          // Array of MediaObject. Tối đa 10 files
         ],
-        "replyToMsgId": "msg_id_old",
-        "isEdited": false,
-        "isRevoked": false,
-        "reactions": { "uid_2": "haha" },
+        "mentions": ["uid_2", "uid_3"], // Lưu UID người bị nhắc tên
+        "isForwarded": false,
+
+        "replyToId": "msg_id_old",
+        "replyToSnippet": {
+          // Trích xuất tin nhắn cũ để render nhanh không cần query lại
+          "senderId": "uid_2",
+          "content": "Tin nhắn gốc",
+          "type": "text"
+        },
+
+        "isEdited": false, // Giới hạn sửa trong 5 phút
+        "isRecalled": false, // Thu hồi phía mọi người
+
+        "deletedBy": {
+          // Chức năng "Xóa phía tôi"
+          "uid_2": true
+        },
+
+        "readBy": {
+          // Trạng thái "Đã xem"
+          "uid_2": 1678900100
+        },
+        "deliveredTo": {
+          // Trạng thái "Đã nhận"
+          "uid_2": 1678900050
+        },
+
+        "reactions": {
+          "uid_2": "haha"
+        },
         "createdAt": 1678900000,
         "updatedAt": 1678900000
       }
@@ -180,24 +211,25 @@ Quản lý thông báo in-app.
   "user_chats": {
     "uid_1": {
       "conv_id_1": {
-        "isPinned": true,
-        "isMuted": false,
-        "isArchived": false,
-        "unreadCount": 5,
+        "isPinned": true, // Ghim hội thoại
+        "isMuted": false, // Tắt thông báo
+        "isArchived": false, // Lưu trữ hội thoại
+        "unreadCount": 5, // Bộ đếm tin nhắn chưa đọc
         "lastReadMsgId": "msg_id_1",
-        "lastMsgTimestamp": 1678900000,
-        "hiddenMessages": {
-          "msg_id_0": true
-        }
+        "lastMsgTimestamp": 1678900000 // Để sort danh sách chat
       }
+    }
+  },
+
+  "call_signaling": {
+    "uid_2": {
+      "callerId": "uid_1",
+      "conversationId": "conv_id_1",
+      "callType": "video",
+      "status": "ringing", // ringing, accepted, rejected
+      "zegoToken": "eyJhb...", // Token tham gia ZegoCloud
+      "timestamp": 1678900000
     }
   }
 }
 ```
-
----
-
-## V. TÍCH HỢP TÍNH NĂNG MỞ RỘNG
-
-1. **Gọi thoại / Video (WebRTC):** Sử dụng SDK ZegoCloud. Firebase Realtime Database lưu trữ `call_log` dưới dạng một `type` tin nhắn đặc biệt trong bảng `messages`.
-2. **Kiểm duyệt ảnh nhạy cảm:** Kích hoạt tự động qua Firebase Cloud Functions kết hợp Google Cloud Vision API. Khi phát hiện vi phạm, hệ thống cập nhật `isSensitive = true`. Frontend thực hiện làm mờ dựa trên cờ này.
