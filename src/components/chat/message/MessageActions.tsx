@@ -1,11 +1,11 @@
 import React from 'react';
 import { MoreVertical, Reply, Forward, RotateCcw, Edit2, Trash2 } from 'lucide-react';
 
-import { Message, MessageType } from '../../../types';
+import { RtdbMessage, MessageType } from '../../../types';
 import { IconButton } from '../../ui';
 
 interface MessageActionsProps {
-  message: Message;
+  message: { id: string; data: RtdbMessage };
   isMe: boolean;
   canEdit: boolean;
   showMenu: boolean;
@@ -13,9 +13,9 @@ interface MessageActionsProps {
   menuPlacement: 'top' | 'bottom';
   menuButtonRef: React.RefObject<HTMLButtonElement>;
   toggleMenu: () => void;
-  onReply?: (message: Message) => void;
-  onForward?: (message: Message) => void;
-  onEdit?: (message: Message) => void;
+  onReply?: (message: { id: string; data: RtdbMessage }) => void;
+  onForward?: (message: { id: string; data: RtdbMessage }) => void;
+  onEdit?: (message: { id: string; data: RtdbMessage }) => void;
   setShowRecallConfirm: (show: boolean) => void;
   onDeleteForMe?: (messageId: string) => void;
   isBlocked: boolean;
@@ -54,7 +54,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           />
           <div className={`absolute z-20 bg-bg-primary border border-border-light rounded-lg shadow-dropdown py-1 w-40 ${isMe ? 'right-0' : 'left-0'} ${menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-8'
             }`}>
-            {message.type !== MessageType.CALL && (
+            {message.data.type !== 'call' && (
               <>
                 <button
                   onClick={() => {

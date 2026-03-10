@@ -3,7 +3,7 @@ import { MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
-import { Post, User, ReportType, PostType } from '../../types';
+import { Post, User, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { useFriendIds } from '../../hooks';
@@ -45,7 +45,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const myReaction = usePostStore(state => state.myPostReactions[post.id]);
   const isOwner = post.authorId === currentUser.id;
 
-  const hasMedia = (post.images?.length ?? 0) > 0 || (post.videos?.length ?? 0) > 0;
+  const hasMedia = (post.media?.length ?? 0) > 0;
 
   const handleProfileClick = useCallback(() => {
     if (author?.id) {
@@ -66,7 +66,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         <div className="flex gap-3">
           <UserAvatar
             userId={author?.id}
-            src={author?.avatar}
+            src={author?.avatar.url}
             name={author?.fullName}
             size="md"
             initialStatus={author?.status}
@@ -80,11 +80,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
               >
                 {author?.fullName || 'Unknown User'}
               </h3>
-              {post.type && post.type !== PostType.NORMAL && (
-                <span className="text-[14px] text-text-secondary font-normal">
-                  {post.content}
-                </span>
-              )}
               {isUploading && !hasMedia && (
                 <span className="text-xs text-info font-medium">
                   Đang đăng...
@@ -131,31 +126,19 @@ const PostItemInner: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      {(!post.type || post.type === PostType.NORMAL) && (
-        <div
-          className="px-4 pb-3 relative"
-        >
-          <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
-            <TruncatedText content={post.content} threshold={300} />
-          </p>
+      <div
+        className="px-4 pb-3 relative"
+      >
+        <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
+          <TruncatedText content={post.content} threshold={300} />
+        </p>
 
-          {/* Hiển thị lỗi tải lên */}
-          {error && (
-            <div className="mt-2 p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
-              <span className="text-xs text-error font-medium">{error}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Vẫn hiển thị lỗi nếu có, kể cả khi ẩn content */}
-      {(post.type && post.type !== PostType.NORMAL && error) && (
-        <div className="px-4 pb-3">
-          <div className="p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
+        {error && (
+          <div className="mt-2 p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
             <span className="text-xs text-error font-medium">{error}</span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <PostMediaGrid
         media={post.media || []}

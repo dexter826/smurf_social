@@ -1,22 +1,20 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Smile, Check, CheckCheck } from 'lucide-react';
+import { Smile, Check, CheckCheck } from 'lucide-react';
 
-import { Message, User, MessageType } from '../../../types';
+import { RtdbMessage, User, MessageType } from '../../../types';
 import {
   Avatar,
   UserAvatar,
-  IconButton,
   ReactionDisplay,
   ReactionSelector,
   Modal,
   UserStatusText,
   ConfirmDialog,
   MediaViewer,
-  BannedBadge,
   ReactionDetailsModal
 } from '../../ui';
-import { useChatStore } from '../../../store/chatStore';
+import { useRtdbChatStore } from '../../../store';
 import { TIME_LIMITS } from '../../../constants/appConfig';
 import { formatTimeOnly } from '../../../utils/dateUtils';
 import { scrollToMessage } from '../../../utils';
@@ -25,7 +23,7 @@ import { MessageActions } from './MessageActions';
 
 
 interface MessageBubbleProps {
-  message: Message;
+  message: { id: string; data: RtdbMessage };
   isMe: boolean;
   sender?: User;
   showAvatar: boolean;
@@ -33,15 +31,16 @@ interface MessageBubbleProps {
   isLastMessage?: boolean;
   onRecall?: (messageId: string) => void;
   onDeleteForMe?: (messageId: string) => void;
-  onForward?: (message: Message) => void;
-  onReply?: (message: Message) => void;
-  onEdit?: (message: Message) => void;
+  onForward?: (message: { id: string; data: RtdbMessage }) => void;
+  onReply?: (message: { id: string; data: RtdbMessage }) => void;
+  onEdit?: (message: { id: string; data: RtdbMessage }) => void;
   currentUserId: string;
   usersMap: Record<string, User>;
   isGroup?: boolean;
   lastReadByUsers?: User[];
   isBlocked?: boolean;
   onCall?: () => void;
+  conversationId: string;
 }
 
 const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
@@ -62,6 +61,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   lastReadByUsers = [],
   isBlocked = false,
   onCall,
+  conversationId,
 }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -72,7 +72,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const { toggleReaction, uploadProgress } = useChatStore();
+  const { toggleReaction, uploadProgress } = useRtdbChatStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -91,6 +91,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     }
   }, [sender?.id, navigate]);
 
+  const senderName = sender?.fullName || 'Người dùng';
+
   const toggleMenu = useCallback(() => {
     if (!showMenu && menuButtonRef.current) {
       const rect = menuButtonRef.current.getBoundingClientRect();
@@ -100,21 +102,22 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     setShowMenu(!showMenu);
   }, [showMenu]);
 
-  const otherReaders = (message.readBy || []).filter(uid => uid !== currentUserId);
+  const otherReaders = message.data.readBy ? Object.keys(message.data.readBy).filter(uid => uid !== currentUserId) : [];
   const isRead = otherReaders.length > 0;
-  const isDelivered = !!message.deliveredAt;
+  const isDelivered = message.data.deliveredTo && Object.keys(message.data.deliveredTo).length > 0;
 
-  const canEdit = isMe && !message.isRecalled && message.type !== MessageType.CALL && (
-    (Date.now() - message.createdAt.toMillis()) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
+  const canEdit = isMe && !message.data.isRecalled && message.data.type !== MessageType.CALL && (
+    (Date.now() - message.data.createdAt) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
   );
 
-  const hasReactions = (message.reactionCount) > 0;
-  const myReaction = useChatStore(state => state.myMessageReactions[message.id]);
+  const hasReactions = message.data.reactions && Object.keys(message.data.reactions).length > 0;
+  const myReaction = message.data.reactions?.[currentUserId];
 
   const handleToggleVoice = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!audioRef.current) {
-      audioRef.current = new Audio(message.fileUrl || message.content);
+      const voiceUrl = message.data.media?.[0]?.url || message.data.content;
+      audioRef.current = new Audio(voiceUrl);
       audioRef.current.onended = () => setIsPlaying(false);
     }
 
@@ -127,12 +130,12 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     }
   };
 
-  if (message.type === 'system') {
+  if (message.data.type === 'system') {
     return (
       <div className="w-full flex justify-center mb-3">
         <div className="flex flex-col items-center w-full my-1">
           <span className="bg-bg-secondary/50 px-3 py-1 rounded-full text-[11px] text-text-tertiary italic text-center max-w-[90%]">
-            {message.content}
+            {message.data.content}
           </span>
         </div>
       </div>
@@ -167,7 +170,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               className="text-[11px] text-text-secondary ml-1 mb-1 font-medium cursor-pointer hover:underline"
               onClick={handleProfileClick}
             >
-              {sender?.name}
+              {senderName}
             </span>
           )}
 
@@ -184,35 +187,35 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             <div
               className={`
                 relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
-                ${(message.type === 'text' || message.isRecalled || message.replyToId || message.type === 'call') ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
+                ${(message.data.type === 'text' || message.data.isRecalled || message.data.replyToId || message.data.type === 'call') ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
                 ${isMe
-                  ? ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : (message.type === 'call' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm' : ''))
-                  : ((message.type === 'text' || message.isRecalled || message.replyToId) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : (message.type === 'call' ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm' : ''))
+                  ? ((message.data.type === 'text' || message.data.isRecalled || message.data.replyToId) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : (message.data.type === 'call' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm' : ''))
+                  : ((message.data.type === 'text' || message.data.isRecalled || message.data.replyToId) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : (message.data.type === 'call' ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm' : ''))
                 }
-                ${message.type === 'call' && !message.isRecalled && onCall ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all duration-base' : ''}
+                ${message.data.type === 'call' && !message.data.isRecalled && onCall ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all duration-base' : ''}
               `}
               onClick={() => {
-                if (message.type === 'call' && !message.isRecalled && onCall) {
+                if (message.data.type === 'call' && !message.data.isRecalled && onCall) {
                   onCall();
                 }
               }}
             >
-              {message.replyToId && message.replyToSnippet && (
+              {message.data.replyToId && message.data.replyToSnippet && (
                 <div className={`mb-2 p-2 rounded border-l-4 text-xs ${isMe
                   ? 'bg-white/10 border-white/50 text-white/90'
                   : 'bg-bg-secondary border-primary text-text-secondary'
                   } max-w-full overflow-hidden truncate opacity-90 cursor-pointer`}
-                  onClick={() => scrollToMessage(message.replyToId!)}
+                  onClick={() => scrollToMessage(message.data.replyToId!)}
                 >
                   <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
-                    {message.replyToSnippet.senderId === currentUserId
+                    {message.data.replyToSnippet.senderId === currentUserId
                       ? 'Bạn'
-                      : usersMap[message.replyToSnippet.senderId]?.name || 'Người dùng'}
+                      : usersMap[message.data.replyToSnippet.senderId]?.fullName || 'Người dùng'}
                   </div>
                   <div className="truncate">
-                    {message.replyToSnippet.type === 'text'
-                      ? message.replyToSnippet.content.replace(/@\[([^\]]+)\]/g, '@$1')
-                      : `[${message.replyToSnippet.type}]`}
+                    {message.data.replyToSnippet.type === 'text'
+                      ? message.data.replyToSnippet.content.replace(/@\[([^\]]+)\]/g, '@$1')
+                      : `[${message.data.replyToSnippet.type}]`}
                   </div>
                 </div>
               )}
@@ -227,20 +230,23 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               />
 
               {/* Thời gian & Trạng thái */}
-              {(message.type === 'text' || message.type === 'call' || message.isRecalled) && (
+              {(message.data.type === 'text' || message.data.type === 'call' || message.data.isRecalled) && (
                 <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMe ? 'text-white/80' : 'text-text-tertiary'
                   }`}>
-                  <span>{formatTimeOnly(message.createdAt)}</span>
+                  <span>{formatTimeOnly(message.data.createdAt)}</span>
                 </div>
               )}
 
               {/* Hiển thị cảm xúc & Bộ chọn Emoji */}
-              {!message.isRecalled && message.type !== MessageType.CALL && (
+              {!message.data.isRecalled && message.data.type !== MessageType.CALL && (
                 <div className={`absolute -bottom-3.5 z-10 flex items-center gap-1 ${isMe ? 'left-1' : 'right-1'}`}>
                   {hasReactions && (
                     <ReactionDisplay
-                      reactionSummary={message.reactionSummary}
-                      reactionCount={message.reactionCount}
+                      reactionSummary={Object.entries(message.data.reactions || {}).reduce((acc, [_, emoji]) => {
+                        acc[emoji] = (acc[emoji] || 0) + 1;
+                        return acc;
+                      }, {} as Record<string, number>)}
+                      reactionCount={Object.keys(message.data.reactions || {}).length}
                       onClick={() => setShowReactionDetails(true)}
                     />
                   )}
@@ -267,7 +273,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                         }}
                       />
                       <ReactionSelector
-                        onSelect={(emoji) => toggleReaction(message.id, currentUserId, emoji)}
+                        onSelect={(emoji) => toggleReaction(conversationId, message.id, currentUserId, emoji)}
                         onClose={() => setShowReactionSelector(false)}
                         autoClose={false}
                         className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
@@ -279,7 +285,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               )}
             </div>
 
-            {!message.isRecalled && (
+            {!message.data.isRecalled && (
               <MessageActions
                 message={message}
                 isMe={isMe}
@@ -300,9 +306,9 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
           </div>
 
           {/* Thời gian cho file media */}
-          {message.type !== 'text' && message.type !== 'call' && !message.isRecalled && (
+          {message.data.type !== 'text' && message.data.type !== 'call' && !message.data.isRecalled && (
             <span className="text-[10px] text-text-tertiary mt-1">
-              {formatTimeOnly(message.createdAt)}
+              {formatTimeOnly(message.data.createdAt)}
             </span>
           )}
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (
@@ -324,8 +330,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                     {lastReadByUsers.slice(0, 3).map(user => (
                       <Avatar
                         key={user.id}
-                        src={user.avatar}
-                        name={user.name}
+                        src={user.avatar.url}
+                        name={user.fullName}
                         size="2xs"
                       />
                     ))}
@@ -349,12 +355,11 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   <div className="space-y-3">
                     {lastReadByUsers.map(reader => (
                       <div key={reader.id} className="flex items-center gap-3 p-2 hover:bg-bg-hover active:bg-bg-active rounded-lg transition-all duration-base">
-                        <UserAvatar userId={reader.id} src={reader.avatar} size="md" initialStatus={reader.status} showStatus={true} />
+                        <UserAvatar userId={reader.id} size="md" showStatus={true} />
                         <div className="flex-1">
-                          <div className="text-sm font-bold text-text-primary">{reader.name}</div>
+                          <div className="text-sm font-bold text-text-primary">{reader.fullName}</div>
                           <UserStatusText
                             userId={reader.id}
-                            initialStatus={reader.status}
                             className="text-xs text-text-tertiary"
                           />
                         </div>
@@ -366,10 +371,10 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </div >
 
       <MediaViewer
-        media={[{ type: 'image', url: message.fileUrl || message.content }]}
+        media={[{ type: 'image', url: message.data.media?.[0]?.url || message.data.content }]}
         initialIndex={0}
         isOpen={showFullImage}
         onClose={() => setShowFullImage(false)}

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { UserAvatar, IconButton, Modal, Dropdown, DropdownItem, Skeleton, ReactionDetailsModal } from '../../ui';
-import { Post, User, ReportType } from '../../../types';
+import { Post, User, ReportType, ReactionType } from '../../../types';
 import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
@@ -65,7 +65,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe && post && mediaIndex < (post.images?.length || 0) + (post.videos?.length || 0) - 1) {
+    if (isLeftSwipe && post && mediaIndex < allMedia.length - 1) {
       setMediaIndex(prev => prev + 1);
     }
     if (isRightSwipe && mediaIndex > 0) {
@@ -82,11 +82,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
   const allMedia = useMemo(() => {
     if (!post) return [];
-    return [
-      ...(post.images || []).map(url => ({ url, type: 'image' })),
-      ...(post.videos || []).map(url => ({ url, type: 'video' }))
-    ];
-  }, [post?.images, post?.videos]);
+    return (post.media || []).map(m => ({
+      url: m.url,
+      type: m.mimeType.startsWith('video/') ? 'video' as const : 'image' as const
+    }));
+  }, [post?.media]);
 
   if (!isOpen) return null;
 
@@ -130,7 +130,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   }
 
   const myReaction = usePostStore(state => state.myPostReactions[post.id]);
-  const isOwner = post.userId === currentUser.id;
+  const isOwner = post.authorId === currentUser.id;
   const hasMedia = allMedia.length > 0;
 
   return (
@@ -217,8 +217,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           <div className="flex gap-3 items-center flex-1 min-w-0">
             <UserAvatar
               userId={author?.id}
-              src={author?.avatar}
-              name={author?.name}
+              src={author?.avatar.url}
+              name={author?.fullName}
               size="md"
               initialStatus={author?.status}
               onClick={handleProfileClick}
@@ -228,7 +228,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 className="font-bold text-text-primary text-[15px] truncate cursor-pointer hover:underline transition-all duration-base"
                 onClick={handleProfileClick}
               >
-                {author?.name || 'Unknown User'}
+                {author?.fullName || 'Unknown User'}
               </h3>
               <div className="flex items-center gap-2 text-[12px] text-text-tertiary mt-0.5">
                 <span title={formatDateTime(post.createdAt)}>
@@ -258,7 +258,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   icon={<Flag size={18} />}
                   label="Báo cáo bài viết"
                   variant="danger"
-                  onClick={() => openReportModal(ReportType.POST, post.id, post.userId)}
+                  onClick={() => openReportModal(ReportType.POST, post.id, post.authorId)}
                 />
               </Dropdown>
             )}
@@ -277,7 +277,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           autoFocus={true}
           className="flex-1 min-h-0"
           onProfileClick={onClose}
-          postOwnerId={post.userId}
+          postOwnerId={post.authorId}
           totalCommentCount={post.commentCount}
           header={
             <div className="flex flex-col">
@@ -322,8 +322,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
               <ReactionActions
                 postId={post.id}
-                reactionSummary={post.reactionSummary}
-                reactionCount={post.reactionCount}
+                reactionSummary={Object.entries(post.reactions || {}).reduce((acc, [type, count]) => {
+                  if (count > 0) acc[type as ReactionType] = count;
+                  return acc;
+                }, {} as Record<ReactionType, number>)}
+                reactionCount={Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0)}
                 myReaction={myReaction}
                 commentCount={post.commentCount}
                 onReact={onReact}

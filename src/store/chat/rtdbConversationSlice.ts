@@ -17,6 +17,7 @@ export interface RtdbConversationSlice {
     searchResults: { users: User[] };
     searchHistory: Record<string, User[]>;
     isChatVisible: boolean;
+    typingUsers: Record<string, string[]>;
 
     subscribeToConversations: (userId: string) => () => void;
     selectConversation: (conversationId: string | null) => void;
@@ -25,6 +26,7 @@ export interface RtdbConversationSlice {
     togglePin: (conversationId: string, userId: string, pinned: boolean) => Promise<void>;
     toggleMute: (conversationId: string, userId: string, muted: boolean) => Promise<void>;
     toggleArchive: (conversationId: string, userId: string, archived: boolean) => Promise<void>;
+    toggleMarkUnread: (conversationId: string, userId: string, markedUnread: boolean) => Promise<void>;
     deleteConversation: (conversationId: string, userId: string) => Promise<void>;
     setSearchFocused: (focused: boolean) => void;
     addToSearchHistory: (item: User, userId: string) => void;
@@ -33,6 +35,8 @@ export interface RtdbConversationSlice {
     setSearchTerm: (term: string) => void;
     setIsChatVisible: (visible: boolean) => void;
     markAllAsRead: (userId: string) => Promise<void>;
+    setTyping: (conversationId: string, userId: string, isTyping: boolean) => Promise<void>;
+    subscribeToTyping: (conversationId: string) => () => void;
 }
 
 export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], RtdbConversationSlice> = (set, get) => ({
@@ -43,6 +47,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
     searchResults: { users: [] },
     searchHistory: {},
     isChatVisible: false,
+    typingUsers: {},
 
     subscribeToConversations: (userId: string) => {
         const hasCache = get().conversations.length > 0;
@@ -144,6 +149,19 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    toggleMarkUnread: async (conversationId: string, userId: string, markedUnread: boolean) => {
+        try {
+            if (markedUnread) {
+                await rtdbConversationService.markAsUnread(userId, conversationId);
+            } else {
+                await rtdbConversationService.resetUnreadCount(userId, conversationId);
+            }
+        } catch (error) {
+            console.error("Lỗi đánh dấu chưa đọc:", error);
+            throw error;
+        }
+    },
+
     deleteConversation: async (conversationId: string, userId: string) => {
         set(state => ({
             selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
@@ -214,5 +232,26 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         } catch (error) {
             console.error("Lỗi đánh dấu tất cả đã đọc:", error);
         }
+    },
+
+    setTyping: async (conversationId: string, userId: string, isTyping: boolean) => {
+        try {
+            await rtdbConversationService.setTyping(conversationId, userId, isTyping);
+        } catch (error) {
+            console.error("Lỗi set typing:", error);
+        }
+    },
+
+    subscribeToTyping: (conversationId: string) => {
+        const unsubscribe = rtdbConversationService.subscribeToTyping(conversationId, (typingUserIds) => {
+            set((state) => ({
+                typingUsers: {
+                    ...state.typingUsers,
+                    [conversationId]: typingUserIds
+                }
+            }));
+        });
+
+        return unsubscribe;
     }
 });

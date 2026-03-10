@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Ellipsis, Flag, PenTool, Pencil, Trash2 } from 'lucide-react';
 import { UserAvatar, LazyImage, Skeleton, ReactionSelector, ReactionDisplay, ReactionDetailsModal, Dropdown, DropdownItem } from '../../ui';
 import { CommentInput } from './CommentInput';
-import { Comment, User, ReactionType, ReportType } from '../../../types';
+import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../types';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { TruncatedText } from '../shared';
 import { useCommentStore } from '../../../store/commentStore';
@@ -25,9 +25,9 @@ interface CommentItemProps {
   rootAuthorId?: string;
   handleReplyClick: (comment: Comment) => void;
   handleEditClick: (comment: Comment) => void;
-  handleCommentSubmit: (content: string, image?: string) => Promise<void>;
+  handleCommentSubmit: (content: string, image?: MediaObject) => Promise<void>;
   handleDeleteClick: (comment: Comment) => void;
-  handleUploadMedia: (file: File) => Promise<string | undefined>;
+  handleUploadMedia: (file: File) => Promise<MediaObject | undefined>;
   loadReplies: (parentId: string) => Promise<void>;
   resetInput: () => void;
   onProfileClick?: () => void;
@@ -92,7 +92,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   return (
     <div className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
       <div className="flex gap-3">
-        <UserAvatar userId={comment.authorId} src={author?.avatar} name={author?.fullName} size={isReply ? 'xs' : 'sm'} onClick={onProfileNavigate} />
+        <UserAvatar userId={comment.authorId} src={author?.avatar.url} name={author?.fullName} size={isReply ? 'xs' : 'sm'} onClick={onProfileNavigate} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-1.5 group/comment">
             <div className="relative inline-block max-w-full">
@@ -122,10 +122,11 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                         className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline"
                         onClick={() => {
                           onProfileClick?.();
-                          navigate(`/profile/${comment.parentId}`);
+                          const parentUser = users[comment.parentId!];
+                          if (parentUser) navigate(`/profile/${parentUser.id}`);
                         }}
                       >
-                        {users[comment.parentId].fullName}
+                        {users[comment.parentId!]?.fullName}
                       </h4>
                     </>
                   )}
@@ -134,7 +135,11 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 {isEditing ? (
                   <div className="mt-2 min-w-[200px] md:min-w-[300px]">
                     <CommentInput
-                      user={currentUser}
+                      user={{
+                        id: currentUser.id,
+                        fullName: currentUser.fullName,
+                        avatar: currentUser.avatar
+                      }}
                       initialValue={comment.content}
                       initialImage={comment.image}
                       onSubmit={handleCommentSubmit}
@@ -155,8 +160,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     {comment.image && (
                       <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
                         <LazyImage
-                          src={typeof comment.image === 'string' ? comment.image : comment.image.url}
-                          className={`max-h-60 w-full object-contain ${typeof comment.image === 'object' && comment.image.isSensitive ? 'blur-md' : ''}`}
+                          src={comment.image.url}
+                          className={`max-h-60 w-full object-contain ${comment.image.isSensitive ? 'blur-md' : ''}`}
                           alt="attach"
                         />
                       </div>
@@ -230,7 +235,11 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
           {isReplying && (
             <div className="mt-3 pl-2">
               <CommentInput
-                user={currentUser}
+                user={{
+                  id: currentUser.id,
+                  fullName: currentUser.fullName,
+                  avatar: currentUser.avatar
+                }}
                 placeholder={`Trả lời ${author?.fullName}...`}
                 onSubmit={handleCommentSubmit}
                 onCancel={resetInput}

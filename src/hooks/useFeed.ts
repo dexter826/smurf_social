@@ -39,25 +39,23 @@ export const useFeed = (): UseFeedReturn => {
 
   const handleLoadMore = useCallback(() => {
     if (!currentUser || feedPostsLoading || feedLoadMoreLoading || !hasMore) return;
-    fetchPosts(currentUser.id, friendIds, blockedUserIds, true);
-  }, [currentUser, hasMore, fetchPosts, feedPostsLoading, feedLoadMoreLoading, friendIds, blockedUserIds]);
+    fetchPosts(currentUser.id, true);
+  }, [currentUser, hasMore, fetchPosts, feedPostsLoading, feedLoadMoreLoading]);
 
   const observerRef = useIntersectionObserver(handleLoadMore, {
     enabled: hasMore && !feedPostsLoading && !feedLoadMoreLoading && !!currentUser
   });
 
-
-
   const handleSubscribeToPosts = useCallback(() => {
     if (!currentUser) return;
-    return subscribeToPosts(currentUser.id, friendIds, blockedUserIds);
-  }, [currentUser, subscribeToPosts, friendIds, blockedUserIds]);
+    return subscribeToPosts(currentUser.id);
+  }, [currentUser, subscribeToPosts]);
 
   useEffect(() => {
     if (!currentUser) return;
 
     if (posts.length === 0 || !feedPostsLoading) {
-      fetchPosts(currentUser.id, friendIds, blockedUserIds, false);
+      fetchPosts(currentUser.id, false);
     }
 
     const unsubscribe = handleSubscribeToPosts();
@@ -65,7 +63,7 @@ export const useFeed = (): UseFeedReturn => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [currentUser?.id, blockedUserIds.length, friendIds.length]);
+  }, [currentUser?.id]);
 
   // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {

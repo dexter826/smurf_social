@@ -1,18 +1,18 @@
 import { useCallback } from 'react';
-import { Conversation } from '../../types';
-import { useChatStore } from '../../store/chatStore';
+import { MediaObject } from '../../types';
+import { useRtdbChatStore } from '../../store';
 
 interface UseChatGroupsProps {
   selectedConversationId: string | null;
   currentUserId: string | null;
-  conversations: Conversation[];
+  conversations: Array<{ id: string; data: any }>;
 }
 
 // Quản lý nhóm chat
-export const useChatGroups = ({ 
-  selectedConversationId, 
+export const useChatGroups = ({
+  selectedConversationId,
   currentUserId,
-  conversations 
+  conversations
 }: UseChatGroupsProps) => {
   const {
     createGroup,
@@ -20,15 +20,13 @@ export const useChatGroups = ({
     addMember,
     removeMember,
     leaveGroup,
-    promoteToAdmin,
-    demoteFromAdmin,
-    disbandGroup,
-  } = useChatStore();
+    updateMemberRole,
+  } = useRtdbChatStore();
 
   const handleCreateGroup = useCallback(async (
-    memberIds: string[], 
-    groupName: string, 
-    groupAvatar?: File | string
+    memberIds: string[],
+    groupName: string,
+    groupAvatar?: File | MediaObject
   ) => {
     if (!currentUserId) return;
     await createGroup(currentUserId, memberIds, groupName, groupAvatar);
@@ -48,11 +46,15 @@ export const useChatGroups = ({
 
   const handleLeaveGroup = useCallback(async (): Promise<{ needAssignAdmin: boolean }> => {
     if (!selectedConversationId || !currentUserId) return { needAssignAdmin: false };
-    
+
     const conv = conversations.find(c => c.id === selectedConversationId);
-    
-    if (conv?.isGroup && conv.creatorId === currentUserId && conv.participantIds.length > 1) {
-      return { needAssignAdmin: true };
+
+    // RTDB structure: check if user is creator and if there are other members
+    if (conv?.data?.isGroup && conv.data.creatorId === currentUserId) {
+      const memberCount = Object.keys(conv.data.members || {}).length;
+      if (memberCount > 1) {
+        return { needAssignAdmin: true };
+      }
     }
 
     await leaveGroup(selectedConversationId, currentUserId);
@@ -61,28 +63,39 @@ export const useChatGroups = ({
 
   const handleAssignAdminAndLeave = useCallback(async (newAdminId: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    await leaveGroup(selectedConversationId, currentUserId, newAdminId);
-  }, [selectedConversationId, currentUserId, leaveGroup]);
+    // First promote the new admin
+    await updateMemberRole(selectedConversationId, newAdminId, 'admin');
+    // Then leave
+    await leaveGroup(selectedConversationId, currentUserId);
+  }, [selectedConversationId, currentUserId, updateMemberRole, leaveGroup]);
 
   const handlePromoteToAdmin = useCallback(async (userId: string) => {
     if (!selectedConversationId) return;
-    await promoteToAdmin(selectedConversationId, userId);
-  }, [selectedConversationId, promoteToAdmin]);
+    await updateMemberRole(selectedConversationId, userId, 'admin');
+  }, [selectedConversationId, updateMemberRole]);
 
   const handleDemoteFromAdmin = useCallback(async (userId: string) => {
     if (!selectedConversationId) return;
-    await demoteFromAdmin(selectedConversationId, userId);
-  }, [selectedConversationId, demoteFromAdmin]);
+    await updateMemberRole(selectedConversationId, userId, 'member');
+  }, [selectedConversationId, updateMemberRole]);
 
-  const handleEditGroup = useCallback(async (updates: { groupName?: string; groupAvatar?: string }) => {
+  const handleEditGroup = useCallback(async (updates: { name?: string; avatar?: MediaObject }) => {
     if (!selectedConversationId) return;
     await updateGroupInfo(selectedConversationId, updates);
   }, [selectedConversationId, updateGroupInfo]);
 
   const handleDisbandGroup = useCallback(async () => {
-    if (!selectedConversationId) return;
-    await disbandGroup(selectedConversationId);
-  }, [selectedConversationId, disbandGroup]);
+    if (!selectedConversationId || !currentUserId) return;
+    // Disband = remove all members then leave
+    const conv = conversations.find(c => c.id === selectedConversationId);
+    if (conv?.data?.members) {
+      const memberIds = Object.keys(conv.data.members).filter(id => id !== currentUserId);
+      for (const memberId of memberIds) {
+        await removeMember(selectedConversationId, memberId);
+      }
+    }
+    await leaveGroup(selectedConversationId, currentUserId);
+  }, [selectedConversationId, currentUserId, conversations, removeMember, leaveGroup]);
 
   return {
     handleCreateGroup,

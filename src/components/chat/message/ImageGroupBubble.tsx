@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Smile, Check, CheckCheck } from 'lucide-react';
-import { Message, User } from '../../../types';
+import { RtdbMessage, User } from '../../../types';
 import { formatTimeOnly } from '../../../utils/dateUtils';
 import { Avatar, UserAvatar, MediaViewer, ReactionDisplay, ReactionSelector, Modal, UserStatusText, ConfirmDialog, LazyImage } from '../../ui';
-import { useChatStore } from '../../../store/chatStore';
+import { useRtdbChatStore } from '../../../store';
 import { MessageActions } from './MessageActions';
 
 interface ImageGroupBubbleProps {
-  messages: Message[];
+  messages: Array<{ id: string; data: RtdbMessage }>;
   sender?: User;
   showAvatar: boolean;
   showName: boolean;
@@ -18,10 +18,11 @@ interface ImageGroupBubbleProps {
   lastReadByUsers?: User[];
   onRecall?: (messageId: string) => void;
   onDeleteForMe?: (messageId: string) => void;
-  onForward?: (message: Message) => void;
-  onReply?: (message: Message) => void;
-  onEdit?: (message: Message) => void;
+  onForward?: (message: { id: string; data: RtdbMessage }) => void;
+  onReply?: (message: { id: string; data: RtdbMessage }) => void;
+  onEdit?: (message: { id: string; data: RtdbMessage }) => void;
   isBlocked?: boolean;
+  conversationId: string;
 }
 
 const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
@@ -39,7 +40,8 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
   onForward,
   onReply,
   onEdit,
-  isBlocked = false
+  isBlocked = false,
+  conversationId,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [showMenu, setShowMenu] = useState(false);
@@ -48,13 +50,13 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
   const [showReactionSelector, setShowReactionSelector] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
-  const { toggleReaction } = useChatStore();
+  const { toggleReaction } = useRtdbChatStore();
 
-  const validMessages = messages.filter(m => !m.isRecalled && !m.deletedBy.includes(currentUserId));
+  const validMessages = messages.filter(m => !m.data.isRecalled && !(m.data.deletedBy && m.data.deletedBy[currentUserId]));
   if (validMessages.length === 0) return null;
 
   const lastMsg = validMessages[validMessages.length - 1];
-  const hasReactions = lastMsg.reactionCount > 0;
+  const hasReactions = lastMsg.data.reactions && Object.keys(lastMsg.data.reactions).length > 0;
 
   const toggleMenu = () => {
     if (!showMenu && menuButtonRef.current) {
@@ -65,8 +67,8 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
     setShowMenu(!showMenu);
   };
 
-  const isMe = lastMsg.senderId === currentUserId;
-  const isDelivered = !!lastMsg.deliveredAt;
+  const isMe = lastMsg.data.senderId === currentUserId;
+  const isDelivered = lastMsg.data.deliveredTo && Object.keys(lastMsg.data.deliveredTo).length > 0;
 
   const gridClass = validMessages.length === 1
     ? 'grid-cols-1'
@@ -79,7 +81,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
 
     return validMessages.slice(0, 4).map((msg, index) => {
       const isOverlay = index === 3 && count > 4;
-      const imageUrl = msg.fileUrl || msg.content;
+      const imageUrl = msg.data.media?.[0]?.url || msg.data.content;
 
       return (
         <div
@@ -122,7 +124,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
       <div className={`flex flex-col max-w-[70%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative ${hasReactions ? 'mb-4' : 'mb-1'}`}>
         {!isMe && showName && (
           <span className="text-[11px] text-text-secondary ml-1 mb-1 font-medium">
-            {sender?.name}
+            {sender?.fullName}
           </span>
         )}
 
@@ -135,8 +137,11 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
           <div className={`absolute -bottom-2 z-10 flex items-center ${isMe ? 'left-1' : 'right-1'}`}>
             {hasReactions ? (
               <ReactionDisplay
-                reactionSummary={lastMsg.reactionSummary}
-                reactionCount={lastMsg.reactionCount}
+                reactionSummary={Object.entries(lastMsg.data.reactions || {}).reduce((acc, [_, emoji]) => {
+                  acc[emoji] = (acc[emoji] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>)}
+                reactionCount={Object.keys(lastMsg.data.reactions || {}).length}
                 onClick={() => setShowReactionSelector(!showReactionSelector)}
               />
             ) : (
@@ -163,10 +168,10 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
                   }}
                 />
                 <ReactionSelector
-                  onSelect={(emoji) => toggleReaction(lastMsg.id, currentUserId, emoji)}
+                  onSelect={(emoji) => toggleReaction(conversationId, lastMsg.id, currentUserId, emoji)}
                   onClose={() => setShowReactionSelector(false)}
                   className={`bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'}`}
-                  currentReaction={useChatStore.getState().myMessageReactions[lastMsg.id]}
+                  currentReaction={lastMsg.data.reactions?.[currentUserId]}
                 />
               </>
             )}
@@ -193,7 +198,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
         {/* Thời gian & Trạng thái đọc */}
         <div className="flex flex-col items-end mt-1">
           <span className="text-[10px] text-text-tertiary">
-            {formatTimeOnly(lastMsg.createdAt)}
+            {formatTimeOnly(lastMsg.data.createdAt)}
           </span>
 
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (
@@ -213,8 +218,8 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
                     {lastReadByUsers.slice(0, 3).map(user => (
                       <Avatar
                         key={user.id}
-                        src={user.avatar}
-                        name={user.name}
+                        src={user.avatar.url}
+                        name={user.fullName}
                         size="2xs"
                       />
                     ))}
@@ -235,7 +240,7 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
       <MediaViewer
         media={validMessages.map(m => ({
           type: 'image' as const,
-          url: m.fileUrl || m.content
+          url: m.data.media?.[0]?.url || m.data.content
         }))}
         initialIndex={selectedIndex}
         isOpen={selectedIndex !== -1}
@@ -253,12 +258,11 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
           <div className="space-y-3">
             {lastReadByUsers.map(reader => (
               <div key={reader.id} className="flex items-center gap-3 p-2 hover:bg-bg-hover active:bg-bg-active rounded-lg transition-all duration-base">
-                <UserAvatar userId={reader.id} size="md" initialStatus={reader.status} showStatus={true} />
+                <UserAvatar userId={reader.id} size="md" showStatus={true} />
                 <div className="flex-1">
-                  <div className="text-sm font-bold text-text-primary">{reader.name}</div>
+                  <div className="text-sm font-bold text-text-primary">{reader.fullName}</div>
                   <UserStatusText
                     userId={reader.id}
-                    initialStatus={reader.status}
                     className="text-xs text-text-tertiary"
                   />
                 </div>

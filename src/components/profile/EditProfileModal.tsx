@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Timestamp } from 'firebase/firestore';
 import { User, Gender } from '../../types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toDate } from '../../utils/dateUtils';
@@ -34,11 +35,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user.fullName,
+      fullName: user.fullName,
       bio: user.bio || '',
       location: user.location || '',
       gender: user.gender || Gender.MALE,
-      birthDate: toDate(user.dob)?.getTime()
+      dob: toDate(user.dob)?.getTime()
     }
   });
 
@@ -47,11 +48,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       reset({
-        name: user.fullName,
+        fullName: user.fullName,
         bio: user.bio || '',
         location: user.location || '',
         gender: user.gender || Gender.MALE,
-        birthDate: toDate(user.dob)?.getTime()
+        dob: toDate(user.dob)?.getTime()
       });
       fetchProvinces();
     }
@@ -71,8 +72,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setSaving(true);
     try {
       await onSave({
-        ...data,
-        birthDate: data.birthDate ? new Date(data.birthDate) : undefined
+        fullName: data.fullName,
+        bio: data.bio,
+        location: data.location,
+        gender: data.gender,
+        dob: data.dob ? Timestamp.fromDate(new Date(data.dob)) : undefined
       });
       toast.success(TOAST_MESSAGES.PROFILE.UPDATE_SUCCESS);
       onClose();
@@ -111,8 +115,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <div className="col-span-1 sm:col-span-2">
               <Input
                 label="Tên hiển thị *"
-                {...register('name')}
-                error={errors.name?.message}
+                {...register('fullName')}
+                error={errors.fullName?.message}
                 placeholder="Nhập họ và tên"
               />
             </div>
@@ -172,8 +176,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <div>
               <DatePicker
                 label="Ngày sinh"
-                value={formData.birthDate}
-                onChange={(ts) => setValue('birthDate', ts, { shouldDirty: true })}
+                value={formData.dob}
+                onChange={(ts) => setValue('dob', ts, { shouldDirty: true })}
                 placeholder="Chọn ngày sinh"
               />
             </div>

@@ -1,17 +1,15 @@
-import * as functions from 'firebase-functions';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 
 /**
  * Fan-out posts cũ của bạn mới vào feed của user
  * Trigger: onCreate users/{userId}/friends/{friendId}
  */
-export const onFriendAdded = functions
-    .region('asia-southeast1')
-    .firestore
-    .document('users/{userId}/friends/{friendId}')
-    .onCreate(async (snapshot, context) => {
-        const userId = context.params.userId;
-        const friendId = context.params.friendId;
+export const onFriendAdded = onDocumentCreated(
+    { document: 'users/{userId}/friends/{friendId}', region: 'asia-southeast1' },
+    async (event) => {
+        const userId = event.params.userId;
+        const friendId = event.params.friendId;
 
         try {
             const db = admin.firestore();
@@ -60,4 +58,5 @@ export const onFriendAdded = functions
         } catch (error) {
             console.error('Error fan-out friend posts:', error);
         }
-    });
+    }
+);

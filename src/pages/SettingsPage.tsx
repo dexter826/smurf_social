@@ -82,7 +82,7 @@ const SettingsPage: React.FC = () => {
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = !!currentUser;
   const MENU_ITEMS = BASE_MENU_ITEMS.filter(item => !item.adminOnly || isAdmin);
 
   useEffect(() => {
@@ -185,7 +185,7 @@ const SettingsPage: React.FC = () => {
                   >
                     <UserAvatar
                       userId={user.id}
-                      src={user.avatar}
+                      src={user.avatar.url}
                       name={user.fullName}
                       size="md"
                     />

@@ -103,9 +103,9 @@ const AvatarInner: React.FC<AvatarProps> = ({
                 ) : (
                   <div
                     className="w-full h-full flex items-center justify-center text-[8px] font-bold text-text-on-primary uppercase"
-                    style={{ background: getAvatarGradient(member.name || member.id) }}
+                    style={{ background: getAvatarGradient(member.fullName || member.id) }}
                   >
-                    {getInitials(member.name).substring(0, 1)}
+                    {getInitials(member.fullName).substring(0, 1)}
                   </div>
                 )}
               </div>

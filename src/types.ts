@@ -33,10 +33,9 @@ export {
   ReportStatus,
   PostStatus,
   CommentStatus,
-  MemberRole,
 };
 
-export type { NotificationPayload };
+export type { NotificationPayload, MemberRole };
 
 // ========== FRONTEND-SPECIFIC ENUMS ==========
 

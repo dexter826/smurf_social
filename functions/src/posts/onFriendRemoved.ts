@@ -1,17 +1,15 @@
-import * as functions from 'firebase-functions';
+import { onDocumentDeleted } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 
 /**
  * Xóa posts của ex-friend khỏi feed của user
  * Trigger: onDelete users/{userId}/friends/{friendId}
  */
-export const onFriendRemoved = functions
-    .region('asia-southeast1')
-    .firestore
-    .document('users/{userId}/friends/{friendId}')
-    .onDelete(async (snapshot, context) => {
-        const userId = context.params.userId;
-        const friendId = context.params.friendId;
+export const onFriendRemoved = onDocumentDeleted(
+    { document: 'users/{userId}/friends/{friendId}', region: 'asia-southeast1' },
+    async (event) => {
+        const userId = event.params.userId;
+        const friendId = event.params.friendId;
 
         try {
             const db = admin.firestore();
@@ -78,4 +76,5 @@ export const onFriendRemoved = functions
         } catch (error) {
             console.error('Error removing friend posts from feed:', error);
         }
-    });
+    }
+);
