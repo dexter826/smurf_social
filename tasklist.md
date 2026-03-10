@@ -225,61 +225,61 @@
 > **Mục tiêu**: Chuyển toàn bộ chat từ Firestore → RTDB.
 
 ### 7.1 Tạo `src/services/chat/rtdbConversationService.ts` (thay thế `conversationService.ts`)
-- [ ] Xóa `src/services/chat/conversationService.ts`
-- [ ] `getOrCreateDirect(user1Id, user2Id)`: check `/conversations` trên RTDB; tạo mới nếu chưa có; ghi `/user_chats/{uid}/{convId}` cho cả hai
-- [ ] `subscribeToUserConversations(userId, callback)`: listen `/user_chats/{uid}`, sau đó batch fetch `/conversations/{convId}` metadata
-- [ ] `updateConversationMeta(convId, updates)`: cập nhật metadata nhóm
-- [ ] `togglePin(uid, convId, isPinned)`: ghi vào `/user_chats/{uid}/{convId}/isPinned`
-- [ ] `toggleMute(uid, convId, isMuted)`: ghi `/user_chats/{uid}/{convId}/isMuted`
-- [ ] `toggleArchive(uid, convId, isArchived)`: ghi `/user_chats/{uid}/{convId}/isArchived`
-- [ ] `deleteConversation(uid, convId)`: xóa `/user_chats/{uid}/{convId}` (không xóa conversation chung)
-- [ ] `resetUnreadCount(uid, convId)`: set `unreadCount: 0` và update `lastReadMsgId`
-- [ ] `markAllAsRead(uid)`: iterate tất cả `/user_chats/{uid}` và reset unread
+- [x] Xóa `src/services/chat/conversationService.ts`
+- [x] `getOrCreateDirect(user1Id, user2Id)`: check `/conversations` trên RTDB; tạo mới nếu chưa có; ghi `/user_chats/{uid}/{convId}` cho cả hai
+- [x] `subscribeToUserConversations(userId, callback)`: listen `/user_chats/{uid}`, sau đó batch fetch `/conversations/{convId}` metadata
+- [x] `updateConversationMeta(convId, updates)`: cập nhật metadata nhóm
+- [x] `togglePin(uid, convId, isPinned)`: ghi vào `/user_chats/{uid}/{convId}/isPinned`
+- [x] `toggleMute(uid, convId, isMuted)`: ghi `/user_chats/{uid}/{convId}/isMuted`
+- [x] `toggleArchive(uid, convId, isArchived)`: ghi `/user_chats/{uid}/{convId}/isArchived`
+- [x] `deleteConversation(uid, convId)`: xóa `/user_chats/{uid}/{convId}` (không xóa conversation chung)
+- [x] `resetUnreadCount(uid, convId)`: set `unreadCount: 0` và update `lastReadMsgId`
+- [x] `markAllAsRead(uid)`: iterate tất cả `/user_chats/{uid}` và reset unread
 
 ### 7.2 Tạo `src/services/chat/rtdbGroupService.ts` (thay thế `groupService.ts`)
-- [ ] Xóa `src/services/chat/groupService.ts`
-- [ ] `createGroup(creatorId, name, memberIds, avatar?)`: ghi node `/conversations/{convId}` trên RTDB với `isGroup: true`, `members: {uid: 'admin'|'member'}`, `avatar: MediaObject`; ghi `/user_chats/{uid}/{convId}` cho tất cả
-- [ ] `addMembers(convId, memberIds)`: update `members` map và tạo `/user_chats/{uid}/{convId}` cho members mới
-- [ ] `removeMember(convId, uid, byAdmin)`: set `members/{uid}` null; xóa `/user_chats/{uid}/{convId}`
-- [ ] `updateGroupInfo(convId, name?, avatar?)`: update metadata, `avatar` là MediaObject
-- [ ] `updateMemberRole(convId, uid, role)`: set `members/{uid}` = `'admin'|'member'`
-- [ ] `leaveGroup(convId, uid)`: gọi `removeMember`; nếu admin cuối thì promote member khác
+- [x] Xóa `src/services/chat/groupService.ts`
+- [x] `createGroup(creatorId, name, memberIds, avatar?)`: ghi node `/conversations/{convId}` trên RTDB với `isGroup: true`, `members: {uid: 'admin'|'member'}`, `avatar: MediaObject`; ghi `/user_chats/{uid}/{convId}` cho tất cả
+- [x] `addMembers(convId, memberIds)`: update `members` map và tạo `/user_chats/{uid}/{convId}` cho members mới
+- [x] `removeMember(convId, uid, byAdmin)`: set `members/{uid}` null; xóa `/user_chats/{uid}/{convId}`
+- [x] `updateGroupInfo(convId, name?, avatar?)`: update metadata, `avatar` là MediaObject
+- [x] `updateMemberRole(convId, uid, role)`: set `members/{uid}` = `'admin'|'member'`
+- [x] `leaveGroup(convId, uid)`: gọi `removeMember`; nếu admin cuối thì promote member khác
 
 ### 7.3 Tạo `src/services/chat/rtdbMessageService.ts` (thay thế `messageService.ts`)
-- [ ] Xóa `src/services/chat/messageService.ts`
-- [ ] `sendTextMessage(convId, senderId, content, options)`: push vào `/messages/{convId}`; cập nhật `/conversations/{convId}/lastMessage`; tăng `unreadCount` trong `/user_chats/{otherUid}/{convId}`
-- [ ] `sendMediaMessage(convId, senderId, file, type, options)`: upload Storage → lấy MediaObject → push message
-- [ ] `subscribeToMessages(convId, limitCount, callback)`: `onChildAdded` + `limitToLast(n)` trên `/messages/{convId}`
-- [ ] `loadMoreMessages(convId, beforeTimestamp, limitCount)`: query `orderByChild('createdAt').endAt(before).limitToLast(n)`
-- [ ] `markAsRead(convId, uid, lastMsgId)`: set `readBy/{uid} = Date.now()` trên từng tin chưa đọc; cập nhật `/user_chats/{uid}/{convId}/lastReadMsgId`
-- [ ] `markAsDelivered(convId, uid)`: set `deliveredTo/{uid} = Date.now()`
-- [ ] `recallMessage(convId, msgId, uid)`: set `isRecalled: true` trên RTDB; cập nhật `lastMessage` nếu là tin cuối
-- [ ] `deleteForMe(convId, msgId, uid)`: set `deletedBy/{uid}: true`
-- [ ] `editMessage(convId, msgId, uid, newContent)`: kiểm tra 5 phút; set `content, isEdited: true, updatedAt`
-- [ ] `forwardMessage(targetConvId, senderId, srcMsg)`: push message mới với `isForwarded: true`
-- [ ] `toggleReaction(convId, msgId, uid, emoji)`: toggle `reactions/{uid}` trên RTDB
-- [ ] `sendSystemMessage(convId, content)`: push system message
-- [ ] `subscribeToTyping(convId, callback)`: listen `/conversations/{convId}/typing` (nếu cần typing indicator)
+- [x] Xóa `src/services/chat/messageService.ts`
+- [x] `sendTextMessage(convId, senderId, content, options)`: push vào `/messages/{convId}`; cập nhật `/conversations/{convId}/lastMessage`; tăng `unreadCount` trong `/user_chats/{otherUid}/{convId}`
+- [x] `sendMediaMessage(convId, senderId, file, type, options)`: upload Storage → lấy MediaObject → push message
+- [x] `subscribeToMessages(convId, limitCount, callback)`: `onChildAdded` + `limitToLast(n)` trên `/messages/{convId}`
+- [x] `loadMoreMessages(convId, beforeTimestamp, limitCount)`: query `orderByChild('createdAt').endAt(before).limitToLast(n)`
+- [x] `markAsRead(convId, uid, lastMsgId)`: set `readBy/{uid} = Date.now()` trên từng tin chưa đọc; cập nhật `/user_chats/{uid}/{convId}/lastReadMsgId`
+- [x] `markAsDelivered(convId, uid)`: set `deliveredTo/{uid} = Date.now()`
+- [x] `recallMessage(convId, msgId, uid)`: set `isRecalled: true` trên RTDB; cập nhật `lastMessage` nếu là tin cuối
+- [x] `deleteForMe(convId, msgId, uid)`: set `deletedBy/{uid}: true`
+- [x] `editMessage(convId, msgId, uid, newContent)`: kiểm tra 5 phút; set `content, isEdited: true, updatedAt`
+- [x] `forwardMessage(targetConvId, senderId, srcMsg)`: push message mới với `isForwarded: true`
+- [x] `toggleReaction(convId, msgId, uid, emoji)`: toggle `reactions/{uid}` trên RTDB
+- [x] `sendSystemMessage(convId, content)`: push system message
+- [x] `subscribeToTyping(convId, callback)`: listen `/conversations/{convId}/typing` (nếu cần typing indicator)
 
 ### 7.4 Tạo `src/services/chat/rtdbCallService.ts` (thay thế logic call cũ)
-- [ ] `initiateCall(callerId, calleeId, convId, callType, zegoToken)`: ghi `/call_signaling/{calleeId}`
-- [ ] `answerCall(calleeId, status)`: update `status: 'accepted'|'rejected'`
-- [ ] `subscribeToIncomingCall(uid, callback)`: listen `/call_signaling/{uid}`
-- [ ] `clearSignaling(uid)`: xóa `/call_signaling/{uid}` sau khi call kết thúc
+- [x] `initiateCall(callerId, calleeId, convId, callType, zegoToken)`: ghi `/call_signaling/{calleeId}`
+- [x] `answerCall(calleeId, status)`: update `status: 'accepted'|'rejected'`
+- [x] `subscribeToIncomingCall(uid, callback)`: listen `/call_signaling/{uid}`
+- [x] `clearSignaling(uid)`: xóa `/call_signaling/{uid}` sau khi call kết thúc
 
 ### 7.5 Cập nhật stores chat
-- [ ] Xóa `src/store/chat/conversationSlice.ts` — viết lại `rtdbConversationSlice.ts`
-- [ ] Xóa `src/store/chat/groupSlice.ts` — viết lại `rtdbGroupSlice.ts`
-- [ ] Xóa `src/store/chat/messageSlice.ts` — viết lại `rtdbMessageSlice.ts`
-- [ ] Cập nhật `src/store/chatStore.ts`: orchestrate 3 slices mới
-- [ ] Cập nhật `src/store/callStore.ts`: dùng `rtdbCallService` thay Firestore
+- [x] Xóa `src/store/chat/conversationSlice.ts` — viết lại `rtdbConversationSlice.ts`
+- [x] Xóa `src/store/chat/groupSlice.ts` — viết lại `rtdbGroupSlice.ts`
+- [x] Xóa `src/store/chat/messageSlice.ts` — viết lại `rtdbMessageSlice.ts`
+- [x] Cập nhật `src/store/chatStore.ts`: orchestrate 3 slices mới
+- [x] Cập nhật `src/store/callStore.ts`: dùng `rtdbCallService` thay Firestore
 
 ### 7.6 Cập nhật Cloud Functions (functions/src)
-- [ ] Xóa `functions/src/conversations/onConversationDeleted.ts` (không còn Firestore conversations)
-- [ ] Xóa `functions/src/messages/*` (không còn Firestore messages)
-- [ ] Giữ lại: `generateZegoToken.ts`, `banUser.ts`, `setAdminClaim.ts`, `resolveReport.ts`, `rejectReport.ts`
-- [ ] Cập nhật `searchUsers.ts`: tìm theo `fullName` thay `name`
-- [ ] Cập nhật `unfriend.ts`: xóa `users/{uid}/friends` subcollection (Firestore)
+- [x] Xóa `functions/src/conversations/onConversationDeleted.ts` (không còn Firestore conversations)
+- [x] Xóa `functions/src/messages/*` (không còn Firestore messages)
+- [x] Giữ lại: `generateZegoToken.ts`, `banUser.ts`, `setAdminClaim.ts`, `resolveReport.ts`, `rejectReport.ts`
+- [x] Cập nhật `searchUsers.ts`: tìm theo `fullName` thay `name`
+- [x] Cập nhật `unfriend.ts`: xóa `users/{uid}/friends` subcollection (Firestore)
 
 ---
 

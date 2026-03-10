@@ -3,7 +3,7 @@ import { db } from '../app';
 
 interface SearchResult {
   id: string;
-  name: string;
+  fullName: string;
   avatar: string;
   email: string;
 }
@@ -36,39 +36,34 @@ export const searchUsers = onCall(
         .filter((u) => u.id !== currentUserId);
 
       if (currentUserId && users.length > 0) {
-        const currentUserSecurityDoc = await db
+        // Get blocked users from subcollection
+        const blockedUsersSnap = await db
           .collection('users')
           .doc(currentUserId)
-          .collection('private')
-          .doc('security')
+          .collection('blockedUsers')
           .get();
-        
-        const myBlockedUsers: string[] = currentUserSecurityDoc.exists 
-          ? (currentUserSecurityDoc.data()?.blockedUsers || []) 
-          : [];
+
+        const myBlockedUsers: string[] = blockedUsersSnap.docs.map(doc => doc.id);
 
         users = users.filter((u) => !myBlockedUsers.includes(u.id));
 
         if (users.length > 0) {
           const safeUsers: SearchResult[] = [];
-          
+
           for (const targetUser of users) {
-             const targetUserSecurityDoc = await db
+            // Check if target user has blocked current user
+            const targetBlockedSnap = await db
               .collection('users')
               .doc(targetUser.id)
-              .collection('private')
-              .doc('security')
+              .collection('blockedUsers')
+              .doc(currentUserId)
               .get();
-              
-             const theirBlockedUsers: string[] = targetUserSecurityDoc.exists
-              ? (targetUserSecurityDoc.data()?.blockedUsers || [])
-              : [];
-              
-             if (!theirBlockedUsers.includes(currentUserId)) {
-               safeUsers.push(targetUser);
-             }
+
+            if (!targetBlockedSnap.exists) {
+              safeUsers.push(targetUser);
+            }
           }
-          
+
           users = safeUsers;
         }
       }
