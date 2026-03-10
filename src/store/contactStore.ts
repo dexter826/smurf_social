@@ -15,7 +15,7 @@ interface ContactState {
   subscribeToRequests: (userId: string) => () => void;
   searchUsers: (searchTerm: string, userId: string) => Promise<User[]>;
 
-  sendFriendRequest: (senderId: string, receiverId: string, message?: string) => Promise<void>;
+  sendFriendRequest: (senderId: string, receiverId: string) => Promise<void>;
   acceptFriendRequest: (requestId: string) => Promise<void>;
   rejectFriendRequest: (requestId: string) => Promise<void>;
   cancelFriendRequest: (requestId: string) => Promise<void>;
@@ -82,9 +82,9 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
-      sendFriendRequest: async (senderId: string, receiverId: string, message?: string) => {
+      sendFriendRequest: async (senderId: string, receiverId: string) => {
         try {
-          await friendService.sendFriendRequest(senderId, receiverId, message);
+          await friendService.sendFriendRequest(senderId, receiverId);
         } catch (error) {
           console.error("Lỗi gửi lời mời:", error);
           throw error;
