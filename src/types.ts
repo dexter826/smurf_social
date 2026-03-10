@@ -4,12 +4,10 @@ import { Timestamp } from 'firebase/firestore';
 // ========== IMPORTS FROM SHARED ==========
 import {
   UserStatus,
-  UserRole,
   Gender,
   Visibility,
   FriendRequestStatus,
   ReactionType,
-  PostType,
   MessageType,
   NotificationType,
   ReportType,
@@ -17,19 +15,17 @@ import {
   ReportStatus,
   PostStatus,
   CommentStatus,
-  ReactableEntity,
+  MemberRole,
   NotificationPayload,
 } from "../shared/types";
 
 // Re-export for consumers
 export {
   UserStatus,
-  UserRole,
   Gender,
   Visibility,
   FriendRequestStatus,
   ReactionType,
-  PostType,
   MessageType,
   NotificationType,
   ReportType,
@@ -37,9 +33,10 @@ export {
   ReportStatus,
   PostStatus,
   CommentStatus,
+  MemberRole,
 };
 
-export type { ReactableEntity, NotificationPayload };
+export type { NotificationPayload };
 
 // ========== FRONTEND-SPECIFIC ENUMS ==========
 
@@ -54,14 +51,6 @@ export enum FriendStatus {
 
 export type ThemeMode = "light" | "dark";
 
-export interface ConversationRealtimeState {
-  conversationId: string;
-  typingUsers: {
-    userId: string;
-    timestamp: number;
-  }[];
-}
-
 // ========== BASE ENTITIES ==========
 
 export interface BaseEntity {
@@ -74,116 +63,132 @@ export interface SoftDeletableEntity {
   deletedBy?: string;
 }
 
+// ========== MEDIA OBJECT ==========
+
+export interface MediaObject {
+  url: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  thumbnailUrl?: string;
+  isSensitive?: boolean;
+}
+
 // ========== CORE INTERFACES ==========
 
 export interface User extends BaseEntity {
-  name: string;
-  avatar: string;
+  fullName: string;
+  avatar: MediaObject;
   email: string;
   location?: string;
   gender?: Gender;
-  birthDate?: Timestamp;
-  status: UserStatus;
+  dob?: Timestamp;
+  status: 'active' | 'banned';
   bio?: string;
-  coverImage?: string;
-  lastSeen?: Timestamp;
+  cover?: MediaObject;
   updatedAt?: Timestamp;
-  role: UserRole;
+  deletedAt?: Timestamp;
 }
 
 export interface FriendRequest extends BaseEntity {
   senderId: string;
   receiverId: string;
   status: FriendRequestStatus;
-  message?: string;
   updatedAt?: Timestamp;
 }
 
-export interface Message extends BaseEntity, ReactableEntity {
-  conversationId: string;
+// ========== RTDB CHAT INTERFACES ==========
+
+export interface RtdbConversation {
+  isGroup: boolean;
+  name?: string;
+  avatar?: MediaObject;
+  creatorId: string;
+  members: Record<string, MemberRole>;
+  lastMessage?: {
+    senderId: string;
+    content: string;
+    type: MessageType;
+    timestamp: number;
+  };
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface RtdbMessage {
   senderId: string;
-  content: string;
   type: MessageType;
-  fileUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-  readBy: string[];
-  deliveredTo: string[];
-  deliveredAt?: Timestamp;
+  content: string;
+  media?: MediaObject[];
   mentions?: string[];
-  isRecalled?: boolean;
-  recalledAt?: Timestamp;
-  deletedBy: string[];
   isForwarded?: boolean;
   replyToId?: string;
-  replyToSnippet?: { senderId: string; content: string; type: MessageType; isRecalled?: boolean };
+  replyToSnippet?: {
+    senderId: string;
+    content: string;
+    type: MessageType;
+  };
   isEdited?: boolean;
-  editedAt?: Timestamp;
+  isRecalled?: boolean;
+  deletedBy?: Record<string, true>;
+  readBy?: Record<string, number>;
+  deliveredTo?: Record<string, number>;
+  reactions?: Record<string, string>;
+  createdAt: number;
+  updatedAt?: number;
 }
 
-export interface LastMessagePreview {
-  id: string;
-  senderId: string;
-  content: string;
-  type: MessageType;
-  createdAt: Timestamp;
-  reactorId?: string;
-  readBy?: string[];
-  deliveredAt?: Timestamp;
-}
-
-export interface Conversation extends BaseEntity {
-  updatedAt: Timestamp;
-  participantIds: string[];
-  lastMessage?: LastMessagePreview;
-  isGroup: boolean;
-  groupName?: string;
-  groupAvatar?: string;
-  creatorId: string;
-  adminIds: string[];
-}
-
-export interface ConversationMember {
-  userId: string;
-  joinedAt: Timestamp;
+export interface RtdbUserChat {
   isPinned: boolean;
   isMuted: boolean;
   isArchived: boolean;
-  markedUnread: boolean;
   unreadCount: number;
-  deletedAt?: Timestamp;
+  lastReadMsgId?: string;
+  lastMsgTimestamp?: number;
 }
 
-export interface Comment extends BaseEntity, ReactableEntity, SoftDeletableEntity {
+export interface RtdbPresence {
+  isOnline: boolean;
+  lastSeen: number;
+}
+
+export interface RtdbCallSignaling {
+  callerId: string;
+  conversationId: string;
+  callType: 'voice' | 'video';
+  status: 'ringing' | 'accepted' | 'rejected' | 'ended';
+  zegoToken?: string;
+  timestamp: number;
+}
+
+export interface Comment extends BaseEntity, SoftDeletableEntity {
   postId: string;
-  userId: string;
+  authorId: string;
   parentId?: string;
   content: string;
   status: CommentStatus;
-  image?: string;
+  image?: MediaObject;
   replyCount?: number;
-  replyToUserId?: string;
+  reactions: Partial<Record<ReactionType, number>>;
   isEdited?: boolean;
   editedAt?: Timestamp;
 }
 
-export interface Post extends BaseEntity, ReactableEntity, SoftDeletableEntity {
-  userId: string;
+export interface Post extends BaseEntity, SoftDeletableEntity {
+  authorId: string;
   content: string;
   status: PostStatus;
-  images?: string[];
-  videos?: string[];
-  videoThumbnails?: Record<string, string>;
+  media?: MediaObject[];
   commentCount: number;
   visibility: Visibility;
-  type: PostType;
+  reactions: Partial<Record<ReactionType, number>>;
   isEdited?: boolean;
   editedAt?: Timestamp;
 }
 
 export interface Notification extends BaseEntity {
   receiverId: string;
-  senderId: string;
+  actorId: string;
   type: NotificationType;
   data: NotificationPayload;
   isRead: boolean;
@@ -196,7 +201,7 @@ export interface Report extends BaseEntity {
   targetOwnerId: string;
   reason: ReportReason;
   description?: string;
-  images?: string[];
+  images?: MediaObject[];
   status: ReportStatus;
   resolvedAt?: Timestamp;
   resolvedBy?: string;
