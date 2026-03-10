@@ -101,26 +101,26 @@
 > **Mục tiêu**: Align `userService` và `authStore` với schema User mới.
 
 ### 2.1 Cập nhật `src/services/userService.ts`
-- [ ] Xóa `updateUserStatus()` — presence chuyển sang RTDB (Phase 3)
-- [ ] Sửa `convertDocToUser()`: map `fullName`, `dob`, `avatar` (MediaObject), `cover` (MediaObject), `status: 'active'|'banned'`
-- [ ] Sửa `updateProfile()`: không còn field `role`, `lastSeen`, `status: ONLINE/OFFLINE`
-- [ ] Sửa `uploadAvatar()`: upload xong trả về `MediaObject` thay vì string URL
-- [ ] Sửa `uploadCoverImage()`: upload xong trả về `MediaObject`
-- [ ] Xóa `deleteAvatar()`, `deleteCoverImage()` — gộp vào `updateProfile()` khi set `avatar: null`
-- [ ] Sửa `getBlockedUserIds()`: đọc từ `users/{uid}/blockedUsers` subcollection thay vì `users/{uid}/private/security`
-- [ ] Sửa `blockUser()`: ghi vào subcollection `blockedUsers` với doc `{blockedUid, createdAt}`, **xóa** logic update `conversations` blockedBy
-- [ ] Sửa `unblockUser()`: xóa doc trong subcollection `blockedUsers`
-- [ ] Xóa `getUserStats()` — friendCount bỏ theo yêu cầu, postCount giữ nếu cần
-- [ ] Sửa `searchUsers()`, `searchFriends()`: dùng `fullName` thay vì `name`
+- [x] Xóa `updateUserStatus()` — presence chuyển sang RTDB (Phase 3)
+- [x] Sửa `convertDocToUser()`: map `fullName`, `dob`, `avatar` (MediaObject), `cover` (MediaObject), `status: 'active'|'banned'`
+- [x] Sửa `updateProfile()`: không còn field `role`, `lastSeen`, `status: ONLINE/OFFLINE`
+- [x] Sửa `uploadAvatar()`: upload xong trả về `MediaObject` thay vì string URL
+- [x] Sửa `uploadCoverImage()`: upload xong trả về `MediaObject`
+- [x] Xóa `deleteAvatar()`, `deleteCoverImage()` — gộp vào `updateProfile()` khi set `avatar: null`
+- [x] Sửa `getBlockedUserIds()`: đọc từ `users/{uid}/blockedUsers` subcollection thay vì `users/{uid}/private/security`
+- [x] Sửa `blockUser()`: ghi vào subcollection `blockedUsers` với doc `{blockedUid, createdAt}`, **xóa** logic update `conversations` blockedBy
+- [x] Sửa `unblockUser()`: xóa doc trong subcollection `blockedUsers`
+- [x] Xóa `getUserStats()` — friendCount bỏ theo yêu cầu, postCount giữ nếu cần
+- [x] Sửa `searchUsers()`, `searchFriends()`: dùng `fullName` thay vì `name`
 
 ### 2.2 Cập nhật `src/store/authStore.ts`
-- [ ] Xóa `updateUserStatus()` calls trong `login`, `logout`, `initialize`, `checkVerificationStatus`
-- [ ] Sửa `register()`: tạo profile với `fullName`, không set `role`
-- [ ] Sửa `initialize()`: không kiểm tra `UserStatus.ONLINE/OFFLINE`; kiểm tra banned bằng `status === 'banned'`
-- [ ] Xóa `blockedUserIds` state — sẽ load riêng từ subcollection `blockedUsers`
+- [x] Xóa `updateUserStatus()` calls trong `login`, `logout`, `initialize`, `checkVerificationStatus`
+- [x] Sửa `register()`: tạo profile với `fullName`, không set `role`
+- [x] Sửa `initialize()`: không kiểm tra `UserStatus.ONLINE/OFFLINE`; kiểm tra banned bằng `status === 'banned'`
+- [x] Xóa `blockedUserIds` state — sẽ load riêng từ subcollection `blockedUsers`
 
 ### 2.3 Cập nhật `src/services/authService.ts`
-- [ ] Sửa flow đăng ký: khi tạo user doc, dùng field `fullName` thay `name`
+- [x] Sửa flow đăng ký: khi tạo user doc, dùng field `fullName` thay `name`
 
 ---
 
