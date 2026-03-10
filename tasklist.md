@@ -129,14 +129,14 @@
 > **Mục tiêu**: Chuyển toàn bộ logic online/offline từ Firestore → RTDB `/presence`.
 
 ### 3.1 Tạo `src/services/presenceService.ts` (mới hoàn toàn)
-- [ ] `setOnline(uid)`: ghi `{ isOnline: true, lastSeen: serverTimestamp }` vào `/presence/{uid}`; cài `.onDisconnect().update({ isOnline: false, lastSeen: serverTimestamp })`
-- [ ] `setOffline(uid)`: ghi `{ isOnline: false, lastSeen: Date.now() }`
-- [ ] `subscribeToPresence(uids[], callback)`: lắng nghe `/presence/{uid}` cho nhiều user
+- [x] `setOnline(uid)`: ghi `{ isOnline: true, lastSeen: serverTimestamp }` vào `/presence/{uid}`; cài `.onDisconnect().update({ isOnline: false, lastSeen: serverTimestamp })`
+- [x] `setOffline(uid)`: ghi `{ isOnline: false, lastSeen: Date.now() }`
+- [x] `subscribeToPresence(uids[], callback)`: lắng nghe `/presence/{uid}` cho nhiều user
 
 ### 3.2 Cập nhật `src/store/presenceStore.ts`
-- [ ] Xóa logic cũ dùng Firestore `userService.updateUserStatus()`
-- [ ] Dùng `presenceService.setOnline()` khi login, `setOffline()` khi logout
-- [ ] Subscribe `/presence/{uid}` cho danh sách bạn bè để cập nhật trạng thái online
+- [x] Xóa logic cũ dùng Firestore `userService.updateUserStatus()`
+- [x] Dùng `presenceService.setOnline()` khi login, `setOffline()` khi logout
+- [x] Subscribe `/presence/{uid}` cho danh sách bạn bè để cập nhật trạng thái online
 
 ---
 

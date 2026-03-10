@@ -13,6 +13,7 @@ import { useCommentStore } from "./commentStore";
 import { useReportStore } from "./reportStore";
 import { useLoadingStore } from "./loadingStore";
 import { usePresenceStore } from "./presenceStore";
+import { presenceService } from "../services/presenceService";
 
 interface AuthState {
   user: User | null;
@@ -57,6 +58,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           throw new Error("Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng. Vui lòng liên hệ admin để biết thêm chi tiết.");
         }
 
+        // Set presence online
+        await presenceService.setOnline(firebaseUser.uid);
+
         set({
           user: userData,
           isPendingVerification: false,
@@ -97,6 +101,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { user } = get();
 
     try {
+      // Set presence offline trước khi logout
+      if (user) {
+        await presenceService.setOffline(user.id);
+      }
+
       // Giữ userCache — tránh flash data khi login lại
       usePresenceStore.getState().reset();
       useChatStore.getState().reset();
@@ -153,6 +162,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             userService.getBlockedUserIds(firebaseUser.uid),
           ]);
           if (userData) {
+            // Set presence online
+            await presenceService.setOnline(firebaseUser.uid);
+
             set({ user: userData, blockedUserIds });
             useUserCache.getState().setUser(userData);
           }
@@ -217,6 +229,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               get().logout();
               return;
             }
+
+            // Set presence online
+            await presenceService.setOnline(firebaseUser.uid);
 
             set({
               user: userData,
