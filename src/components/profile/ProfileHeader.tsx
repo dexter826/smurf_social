@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { User, UserStatus, ReportType } from '../../types';
+import { User, ReportType } from '../../types';
 import { FriendStatus } from '../../types';
 import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
 import { toast } from '../../store/toastStore';
@@ -145,7 +145,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {/* Background Image Layer */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-active md:rounded-b-2xl overflow-hidden">
             <LazyImage
-              src={user.coverImage || '/cover-image.jpg'}
+              src={typeof user.cover === 'string' ? user.cover : user.cover?.url || '/cover-image.jpg'}
               className="w-full h-full object-cover transition-all duration-base"
               alt="Cover"
             />
@@ -171,7 +171,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   label="Tải ảnh lên"
                   onClick={handleCoverClick}
                 />
-                {user.coverImage && (
+                {user.cover && (
                   <DropdownItem
                     icon={<Trash2 size={16} />}
                     label="Xóa ảnh bìa"
@@ -204,7 +204,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     <UserAvatar
                       userId={user.id}
                       src={user.avatar}
-                      name={user.name}
+                      name={user.fullName}
                       size="2xl"
                       className="border-4 border-bg-primary shadow-lg"
                       initialStatus={user.status}
@@ -264,7 +264,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {/* Info */}
               <div className="flex-1 pb-1">
                 <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
-                  <h1 className="text-3xl font-bold text-text-primary">{user.name}</h1>
+                  <h1 className="text-3xl font-bold text-text-primary">{user.fullName}</h1>
                 </div>
 
                 {/* Stats */}
@@ -302,7 +302,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       Cài đặt
                     </Button>
                   </>
-                ) : user.status === UserStatus.BANNED ? (
+                ) : user.status === 'banned' ? (
                   <div className="flex items-center gap-2">
                     <div className="px-4 py-2 rounded-lg bg-error/10 text-error text-sm font-medium">
                       Tài khoản đã bị khóa

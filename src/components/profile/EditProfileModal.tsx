@@ -34,11 +34,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user.name,
+      name: user.fullName,
       bio: user.bio || '',
       location: user.location || '',
       gender: user.gender || Gender.MALE,
-      birthDate: toDate(user.birthDate)?.getTime()
+      birthDate: toDate(user.dob)?.getTime()
     }
   });
 
@@ -47,11 +47,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       reset({
-        name: user.name,
+        name: user.fullName,
         bio: user.bio || '',
         location: user.location || '',
         gender: user.gender || Gender.MALE,
-        birthDate: toDate(user.birthDate)?.getTime()
+        birthDate: toDate(user.dob)?.getTime()
       });
       fetchProvinces();
     }
@@ -94,8 +94,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <Button variant="secondary" onClick={onClose} disabled={saving}>
             Hủy
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={handleSubmit(handleSave)}
             disabled={saving || !isDirty}
           >
