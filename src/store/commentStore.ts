@@ -16,7 +16,7 @@ const mergeOptimisticComments = (
   const updated = existing.map(e => {
     if (e.id.startsWith('temp-')) {
       const match = incoming.find(c =>
-        c.userId === e.userId &&
+        c.authorId === e.authorId &&
         c.content === e.content &&
         Math.abs(c.createdAt.toMillis() - e.createdAt.toMillis()) < 30000
       );
@@ -63,8 +63,8 @@ interface CommentState {
   fetchReplies: (postId: string, parentId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToComments: (postId: string, blockedUserIds?: string[]) => () => void;
   subscribeToReplies: (postId: string, parentId: string, blockedUserIds?: string[]) => () => void;
-  createComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, imageUrl?: string) => Promise<string>;
-  updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null) => Promise<void>;
+  createComment: (postId: string, userId: string, content: string, parentId?: string | null, image?: any) => Promise<string>;
+  updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, image?: any) => Promise<void>;
   deleteComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
   reactToComment: (postId: string, commentId: string, userId: string, reaction: string | ReactionType, parentId?: string | null) => Promise<void>;
 
@@ -73,7 +73,7 @@ interface CommentState {
   setReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   addReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   clearComments: (postId: string) => void;
-  updateCommentInStore: (postId: string, commentId: string, content: string, parentId?: string | null, imageUrl?: string | null) => void;
+  updateCommentInStore: (postId: string, commentId: string, content: string, parentId?: string | null, image?: any) => void;
   isLoadingPost: (postId: string) => boolean;
   reset: () => void;
 }

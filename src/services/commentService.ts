@@ -18,9 +18,9 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
   onSnapshot
-, Timestamp} from 'firebase/firestore';
+} from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Comment, ReactionType, UserStatus, CommentStatus } from '../types';
+import { Comment, ReactionType, CommentStatus, MediaObject } from '../types';
 import { PAGINATION } from '../constants';
 import { batchGetUsers } from '../utils/batchUtils';
 
@@ -59,12 +59,12 @@ export const commentService = {
       const hasMore = snapshot.docs.length > limitCount;
       const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
       const comments = docsToProcess
         .map(convertDocToComment)
-        .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
+        .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
       return {
         comments,
@@ -97,12 +97,12 @@ export const commentService = {
       const hasMore = snapshot.docs.length > limitCount;
       const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
       const replies = docsToProcess
         .map(convertDocToComment)
-        .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
+        .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
       return {
         replies,
@@ -121,21 +121,20 @@ export const commentService = {
     userId: string,
     content: string,
     parentId: string | null = null,
-    replyToUserId?: string,
-    imageUrl?: string,
+    image?: MediaObject,
     preGeneratedId?: string
   ): Promise<string> => {
     try {
       const commentData = {
         postId,
-        userId,
+        authorId: userId,
         content,
         status: CommentStatus.ACTIVE,
         parentId,
-        replyToUserId: replyToUserId || null,
-        image: imageUrl || null,
+        image: image || null,
         createdAt: Timestamp.now(),
-        replyCount: 0
+        replyCount: 0,
+        reactions: {}
       };
 
       let docRefId = preGeneratedId;
@@ -145,7 +144,6 @@ export const commentService = {
         const docRef = await addDoc(collection(db, 'comments'), commentData);
         docRefId = docRef.id;
       }
-
 
       return docRefId!;
     } catch (error) {
@@ -180,16 +178,16 @@ export const commentService = {
   },
 
   // Chỉnh sửa nội dung bình luận hiện có.
-  updateComment: async (commentId: string, content: string, imageUrl?: string | null) => {
+  updateComment: async (commentId: string, content: string, image?: MediaObject | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
-      const updateData: Partial<Comment> = {
+      const updateData: any = {
         content,
         isEdited: true,
-        editedAt: serverTimestamp() as unknown as Date
+        editedAt: serverTimestamp()
       };
-      if (imageUrl !== undefined) updateData.image = imageUrl;
-      await updateDoc(commentRef, updateData as DocumentData);
+      if (image !== undefined) updateData.image = image;
+      await updateDoc(commentRef, updateData);
     } catch (error) {
       console.error("Lỗi cập nhật comment:", error);
       throw error;
@@ -205,9 +203,9 @@ export const commentService = {
       if (reaction === 'REMOVE' || current === reaction) {
         await deleteDoc(reactionRef);
       } else {
-        await setDoc(reactionRef, { type: reaction });
+        await setDoc(reactionRef, { type: reaction, createdAt: serverTimestamp() });
       }
-      // CF onCommentReactionWrite xử lý counter + notification
+      // CF onCommentReactionWrite xử lý update Map reactions + notification
     } catch (error) {
       console.error("Lỗi react comment:", error);
       throw error;
@@ -278,7 +276,7 @@ export const commentService = {
     return onSnapshot(rootQuery, { includeMetadataChanges: true }, async (snapshot) => {
       if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
       if (isInitialLoad) {
@@ -287,7 +285,7 @@ export const commentService = {
 
         const comments = docsToProcess
           .map(convertDocToComment)
-          .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
+          .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
         callback('initial', {
           comments,
@@ -299,12 +297,12 @@ export const commentService = {
       }
 
       const changes = snapshot.docChanges();
-      const changeUserIds = [...new Set(changes.map(c => c.doc.data().userId))];
+      const changeUserIds = [...new Set(changes.map(c => c.doc.data().authorId))];
       const changeUsersMap = await batchGetUsers(changeUserIds);
 
       for (const change of changes) {
         const comment = convertDocToComment(change.doc);
-        if (blockedUserIds.includes(comment.userId) || changeUsersMap[comment.userId]?.status === UserStatus.BANNED) continue;
+        if (blockedUserIds.includes(comment.authorId) || changeUsersMap[comment.authorId]?.status === 'banned') continue;
 
         if (change.type === 'added') {
           callback('add', [comment]);
@@ -341,7 +339,7 @@ export const commentService = {
     return onSnapshot(q, { includeMetadataChanges: true }, async (snapshot) => {
       if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().userId))];
+      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
       if (isInitialLoad) {
@@ -350,7 +348,7 @@ export const commentService = {
 
         const replies = docsToProcess
           .map(convertDocToComment)
-          .filter(c => !blockedUserIds.includes(c.userId) && usersMap[c.userId]?.status !== UserStatus.BANNED);
+          .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
         callback('initial', {
           replies,
@@ -363,7 +361,7 @@ export const commentService = {
 
       snapshot.docChanges().forEach(change => {
         const reply = convertDocToComment(change.doc);
-        if (blockedUserIds.includes(reply.userId)) return;
+        if (blockedUserIds.includes(reply.authorId)) return;
 
         if (change.type === 'added') {
           callback('add', [reply]);
@@ -374,6 +372,41 @@ export const commentService = {
         }
       });
     }, (error) => console.error("Lỗi subscribe replies:", error));
+  },
+
+  // Tải lên ảnh comment
+  uploadCommentImage: async (
+    file: File,
+    userId: string,
+    onProgress?: (progress: number) => void
+  ): Promise<MediaObject> => {
+    try {
+      const { compressImage } = await import('../utils/imageUtils');
+      const { uploadWithProgress } = await import('../utils/uploadUtils');
+      const { withRetry } = await import('../utils/retryUtils');
+      const { IMAGE_COMPRESSION } = await import('../constants');
+
+      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COMMENT);
+
+      const createdAt = Date.now();
+      const fileName = `comment_img_${createdAt}_${file.name}`;
+      const path = `comments/${userId}/images/${fileName}`;
+
+      const url = await withRetry(() => uploadWithProgress(path, compressedFile, (p) => {
+        onProgress?.(p.progress);
+      }));
+
+      return {
+        url,
+        fileName,
+        mimeType: file.type,
+        size: compressedFile.size,
+        isSensitive: false,
+      };
+    } catch (error) {
+      console.error("Lỗi upload ảnh comment:", error);
+      throw error;
+    }
   }
 };
 
