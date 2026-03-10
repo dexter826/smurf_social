@@ -1,4 +1,4 @@
-import { Post, Visibility, PostStatus, PostType, ReactionType } from '../types';
+import { Post, Visibility, PostStatus, ReactionType, MediaObject } from '../types';
 import { postService } from '../services/postService';
 import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { toast } from './toastStore';
@@ -16,13 +16,13 @@ interface PostState {
   uploadingStates: Record<string, { progress: number; error?: string }>;
   isError: boolean;
 
-  fetchPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
-  subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds?: string[]) => () => void;
-  createPost: (userId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
-  updatePost: (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => Promise<void>;
+  fetchPosts: (currentUserId: string, loadMore?: boolean) => Promise<void>;
+  subscribeToPosts: (currentUserId: string) => () => void;
+  createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
+  updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   deletePost: (postId: string, userId: string, images?: string[], videos?: string[]) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
-  uploadMedia: (files: File[], userId: string) => Promise<{ images: string[], videos: string[], videoThumbnails?: Record<string, string> }>;
+  uploadMedia: (files: File[], userId: string) => Promise<MediaObject[]>;
 
   clearPosts: () => void;
 
@@ -60,7 +60,7 @@ export const usePostStore = create<PostState>()(
         });
       },
 
-      fetchPosts: async (currentUserId: string, friendIds: string[], blockedUserIds: string[] = [], loadMore = false) => {
+      fetchPosts: async (currentUserId: string, loadMore = false) => {
         const { abortController: currentController, posts } = get();
         const loadingStore = useLoadingStore.getState();
 
@@ -82,10 +82,8 @@ export const usePostStore = create<PostState>()(
         const { lastDoc } = get();
 
         try {
-          const result = await postService.getFeed(
+          const result = await postService.getFeedFromFanout(
             currentUserId,
-            friendIds,
-            blockedUserIds,
             PAGINATION.FEED_POSTS,
             loadMore ? lastDoc || undefined : undefined
           );
@@ -117,13 +115,11 @@ export const usePostStore = create<PostState>()(
         }
       },
 
-      subscribeToPosts: (currentUserId: string, friendIds: string[], blockedUserIds: string[] = []) => {
+      subscribeToPosts: (currentUserId: string) => {
         const currentCount = Math.max(get().posts.length, PAGINATION.FEED_POSTS);
 
-        const unsubscribe = postService.subscribeToFeed(
+        const unsubscribe = postService.subscribeToFeedFanout(
           currentUserId,
-          friendIds,
-          blockedUserIds,
           (action, changedPosts) => {
             set((state) => {
               if (action === 'initial') {
@@ -181,25 +177,26 @@ export const usePostStore = create<PostState>()(
         return unsubscribe;
       },
 
-      createPost: async (userId: string, content: string, images: string[], videos: string[], visibility: Visibility = Visibility.PUBLIC, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => {
+      createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.PUBLIC, pendingFiles?: File[]) => {
         const postId = postService.generatePostId();
-        const previewImages = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('image/')).map(f => URL.createObjectURL(f)) : [];
-        const previewVideos = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('video/')).map(f => URL.createObjectURL(f)) : [];
+        const previewMedia = pendingFiles ? pendingFiles.map(f => ({
+          url: URL.createObjectURL(f),
+          fileName: f.name,
+          mimeType: f.type,
+          size: f.size,
+          isSensitive: false,
+        } as MediaObject)) : [];
 
         const newPost: Post = {
           id: postId,
-          userId,
+          authorId: userId,
           content,
-          images: [...(images || []), ...previewImages],
-          videos: [...(videos || []), ...previewVideos],
-          videoThumbnails: videoThumbnails || {},
+          media: [...media, ...previewMedia],
           visibility,
           commentCount: 0,
           createdAt: Timestamp.now(),
           status: PostStatus.ACTIVE,
-          type: PostType.NORMAL,
-          reactionCount: 0,
-          reactionSummary: {},
+          reactions: {},
         };
 
         set(state => ({
@@ -209,12 +206,10 @@ export const usePostStore = create<PostState>()(
 
         const processUpload = async () => {
           try {
-            let finalImages = [...images];
-            let finalVideos = [...videos];
-            let finalThumbnails = { ...videoThumbnails };
+            let finalMedia = [...media];
 
             if (pendingFiles && pendingFiles.length > 0) {
-              const result = await postService.uploadPostMedia(pendingFiles, userId, (progress) => {
+              const uploadedMedia = await postService.uploadPostMedia(pendingFiles, userId, (progress) => {
                 set(state => ({
                   uploadingStates: {
                     ...state.uploadingStates,
@@ -222,22 +217,15 @@ export const usePostStore = create<PostState>()(
                   }
                 }));
               });
-              finalImages = [...finalImages, ...result.images];
-              finalVideos = [...finalVideos, ...result.videos];
-              finalThumbnails = { ...finalThumbnails, ...result.videoThumbnails };
+              finalMedia = [...finalMedia, ...uploadedMedia];
             }
 
             await postService.createPost({
-              userId,
+              authorId: userId,
               content,
-              images: finalImages,
-              videos: finalVideos,
-              videoThumbnails: finalThumbnails,
+              media: finalMedia,
               visibility,
-              type: PostType.NORMAL,
-              reactionCount: 0,
-              reactionSummary: {},
-            }, postId);
+            });
 
             set(state => {
               const newUploadingStates = { ...state.uploadingStates };
@@ -257,23 +245,25 @@ export const usePostStore = create<PostState>()(
             }));
             toast.error(TOAST_MESSAGES.POST.CREATE_FAILED(errorMessage));
           } finally {
-            // Dọn dẹp các URL tạm thời để tránh rò rỉ bộ nhớ
-            previewImages.forEach(url => URL.revokeObjectURL(url));
-            previewVideos.forEach(url => URL.revokeObjectURL(url));
+            previewMedia.forEach(m => URL.revokeObjectURL(m.url));
           }
         };
 
         processUpload();
       },
 
-      updatePost: async (postId: string, content: string, images: string[], videos: string[], visibility: Visibility, videoThumbnails?: Record<string, string>, pendingFiles?: File[]) => {
+      updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => {
         const { posts } = get();
         const post = posts.find(p => p.id === postId);
         if (!post) return;
 
-        // Tạo URL xem trước tạm thời
-        const previewImages = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('image/')).map(f => URL.createObjectURL(f)) : [];
-        const previewVideos = pendingFiles ? pendingFiles.filter(f => f.type.startsWith('video/')).map(f => URL.createObjectURL(f)) : [];
+        const previewMedia = pendingFiles ? pendingFiles.map(f => ({
+          url: URL.createObjectURL(f),
+          fileName: f.name,
+          mimeType: f.type,
+          size: f.size,
+          isSensitive: false,
+        } as MediaObject)) : [];
 
         set(state => ({
           posts: state.posts.map(p =>
@@ -281,10 +271,8 @@ export const usePostStore = create<PostState>()(
               ? {
                 ...p,
                 content,
-                images: [...images, ...previewImages],
-                videos: [...videos, ...previewVideos],
+                media: [...media, ...previewMedia],
                 visibility,
-                videoThumbnails,
                 isEdited: true,
                 editedAt: Timestamp.now()
               }
@@ -297,12 +285,10 @@ export const usePostStore = create<PostState>()(
 
         const processUpdate = async () => {
           try {
-            let finalImages = [...images];
-            let finalVideos = [...videos];
-            let finalThumbnails = { ...videoThumbnails };
+            let finalMedia = [...media];
 
             if (pendingFiles && pendingFiles.length > 0) {
-              const result = await postService.uploadPostMedia(pendingFiles, post.userId, (progress) => {
+              const uploadedMedia = await postService.uploadPostMedia(pendingFiles, post.authorId, (progress) => {
                 set(state => ({
                   uploadingStates: {
                     ...state.uploadingStates,
@@ -310,12 +296,10 @@ export const usePostStore = create<PostState>()(
                   }
                 }));
               });
-              finalImages = [...finalImages, ...result.images];
-              finalVideos = [...finalVideos, ...result.videos];
-              finalThumbnails = { ...finalThumbnails, ...result.videoThumbnails };
+              finalMedia = [...finalMedia, ...uploadedMedia];
             }
 
-            await postService.updatePost(postId, content, finalImages, finalVideos, visibility, finalThumbnails);
+            await postService.updatePost(postId, content, finalMedia, visibility);
 
             set(state => {
               const newUploadingStates = { ...state.uploadingStates };
@@ -324,7 +308,7 @@ export const usePostStore = create<PostState>()(
                 uploadingStates: newUploadingStates,
                 posts: state.posts.map(p =>
                   p.id === postId
-                    ? { ...p, images: finalImages, videos: finalVideos, videoThumbnails: finalThumbnails }
+                    ? { ...p, media: finalMedia }
                     : p
                 )
               };
@@ -342,9 +326,7 @@ export const usePostStore = create<PostState>()(
             }));
             toast.error(TOAST_MESSAGES.POST.UPDATE_FAILED(errorMessage));
           } finally {
-            // Dọn dẹp URL tạm
-            previewImages.forEach(url => URL.revokeObjectURL(url));
-            previewVideos.forEach(url => URL.revokeObjectURL(url));
+            previewMedia.forEach(m => URL.revokeObjectURL(m.url));
           }
         };
 
@@ -370,35 +352,29 @@ export const usePostStore = create<PostState>()(
         if (!post) return;
 
         const prevMyReaction = get().myPostReactions[postId];
-        const prevCount = post.reactionCount;
-        const prevSummary = { ...post.reactionSummary };
+        const prevReactions = { ...post.reactions };
         const prevSelectedPost = get().selectedPost;
 
         const isRemove = reaction === 'REMOVE' || prevMyReaction === reaction;
         const oldType = prevMyReaction;
 
         const applyOptimistic = (p: Post): Post => {
-          const newSummary = { ...p.reactionSummary };
-          let delta = 0;
+          const newReactions = { ...p.reactions };
 
           if (isRemove && oldType) {
-            newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
-            if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
-            delta = -1;
+            newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
+            if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
           } else if (!isRemove) {
             if (oldType) {
-              newSummary[oldType as ReactionType] = Math.max(0, (newSummary[oldType as ReactionType] ?? 1) - 1);
-              if (newSummary[oldType as ReactionType] === 0) delete newSummary[oldType as ReactionType];
-            } else {
-              delta = 1;
+              newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
+              if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
             }
-            newSummary[reaction as ReactionType] = (newSummary[reaction as ReactionType] ?? 0) + 1;
+            newReactions[reaction as ReactionType] = (newReactions[reaction as ReactionType] ?? 0) + 1;
           }
 
           return {
             ...p,
-            reactionCount: Math.max(0, p.reactionCount + delta),
-            reactionSummary: newSummary,
+            reactions: newReactions,
           };
         };
 
@@ -421,7 +397,7 @@ export const usePostStore = create<PostState>()(
         } catch (error) {
           console.error("Lỗi react bài viết:", error);
           set((state) => ({
-            posts: state.posts.map(p => p.id === postId ? { ...p, reactionCount: prevCount, reactionSummary: prevSummary } : p),
+            posts: state.posts.map(p => p.id === postId ? { ...p, reactions: prevReactions } : p),
             selectedPost: prevSelectedPost,
             myPostReactions: { ...state.myPostReactions, [postId]: prevMyReaction },
           }));

@@ -10,6 +10,12 @@ export { onReportCreated } from './notifications/onReportCreated';
 export { onFriendRequestStatusChange } from './friends/onFriendRequestStatusChange';
 export { unfriend } from './friends/unfriend';
 
+// Post Triggers (Fan-out)
+export { onPostCreated } from './posts/onPostCreated';
+export { onPostDeleted } from './posts/onPostDeleted';
+export { onFriendAdded } from './posts/onFriendAdded';
+export { onFriendRemoved } from './posts/onFriendRemoved';
+
 // Message Triggers
 export { onMessageRecalled } from './messages/onMessageRecalled';
 export { onMessageUpdated, syncReplyToSnippet } from './messages/onMessageUpdated';
