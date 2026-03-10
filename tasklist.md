@@ -83,8 +83,8 @@
 > **Mục tiêu**: Kết nối RTDB, tạo module riêng cho RTDB.
 
 ### 1.1 Cấu hình Firebase
-- [ ] Kiểm tra `src/firebase/config.ts` — export thêm `rtdb` (Realtime Database instance)
-- [ ] Cập nhật `database.rules.json` theo security rules của schema mới:
+- [x] Kiểm tra `src/firebase/config.ts` — export thêm `rtdb` (Realtime Database instance)
+- [x] Cập nhật `database.rules.json` theo security rules của schema mới:
   - `/presence/{uid}`: User chỉ ghi được presence của chính mình
   - `/conversations/{convId}`: Members có thể đọc, chỉ admin/creator mới sửa metadata
   - `/messages/{convId}/{msgId}`: Member đọc được; chỉ senderId mới sửa/thu hồi
@@ -92,7 +92,7 @@
   - `/call_signaling/{uid}`: Caller ghi, callee đọc
 
 ### 1.2 Tạo RTDB helper module
-- [ ] Tạo `src/firebase/rtdb.ts`: export các helper refs (`presenceRef`, `conversationRef`, `messagesRef`, `userChatsRef`, `callSignalingRef`)
+- [x] Tạo `src/firebase/rtdb.ts`: export các helper refs (`presenceRef`, `conversationRef`, `messagesRef`, `userChatsRef`, `callSignalingRef`)
 
 ---
 
