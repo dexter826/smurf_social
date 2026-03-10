@@ -2,14 +2,8 @@
 // Các enums này được dùng chung giữa frontend (src) và backend (functions)
 
 export enum UserStatus {
-    ONLINE = "online",
-    OFFLINE = "offline",
+    ACTIVE = "active",
     BANNED = "banned",
-}
-
-export enum UserRole {
-    ADMIN = "admin",
-    USER = "user",
 }
 
 export enum Gender {
@@ -39,11 +33,7 @@ export enum ReactionType {
     ANGRY = "angry",
 }
 
-export enum PostType {
-    NORMAL = "normal",
-    AVATAR_UPDATE = "avatar_update",
-    COVER_UPDATE = "cover_update",
-}
+
 
 export enum MessageType {
     TEXT = "text",
@@ -56,15 +46,10 @@ export enum MessageType {
 }
 
 export enum NotificationType {
-    LIKE_POST = "like_post",
-    COMMENT_POST = "comment_post",
-    REPLY_COMMENT = "reply_comment",
-    REACT_COMMENT = "react_comment",
+    REACTION = "reaction",
+    COMMENT = "comment",
     FRIEND_REQUEST = "friend_request",
-    FRIEND_ACCEPT = "friend_accept",
-    REPORT_NEW = "report_new",
-    REPORT_RESOLVED = "report_resolved",
-    CONTENT_VIOLATION = "content_violation",
+    SYSTEM = "system",
 }
 
 export enum ReportType {
@@ -98,12 +83,11 @@ export enum CommentStatus {
     DELETED = "deleted",
 }
 
-// ========== SHARED INTERFACES ==========
+// ========== SHARED TYPES ==========
 
-export interface ReactableEntity {
-    reactionCount: number;
-    reactionSummary: Partial<Record<ReactionType, number>>;
-}
+export type MemberRole = "admin" | "member";
+
+// ========== SHARED INTERFACES ==========
 
 export interface NotificationPayload {
     postId?: string;
