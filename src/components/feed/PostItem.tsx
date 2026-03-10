@@ -158,9 +158,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
       )}
 
       <PostMediaGrid
-        images={post.images}
-        videos={post.videos}
-        videoThumbnails={post.videoThumbnails}
+        media={post.media || []}
         onClick={handleViewDetail}
         uploadProgress={uploadState?.progress}
       />
