@@ -304,11 +304,16 @@
 > **Mục tiêu**: Align `images` field thành `MediaObject[]`.
 
 ### 9.1 Cập nhật `src/services/reportService.ts`
-- [ ] Sửa `createReport()`: `images` nay là `MediaObject[]`
-- [ ] Sửa `uploadReportImages()`: trả về `MediaObject[]` thay `string[]`
+- [x] Sửa `createReport()`: `images` nay là `MediaObject[]`
+- [x] Sửa `uploadReportImages()`: trả về `MediaObject[]` thay `string[]`
 
 ### 9.2 Cập nhật `src/store/reportStore.ts`
-- [ ] Cập nhật state và UI data để dùng `MediaObject` cho evidence images
+- [x] Cập nhật state và UI data để dùng `MediaObject` cho evidence images
+
+### 9.3 Cập nhật UI Components
+- [x] Cập nhật `ReportModal.tsx`: dùng `reportService.uploadReportImages()`
+- [x] Cập nhật `ReportDetailModal.tsx`: hiển thị `MediaObject[]` cho evidence images
+- [x] Cập nhật `PostMediaGrid.tsx`: refactor để dùng `media: MediaObject[]` thay `images[], videos[]`
 
 ---
 
