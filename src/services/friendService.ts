@@ -32,22 +32,24 @@ export const friendService = {
     }
   },
 
-  sendFriendRequest: async (senderId: string, receiverId: string, message?: string): Promise<FriendRequest> => {
+  sendFriendRequest: async (senderId: string, receiverId: string): Promise<FriendRequest> => {
     try {
       if (senderId === receiverId) {
         throw new Error("Không thể gửi lời mời kết bạn cho chính mình");
       }
 
-      const [receiverSnap, receiverSec, senderSec] = await Promise.all([
+      // Kiểm tra user tồn tại và block status từ subcollection blockedUsers
+      const [receiverSnap, receiverBlockedSnap, senderBlockedSnap] = await Promise.all([
         getDoc(doc(db, 'users', receiverId)),
-        getDoc(doc(db, 'users', receiverId, 'private', 'security')),
-        getDoc(doc(db, 'users', senderId, 'private', 'security')),
+        getDoc(doc(db, 'users', receiverId, 'blockedUsers', senderId)),
+        getDoc(doc(db, 'users', senderId, 'blockedUsers', receiverId)),
       ]);
+
       if (!receiverSnap.exists()) throw new Error("Người dùng không tồn tại");
-      if (receiverSec.data()?.blockedUserIds?.includes(senderId)) {
+      if (receiverBlockedSnap.exists()) {
         throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
       }
-      if (senderSec.data()?.blockedUserIds?.includes(receiverId)) {
+      if (senderBlockedSnap.exists()) {
         throw new Error("Bạn đã chặn người dùng này");
       }
 
@@ -58,7 +60,6 @@ export const friendService = {
         senderId,
         receiverId,
         status: FriendRequestStatus.PENDING,
-        message: message || '',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };

@@ -288,14 +288,14 @@
 > **Mục tiêu**: Align với schema mới — `users/{uid}/friends` subcollection đơn giản hơn.
 
 ### 8.1 Cập nhật `src/services/friendService.ts`
-- [ ] Xóa `FriendRequest.message` field (schema mới không có)
-- [ ] `sendFriendRequest()`: kiểm tra block dùng subcollection `blockedUsers` thay `private/security`
-- [ ] `acceptFriendRequest()`: Cloud Function `onFriendRequestStatusChange` sẽ ghi `users/{uid}/friends`
-- [ ] Xóa trực tiếp call đến `users/{uid}/private/security` trong toàn bộ file
+- [x] Xóa `FriendRequest.message` field (schema mới không có)
+- [x] `sendFriendRequest()`: kiểm tra block dùng subcollection `blockedUsers` thay `private/security`
+- [x] `acceptFriendRequest()`: Cloud Function `onFriendRequestStatusChange` sẽ ghi `users/{uid}/friends`
+- [x] Xóa trực tiếp call đến `users/{uid}/private/security` trong toàn bộ file
 
 ### 8.2 Cập nhật Cloud Functions friends
-- [ ] `onFriendRequestStatusChange.ts`: khi ACCEPTED ghi `friends/{friendId}: {createdAt}` vào subcollection; khi cần xóa, remove doc
-- [ ] `unfriend.ts`: xóa doc trong `users/{uid}/friends/{friendId}` cho cả hai phía
+- [x] `onFriendRequestStatusChange.ts`: khi ACCEPTED ghi `friends/{friendId}: {createdAt}` vào subcollection; khi cần xóa, remove doc
+- [x] `unfriend.ts`: xóa doc trong `users/{uid}/friends/{friendId}` cho cả hai phía
 
 ---
 
