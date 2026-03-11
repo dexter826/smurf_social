@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Users, FileText, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
+import { Users, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, ReportType } from '../../types';
 import { FriendStatus } from '../../types';
@@ -11,7 +11,6 @@ import { validateFileSize } from '../../utils/uploadUtils';
 
 interface ProfileHeaderProps {
   user: User;
-  stats: { postCount: number };
   isOwnProfile: boolean;
   friendStatus?: FriendStatus;
   onEditClick?: () => void;
@@ -30,7 +29,6 @@ interface ProfileHeaderProps {
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user,
-  stats,
   isOwnProfile,
   friendStatus = FriendStatus.NOT_FRIEND,
   onEditClick,
@@ -265,20 +263,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <div className="flex-1 pb-1">
                 <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
                   <h1 className="text-3xl font-bold text-text-primary">{user.fullName}</h1>
-                </div>
-
-                {/* Stats */}
-                <div className="flex items-center justify-center md:justify-start flex-wrap gap-2 md:gap-4 mt-3 text-sm text-text-secondary">
-                  <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-2 rounded-lg border border-border-light">
-                    <FileText size={16} className="text-primary" />
-                    <span><strong className="text-text-primary">{stats.postCount}</strong> bài viết</span>
-                  </div>
-                  {isOwnProfile && (
-                    <div className="flex items-center gap-1.5 bg-bg-secondary/50 px-3 py-2 rounded-lg border border-border-light">
-                      <FileText size={16} className="text-primary" />
-                      <span><strong className="text-text-primary">{stats.postCount}</strong> bài viết</span>
-                    </div>
-                  )}
                 </div>
               </div>
 

@@ -36,6 +36,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const navigate = useNavigate();
   const { openReportModal } = useReportStore();
   const friendIds = useFriendIds();
+  const myReaction = usePostStore(state => state.myPostReactions[post?.id || '']);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
 
@@ -129,7 +130,6 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     );
   }
 
-  const myReaction = usePostStore(state => state.myPostReactions[post.id]);
   const isOwner = post.authorId === currentUser.id;
   const hasMedia = allMedia.length > 0;
 

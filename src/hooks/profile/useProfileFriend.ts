@@ -32,13 +32,13 @@ export const useProfileFriend = ({
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) return;
 
-    if (friendIds.includes(profileUserId)) {
-      setFriendStatus(FriendStatus.FRIEND);
-      setPendingRequestId(undefined);
-      return;
-    }
-
     const updateStatus = () => {
+      if (friendIds.includes(profileUserId)) {
+        setFriendStatus(FriendStatus.FRIEND);
+        setPendingRequestId(undefined);
+        return;
+      }
+
       if (sentRequestRef.current) {
         setFriendStatus(FriendStatus.PENDING_SENT);
         setPendingRequestId(sentRequestRef.current.id);
@@ -61,6 +61,9 @@ export const useProfileFriend = ({
       updateStatus();
     });
 
+    // Trigger update khi friendIds thay đổi
+    updateStatus();
+
     return () => {
       unsubscribeSent();
       unsubscribeReceived();
@@ -68,7 +71,7 @@ export const useProfileFriend = ({
       sentRequestRef.current = null;
       receivedRequestRef.current = null;
     };
-  }, [currentUser, profileUserId, isOwnProfile]);
+  }, [currentUser, profileUserId, isOwnProfile, friendIds]);
 
   const handleFriendAction = useCallback(async (): Promise<{ needConfirm: boolean }> => {
     if (!currentUser || !profile || isOwnProfile) return { needConfirm: false };

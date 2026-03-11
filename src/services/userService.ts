@@ -1,6 +1,6 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, serverTimestamp, arrayUnion, arrayRemove, onSnapshot, orderBy, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { User, UserStatus, Visibility, Gender, MediaObject } from '../types';
+import { User, MediaObject } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
@@ -238,38 +238,6 @@ export const userService = {
   },
 
 
-
-  // Lấy thống kê số lượng bài viết
-  getUserStats: async (userId: string, currentUserId?: string, friendIds?: string[]): Promise<{ postCount: number }> => {
-    try {
-      const isOwner = userId === currentUserId;
-      const isFriend = friendIds?.includes(userId) || false;
-
-      let visibilityFilter: string[];
-      if (isOwner) {
-        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
-      } else if (isFriend) {
-        visibilityFilter = [Visibility.PUBLIC, Visibility.FRIENDS];
-      } else {
-        visibilityFilter = [Visibility.PUBLIC];
-      }
-
-      const postsQuery = query(
-        collection(db, 'posts'),
-        where('authorId', '==', userId),
-        where('visibility', 'in', visibilityFilter)
-      );
-
-      const postsSnapshot = await getCountFromServer(postsQuery);
-
-      return {
-        postCount: postsSnapshot.data().count,
-      };
-    } catch (error) {
-      console.error("Lỗi lấy thống kê user", error);
-      return { postCount: 0 };
-    }
-  },
 
   // Lấy danh sách bị chặn từ subcollection blockedUsers
   getBlockedUserIds: async (userId: string): Promise<string[]> => {

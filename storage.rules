@@ -21,7 +21,11 @@ service firebase.storage {
     }
 
     function isValidFile() {
-      return request.resource.contentType.matches('(image|video|audio|application)/.*');
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType.matches('video/.*') ||
+             request.resource.contentType.matches('audio/.*') ||
+             request.resource.contentType.matches('application/.*') ||
+             request.resource.contentType.matches('text/.*');
     }
 
     // Avatar người dùng - MediaObject (max 5MB)
@@ -62,6 +66,8 @@ service firebase.storage {
 
     // File chat - MediaObject[] (max 50MB per file)
     // Bao gồm: images, videos, files, voice messages
+    // Pattern hỗ trợ: chats/{convId}/{timestamp}_{filename}
+    // convId có thể là: direct_{uid1}_{uid2} hoặc group_{groupId}
     match /chats/{conversationId}/{allPaths=**} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated()
