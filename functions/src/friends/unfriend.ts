@@ -2,7 +2,10 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../app';
 
 export const unfriend = onCall(
-  { region: 'us-central1' },
+  {
+    region: 'us-central1',
+    cors: true
+  },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
 

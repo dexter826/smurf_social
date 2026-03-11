@@ -7,7 +7,10 @@ import { sendPushNotification } from '../helpers/fcmHelper';
 
 // Admin từ chối báo cáo — không vi phạm
 export const rejectReport = onCall(
-  { region: 'us-central1' },
+  {
+    region: 'us-central1',
+    cors: true
+  },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
     if (!request.auth.token.admin) throw new HttpsError('permission-denied', 'Không có quyền Admin');

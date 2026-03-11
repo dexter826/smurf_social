@@ -6,7 +6,10 @@ import { createNotification } from '../helpers/notificationHelper';
 
 // Admin khóa/mở khóa tài khoản người dùng
 export const banUser = onCall(
-  { region: 'us-central1' },
+  {
+    region: 'us-central1',
+    cors: true
+  },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
     if (!request.auth.token.admin) throw new HttpsError('permission-denied', 'Không có quyền Admin');
