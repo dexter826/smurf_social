@@ -172,12 +172,19 @@ export const useChat = () => {
   // Auto mark as read
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
+    
+    const activeParticipantIds = Object.keys(conversations.find(c => c.id === selectedConversationId)?.data.members || {});
+    const activePartnerId = activeParticipantIds.find(id => id !== currentUser.id);
+    const isMessageRequest = activePartnerId ? !friendIds.includes(activePartnerId) : false;
+
+    if (isMessageRequest) return;
+
     const msgs = messages[selectedConversationId] || [];
     const hasUnread = msgs.some(m =>
       m.data.senderId !== currentUser.id && (!m.data.readBy || !m.data.readBy[currentUser.id])
     );
     if (hasUnread) markAsRead(selectedConversationId, currentUser.id);
-  }, [messages, selectedConversationId, currentUser, markAsRead]);
+  }, [messages, selectedConversationId, currentUser, markAsRead, conversations, friendIds]);
 
   // Fetch user info
   useEffect(() => {

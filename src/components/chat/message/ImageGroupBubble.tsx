@@ -110,14 +110,14 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
         </div>
       )}
 
-      <div className={`flex flex-col max-w-[70%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative ${hasReactions ? 'mb-4' : 'mb-1'}`}>
+      <div className={`flex flex-col max-w-[70%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative mb-1`}>
         {!isMe && showName && (
           <span className="text-[11px] text-text-secondary ml-1 mb-1 font-medium">
             {sender?.fullName}
           </span>
         )}
 
-        <div className="relative group/message">
+        <div className={`relative group/message ${hasReactions ? 'mb-3.5' : ''}`}>
           <div className={`rounded-xl overflow-hidden grid gap-0.5 ${gridClass} border border-border-light shadow-sm bg-bg-secondary w-full max-w-[320px]`}>
             {renderImages()}
           </div>

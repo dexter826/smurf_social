@@ -65,7 +65,7 @@ export const useConversationItem = ({
   }, [lastMessage]);
 
   const readers = useMemo(() => {
-    if (!lastMessage) return [];
+    if (!lastMessage || isMessageRequest) return [];
     const readBy = lastMessage.readBy || {};
     return Object.keys(readBy)
       .filter(uid => uid !== currentUserId)

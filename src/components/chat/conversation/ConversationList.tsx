@@ -221,7 +221,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </div>
         ) : (
           <div>
-            {/* Tin nhắn chờ Section */}
+            {/* Người lạ Section */}
             {viewMode === 'normal' && activeFilter === 'all' && requestConversations.length > 0 && (
               <>
                 <button
@@ -230,7 +230,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                 >
                   <span className="flex items-center gap-2 text-sm font-medium text-text-primary">
                     <MessageCircle size={16} className="text-primary" />
-                    Tin nhắn chờ
+                    Người lạ
                     <span className="text-[10px] bg-primary text-text-on-primary px-1.5 py-0.5 rounded-full min-w-[18px]">
                       {requestConversations.length}
                     </span>

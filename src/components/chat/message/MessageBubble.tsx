@@ -162,7 +162,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
           </div>
         )}
 
-        <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative ${hasReactions ? 'mb-4' : 'mb-1'}`}>
+        <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative mb-1`}>
           {/* Tên người gửi trong nhóm */}
           {!isMe && showName && (
             <span
@@ -173,7 +173,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             </span>
           )}
 
-          <div className="relative group/message">
+          <div className={`relative group/message ${hasReactions ? 'mb-3.5' : ''}`}>
             <ReactionDetailsModal
               isOpen={showReactionDetails}
               onClose={() => setShowReactionDetails(false)}
@@ -184,18 +184,18 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               context="CHAT"
             />
 
-            {/* Nội dung tin nhắn */}
             <div
               className={`
                 relative text-sm
                 ${(message.data.type === 'text' || message.data.isRecalled || message.data.replyToId || message.data.type === 'call')
-                  ? `px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} rounded-2xl shadow-sm ${isMe
+                  ? `px-3 py-1.5 rounded-2xl shadow-sm ${isMe
                     ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all'
                     : 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all'
                   }`
-                  : hasReactions ? 'pb-3.5' : ''
+                  : ''
                 }
                 ${message.data.type === 'call' && !message.data.isRecalled && onCall ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all duration-base' : ''}
+                ${hasReactions ? 'min-w-[80px] pb-[12px]' : ''}
               `}
               onClick={() => {
                 if (message.data.type === 'call' && !message.data.isRecalled && onCall) {
