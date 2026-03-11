@@ -6,6 +6,7 @@ interface SearchResult {
   fullName: string;
   avatar: string;
   email: string;
+  status?: string;
 }
 
 // Thay thế getDocs toàn collection — tìm user theo email chính xác
@@ -30,13 +31,12 @@ export const searchUsers = onCall(
       const snap = await db
         .collection('users')
         .where('email', '==', searchTerm.toLowerCase().trim())
-        .where('status', '!=', 'banned')
         .limit(10)
         .get();
 
       let users: SearchResult[] = snap.docs
         .map((d) => ({ id: d.id, ...d.data() } as SearchResult))
-        .filter((u) => u.id !== currentUserId);
+        .filter((u) => u.id !== currentUserId && u.status !== 'banned');
 
       if (currentUserId && users.length > 0) {
         // Get blocked users from subcollection
