@@ -225,7 +225,7 @@ export const usePostStore = create<PostState>()(
               content,
               media: finalMedia,
               visibility,
-            });
+            }, postId);
 
             set(state => {
               const newUploadingStates = { ...state.uploadingStates };
