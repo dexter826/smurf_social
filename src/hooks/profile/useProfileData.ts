@@ -1,14 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User } from '../../types';
-import { useAuthStore } from '../../store/authStore';
 import { useFriendIds } from '../utils';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { useUserCache } from '../../store/userCacheStore';
-
-interface ProfileStats {
-  postCount: number;
-}
 
 interface UseProfileDataProps {
   profileUserId: string | undefined;
@@ -18,7 +13,6 @@ interface UseProfileDataProps {
 // Lấy và đồng bộ dữ liệu profile
 export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataProps) => {
   const [profile, setProfile] = useState<User | null>(null);
-  const [stats, setStats] = useState<ProfileStats>({ postCount: 0 });
   const [loading, setLoading] = useState(true);
   const [latestMedia, setLatestMedia] = useState<string[]>([]);
 
@@ -36,7 +30,6 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
       ]);
 
       setProfile(userData || null);
-      setStats({ postCount: userPosts.posts.length });
 
       const media: string[] = [];
       userPosts.posts.forEach(post => {
@@ -74,7 +67,6 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
   return {
     profile,
     setProfile,
-    stats,
     latestMedia,
     loading,
     isOwnProfile,

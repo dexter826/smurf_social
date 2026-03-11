@@ -23,7 +23,6 @@ const ProfilePage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
   const {
     profile,
-    stats,
     latestMedia,
     loading,
     uploading,
@@ -121,7 +120,6 @@ const ProfilePage: React.FC = () => {
       <div className="bg-bg-primary shadow-sm mb-4">
         <ProfileHeader
           user={profile}
-          stats={stats}
           isOwnProfile={isOwnProfile}
           friendStatus={friendStatus}
           onEditClick={() => setIsEditModalOpen(true)}

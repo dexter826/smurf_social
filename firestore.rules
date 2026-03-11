@@ -29,10 +29,10 @@ service cloud.firestore {
 
     // QUẢN LÝ NGƯỜI DÙNG
     match /users/{userId} {
-      // FCM tokens — CF-only write
+      // FCM tokens — Client có thể ghi để đăng ký push notification
       match /private/fcm {
         allow read: if isOwner(userId);
-        allow write: if false;
+        allow write: if isOwner(userId) && isNotBanned();
       }
       allow read: if isAuthenticated();
 

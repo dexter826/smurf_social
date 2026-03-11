@@ -82,7 +82,6 @@ export const useProfile = () => {
   return {
     currentUser,
     profile: data.profile,
-    stats: data.stats,
     latestMedia: data.latestMedia,
     loading: data.loading,
     profileUserId,
