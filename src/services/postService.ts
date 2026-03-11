@@ -635,11 +635,6 @@ export const postService = {
           isSensitive: false,
         };
 
-        // Nếu là video, Cloud Function generateVideoThumbnail sẽ tạo thumbnail
-        if (isVideo) {
-          mediaObject.thumbnailUrl = undefined; // CF sẽ update sau
-        }
-
         media.push(mediaObject);
       }
 
