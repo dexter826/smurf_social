@@ -597,12 +597,13 @@ export const rtdbMessageService = {
     /**
      * Thêm/xóa reaction
      */
-    toggleReaction: async (convId: string, msgId: string, uid: string, emoji: string): Promise<void> => {
+    toggleReaction: async (convId: string, msgId: string, uid: string, emoji: string | 'REMOVE'): Promise<void> => {
         try {
             const reactionRef = ref(rtdb, `messages/${convId}/${msgId}/reactions/${uid}`);
             const reactionSnap = await get(reactionRef);
+            const currentEmoji = reactionSnap.val();
 
-            if (reactionSnap.exists() && reactionSnap.val() === emoji) {
+            if (emoji === 'REMOVE' || currentEmoji === emoji) {
                 await set(reactionRef, null);
             } else {
                 await set(reactionRef, emoji);

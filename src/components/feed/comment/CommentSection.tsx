@@ -204,6 +204,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       await deleteComment(postId, commentToDelete.id, currentUser.id, commentToDelete.parentId);
       setCommentToDelete(null);
     } catch (error) {
+      console.error("Lỗi xóa bình luận:", error);
+      toast.error("Không thể xóa bình luận này");
     }
   }, [commentToDelete, postId, currentUser.id, deleteComment]);
 

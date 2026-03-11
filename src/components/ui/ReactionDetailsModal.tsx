@@ -39,19 +39,29 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
   // Tải từ subcollection khi POST/COMMENT context
   useEffect(() => {
     if (!isOpen) return;
-    if (sourceId && sourceType) {
+
+    // Ưu tiên sử dụng reactions từ prop (Chat hoặc khi Ref cho Posts/Comments đã có sẵn)
+    if (reactionsProp) {
+      setReactions(reactionsProp);
+      return;
+    }
+
+    // Chỉ truy vấn Firestore nếu là Post/Comment và có sourceId
+    if (sourceId && sourceType && (sourceType === 'post' || sourceType === 'comment')) {
       const colPath = sourceType === 'post'
         ? `posts/${sourceId}/reactions`
-        : sourceType === 'comment'
-          ? `comments/${sourceId}/reactions`
-          : `messages/${sourceId}/reactions`;
-      getDocs(collection(db, colPath)).then(snap => {
-        const map: Record<string, string> = {};
-        snap.forEach(d => { map[d.id] = d.data().type; });
-        setReactions(map);
-      }).catch(() => setReactions({}));
-    } else if (reactionsProp) {
-      setReactions(reactionsProp);
+        : `comments/${sourceId}/reactions`;
+
+      getDocs(collection(db, colPath))
+        .then(snap => {
+          const map: Record<string, string> = {};
+          snap.forEach(d => { map[d.id] = d.data().type; });
+          setReactions(map);
+        })
+        .catch((err) => {
+          console.error(`Lỗi tải Firestore reactions cho ${sourceType}:`, err);
+          setReactions({});
+        });
     }
   }, [isOpen, sourceId, sourceType, reactionsProp]);
 
