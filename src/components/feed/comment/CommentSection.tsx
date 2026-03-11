@@ -256,7 +256,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     handleReplyClick={handleReplyClick}
                     handleEditClick={handleEditClick}
                     handleCommentSubmit={handleCommentSubmit}
-                    handleDeleteClick={setCommentToDelete}
+                    handleDeleteClick={() => setCommentToDelete(comment)}
                     handleUploadMedia={handleUploadMedia}
                     loadReplies={loadReplies}
                     resetInput={resetInput}
@@ -265,6 +265,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   />
                 </div>
               ))}
+              
+              {totalCommentCount > filteredRootComments.length && filteredRootComments.length > 0 && (
+                <div className="text-center py-4 px-6 mt-2 border-t border-border-light/30">
+                  <p className="text-text-tertiary text-[13px] italic">
+                    Còn {totalCommentCount - filteredRootComments.length} bình luận khác. Bạn chỉ xem được bình luận của bạn bè.
+                  </p>
+                </div>
+              )}
               {currentHasMoreRoot && (
                 <div className="px-6 py-4">
                   <Button

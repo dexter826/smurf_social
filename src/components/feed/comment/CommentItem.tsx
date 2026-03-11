@@ -7,7 +7,7 @@ import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../t
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { TruncatedText } from '../shared';
 import { useCommentStore } from '../../../store/commentStore';
-import { useFriendIds } from '../../../hooks';
+import { useFriendIds, useFilteredReactions } from '../../../hooks';
 
 interface CommentItemProps {
   comment: Comment;
@@ -82,7 +82,16 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   }, [comment.authorId, onProfileClick, navigate]);
 
   const myReaction = useCommentStore(state => state.myCommentReactions[comment.id]);
-  const reactionCount = Object.values(comment.reactions || {}).reduce((sum, count) => sum + count, 0);
+  
+  const { filteredSummary, filteredCount } = useFilteredReactions(
+    comment.id,
+    'comment',
+    comment.authorId,
+    comment.reactions,
+    Object.values(comment.reactions || {}).reduce((sum, count) => sum + count, 0)
+  );
+
+  const reactionCount = filteredCount;
 
   const handleReact = useCallback((reaction: string | ReactionType) => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);
@@ -312,6 +321,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
           sourceId={comment.id}
           sourceType="comment"
           currentUserId={currentUser.id}
+          authorId={comment.authorId}
           context="POST"
           friendsIds={friendIds}
         />

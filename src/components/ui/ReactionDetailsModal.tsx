@@ -14,6 +14,7 @@ interface ReactionDetailsModalProps {
   sourceId?: string;
   sourceType?: 'post' | 'comment' | 'message';
   currentUserId: string;
+  authorId?: string;
   context?: 'POST' | 'CHAT';
   friendsIds?: string[];
 }
@@ -25,6 +26,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
   sourceId,
   sourceType,
   currentUserId,
+  authorId,
   context = 'CHAT',
   friendsIds = [],
 }) => {
@@ -97,8 +99,16 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
       .filter(item => !!item.user);
 
     if (context === 'POST') {
+      const isOwner = currentUserId === authorId;
+      if (isOwner) {
+        return {
+          displayList: list.filter(item => activeTab === 'ALL' || item.type === activeTab),
+          othersCount: 0
+        };
+      }
+
       const friends = list.filter(item =>
-        item.userId === currentUserId || friendsIds.includes(item.userId)
+        item.userId === currentUserId || item.userId === authorId || friendsIds.includes(item.userId)
       );
       const othersCount = list.length - friends.length;
 
@@ -112,7 +122,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
       displayList: list.filter(item => activeTab === 'ALL' || item.type === activeTab),
       othersCount: 0
     };
-  }, [usersMap, reactionEntries, activeTab, context, currentUserId, friendsIds]);
+  }, [usersMap, reactionEntries, activeTab, context, currentUserId, authorId, friendsIds]);
 
   const { displayList, othersCount } = filteredUsers;
 
