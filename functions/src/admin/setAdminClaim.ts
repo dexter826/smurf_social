@@ -4,7 +4,10 @@ import { db, auth } from '../app';
 
 // Chỉ superAdmin (set thủ công qua Firebase Console) mới được gọi
 export const setAdminClaim = onCall(
-  { region: 'us-central1' },
+  {
+    region: 'us-central1',
+    cors: true
+  },
   async (request) => {
     if (!request.auth?.token.superAdmin) {
       throw new HttpsError('permission-denied', 'Không có quyền superAdmin');

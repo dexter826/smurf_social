@@ -10,7 +10,10 @@ interface SearchResult {
 
 // Thay thế getDocs toàn collection — tìm user theo email chính xác
 export const searchUsers = onCall(
-  { region: 'us-central1' },
+  {
+    region: 'us-central1',
+    cors: true
+  },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
 
