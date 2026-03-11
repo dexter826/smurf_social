@@ -10,6 +10,7 @@ export { onPostCreated } from './posts/onPostCreated';
 export { onPostDeleted } from './posts/onPostDeleted';
 export { onFriendAdded } from './posts/onFriendAdded';
 export { onFriendRemoved } from './posts/onFriendRemoved';
+export { onBlockedUserWrite } from './posts/onBlockedUserWrite';
 
 // Admin Callable Functions
 export { resolveReport } from './admin/resolveReport';

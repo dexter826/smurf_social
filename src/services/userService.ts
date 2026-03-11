@@ -1,7 +1,7 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp, writeBatch, deleteDoc, FieldValue } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp, writeBatch, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { User, MediaObject, UserRole } from '../types';
+import { User, MediaObject, UserRole, BlockOptions } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
@@ -238,47 +238,54 @@ export const userService = {
 
 
 
-  // Lấy danh sách bị chặn từ subcollection blockedUsers
-  getBlockedUserIds: async (userId: string): Promise<string[]> => {
+  // Lấy map blockedUserId → options từ subcollection
+  getBlockedUsers: async (userId: string): Promise<Record<string, BlockOptions>> => {
     try {
-      const blockedSnap = await getDocs(collection(db, 'users', userId, 'blockedUsers'));
-      return blockedSnap.docs.map(doc => doc.id);
+      const snap = await getDocs(collection(db, 'users', userId, 'blockedUsers'));
+      const result: Record<string, BlockOptions> = {};
+      snap.docs.forEach(d => {
+        const data = d.data();
+        result[d.id] = {
+          blockMessages: data.blockMessages ?? false,
+          blockCalls: data.blockCalls ?? false,
+          blockViewMyActivity: data.blockViewMyActivity ?? false,
+          hideTheirActivity: data.hideTheirActivity ?? false,
+        };
+      });
+      return result;
     } catch {
-      return [];
+      return {};
     }
   },
 
-  // Chặn + hủy kết bạn + xóa requests liên quan
-  blockUser: async (userId: string, blockedUserId: string): Promise<void> => {
+  // Chặn với options — không xóa kết bạn
+  blockUser: async (userId: string, blockedUserId: string, options: BlockOptions): Promise<void> => {
     try {
-      const batch = writeBatch(db);
-
-      batch.set(
+      await setDoc(
         doc(db, 'users', userId, 'blockedUsers', blockedUserId),
-        { blockedUid: blockedUserId, createdAt: serverTimestamp() }
+        {
+          blockedUid: blockedUserId,
+          ...options,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
       );
-
-      batch.delete(doc(db, 'users', userId, 'friends', blockedUserId));
-      batch.delete(doc(db, 'users', blockedUserId, 'friends', userId));
-
-      const [sentSnap, receivedSnap] = await Promise.all([
-        getDocs(query(
-          collection(db, 'friendRequests'),
-          where('senderId', '==', userId),
-          where('receiverId', '==', blockedUserId)
-        )),
-        getDocs(query(
-          collection(db, 'friendRequests'),
-          where('senderId', '==', blockedUserId),
-          where('receiverId', '==', userId)
-        )),
-      ]);
-
-      [...sentSnap.docs, ...receivedSnap.docs].forEach(d => batch.delete(d.ref));
-
-      await batch.commit();
     } catch (error) {
-      console.error("Lỗi chặn người dùng", error);
+      console.error('Lỗi chặn người dùng', error);
+      throw error;
+    }
+  },
+
+  // Cập nhật từng options của block
+  updateBlockOptions: async (userId: string, blockedUserId: string, options: Partial<BlockOptions>): Promise<void> => {
+    try {
+      await updateDoc(
+        doc(db, 'users', userId, 'blockedUsers', blockedUserId),
+        { ...options, updatedAt: serverTimestamp() }
+      );
+    } catch (error) {
+      console.error('Lỗi cập nhật block options', error);
       throw error;
     }
   },
@@ -288,7 +295,7 @@ export const userService = {
     try {
       await deleteDoc(doc(db, 'users', userId, 'blockedUsers', blockedUserId));
     } catch (error) {
-      console.error("Lỗi bỏ chặn người dùng", error);
+      console.error('Lỗi bỏ chặn người dùng', error);
       throw error;
     }
   },

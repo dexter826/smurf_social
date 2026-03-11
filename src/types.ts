@@ -52,6 +52,22 @@ export enum FriendStatus {
 
 export type ThemeMode = "light" | "dark";
 
+// ========== BLOCK OPTIONS ==========
+
+export interface BlockOptions {
+  blockMessages: boolean;
+  blockCalls: boolean;
+  blockViewMyActivity: boolean;
+  hideTheirActivity: boolean;
+}
+
+export interface BlockedUserEntry {
+  blockedUid: string;
+  options: BlockOptions;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+}
+
 // ========== BASE ENTITIES ==========
 
 export interface BaseEntity {

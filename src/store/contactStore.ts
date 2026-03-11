@@ -20,7 +20,6 @@ interface ContactState {
   rejectFriendRequest: (requestId: string) => Promise<void>;
   cancelFriendRequest: (requestId: string) => Promise<void>;
   unfriend: (userId: string, friendId: string) => Promise<void>;
-  blockUser: (userId: string, blockedUserId: string) => Promise<void>;
 
   clearSearchResults: () => void;
   reset: () => void;
@@ -147,18 +146,6 @@ export const useContactStore = create<ContactState>()(
         } catch (error) {
           set({ friends: previousFriends });
           console.error("Lỗi hủy kết bạn:", error);
-          throw error;
-        }
-      },
-
-      blockUser: async (userId: string, blockedUserId: string) => {
-        try {
-          await userService.blockUser(userId, blockedUserId);
-          set((state) => ({
-            friends: state.friends.filter(f => f.id !== blockedUserId)
-          }));
-        } catch (error) {
-          console.error("Lỗi chặn người dùng:", error);
           throw error;
         }
       },

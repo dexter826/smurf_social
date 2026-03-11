@@ -44,11 +44,11 @@ export const useProfile = () => {
     profile,
     profileUserId,
     isOwnProfile,
-    friendStatus: friend.friendStatus,
-    pendingRequestId: friend.pendingRequestId,
   });
 
   const isBannedProfile = profile?.status === 'banned';
+
+  const canViewContent = !block.isBlockedByMe && !block.isActivityBlockedByPartner;
 
   const handleMessage = useCallback(async () => {
     if (!currentUser || !profile) return;
@@ -87,6 +87,7 @@ export const useProfile = () => {
     profileUserId,
     isOwnProfile,
     isBannedProfile,
+    canViewContent,
     activeTab,
     setActiveTab,
     loadProfile,
@@ -109,8 +110,12 @@ export const useProfile = () => {
 
     // Block
     isBlockedByMe: block.isBlockedByMe,
-    canViewContent: block.canViewContent,
-    handleBlockUser: block.handleBlockUser,
+    isActivityBlockedByPartner: block.isActivityBlockedByPartner,
+    currentBlockOptions: block.currentBlockOptions,
+    isBlockModalOpen: block.isBlockModalOpen,
+    handleOpenBlockModal: block.handleOpenBlockModal,
+    handleApplyBlock: block.handleApplyBlock,
     handleUnblockUser: block.handleUnblockUser,
+    closeBlockModal: block.closeBlockModal,
   };
 };

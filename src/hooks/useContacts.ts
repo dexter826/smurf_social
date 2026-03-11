@@ -34,7 +34,6 @@ interface UseContactsReturn {
   handleRejectRequest: (requestId: string) => Promise<void>;
   handleCancelRequest: (requestId: string) => Promise<void>;
   handleUnfriend: (friendId: string) => Promise<void>;
-  handleBlockUser: (userId: string) => Promise<void>;
   handleMessage: (friendId: string) => Promise<string | null>;
 }
 
@@ -49,8 +48,7 @@ export const useContacts = (): UseContactsReturn => {
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
-    unfriend,
-    blockUser
+    unfriend
   } = useContactStore();
 
   const { users: userCache, fetchUsers } = useUserCache();
@@ -135,11 +133,6 @@ export const useContacts = (): UseContactsReturn => {
     await unfriend(currentUser.id, friendId);
   }, [currentUser, unfriend]);
 
-  const handleBlockUser = useCallback(async (userId: string) => {
-    if (!currentUser) return;
-    await blockUser(currentUser.id, userId);
-  }, [currentUser, blockUser]);
-
   const handleMessage = useCallback(async (friendId: string): Promise<string | null> => {
     if (!currentUser) return null;
     const conversationId = await getOrCreateConversation(currentUser.id, friendId);
@@ -165,7 +158,6 @@ export const useContacts = (): UseContactsReturn => {
     handleRejectRequest,
     handleCancelRequest,
     handleUnfriend,
-    handleBlockUser,
     handleMessage,
   };
 };

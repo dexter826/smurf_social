@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
+import { BlockOptionsModal } from '../components/ui';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
 import { useContactStore } from '../store/contactStore';
@@ -40,6 +41,8 @@ const ChatPage: React.FC = () => {
     usersMap,
     isBlocked,
     isBlockedByMe,
+    isCallBlockedByMe,
+    isCallBlockedByPartner,
     blockedMessage,
     forwardingMessage,
     setForwardingMessage,
@@ -67,7 +70,9 @@ const ChatPage: React.FC = () => {
     handleMarkUnread,
     handleDelete,
     handleMarkAllRead,
-    handleToggleBlock,
+    handleApplyBlock,
+    handleUnblock,
+    myBlockOptions,
     handleCreateGroup,
     handleAddMembers,
     handleRemoveMember,
@@ -110,6 +115,10 @@ const ChatPage: React.FC = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+
+  const openBlockModal = () => setIsBlockModalOpen(true);
+  const closeBlockModal = () => setIsBlockModalOpen(false);
 
   const {
     callPhase,
@@ -168,6 +177,16 @@ const ChatPage: React.FC = () => {
       }
     } else {
       if (!partner || !startCall) return;
+
+      if (isCallBlockedByMe) {
+        import('../store/toastStore').then(({ toast }) => toast.error('Bạn đã chặn cuộc gọi với người dùng này.'));
+        return;
+      }
+      if (isCallBlockedByPartner) {
+        import('../store/toastStore').then(({ toast }) => toast.error('Không thể thực hiện cuộc gọi cho người dùng này.'));
+        return;
+      }
+
       setIsCaller(true);
       setOtherUserIds([partner.id]);
       setCallPhase('outgoing');
@@ -254,7 +273,7 @@ const ChatPage: React.FC = () => {
           viewMode={viewMode}
           archivedCount={archivedCount}
           onViewModeChange={setViewMode}
-          onBlock={handleToggleBlock}
+          onBlock={openBlockModal}
           isSearchFocused={isSearchFocused}
           onSearchFocus={setSearchFocused}
           searchResults={{ conversations: [], users: searchResults.users }}
@@ -310,14 +329,14 @@ const ChatPage: React.FC = () => {
               }}
               onAddFriend={handleSendFriendRequest}
               onAcceptFriend={handleAcceptFriendRequest}
-              onBlock={handleToggleBlock}
+              onBlock={openBlockModal}
               isLoading={isLoading}
               isLoadingMore={isLoadingMore}
               hasMoreMessages={hasMoreMessages}
               onLoadMore={handleLoadMoreMessages}
               isBlocked={isBlocked}
               isBlockedByMe={isBlockedByMe}
-              onUnblock={handleToggleBlock}
+              onUnblock={handleUnblock}
               onCall={(isVideo) => handleInitiateCall(isVideo ? 'video' : 'voice')}
               onVideoCall={() => handleInitiateCall('video')}
             />
@@ -372,7 +391,7 @@ const ChatPage: React.FC = () => {
           onTogglePin={() => handlePin(selectedConversation.id, !(selectedMemberSettings?.isPinned || false))}
           onToggleArchive={() => handleArchive(selectedConversation.id, !(selectedMemberSettings?.isArchived || false))}
           onToggleMarkUnread={() => handleMarkUnread(selectedConversation.id, false)}
-          onToggleBlock={handleToggleBlock}
+          onToggleBlock={openBlockModal}
           onDelete={() => {
             if (selectedConversation.data.isGroup && selectedConversation.data.creatorId === currentUser.id) {
               handleDisbandGroup();
@@ -453,6 +472,16 @@ const ChatPage: React.FC = () => {
           callType={callType}
           onCancel={handleCancelOutgoingCall}
           onTimeout={handleMissedCallTimeout}
+        />
+      )}
+      {/* Block options modal */}
+      {partner && (
+        <BlockOptionsModal
+          isOpen={isBlockModalOpen}
+          targetName={partner.fullName}
+          initialOptions={myBlockOptions}
+          onApply={handleApplyBlock}
+          onClose={closeBlockModal}
         />
       )}
     </div>

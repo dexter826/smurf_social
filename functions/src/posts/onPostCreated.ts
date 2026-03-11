@@ -1,10 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 
-/**
- * Fan-out post ID vào feeds subcollection của tất cả bạn bè + chính tác giả
- * Trigger: onCreate posts/{postId}
- */
+// Fan-out post vào feed bạn bè, bỏ qua người chặn tác giả
 export const onPostCreated = onDocumentCreated(
     { document: 'posts/{postId}', region: 'us-central1' },
     async (event) => {
@@ -15,8 +12,8 @@ export const onPostCreated = onDocumentCreated(
             console.error('Post data is null');
             return;
         }
-        const authorId = postData.authorId;
 
+        const authorId = postData.authorId;
         if (!authorId) {
             console.error('Post missing authorId:', postId);
             return;
@@ -30,36 +27,60 @@ export const onPostCreated = onDocumentCreated(
                 createdAt: postData.createdAt || admin.firestore.FieldValue.serverTimestamp(),
             };
 
-            // Fan-out vào feed của chính tác giả
-            const authorFeedRef = db.collection('users').doc(authorId).collection('feeds').doc(postId);
-            batch.set(authorFeedRef, feedEntry);
+            // Fan-out vào feed tác giả
+            batch.set(
+                db.collection('users').doc(authorId).collection('feeds').doc(postId),
+                feedEntry
+            );
 
-            // Lấy danh sách bạn bè
-            const friendsSnapshot = await db.collection('users').doc(authorId).collection('friends').get();
+            const friendsSnap = await db.collection('users').doc(authorId).collection('friends').get();
+            if (friendsSnap.empty) {
+                await batch.commit();
+                return;
+            }
+
+            const friendIds = friendsSnap.docs.map(d => d.id);
+
+            // Check từng bạn có đang hide tác giả không
+            const usersHidingAuthor = new Set<string>();
+            const chunkSize = 10;
+
+            for (let i = 0; i < friendIds.length; i += chunkSize) {
+                const chunk = friendIds.slice(i, i + chunkSize);
+                const blockSnaps = await Promise.all(
+                    chunk.map(fid =>
+                        db.collection('users').doc(fid).collection('blockedUsers').doc(authorId).get()
+                    )
+                );
+                blockSnaps.forEach((snap, idx) => {
+                    if (snap.exists && snap.data()?.hideTheirActivity === true) {
+                        usersHidingAuthor.add(chunk[idx]);
+                    }
+                });
+            }
 
             let batchCount = 0;
             const MAX_BATCH_SIZE = 500;
 
-            for (const friendDoc of friendsSnapshot.docs) {
-                const friendId = friendDoc.id;
-                const friendFeedRef = db.collection('users').doc(friendId).collection('feeds').doc(postId);
-                batch.set(friendFeedRef, feedEntry);
+            for (const friendId of friendIds) {
+                // Bỏ qua người chặn tác giả bằng hideTheirActivity
+                if (usersHidingAuthor.has(friendId)) continue;
+
+                batch.set(
+                    db.collection('users').doc(friendId).collection('feeds').doc(postId),
+                    feedEntry
+                );
 
                 batchCount++;
-
-                // Commit batch khi đạt limit
                 if (batchCount >= MAX_BATCH_SIZE) {
                     await batch.commit();
                     batchCount = 0;
                 }
             }
 
-            // Commit batch cuối cùng
-            if (batchCount > 0) {
-                await batch.commit();
-            }
+            if (batchCount > 0) await batch.commit();
 
-            console.log(`Fan-out post ${postId} to ${friendsSnapshot.size + 1} feeds`);
+            console.log(`Fan-out ${postId}: ${friendIds.length - usersHidingAuthor.size + 1} feeds`);
         } catch (error) {
             console.error('Error fan-out post:', error);
         }

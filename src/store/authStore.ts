@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase/config";
-import { User } from "../types";
+import { User, BlockOptions } from "../types";
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
 import { useUserCache } from "./userCacheStore";
@@ -17,7 +17,7 @@ import { presenceService } from "../services/presenceService";
 
 interface AuthState {
   user: User | null;
-  blockedUserIds: string[];
+  blockedUsers: Record<string, BlockOptions>;
   isPendingVerification: boolean;
   isInitialized: boolean;
   login: (email: string, pass: string) => Promise<void>;
@@ -30,12 +30,12 @@ interface AuthState {
   initialize: () => () => void;
   updateUserProfile: (updates: Partial<User>) => void;
   updateAvatar: (avatar: any) => void;
-  updateBlockList: (action: "add" | "remove", targetUserId: string) => void;
+  updateBlockEntry: (action: "add" | "remove", targetUserId: string, options?: BlockOptions) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  blockedUserIds: [],
+  blockedUsers: {},
   isPendingVerification: false,
   isInitialized: false,
 
@@ -157,15 +157,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isPendingVerification: false });
 
         try {
-          const [userData, blockedUserIds] = await Promise.all([
+          const [userData, blockedUsers] = await Promise.all([
             userService.getUserById(firebaseUser.uid),
-            userService.getBlockedUserIds(firebaseUser.uid),
+            userService.getBlockedUsers(firebaseUser.uid),
           ]);
           if (userData) {
             // Set presence online
             await presenceService.setOnline(firebaseUser.uid);
 
-            set({ user: userData, blockedUserIds });
+            set({ user: userData, blockedUsers });
             useUserCache.getState().setUser(userData);
           }
         } catch (error) {
@@ -191,12 +191,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useUserCache.getState().setUser(updatedUser);
   },
 
-  updateBlockList: (action, targetUserId) => {
-    const currentBlocked = get().blockedUserIds;
-    if (action === "add") {
-      set({ blockedUserIds: [...currentBlocked, targetUserId] });
-    } else {
-      set({ blockedUserIds: currentBlocked.filter((id) => id !== targetUserId) });
+  // Thêm/xóa/cập nhật entry trong blockedUsers map
+  updateBlockEntry: (action, targetUserId, options?) => {
+    const current = get().blockedUsers;
+    if (action === "add" && options) {
+      set({ blockedUsers: { ...current, [targetUserId]: options } });
+    } else if (action === "remove") {
+      const updated = { ...current };
+      delete updated[targetUserId];
+      set({ blockedUsers: updated });
     }
   },
 
@@ -217,9 +220,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         try {
-          const [userData, blockedUserIds] = await Promise.all([
+          const [userData, blockedUsers] = await Promise.all([
             userService.getUserById(firebaseUser.uid),
-            userService.getBlockedUserIds(firebaseUser.uid),
+            userService.getBlockedUsers(firebaseUser.uid),
           ]);
 
           if (userData) {
@@ -235,7 +238,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             set({
               user: userData,
-              blockedUserIds,
+              blockedUsers,
               isPendingVerification: false,
               isInitialized: true,
             });
@@ -250,8 +253,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                   return;
                 }
 
-                const currentBlocked = get().blockedUserIds;
-                set({ user: updatedUser, blockedUserIds: currentBlocked });
+                const currentBlocked = get().blockedUsers;
+                set({ user: updatedUser, blockedUsers: currentBlocked });
                 useUserCache.getState().setUser(updatedUser);
               },
             );
