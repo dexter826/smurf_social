@@ -1,11 +1,23 @@
 import { Post, Visibility, PostStatus, ReactionType, MediaObject } from '../types';
 import { postService } from '../services/postService';
-import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
+import { DocumentSnapshot, Timestamp, onSnapshot, doc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { toast } from './toastStore';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { PAGINATION, TOAST_MESSAGES } from '../constants';
 import { useLoadingStore } from './loadingStore';
+
+function convertDocToPost(docSnap: DocumentSnapshot): Post {
+  const data = docSnap.data();
+  return {
+    ...data,
+    id: docSnap.id,
+    createdAt: data?.createdAt as Timestamp,
+    editedAt: data?.editedAt as Timestamp | undefined,
+    deletedAt: data?.deletedAt as Timestamp | undefined,
+  } as Post;
+}
 
 interface PostState {
   posts: Post[];
@@ -18,6 +30,7 @@ interface PostState {
   lastFetchTime: number | null;
   newPostsAvailable: number;
   pendingPosts: Post[];
+  selectedPostUnsubscribe: (() => void) | null;
 
   fetchPosts: (currentUserId: string, loadMore?: boolean, force?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string) => () => void;
@@ -51,10 +64,12 @@ export const usePostStore = create<PostState>()(
       lastFetchTime: null,
       newPostsAvailable: 0,
       pendingPosts: [],
+      selectedPostUnsubscribe: null,
 
       reset: () => {
-        const { abortController } = get();
+        const { abortController, selectedPostUnsubscribe } = get();
         if (abortController) abortController.abort();
+        if (selectedPostUnsubscribe) selectedPostUnsubscribe();
 
         set({
           posts: [],
@@ -67,7 +82,8 @@ export const usePostStore = create<PostState>()(
           uploadingStates: {},
           lastFetchTime: null,
           newPostsAvailable: 0,
-          pendingPosts: []
+          pendingPosts: [],
+          selectedPostUnsubscribe: null
         });
       },
 
@@ -112,8 +128,16 @@ export const usePostStore = create<PostState>()(
           const postIds = result.posts.map(p => p.id);
           const myReactions = await postService.batchLoadMyReactions(postIds, currentUserId);
 
+          const mergedPosts = loadMore ? [...posts, ...result.posts] : result.posts;
+          const seenIds = new Set<string>();
+          const dedupedPosts = mergedPosts.filter(p => {
+            if (seenIds.has(p.id)) return false;
+            seenIds.add(p.id);
+            return true;
+          });
+
           set({
-            posts: loadMore ? [...posts, ...result.posts] : result.posts,
+            posts: dedupedPosts,
             myPostReactions: loadMore ? { ...get().myPostReactions, ...myReactions } : myReactions,
             lastDoc: result.lastDoc,
             hasMore: result.hasMore,
@@ -142,9 +166,7 @@ export const usePostStore = create<PostState>()(
           (action, changedPosts) => {
             set((state) => {
               if (action === 'initial') {
-                return {
-                  posts: changedPosts
-                };
+                return {};
               }
 
               if (action === 'add') {
@@ -153,8 +175,16 @@ export const usePostStore = create<PostState>()(
 
                 if (newPosts.length === 0) return {};
 
+                const uniquePending = [...newPosts, ...state.pendingPosts];
+                const seenIds = new Set<string>();
+                const deduped = uniquePending.filter(p => {
+                  if (seenIds.has(p.id)) return false;
+                  seenIds.add(p.id);
+                  return true;
+                }).sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+
                 return {
-                  pendingPosts: [...newPosts, ...state.pendingPosts].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()),
+                  pendingPosts: deduped,
                   newPostsAvailable: state.newPostsAvailable + newPosts.length
                 };
               }
@@ -198,12 +228,16 @@ export const usePostStore = create<PostState>()(
 
       loadNewPosts: () => {
         set((state) => {
-          const existingIds = new Set(state.posts.map(p => p.id));
-          const uniquePendingPosts = state.pendingPosts.filter(p => !existingIds.has(p.id));
-          const allPosts = [...uniquePendingPosts, ...state.posts].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+          const allPosts = [...state.pendingPosts, ...state.posts];
+          const seenIds = new Set<string>();
+          const dedupedPosts = allPosts.filter(p => {
+            if (seenIds.has(p.id)) return false;
+            seenIds.add(p.id);
+            return true;
+          }).sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
           return {
-            posts: allPosts,
+            posts: dedupedPosts,
             pendingPosts: [],
             newPostsAvailable: 0
           };
@@ -465,7 +499,28 @@ export const usePostStore = create<PostState>()(
 
       clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true }),
 
-      setSelectedPost: (post: Post | null) => set({ selectedPost: post }),
+      setSelectedPost: (post: Post | null) => {
+        const { selectedPostUnsubscribe } = get();
+        if (selectedPostUnsubscribe) {
+          selectedPostUnsubscribe();
+        }
+
+        if (post) {
+          const unsubscribe = onSnapshot(doc(db, 'posts', post.id), (postDoc) => {
+            if (postDoc.exists()) {
+              const updatedPost = convertDocToPost(postDoc);
+              set(state => ({
+                selectedPost: state.selectedPost?.id === post.id ? updatedPost : state.selectedPost,
+                posts: state.posts.map(p => p.id === post.id ? updatedPost : p)
+              }));
+            }
+          });
+
+          set({ selectedPost: post, selectedPostUnsubscribe: unsubscribe });
+        } else {
+          set({ selectedPost: null, selectedPostUnsubscribe: null });
+        }
+      },
 
       fetchPostById: async (postId: string, currentUserId: string, friendIds: string[]) => {
         useLoadingStore.getState().setLoading('feed', true);
