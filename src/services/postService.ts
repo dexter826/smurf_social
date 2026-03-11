@@ -1,6 +1,5 @@
 import {
   collection,
-  addDoc,
   getDocs,
   getDoc,
   query,
@@ -10,8 +9,6 @@ import {
   deleteDoc,
   doc,
   setDoc,
-  arrayUnion,
-  arrayRemove,
   Timestamp,
   serverTimestamp,
   onSnapshot,
@@ -489,16 +486,6 @@ export const postService = {
         deletedAt: serverTimestamp(),
         deletedBy: userId
       });
-
-      // Cleanup related notifications
-      const notifQuery = query(
-        collection(db, 'notifications'),
-        where('data.postId', '==', postId)
-      );
-
-      const snapshot = await getDocs(notifQuery);
-      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-      await Promise.all(deletePromises);
     } catch (error) {
       console.error("Lỗi xóa bài viết", error);
       throw error;
@@ -553,10 +540,12 @@ export const postService = {
       if (!postSnap.exists()) return null;
 
       const data = postSnap.data();
+
+      if (data.status === PostStatus.DELETED) return null;
+
       const isOwner = data.authorId === currentUserId;
       const isFriend = friendIds?.includes(data.authorId) || false;
 
-      // Kiểm tra quyền xem
       if (data.visibility === Visibility.PRIVATE && !isOwner) {
         return null;
       }
@@ -614,7 +603,6 @@ export const postService = {
         const fileName = `${createdAt}_${file.name}`;
         const path = `posts/${userId}/${typeFolder}/${fileName}`;
 
-        // Compress ảnh trước khi upload
         if (isImageFile(file)) {
           file = await compressImage(file, IMAGE_COMPRESSION.POST);
         }
@@ -632,7 +620,7 @@ export const postService = {
           fileName,
           mimeType: file.type,
           size: file.size,
-          isSensitive: false,
+          isSensitive: false
         };
 
         media.push(mediaObject);

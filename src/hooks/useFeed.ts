@@ -13,7 +13,10 @@ interface UseFeedReturn {
   isLoading: boolean;
   hasMore: boolean;
   usersMap: Record<string, User>;
+  newPostsAvailable: number;
   handleLoadMore: () => void;
+  handleLoadNewPosts: () => void;
+  handleRefresh: () => Promise<void>;
   handleReact: (postId: string, reaction: string) => Promise<void>;
   handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility) => Promise<void>;
   handleDelete: (postId: string, media?: any[]) => Promise<void>;
@@ -27,8 +30,11 @@ export const useFeed = (): UseFeedReturn => {
   const {
     posts,
     hasMore,
+    newPostsAvailable,
     fetchPosts,
     subscribeToPosts,
+    loadNewPosts,
+    refreshFeed,
     reactToPost,
     updatePost,
     deletePost,
@@ -54,9 +60,7 @@ export const useFeed = (): UseFeedReturn => {
   useEffect(() => {
     if (!currentUser) return;
 
-    if (posts.length === 0 || !feedPostsLoading) {
-      fetchPosts(currentUser.id, false);
-    }
+    fetchPosts(currentUser.id, false, false);
 
     const unsubscribe = handleSubscribeToPosts();
 
@@ -65,13 +69,22 @@ export const useFeed = (): UseFeedReturn => {
     };
   }, [currentUser?.id]);
 
-  // Lấy thông tin người dùng khi có bài mới
   useEffect(() => {
     if (posts.length > 0) {
       const userIds = [...new Set(posts.map(p => p.authorId))];
       fetchUsers(userIds);
     }
   }, [posts, fetchUsers]);
+
+  const handleLoadNewPosts = useCallback(() => {
+    loadNewPosts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [loadNewPosts]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!currentUser) return;
+    await refreshFeed(currentUser.id);
+  }, [currentUser, refreshFeed]);
 
   const handleReact = useCallback(async (postId: string, reaction: string) => {
     if (!currentUser) return;
@@ -100,7 +113,10 @@ export const useFeed = (): UseFeedReturn => {
     isLoading: feedPostsLoading,
     hasMore,
     usersMap,
+    newPostsAvailable,
     handleLoadMore,
+    handleLoadNewPosts,
+    handleRefresh,
     handleReact,
     handleUpdate,
     handleDelete,

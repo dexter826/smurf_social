@@ -9,15 +9,20 @@ import { useLoadingStore } from './loadingStore';
 
 interface PostState {
   posts: Post[];
-  myPostReactions: Record<string, string>; // postId -> reactionType
+  myPostReactions: Record<string, string>;
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
   uploadingStates: Record<string, { progress: number; error?: string }>;
   isError: boolean;
+  lastFetchTime: number | null;
+  newPostsAvailable: number;
+  pendingPosts: Post[];
 
-  fetchPosts: (currentUserId: string, loadMore?: boolean) => Promise<void>;
+  fetchPosts: (currentUserId: string, loadMore?: boolean, force?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string) => () => void;
+  loadNewPosts: () => void;
+  refreshFeed: (currentUserId: string) => Promise<void>;
   createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   deletePost: (postId: string, userId: string, images?: string[], videos?: string[]) => Promise<void>;
@@ -43,6 +48,9 @@ export const usePostStore = create<PostState>()(
       isError: false,
       uploadingStates: {},
       selectedPost: null,
+      lastFetchTime: null,
+      newPostsAvailable: 0,
+      pendingPosts: [],
 
       reset: () => {
         const { abortController } = get();
@@ -56,15 +64,26 @@ export const usePostStore = create<PostState>()(
           abortController: null,
           isError: false,
           selectedPost: null,
-          uploadingStates: {}
+          uploadingStates: {},
+          lastFetchTime: null,
+          newPostsAvailable: 0,
+          pendingPosts: []
         });
       },
 
-      fetchPosts: async (currentUserId: string, loadMore = false) => {
-        const { abortController: currentController, posts } = get();
+      fetchPosts: async (currentUserId: string, loadMore = false, force = false) => {
+        const { abortController: currentController, posts, lastFetchTime } = get();
         const loadingStore = useLoadingStore.getState();
 
         if (loadingStore.isLoading('feed.posts') || loadingStore.isLoading('feed.loadMore')) return;
+
+        const CACHE_DURATION = 5 * 60 * 1000;
+        const now = Date.now();
+        const isCacheValid = lastFetchTime && (now - lastFetchTime) < CACHE_DURATION;
+
+        if (!force && !loadMore && posts.length > 0 && isCacheValid) {
+          return;
+        }
 
         if (currentController) {
           currentController.abort();
@@ -90,7 +109,6 @@ export const usePostStore = create<PostState>()(
 
           if (newController.signal.aborted) return;
 
-          // Load myReactions for posts
           const postIds = result.posts.map(p => p.id);
           const myReactions = await postService.batchLoadMyReactions(postIds, currentUserId);
 
@@ -100,7 +118,8 @@ export const usePostStore = create<PostState>()(
             lastDoc: result.lastDoc,
             hasMore: result.hasMore,
             abortController: null,
-            isError: false
+            isError: false,
+            lastFetchTime: loadMore ? lastFetchTime : now
           });
         } catch (error: unknown) {
           const err = error as { name?: string };
@@ -129,22 +148,14 @@ export const usePostStore = create<PostState>()(
               }
 
               if (action === 'add') {
-                const existingIds = new Set(state.posts.map(p => p.id));
+                const existingIds = new Set([...state.posts.map(p => p.id), ...state.pendingPosts.map(p => p.id)]);
                 const newPosts = changedPosts.filter(p => !existingIds.has(p.id));
-                const duplicates = changedPosts.filter(p => existingIds.has(p.id));
 
-                let currentPosts = state.posts;
-                if (duplicates.length > 0) {
-                  currentPosts = currentPosts.map(p => {
-                    const match = duplicates.find(d => d.id === p.id);
-                    return match || p;
-                  });
-                }
-
-                if (newPosts.length === 0 && duplicates.length === 0) return {};
+                if (newPosts.length === 0) return {};
 
                 return {
-                  posts: [...newPosts, ...currentPosts].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
+                  pendingPosts: [...newPosts, ...state.pendingPosts].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()),
+                  newPostsAvailable: state.newPostsAvailable + newPosts.length
                 };
               }
 
@@ -154,8 +165,14 @@ export const usePostStore = create<PostState>()(
                   return updated || p;
                 });
 
+                const updatedPending = state.pendingPosts.map(p => {
+                  const updated = changedPosts.find(cp => cp.id === p.id);
+                  return updated || p;
+                });
+
                 return {
                   posts: updatedPosts,
+                  pendingPosts: updatedPending,
                   selectedPost: state.selectedPost?.id === changedPosts[0]?.id ? changedPosts[0] : state.selectedPost
                 };
               }
@@ -164,6 +181,8 @@ export const usePostStore = create<PostState>()(
                 const removedIds = new Set(changedPosts.map(p => p.id));
                 return {
                   posts: state.posts.filter(p => !removedIds.has(p.id)),
+                  pendingPosts: state.pendingPosts.filter(p => !removedIds.has(p.id)),
+                  newPostsAvailable: Math.max(0, state.newPostsAvailable - changedPosts.filter(p => state.pendingPosts.some(pp => pp.id === p.id)).length),
                   selectedPost: removedIds.has(state.selectedPost?.id || '') ? null : state.selectedPost
                 };
               }
@@ -175,6 +194,32 @@ export const usePostStore = create<PostState>()(
         );
 
         return unsubscribe;
+      },
+
+      loadNewPosts: () => {
+        set((state) => {
+          const existingIds = new Set(state.posts.map(p => p.id));
+          const uniquePendingPosts = state.pendingPosts.filter(p => !existingIds.has(p.id));
+          const allPosts = [...uniquePendingPosts, ...state.posts].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+
+          return {
+            posts: allPosts,
+            pendingPosts: [],
+            newPostsAvailable: 0
+          };
+        });
+      },
+
+      refreshFeed: async (currentUserId: string) => {
+        set({
+          posts: [],
+          pendingPosts: [],
+          newPostsAvailable: 0,
+          lastDoc: null,
+          hasMore: true,
+          lastFetchTime: null
+        });
+        await get().fetchPosts(currentUserId, false, true);
       },
 
       createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.PUBLIC, pendingFiles?: File[]) => {
@@ -230,7 +275,12 @@ export const usePostStore = create<PostState>()(
             set(state => {
               const newUploadingStates = { ...state.uploadingStates };
               delete newUploadingStates[postId];
-              return { uploadingStates: newUploadingStates };
+              return {
+                uploadingStates: newUploadingStates,
+                posts: state.posts.map(p =>
+                  p.id === postId ? { ...p, media: finalMedia } : p
+                )
+              };
             });
 
             toast.success(TOAST_MESSAGES.POST.CREATE_SUCCESS);
@@ -421,6 +471,13 @@ export const usePostStore = create<PostState>()(
         useLoadingStore.getState().setLoading('feed', true);
         try {
           const post = await postService.getPostById(postId, currentUserId, friendIds);
+
+          if (!post) {
+            toast.info('Bài viết này đã bị xóa hoặc không còn tồn tại');
+            set({ selectedPost: null });
+            return;
+          }
+
           const myReaction = await postService.getMyReactionForPost(postId, currentUserId);
 
           set({
@@ -429,6 +486,7 @@ export const usePostStore = create<PostState>()(
           });
         } catch (error) {
           console.error("Lỗi lấy chi tiết bài viết:", error);
+          toast.error('Không thể tải bài viết');
         } finally {
           useLoadingStore.getState().setLoading('feed', false);
         }
@@ -437,7 +495,11 @@ export const usePostStore = create<PostState>()(
     {
       name: 'smurf_feed_cache',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ posts: state.posts.slice(0, PAGINATION.FEED_CACHE_LIMIT) }),
+      partialize: (state) => ({
+        posts: state.posts.slice(0, PAGINATION.FEED_CACHE_LIMIT),
+        lastFetchTime: state.lastFetchTime,
+        myPostReactions: state.myPostReactions
+      }),
     }
   )
 );
