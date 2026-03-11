@@ -83,7 +83,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages }) =>
                 rel="noopener noreferrer"
                 className="aspect-video rounded-lg overflow-hidden bg-bg-tertiary hover:opacity-80 active:opacity-70 transition-all duration-base relative group"
               >
-                <video src={msg.data.media?.[0]?.url} className="w-full h-full object-cover" playsInline muted />
+                <video src={msg.data.media?.[0]?.url} poster={msg.data.media?.[0]?.thumbnailUrl} className="w-full h-full object-cover" playsInline muted />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-base">
                   <ExternalLink size={24} className="text-white" />
                 </div>

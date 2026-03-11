@@ -13,7 +13,7 @@ interface PhotosTabProps {
   userId: string;
 }
 
-type MediaItem = { url: string; type: MessageType.IMAGE | MessageType.VIDEO };
+type MediaItem = { url: string; type: MessageType.IMAGE | MessageType.VIDEO; thumbnailUrl?: string };
 
 const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -32,12 +32,14 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
       post.media?.forEach((mediaObj: any) => {
         items.push({
           url: mediaObj.url,
-          type: mediaObj.mimeType?.startsWith('video/') ? MessageType.VIDEO : MessageType.IMAGE
+          type: mediaObj.mimeType?.startsWith('video/') ? MessageType.VIDEO : MessageType.IMAGE,
+          thumbnailUrl: mediaObj.thumbnailUrl
         });
       });
     });
     return items;
   }, []);
+
 
   const loadMedia = useCallback(async (isLoadMore = false) => {
     if (!currentUser) return;
@@ -122,7 +124,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
               onClick={() => setSelectedIndex(index)}
             >
               {item.type === 'video' ? (
-                <video src={item.url} className="w-full h-full object-cover" />
+                <video src={item.url} poster={item.thumbnailUrl} className="w-full h-full object-cover" />
               ) : (
                 <LazyImage
                   src={item.url}
@@ -130,6 +132,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
                   className="w-full h-full object-cover"
                 />
               )}
+
               {item.type === 'video' && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all duration-base">
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">

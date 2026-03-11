@@ -43,6 +43,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
             controls={!isBlob}
             playsInline
             muted={isBlob}
+            preload="none"
           />
         ) : (
           <LazyImage
@@ -93,6 +94,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
               controls={!isBlob}
               playsInline
               muted={isBlob}
+              preload="none"
             />
           ) : (
             <LazyImage

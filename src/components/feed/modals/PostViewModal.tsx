@@ -85,7 +85,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     if (!post) return [];
     return (post.media || []).map(m => ({
       url: m.url,
-      type: m.mimeType.startsWith('video/') ? 'video' as const : 'image' as const
+      type: m.mimeType.startsWith('video/') ? 'video' as const : 'image' as const,
+      thumbnailUrl: m.thumbnailUrl
     }));
   }, [post?.media]);
 
@@ -156,8 +157,10 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               {allMedia[mediaIndex].type === 'video' ? (
                 <video
                   src={allMedia[mediaIndex].url}
+                  poster={allMedia[mediaIndex].thumbnailUrl}
                   controls
                   playsInline
+                  preload="none"
                   className="max-w-full max-h-full object-contain"
                 />
               ) : (
@@ -291,7 +294,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     {allMedia[mediaIndex].type === 'video' ? (
-                      <video src={allMedia[mediaIndex].url} controls playsInline className="max-w-full max-h-full" />
+                      <video src={allMedia[mediaIndex].url} poster={allMedia[mediaIndex].thumbnailUrl} controls playsInline className="max-w-full max-h-full" />
                     ) : (
                       <img src={allMedia[mediaIndex].url} alt="" className="max-w-full max-h-full object-contain" />
                     )}

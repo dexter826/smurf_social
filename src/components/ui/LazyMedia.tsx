@@ -134,9 +134,10 @@ export const LazyVideo: React.FC<LazyVideoProps> = ({
       ) : isInView ? (
         <video
           src={src}
+          poster={thumbnail}
           className={className}
           controls
-          preload="metadata"
+          preload="none"
           playsInline
           {...props}
         />
