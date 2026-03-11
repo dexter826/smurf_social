@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { User, MediaObject } from '../types';
+import { User, MediaObject, UserRole } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
@@ -135,7 +135,7 @@ export const userService = {
           avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0 },
           email: data.email || '',
           status: 'active',
-          role: data.role || 'user',
+          role: data.role || UserRole.USER,
           bio: data.bio || '',
           cover: data.cover,
           createdAt: Timestamp.now(),

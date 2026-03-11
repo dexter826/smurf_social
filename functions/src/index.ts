@@ -20,9 +20,6 @@ export { resolveReport } from './admin/resolveReport';
 export { rejectReport } from './admin/rejectReport';
 export { banUser } from './admin/banUser';
 
-// Media Processing
-export { generateVideoThumbnail } from './media/generateVideoThumbnail';
-
 // Search
 export { searchUsers } from './search/searchUsers';
 

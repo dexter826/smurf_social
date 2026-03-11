@@ -619,9 +619,21 @@ export const postService = {
         const createdAt = Date.now();
         const fileName = `${createdAt}_${file.name}`;
         const path = `posts/${userId}/${typeFolder}/${fileName}`;
+        
+        let thumbnailUrl: string | undefined = undefined;
 
         if (isImageFile(file)) {
           file = await compressImage(file, IMAGE_COMPRESSION.POST);
+        } else if (isVideo) {
+          // Trích xuất và upload thumbnail
+          try {
+             const { generateVideoThumbnail } = await import('../utils/uploadUtils');
+             const thumbFile = await generateVideoThumbnail(file);
+             const thumbPath = `posts/${userId}/thumbnails/${createdAt}_${thumbFile.name}`;
+             thumbnailUrl = await uploadWithProgress(thumbPath, thumbFile);
+          } catch (e) {
+             console.error("Lỗi tạo/up thumbnail:", e);
+          }
         }
 
         const url = await withRetry(() =>
@@ -639,6 +651,10 @@ export const postService = {
           size: file.size,
           isSensitive: false
         };
+        
+        if (thumbnailUrl) {
+          mediaObject.thumbnailUrl = thumbnailUrl;
+        }
 
         media.push(mediaObject);
       }
