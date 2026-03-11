@@ -125,8 +125,7 @@ export const postService = {
     }
 
     let isInitialLoad = true;
-    let allCurrentPosts: Post[] = [];
-    const postCache = new Map<string, Post>();
+    const postUnsubscribers = new Map<string, () => void>();
 
     const feedQuery = query(
       collection(db, 'users', userId, 'feeds'),
@@ -136,43 +135,61 @@ export const postService = {
 
     const unsubscribe = onSnapshot(feedQuery, async (snapshot) => {
       if (isInitialLoad) {
-        // Initial load
         const result = await postService.getFeedFromFanout(userId, limitCount);
-        allCurrentPosts = result.posts;
-        result.posts.forEach(p => postCache.set(p.id, p));
+
+        result.posts.forEach(p => {
+          const postUnsub = onSnapshot(doc(db, 'posts', p.id), (postDoc) => {
+            if (postDoc.exists()) {
+              const updatedPost = convertDocToPost(postDoc);
+              callback('update', [updatedPost]);
+            }
+          });
+          postUnsubscribers.set(p.id, postUnsub);
+        });
+
         isInitialLoad = false;
         callback('initial', result.posts);
         return;
       }
 
-      // Handle changes
       for (const change of snapshot.docChanges()) {
         const feedData = change.doc.data();
         const postId = feedData.postId;
 
         if (change.type === 'added') {
-          // Fetch post detail
           const postDoc = await getDoc(doc(db, 'posts', postId));
           if (postDoc.exists() && postDoc.data().status === PostStatus.ACTIVE) {
             const post = convertDocToPost(postDoc);
-            postCache.set(postId, post);
-            allCurrentPosts = [post, ...allCurrentPosts.filter(p => p.id !== postId)];
+
+            const postUnsub = onSnapshot(doc(db, 'posts', postId), (updatedPostDoc) => {
+              if (updatedPostDoc.exists()) {
+                const updatedPost = convertDocToPost(updatedPostDoc);
+                callback('update', [updatedPost]);
+              }
+            });
+            postUnsubscribers.set(postId, postUnsub);
+
             callback('add', [post]);
           }
         } else if (change.type === 'removed') {
-          const post = postCache.get(postId);
-          if (post) {
-            postCache.delete(postId);
-            allCurrentPosts = allCurrentPosts.filter(p => p.id !== postId);
-            callback('remove', [post]);
+          const postUnsub = postUnsubscribers.get(postId);
+          if (postUnsub) {
+            postUnsub();
+            postUnsubscribers.delete(postId);
           }
+
+          callback('remove', [{ id: postId } as Post]);
         }
       }
     }, (error) => {
       console.error("Lỗi subscribe feed fan-out", error);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      postUnsubscribers.forEach(unsub => unsub());
+      postUnsubscribers.clear();
+    };
   },
 
   // ========== LEGACY FEED METHODS (Fallback) ==========
