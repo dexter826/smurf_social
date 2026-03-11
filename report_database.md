@@ -42,9 +42,10 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 - `gender` (String): `male`, `female`, `other`.
 - `location` (String): Vị trí.
 - `status` (String): `active`, `banned`.
+- `role` (String): `user`, `admin`. Mặc định là `user`.
 - `createdAt` / `updatedAt` / `deletedAt` (Timestamp).
 
-_(Lưu ý: Quyền Admin sẽ được set bằng Firebase Auth Custom Claims, không lưu ở đây để bảo mật)._
+_(Lưu ý: Field `role` được bảo vệ bởi Security Rules, chỉ admin mới có thể thay đổi)._
 
 **1.1. Sub-collection `friends` (Bên trong `users/{uid}`)**
 

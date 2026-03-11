@@ -135,6 +135,7 @@ export const userService = {
           avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0 },
           email: data.email || '',
           status: 'active',
+          role: data.role || 'user',
           bio: data.bio || '',
           cover: data.cover,
           createdAt: Timestamp.now(),

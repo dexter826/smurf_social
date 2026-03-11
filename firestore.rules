@@ -10,13 +10,16 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    // Admin và banned dùng Custom Claims — không cần Firestore read
     function isAdmin() {
-      return isAuthenticated() && ('admin' in request.auth.token) && request.auth.token.admin == true;
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     function isNotBanned() {
-      return isAuthenticated() && (!('banned' in request.auth.token) || request.auth.token.banned != true);
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
     }
 
     // Danh sách các trường dữ liệu thay đổi.
@@ -35,14 +38,11 @@ service cloud.firestore {
 
       allow create: if isAuthenticated() && isOwner(userId) &&
         request.resource.data.status in ['active', 'banned'] &&
-        // Role chỉ được set qua Custom Claims — chặn ghi trực tiếp
-        !('role' in request.resource.data);
+        request.resource.data.role == 'user';
 
       allow update: if isAuthenticated() && (
-        // Quyền admin toàn phần.
         isAdmin() ||
-        // Chủ sở hữu không được tự đổi role (CF xử lý).
-        (isOwner(userId) && isNotBanned() && !changed().hasAny(['role']))
+        (isOwner(userId) && isNotBanned() && !changed().hasAny(['role', 'status']))
       );
 
       allow delete: if isAuthenticated() && isOwner(userId) && isNotBanned();

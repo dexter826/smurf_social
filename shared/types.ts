@@ -83,6 +83,11 @@ export enum CommentStatus {
     DELETED = "deleted",
 }
 
+export enum UserRole {
+    USER = "user",
+    ADMIN = "admin",
+}
+
 // ========== SHARED TYPES ==========
 
 export type MemberRole = "admin" | "member";

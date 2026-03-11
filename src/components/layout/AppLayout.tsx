@@ -8,7 +8,6 @@ import { useContactStore } from '../../store/contactStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
 import { PostViewModal } from '../feed';
-import { auth } from '../../firebase/config';
 import { usePostStore } from '../../store/postStore';
 import { useUserCache } from '../../store/userCacheStore';
 import { useNotificationStore } from '../../store/notificationStore';
@@ -37,19 +36,8 @@ export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check admin status from custom claims
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const tokenResult = await currentUser.getIdTokenResult();
-        setIsAdmin(!!tokenResult.claims.admin);
-      }
-    };
-    checkAdminStatus();
-  }, [user?.id]);
+  const isAdmin = user?.role === 'admin';
 
   const isChatRoom = location.pathname === '/' && !!selectedConversationId;
 

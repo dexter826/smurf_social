@@ -33,6 +33,7 @@ export {
   ReportStatus,
   PostStatus,
   CommentStatus,
+  UserRole,
 };
 
 export type { NotificationPayload, MemberRole };
@@ -83,6 +84,7 @@ export interface User extends BaseEntity {
   gender?: Gender;
   dob?: Timestamp;
   status: 'active' | 'banned';
+  role: UserRole;
   bio?: string;
   cover?: MediaObject;
   updatedAt?: Timestamp;

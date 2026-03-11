@@ -21,8 +21,9 @@ export const onReportCreated = onDocumentCreated(
     const { reporterId, targetType, reason } = report;
 
     try {
-      const configDoc = await db.collection('config').doc('admins').get();
-      const adminIds: string[] = configDoc.data()?.adminIds || [];
+      const usersSnapshot = await db.collection('users').where('role', '==', 'admin').get();
+      const adminIds = usersSnapshot.docs.map(doc => doc.id);
+
       if (adminIds.length === 0) return;
 
       const typeLabel = REPORT_TYPE_LABELS[targetType] || targetType;
