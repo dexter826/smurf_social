@@ -19,7 +19,6 @@ export { onFriendRemoved } from './posts/onFriendRemoved';
 export { resolveReport } from './admin/resolveReport';
 export { rejectReport } from './admin/rejectReport';
 export { banUser } from './admin/banUser';
-export { setAdminClaim } from './admin/setAdminClaim';
 
 // Media Processing
 export { generateVideoThumbnail } from './media/generateVideoThumbnail';
