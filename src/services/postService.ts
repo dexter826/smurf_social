@@ -430,9 +430,9 @@ export const postService = {
     };
   },
 
-  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status' | 'reactions'>): Promise<string> => {
+  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status' | 'reactions'>, predefinedId?: string): Promise<string> => {
     try {
-      const postRef = doc(collection(db, 'posts'));
+      const postRef = predefinedId ? doc(db, 'posts', predefinedId) : doc(collection(db, 'posts'));
       await setDoc(postRef, {
         ...postData,
         status: PostStatus.ACTIVE,
