@@ -48,8 +48,6 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
   const [showRecallConfirm, setShowRecallConfirm] = useState(false);
   const [showReaders, setShowReaders] = useState(false);
   const [showReactionSelector, setShowReactionSelector] = useState(false);
-  const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
-  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const { toggleReaction } = useRtdbChatStore();
 
   const validMessages = messages.filter(m => !m.data.isRecalled && !(m.data.deletedBy && m.data.deletedBy[currentUserId]));
@@ -57,15 +55,6 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
 
   const lastMsg = validMessages[validMessages.length - 1];
   const hasReactions = lastMsg.data.reactions && Object.keys(lastMsg.data.reactions).length > 0;
-
-  const toggleMenu = () => {
-    if (!showMenu && menuButtonRef.current) {
-      const rect = menuButtonRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
-    }
-    setShowMenu(!showMenu);
-  };
 
   const isMe = lastMsg.data.senderId === currentUserId;
   const isDelivered = lastMsg.data.deliveredTo && Object.keys(lastMsg.data.deliveredTo).length > 0;
@@ -145,17 +134,19 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
                 onClick={() => setShowReactionSelector(!showReactionSelector)}
               />
             ) : (
-              <div className="opacity-0 group-hover/message:opacity-100 transition-all duration-base">
-                <button
-                  className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-base"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowReactionSelector(!showReactionSelector);
-                  }}
-                >
-                  <Smile size={12} />
-                </button>
-              </div>
+              !isBlocked && (
+                <div className="opacity-0 group-hover/message:opacity-100 transition-all duration-base">
+                  <button
+                    className="flex items-center justify-center w-6 h-5 bg-bg-secondary rounded-full ring-1 ring-border-light shadow-sm text-text-secondary hover:text-primary hover:ring-primary hover:shadow-md transition-all duration-base"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowReactionSelector(!showReactionSelector);
+                    }}
+                  >
+                    <Smile size={12} />
+                  </button>
+                </div>
+              )
             )}
 
             {showReactionSelector && (
@@ -183,9 +174,6 @@ const ImageGroupBubbleInner: React.FC<ImageGroupBubbleProps> = ({
             canEdit={false}
             showMenu={showMenu}
             setShowMenu={setShowMenu}
-            menuPlacement={menuPlacement}
-            menuButtonRef={menuButtonRef}
-            toggleMenu={toggleMenu}
             onReply={onReply}
             onForward={onForward}
             onEdit={onEdit}

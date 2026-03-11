@@ -1,5 +1,6 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp, writeBatch, deleteDoc, FieldValue } from 'firebase/firestore';
+import { db, functions } from '../firebase/config';
+import { httpsCallable } from 'firebase/functions';
 import { User, MediaObject, UserRole } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
@@ -83,8 +84,6 @@ export const userService = {
   // Cloud Function searchUsers thay thế full collection scan
   searchUsers: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
       const fn = httpsCallable<{ searchTerm: string; currentUserId: string }, { users: User[] }>(functions, 'searchUsers');
       const result = await fn({ searchTerm, currentUserId });
       return result.data.users;
@@ -249,26 +248,45 @@ export const userService = {
     }
   },
 
+  // Chặn + hủy kết bạn + xóa requests liên quan
   blockUser: async (userId: string, blockedUserId: string): Promise<void> => {
     try {
-      await setDoc(
+      const batch = writeBatch(db);
+
+      batch.set(
         doc(db, 'users', userId, 'blockedUsers', blockedUserId),
-        {
-          blockedUid: blockedUserId,
-          createdAt: serverTimestamp()
-        }
+        { blockedUid: blockedUserId, createdAt: serverTimestamp() }
       );
+
+      batch.delete(doc(db, 'users', userId, 'friends', blockedUserId));
+      batch.delete(doc(db, 'users', blockedUserId, 'friends', userId));
+
+      const [sentSnap, receivedSnap] = await Promise.all([
+        getDocs(query(
+          collection(db, 'friendRequests'),
+          where('senderId', '==', userId),
+          where('receiverId', '==', blockedUserId)
+        )),
+        getDocs(query(
+          collection(db, 'friendRequests'),
+          where('senderId', '==', blockedUserId),
+          where('receiverId', '==', userId)
+        )),
+      ]);
+
+      [...sentSnap.docs, ...receivedSnap.docs].forEach(d => batch.delete(d.ref));
+
+      await batch.commit();
     } catch (error) {
       console.error("Lỗi chặn người dùng", error);
       throw error;
     }
   },
 
+  // Bỏ chặn — xóa document khỏi subcollection
   unblockUser: async (userId: string, blockedUserId: string): Promise<void> => {
     try {
-      const blockedDocRef = doc(db, 'users', userId, 'blockedUsers', blockedUserId);
-      const { deleteDoc } = await import('firebase/firestore');
-      await deleteDoc(blockedDocRef);
+      await deleteDoc(doc(db, 'users', userId, 'blockedUsers', blockedUserId));
     } catch (error) {
       console.error("Lỗi bỏ chặn người dùng", error);
       throw error;

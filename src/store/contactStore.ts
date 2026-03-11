@@ -16,7 +16,7 @@ interface ContactState {
   searchUsers: (searchTerm: string, userId: string) => Promise<User[]>;
 
   sendFriendRequest: (senderId: string, receiverId: string) => Promise<void>;
-  acceptFriendRequest: (requestId: string) => Promise<void>;
+  acceptFriendRequest: (requestId: string, senderId: string, receiverId: string) => Promise<void>;
   rejectFriendRequest: (requestId: string) => Promise<void>;
   cancelFriendRequest: (requestId: string) => Promise<void>;
   unfriend: (userId: string, friendId: string) => Promise<void>;
@@ -91,14 +91,14 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
-      acceptFriendRequest: async (requestId: string) => {
+      acceptFriendRequest: async (requestId: string, senderId: string, receiverId: string) => {
         const previousRequests = get().receivedRequests;
         set(state => ({
           receivedRequests: state.receivedRequests.filter(r => r.id !== requestId)
         }));
 
         try {
-          await friendService.acceptFriendRequest(requestId);
+          await friendService.acceptFriendRequest(requestId, senderId, receiverId);
         } catch (error) {
           set({ receivedRequests: previousRequests });
           console.error("Lỗi chấp nhận kết bạn:", error);
@@ -153,10 +153,6 @@ export const useContactStore = create<ContactState>()(
 
       blockUser: async (userId: string, blockedUserId: string) => {
         try {
-          const isFriend = get().friends.some(f => f.id === blockedUserId);
-          if (isFriend) {
-            await friendService.unfriend(userId, blockedUserId);
-          }
           await userService.blockUser(userId, blockedUserId);
           set((state) => ({
             friends: state.friends.filter(f => f.id !== blockedUserId)

@@ -6,6 +6,8 @@ import { useUserCache } from '../../store/userCacheStore';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
 import { TOAST_MESSAGES } from '../../constants';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 interface UseChatBlockProps {
   partnerId: string | null;
@@ -30,6 +32,7 @@ export const useChatBlock = ({
   conversation,
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<'active' | 'banned' | undefined>();
+  const [isBlockedByPartner, setIsBlockedByPartner] = useState(false);
 
   const myBlockedUserIds = useAuthStore(state => state.blockedUserIds);
 
@@ -38,7 +41,8 @@ export const useChatBlock = ({
     [partnerId, myBlockedUserIds]
   );
 
-  const isBlocked = isBlockedByMe;
+  // Mình bị chặn hoặc đã chặn đối phương
+  const isBlocked = isBlockedByMe || isBlockedByPartner;
 
   useEffect(() => {
     if (!partnerId) {
@@ -53,18 +57,29 @@ export const useChatBlock = ({
     return () => unsub();
   }, [partnerId]);
 
+  // Subscribe realtime để biết bị partner chặn
+  useEffect(() => {
+    if (!partnerId || !currentUser || isGroup) {
+      setIsBlockedByPartner(false);
+      return;
+    }
+
+    const blockRef = doc(db, 'users', partnerId, 'blockedUsers', currentUser.id);
+    const unsub = onSnapshot(blockRef, (snap) => {
+      setIsBlockedByPartner(snap.exists());
+    });
+    return () => unsub();
+  }, [partnerId, currentUser, isGroup]);
+
   const getBlockedMessage = useCallback((): string | undefined => {
     if (!isGroup && partnerId) {
       const currentStatus = partnerStatus || partner?.status || usersMap[partnerId]?.status;
-
-      if (currentStatus === 'banned') {
-        return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
-      }
+      if (currentStatus === 'banned') return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
       if (isBlockedByMe) return 'Bạn đã chặn người này. Bỏ chặn để gửi tin nhắn.';
-      // RTDB doesn't have blockedBy field in conversation
+      if (isBlockedByPartner) return 'Không thể gửi tin nhắn cho người dùng này.';
     }
     return undefined;
-  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe]);
+  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isBlockedByMe, isBlockedByPartner]);
 
   const blockedMessage = useMemo(() => getBlockedMessage(), [getBlockedMessage]);
 
@@ -77,7 +92,6 @@ export const useChatBlock = ({
         useAuthStore.getState().updateBlockList('remove', partnerId);
         toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
       } else {
-        // Dọn dẹp quan hệ bạn bè trước khi chặn
         if (friendStatus === FriendStatus.FRIEND) {
           await friendService.unfriend(currentUser.id, partnerId);
         }
@@ -98,9 +112,11 @@ export const useChatBlock = ({
   return {
     isBlocked,
     isBlockedByMe,
+    isBlockedByPartner,
     partnerStatus,
     getBlockedMessage,
     handleToggleBlock,
     blockedMessage,
   };
 };
+

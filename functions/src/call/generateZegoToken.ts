@@ -2,7 +2,10 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { generateZegoKitToken } from '../helpers/zegoTokenHelper';
 
 export const generateZegoToken = onCall(
-  { cors: true },
+  {
+    region: 'us-central1',
+    cors: true
+  },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Yêu cầu đăng nhập.');

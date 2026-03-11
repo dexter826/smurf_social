@@ -228,7 +228,7 @@ const ChatPage: React.FC = () => {
     const request = receivedRequests.find(r => r.senderId === userId);
     if (request) {
       try {
-        await friendService.acceptFriendRequest(request.id);
+        await friendService.acceptFriendRequest(request.id, request.senderId, currentUser.id);
       } catch (error) {
         console.error('Lỗi chấp nhận kết bạn:', error);
       }

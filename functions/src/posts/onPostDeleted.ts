@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
  * Trigger: onUpdate posts/{postId} (khi status = DELETED)
  */
 export const onPostDeleted = onDocumentUpdated(
-    { document: 'posts/{postId}', region: 'asia-southeast1' },
+    { document: 'posts/{postId}', region: 'us-central1' },
     async (event) => {
         const postId = event.params.postId;
         const beforeData = event.data?.before.data();

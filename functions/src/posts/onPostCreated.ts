@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
  * Trigger: onCreate posts/{postId}
  */
 export const onPostCreated = onDocumentCreated(
-    { document: 'posts/{postId}', region: 'asia-southeast1' },
+    { document: 'posts/{postId}', region: 'us-central1' },
     async (event) => {
         const postId = event.params.postId;
         const postData = event.data?.data();
