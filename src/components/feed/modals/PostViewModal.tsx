@@ -332,15 +332,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               </div>
 
               <ReactionActions
-                postId={post.id}
-                reactionSummary={Object.entries(post.reactions || {}).reduce((acc, [type, count]) => {
-                  if (count > 0) acc[type as ReactionType] = count;
-                  return acc;
-                }, {} as Record<ReactionType, number>)}
-                reactionCount={Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0)}
+                reactionSummary={filteredSummary}
+                reactionCount={filteredCount}
                 myReaction={myReaction}
                 commentCount={post.commentCount}
-                onReact={onReact}
+                onReact={(type) => onReact(post.id, type)}
                 onViewReactions={() => setIsReactionsModalOpen(true)}
                 statsClassName="px-5 md:px-6 py-4 flex justify-between items-center border-b border-border-light/60"
                 actionClassName="flex px-2 py-1 border-b border-border-light relative"

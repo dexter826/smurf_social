@@ -39,7 +39,7 @@ interface PostState {
   createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   deletePost: (postId: string, userId: string, images?: string[], videos?: string[]) => Promise<void>;
-  reactToPost: (postId: string, userId: string, reaction: string) => Promise<void>;
+  reactToPost: (postId: string, userId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<MediaObject[]>;
 
   clearPosts: () => void;
@@ -431,7 +431,7 @@ export const usePostStore = create<PostState>()(
         }
       },
 
-      reactToPost: async (postId: string, userId: string, reaction: string) => {
+      reactToPost: async (postId: string, userId: string, reaction: ReactionType | 'REMOVE') => {
         const post = get().posts.find(p => p.id === postId) ?? get().selectedPost;
         if (!post) return;
 

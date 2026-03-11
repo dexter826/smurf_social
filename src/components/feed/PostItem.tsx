@@ -3,7 +3,7 @@ import { MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
-import { Post, User, ReportType } from '../../types';
+import { Post, User, ReportType, ReactionType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { useFriendIds, useFilteredReactions } from '../../hooks';
@@ -14,7 +14,7 @@ interface PostItemProps {
   post: Post;
   author: User;
   currentUser: User;
-  onReact: (postId: string, reaction: string) => void;
+  onReact: (postId: string, reaction: ReactionType | 'REMOVE') => void;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onViewDetail?: (post: Post) => void;
@@ -25,7 +25,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   post,
   author,
   currentUser,
-  onReact,
+  onReact: onReactProp,
   onEdit,
   onDelete,
   onViewDetail,
@@ -40,9 +40,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const uploadState = uploadingStates[post.id];
   const isUploading = !!uploadState && !uploadState.error;
   const error = uploadState?.error;
-  const progress = uploadState?.progress || 0;
 
-  const myReaction = usePostStore(state => state.myPostReactions[post.id]);
+  const myReaction = usePostStore(state => state.myPostReactions[post.id] as ReactionType | null);
   const isOwner = post.authorId === currentUser.id;
 
   const { filteredSummary, filteredCount } = useFilteredReactions(
@@ -50,7 +49,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
     'post',
     post.authorId,
     post.reactions,
-    Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0)
+    0 // Không cần pass totalCount vì hook sẽ tự tính hoặc fallback
   );
 
   const hasMedia = (post.media?.length ?? 0) > 0;
@@ -65,6 +64,10 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const handleViewDetail = useCallback(() => onViewDetail?.(post), [onViewDetail, post]);
   const handleOpenReactions = useCallback(() => setIsReactionsModalOpen(true), []);
   const handleCloseReactions = useCallback(() => setIsReactionsModalOpen(false), []);
+
+  const onReact = (type: ReactionType | 'REMOVE') => {
+    onReactProp(post.id, type);
+  };
 
   return (
     <div className="bg-bg-primary rounded-xl shadow-sm border-2 border-border-light overflow-hidden mb-4 transition-all duration-base relative">
@@ -134,9 +137,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      <div
-        className="px-4 pb-3 relative"
-      >
+      <div className="px-4 pb-3 relative">
         <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
           <TruncatedText content={post.content} threshold={300} />
         </p>
@@ -155,9 +156,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
       />
 
       <ReactionActions
-        postId={post.id}
-        reactionSummary={post.reactions || {}}
-        reactionCount={Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0)}
+        reactionSummary={filteredSummary}
+        reactionCount={filteredCount}
         myReaction={myReaction}
         commentCount={post.commentCount}
         onReact={onReact}

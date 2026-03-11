@@ -52,12 +52,15 @@ export const useFilteredReactions = (
   }, [sourceId, sourceType, currentUser, authorId, friendIds, isOwner]);
 
   const { filteredSummary, filteredCount } = useMemo(() => {
-    if (!isLoaded && initialSummary) {
-        // Chưa tải xong, nếu là owner có thể tạm trả dữ liệu thô
-        return {
-            filteredSummary: isOwner ? initialSummary : {},
-            filteredCount: isOwner ? (initialCount || 0) : 0
-        };
+    // Ưu tiên dùng reactionsMap nếu đã có ít nhất một bản ghi hoặc đã load xong
+    const hasDataInMap = Object.keys(reactionsMap).length > 0;
+    
+    if (!isLoaded && !hasDataInMap && initialSummary) {
+      // Trong lúc load và chưa có dữ liệu chi tiết, dùng summary ban đầu làm fallback
+      return {
+        filteredSummary: initialSummary,
+        filteredCount: initialCount || 0
+      };
     }
 
     const summary: Partial<Record<ReactionType, number>> = {};
@@ -69,7 +72,7 @@ export const useFilteredReactions = (
     });
 
     return { filteredSummary: summary, filteredCount: count };
-  }, [reactionsMap, isLoaded, initialSummary, initialCount, isOwner]);
+  }, [reactionsMap, isLoaded, initialSummary, initialCount]);
 
   return { filteredSummary, filteredCount, reactionsMap };
 };

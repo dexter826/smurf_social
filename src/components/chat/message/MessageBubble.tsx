@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Smile, Check, CheckCheck } from 'lucide-react';
 
@@ -115,6 +115,16 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const hasReactions = message.data.reactions && Object.keys(message.data.reactions).length > 0;
   const myReaction = message.data.reactions?.[currentUserId];
 
+  const reactionSummary = useMemo(() => {
+    if (!message.data.reactions) return {};
+    return Object.entries(message.data.reactions).reduce((acc, [_, emoji]) => {
+      acc[emoji] = (acc[emoji] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [message.data.reactions]);
+
+  const reactionCount = useMemo(() => Object.keys(message.data.reactions || {}).length, [message.data.reactions]);
+
   const handleToggleVoice = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!audioRef.current) {
@@ -182,7 +192,9 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               onClose={() => setShowReactionDetails(false)}
               sourceId={message.id}
               sourceType="message"
+              reactions={message.data.reactions}
               currentUserId={currentUserId}
+              context="CHAT"
             />
 
             {/* Nội dung tin nhắn */}
@@ -300,16 +312,13 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 <div className={`absolute -bottom-3.5 z-10 flex items-center gap-1 ${isMe ? 'left-1' : 'right-1'}`}>
                   {hasReactions && (
                     <ReactionDisplay
-                      reactionSummary={Object.entries(message.data.reactions || {}).reduce((acc, [_, emoji]) => {
-                        acc[emoji] = (acc[emoji] || 0) + 1;
-                        return acc;
-                      }, {} as Record<string, number>)}
-                      reactionCount={Object.keys(message.data.reactions || {}).length}
+                      reactionSummary={reactionSummary}
+                      reactionCount={reactionCount}
                       onClick={() => setShowReactionDetails(true)}
                     />
                   )}
 
-                  <div className={`${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-all duration-base flex items-center`}>
+                  <div className={`relative ${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-all duration-base flex items-center z-[var(--z-popover)]`}>
                     <button
                       className="flex items-center justify-center w-8 h-[26px] bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
                       onClick={(e) => {

@@ -8,6 +8,7 @@ import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { TruncatedText } from '../shared';
 import { useCommentStore } from '../../../store/commentStore';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
+import { REACTION_LABELS } from '../../../constants';
 
 interface CommentItemProps {
   comment: Comment;
@@ -32,7 +33,6 @@ interface CommentItemProps {
   resetInput: () => void;
   onProfileClick?: () => void;
   openReportModal: (type: ReportType, id: string, userId: string) => void;
-  onViewReactions?: (reactions: Record<string, string>) => void;
 }
 
 const CommentItemInner: React.FC<CommentItemProps> = ({
@@ -57,8 +57,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   loadReplies,
   resetInput,
   onProfileClick,
-  openReportModal,
-  onViewReactions
+  openReportModal
 }) => {
   const navigate = useNavigate();
   const { reactToComment } = useCommentStore();
@@ -81,19 +80,16 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
     }
   }, [comment.authorId, onProfileClick, navigate]);
 
-  const myReaction = useCommentStore(state => state.myCommentReactions[comment.id]);
+  const myReaction = useCommentStore(state => state.myCommentReactions[comment.id] as ReactionType | null);
   
   const { filteredSummary, filteredCount } = useFilteredReactions(
     comment.id,
     'comment',
     comment.authorId,
     comment.reactions,
-    Object.values(comment.reactions || {}).reduce((sum, count) => sum + count, 0)
   );
 
-  const reactionCount = filteredCount;
-
-  const handleReact = useCallback((reaction: string | ReactionType) => {
+  const handleReact = useCallback((reaction: ReactionType | 'REMOVE') => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);
     setShowReactions(false);
   }, [postId, comment.id, comment.parentId, currentUser.id, reactToComment]);
@@ -226,14 +222,14 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                   onClick={() => handleReact(myReaction ? 'REMOVE' : ReactionType.LIKE)}
                   className={`hover:underline active:underline transition-all duration-base cursor-pointer ${myReaction ? 'text-primary' : ''}`}
                 >
-                  Thích
+                  {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}
                 </button>
               </div>
               <button onClick={() => handleReplyClick(comment)} className="hover:underline active:underline transition-all duration-base cursor-pointer">Trả lời</button>
-              {reactionCount > 0 && (
+              {filteredCount > 0 && (
                 <ReactionDisplay
-                  reactionSummary={comment.reactions || {}}
-                  reactionCount={reactionCount}
+                  reactionSummary={filteredSummary}
+                  reactionCount={filteredCount}
                   variant="minimal"
                   onClick={() => setShowReactionDetails(true)}
                 />
@@ -294,7 +290,6 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                         resetInput={resetInput}
                         onProfileClick={onProfileClick}
                         openReportModal={openReportModal}
-                        onViewReactions={onViewReactions}
                       />
                     ))}
                   </div>
@@ -314,7 +309,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
         </div>
       </div>
 
-      {showReactionDetails && reactionCount > 0 && (
+      {showReactionDetails && filteredCount > 0 && (
         <ReactionDetailsModal
           isOpen={showReactionDetails}
           onClose={() => setShowReactionDetails(false)}

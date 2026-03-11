@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Post, User } from '../types';
+import { Post, User, ReactionType } from '../types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
 import { useFriendIds } from './utils';
@@ -14,7 +14,7 @@ interface UseUserPostsReturn {
   hasMore: boolean;
   users: Record<string, User>;
   handleLoadMore: () => void;
-  handleReact: (postId: string, reaction: string) => Promise<void>;
+  handleReact: (postId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   handleDelete: (postId: string, media?: any[]) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -122,7 +122,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     }
   }, [loading, loadingMore, hasMore, loadPosts]);
 
-  const handleReact = useCallback(async (postId: string, reaction: string) => {
+  const handleReact = useCallback(async (postId: string, reaction: ReactionType | 'REMOVE') => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 

@@ -1,5 +1,5 @@
 import { useEffect, useCallback, RefObject } from 'react';
-import { Post, User, Visibility } from '../types';
+import { Post, User, Visibility, ReactionType } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
 import { useUserCache } from '../store/userCacheStore';
@@ -17,7 +17,7 @@ interface UseFeedReturn {
   handleLoadMore: () => void;
   handleLoadNewPosts: () => void;
   handleRefresh: () => Promise<void>;
-  handleReact: (postId: string, reaction: string) => Promise<void>;
+  handleReact: (postId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility) => Promise<void>;
   handleDelete: (postId: string, media?: any[]) => Promise<void>;
   observerRef: RefObject<HTMLDivElement | null>;
@@ -86,9 +86,9 @@ export const useFeed = (): UseFeedReturn => {
     await refreshFeed(currentUser.id);
   }, [currentUser, refreshFeed]);
 
-  const handleReact = useCallback(async (postId: string, reaction: string) => {
+  const handleReact = useCallback(async (postId: string, reaction: ReactionType | 'REMOVE') => {
     if (!currentUser) return;
-    await reactToPost(postId, currentUser.id, reaction);
+    await reactToPost(postId, currentUser.id, reaction as ReactionType | 'REMOVE');
   }, [currentUser, reactToPost]);
 
   const handleUpdate = useCallback(async (

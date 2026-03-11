@@ -66,7 +66,7 @@ interface CommentState {
   createComment: (postId: string, userId: string, content: string, parentId?: string | null, image?: any) => Promise<string>;
   updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, image?: any) => Promise<void>;
   deleteComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
-  reactToComment: (postId: string, commentId: string, userId: string, reaction: string | ReactionType, parentId?: string | null) => Promise<void>;
+  reactToComment: (postId: string, commentId: string, userId: string, reaction: ReactionType | 'REMOVE', parentId?: string | null) => Promise<void>;
 
   setRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
   addRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;
