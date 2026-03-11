@@ -41,6 +41,7 @@ interface MessageBubbleProps {
   isBlocked?: boolean;
   onCall?: () => void;
   conversationId: string;
+  allMessages?: Array<{ id: string; data: RtdbMessage }>;
 }
 
 const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
@@ -62,6 +63,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   isBlocked = false,
   onCall,
   conversationId,
+  allMessages = [],
 }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -93,6 +95,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
   const senderName = sender?.fullName || 'Người dùng';
 
+
+
   const toggleMenu = useCallback(() => {
     if (!showMenu && menuButtonRef.current) {
       const rect = menuButtonRef.current.getBoundingClientRect();
@@ -102,8 +106,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     setShowMenu(!showMenu);
   }, [showMenu]);
 
-  const otherReaders = message.data.readBy ? Object.keys(message.data.readBy).filter(uid => uid !== currentUserId) : [];
-  const isRead = otherReaders.length > 0;
   const isDelivered = message.data.deliveredTo && Object.keys(message.data.deliveredTo).length > 0;
 
   const canEdit = isMe && !message.data.isRecalled && message.data.type !== MessageType.CALL && (
@@ -186,11 +188,13 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             {/* Nội dung tin nhắn */}
             <div
               className={`
-                relative px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} text-sm shadow-sm
-                ${(message.data.type === 'text' || message.data.isRecalled || message.data.replyToId || message.data.type === 'call') ? 'rounded-2xl' : 'rounded-lg bg-transparent shadow-none p-0'}
-                ${isMe
-                  ? ((message.data.type === 'text' || message.data.isRecalled || message.data.replyToId) ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all' : (message.data.type === 'call' ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm' : ''))
-                  : ((message.data.type === 'text' || message.data.isRecalled || message.data.replyToId) ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all' : (message.data.type === 'call' ? 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm' : ''))
+                relative text-sm
+                ${(message.data.type === 'text' || message.data.isRecalled || message.data.replyToId || message.data.type === 'call')
+                  ? `px-3 ${hasReactions ? 'pb-3.5 pt-1.5' : 'py-1.5'} rounded-2xl shadow-sm ${isMe
+                    ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm break-all'
+                    : 'bg-bg-message-received text-text-primary border border-border-light rounded-bl-sm break-all'
+                  }`
+                  : hasReactions ? 'pb-3.5' : ''
                 }
                 ${message.data.type === 'call' && !message.data.isRecalled && onCall ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all duration-base' : ''}
               `}
@@ -200,34 +204,88 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 }
               }}
             >
-              {message.data.replyToId && message.data.replyToSnippet && (
-                <div className={`mb-2 p-2 rounded border-l-4 text-xs ${isMe
-                  ? 'bg-white/10 border-white/50 text-white/90'
-                  : 'bg-bg-secondary border-primary text-text-secondary'
-                  } max-w-full overflow-hidden truncate opacity-90 cursor-pointer`}
-                  onClick={() => scrollToMessage(message.data.replyToId!)}
-                >
-                  <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
-                    {message.data.replyToSnippet.senderId === currentUserId
-                      ? 'Bạn'
-                      : usersMap[message.data.replyToSnippet.senderId]?.fullName || 'Người dùng'}
+              {!message.data.isRecalled && message.data.replyToId && (() => {
+                const replyToMsg = allMessages.find(m => m.id === message.data.replyToId);
+
+                if (!replyToMsg || replyToMsg.data.isRecalled) {
+                  return (
+                    <div className={`mb-2 p-2 rounded border-l-4 text-xs ${isMe
+                      ? 'bg-white/10 border-white/50 text-white/90'
+                      : 'bg-bg-secondary border-primary text-text-secondary'
+                      } max-w-full overflow-hidden truncate opacity-90`}
+                    >
+                      <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
+                        {replyToMsg?.data.senderId === currentUserId
+                          ? 'Bạn'
+                          : usersMap[replyToMsg?.data.senderId || '']?.fullName || 'Người dùng'}
+                      </div>
+                      <div className="truncate italic opacity-70">
+                        Tin nhắn đã thu hồi
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className={`mb-2 p-2 rounded border-l-4 text-xs ${isMe
+                    ? 'bg-white/10 border-white/50 text-white/90'
+                    : 'bg-bg-secondary border-primary text-text-secondary'
+                    } max-w-full overflow-hidden truncate opacity-90 cursor-pointer`}
+                    onClick={() => scrollToMessage(message.data.replyToId!)}
+                  >
+                    <div className={`font-bold mb-1 ${isMe ? 'text-white' : 'text-primary'}`}>
+                      {replyToMsg.data.senderId === currentUserId
+                        ? 'Bạn'
+                        : usersMap[replyToMsg.data.senderId]?.fullName || 'Người dùng'}
+                    </div>
+                    <div className="truncate">
+                      {replyToMsg.data.type === 'text'
+                        ? replyToMsg.data.content.replace(/@\[([^\]]+)\]/g, '@$1')
+                        : replyToMsg.data.type === 'image' ? '[Hình ảnh]'
+                          : replyToMsg.data.type === 'video' ? '[Video]'
+                            : replyToMsg.data.type === 'file' ? `[${replyToMsg.data.media?.[0]?.fileName || 'File'}]`
+                              : replyToMsg.data.type === 'voice' ? '[Tin nhắn thoại]'
+                                : `[${replyToMsg.data.type}]`
+                      }
+                    </div>
                   </div>
-                  <div className="truncate">
-                    {message.data.replyToSnippet.type === 'text'
-                      ? message.data.replyToSnippet.content.replace(/@\[([^\]]+)\]/g, '@$1')
-                      : `[${message.data.replyToSnippet.type}]`}
-                  </div>
+                );
+              })()}
+
+              {!message.data.isRecalled && message.data.replyToId && (message.data.type === 'image' || message.data.type === 'video' || message.data.type === 'file') && (
+                <div className="px-3 pt-1.5">
+                  <MessageContent
+                    message={message}
+                    isMe={isMe}
+                    uploadProgress={uploadProgress}
+                    isPlaying={isPlaying}
+                    onToggleVoice={handleToggleVoice}
+                    setShowFullImage={setShowFullImage}
+                  />
                 </div>
               )}
 
-              <MessageContent
-                message={message}
-                isMe={isMe}
-                uploadProgress={uploadProgress}
-                isPlaying={isPlaying}
-                onToggleVoice={handleToggleVoice}
-                setShowFullImage={setShowFullImage}
-              />
+              {!message.data.isRecalled && (!message.data.replyToId || (message.data.type !== 'image' && message.data.type !== 'video' && message.data.type !== 'file')) && (
+                <MessageContent
+                  message={message}
+                  isMe={isMe}
+                  uploadProgress={uploadProgress}
+                  isPlaying={isPlaying}
+                  onToggleVoice={handleToggleVoice}
+                  setShowFullImage={setShowFullImage}
+                />
+              )}
+
+              {message.data.isRecalled && (
+                <MessageContent
+                  message={message}
+                  isMe={isMe}
+                  uploadProgress={uploadProgress}
+                  isPlaying={isPlaying}
+                  onToggleVoice={handleToggleVoice}
+                  setShowFullImage={setShowFullImage}
+                />
+              )}
 
               {/* Thời gian & Trạng thái */}
               {(message.data.type === 'text' || message.data.type === 'call' || message.data.isRecalled) && (

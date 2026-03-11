@@ -29,7 +29,7 @@ export const useChatMessages = ({
     replyToId?: string
   ) => {
     if (!selectedConversationId || !currentUserId) return;
-    await sendTextMessage(selectedConversationId, currentUserId, text, mentions);
+    await sendTextMessage(selectedConversationId, currentUserId, text, mentions, replyToId);
   }, [selectedConversationId, currentUserId, sendTextMessage]);
 
   const handleSendImage = useCallback(async (file: File, replyToId?: string) => {

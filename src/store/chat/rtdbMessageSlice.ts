@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { RtdbMessage, MessageType } from '../../types';
+import { RtdbMessage } from '../../types';
 import { rtdbMessageService } from '../../services/chat/rtdbMessageService';
 import { useAuthStore } from '../authStore';
 import type { RtdbChatState } from '../rtdbChatStore';
@@ -13,7 +13,7 @@ export interface RtdbMessageSlice {
 
     subscribeToMessages: (conversationId: string) => () => void;
     loadMoreMessages: (conversationId: string) => Promise<void>;
-    sendTextMessage: (conversationId: string, senderId: string, content: string, mentions?: string[]) => Promise<void>;
+    sendTextMessage: (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => Promise<void>;
     sendImageMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendFileMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendVideoMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
@@ -84,9 +84,12 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
-    sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[]) => {
+    sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => {
         try {
-            await rtdbMessageService.sendTextMessage(conversationId, senderId, content, { mentions });
+            await rtdbMessageService.sendTextMessage(conversationId, senderId, content, {
+                mentions,
+                replyToId
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendTextMessage:', error);
             throw error;

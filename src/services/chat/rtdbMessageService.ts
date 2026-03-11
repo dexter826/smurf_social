@@ -58,7 +58,6 @@ async function createAndSendMediaMessage(
     type: MessageType,
     options: {
         replyToId?: string;
-        replyToSnippet?: RtdbMessage['replyToSnippet'];
         onProgress?: ProgressCallback;
         compress?: boolean;
         displayContent: string;
@@ -97,7 +96,6 @@ async function createAndSendMediaMessage(
         mentions: options.mentions || [],
         isForwarded: false,
         replyToId: options.replyToId || null,
-        replyToSnippet: options.replyToSnippet || null,
         isEdited: false,
         isRecalled: false,
         deletedBy: {},
@@ -124,7 +122,6 @@ export const rtdbMessageService = {
         content: string,
         options?: {
             replyToId?: string;
-            replyToSnippet?: RtdbMessage['replyToSnippet'];
             isForwarded?: boolean;
             mentions?: string[];
         }
@@ -141,7 +138,6 @@ export const rtdbMessageService = {
                 mentions: options?.mentions || [],
                 isForwarded: options?.isForwarded || false,
                 replyToId: options?.replyToId || null,
-                replyToSnippet: options?.replyToSnippet || null,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -171,7 +167,6 @@ export const rtdbMessageService = {
         file: File,
         options?: {
             replyToId?: string;
-            replyToSnippet?: RtdbMessage['replyToSnippet'];
             onProgress?: ProgressCallback;
             mentions?: string[];
         }
@@ -197,7 +192,6 @@ export const rtdbMessageService = {
         file: File,
         options?: {
             replyToId?: string;
-            replyToSnippet?: RtdbMessage['replyToSnippet'];
             onProgress?: ProgressCallback;
             mentions?: string[];
         }
@@ -223,7 +217,6 @@ export const rtdbMessageService = {
         file: File,
         options?: {
             replyToId?: string;
-            replyToSnippet?: RtdbMessage['replyToSnippet'];
             onProgress?: ProgressCallback;
             mentions?: string[];
         }
@@ -249,7 +242,6 @@ export const rtdbMessageService = {
         file: File,
         options?: {
             replyToId?: string;
-            replyToSnippet?: RtdbMessage['replyToSnippet'];
             onProgress?: ProgressCallback;
             mentions?: string[];
         }
@@ -483,7 +475,6 @@ export const rtdbMessageService = {
 
             await update(msgRef, {
                 isRecalled: true,
-                content: 'Tin nhắn đã được thu hồi',
                 updatedAt: Date.now()
             });
 
@@ -492,9 +483,9 @@ export const rtdbMessageService = {
 
             if (convSnap.exists()) {
                 const conv = convSnap.val() as RtdbConversation;
-                if (conv.lastMessage && conv.lastMessage.timestamp === msgData.createdAt) {
+                if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
                     await update(convRef, {
-                        'lastMessage/content': 'Tin nhắn đã được thu hồi',
+                        'lastMessage/content': 'Tin nhắn đã thu hồi',
                         updatedAt: Date.now()
                     });
                 }
@@ -576,7 +567,6 @@ export const rtdbMessageService = {
                 mentions: [],
                 isForwarded: true,
                 replyToId: null,
-                replyToSnippet: null,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -639,7 +629,6 @@ export const rtdbMessageService = {
                 mentions: [],
                 isForwarded: false,
                 replyToId: null,
-                replyToSnippet: null,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
