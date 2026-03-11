@@ -7,7 +7,7 @@ import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
 import { usePostStore } from '../../../store/postStore';
-import { useFriendIds } from '../../../hooks';
+import { useFriendIds, useFilteredReactions } from '../../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions } from '../shared';
 
 interface PostViewModalProps {
@@ -39,6 +39,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const myReaction = usePostStore(state => state.myPostReactions[post?.id || '']);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
+
+  const { filteredSummary, filteredCount } = useFilteredReactions(
+    post?.id || '',
+    'post',
+    post?.authorId || '',
+    post?.reactions,
+    Object.values(post?.reactions || {}).reduce((sum, count) => sum + count, 0)
+  );
 
   const handleProfileClick = useCallback(() => {
     if (author?.id) {
@@ -348,6 +356,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         sourceId={post.id}
         sourceType="post"
         currentUserId={currentUser.id}
+        authorId={post.authorId}
         context="POST"
         friendsIds={friendIds}
       />

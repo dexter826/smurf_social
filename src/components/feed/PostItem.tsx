@@ -6,7 +6,7 @@ import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui'
 import { Post, User, ReportType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
-import { useFriendIds } from '../../hooks';
+import { useFriendIds, useFilteredReactions } from '../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
 import { ReactionDetailsModal } from '../ui';
 
@@ -44,6 +44,14 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
   const myReaction = usePostStore(state => state.myPostReactions[post.id]);
   const isOwner = post.authorId === currentUser.id;
+
+  const { filteredSummary, filteredCount } = useFilteredReactions(
+    post.id,
+    'post',
+    post.authorId,
+    post.reactions,
+    Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0)
+  );
 
   const hasMedia = (post.media?.length ?? 0) > 0;
 
@@ -164,6 +172,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         sourceId={post.id}
         sourceType="post"
         currentUserId={currentUser.id}
+        authorId={post.authorId}
         context="POST"
         friendsIds={friendIds}
       />
