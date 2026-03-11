@@ -27,6 +27,14 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
 
+    // Kiểm tra xem request.auth.uid và otherUserId có chặn nhau không
+    function isBlockedWith(otherUserId) {
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(otherUserId)) ||
+        exists(/databases/$(database)/documents/users/$(otherUserId)/blockedUsers/$(request.auth.uid))
+      );
+    }
+
     // QUẢN LÝ NGƯỜI DÙNG
     match /users/{userId} {
       // FCM tokens — Client có thể ghi để đăng ký push notification
@@ -47,10 +55,18 @@ service cloud.firestore {
 
       allow delete: if isAuthenticated() && isOwner(userId) && isNotBanned();
 
-      // Bạn bè — chỉ CF write, tất cả authenticated đều có thể đọc
+      // Client write trực tiếp — acceptFriendRequest, unfriend, blockUser
       match /friends/{friendId} {
-        allow read: if isAuthenticated();
-        allow write: if false;
+        allow read: if isAuthenticated() && !isBlockedWith(userId) && !isBlockedWith(friendId);
+
+        // Tạo khi chấp nhận kết bạn: caller là một trong hai bên
+        allow create: if isNotBanned() &&
+          (isOwner(userId) || isOwner(friendId)) &&
+          request.resource.data.keys().hasOnly(['friendId', 'createdAt']) &&
+          request.resource.data.friendId == friendId;
+
+        // Xóa khi unfriend hoặc block — cả hai bên đều được quyền
+        allow delete: if isAuthenticated() && (isOwner(userId) || isOwner(friendId));
       }
 
       // Danh sách người dùng bị chặn
@@ -72,10 +88,11 @@ service cloud.firestore {
         (resource.data.senderId == request.auth.uid ||
          resource.data.receiverId == request.auth.uid);
 
-      // Chặn tự mời kết bạn, mặc định chờ duyệt.
+      // Chặn tự mời kết bạn, mặc định chờ duyệt. Chặn nếu có quan hệ block.
       allow create: if isNotBanned() &&
         request.resource.data.senderId == request.auth.uid &&
         request.resource.data.senderId != request.resource.data.receiverId &&
+        !isBlockedWith(request.resource.data.receiverId) &&
         request.resource.data.status == 'pending';
 
       allow update: if isNotBanned() &&
@@ -95,7 +112,7 @@ service cloud.firestore {
 
     // BÀI VIẾT
     match /posts/{postId} {
-      allow read: if isAuthenticated() && (
+      allow read: if isAuthenticated() && !isBlockedWith(resource.data.authorId) && (
         resource.data.visibility == 'public' ||
         resource.data.authorId == request.auth.uid ||
         (resource.data.visibility == 'friends' &&
@@ -115,8 +132,8 @@ service cloud.firestore {
         (resource.data.authorId == request.auth.uid && isNotBanned() &&
          (changed().hasOnly(['content', 'media', 'visibility', 'isEdited', 'editedAt']) ||
           changed().hasOnly(['status', 'deletedAt', 'deletedBy']))) ||
-        // Chỉ cho phép cập nhật tương tác (reactions là Map).
-        (isNotBanned() && changed().hasOnly(['commentCount', 'reactions']))
+        // Chỉ cho phép cập nhật tương tác (reactions là Map). Chặn nếu viewer bị author block.
+        (isNotBanned() && !isBlockedWith(resource.data.authorId) && changed().hasOnly(['commentCount', 'reactions']))
       );
 
       allow delete: if isAuthenticated() && (
@@ -126,20 +143,21 @@ service cloud.firestore {
 
       // Reactions subcollection — client ghi trực tiếp theo userId
       match /reactions/{reactorId} {
-        allow read: if isAuthenticated();
-        allow write: if isNotBanned() && reactorId == request.auth.uid;
+        allow read: if isAuthenticated() && (isOwner(reactorId) || !isBlockedWith(get(/databases/$(database)/documents/posts/$(postId)).data.authorId));
+        allow write: if isNotBanned() && reactorId == request.auth.uid && !isBlockedWith(get(/databases/$(database)/documents/posts/$(postId)).data.authorId);
       }
     }
 
     // BÌNH LUẬN
     match /comments/{commentId} {
-      // Quyền xem phụ thuộc vào bài viết.
-      allow read: if isAuthenticated();
+      // Quyền xem phụ thuộc vào bài viết. Chặn nếu có block.
+      allow read: if isAuthenticated() && !isBlockedWith(resource.data.authorId);
 
-      // Số lượng phản hồi khởi tạo bằng 0.
+      // Số lượng phản hồi khởi tạo bằng 0. Chặn nếu bị tác giả bài viết hoặc người bị reply block.
       allow create: if isNotBanned() &&
         request.resource.data.authorId == request.auth.uid &&
-        request.resource.data.postId is string &&
+        !isBlockedWith(get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.authorId) &&
+        (request.resource.data.parentId == null || !isBlockedWith(get(/databases/$(database)/documents/comments/$(request.resource.data.parentId)).data.authorId)) &&
         request.resource.data.status == 'active' &&
         request.resource.data.replyCount == 0;
 
@@ -153,8 +171,8 @@ service cloud.firestore {
         // Chủ comment có thể soft delete
         (resource.data.authorId == request.auth.uid && isNotBanned() &&
          changed().hasOnly(['status', 'deletedAt', 'deletedBy'])) ||
-        // Chỉ cho phép cập nhật cảm xúc/phản hồi (reactions là Map).
-        (isNotBanned() && changed().hasOnly(['replyCount', 'reactions']))
+        // Chỉ cho phép cập nhật cảm xúc/phản hồi (reactions là Map). Chặn nếu có block.
+        (isNotBanned() && !isBlockedWith(resource.data.authorId) && changed().hasOnly(['replyCount', 'reactions']))
       );
 
       allow delete: if isAuthenticated() && (
@@ -170,8 +188,8 @@ service cloud.firestore {
 
       // Reactions subcollection — client ghi trực tiếp theo userId
       match /reactions/{reactorId} {
-        allow read: if isAuthenticated();
-        allow write: if isNotBanned() && reactorId == request.auth.uid;
+        allow read: if isAuthenticated() && !isBlockedWith(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId);
+        allow write: if isNotBanned() && reactorId == request.auth.uid && !isBlockedWith(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId);
       }
     }
 

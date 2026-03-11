@@ -309,6 +309,29 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       />
                     </Dropdown>
                   </div>
+                ) : isBlockedByMe ? (
+                  <Dropdown
+                    trigger={
+                      <Button
+                        variant="secondary"
+                        icon={<MoreHorizontal size={18} />}
+                        className="border-border-medium text-text-primary hover:bg-bg-hover"
+                      />
+                    }
+                    align="right"
+                  >
+                    <DropdownItem
+                      icon={<UserCheck size={16} />}
+                      label="Bỏ chặn"
+                      onClick={onUnblockClick || (() => { })}
+                    />
+                    <DropdownItem
+                      icon={<Flag size={16} />}
+                      label="Báo cáo"
+                      variant="danger"
+                      onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
+                    />
+                  </Dropdown>
                 ) : (
                   <>
                     <Button
@@ -367,20 +390,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       }
                       align="right"
                     >
-                      {isBlockedByMe ? (
-                        <DropdownItem
-                          icon={<UserCheck size={16} />}
-                          label="Bỏ chặn"
-                          onClick={onUnblockClick || (() => { })}
-                        />
-                      ) : (
-                        <DropdownItem
-                          icon={<Ban size={16} />}
-                          label="Chặn"
-                          variant="danger"
-                          onClick={onBlockClick || (() => { })}
-                        />
-                      )}
+                      <DropdownItem
+                        icon={<Ban size={16} />}
+                        label="Chặn"
+                        variant="danger"
+                        onClick={onBlockClick || (() => { })}
+                      />
                       <DropdownItem
                         icon={<Flag size={16} />}
                         label="Báo cáo"

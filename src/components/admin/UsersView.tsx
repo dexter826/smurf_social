@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { User, UserStatus } from '../../types';
 import { userService } from '../../services/userService';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { functions } from '../../firebase/config';
+import { httpsCallable } from 'firebase/functions';
 import { Button, UserAvatar, Skeleton, IconButton, Select, Input, ConfirmDialog } from '../ui';
 import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
@@ -80,7 +81,7 @@ export const UsersView: React.FC = () => {
   const handleConfirmAction = async () => {
     const { type, userId, userName } = confirmDialog;
     try {
-      const fn = httpsCallable(getFunctions(), 'banUser');
+      const fn = httpsCallable(functions, 'banUser');
       await fn({ userId, action: type });
       if (type === 'ban') {
         toast.success(TOAST_MESSAGES.ADMIN.BAN_SUCCESS(userName));

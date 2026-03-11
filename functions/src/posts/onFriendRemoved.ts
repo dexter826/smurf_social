@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
  * Trigger: onDelete users/{userId}/friends/{friendId}
  */
 export const onFriendRemoved = onDocumentDeleted(
-    { document: 'users/{userId}/friends/{friendId}', region: 'asia-southeast1' },
+    { document: 'users/{userId}/friends/{friendId}', region: 'us-central1' },
     async (event) => {
         const userId = event.params.userId;
         const friendId = event.params.friendId;

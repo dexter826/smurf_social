@@ -2,12 +2,8 @@
 export { onPostReactionWrite } from './notifications/onPostReactionWrite';
 export { onCommentReactionWrite } from './notifications/onCommentReactionWrite';
 export { onCommentCreated } from './notifications/onCommentCreated';
-export { onFriendRequestCreated, onFriendRequestUpdated } from './notifications/onFriendRequest';
+export { onFriendRequestCreated, onFriendRequestUpdated, onFriendRequestDeleted } from './notifications/onFriendRequest';
 export { onReportCreated } from './notifications/onReportCreated';
-
-// Friend Triggers
-export { onFriendRequestStatusChange } from './friends/onFriendRequestStatusChange';
-export { unfriend } from './friends/unfriend';
 
 // Post Triggers (Fan-out)
 export { onPostCreated } from './posts/onPostCreated';

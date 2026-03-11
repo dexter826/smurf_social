@@ -32,7 +32,7 @@ export const useConversationGroups = ({
       } else {
         const participantIds = Object.keys(conv.data.members);
         const partnerId = participantIds.find(id => id !== currentUserId);
-        if (partnerId && currentUserFriendIds.includes(partnerId)) {
+        if (partnerId && (currentUserFriendIds.includes(partnerId) || blockedUserIds.includes(partnerId))) {
           friends.push(conv);
         } else {
           requests.push(conv);

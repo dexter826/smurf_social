@@ -72,8 +72,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const [showReaders, setShowReaders] = useState(false);
   const [showReactionSelector, setShowReactionSelector] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
-  const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { toggleReaction, uploadProgress } = useRtdbChatStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -94,17 +92,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   }, [sender?.id, navigate]);
 
   const senderName = sender?.fullName || 'Người dùng';
-
-
-
-  const toggleMenu = useCallback(() => {
-    if (!showMenu && menuButtonRef.current) {
-      const rect = menuButtonRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setMenuPlacement(spaceBelow < 250 ? 'top' : 'bottom');
-    }
-    setShowMenu(!showMenu);
-  }, [showMenu]);
 
   const isDelivered = message.data.deliveredTo && Object.keys(message.data.deliveredTo).length > 0;
 
@@ -318,17 +305,19 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                     />
                   )}
 
-                  <div className={`relative ${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-all duration-base flex items-center z-[var(--z-popover)]`}>
-                    <button
-                      className="flex items-center justify-center w-8 h-[26px] bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowReactionSelector(!showReactionSelector);
-                      }}
-                    >
-                      <Smile size={12} strokeWidth={2.5} />
-                    </button>
-                  </div>
+                  {!isBlocked && (
+                    <div className={`relative ${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-all duration-base flex items-center z-[var(--z-popover)]`}>
+                      <button
+                        className="flex items-center justify-center w-8 h-[26px] bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowReactionSelector(!showReactionSelector);
+                        }}
+                      >
+                        <Smile size={12} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  )}
 
                   {showReactionSelector && (
                     <>
@@ -359,9 +348,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 canEdit={canEdit}
                 showMenu={showMenu}
                 setShowMenu={setShowMenu}
-                menuPlacement={menuPlacement}
-                menuButtonRef={menuButtonRef}
-                toggleMenu={toggleMenu}
                 onReply={onReply}
                 onForward={onForward}
                 onEdit={onEdit}

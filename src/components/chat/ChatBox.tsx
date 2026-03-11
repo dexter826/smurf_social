@@ -89,8 +89,10 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   const avatarSrc = conversation.data.isGroup ? conversation.data.avatar?.url : partner?.avatar.url;
 
   const isMessageRequest = useMemo(() =>
-    !conversation.data.isGroup && partner && !currentUserFriendIds.includes(partner.id)
-    , [conversation.data.isGroup, partner, currentUserFriendIds]);
+    !conversation.data.isGroup && partner &&
+    !currentUserFriendIds.includes(partner.id) &&
+    !isBlockedByMe && !isBlocked
+    , [conversation.data.isGroup, partner, currentUserFriendIds, isBlockedByMe, isBlocked]);
 
   const lastReadByMap = useMemo(() => {
     const map: Record<string, User[]> = {};

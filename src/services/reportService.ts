@@ -13,8 +13,8 @@ import {
   onSnapshot,
   QueryConstraint
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase/config';
+import { httpsCallable } from 'firebase/functions';
 import { Report, ReportType, ReportStatus, MediaObject } from '../types';
 import { PAGINATION } from '../constants';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
@@ -183,14 +183,12 @@ export const reportService = {
     resolution: string = 'Đã xử lý',
     action: 'delete_content' | 'warn_user' | 'ban_user' = 'delete_content'
   ): Promise<void> => {
-    const functions = getFunctions();
     const fn = httpsCallable(functions, 'resolveReport');
     await fn({ reportId, resolution, action });
   },
 
   // Admin từ chối báo cáo qua Cloud Function
   rejectReport: async (reportId: string): Promise<void> => {
-    const functions = getFunctions();
     const fn = httpsCallable(functions, 'rejectReport');
     await fn({ reportId });
   },
