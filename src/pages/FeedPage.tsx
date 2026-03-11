@@ -16,9 +16,11 @@ const FeedPage: React.FC = () => {
     isLoading,
     hasMore,
     usersMap,
+    newPostsAvailable,
     handleReact,
     handleUpdate,
     handleDelete,
+    handleLoadNewPosts,
     observerRef,
   } = useFeed();
   const isLoadingMore = useLoadingStore(state => state.loadingStates['feed.loadMore']);
@@ -71,6 +73,15 @@ const FeedPage: React.FC = () => {
       <div className="w-full max-w-[680px] py-4 md:py-6 space-y-3 md:space-y-4 px-3 sm:px-4 md:px-0 pb-6 md:pb-8">
         <CreatePost currentUser={currentUser} />
 
+        {newPostsAvailable > 0 && (
+          <button
+            onClick={handleLoadNewPosts}
+            className="w-full py-3 bg-primary hover:bg-primary-dark text-text-on-primary rounded-xl font-medium transition-colors shadow-sm"
+          >
+            {newPostsAvailable} bài viết mới
+          </button>
+        )}
+
         {posts.length === 0 ? (
           <div className="bg-bg-primary rounded-xl p-6 sm:p-8 md:p-12 shadow-sm border border-border-light text-center transition-theme">
             <div className="w-14 h-14 sm:w-16 sm:h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
@@ -85,7 +96,6 @@ const FeedPage: React.FC = () => {
           <>
             {posts.map((post) => {
               const author = usersMap[post.authorId];
-              // User cache chưa sẵn sàng
               if (!author) return <PostItem.Skeleton key={post.id} />;
 
               return (
