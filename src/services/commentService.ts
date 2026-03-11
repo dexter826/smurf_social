@@ -21,9 +21,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Comment, ReactionType, CommentStatus, MediaObject } from '../types';
-import { PAGINATION } from '../constants';
+import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
 import { batchGetUsers } from '../utils/batchUtils';
-
+import { compressImage } from '../utils/imageUtils';
+import { uploadWithProgress } from '../utils/uploadUtils';
+import { withRetry } from '../utils/retryUtils';
 function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<DocumentData>): Comment {
   const data = docSnap.data();
   return {
@@ -381,10 +383,6 @@ export const commentService = {
     onProgress?: (progress: number) => void
   ): Promise<MediaObject> => {
     try {
-      const { compressImage } = await import('../utils/imageUtils');
-      const { uploadWithProgress } = await import('../utils/uploadUtils');
-      const { withRetry } = await import('../utils/retryUtils');
-      const { IMAGE_COMPRESSION } = await import('../constants');
 
       const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COMMENT);
 
