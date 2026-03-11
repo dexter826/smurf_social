@@ -4,6 +4,7 @@ import { useFriendIds } from '../utils';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { useUserCache } from '../../store/userCacheStore';
+import { useBlockedUsers } from '../utils/useBlockedUsers';
 
 interface UseProfileDataProps {
   profileUserId: string | undefined;
@@ -18,15 +19,17 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
 
   const isOwnProfile = currentUser?.id === profileUserId;
   const friendIds = useFriendIds();
+  const { isActivityBlocked, isBlocked } = useBlockedUsers();
 
   const loadProfile = useCallback(async () => {
     if (!profileUserId) return;
 
     setLoading(true);
     try {
+      const isBlockedWith = profileUserId ? isActivityBlocked(profileUserId) || isBlocked(profileUserId) : false;
       const [userData, userPosts] = await Promise.all([
         userService.getUserById(profileUserId),
-        postService.getUserPosts(profileUserId, currentUser?.id || '', friendIds, 20)
+        isBlockedWith ? Promise.resolve({ posts: [], lastDoc: null }) : postService.getUserPosts(profileUserId, currentUser?.id || '', friendIds, 20)
       ]);
 
       setProfile(userData || null);
@@ -44,7 +47,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
     } finally {
       setLoading(false);
     }
-  }, [profileUserId, currentUser?.id, friendIds]);
+  }, [profileUserId, currentUser?.id, friendIds, isActivityBlocked, isBlocked]);
 
   useEffect(() => {
     loadProfile();
