@@ -169,7 +169,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   label="Tải ảnh lên"
                   onClick={handleCoverClick}
                 />
-                {user.cover && (
+                {user.cover?.url && (
                   <DropdownItem
                     icon={<Trash2 size={16} />}
                     label="Xóa ảnh bìa"
@@ -237,7 +237,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                           label="Tải ảnh lên"
                           onClick={handleAvatarClick}
                         />
-                        {user.avatar && (
+                        {user.avatar?.url && (
                           <DropdownItem
                             icon={<Trash2 size={16} />}
                             label="Xóa ảnh đại diện"

@@ -7,6 +7,7 @@ import { useRtdbChatStore } from '../../store';
 import { useContactStore } from '../../store/contactStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
+import { Post, Visibility, ReactionType } from '../../types';
 import { PostViewModal } from '../feed';
 import { usePostStore } from '../../store/postStore';
 import { useUserCache } from '../../store/userCacheStore';
@@ -141,7 +142,7 @@ export const AppLayout: React.FC = () => {
 
   const hasNewRequests = receivedRequests.length > 0;
 
-  const handlePostReact = async (postId: string, reaction: string) => {
+  const handlePostReact = async (postId: string, reaction: ReactionType | 'REMOVE') => {
     if (user) {
       await reactToPost(postId, user.id, reaction);
     }

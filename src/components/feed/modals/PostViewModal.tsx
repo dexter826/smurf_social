@@ -16,7 +16,7 @@ interface PostViewModalProps {
   currentUser: User;
   isOpen: boolean;
   onClose: () => void;
-  onReact: (postId: string, reaction: string) => void;
+  onReact: (postId: string, reaction: ReactionType | 'REMOVE') => void;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   isLoading?: boolean;
