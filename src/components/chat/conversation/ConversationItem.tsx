@@ -131,7 +131,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             {!conversation.data.isGroup && partner?.status === 'banned' && <BannedBadge size="sm" />}
             {showMessageRequestBadge && isMessageRequest && (
               <span className="text-[10px] text-warning bg-warning-light px-1.5 py-0.5 rounded-full border border-warning/30 flex-shrink-0">
-                Tin nhắn chờ
+                Người lạ
               </span>
             )}
             {memberSettings?.isPinned && (
