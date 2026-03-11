@@ -155,7 +155,14 @@ Thiết kế Root Collection để dễ phân trang (5 comment/trang theo yêu c
         "senderId": "uid_1",
         "content": "Chào mọi người",
         "type": "text",
-        "timestamp": 1678900000
+        "timestamp": 1678900000,
+        "messageId": "msg_id_1",
+        "readBy": {
+          "uid_2": 1678900100
+        },
+        "deliveredTo": {
+          "uid_2": 1678900050
+        }
       },
       "createdAt": 1678900000,
       "updatedAt": 1678900000
@@ -167,7 +174,7 @@ Thiết kế Root Collection để dễ phân trang (5 comment/trang theo yêu c
       "msg_id_1": {
         "senderId": "uid_1",
         "type": "text", // text, image, video, file, voice, system, call
-        "content": "Nội dung tin nhắn...", // Max 5000 ký tự
+        "content": "Nội dung tin nhắn...",
         "media": [
           // Array of MediaObject. Tối đa 10 files
         ],
@@ -176,7 +183,6 @@ Thiết kế Root Collection để dễ phân trang (5 comment/trang theo yêu c
 
         "replyToId": "msg_id_old",
         "replyToSnippet": {
-          // Trích xuất tin nhắn cũ để render nhanh không cần query lại
           "senderId": "uid_2",
           "content": "Tin nhắn gốc",
           "type": "text"

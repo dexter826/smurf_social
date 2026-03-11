@@ -66,12 +66,18 @@ export const useConversationItem = ({
 
   const readers = useMemo(() => {
     if (!lastMessage) return [];
-    const readBy = (lastMessage as any).readBy || {};
+    const readBy = lastMessage.readBy || {};
     return Object.keys(readBy)
       .filter(uid => uid !== currentUserId)
       .map(uid => participants.find(p => p.id === uid))
       .filter((u): u is User => !!u);
   }, [lastMessage, participants, currentUserId]);
+
+  const deliveredUsers = useMemo(() => {
+    if (!lastMessage) return [];
+    const deliveredTo = lastMessage.deliveredTo || {};
+    return Object.keys(deliveredTo).filter(uid => uid !== currentUserId);
+  }, [lastMessage, currentUserId]);
 
   const displayTime = useMemo(() => {
     const time = conversation.data.updatedAt;
@@ -91,6 +97,7 @@ export const useConversationItem = ({
     isLastMessageMine: lastMessage?.senderId === currentUserId,
     readers,
     isLastMessageRead: readers.length > 0,
+    isLastMessageDelivered: deliveredUsers.length > 0,
     displayTime
   };
 };
