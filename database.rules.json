@@ -8,22 +8,35 @@
     },
     "conversations": {
       "$convId": {
-        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
-        ".write": "auth != null && (data.child('creatorId').val() === auth.uid || data.child('members').child(auth.uid).val() === 'admin')"
+        ".read": "auth != null && (!data.exists() || data.child('members').child(auth.uid).exists())",
+        ".write": "auth != null && (!data.exists() || data.child('members').child(auth.uid).exists() || newData.child('members').child(auth.uid).exists())"
       }
     },
     "messages": {
       "$convId": {
         ".read": "auth != null && root.child('conversations').child($convId).child('members').child(auth.uid).exists()",
+        ".indexOn": ["createdAt"],
         "$msgId": {
-          ".write": "auth != null && (newData.child('senderId').val() === auth.uid || root.child('conversations').child($convId).child('members').child(auth.uid).exists())"
+          ".write": "auth != null && (!data.exists() || data.child('senderId').val() === auth.uid)",
+          "readBy": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          },
+          "deliveredTo": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          }
         }
       }
     },
     "user_chats": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
+        "$convId": {
+          ".write": "auth != null && (auth.uid === $uid || newData.exists())"
+        }
       }
     },
     "call_signaling": {

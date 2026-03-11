@@ -12,11 +12,11 @@ service cloud.firestore {
 
     // Admin và banned dùng Custom Claims — không cần Firestore read
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.admin == true;
+      return isAuthenticated() && ('admin' in request.auth.token) && request.auth.token.admin == true;
     }
 
     function isNotBanned() {
-      return isAuthenticated() && request.auth.token.banned != true;
+      return isAuthenticated() && (!('banned' in request.auth.token) || request.auth.token.banned != true);
     }
 
     // Danh sách các trường dữ liệu thay đổi.
@@ -53,9 +53,9 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      // Danh sách người dùng bị chặn — chỉ owner có thể đọc/ghi
+      // Danh sách người dùng bị chặn
       match /blockedUsers/{blockedUid} {
-        allow read: if isOwner(userId);
+        allow read: if isOwner(userId) || (isAuthenticated() && blockedUid == request.auth.uid);
         allow write: if isOwner(userId) && isNotBanned();
       }
 

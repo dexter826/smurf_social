@@ -8,48 +8,32 @@ export const rtdbConversationService = {
      */
     getOrCreateDirect: async (user1Id: string, user2Id: string): Promise<string> => {
         try {
-            // Check if conversation already exists
-            const conversationsRef = ref(rtdb, 'conversations');
-            const snapshot = await get(conversationsRef);
+            // Tạo ID nhất quán cho hội thoại 1-1
+            const sortedIds = [user1Id, user2Id].sort();
+            const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
 
-            if (snapshot.exists()) {
-                const conversations = snapshot.val();
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
 
-                // Find existing direct conversation between these two users
-                for (const [convId, conv] of Object.entries(conversations)) {
-                    const conversation = conv as RtdbConversation;
-                    if (!conversation.isGroup) {
-                        const memberIds = Object.keys(conversation.members || {});
-                        if (
-                            memberIds.length === 2 &&
-                            memberIds.includes(user1Id) &&
-                            memberIds.includes(user2Id)
-                        ) {
-                            // Restore user chat if deleted
-                            const userChatRef = ref(rtdb, `user_chats/${user1Id}/${convId}`);
-                            const userChatSnap = await get(userChatRef);
+            const updates: Record<string, any> = {};
 
-                            if (!userChatSnap.exists()) {
-                                await set(userChatRef, {
-                                    isPinned: false,
-                                    isMuted: false,
-                                    isArchived: false,
-                                    unreadCount: 0,
-                                    lastReadMsgId: null,
-                                    lastMsgTimestamp: Date.now()
-                                });
-                            }
+            if (convSnap.exists()) {
+                // Khôi phục phòng chat.
+                updates[`user_chats/${user1Id}/${convId}/isArchived`] = false;
+                updates[`user_chats/${user2Id}/${convId}/isArchived`] = false;
 
-                            return convId;
-                        }
+                if (Object.keys(updates).length > 0) {
+                    try {
+                        await update(ref(rtdb), updates);
+                    } catch (e) {
+                         console.error('Không thể cập nhật trạng thái user_chat:', e);
                     }
                 }
+
+                return convId;
             }
 
-            // Create new conversation
-            const newConvRef = push(ref(rtdb, 'conversations'));
-            const convId = newConvRef.key!;
-
+            // Tạo hội thoại mới
             const conversationData: RtdbConversation = {
                 isGroup: false,
                 name: null,
@@ -64,10 +48,7 @@ export const rtdbConversationService = {
                 updatedAt: Date.now()
             };
 
-            await set(newConvRef, conversationData);
-
-            // Create user_chats entries for both users
-            const updates: Record<string, RtdbUserChat> = {};
+            updates[`conversations/${convId}`] = conversationData;
             updates[`user_chats/${user1Id}/${convId}`] = {
                 isPinned: false,
                 isMuted: false,

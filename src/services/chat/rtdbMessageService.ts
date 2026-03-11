@@ -1,4 +1,4 @@
-import { ref, set, get, update, push, query, orderByChild, limitToLast, endBefore, onChildAdded, onChildChanged, off } from 'firebase/database';
+import { ref, set, get, update, push, query, orderByChild, limitToLast, endBefore, onChildAdded, onChildChanged, off, increment } from 'firebase/database';
 import { rtdb } from '../../firebase/config';
 import { RtdbMessage, RtdbConversation, MessageType, MediaObject } from '../../types';
 import { TIME_LIMITS, IMAGE_COMPRESSION } from '../../constants';
@@ -38,15 +38,9 @@ async function updateConversationAfterMessage(
         // Increment unreadCount for other members
         for (const memberId of memberIds) {
             if (memberId !== senderId) {
-                const userChatRef = ref(rtdb, `user_chats/${memberId}/${convId}`);
-                const userChatSnap = await get(userChatRef);
-
-                if (userChatSnap.exists()) {
-                    const currentUnread = userChatSnap.val().unreadCount || 0;
-                    updates[`user_chats/${memberId}/${convId}/unreadCount`] = currentUnread + 1;
-                    updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = Date.now();
-                    updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
-                }
+                updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
+                updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = Date.now();
+                updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
             } else {
                 // Update sender's lastMsgTimestamp
                 updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = Date.now();
