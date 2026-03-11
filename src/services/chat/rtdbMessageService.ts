@@ -6,60 +6,51 @@ import { compressImage } from '../../utils/imageUtils';
 import { withRetry } from '../../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../../utils/uploadUtils';
 
-/**
- * Cập nhật tin nhắn và lastMessage đồng thời.
- */
-async function updateConversationAndMessage(
+async function updateConversationAfterMessage(
     convId: string,
-    msgId: string,
     senderId: string,
-    messageData: RtdbMessage,
-    displayContent: string
+    messageData: Partial<RtdbMessage>,
+    displayContent: string,
+    messageId?: string
 ): Promise<void> {
     try {
         const convRef = ref(rtdb, `conversations/${convId}`);
         const convSnap = await get(convRef);
 
+        if (!convSnap.exists()) return;
+
+        const conversation = convSnap.val() as RtdbConversation;
+        const memberIds = Object.keys(conversation.members || {});
+
         const updates: Record<string, any> = {};
 
-        // Ghi tin nhắn mới.
-        updates[`messages/${convId}/${msgId}`] = messageData;
+        updates[`conversations/${convId}/lastMessage`] = {
+            senderId,
+            content: displayContent,
+            type: messageData.type,
+            timestamp: Date.now(),
+            messageId: messageId || null,
+            readBy: messageData.readBy || {},
+            deliveredTo: messageData.deliveredTo || {}
+        };
+        updates[`conversations/${convId}/updatedAt`] = Date.now();
 
-        if (convSnap.exists()) {
-            const conversation = convSnap.val() as RtdbConversation;
-            const memberIds = Object.keys(conversation.members || {});
-
-            // Update conversation lastMessage
-            updates[`conversations/${convId}/lastMessage`] = {
-                senderId,
-                content: displayContent,
-                type: messageData.type,
-                timestamp: messageData.createdAt || Date.now()
-            };
-            updates[`conversations/${convId}/updatedAt`] = messageData.createdAt || Date.now();
-
-            // Tăng số lượng tin chưa đọc cho người nhận.
-            for (const memberId of memberIds) {
-                if (memberId !== senderId) {
-                    updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
-                    updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = messageData.createdAt || Date.now();
-                    updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
-                } else {
-                    // Cập nhật mốc thời gian cho người gửi.
-                    updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = messageData.createdAt || Date.now();
-                }
+        for (const memberId of memberIds) {
+            if (memberId !== senderId) {
+                updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
+                updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = Date.now();
+                updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
+            } else {
+                updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = Date.now();
             }
         }
 
         await update(ref(rtdb), updates);
     } catch (error) {
-        console.error('[rtdbMessageService] Lỗi updateConversationAndMessage:', error);
+        console.error('[rtdbMessageService] Lỗi updateConversationAfterMessage:', error);
     }
 }
 
-/**
- * Upload and send media message
- */
 async function createAndSendMediaMessage(
     convId: string,
     senderId: string,
@@ -76,7 +67,6 @@ async function createAndSendMediaMessage(
 ): Promise<string> {
     let uploadFile: File = file;
 
-    // Compress image
     if (options.compress && type === MessageType.IMAGE) {
         uploadFile = await compressImage(file, IMAGE_COMPRESSION.CHAT);
     }
@@ -118,14 +108,15 @@ async function createAndSendMediaMessage(
         updatedAt: createdAt
     };
 
-    await updateConversationAndMessage(convId, msgId, senderId, messageData, options.displayContent);
+    await set(newMsgRef, messageData);
+    await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent, msgId);
 
     return msgId;
 }
 
 export const rtdbMessageService = {
     /**
-     * Send text message
+     * Gửi tin nhắn văn bản
      */
     sendTextMessage: async (
         convId: string,
@@ -161,7 +152,8 @@ export const rtdbMessageService = {
                 updatedAt: Date.now()
             };
 
-            await updateConversationAndMessage(convId, msgId, senderId, messageData, content);
+            await set(newMsgRef, messageData);
+            await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
 
             return msgId;
         } catch (error) {
@@ -171,7 +163,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Send image message
+     * Gửi tin nhắn hình ảnh
      */
     sendImageMessage: async (
         convId: string,
@@ -197,7 +189,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Send video message
+     * Gửi tin nhắn video
      */
     sendVideoMessage: async (
         convId: string,
@@ -223,7 +215,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Send file message
+     * Gửi tin nhắn file
      */
     sendFileMessage: async (
         convId: string,
@@ -249,7 +241,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Send voice message
+     * Gửi tin nhắn thoại
      */
     sendVoiceMessage: async (
         convId: string,
@@ -275,7 +267,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Subscribe to messages (real-time)
+     * Lắng nghe tin nhắn realtime
      */
     subscribeToMessages: (
         convId: string,
@@ -291,7 +283,6 @@ export const rtdbMessageService = {
             const msgId = snapshot.key;
             const msgData = snapshot.val() as RtdbMessage;
 
-            // Check if message already exists
             const existingIndex = messages.findIndex(m => m.id === msgId);
             if (existingIndex === -1) {
                 messages.push({ id: msgId, data: msgData });
@@ -314,7 +305,6 @@ export const rtdbMessageService = {
         onChildAdded(messagesQuery, childAddedHandler);
         onChildChanged(messagesQuery, childChangedHandler);
 
-        // Return unsubscribe function
         return () => {
             off(messagesQuery, 'child_added', childAddedHandler);
             off(messagesQuery, 'child_changed', childChangedHandler);
@@ -322,7 +312,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Load more messages (pagination)
+     * Tải thêm tin nhắn cũ
      */
     loadMoreMessages: async (
         convId: string,
@@ -358,7 +348,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Mark messages as read
+     * Đánh dấu tin nhắn đã đọc
      */
     markAsRead: async (convId: string, uid: string, lastMsgId?: string): Promise<void> => {
         try {
@@ -369,12 +359,18 @@ export const rtdbMessageService = {
 
             const updates: Record<string, any> = {};
             let hasUpdates = false;
+            let lastMessageId: string | null = null;
+            let lastMessageTimestamp = 0;
 
             snapshot.forEach((childSnap) => {
                 const msgId = childSnap.key!;
                 const msgData = childSnap.val() as RtdbMessage;
 
-                // Xác nhận đã đọc tin do người khác gửi.
+                if (msgData.createdAt > lastMessageTimestamp) {
+                    lastMessageTimestamp = msgData.createdAt;
+                    lastMessageId = msgId;
+                }
+
                 if (msgData.senderId !== uid && !msgData.readBy?.[uid]) {
                     updates[`messages/${convId}/${msgId}/readBy/${uid}`] = Date.now();
                     updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = Date.now();
@@ -382,23 +378,24 @@ export const rtdbMessageService = {
                 }
             });
 
-            // Ghi đè lastMessage mới nhất.
-            const convRef = ref(rtdb, `conversations/${convId}/lastMessage`);
-            const convSnap = await get(convRef);
-            if (convSnap.exists()) {
-                const lastMsg = convSnap.val();
-                if (lastMsg && lastMsg.senderId !== uid && !lastMsg.readBy?.[uid]) {
-                    updates[`conversations/${convId}/lastMessage/readBy/${uid}`] = Date.now();
-                    updates[`conversations/${convId}/lastMessage/deliveredTo/${uid}`] = Date.now();
-                    hasUpdates = true;
-                }
-            }
-
             if (hasUpdates) {
                 await update(ref(rtdb), updates);
             }
 
-            // Xóa bỏ số lượng tin chưa đọc.
+            if (lastMessageId) {
+                const convRef = ref(rtdb, `conversations/${convId}`);
+                const convSnap = await get(convRef);
+
+                if (convSnap.exists()) {
+                    const conv = convSnap.val() as RtdbConversation;
+                    if (conv.lastMessage && conv.lastMessage.messageId === lastMessageId) {
+                        updates[`conversations/${convId}/lastMessage/readBy/${uid}`] = Date.now();
+                        updates[`conversations/${convId}/lastMessage/deliveredTo/${uid}`] = Date.now();
+                        await update(ref(rtdb), updates);
+                    }
+                }
+            }
+
             const userChatUpdates: Record<string, any> = {
                 [`user_chats/${uid}/${convId}/unreadCount`]: 0
             };
@@ -415,7 +412,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Mark messages as delivered
+     * Đánh dấu tin nhắn đã nhận
      */
     markAsDelivered: async (convId: string, uid: string): Promise<void> => {
         try {
@@ -426,31 +423,39 @@ export const rtdbMessageService = {
 
             const updates: Record<string, any> = {};
             let hasUpdates = false;
+            let lastMessageId: string | null = null;
+            let lastMessageTimestamp = 0;
 
             snapshot.forEach((childSnap) => {
                 const msgId = childSnap.key!;
                 const msgData = childSnap.val() as RtdbMessage;
 
-                // Xác nhận trạng thái đã nhận tin.
+                if (msgData.createdAt > lastMessageTimestamp) {
+                    lastMessageTimestamp = msgData.createdAt;
+                    lastMessageId = msgId;
+                }
+
                 if (msgData.senderId !== uid && !msgData.deliveredTo?.[uid]) {
                     updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = Date.now();
                     hasUpdates = true;
                 }
             });
 
-            // Đồng bộ trạng thái đã nhận vào lastMessage.
-            const convRef = ref(rtdb, `conversations/${convId}/lastMessage`);
-            const convSnap = await get(convRef);
-            if (convSnap.exists()) {
-                const lastMsg = convSnap.val();
-                if (lastMsg && lastMsg.senderId !== uid && !lastMsg.deliveredTo?.[uid]) {
-                    updates[`conversations/${convId}/lastMessage/deliveredTo/${uid}`] = Date.now();
-                    hasUpdates = true;
-                }
-            }
-
             if (hasUpdates) {
                 await update(ref(rtdb), updates);
+            }
+
+            if (lastMessageId) {
+                const convRef = ref(rtdb, `conversations/${convId}`);
+                const convSnap = await get(convRef);
+
+                if (convSnap.exists()) {
+                    const conv = convSnap.val() as RtdbConversation;
+                    if (conv.lastMessage && conv.lastMessage.messageId === lastMessageId) {
+                        updates[`conversations/${convId}/lastMessage/deliveredTo/${uid}`] = Date.now();
+                        await update(ref(rtdb), updates);
+                    }
+                }
             }
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi markAsDelivered:', error);
@@ -459,7 +464,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Recall message (for everyone)
+     * Thu hồi tin nhắn
      */
     recallMessage: async (convId: string, msgId: string, uid: string): Promise<void> => {
         try {
@@ -482,7 +487,6 @@ export const rtdbMessageService = {
                 updatedAt: Date.now()
             });
 
-            // Update lastMessage if this is the last message
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
 
@@ -502,7 +506,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Delete message for me
+     * Xóa tin nhắn phía tôi
      */
     deleteForMe: async (convId: string, msgId: string, uid: string): Promise<void> => {
         try {
@@ -515,7 +519,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Edit message (within time limit)
+     * Chỉnh sửa tin nhắn
      */
     editMessage: async (convId: string, msgId: string, uid: string, newContent: string): Promise<void> => {
         try {
@@ -553,7 +557,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Forward message
+     * Chuyển tiếp tin nhắn
      */
     forwardMessage: async (
         targetConvId: string,
@@ -583,13 +587,15 @@ export const rtdbMessageService = {
                 updatedAt: Date.now()
             };
 
+            await set(newMsgRef, messageData);
+
             let displayContent = srcMsg.content;
             if (srcMsg.type === MessageType.IMAGE) displayContent = 'Hình ảnh';
             else if (srcMsg.type === MessageType.VIDEO) displayContent = 'Video';
             else if (srcMsg.type === MessageType.FILE) displayContent = srcMsg.media?.[0]?.fileName || 'Tài liệu';
             else if (srcMsg.type === MessageType.VOICE) displayContent = 'Tin nhắn thoại';
 
-            await updateConversationAndMessage(targetConvId, msgId, senderId, messageData, displayContent);
+            await updateConversationAfterMessage(targetConvId, senderId, messageData, displayContent, msgId);
 
             return msgId;
         } catch (error) {
@@ -599,7 +605,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Toggle reaction
+     * Thêm/xóa reaction
      */
     toggleReaction: async (convId: string, msgId: string, uid: string, emoji: string): Promise<void> => {
         try {
@@ -607,10 +613,8 @@ export const rtdbMessageService = {
             const reactionSnap = await get(reactionRef);
 
             if (reactionSnap.exists() && reactionSnap.val() === emoji) {
-                // Remove reaction
                 await set(reactionRef, null);
             } else {
-                // Add or update reaction
                 await set(reactionRef, emoji);
             }
         } catch (error) {
@@ -620,7 +624,7 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Send system message
+     * Gửi tin nhắn hệ thống
      */
     sendSystemMessage: async (convId: string, content: string): Promise<string> => {
         try {
@@ -648,14 +652,16 @@ export const rtdbMessageService = {
 
             await set(newMsgRef, messageData);
 
-            // Update conversation lastMessage
             const convRef = ref(rtdb, `conversations/${convId}`);
             await update(convRef, {
                 lastMessage: {
                     senderId: 'system',
                     content,
                     type: MessageType.SYSTEM,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    messageId: msgId,
+                    readBy: {},
+                    deliveredTo: {}
                 },
                 updatedAt: Date.now()
             });

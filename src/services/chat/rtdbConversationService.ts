@@ -26,7 +26,7 @@ export const rtdbConversationService = {
                     try {
                         await update(ref(rtdb), updates);
                     } catch (e) {
-                         console.error('Không thể cập nhật trạng thái user_chat:', e);
+                        console.error('Không thể cập nhật trạng thái user_chat:', e);
                     }
                 }
 
@@ -83,8 +83,13 @@ export const rtdbConversationService = {
         callback: (conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>) => void
     ) => {
         const userChatsRef = ref(rtdb, `user_chats/${userId}`);
+        const conversationListeners: Array<() => void> = [];
 
-        return onValue(userChatsRef, async (snapshot) => {
+        const mainUnsubscribe = onValue(userChatsRef, async (snapshot) => {
+            // Unsubscribe from old conversation listeners
+            conversationListeners.forEach(unsub => unsub());
+            conversationListeners.length = 0;
+
             if (!snapshot.exists()) {
                 callback([]);
                 return;
@@ -98,29 +103,47 @@ export const rtdbConversationService = {
                 return;
             }
 
-            // Fetch all conversations metadata
-            const conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }> = [];
+            // Store conversations data
+            const conversationsMap = new Map<string, { id: string; data: RtdbConversation; userChat: RtdbUserChat }>();
 
+            // Function to update callback with sorted conversations
+            const updateCallback = () => {
+                const conversations = Array.from(conversationsMap.values());
+                conversations.sort((a, b) => (b.userChat.lastMsgTimestamp || 0) - (a.userChat.lastMsgTimestamp || 0));
+                callback(conversations);
+            };
+
+            // Subscribe to each conversation
             for (const convId of convIds) {
                 const convRef = ref(rtdb, `conversations/${convId}`);
-                const convSnap = await get(convRef);
 
-                if (convSnap.exists()) {
-                    conversations.push({
-                        id: convId,
-                        data: convSnap.val() as RtdbConversation,
-                        userChat: userChats[convId]
-                    });
-                }
+                const unsubConv = onValue(convRef, (convSnap) => {
+                    if (convSnap.exists()) {
+                        conversationsMap.set(convId, {
+                            id: convId,
+                            data: convSnap.val() as RtdbConversation,
+                            userChat: userChats[convId]
+                        });
+                        updateCallback();
+                    } else {
+                        conversationsMap.delete(convId);
+                        updateCallback();
+                    }
+                }, (error) => {
+                    console.error(`[rtdbConversationService] Lỗi subscribe conversation ${convId}:`, error);
+                });
+
+                conversationListeners.push(unsubConv);
             }
-
-            // Sort by lastMsgTimestamp descending
-            conversations.sort((a, b) => (b.userChat.lastMsgTimestamp || 0) - (a.userChat.lastMsgTimestamp || 0));
-
-            callback(conversations);
         }, (error) => {
-            console.error('[rtdbConversationService] Lỗi subscribe:', error);
+            console.error('[rtdbConversationService] Lỗi subscribe user_chats:', error);
         });
+
+        // Return combined unsubscribe function
+        return () => {
+            mainUnsubscribe();
+            conversationListeners.forEach(unsub => unsub());
+        };
     },
 
     /**

@@ -73,6 +73,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
     isLastMessageMine,
     readers,
     isLastMessageRead,
+    isLastMessageDelivered,
     displayTime
   } = useConversationItem({
     conversation,
@@ -180,7 +181,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             <MessageStatus
               isMine={isLastMessageMine && !isUnread && !typingText}
               isRead={isLastMessageRead}
-              isDelivered={false}
+              isDelivered={isLastMessageDelivered}
               readers={readers}
             />
             {isUnread && unreadCount > 0 ? (

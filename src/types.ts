@@ -109,6 +109,9 @@ export interface RtdbConversation {
     content: string;
     type: MessageType;
     timestamp: number;
+    messageId?: string;
+    readBy?: Record<string, number>;
+    deliveredTo?: Record<string, number>;
   };
   createdAt: number;
   updatedAt: number;
