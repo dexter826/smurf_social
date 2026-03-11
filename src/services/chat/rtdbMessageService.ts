@@ -7,49 +7,53 @@ import { withRetry } from '../../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback } from '../../utils/uploadUtils';
 
 /**
- * Update conversation lastMessage and user_chats unreadCount
+ * Cập nhật tin nhắn và lastMessage đồng thời.
  */
-async function updateConversationAfterMessage(
+async function updateConversationAndMessage(
     convId: string,
+    msgId: string,
     senderId: string,
-    messageData: Partial<RtdbMessage>,
+    messageData: RtdbMessage,
     displayContent: string
 ): Promise<void> {
     try {
         const convRef = ref(rtdb, `conversations/${convId}`);
         const convSnap = await get(convRef);
 
-        if (!convSnap.exists()) return;
-
-        const conversation = convSnap.val() as RtdbConversation;
-        const memberIds = Object.keys(conversation.members || {});
-
         const updates: Record<string, any> = {};
 
-        // Update conversation lastMessage
-        updates[`conversations/${convId}/lastMessage`] = {
-            senderId,
-            content: displayContent,
-            type: messageData.type,
-            timestamp: Date.now()
-        };
-        updates[`conversations/${convId}/updatedAt`] = Date.now();
+        // Ghi tin nhắn mới.
+        updates[`messages/${convId}/${msgId}`] = messageData;
 
-        // Increment unreadCount for other members
-        for (const memberId of memberIds) {
-            if (memberId !== senderId) {
-                updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
-                updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = Date.now();
-                updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
-            } else {
-                // Update sender's lastMsgTimestamp
-                updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = Date.now();
+        if (convSnap.exists()) {
+            const conversation = convSnap.val() as RtdbConversation;
+            const memberIds = Object.keys(conversation.members || {});
+
+            // Update conversation lastMessage
+            updates[`conversations/${convId}/lastMessage`] = {
+                senderId,
+                content: displayContent,
+                type: messageData.type,
+                timestamp: messageData.createdAt || Date.now()
+            };
+            updates[`conversations/${convId}/updatedAt`] = messageData.createdAt || Date.now();
+
+            // Tăng số lượng tin chưa đọc cho người nhận.
+            for (const memberId of memberIds) {
+                if (memberId !== senderId) {
+                    updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
+                    updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = messageData.createdAt || Date.now();
+                    updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
+                } else {
+                    // Cập nhật mốc thời gian cho người gửi.
+                    updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = messageData.createdAt || Date.now();
+                }
             }
         }
 
         await update(ref(rtdb), updates);
     } catch (error) {
-        console.error('[rtdbMessageService] Lỗi updateConversationAfterMessage:', error);
+        console.error('[rtdbMessageService] Lỗi updateConversationAndMessage:', error);
     }
 }
 
@@ -114,8 +118,7 @@ async function createAndSendMediaMessage(
         updatedAt: createdAt
     };
 
-    await set(newMsgRef, messageData);
-    await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent);
+    await updateConversationAndMessage(convId, msgId, senderId, messageData, options.displayContent);
 
     return msgId;
 }
@@ -158,8 +161,7 @@ export const rtdbMessageService = {
                 updatedAt: Date.now()
             };
 
-            await set(newMsgRef, messageData);
-            await updateConversationAfterMessage(convId, senderId, messageData, content);
+            await updateConversationAndMessage(convId, msgId, senderId, messageData, content);
 
             return msgId;
         } catch (error) {
@@ -372,7 +374,7 @@ export const rtdbMessageService = {
                 const msgId = childSnap.key!;
                 const msgData = childSnap.val() as RtdbMessage;
 
-                // Mark as read if not sent by current user and not already read
+                // Xác nhận đã đọc tin do người khác gửi.
                 if (msgData.senderId !== uid && !msgData.readBy?.[uid]) {
                     updates[`messages/${convId}/${msgId}/readBy/${uid}`] = Date.now();
                     updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = Date.now();
@@ -380,11 +382,23 @@ export const rtdbMessageService = {
                 }
             });
 
+            // Ghi đè lastMessage mới nhất.
+            const convRef = ref(rtdb, `conversations/${convId}/lastMessage`);
+            const convSnap = await get(convRef);
+            if (convSnap.exists()) {
+                const lastMsg = convSnap.val();
+                if (lastMsg && lastMsg.senderId !== uid && !lastMsg.readBy?.[uid]) {
+                    updates[`conversations/${convId}/lastMessage/readBy/${uid}`] = Date.now();
+                    updates[`conversations/${convId}/lastMessage/deliveredTo/${uid}`] = Date.now();
+                    hasUpdates = true;
+                }
+            }
+
             if (hasUpdates) {
                 await update(ref(rtdb), updates);
             }
 
-            // Reset unread count in user_chats
+            // Xóa bỏ số lượng tin chưa đọc.
             const userChatUpdates: Record<string, any> = {
                 [`user_chats/${uid}/${convId}/unreadCount`]: 0
             };
@@ -417,12 +431,23 @@ export const rtdbMessageService = {
                 const msgId = childSnap.key!;
                 const msgData = childSnap.val() as RtdbMessage;
 
-                // Mark as delivered if not sent by current user and not already delivered
+                // Xác nhận trạng thái đã nhận tin.
                 if (msgData.senderId !== uid && !msgData.deliveredTo?.[uid]) {
                     updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = Date.now();
                     hasUpdates = true;
                 }
             });
+
+            // Đồng bộ trạng thái đã nhận vào lastMessage.
+            const convRef = ref(rtdb, `conversations/${convId}/lastMessage`);
+            const convSnap = await get(convRef);
+            if (convSnap.exists()) {
+                const lastMsg = convSnap.val();
+                if (lastMsg && lastMsg.senderId !== uid && !lastMsg.deliveredTo?.[uid]) {
+                    updates[`conversations/${convId}/lastMessage/deliveredTo/${uid}`] = Date.now();
+                    hasUpdates = true;
+                }
+            }
 
             if (hasUpdates) {
                 await update(ref(rtdb), updates);
@@ -558,15 +583,13 @@ export const rtdbMessageService = {
                 updatedAt: Date.now()
             };
 
-            await set(newMsgRef, messageData);
-
             let displayContent = srcMsg.content;
             if (srcMsg.type === MessageType.IMAGE) displayContent = 'Hình ảnh';
             else if (srcMsg.type === MessageType.VIDEO) displayContent = 'Video';
             else if (srcMsg.type === MessageType.FILE) displayContent = srcMsg.media?.[0]?.fileName || 'Tài liệu';
             else if (srcMsg.type === MessageType.VOICE) displayContent = 'Tin nhắn thoại';
 
-            await updateConversationAfterMessage(targetConvId, senderId, messageData, displayContent);
+            await updateConversationAndMessage(targetConvId, msgId, senderId, messageData, displayContent);
 
             return msgId;
         } catch (error) {
