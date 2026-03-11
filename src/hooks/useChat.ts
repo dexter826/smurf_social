@@ -146,8 +146,6 @@ export const useChat = () => {
     partner,
     isGroup: selectedConversation?.data.isGroup ?? false,
     usersMap,
-    friendStatus: partnerFriendStatus,
-    pendingRequestId: partnerPendingRequestId,
     conversation: selectedConversation?.data,
   });
 
@@ -214,10 +212,6 @@ export const useChat = () => {
     await searchConversations(currentUser.id, term);
   }, [currentUser, searchConversations]);
 
-  const handleToggleBlock = useCallback(async () => {
-    block.handleToggleBlock(selectConversation);
-  }, [block, selectConversation]);
-
   return {
     currentUser,
     conversations,
@@ -248,7 +242,6 @@ export const useChat = () => {
     handleForwardMessage,
     handleTyping,
     handleSearch,
-    handleToggleBlock,
     setSearchFocused,
     addToSearchHistory: (item: User) => {
       if (currentUser?.id) addToSearchHistory(item, currentUser.id);
@@ -265,10 +258,15 @@ export const useChat = () => {
     // Block
     isBlocked: block.isBlocked,
     isBlockedByMe: block.isBlockedByMe,
+    isMessageBlockedByMe: block.isMessageBlockedByMe,
+    isCallBlockedByMe: block.isCallBlockedByMe,
+    isCallBlockedByPartner: block.isCallBlockedByPartner,
+    myBlockOptions: block.myBlockOptions,
     partnerId,
     blockedMessage: block.blockedMessage,
     getBlockedMessage: block.getBlockedMessage,
-
+    handleApplyBlock: block.handleApplyBlock,
+    handleUnblock: block.handleUnblock,
     // Friend requests
     friendRequestStatus,
     currentReceivedRequest,

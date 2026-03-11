@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Gender, ReactionType } from '../types';
 import { useAuthStore } from '../store/authStore';
-import { Button, ConfirmDialog } from '../components/ui';
+import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import { PostViewModal } from '../components/feed';
 import { usePostStore } from '../store/postStore';
@@ -16,7 +16,7 @@ import { User as UserIcon, Lock, Cake, MapPin } from 'lucide-react';
 import { useProfile } from '../hooks';
 import { toDate } from '../utils/dateUtils';
 
-type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover' | 'block';
+type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,8 +41,13 @@ const ProfilePage: React.FC = () => {
     handleAvatarDelete,
     handleCoverDelete,
     isBlockedByMe,
-    handleBlockUser,
+    isActivityBlockedByPartner,
+    currentBlockOptions,
+    isBlockModalOpen,
+    handleOpenBlockModal,
+    handleApplyBlock,
     handleUnblockUser,
+    closeBlockModal,
   } = useProfile();
 
   const { selectedPost, setSelectedPost } = usePostStore();
@@ -59,7 +64,6 @@ const ProfilePage: React.FC = () => {
     unfriend: confirmUnfriend,
     deleteAvatar: handleAvatarDelete,
     deleteCover: handleCoverDelete,
-    block: handleBlockUser,
   };
 
   if (loading || !profile || !currentUser) {
@@ -84,14 +88,8 @@ const ProfilePage: React.FC = () => {
       message: CONFIRM_MESSAGES.MEDIA.DELETE_COVER.MESSAGE,
       confirmLabel: CONFIRM_MESSAGES.MEDIA.DELETE_COVER.CONFIRM,
     },
-    block: {
-      title: CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE,
-      message: CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(profile?.fullName || ''),
-      confirmLabel: CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM,
-    },
   };
 
-  // Nếu là profile bị ban (và không phải chính mình), ẩn hoàn toàn
   if (isBannedProfile && !isOwnProfile) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 md:py-20 text-center bg-bg-secondary h-full flex items-center justify-center">
@@ -129,7 +127,7 @@ const ProfilePage: React.FC = () => {
           onCoverChange={handleCoverChange}
           onAvatarDelete={() => setConfirmType('deleteAvatar')}
           onCoverDelete={() => setConfirmType('deleteCover')}
-          onBlockClick={() => setConfirmType('block')}
+          onBlockClick={handleOpenBlockModal}
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
           uploading={uploading}
@@ -146,7 +144,6 @@ const ProfilePage: React.FC = () => {
           {activeTab === 'posts' ? (
             <div className="flex flex-col md:flex-row gap-4 md:gap-6">
               <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 space-y-4">
-                {/* Khối Giới thiệu */}
                 <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4">
                   <h3 className="font-bold text-lg mb-4 text-text-primary">Giới thiệu</h3>
                   {profile.bio && (
@@ -190,7 +187,6 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Khối Ảnh/Video Preview */}
                 <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4 hidden md:block">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg text-text-primary">Ảnh/Video</h3>
@@ -241,10 +237,9 @@ const ProfilePage: React.FC = () => {
             </div>
             <h2 className="text-2xl font-bold text-text-primary mb-3">Không thể xem trang này</h2>
             <p className="text-text-secondary mb-8">
-              {isBlockedByMe
-                ? 'Bạn đã chặn người dùng này. Bỏ chặn để xem nội dung của họ.'
-                : 'Bạn không thể xem trang cá nhân này.'
-              }
+              {isBlockedByMe ? 'Bạn đã chặn người dùng này. Bỏ chặn để xem nội dung của họ.' : ''}
+              {!isBlockedByMe && isActivityBlockedByPartner ? 'Người dùng này đã giới hạn quyền xem trang cá nhân.' : ''}
+              {!isBlockedByMe && !isActivityBlockedByPartner ? 'Bạn không thể xem trang cá nhân này.' : ''}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {isBlockedByMe ? (
@@ -280,6 +275,14 @@ const ProfilePage: React.FC = () => {
           variant="danger"
         />
       )}
+
+      <BlockOptionsModal
+        isOpen={isBlockModalOpen}
+        targetName={profile.fullName}
+        initialOptions={currentBlockOptions}
+        onApply={handleApplyBlock}
+        onClose={closeBlockModal}
+      />
 
       <PostViewModal
         isOpen={!!selectedPost}

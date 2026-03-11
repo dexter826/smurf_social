@@ -55,9 +55,10 @@ service cloud.firestore {
 
       allow delete: if isAuthenticated() && isOwner(userId) && isNotBanned();
 
-      // Client write trực tiếp — acceptFriendRequest, unfriend, blockUser
+      // Client write trực tiếp — acceptFriendRequest, unfriend
       match /friends/{friendId} {
-        allow read: if isAuthenticated() && !isBlockedWith(userId) && !isBlockedWith(friendId);
+        // Block không ảnh hưởng quyền đọc danh sách bạn bè — chỉ ẩn ở client
+        allow read: if isAuthenticated() && (isOwner(userId) || isOwner(friendId));
 
         // Tạo khi chấp nhận kết bạn: caller là một trong hai bên
         allow create: if isNotBanned() &&
@@ -65,14 +66,16 @@ service cloud.firestore {
           request.resource.data.keys().hasOnly(['friendId', 'createdAt']) &&
           request.resource.data.friendId == friendId;
 
-        // Xóa khi unfriend hoặc block — cả hai bên đều được quyền
+        // Xóa khi unfriend — cả hai bên đều được quyền
         allow delete: if isAuthenticated() && (isOwner(userId) || isOwner(friendId));
       }
 
-      // Danh sách người dùng bị chặn
+      // Danh sách người dùng bị chặn — hỗ trợ set/update/delete
       match /blockedUsers/{blockedUid} {
         allow read: if isOwner(userId) || (isAuthenticated() && blockedUid == request.auth.uid);
-        allow write: if isOwner(userId) && isNotBanned();
+        // Hỗ trợ setDoc (merge: true) và updateDoc — chỉ chủ sở hữu
+        allow create, update: if isOwner(userId) && isNotBanned();
+        allow delete: if isOwner(userId) && isNotBanned();
       }
 
       // Bảng tin fan-out — CF-only write, owner có thể đọc
@@ -143,7 +146,8 @@ service cloud.firestore {
 
       // Reactions subcollection — client ghi trực tiếp theo userId
       match /reactions/{reactorId} {
-        allow read: if isAuthenticated() && (isOwner(reactorId) || !isBlockedWith(get(/databases/$(database)/documents/posts/$(postId)).data.authorId));
+        // Cho phép đọc danh sách reactions nếu xem được bài viết. Phân quyền hiển thị do Client lo.
+        allow read: if isAuthenticated() && !isBlockedWith(get(/databases/$(database)/documents/posts/$(postId)).data.authorId);
         allow write: if isNotBanned() && reactorId == request.auth.uid && !isBlockedWith(get(/databases/$(database)/documents/posts/$(postId)).data.authorId);
       }
     }
@@ -188,6 +192,7 @@ service cloud.firestore {
 
       // Reactions subcollection — client ghi trực tiếp theo userId
       match /reactions/{reactorId} {
+        // Cho phép đọc danh sách reactions nếu xem được bình luận. Phân quyền hiển thị do Client lo.
         allow read: if isAuthenticated() && !isBlockedWith(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId);
         allow write: if isNotBanned() && reactorId == request.auth.uid && !isBlockedWith(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId);
       }
