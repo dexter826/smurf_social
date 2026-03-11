@@ -27,7 +27,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
   if (message.data.isRecalled) {
     return (
       <div className={`italic text-sm ${isMe ? 'text-white/80' : 'text-text-tertiary'}`}>
-        Tin nhắn đã được thu hồi
+        Tin nhắn đã thu hồi
       </div>
     );
   }

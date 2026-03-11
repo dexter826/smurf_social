@@ -17,6 +17,7 @@ import {
   CommentStatus,
   MemberRole,
   NotificationPayload,
+  UserRole,
 } from "../shared/types";
 
 // Re-export for consumers
@@ -127,11 +128,6 @@ export interface RtdbMessage {
   mentions?: string[];
   isForwarded?: boolean;
   replyToId?: string;
-  replyToSnippet?: {
-    senderId: string;
-    content: string;
-    type: MessageType;
-  };
   isEdited?: boolean;
   isRecalled?: boolean;
   deletedBy?: Record<string, true>;

@@ -183,11 +183,6 @@ Thiết kế Root Collection để dễ phân trang (5 comment/trang theo yêu c
         "isForwarded": false,
 
         "replyToId": "msg_id_old",
-        "replyToSnippet": {
-          "senderId": "uid_2",
-          "content": "Tin nhắn gốc",
-          "type": "text"
-        },
 
         "isEdited": false, // Giới hạn sửa trong 5 phút
         "isRecalled": false, // Thu hồi phía mọi người

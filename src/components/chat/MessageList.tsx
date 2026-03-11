@@ -208,6 +208,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
                     currentUserId={currentUserId}
                     usersMap={usersMap}
                     isGroup={conversation.data.isGroup}
+                    allMessages={messages}
                     isBlocked={isBlocked}
                     conversationId={conversation.id}
                   />
