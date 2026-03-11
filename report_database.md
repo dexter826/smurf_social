@@ -39,7 +39,7 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 - `avatar` (MediaObject): Ảnh đại diện.
 - `cover` (MediaObject): Ảnh bìa.
 - `dob` (Timestamp): Ngày sinh.
-- `gender` (String): `male`, `female`, `other`.
+- `gender` (String): `male`, `female`.
 - `location` (String): Vị trí.
 - `status` (String): `active`, `banned`.
 - `role` (String): `user`, `admin`. Mặc định là `user`.

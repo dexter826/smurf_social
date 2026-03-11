@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Gender } from '../types';
+import { User, Gender, ReactionType } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
@@ -162,7 +162,7 @@ const ProfilePage: React.FC = () => {
                             <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg">
                               <UserIcon size={16} />
                             </div>
-                            <span>Giới tính <strong className="text-text-primary">{profile.gender === Gender.MALE ? 'Nam' : profile.gender === Gender.FEMALE ? 'Nữ' : 'Khác'}</strong></span>
+                            <span>Giới tính <strong className="text-text-primary">{profile.gender === Gender.MALE ? 'Nam' : 'Nữ'}</strong></span>
                           </div>
                         )}
                         {profile.dob && (
