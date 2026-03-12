@@ -226,7 +226,8 @@ Thiết kế Root Collection để dễ phân trang (5 comment/trang theo yêu c
         "isArchived": false, // Lưu trữ hội thoại
         "unreadCount": 5, // Bộ đếm tin nhắn chưa đọc
         "lastReadMsgId": "msg_id_1",
-        "lastMsgTimestamp": 1678900000 // Để sort danh sách chat
+        "lastMsgTimestamp": 1678900000, // Để sort danh sách chat
+        "clearedAt": 1678900000 // Thời điểm người dùng xóa lịch sử trò chuyện (ẩn tin nhắn cũ)
       }
     }
   },

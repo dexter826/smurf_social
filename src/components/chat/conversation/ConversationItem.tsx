@@ -243,10 +243,10 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => { onBlock?.(); setIsMenuOpen(false); }}
             />
           )}
-          {onDelete && (!conversation.data.isGroup || conversation.data.creatorId === currentUserId) && (
+          {onDelete && (
             <DropdownItem
               icon={<Trash2 size={16} />}
-              label={conversation.data.isGroup ? "Giải tán nhóm" : "Xóa"}
+              label={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? "Giải tán nhóm" : "Xóa cuộc trò chuyện"}
               variant="danger"
               onClick={() => setShowDeleteConfirm(true)}
             />

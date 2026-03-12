@@ -59,6 +59,8 @@ export const useChat = () => {
   const filteredConversations = useMemo(() =>
     conversations.filter(c => {
       const isArchived = c.userChat?.isArchived ?? false;
+      const isCleared = c.userChat?.clearedAt && (c.userChat?.lastMsgTimestamp || 0) <= c.userChat.clearedAt;
+      if (isCleared) return false;
       return viewMode === 'archived' ? isArchived : !isArchived;
     }),
     [conversations, viewMode]
