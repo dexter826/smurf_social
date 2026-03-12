@@ -262,9 +262,9 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => { onDelete?.(); setShowDeleteConfirm(false); }}
-        title={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
-        message={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
-        confirmLabel={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
+        title={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.TITLE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
+        message={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.MESSAGE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
+        confirmLabel={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.CONFIRM : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
         variant="danger"
       />
     </div>

@@ -82,31 +82,30 @@ export const rtdbGroupService = {
             }
 
             const conversation = convSnap.val() as RtdbConversation;
-            const currentMemberCount = Object.keys(conversation.members || {}).length;
-
-            if (currentMemberCount + memberIds.length > GROUP_LIMITS.MAX_MEMBERS) {
+            const currentMemberIds = Object.keys(conversation.members || {});
+            
+            if (currentMemberIds.length + memberIds.length > GROUP_LIMITS.MAX_MEMBERS) {
                 throw new Error(`Nhóm chỉ được tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`);
             }
 
             const updates: Record<string, any> = {};
+            const now = Date.now();
 
-            // Add members to conversation
             memberIds.forEach(uid => {
-                updates[`conversations/${convId}/members/${uid}`] = 'member';
-
-                // Create user_chats entry
-                updates[`user_chats/${uid}/${convId}`] = {
-                    isPinned: false,
-                    isMuted: false,
-                    isArchived: false,
-                    unreadCount: 0,
-                    lastReadMsgId: null,
-                    lastMsgTimestamp: Date.now()
-                } as RtdbUserChat;
+                if (!currentMemberIds.includes(uid)) {
+                    updates[`conversations/${convId}/members/${uid}`] = 'member';
+                    updates[`user_chats/${uid}/${convId}`] = {
+                        isPinned: false,
+                        isMuted: false,
+                        isArchived: false,
+                        unreadCount: 0,
+                        lastReadMsgId: null,
+                        lastMsgTimestamp: now
+                    } as RtdbUserChat;
+                }
             });
 
-            updates[`conversations/${convId}/updatedAt`] = Date.now();
-
+            updates[`conversations/${convId}/updatedAt`] = now;
             await update(ref(rtdb), updates);
         } catch (error) {
             console.error('[rtdbGroupService] Lỗi addMembers:', error);
@@ -120,17 +119,40 @@ export const rtdbGroupService = {
     removeMember: async (convId: string, uid: string): Promise<void> => {
         try {
             const updates: Record<string, any> = {};
-
-            // Remove from conversation members
             updates[`conversations/${convId}/members/${uid}`] = null;
             updates[`conversations/${convId}/updatedAt`] = Date.now();
-
-            // Remove user_chats entry
             updates[`user_chats/${uid}/${convId}`] = null;
 
             await update(ref(rtdb), updates);
         } catch (error) {
             console.error('[rtdbGroupService] Lỗi removeMember:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Giải tán nhóm (Chỉ Creator)
+     */
+    disbandGroup: async (convId: string): Promise<void> => {
+        try {
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+            if (!convSnap.exists()) return;
+
+            const conversation = convSnap.val() as RtdbConversation;
+            const memberIds = Object.keys(conversation.members || {});
+            
+            const updates: Record<string, any> = {};
+            updates[`conversations/${convId}`] = null;
+            updates[`messages/${convId}`] = null;
+            
+            memberIds.forEach(uid => {
+                updates[`user_chats/${uid}/${convId}`] = null;
+            });
+
+            await update(ref(rtdb), updates);
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi disbandGroup:', error);
             throw error;
         }
     },
@@ -144,10 +166,8 @@ export const rtdbGroupService = {
     ): Promise<void> => {
         try {
             const convRef = ref(rtdb, `conversations/${convId}`);
-            await update(convRef, {
-                ...updates,
-                updatedAt: Date.now()
-            });
+            const updateData: any = { ...updates, updatedAt: Date.now() };
+            await update(convRef, updateData);
         } catch (error) {
             console.error('[rtdbGroupService] Lỗi updateGroupInfo:', error);
             throw error;
@@ -184,32 +204,36 @@ export const rtdbGroupService = {
 
             const conversation = convSnap.val() as RtdbConversation;
             const memberIds = Object.keys(conversation.members || {});
+            const updates: Record<string, any> = {};
+            const now = Date.now();
 
-            // If only 1 member left, delete conversation
+            // Nếu là thành viên cuối cùng -> xóa toàn bộ hội thoại
             if (memberIds.length <= 1) {
-                await remove(convRef);
-                await remove(ref(rtdb, `user_chats/${uid}/${convId}`));
+                updates[`conversations/${convId}`] = null;
+                updates[`messages/${convId}`] = null;
+                updates[`user_chats/${uid}/${convId}`] = null;
+                await update(ref(rtdb), updates);
                 return;
             }
 
-            // If leaving user is creator, promote another admin or first member
+            // Nếu người rời là chủ nhóm -> chuyển quyền
             if (conversation.creatorId === uid) {
                 const admins = memberIds.filter(id => id !== uid && conversation.members[id] === 'admin');
                 const newCreatorId = admins.length > 0 ? admins[0] : memberIds.find(id => id !== uid)!;
-
-                await update(convRef, {
-                    creatorId: newCreatorId,
-                    updatedAt: Date.now()
-                });
-
-                // Ensure new creator is admin
+                
+                updates[`conversations/${convId}/creatorId`] = newCreatorId;
+                // Đảm bảo chủ nhóm mới có role admin
                 if (conversation.members[newCreatorId] !== 'admin') {
-                    await set(ref(rtdb, `conversations/${convId}/members/${newCreatorId}`), 'admin');
+                    updates[`conversations/${convId}/members/${newCreatorId}`] = 'admin';
                 }
             }
 
-            // Remove member
-            await rtdbGroupService.removeMember(convId, uid);
+            // Xóa thành viên
+            updates[`conversations/${convId}/members/${uid}`] = null;
+            updates[`conversations/${convId}/updatedAt`] = now;
+            updates[`user_chats/${uid}/${convId}`] = null;
+
+            await update(ref(rtdb), updates);
         } catch (error) {
             console.error('[rtdbGroupService] Lỗi leaveGroup:', error);
             throw error;
