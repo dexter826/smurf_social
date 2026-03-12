@@ -5,13 +5,15 @@
 
 ## I. TỔNG QUAN KIẾN TRÚC
 
-1. **Cloud Firestore:** Dùng để lưu trữ dữ liệu tĩnh, cấu trúc phức tạp, cần query nhiều chiều (Người dùng, Bảng tin, Bài viết, Bình luận, Báo cáo, Thông báo). Áp dụng kiến trúc **Fan-out** cho Bảng tin.
-2. **Realtime Database (RTDB):** Dùng chuyên biệt cho **Hệ thống Chat và Hiện diện** (Trạng thái Online, Tin nhắn, Đã xem/Đang gõ, Signaling cuộc gọi). Giúp hệ thống chịu tải hàng triệu tin nhắn mà không bị quá giới hạn quota đọc/ghi của Firestore.
+Hệ thống lưu trữ bao gồm **tổng cộng 19 bảng/node** dữ liệu lồng nhau, chia thành 2 nhóm chính:
+
+1. **Cloud Firestore (14 Bảng):** Dùng để lưu trữ dữ liệu tĩnh, cấu trúc phức tạp, cần query nhiều chiều (Người dùng, Bảng tin, Bài viết, Bình luận, Báo cáo, Thông báo). Áp dụng kiến trúc **Fan-out** cho Bảng tin. Gồm 6 collections gốc và 8 sub-collections.
+2. **Realtime Database (5 Node):** Dùng chuyên biệt cho **Hệ thống Chat và Hiện diện** (Trạng thái Online, Tin nhắn, Đã xem/Đang gõ, Signaling cuộc gọi). Giúp hệ thống chịu tải hàng triệu tin nhắn mà không bị quá giới hạn quota đọc/ghi của Firestore.
 3. **Cloud Storage:** Lưu trữ file vật lý.
 
 ---
 
-## II. ĐẶC TẢ OBJECT MEDIA (DÙNG CHUNG)
+## II. ĐẶC TẢ OBJECT MEDIA (DÙNG CHUNG) lưu trữ trong Cloud Storage
 
 Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạng Object này để quản lý giới hạn và tự động làm mờ ảnh nhạy cảm
 
@@ -31,7 +33,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 ## III. FIRESTORE SCHEMA (Dữ liệu Core & Mạng Xã Hội)
 
 ### 1. Collection `users` (Quản lý Hồ sơ)
-*Mô tả: Lưu trữ thông tin định danh, tài khoản và hồ sơ cá nhân của người dùng trên toàn hệ thống.*
+
+_Mô tả: Lưu trữ thông tin định danh, tài khoản và hồ sơ cá nhân của người dùng trên toàn hệ thống._
 
 - `uid` (String, **Required**): Document ID (Firebase Auth UID).
 - `email` (String, **Required**): Dùng để đăng nhập và tìm kiếm chính xác duy nhất.
@@ -81,7 +84,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 - `createdAt` (Timestamp, **Required**).
 
 ### 2. Collection `friendRequests`
-*Mô tả: Quản lý các lời mời kết bạn đang chờ, đã chấp nhận hoặc bị từ chối giữa 2 người dùng.*
+
+_Mô tả: Quản lý các lời mời kết bạn đang chờ, đã chấp nhận hoặc bị từ chối giữa 2 người dùng._
 
 - `id` (String, **Required**): Document ID.
 - `senderId` (String, **Required**).
@@ -91,7 +95,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 - `updatedAt` (Timestamp, **Required**).
 
 ### 3. Collection `posts`
-*Mô tả: Bảng trung tâm lưu diễn đàn bài viết/trạng thái (Status/Feed) của người dùng.*
+
+_Mô tả: Bảng trung tâm lưu diễn đàn bài viết/trạng thái (Status/Feed) của người dùng._
 
 - `id` (String, **Required**): Document ID.
 - `authorId` (String, **Required**).
@@ -114,7 +119,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 - `createdAt` (Timestamp, **Required**).
 
 ### 4. Collection `comments`
-*Mô tả: Chứa mọi bình luận của bài viết. Áp dụng cấu trúc phẳng (Flat structure) kết hợp `parentId` để làm tính năng Reply Comment 1 cấp.*
+
+_Mô tả: Chứa mọi bình luận của bài viết. Áp dụng cấu trúc phẳng (Flat structure) kết hợp `parentId` để làm tính năng Reply Comment 1 cấp._
 
 - `id` (String, **Required**): Document ID.
 - `postId` (String, **Required**).
@@ -138,7 +144,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 - `createdAt` (Timestamp, **Required**).
 
 ### 5. Collection `reports` (Quản trị viên)
-*Mô tả: Lưu các vé báo cáo (Report Ticket) của người dùng về nội dung/tài khoản vi phạm để Admin duyệt.*
+
+_Mô tả: Lưu các vé báo cáo (Report Ticket) của người dùng về nội dung/tài khoản vi phạm để Admin duyệt._
 
 - `id` (String, **Required**): Document ID.
 - `reporterId` (String, **Required**).
@@ -156,7 +163,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 - `resolution` (String, _Optional_).
 
 ### 6. Collection `notifications`
-*Mô tả: Lưu trữ mọi thông báo (Tương tác, Hệ thống) đẩy tới chuông thông báo của User.*
+
+_Mô tả: Lưu trữ mọi thông báo (Tương tác, Hệ thống) đẩy tới chuông thông báo của User._
 
 - `id` (String, **Required**): Document ID.
 - `receiverId` (String, **Required**).
@@ -172,14 +180,16 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 
 ```json
 {
-  "presence": { // Mô tả: Lưu trạng thái Online/Offline và lần truy cập cuối cùng của User.
+  "presence": {
+    // Mô tả: Lưu trạng thái Online/Offline và lần truy cập cuối cùng của User.
     "uid_1": {
       "isOnline": true, // Required
       "lastSeen": 1678900000000 // Required
     }
   },
 
-  "conversations": { // Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Group, snippet tin nhắn mới nhất để hiển thị ra list Inbox.
+  "conversations": {
+    // Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Group, snippet tin nhắn mới nhất để hiển thị ra list Inbox.
     "conv_id_1": {
       "isGroup": true, // Required
       "creatorId": "uid_1", // Required
@@ -215,7 +225,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
     }
   },
 
-  "messages": { // Mô tả: Nơi lưu raw data từng cục tin nhắn riêng lẻ được gắn theo ID nhóm chat. Giúp scale khi cuộc hội thoại đạt hàng triệu tin.
+  "messages": {
+    // Mô tả: Nơi lưu raw data từng cục tin nhắn riêng lẻ được gắn theo ID nhóm chat. Giúp scale khi cuộc hội thoại đạt hàng triệu tin.
     "conv_id_1": {
       "msg_id_1": {
         "senderId": "uid_1", // Required
@@ -249,7 +260,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
     }
   },
 
-  "user_chats": { // Mô tả: Bảng Metadata cắm theo cấu trúc của User. Điểm danh/Lập chỉ mục các setting riêng lẻ (Ghim, Tắt thông báo, Unread) của User đó đối với 1 cuộc hội thoại.
+  "user_chats": {
+    // Mô tả: Bảng Metadata cắm theo cấu trúc của User. Điểm danh/Lập chỉ mục các setting riêng lẻ (Ghim, Tắt thông báo, Unread) của User đó đối với 1 cuộc hội thoại.
     "uid_1": {
       "conv_id_1": {
         "isPinned": true, // Required
@@ -263,7 +275,8 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
     }
   },
 
-  "call_signaling": { // Mô tả: Bảng tạm (Ephemeral) để báo hiệu cuộc gọi WebRTC tới các User đang online (như chuông điện thoại reo).
+  "call_signaling": {
+    // Mô tả: Bảng tạm (Ephemeral) để báo hiệu cuộc gọi WebRTC tới các User đang online (như chuông điện thoại reo).
     "uid_2": {
       "callerId": "uid_1", // Required
       "conversationId": "conv_id_1", // Required
