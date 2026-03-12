@@ -63,16 +63,32 @@ export const useConversationGroups = ({
         .sort((a, b) => (b.data.updatedAt ?? 0) - (a.data.updatedAt ?? 0));
     }
 
-    let list = friendConversations;
+    // Lọc bỏ các hội thoại đã lưu trữ hoặc đã xóa khỏi danh sách chính
+    const filteredList = friendConversations.filter(conv => {
+      // Không hiện hội thoại đã lưu trữ trong danh sách chính
+      if (conv.userChat?.isArchived) return false;
+
+      // Nếu đã xóa (clearedAt), chỉ hiện lại nếu có tin nhắn mới hơn thời điểm xóa
+      const clearedAt = conv.userChat?.clearedAt || 0;
+      const lastMsgTimestamp = conv.data.lastMessage?.timestamp || conv.data.updatedAt || 0;
+      if (clearedAt > 0 && lastMsgTimestamp <= clearedAt) return false;
+
+      return true;
+    });
+
     if (activeFilter === 'group') {
-      list = list.filter(c => c.data.isGroup);
+      return filteredList.filter(c => c.data.isGroup);
     }
-    return list;
+    return filteredList;
   }, [viewMode, friendConversations, conversations, activeFilter]);
 
   return {
     friendConversations,
-    requestConversations,
+    requestConversations: requestConversations.filter(conv => {
+      const clearedAt = conv.userChat?.clearedAt || 0;
+      const lastMsgTimestamp = conv.data.lastMessage?.timestamp || conv.data.updatedAt || 0;
+      return !(clearedAt > 0 && lastMsgTimestamp <= clearedAt);
+    }),
     displayConversations
   };
 };
