@@ -79,11 +79,6 @@ export const CONFIRM_MESSAGES = {
       MESSAGE: 'Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác.',
       CONFIRM: 'Xóa ngay',
     },
-    BLOCK_USER: {
-      TITLE: 'Chặn người dùng',
-      MESSAGE: 'Bạn có chắc chắn muốn chặn người này? Cả hai bên sẽ không thể nhắn tin cho nhau.',
-      CONFIRM: 'Chặn ngay',
-    },
     LEAVE_GROUP: {
       TITLE: 'Rời khỏi nhóm',
       MESSAGE: 'Bạn có chắc chắn muốn rời khỏi nhóm này? Bạn sẽ không thể xem tin nhắn mới nữa.',
