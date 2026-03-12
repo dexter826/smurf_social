@@ -136,7 +136,6 @@ export const commentService = {
         parentId,
         image: image || null,
         replyCount: 0,
-        reactions: {},
         isEdited: false,
         editedAt: null,
         createdAt: serverTimestamp(),

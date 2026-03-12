@@ -302,7 +302,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       createdAt: Timestamp.now(),
       replyCount: 0,
       status: CommentStatus.ACTIVE,
-      reactions: {},
     };
 
     const previousState = {
@@ -403,31 +402,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
     const comment = findComment();
     const prevMyReaction = myCommentReactions[commentId];
-    const prevReactions = { ...(comment?.reactions ?? {}) };
-
-    const isRemove = reaction === 'REMOVE' || prevMyReaction === reaction;
-    const oldType = prevMyReaction;
-
-    const applyOptimistic = (c: Comment): Comment => {
-      if (c.id !== commentId) return c;
-      const newReactions = { ...c.reactions };
-
-      if (isRemove && oldType) {
-        newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
-        if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
-      } else if (!isRemove) {
-        if (oldType) {
-          newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
-          if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
-        }
-        newReactions[reaction as ReactionType] = (newReactions[reaction as ReactionType] ?? 0) + 1;
-      }
-
-      return {
-        ...c,
-        reactions: newReactions,
-      };
-    };
+    const isRemove = prevMyReaction === reaction || reaction === 'REMOVE';
 
     // Update myCommentReactions
     const newMyReactions = { ...myCommentReactions };
@@ -437,40 +412,14 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       newMyReactions[commentId] = reaction;
     }
 
-    set((state) => {
-      if (parentId) {
-        const postReplies = state.replies[postId] || {};
-        return {
-          replies: {
-            ...state.replies,
-            [postId]: { ...postReplies, [parentId]: (postReplies[parentId] || []).map(applyOptimistic) },
-          },
-          myCommentReactions: newMyReactions,
-        };
-      }
-      return {
-        rootComments: {
-          ...state.rootComments,
-          [postId]: (state.rootComments[postId] || []).map(applyOptimistic),
-        },
-        myCommentReactions: newMyReactions,
-      };
-    });
+    set({ myCommentReactions: newMyReactions });
 
     try {
       await commentService.reactToComment(commentId, userId, reaction);
     } catch (error) {
       console.error('Lỗi bày tỏ cảm xúc:', error);
-      // Rollback
-      const rollback = (c: Comment): Comment => c.id !== commentId ? c : {
-        ...c, reactions: prevReactions,
-      };
+      // Rollback myCommentReactions
       set(state => ({
-        rootComments: { ...state.rootComments, [postId]: (state.rootComments[postId] || []).map(rollback) },
-        replies: parentId ? {
-          ...state.replies,
-          [postId]: { ...(state.replies[postId] || {}), [parentId]: ((state.replies[postId] || {})[parentId] || []).map(rollback) },
-        } : state.replies,
         myCommentReactions: { ...state.myCommentReactions, [commentId]: prevMyReaction },
       }));
     }

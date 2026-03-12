@@ -43,9 +43,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const { filteredSummary, filteredCount } = useFilteredReactions(
     post?.id || '',
     'post',
-    post?.authorId || '',
-    post?.reactions,
-    Object.values(post?.reactions || {}).reduce((sum, count) => sum + count, 0)
+    post?.authorId || ''
   );
 
   const handleProfileClick = useCallback(() => {

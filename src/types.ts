@@ -214,7 +214,6 @@ export interface Comment extends BaseEntity, SoftDeletableEntity {
   status: CommentStatus;
   image?: MediaObject;
   replyCount?: number;
-  reactions: Partial<Record<ReactionType, number>>;
   isEdited?: boolean;
   editedAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -227,7 +226,6 @@ export interface Post extends BaseEntity, SoftDeletableEntity {
   media?: MediaObject[];
   commentCount: number;
   visibility: Visibility;
-  reactions: Partial<Record<ReactionType, number>>;
   isEdited?: boolean;
   editedAt?: Timestamp;
   updatedAt?: Timestamp;
