@@ -74,6 +74,7 @@ export const reportService = {
 
       const docRef = await addDoc(collection(db, 'reports'), {
         ...cleanData,
+        targetOwnerId: data.targetOwnerId,
         status: ReportStatus.PENDING,
         createdAt: Timestamp.now()
       });

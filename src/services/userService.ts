@@ -143,9 +143,8 @@ export const userService = {
         };
       }
 
-      const PRIVATE_FIELDS = ['blockedUserIds', 'fcmTokens'];
       const cleanData = Object.fromEntries(
-        Object.entries(updatedData).filter(([k, v]) => v !== undefined && !PRIVATE_FIELDS.includes(k))
+        Object.entries(updatedData).filter(([k, v]) => v !== undefined)
       );
 
       await setDoc(userRef, { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
