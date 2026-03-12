@@ -12,7 +12,8 @@ import {
   writeBatch,
   limit,
   arrayUnion,
-  deleteDoc
+  deleteDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
@@ -114,7 +115,7 @@ export const notificationService = {
         if (token) {
           await setDoc(
             doc(db, 'users', userId, 'private', 'fcm'),
-            { tokens: arrayUnion(token) },
+            { fcmTokens: arrayUnion(token), updatedAt: serverTimestamp() },
             { merge: true }
           );
           return token;

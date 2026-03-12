@@ -188,10 +188,6 @@ service cloud.firestore {
       );
     }
 
-    match /config/{document} {
-      allow read: if isAuthenticated();
-      allow write: if false;
-    }
 
     match /reports/{reportId} {
       allow create: if isNotBanned() &&
