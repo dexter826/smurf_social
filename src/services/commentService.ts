@@ -32,6 +32,7 @@ function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<D
     ...data,
     id: docSnap.id,
     createdAt: data?.createdAt as Timestamp,
+    updatedAt: data?.updatedAt as Timestamp,
     editedAt: data?.editedAt as Timestamp | undefined,
     deletedAt: data?.deletedAt as Timestamp | undefined,
   } as Comment;
@@ -79,7 +80,7 @@ export const commentService = {
     }
   },
 
-  // Lấy phản hồi mục
+  // Lấy phản hồi (replies)
   getReplies: async (postId: string, commentId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -134,9 +135,12 @@ export const commentService = {
         status: CommentStatus.ACTIVE,
         parentId,
         image: image || null,
-        createdAt: Timestamp.now(),
         replyCount: 0,
-        reactions: {}
+        reactions: {},
+        isEdited: false,
+        editedAt: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
 
       let docRefId = preGeneratedId;
@@ -154,14 +158,15 @@ export const commentService = {
     }
   },
 
-  // Soft delete - đánh dấu xóa thay vì xóa hẳn
+  // Xóa bình luận (soft-delete)
   deleteComment: async (commentId: string, userId: string) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
       await updateDoc(commentRef, {
         status: CommentStatus.DELETED,
         deletedAt: serverTimestamp(),
-        deletedBy: userId
+        deletedBy: userId,
+        updatedAt: serverTimestamp()
       });
 
       // Cleanup related notifications
@@ -179,14 +184,15 @@ export const commentService = {
     }
   },
 
-  // Chỉnh sửa nội dung bình luận hiện có.
+  // Sửa nội dung bình luận
   updateComment: async (commentId: string, content: string, image?: MediaObject | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
       const updateData: any = {
         content,
         isEdited: true,
-        editedAt: serverTimestamp()
+        editedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
       if (image !== undefined) updateData.image = image;
       await updateDoc(commentRef, updateData);
@@ -214,7 +220,7 @@ export const commentService = {
     }
   },
 
-  // Lấy reaction của user hiện tại trên một comment.
+  // Lấy reaction cá nhân tại comment
   getMyReactionForComment: async (commentId: string, userId: string): Promise<string | null> => {
     try {
       const snap = await getDoc(doc(db, 'comments', commentId, 'reactions', userId));
@@ -224,7 +230,7 @@ export const commentService = {
     }
   },
 
-  // Batch load myReaction cho danh sách comments.
+  // Tải hàng loạt reaction cá nhân
   batchLoadMyReactionsForComments: async (commentIds: string[], userId: string): Promise<Record<string, string>> => {
     const results: Record<string, string> = {};
     await Promise.all(

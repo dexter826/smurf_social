@@ -43,6 +43,7 @@ export const rtdbConversationService = {
                     [user1Id]: 'member',
                     [user2Id]: 'member'
                 },
+                typing: {},
                 lastMessage: null,
                 createdAt: Date.now(),
                 updatedAt: Date.now()
@@ -55,7 +56,8 @@ export const rtdbConversationService = {
                 isArchived: false,
                 unreadCount: 0,
                 lastReadMsgId: null,
-                lastMsgTimestamp: Date.now()
+                lastMsgTimestamp: Date.now(),
+                clearedAt: 0
             };
             updates[`user_chats/${user2Id}/${convId}`] = {
                 isPinned: false,
@@ -63,7 +65,8 @@ export const rtdbConversationService = {
                 isArchived: false,
                 unreadCount: 0,
                 lastReadMsgId: null,
-                lastMsgTimestamp: Date.now()
+                lastMsgTimestamp: Date.now(),
+                clearedAt: 0
             };
 
             await update(ref(rtdb), updates);

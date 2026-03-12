@@ -25,18 +25,19 @@ import { compressImage, isImageFile } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback, deleteStorageFiles } from '../utils/uploadUtils';
 
-function convertDocToPost(doc: DocumentSnapshot): Post {
-  const data = doc.data();
+function convertDocToPost(document: DocumentSnapshot): Post {
+  const data = document.data()!;
   return {
     ...data,
-    id: doc.id,
-    createdAt: data?.createdAt as Timestamp,
-    editedAt: data?.editedAt as Timestamp | undefined,
-    deletedAt: data?.deletedAt as Timestamp | undefined,
+    id: document.id,
+    createdAt: data.createdAt as Timestamp,
+    updatedAt: data.updatedAt as Timestamp,
+    editedAt: data.editedAt as Timestamp | undefined,
+    deletedAt: data.deletedAt as Timestamp | undefined,
   } as Post;
 }
 
-// Tính toán quyền xem dựa trên quan hệ người dùng.
+// Phân quyền hiển thị
 function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] {
   if (isOwner) {
     return [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
@@ -49,7 +50,12 @@ function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] 
 export const postService = {
   // ========== FAN-OUT FEED METHODS ==========
 
-  getFeedFromFanout: async (userId: string, limitCount: number = PAGINATION.FEED_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null, hasMore: boolean }> => {
+  // Lấy feed từ fan-out
+  getFeedFromFanout: async (
+    userId: string,
+    limitCount: number = PAGINATION.FEED_POSTS,
+    lastDoc?: DocumentSnapshot
+  ): Promise<{ posts: Post[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }> => {
     try {
       if (!userId) {
         console.warn("getFeedFromFanout: userId is missing");
@@ -78,7 +84,7 @@ export const postService = {
 
       // Batch fetch posts
       const posts: Post[] = [];
-      const chunkSize = 10; // Firestore 'in' query limit
+      const chunkSize = 10; // Firestore limit
 
       for (let i = 0; i < postIds.length; i += chunkSize) {
         const chunk = postIds.slice(i, i + chunkSize);
@@ -104,7 +110,9 @@ export const postService = {
       const finalPosts = filteredPosts.slice(0, limitCount);
 
       const lastPost = finalPosts[finalPosts.length - 1];
-      const lastVisible = lastPost ? feedSnapshot.docs.find(d => d.data().postId === lastPost.id) || null : null;
+      const lastVisible = lastPost
+        ? feedSnapshot.docs.find(d => d.data().postId === lastPost.id) || null
+        : null;
 
       return { posts: finalPosts, lastDoc: lastVisible, hasMore };
     } catch (error) {
@@ -200,6 +208,7 @@ export const postService = {
 
   // ========== USER POSTS METHODS ==========
 
+  // Lấy bài viết của user
   getUserPosts: async (userId: string, currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.USER_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
       const isOwner = userId === currentUserId;
@@ -278,16 +287,22 @@ export const postService = {
     };
   },
 
+  // Tạo bài viết mới
   createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status' | 'reactions'>, predefinedId?: string): Promise<string> => {
     try {
       const postRef = predefinedId ? doc(db, 'posts', predefinedId) : doc(collection(db, 'posts'));
       await setDoc(postRef, {
-        ...postData,
+        authorId: postData.authorId,
+        content: postData.content || '',
+        visibility: postData.visibility || Visibility.PUBLIC,
+        media: postData.media || [],
         status: PostStatus.ACTIVE,
         commentCount: 0,
         reactions: {},
-        createdAt: Timestamp.now(),
-        isEdited: false
+        isEdited: false,
+        editedAt: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
       return postRef.id;
     } catch (error) {
@@ -298,11 +313,11 @@ export const postService = {
 
   generatePostId: () => doc(collection(db, 'posts')).id,
 
+  // Cập nhật nội dung bài viết
   updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
 
-      // Xóa media bị loại bỏ khi edit
       const oldSnap = await getDoc(postRef);
       if (oldSnap.exists()) {
         const old = oldSnap.data();
@@ -320,7 +335,8 @@ export const postService = {
         media,
         visibility,
         isEdited: true,
-        editedAt: Timestamp.now()
+        editedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
     } catch (error) {
       console.error("Lỗi cập nhật bài viết", error);
@@ -328,14 +344,15 @@ export const postService = {
     }
   },
 
-  // Soft delete - đánh dấu xóa thay vì xóa hẳn
+  // Xóa bài viết (soft-delete)
   deletePost: async (postId: string, userId: string): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
         status: PostStatus.DELETED,
         deletedAt: serverTimestamp(),
-        deletedBy: userId
+        deletedBy: userId,
+        updatedAt: serverTimestamp()
       });
     } catch (error) {
       console.error("Lỗi xóa bài viết", error);
@@ -361,7 +378,7 @@ export const postService = {
     }
   },
 
-  // Lấy reaction của user hiện tại trên một post.
+  // Lấy reaction cá nhân tại post
   getMyReactionForPost: async (postId: string, userId: string): Promise<string | null> => {
     try {
       const snap = await getDoc(doc(db, 'posts', postId, 'reactions', userId));
@@ -371,7 +388,7 @@ export const postService = {
     }
   },
 
-  // Batch load myReaction cho danh sách posts.
+  // Tải hàng loạt reaction cá nhân
   batchLoadMyReactions: async (postIds: string[], userId: string): Promise<Record<string, string>> => {
     const results: Record<string, string> = {};
     await Promise.all(
@@ -416,7 +433,7 @@ export const postService = {
     }
   },
 
-  // Admin có thể xem mọi bài viết
+  // Admin lấy bài viết
   getPostByIdForAdmin: async (postId: string): Promise<Post | null> => {
     try {
       const postRef = doc(db, 'posts', postId);

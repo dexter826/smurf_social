@@ -20,7 +20,7 @@ import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
-import { User, BlockOptions, UserSettings, Visibility } from '../types';
+import { User, BlockOptions, UserSettings, Visibility, BlockedUserEntry } from '../types';
 import { UserAvatar, ConfirmDialog, Button, Skeleton, BlockOptionsModal, Dropdown, DropdownItem } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
@@ -97,7 +97,7 @@ const BlockOptionTags: React.FC<{ options: BlockOptions }> = ({ options }) => {
 
 interface BlockedUserWithOptions {
   user: User;
-  options: BlockOptions;
+  options: BlockedUserEntry;
 }
 
 const SettingsPage: React.FC = () => {
@@ -139,8 +139,12 @@ const SettingsPage: React.FC = () => {
       }
       await fetchUsers(ids);
       const list: BlockedUserWithOptions[] = ids
-        .map(id => ({ user: userCache[id], options: blockedMap[id] }))
-        .filter((item): item is BlockedUserWithOptions => !!item.user);
+        .map(id => {
+          const user = userCache[id];
+          if (!user) return null;
+          return { user, options: blockedMap[id] };
+        })
+        .filter((item): item is BlockedUserWithOptions => !!item);
       setBlockedList(list);
     } finally {
       setLoading('settings', false);
@@ -158,8 +162,12 @@ const SettingsPage: React.FC = () => {
     userService.getBlockedUsers(currentUser.id).then(blockedMap => {
       const ids = Object.keys(blockedMap);
       const list: BlockedUserWithOptions[] = ids
-        .map(id => ({ user: userCache[id], options: blockedMap[id] }))
-        .filter((item): item is BlockedUserWithOptions => !!item.user);
+        .map(id => {
+          const user = userCache[id];
+          if (!user) return null;
+          return { user, options: blockedMap[id] };
+        })
+        .filter((item): item is BlockedUserWithOptions => !!item);
       setBlockedList(list);
     });
   }, [userCache, currentUser?.id]);
@@ -182,7 +190,7 @@ const SettingsPage: React.FC = () => {
     await userService.blockUser(currentUser.id, manageBlockTarget.user.id, options);
     useAuthStore.getState().updateBlockEntry('add', manageBlockTarget.user.id, options);
     setBlockedList(prev => prev.map(item =>
-      item.user.id === manageBlockTarget.user.id ? { ...item, options } : item
+      item.user.id === manageBlockTarget.user.id ? { ...item, options: { ...item.options, ...options } } : item
     ));
   };
 

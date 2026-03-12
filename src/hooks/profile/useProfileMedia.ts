@@ -96,7 +96,7 @@ export const useProfileMedia = ({
     if (!profile || !isOwnProfile) return;
     setUploading(true);
     try {
-      const emptyAvatar: MediaObject = { url: '', fileName: '', mimeType: '', size: 0 };
+      const emptyAvatar: MediaObject = { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false };
       await userService.updateProfile(profile.id, { avatar: emptyAvatar });
       const updatedProfile = { ...profile, avatar: emptyAvatar };
       setProfile(updatedProfile);
@@ -117,8 +117,9 @@ export const useProfileMedia = ({
     if (!profile || !isOwnProfile) return;
     setUploading(true);
     try {
-      await userService.updateProfile(profile.id, { cover: undefined });
-      const updatedProfile = { ...profile, cover: undefined };
+      const emptyCover: MediaObject = { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false };
+      await userService.updateProfile(profile.id, { cover: emptyCover });
+      const updatedProfile = { ...profile, cover: emptyCover };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
       toast.success(TOAST_MESSAGES.MEDIA.DELETE_COVER_SUCCESS);

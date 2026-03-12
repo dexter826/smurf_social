@@ -46,7 +46,7 @@ export const profileSchema = z.object({
     .max(VALIDATION.BIO_MAX_LENGTH, `Giới thiệu không được quá ${VALIDATION.BIO_MAX_LENGTH} ký tự`)
     .optional(),
   location: z.string().optional(),
-  gender: z.nativeEnum(Gender).optional(),
+  gender: z.nativeEnum(Gender).or(z.literal("")).optional(),
   dob: z.number().optional(),
 });
 
