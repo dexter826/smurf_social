@@ -56,7 +56,6 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
   const typingUsers: string[] = [];
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
@@ -241,7 +240,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               icon={<Ban size={16} />}
               label="Chặn"
               variant="danger"
-              onClick={() => setShowBlockConfirm(true)}
+              onClick={() => { onBlock?.(); setIsMenuOpen(false); }}
             />
           )}
           {onDelete && (!conversation.data.isGroup || conversation.data.creatorId === currentUserId) && (
@@ -255,15 +254,6 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         </Dropdown>
       </div>
 
-      <ConfirmDialog
-        isOpen={showBlockConfirm}
-        onClose={() => setShowBlockConfirm(false)}
-        onConfirm={() => { onBlock?.(); setShowBlockConfirm(false); }}
-        title={CONFIRM_MESSAGES.CHAT.BLOCK_USER.TITLE}
-        message={CONFIRM_MESSAGES.CHAT.BLOCK_USER.MESSAGE}
-        confirmLabel={CONFIRM_MESSAGES.CHAT.BLOCK_USER.CONFIRM}
-        variant="danger"
-      />
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

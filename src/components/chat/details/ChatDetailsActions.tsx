@@ -43,7 +43,6 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
 }) => {
   const { openReportModal } = useReportStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
@@ -108,7 +107,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
     actions.push({
       icon: isBlocked ? <UserCheck size={20} /> : <Ban size={20} />,
       label: isBlocked ? 'Bỏ chặn người dùng' : 'Chặn người dùng',
-      onClick: () => setShowBlockConfirm(true),
+      onClick: onToggleBlock,
       variant: 'danger' as const,
     });
 
@@ -174,18 +173,6 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         ))}
       </div>
 
-      <ConfirmDialog
-        isOpen={showBlockConfirm}
-        onClose={() => setShowBlockConfirm(false)}
-        onConfirm={() => onToggleBlock?.()}
-        title={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE : CONFIRM_MESSAGES.CHAT.BLOCK_USER.TITLE}
-        message={isBlocked
-          ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(partner?.fullName || 'Người dùng')
-          : CONFIRM_MESSAGES.CHAT.BLOCK_USER.MESSAGE
-        }
-        confirmLabel={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM : CONFIRM_MESSAGES.CHAT.BLOCK_USER.CONFIRM}
-        variant="danger"
-      />
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}
