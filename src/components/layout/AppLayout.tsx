@@ -6,7 +6,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { useRtdbChatStore } from '../../store';
 import { useContactStore } from '../../store/contactStore';
 import { useLoadingStore } from '../../store/loadingStore';
-import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton } from '../ui';
+import { Avatar, UserAvatar, ConfirmDialog, Button, IconButton, ScreenLoader } from '../ui';
 import { Post, Visibility, ReactionType } from '../../types';
 import { PostViewModal } from '../feed';
 import { usePostStore } from '../../store/postStore';
@@ -26,7 +26,7 @@ export const AppLayout: React.FC = () => {
   const { user } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
   const { subscribeToConversations, selectedConversationId } = useRtdbChatStore();
-  const { receivedRequests, subscribeToRequests } = useContactStore();
+  const { receivedRequests, subscribeToRequests, subscribeToFriends } = useContactStore();
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
 
   const { selectedPost, setSelectedPost, reactToPost } = usePostStore();
@@ -116,13 +116,15 @@ export const AppLayout: React.FC = () => {
     if (!user) return;
     const unsubscribeChat = subscribeToConversations(user.id);
     const unsubscribeContacts = subscribeToRequests(user.id);
+    const unsubscribeFriends = subscribeToFriends(user.id);
     const unsubscribeNotifications = initNotifications(user.id);
     return () => {
       unsubscribeChat();
       unsubscribeContacts();
+      unsubscribeFriends();
       unsubscribeNotifications();
     };
-  }, [user, subscribeToConversations, subscribeToRequests, initNotifications]);
+  }, [user, subscribeToConversations, subscribeToRequests, subscribeToFriends, initNotifications]);
 
   useEffect(() => {
     if (selectedPost && !usersMap[selectedPost.authorId]) {
@@ -256,7 +258,9 @@ export const AppLayout: React.FC = () => {
 
       {/* Main Content */}
       <main className={`flex-1 relative flex flex-col h-full overflow-hidden transition-theme md:pb-0 ${isChatRoom ? 'pb-0' : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]'}`}>
-        <Outlet />
+        <React.Suspense fallback={<ScreenLoader />}>
+          <Outlet />
+        </React.Suspense>
       </main>
 
       {/* Mobile Navigation */}
