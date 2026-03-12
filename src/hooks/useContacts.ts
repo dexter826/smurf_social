@@ -43,8 +43,6 @@ export const useContacts = (): UseContactsReturn => {
     friends,
     receivedRequests,
     sentRequests,
-    subscribeToFriends,
-    subscribeToRequests,
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
@@ -60,17 +58,6 @@ export const useContacts = (): UseContactsReturn => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
 
-  useEffect(() => {
-    if (!currentUser) return;
-    const unsubscribe = subscribeToFriends(currentUser.id);
-    return () => unsubscribe();
-  }, [currentUser?.id, subscribeToFriends]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    const unsubscribe = subscribeToRequests(currentUser.id);
-    return () => unsubscribe();
-  }, [currentUser?.id, subscribeToRequests]);
 
   // Tải info user cho friend request
   useEffect(() => {
