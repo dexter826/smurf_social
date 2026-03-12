@@ -13,9 +13,7 @@ interface UseFeedReturn {
   isLoading: boolean;
   hasMore: boolean;
   usersMap: Record<string, User>;
-  newPostsAvailable: number;
   handleLoadMore: () => void;
-  handleLoadNewPosts: () => void;
   handleRefresh: () => Promise<void>;
   handleReact: (postId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility) => Promise<void>;
@@ -30,10 +28,8 @@ export const useFeed = (): UseFeedReturn => {
   const {
     posts,
     hasMore,
-    newPostsAvailable,
     fetchPosts,
     subscribeToPosts,
-    loadNewPosts,
     refreshFeed,
     reactToPost,
     updatePost,
@@ -76,10 +72,7 @@ export const useFeed = (): UseFeedReturn => {
     }
   }, [posts, fetchUsers]);
 
-  const handleLoadNewPosts = useCallback(() => {
-    loadNewPosts();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [loadNewPosts]);
+
 
   const handleRefresh = useCallback(async () => {
     if (!currentUser) return;
@@ -113,9 +106,7 @@ export const useFeed = (): UseFeedReturn => {
     isLoading: feedPostsLoading,
     hasMore,
     usersMap,
-    newPostsAvailable,
     handleLoadMore,
-    handleLoadNewPosts,
     handleRefresh,
     handleReact,
     handleUpdate,

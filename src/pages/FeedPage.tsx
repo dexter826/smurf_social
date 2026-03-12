@@ -16,11 +16,9 @@ const FeedPage: React.FC = () => {
     isLoading,
     hasMore,
     usersMap,
-    newPostsAvailable,
     handleReact,
     handleUpdate,
     handleDelete,
-    handleLoadNewPosts,
     observerRef,
   } = useFeed();
   const isLoadingMore = useLoadingStore(state => state.loadingStates['feed.loadMore']);
@@ -73,14 +71,7 @@ const FeedPage: React.FC = () => {
       <div className="w-full max-w-[680px] py-4 md:py-6 space-y-3 md:space-y-4 px-3 sm:px-4 md:px-0 pb-6 md:pb-8">
         <CreatePost currentUser={currentUser} />
 
-        {newPostsAvailable > 0 && (
-          <button
-            onClick={handleLoadNewPosts}
-            className="w-full py-3 bg-primary hover:bg-primary-dark text-text-on-primary rounded-xl font-medium transition-colors shadow-sm"
-          >
-            {newPostsAvailable} bài viết mới
-          </button>
-        )}
+
 
         {posts.length === 0 ? (
           <div className="bg-bg-primary rounded-xl p-6 sm:p-8 md:p-12 shadow-sm border border-border-light text-center transition-theme">
