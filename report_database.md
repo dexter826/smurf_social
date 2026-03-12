@@ -13,7 +13,7 @@
 
 ## II. ĐẶC TẢ OBJECT MEDIA (DÙNG CHUNG)
 
-Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạng Object này để quản lý giới hạn và tự động làm mờ ảnh nhạy cảm (thông qua Cloud Vision API).
+Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạng Object này để quản lý giới hạn và tự động làm mờ ảnh nhạy cảm
 
 ```json
 {
@@ -31,129 +31,140 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 ## III. FIRESTORE SCHEMA (Dữ liệu Core & Mạng Xã Hội)
 
 ### 1. Collection `users` (Quản lý Hồ sơ)
+*Mô tả: Lưu trữ thông tin định danh, tài khoản và hồ sơ cá nhân của người dùng trên toàn hệ thống.*
 
-- `uid` (String): Document ID (Firebase Auth UID).
-- `email` (String): Dùng để đăng nhập và tìm kiếm chính xác duy nhất.
-- `fullName` (String): Tên hiển thị (Max 50 ký tự).
-- `bio` (String): Tiểu sử (Max 500 ký tự).
-- `avatar` (MediaObject): Ảnh đại diện.
-- `cover` (MediaObject): Ảnh bìa.
-- `dob` (Timestamp): Ngày sinh.
-- `gender` (String): `male`, `female`. Mặc định rỗng (chưa chọn).
-- `location` (String): Vị trí.
-- `status` (String): `active`, `banned`.
-- `role` (String): `user`, `admin`. Mặc định là `user`.
-- `createdAt` / `updatedAt` / `deletedAt` (Timestamp).
+- `uid` (String, **Required**): Document ID (Firebase Auth UID).
+- `email` (String, **Required**): Dùng để đăng nhập và tìm kiếm chính xác duy nhất.
+- `fullName` (String, **Required**): Tên hiển thị (Max 50 ký tự), mặc định `""`.
+- `avatar` (MediaObject, **Required**): Ảnh đại diện. Luôn có Object, mặc định các field bên trong rỗng.
+- `cover` (MediaObject, **Required**): Ảnh bìa. Luôn có Object, mặc định các field bên trong rỗng.
+- `status` (String Enum, **Required**): `"active"`, `"banned"`.
+- `role` (String Enum, **Required**): `"user"`, `"admin"`.
+- `gender` (String Enum, _Optional_): `"male"`, `"female"`.
+- `bio` (String, _Optional_): Tiểu sử (Max 500 ký tự).
+- `location` (String, _Optional_): Vị trí.
+- `dob` (Timestamp, _Optional_): Ngày sinh.
+- `createdAt` (Timestamp, **Required**).
+- `updatedAt` (Timestamp, **Required**).
 
 **1.1. Sub-collection `private/fcm` (Bên trong `users/{uid}`)**
 
-Lưu trữ thông tin nhạy cảm và token thông báo. Được bảo vệ bởi Security Rules (chỉ owner truy cập).
-
-- `fcmTokens` (Array of String): Danh sách token của các thiết bị.
-- `updatedAt` (Timestamp).
+- `fcmTokens` (Array of String, **Required**): Danh sách token của các thiết bị.
+- `updatedAt` (Timestamp, **Required**).
 
 **1.2. Sub-collection `private/settings` (Bên trong `users/{uid}`)**
 
-Lưu trữ các cấu hình riêng tư của người dùng. Mỗi người dùng có một document duy nhất là `settings`.
-
-- `showOnlineStatus` (Boolean): Mặc định `true`.
-- `showReadReceipts` (Boolean): Mặc định `true`.
-- `defaultPostVisibility` (String): `public`, `friends`, `private`. Mặc định `public`.
-- `updatedAt` (Timestamp).
+- `showOnlineStatus` (Boolean, **Required**).
+- `showReadReceipts` (Boolean, **Required**).
+- `defaultPostVisibility` (String Enum, **Required**): `"public"`, `"friends"`, `"private"`.
+- `updatedAt` (Timestamp, **Required**).
 
 **1.3. Sub-collection `friends` (Bên trong `users/{uid}`)**
 
-- `friendId` (String): Document ID.
-- `createdAt` (Timestamp).
+- `friendId` (String, **Required**): Document ID.
+- `createdAt` (Timestamp, **Required**).
 
 **1.4. Sub-collection `blockedUsers` (Bên trong `users/{uid}`)**
 
-- `blockedUid` (String): Document ID (UID người bị chặn).
-- `blockMessages` (Boolean): Chặn tin nhắn.
-- `blockCalls` (Boolean): Chặn gọi điện.
-- `blockViewMyActivity` (Boolean): Người bị chặn không xem được bài đăng của mình.
-- `hideTheirActivity` (Boolean): Người chặn không thấy bài đăng của người bị chặn.
-- `createdAt` / `updatedAt` (Timestamp).
+- `blockedUid` (String, **Required**): Document ID (UID người bị chặn).
+- `blockMessages` (Boolean, **Required**): Mặc định `false`.
+- `blockCalls` (Boolean, **Required**): Mặc định `false`.
+- `blockViewMyActivity` (Boolean, **Required**): Mặc định `false`.
+- `hideTheirActivity` (Boolean, **Required**): Mặc định `false`.
+- `createdAt` (Timestamp, **Required**).
+- `updatedAt` (Timestamp, **Required**).
 
 **1.5. Sub-collection `feeds` (Bên trong `users/{uid}` - Bảng tin Fan-out)**
 
-- `postId` (String): Document ID.
-- `authorId` (String).
-- `createdAt` (Timestamp).
+- `postId` (String, **Required**).
+- `authorId` (String, **Required**).
+- `createdAt` (Timestamp, **Required**).
 
 ### 2. Collection `friendRequests`
+*Mô tả: Quản lý các lời mời kết bạn đang chờ, đã chấp nhận hoặc bị từ chối giữa 2 người dùng.*
 
-- `id` (String): Document ID.
-- `senderId` (String): UID người gửi.
-- `receiverId` (String): UID người nhận.
-- `status` (String): `pending`, `accepted`, `rejected`.
-- `createdAt` / `updatedAt` (Timestamp).
+- `id` (String, **Required**): Document ID.
+- `senderId` (String, **Required**).
+- `receiverId` (String, **Required**).
+- `status` (String Enum, **Required**): `"pending"`, `"accepted"`, `"rejected"`.
+- `createdAt` (Timestamp, **Required**).
+- `updatedAt` (Timestamp, **Required**).
 
 ### 3. Collection `posts`
+*Mô tả: Bảng trung tâm lưu diễn đàn bài viết/trạng thái (Status/Feed) của người dùng.*
 
-- `id` (String): Document ID.
-- `authorId` (String).
-- `content` (String).
-- `visibility` (String): `public`, `friends`, `private`.
-- `media` (Array of MediaObject): Tối đa 10 file.
-- `commentCount` (Number).
-- `isEdited` (Boolean).
-- `editedAt` (Timestamp).
-- `status` (String): `active`, `deleted`.
-- `createdAt` / `updatedAt` / `deletedAt` (Timestamp).
-- `deletedBy` (String): UID người thực hiện xóa (nếu status = deleted).
+- `id` (String, **Required**): Document ID.
+- `authorId` (String, **Required**).
+- `content` (String, **Required**): Mặc định chuỗi rỗng `""`.
+- `status` (String Enum, **Required**): `"active"`, `"deleted"`.
+- `visibility` (String Enum, **Required**): `"public"`, `"friends"`, `"private"`.
+- `commentCount` (Int Number, **Required**): Mặc định `0`.
+- `media` (Array of MediaObject, _Optional_).
+- `isEdited` (Boolean, _Optional_).
+- `editedAt` (Timestamp, _Optional_).
+- `createdAt` (Timestamp, **Required**).
+- `updatedAt` (Timestamp, **Required**).
+- `deletedAt` (Timestamp, _Optional_).
+- `deletedBy` (String, _Optional_).
 
 **3.1. Sub-collection `reactions` (Bên trong `posts/{postId}`)**
 
-- `userId` (String): Document ID.
-- `type` (String): `like`, `love`, `haha`...
-- `createdAt` (Timestamp).
+- `userId` (String, **Required**): Document ID.
+- `type` (String Enum, **Required**): `"like"`, `"love"`, `"haha"`, `"wow"`, `"sad"`, `"angry"`.
+- `createdAt` (Timestamp, **Required**).
 
 ### 4. Collection `comments`
+*Mô tả: Chứa mọi bình luận của bài viết. Áp dụng cấu trúc phẳng (Flat structure) kết hợp `parentId` để làm tính năng Reply Comment 1 cấp.*
 
-- `id` (String): Document ID.
-- `postId` (String).
-- `authorId` (String).
-- `parentId` (String): `null` nếu là bình luận gốc.
-- `content` (String): Max 2000 ký tự.
-- `image` (MediaObject): Tối đa 1 ảnh.
-- `replyCount` (Number).
-- `isEdited` (Boolean).
-- `editedAt` (Timestamp).
-- `status` (String): `active`, `deleted`.
-- `createdAt` / `updatedAt` / `deletedAt` (Timestamp).
-- `deletedBy` (String): UID người thực hiện xóa.
+- `id` (String, **Required**): Document ID.
+- `postId` (String, **Required**).
+- `authorId` (String, **Required**).
+- `content` (String, **Required**).
+- `status` (String Enum, **Required**): `"active"`, `"deleted"`.
+- `parentId` (String, _Optional_): Không tồn tại nếu là bình luận gốc.
+- `image` (MediaObject, _Optional_).
+- `replyCount` (Int Number, **Required**): Mặc định `0`.
+- `isEdited` (Boolean, _Optional_).
+- `editedAt` (Timestamp, _Optional_).
+- `createdAt` (Timestamp, **Required**).
+- `updatedAt` (Timestamp, **Required**).
+- `deletedAt` (Timestamp, _Optional_).
+- `deletedBy` (String, _Optional_).
 
 **4.1. Sub-collection `reactions` (Bên trong `comments/{commentId}`)**
 
-- `userId` (String): Document ID.
-- `type` (String).
-- `createdAt` (Timestamp).
+- `userId` (String, **Required**): Document ID.
+- `type` (String Enum, **Required**): `"like"`, `"love"`, `"haha"`, `"wow"`, `"sad"`, `"angry"`.
+- `createdAt` (Timestamp, **Required**).
 
 ### 5. Collection `reports` (Quản trị viên)
+*Mô tả: Lưu các vé báo cáo (Report Ticket) của người dùng về nội dung/tài khoản vi phạm để Admin duyệt.*
 
-- `id` (String): Document ID.
-- `reporterId` (String).
-- `targetType` (String): `post`, `comment`, `user`.
-- `targetId` (String).
-- `targetOwnerId` (String): UID của người bị báo cáo.
-- `reason` (String): `spam`, `harassment`, `hate_speech`, `sensitive`, `scam_impersonation`, `other`.
-- `description` (String): Max 500 ký tự.
-- `images` (Array of MediaObject): Tối đa 5 ảnh bằng chứng.
-- `status` (String): `pending`, `resolved`, `rejected`.
-- `resolution` (String): Hướng xử lý của Admin.
-- `resolvedBy` (String): UID của Admin xử lý.
-- `createdAt` / `updatedAt` / `resolvedAt` (Timestamp).
+- `id` (String, **Required**): Document ID.
+- `reporterId` (String, **Required**).
+- `targetType` (String Enum, **Required**): `"post"`, `"comment"`, `"user"`.
+- `targetId` (String, **Required**).
+- `targetOwnerId` (String, **Required**).
+- `reason` (String Enum, **Required**): `"spam"`, `"harassment"`, `"hate_speech"`, `"sensitive"`, `"scam_impersonation"`, `"other"`.
+- `status` (String Enum, **Required**): `"pending"`, `"resolved"`, `"rejected"`.
+- `description` (String, _Optional_).
+- `images` (Array of MediaObject, _Optional_).
+- `createdAt` (Timestamp, **Required**).
+- `updatedAt` (Timestamp, **Required**).
+- `resolvedAt` (Timestamp, _Optional_).
+- `resolvedBy` (String, _Optional_).
+- `resolution` (String, _Optional_).
 
 ### 6. Collection `notifications`
+*Mô tả: Lưu trữ mọi thông báo (Tương tác, Hệ thống) đẩy tới chuông thông báo của User.*
 
-- `id` (String): Document ID.
-- `receiverId` (String).
-- `type` (String): `reaction`, `comment`, `friend_request`, `system`.
-- `actorId` (String).
-- `data` (Map): Chứa `targetId`, `contentSnippet`, `postId`... tùy theo `type`.
-- `isRead` (Boolean).
-- `createdAt` (Timestamp).
+- `id` (String, **Required**): Document ID.
+- `receiverId` (String, **Required**).
+- `actorId` (String, **Required**).
+- `type` (String Enum, **Required**): `"reaction"`, `"comment"`, `"friend_request"`, `"system"`.
+- `data` (Map, **Required**): Có thể chứa `postId`, `commentId`, `friendRequestId`, `reportId`, `contentSnippet`, tuỳ type.
+- `isRead` (Boolean, **Required**): Mặc định `false`.
+- `createdAt` (Timestamp, **Required**).
 
 ---
 
@@ -161,106 +172,105 @@ Lưu trữ các cấu hình riêng tư của người dùng. Mỗi người dùn
 
 ```json
 {
-  "presence": {
+  "presence": { // Mô tả: Lưu trạng thái Online/Offline và lần truy cập cuối cùng của User.
     "uid_1": {
-      "isOnline": true,
-      "lastSeen": 1678900000
+      "isOnline": true, // Required
+      "lastSeen": 1678900000000 // Required
     }
   },
 
-  "conversations": {
+  "conversations": { // Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Group, snippet tin nhắn mới nhất để hiển thị ra list Inbox.
     "conv_id_1": {
-      "isGroup": true,
-      "name": "Nhóm Đồ Án", // Tối đa 50 ký tự
-      "avatar": { "url": "...", "isSensitive": false },
-      "creatorId": "uid_1",
+      "isGroup": true, // Required
+      "creatorId": "uid_1", // Required
+      "createdAt": 1678900000000, // Required
+      "updatedAt": 1678900000000, // Required
       "members": {
+        // Required (Record<string, "admin" | "member">)
         "uid_1": "admin",
         "uid_2": "member"
       },
+      "name": "Nhóm Đồ Án", // Optional
+      "avatar": { "url": "...", "isSensitive": false }, // Optional
       "typing": {
-        "uid_2": 1678900050 // Timestamp lần cuối gõ phím
+        // Optional (Record<string, number>)
+        "uid_2": 1678900050000
       },
       "lastMessage": {
-        "senderId": "uid_1",
-        "content": "Chào mọi người",
-        "type": "text",
-        "timestamp": 1678900000,
-        "messageId": "msg_id_1",
+        // Optional
+        "senderId": "uid_1", // Required
+        "content": "Chào mọi người", // Required
+        "type": "text", // Enum: "text", "image", "video", "file", "voice", "system", "call"
+        "timestamp": 1678900000000, // Required
+        "messageId": "msg_id_1", // Optional
         "readBy": {
-          "uid_2": 1678900100
+          // Optional
+          "uid_2": 1678900100000
         },
         "deliveredTo": {
-          "uid_2": 1678900050
+          // Optional
+          "uid_2": 1678900050000
         }
-      },
-      "createdAt": 1678900000,
-      "updatedAt": 1678900000
+      }
     }
   },
 
-  "messages": {
+  "messages": { // Mô tả: Nơi lưu raw data từng cục tin nhắn riêng lẻ được gắn theo ID nhóm chat. Giúp scale khi cuộc hội thoại đạt hàng triệu tin.
     "conv_id_1": {
       "msg_id_1": {
-        "senderId": "uid_1",
-        "type": "text", // text, image, video, file, voice, system, call
-        "content": "Nội dung tin nhắn...",
-        "media": [
-          // Array of MediaObject. Tối đa 10 files
-        ],
-        "mentions": ["uid_2", "uid_3"], // Lưu UID người bị nhắc tên
-        "isForwarded": false,
-
-        "replyToId": "msg_id_old",
-
-        "isEdited": false, // Giới hạn sửa trong 5 phút
-        "isRecalled": false, // Thu hồi phía mọi người
-
+        "senderId": "uid_1", // Required
+        "type": "text", // Enum: "text", "image", "video", "file", "voice", "system", "call"
+        "content": "Nội dung...", // Required
+        "createdAt": 1678900000000, // Required
+        "media": [], // Optional
+        "mentions": ["uid_2"], // Optional
+        "isForwarded": false, // Optional
+        "replyToId": "msg_id_old", // Optional
+        "isEdited": false, // Optional
+        "isRecalled": false, // Optional
         "deletedBy": {
-          // Chức năng "Xóa phía tôi"
+          // Optional (Record<string, true>)
           "uid_2": true
         },
-
         "readBy": {
-          // Trạng thái "Đã xem"
-          "uid_2": 1678900100
+          // Optional
+          "uid_2": 1678900100000
         },
         "deliveredTo": {
-          // Trạng thái "Đã nhận"
-          "uid_2": 1678900050
+          // Optional
+          "uid_2": 1678900050000
         },
-
         "reactions": {
+          // Optional
           "uid_2": "haha"
         },
-        "createdAt": 1678900000,
-        "updatedAt": 1678900000
+        "updatedAt": 1678900000000 // Optional
       }
     }
   },
 
-  "user_chats": {
+  "user_chats": { // Mô tả: Bảng Metadata cắm theo cấu trúc của User. Điểm danh/Lập chỉ mục các setting riêng lẻ (Ghim, Tắt thông báo, Unread) của User đó đối với 1 cuộc hội thoại.
     "uid_1": {
       "conv_id_1": {
-        "isPinned": true, // Ghim hội thoại
-        "isMuted": false, // Tắt thông báo
-        "isArchived": false, // Lưu trữ hội thoại
-        "unreadCount": 5, // Bộ đếm tin nhắn chưa đọc
-        "lastReadMsgId": "msg_id_1",
-        "lastMsgTimestamp": 1678900000, // Để sort danh sách chat
-        "clearedAt": 1678900000 // Thời điểm người dùng xóa lịch sử trò chuyện (ẩn tin nhắn cũ)
+        "isPinned": true, // Required
+        "isMuted": false, // Required
+        "isArchived": false, // Required
+        "unreadCount": 5, // Required
+        "lastMsgTimestamp": 1678900000000, // Required
+        "lastReadMsgId": "msg_id_1", // Required (can be null)
+        "clearedAt": 1678900000000 // Optional
       }
     }
   },
 
-  "call_signaling": {
+  "call_signaling": { // Mô tả: Bảng tạm (Ephemeral) để báo hiệu cuộc gọi WebRTC tới các User đang online (như chuông điện thoại reo).
     "uid_2": {
-      "callerId": "uid_1",
-      "conversationId": "conv_id_1",
-      "callType": "voice", // voice, video
-      "status": "ringing", // ringing, accepted, rejected, ended
-      "zegoToken": "eyJhb...", // Token tham gia ZegoCloud
-      "timestamp": 1678900000
+      "callerId": "uid_1", // Required
+      "conversationId": "conv_id_1", // Required
+      "callType": "voice", // Enum: "voice", "video"
+      "status": "ringing", // Enum: "ringing", "accepted", "rejected", "ended"
+      "timestamp": 1678900000000, // Required
+      "zegoToken": "eyJhb..." // Optional
     }
   }
 }

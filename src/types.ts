@@ -123,13 +123,13 @@ export interface User extends BaseEntity {
   avatar: MediaObject;
   email: string;
   location?: string;
-  gender: Gender | "";
-  dob?: Timestamp | null;
+  gender?: Gender;
+  dob?: Timestamp;
   status: 'active' | 'banned';
   role: UserRole;
   bio?: string;
   cover: MediaObject;
-  updatedAt?: Timestamp;
+  updatedAt: Timestamp;
   deletedAt?: Timestamp;
   settings?: UserSettings;
 }
@@ -216,7 +216,7 @@ export interface Comment extends BaseEntity, SoftDeletableEntity {
   replyCount?: number;
   isEdited?: boolean;
   editedAt?: Timestamp;
-  updatedAt?: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface Post extends BaseEntity, SoftDeletableEntity {
@@ -228,7 +228,7 @@ export interface Post extends BaseEntity, SoftDeletableEntity {
   visibility: Visibility;
   isEdited?: boolean;
   editedAt?: Timestamp;
-  updatedAt?: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface Notification extends BaseEntity {
