@@ -57,7 +57,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const typingUsers: string[] = [];
+  const typingUsers = useRtdbChatStore(state => state.typingUsers[conversation.id] || []);
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
 
   const {
@@ -138,6 +138,9 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             )}
             {memberSettings?.isMuted && (
               <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
+            )}
+            {memberSettings?.isArchived && (
+              <Archive size={14} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
           <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'md:hidden' : 'md:group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
