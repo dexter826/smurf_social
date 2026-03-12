@@ -3,7 +3,7 @@ import { MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
-import { Post, User, ReportType, ReactionType } from '../../types';
+import { Post, PostStatus, Visibility, PostType, User, ReportType, ReactionType } from '../../types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { useFriendIds, useFilteredReactions } from '../../hooks';
@@ -81,21 +81,27 @@ const PostItemInner: React.FC<PostItemProps> = ({
             initialStatus={author?.status}
             onClick={handleProfileClick}
           />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3
-                className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
-                onClick={handleProfileClick}
-              >
-                {author?.fullName || 'Unknown User'}
-              </h3>
-              {isUploading && !hasMedia && (
-                <span className="text-xs text-info font-medium">
-                  Đang đăng...
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3
+                  className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
+                  onClick={handleProfileClick}
+                >
+                  {author?.fullName || 'Unknown User'}
+                </h3>
+                {post.type === PostType.AVATAR_UPDATE && (
+                  <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh đại diện mới.</span>
+                )}
+                {post.type === PostType.COVER_UPDATE && (
+                  <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh bìa mới.</span>
+                )}
+                {isUploading && !hasMedia && (
+                  <span className="text-xs text-info font-medium">
+                    Đang đăng...
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
               <span title={formatDateTime(post.createdAt)}>
                 {formatRelativeTime(post.createdAt)}
               </span>
@@ -135,17 +141,19 @@ const PostItemInner: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      <div className="px-4 pb-3 relative w-full overflow-hidden">
-        <p className="text-text-primary whitespace-pre-line break-words break-all text-[15px] leading-relaxed w-full">
-          <TruncatedText content={post.content} threshold={300} />
-        </p>
+      {(post.type === PostType.REGULAR || post.content) && post.type === PostType.REGULAR && (
+        <div className="px-4 pb-3 relative w-full overflow-hidden">
+          <p className="text-text-primary whitespace-pre-line break-words break-all text-[15px] leading-relaxed w-full">
+            <TruncatedText content={post.content} threshold={300} />
+          </p>
 
-        {error && (
-          <div className="mt-2 p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
-            <span className="text-xs text-error font-medium">{error}</span>
-          </div>
-        )}
-      </div>
+          {error && (
+            <div className="mt-2 p-2 bg-error-light dark:bg-error/10 border border-error/20 rounded-lg">
+              <span className="text-xs text-error font-medium">{error}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <PostMediaGrid
         media={post.media || []}

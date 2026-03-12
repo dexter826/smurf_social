@@ -121,7 +121,7 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (
         (resource.data.authorId == request.auth.uid && isNotBanned() &&
          (changed().hasOnly(['content', 'media', 'visibility', 'isEdited', 'editedAt']) ||
-          changed().hasOnly(['status', 'deletedAt', 'deletedBy']))) ||
+          changed().hasOnly(['status', 'deletedAt', 'deletedBy', 'updatedAt']))) ||
         (isNotBanned() && !isBlockedWith(resource.data.authorId) && changed().hasOnly(['commentCount', 'reactions']))
       );
 
@@ -154,7 +154,7 @@ service cloud.firestore {
         (resource.data.authorId == request.auth.uid && isNotBanned() && 
          changed().hasOnly(['content', 'isEdited', 'editedAt'])) ||
         (resource.data.authorId == request.auth.uid && isNotBanned() &&
-         changed().hasOnly(['status', 'deletedAt', 'deletedBy'])) ||
+         changed().hasOnly(['status', 'deletedAt', 'deletedBy', 'updatedAt'])) ||
         (isNotBanned() && !isBlockedWith(resource.data.authorId) && changed().hasOnly(['replyCount', 'reactions']))
       );
 

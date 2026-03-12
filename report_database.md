@@ -100,6 +100,7 @@ _Mô tả: Bảng trung tâm lưu diễn đàn bài viết/trạng thái (Status
 
 - `id` (String, **Required**): Document ID.
 - `authorId` (String, **Required**).
+- `type` (String Enum, **Required**): `"regular"`, `"avatar_update"`, `"cover_update"`. Mặc định `"regular"`.
 - `content` (String, **Required**): Mặc định chuỗi rỗng `""`.
 - `status` (String Enum, **Required**): `"active"`, `"deleted"`.
 - `visibility` (String Enum, **Required**): `"public"`, `"friends"`, `"private"`.

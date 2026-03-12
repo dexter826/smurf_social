@@ -19,7 +19,9 @@ import {
 } from 'firebase/firestore';
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { User, MediaObject, UserRole, UserStatus, BlockOptions, BlockedUserEntry, UserSettings, Visibility } from '../types';
+import { User, MediaObject, UserRole, UserStatus, BlockOptions, BlockedUserEntry, UserSettings, Visibility, PostType } from '../types';
+import { postService } from './postService';
+import { SOCIAL_MESSAGES } from '../constants/socialMessages';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
@@ -179,22 +181,26 @@ export const userService = {
     }
   },
 
-  // Tải lên avatar
-  uploadAvatar: async (
+  // Helper nội bộ để upload media cho profile (Avatar/Cover)
+  uploadProfileMedia: async (
     userId: string,
     file: File,
+    type: 'avatar' | 'cover',
+    shareToFeed: boolean = false,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
     try {
-      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.AVATAR);
+      const compressionType = type === 'avatar' ? IMAGE_COMPRESSION.AVATAR : IMAGE_COMPRESSION.COVER;
+      const compressedFile = await compressImage(file, compressionType);
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
-      const path = `avatars/${userId}/${fileName}`;
+      const prefix = type === 'avatar' ? 'avatar' : 'cover';
+      const folder = type === 'avatar' ? 'avatars' : 'covers';
+      const fileName = `${prefix}_${userId}_${Date.now()}.${fileExt}`;
+      const path = `${folder}/${userId}/${fileName}`;
 
-      // Lấy avatar cũ để xóa sau
       const currentUser = await userService.getUserById(userId);
-      const oldAvatarUrl = currentUser?.avatar?.url;
+      const oldUrl = type === 'avatar' ? currentUser?.avatar?.url : currentUser?.cover?.url;
 
       const downloadURL = await withRetry(() =>
         uploadWithProgress(path, compressedFile, onProgress)
@@ -208,55 +214,49 @@ export const userService = {
         isSensitive: false,
       };
 
-      await userService.updateProfile(userId, { avatar: mediaObject });
+      // Cập nhật profile
+      await userService.updateProfile(userId, { [type]: mediaObject });
 
-      if (oldAvatarUrl) await deleteStorageFile(oldAvatarUrl);
+      // Tự động tạo bài viết nếu được yêu cầu
+      if (shareToFeed && currentUser) {
+        const settings = await userService.getUserSettings(userId);
+        await postService.createPost({
+          authorId: userId,
+          type: type === 'avatar' ? PostType.AVATAR_UPDATE : PostType.COVER_UPDATE,
+          content: SOCIAL_MESSAGES[type === 'avatar' ? 'UPDATE_AVATAR' : 'UPDATE_COVER'],
+          media: [mediaObject],
+          visibility: settings.defaultPostVisibility,
+          updatedAt: serverTimestamp() as any
+        });
+      }
+
+      if (oldUrl) await deleteStorageFile(oldUrl);
 
       return mediaObject;
     } catch (error) {
-      console.error("Lỗi upload avatar", error);
+      console.error(`Lỗi upload ${type}`, error);
       throw error;
     }
+  },
+
+  // Tải lên ảnh đại diện
+  uploadAvatar: async (
+    userId: string,
+    file: File,
+    shareToFeed: boolean = false,
+    onProgress?: ProgressCallback
+  ): Promise<MediaObject> => {
+    return userService.uploadProfileMedia(userId, file, 'avatar', shareToFeed, onProgress);
   },
 
   // Tải lên ảnh bìa
   uploadCoverImage: async (
     userId: string,
     file: File,
+    shareToFeed: boolean = false,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
-    try {
-      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COVER);
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `cover_${userId}_${Date.now()}.${fileExt}`;
-      const path = `covers/${userId}/${fileName}`;
-
-      // Lấy cover cũ để xóa sau
-      const currentUser = await userService.getUserById(userId);
-      const oldCoverUrl = currentUser?.cover?.url;
-
-      const downloadURL = await withRetry(() =>
-        uploadWithProgress(path, compressedFile, onProgress)
-      );
-
-      const mediaObject: MediaObject = {
-        url: downloadURL,
-        fileName,
-        mimeType: file.type,
-        size: compressedFile.size,
-        isSensitive: false,
-      };
-
-      await userService.updateProfile(userId, { cover: mediaObject });
-
-      if (oldCoverUrl) await deleteStorageFile(oldCoverUrl);
-
-      return mediaObject;
-    } catch (error) {
-      console.error("Lỗi upload cover image", error);
-      throw error;
-    }
+    return userService.uploadProfileMedia(userId, file, 'cover', shareToFeed, onProgress);
   },
 
 

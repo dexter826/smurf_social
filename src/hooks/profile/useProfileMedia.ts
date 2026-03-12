@@ -24,7 +24,7 @@ export const useProfileMedia = ({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleAvatarChange = useCallback(async (file: File) => {
+  const handleAvatarChange = useCallback(async (file: File, shouldShare: boolean = false) => {
     if (!profile || !isOwnProfile) return;
     if (!file.type.startsWith('image/')) {
       toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
@@ -39,7 +39,7 @@ export const useProfileMedia = ({
     setUploading(true);
     setUploadProgress(0);
     try {
-      const newAvatarMedia = await userService.uploadAvatar(profile.id, file, (p) => {
+      const newAvatarMedia = await userService.uploadAvatar(profile.id, file, shouldShare, (p) => {
         setUploadProgress(p.progress);
       });
       const updatedProfile = { ...profile, avatar: newAvatarMedia };
@@ -60,7 +60,7 @@ export const useProfileMedia = ({
     }
   }, [profile, isOwnProfile, currentUser, setProfile]);
 
-  const handleCoverChange = useCallback(async (file: File) => {
+  const handleCoverChange = useCallback(async (file: File, shouldShare: boolean = false) => {
     if (!profile || !isOwnProfile) return;
     if (!file.type.startsWith('image/')) {
       toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
@@ -75,7 +75,7 @@ export const useProfileMedia = ({
     setUploading(true);
     setUploadProgress(0);
     try {
-      const newCoverMedia = await userService.uploadCoverImage(profile.id, file, (p) => {
+      const newCoverMedia = await userService.uploadCoverImage(profile.id, file, shouldShare, (p) => {
         setUploadProgress(p.progress);
       });
       const updatedProfile = { ...profile, cover: newCoverMedia };
