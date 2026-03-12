@@ -135,9 +135,13 @@ export const postService = {
 
     const unsubscribe = onSnapshot(feedQuery, async (snapshot) => {
       if (isInitialLoad) {
+        isInitialLoad = false;
         const result = await postService.getFeedFromFanout(userId, limitCount);
 
         result.posts.forEach(p => {
+          const existingUnsub = postUnsubscribers.get(p.id);
+          if (existingUnsub) existingUnsub();
+          
           const postUnsub = onSnapshot(doc(db, 'posts', p.id), (postDoc) => {
             if (postDoc.exists()) {
               const updatedPost = convertDocToPost(postDoc);
@@ -147,7 +151,6 @@ export const postService = {
           postUnsubscribers.set(p.id, postUnsub);
         });
 
-        isInitialLoad = false;
         callback('initial', result.posts);
         return;
       }
@@ -160,6 +163,9 @@ export const postService = {
           const postDoc = await getDoc(doc(db, 'posts', postId));
           if (postDoc.exists() && postDoc.data().status === PostStatus.ACTIVE) {
             const post = convertDocToPost(postDoc);
+
+            const existingUnsub = postUnsubscribers.get(postId);
+            if (existingUnsub) existingUnsub();
 
             const postUnsub = onSnapshot(doc(db, 'posts', postId), (updatedPostDoc) => {
               if (updatedPostDoc.exists()) {
@@ -420,9 +426,11 @@ export const postService = {
     );
 
     let unsubscribe: (() => void) | null = null;
+    let isCancelled = false;
 
     const setup = async () => {
       const user = await userService.getUserById(userId);
+      if (isCancelled) return;
       if (user?.status === 'banned') {
         callback([]);
         return;
@@ -440,6 +448,7 @@ export const postService = {
     setup();
 
     return () => {
+      isCancelled = true;
       if (unsubscribe) unsubscribe();
     };
   },

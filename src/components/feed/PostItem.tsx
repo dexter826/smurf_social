@@ -137,8 +137,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      <div className="px-4 pb-3 relative">
-        <p className="text-text-primary whitespace-pre-line text-[15px] leading-relaxed">
+      <div className="px-4 pb-3 relative w-full overflow-hidden">
+        <p className="text-text-primary whitespace-pre-line break-words break-all text-[15px] leading-relaxed w-full">
           <TruncatedText content={post.content} threshold={300} />
         </p>
 
