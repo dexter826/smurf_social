@@ -63,6 +63,18 @@ export const PostModal: React.FC<PostModalProps> = ({
   const initializedRef = React.useRef(false);
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { userService } = await import('../../../services/userService');
+        const settings = await userService.getUserSettings(currentUser.id);
+        if (settings) {
+          setValue('visibility', settings.defaultPostVisibility);
+        }
+      } catch (error) {
+        console.error('Lỗi lấy settings mặc định:', error);
+      }
+    };
+
     if (isOpen && !initializedRef.current) {
       if (isEdit && initialPost) {
         reset({
@@ -76,8 +88,9 @@ export const PostModal: React.FC<PostModalProps> = ({
           content: '',
           media: [],
           hasPendingFiles: initialFiles.length > 0,
-          visibility: Visibility.PUBLIC
+          visibility: Visibility.PUBLIC // Giá trị tạm thời
         });
+        fetchSettings(); // Ghi đè bằng settings từ DB
         if (initialFiles.length > 0) processFiles(initialFiles);
       }
       initializedRef.current = true;

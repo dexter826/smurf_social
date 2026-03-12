@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp, writeBatch, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { User, MediaObject, UserRole, BlockOptions } from '../types';
+import { User, MediaObject, UserRole, BlockOptions, UserSettings, Visibility } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
@@ -374,5 +374,50 @@ export const userService = {
     }, (error) => {
       if (onError) onError(error);
     });
+  },
+
+  /**
+   * Lấy cài đặt người dùng từ sub-collection private/settings
+   */
+  getUserSettings: async (userId: string): Promise<UserSettings> => {
+    try {
+      const settingsDoc = await getDoc(doc(db, 'users', userId, 'private', 'settings'));
+      if (settingsDoc.exists()) {
+        const data = settingsDoc.data();
+        return {
+          showOnlineStatus: data.showOnlineStatus ?? true,
+          showReadReceipts: data.showReadReceipts ?? true,
+          defaultPostVisibility: data.defaultPostVisibility || Visibility.PUBLIC,
+          updatedAt: data.updatedAt as Timestamp
+        } as UserSettings;
+      }
+      
+      // Trả về mặc định nếu chưa có document
+      return {
+        showOnlineStatus: true,
+        showReadReceipts: true,
+        defaultPostVisibility: Visibility.PUBLIC,
+        updatedAt: Timestamp.now()
+      };
+    } catch (error) {
+      console.error("[userService] Lỗi getUserSettings:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Cập nhật cài đặt người dùng
+   */
+  updateUserSettings: async (userId: string, settings: Partial<UserSettings>): Promise<void> => {
+    try {
+      const settingsRef = doc(db, 'users', userId, 'private', 'settings');
+      await setDoc(settingsRef, {
+        ...settings,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error("[userService] Lỗi updateUserSettings:", error);
+      throw error;
+    }
   }
 };
