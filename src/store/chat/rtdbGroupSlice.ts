@@ -7,10 +7,11 @@ import { RtdbConversationSlice } from './rtdbConversationSlice';
 export interface RtdbGroupSlice {
     createGroup: (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: File | MediaObject) => Promise<string>;
     updateGroupInfo: (conversationId: string, updates: { name?: string; avatar?: MediaObject }) => Promise<void>;
-    addMember: (conversationId: string, userId: string) => Promise<void>;
+    addMember: (conversationId: string, userId: string | string[]) => Promise<void>;
     removeMember: (conversationId: string, userId: string) => Promise<void>;
     leaveGroup: (conversationId: string, userId: string) => Promise<void>;
     updateMemberRole: (conversationId: string, userId: string, role: 'admin' | 'member') => Promise<void>;
+    disbandGroup: (conversationId: string) => Promise<void>;
 }
 
 type RtdbGroupSliceWithConversation = RtdbGroupSlice & RtdbConversationSlice;
@@ -48,9 +49,10 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    addMember: async (conversationId: string, userId: string) => {
+    addMember: async (conversationId: string, userId: string | string[]) => {
         try {
-            await rtdbGroupService.addMembers(conversationId, [userId]);
+            const userIds = Array.isArray(userId) ? userId : [userId];
+            await rtdbGroupService.addMembers(conversationId, userIds);
         } catch (error) {
             console.error('[rtdbGroupSlice] Lỗi thêm thành viên:', error);
             throw error;
@@ -85,6 +87,19 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
             await rtdbGroupService.updateMemberRole(conversationId, userId, role);
         } catch (error) {
             console.error('[rtdbGroupSlice] Lỗi cập nhật role:', error);
+            throw error;
+        }
+    },
+
+    disbandGroup: async (conversationId: string) => {
+        try {
+            await rtdbGroupService.disbandGroup(conversationId);
+            set((state) => ({
+                conversations: state.conversations.filter(c => c.id !== conversationId),
+                selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
+            }));
+        } catch (error) {
+            console.error('[rtdbGroupSlice] Lỗi giải tán nhóm:', error);
             throw error;
         }
     }

@@ -9,7 +9,7 @@
     "conversations": {
       "$convId": {
         ".read": "auth != null && (!data.exists() || data.child('members').child(auth.uid).exists())",
-        ".write": "auth != null && (!data.exists() || data.child('members').child(auth.uid).exists() || newData.child('members').child(auth.uid).exists())"
+        ".write": "auth != null && ((!data.exists() && newData.child('members').child(auth.uid).val() === 'admin') || (data.exists() && data.child('members').child(auth.uid).exists() && ((newData.child('lastMessage').exists() || newData.child('updatedAt').exists()) || (newData.child('name').exists() || newData.child('avatar').exists()) || (data.child('members').child(auth.uid).val() === 'admin'))) || (data.exists() && data.child('creatorId').val() === auth.uid && !newData.exists()))"
       }
     },
     "messages": {

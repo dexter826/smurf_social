@@ -21,6 +21,7 @@ export const useChatGroups = ({
     removeMember,
     leaveGroup,
     updateMemberRole,
+    disbandGroup,
   } = useRtdbChatStore();
 
   const handleCreateGroup = useCallback(async (
@@ -34,8 +35,10 @@ export const useChatGroups = ({
 
   const handleAddMembers = useCallback(async (userIds: string[]) => {
     if (!selectedConversationId) return;
-    for (const userId of userIds) {
-      await addMember(selectedConversationId, userId);
+    try {
+      await addMember(selectedConversationId, userIds);
+    } catch (error) {
+       console.error(error);
     }
   }, [selectedConversationId, addMember]);
 
@@ -49,7 +52,6 @@ export const useChatGroups = ({
 
     const conv = conversations.find(c => c.id === selectedConversationId);
 
-    // RTDB structure: check if user is creator and if there are other members
     if (conv?.data?.isGroup && conv.data.creatorId === currentUserId) {
       const memberCount = Object.keys(conv.data.members || {}).length;
       if (memberCount > 1) {
@@ -63,9 +65,7 @@ export const useChatGroups = ({
 
   const handleAssignAdminAndLeave = useCallback(async (newAdminId: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    // First promote the new admin
     await updateMemberRole(selectedConversationId, newAdminId, 'admin');
-    // Then leave
     await leaveGroup(selectedConversationId, currentUserId);
   }, [selectedConversationId, currentUserId, updateMemberRole, leaveGroup]);
 
@@ -85,17 +85,9 @@ export const useChatGroups = ({
   }, [selectedConversationId, updateGroupInfo]);
 
   const handleDisbandGroup = useCallback(async () => {
-    if (!selectedConversationId || !currentUserId) return;
-    // Disband = remove all members then leave
-    const conv = conversations.find(c => c.id === selectedConversationId);
-    if (conv?.data?.members) {
-      const memberIds = Object.keys(conv.data.members).filter(id => id !== currentUserId);
-      for (const memberId of memberIds) {
-        await removeMember(selectedConversationId, memberId);
-      }
-    }
-    await leaveGroup(selectedConversationId, currentUserId);
-  }, [selectedConversationId, currentUserId, conversations, removeMember, leaveGroup]);
+    if (!selectedConversationId) return;
+    await disbandGroup(selectedConversationId);
+  }, [selectedConversationId, disbandGroup]);
 
   return {
     handleCreateGroup,
