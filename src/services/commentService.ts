@@ -39,10 +39,12 @@ function convertDocToComment(docSnap: DocumentSnapshot | QueryDocumentSnapshot<D
 }
 
 export const commentService = {
+  /** Tạo ID mới cho bình luận */
   generateCommentId: () => {
     return doc(collection(db, 'comments')).id;
   },
 
+  /** Lấy danh sách bình luận gốc của bài viết */
   getRootComments: async (postId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.COMMENTS, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -80,7 +82,7 @@ export const commentService = {
     }
   },
 
-  // Lấy phản hồi (replies)
+  /** Lấy danh sách phản hồi cho một bình luận */
   getReplies: async (postId: string, commentId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
@@ -118,7 +120,7 @@ export const commentService = {
     }
   },
 
-  // Tạo bình luận mới
+  /** Tạo bình luận hoặc phản hồi mới */
   createComment: async (
     postId: string,
     userId: string,
@@ -156,7 +158,7 @@ export const commentService = {
     }
   },
 
-  // Xóa bình luận (soft-delete)
+  /** Xóa bình luận bài viết (soft-delete) */
   deleteComment: async (commentId: string, userId: string) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -182,7 +184,7 @@ export const commentService = {
     }
   },
 
-  // Sửa nội dung bình luận
+  /** Sửa nội dung hoặc ảnh của bình luận */
   updateComment: async (commentId: string, content: string, image?: MediaObject | null) => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -200,6 +202,7 @@ export const commentService = {
     }
   },
 
+  /** Tương tác cảm xúc với bình luận */
   reactToComment: async (commentId: string, userId: string, reaction: string | ReactionType) => {
     try {
       const reactionRef = doc(db, 'comments', commentId, 'reactions', userId);
@@ -218,7 +221,7 @@ export const commentService = {
     }
   },
 
-  // Lấy reaction cá nhân tại comment
+  /** Lấy reaction của người dùng hiện tại tại bình luận */
   getMyReactionForComment: async (commentId: string, userId: string): Promise<string | null> => {
     try {
       const snap = await getDoc(doc(db, 'comments', commentId, 'reactions', userId));
@@ -228,7 +231,7 @@ export const commentService = {
     }
   },
 
-  // Tải hàng loạt reaction cá nhân
+  /** Tải hàng loạt reaction của người dùng cho danh sách bình luận */
   batchLoadMyReactionsForComments: async (commentIds: string[], userId: string): Promise<Record<string, string>> => {
     const results: Record<string, string> = {};
     await Promise.all(
@@ -240,7 +243,7 @@ export const commentService = {
     return results;
   },
 
-  // Lấy bình luận theo ID
+  /** Lấy thông tin bình luận chi tiết theo ID */
   getCommentById: async (commentId: string): Promise<Comment | null> => {
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -260,7 +263,7 @@ export const commentService = {
     }
   },
 
-  // Theo dõi bình luận realtime
+  /** Theo dõi bình luận bài viết thời gian thực */
   subscribeToComments: (
     postId: string,
     blockedUserIds: string[] = [],
@@ -323,7 +326,7 @@ export const commentService = {
     }, (error) => console.error("Lỗi subscribe comments:", error));
   },
 
-  // Theo dõi phản hồi realtime
+  /** Theo dõi phản hồi bài viết thời gian thực */
   subscribeToReplies: (
     postId: string,
     parentId: string,
@@ -384,7 +387,7 @@ export const commentService = {
     }, (error) => console.error("Lỗi subscribe replies:", error));
   },
 
-  // Tải lên ảnh comment
+  /** Tải lên ảnh cho bình luận và trả về MediaObject */
   uploadCommentImage: async (
     file: File,
     userId: string,

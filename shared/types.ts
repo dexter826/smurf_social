@@ -78,6 +78,12 @@ export enum PostStatus {
     DELETED = "deleted",
 }
 
+export enum PostType {
+    REGULAR = "regular",
+    AVATAR_UPDATE = "avatar_update",
+    COVER_UPDATE = "cover_update",
+}
+
 export enum CommentStatus {
     ACTIVE = "active",
     DELETED = "deleted",

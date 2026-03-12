@@ -18,6 +18,7 @@ import {
   MemberRole,
   NotificationPayload,
   UserRole,
+  PostType,
 } from "../shared/types";
 
 // Re-export for consumers
@@ -33,6 +34,7 @@ export {
   ReportReason,
   ReportStatus,
   PostStatus,
+  PostType,
   CommentStatus,
   UserRole,
 };
@@ -221,6 +223,7 @@ export interface Comment extends BaseEntity, SoftDeletableEntity {
 
 export interface Post extends BaseEntity, SoftDeletableEntity {
   authorId: string;
+  type: PostType;
   content: string;
   status: PostStatus;
   media?: MediaObject[];

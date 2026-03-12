@@ -102,7 +102,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     } else if (cropState?.type === 'cover' && onCoverChange) {
       onCoverChange(croppedFile, shouldShare);
     }
-    // Cleanup blob URL
+
     if (cropState?.image) {
       URL.revokeObjectURL(cropState.image);
     }
