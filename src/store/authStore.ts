@@ -82,10 +82,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useLoadingStore.getState().setLoading("auth.register", true);
     try {
       const firebaseUser = await authService.register(email, pass);
-      await userService.updateProfile(firebaseUser.uid, {
+      await userService.createUserDocument(firebaseUser.uid, {
         id: firebaseUser.uid,
         fullName: name,
-        avatar: { url: '', fileName: '', mimeType: '', size: 0 },
+        avatar: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
+        cover: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
         email: email.trim(),
       });
 

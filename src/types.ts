@@ -61,9 +61,8 @@ export interface BlockOptions {
   hideTheirActivity: boolean;
 }
 
-export interface BlockedUserEntry {
+export interface BlockedUserEntry extends BlockOptions {
   blockedUid: string;
-  options: BlockOptions;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
 }
@@ -87,8 +86,25 @@ export interface MediaObject {
   fileName: string;
   mimeType: string;
   size: number;
-  thumbnailUrl?: string;
-  isSensitive?: boolean;
+  thumbnailUrl?: string; // Chỉ có ở Video
+  isSensitive: boolean;
+}
+
+// Sub-collections interfaces
+export interface UserFeedItem {
+  postId: string;
+  authorId: string;
+  createdAt: Timestamp;
+}
+
+export interface UserFriendItem {
+  friendId: string;
+  createdAt: Timestamp;
+}
+
+export interface FCMTokenDoc {
+  fcmTokens: string[];
+  updatedAt: Timestamp;
 }
 
 // ========== USER SETTINGS ==========
@@ -107,16 +123,14 @@ export interface User extends BaseEntity {
   avatar: MediaObject;
   email: string;
   location?: string;
-  gender?: Gender;
-  dob?: Timestamp;
+  gender: Gender | "";
+  dob?: Timestamp | null;
   status: 'active' | 'banned';
   role: UserRole;
   bio?: string;
-  cover?: MediaObject;
+  cover: MediaObject;
   updatedAt?: Timestamp;
   deletedAt?: Timestamp;
-  // Metadata settings có thể được gộp để tối ưu đọc, 
-  // nhưng lưu trữ chính vẫn nằm ở sub-collection.
   settings?: UserSettings;
 }
 
@@ -135,6 +149,7 @@ export interface RtdbConversation {
   avatar?: MediaObject;
   creatorId: string;
   members: Record<string, MemberRole>;
+  typing?: Record<string, number>;
   lastMessage?: {
     senderId: string;
     content: string;
@@ -146,6 +161,16 @@ export interface RtdbConversation {
   };
   createdAt: number;
   updatedAt: number;
+}
+
+export interface RtdbUserChat {
+  isPinned: boolean;
+  isMuted: boolean;
+  isArchived: boolean;
+  unreadCount: number;
+  lastReadMsgId: string | null;
+  lastMsgTimestamp: number;
+  clearedAt?: number;
 }
 
 export interface RtdbMessage {
@@ -166,15 +191,6 @@ export interface RtdbMessage {
   updatedAt?: number;
 }
 
-export interface RtdbUserChat {
-  isPinned: boolean;
-  isMuted: boolean;
-  isArchived: boolean;
-  unreadCount: number;
-  lastReadMsgId?: string;
-  lastMsgTimestamp?: number;
-  clearedAt?: number;
-}
 
 export interface RtdbPresence {
   isOnline: boolean;
@@ -201,6 +217,7 @@ export interface Comment extends BaseEntity, SoftDeletableEntity {
   reactions: Partial<Record<ReactionType, number>>;
   isEdited?: boolean;
   editedAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface Post extends BaseEntity, SoftDeletableEntity {
@@ -213,6 +230,7 @@ export interface Post extends BaseEntity, SoftDeletableEntity {
   reactions: Partial<Record<ReactionType, number>>;
   isEdited?: boolean;
   editedAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface Notification extends BaseEntity {
@@ -232,6 +250,7 @@ export interface Report extends BaseEntity {
   description?: string;
   images?: MediaObject[];
   status: ReportStatus;
+  updatedAt?: Timestamp;
   resolvedAt?: Timestamp;
   resolvedBy?: string;
   resolution?: string;

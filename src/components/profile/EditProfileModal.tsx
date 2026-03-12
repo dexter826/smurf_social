@@ -38,8 +38,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       fullName: user.fullName,
       bio: user.bio || '',
       location: user.location || '',
-      gender: user.gender,
-      dob: toDate(user.dob)?.getTime()
+      gender: user.gender as Gender | "",
+      dob: user.dob ? toDate(user.dob)?.getTime() : undefined
     }
   });
 
@@ -51,8 +51,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         fullName: user.fullName,
         bio: user.bio || '',
         location: user.location || '',
-        gender: user.gender,
-        dob: toDate(user.dob)?.getTime()
+        gender: user.gender as Gender | "",
+        dob: user.dob ? toDate(user.dob)?.getTime() : undefined
       });
       fetchProvinces();
     }
@@ -100,7 +100,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </Button>
           <Button
             variant="primary"
-            onClick={handleSubmit(handleSave)}
+            onClick={handleSubmit(handleSave as any)}
             disabled={saving || !isDirty}
           >
             {saving ? 'Đang lưu...' : 'Lưu'}
@@ -164,7 +164,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <Select
                 label="Giới tính"
                 value={formData.gender || ''}
-                onChange={(val) => setValue('gender', val as Gender, { shouldDirty: true })}
+                onChange={(val) => setValue('gender', val as Gender | "", { shouldDirty: true })}
                 options={[
                   { value: 'male', label: 'Nam' },
                   { value: 'female', label: 'Nữ' }

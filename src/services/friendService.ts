@@ -61,8 +61,8 @@ export const friendService = {
         senderId,
         receiverId,
         status: FriendRequestStatus.PENDING,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
 
       const docRef = await addDoc(collection(db, 'friendRequests'), requestData);

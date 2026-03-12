@@ -11,7 +11,8 @@ import {
   getCountFromServer,
   limit,
   onSnapshot,
-  QueryConstraint
+  QueryConstraint,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
@@ -76,7 +77,8 @@ export const reportService = {
         ...cleanData,
         targetOwnerId: data.targetOwnerId,
         status: ReportStatus.PENDING,
-        createdAt: Timestamp.now()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
 
       return docRef.id;

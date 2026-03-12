@@ -9,6 +9,7 @@ export enum UserStatus {
 export enum Gender {
     MALE = "male",
     FEMALE = "female",
+    NONE = "",
 }
 
 export enum Visibility {
@@ -59,7 +60,7 @@ export enum ReportType {
 
 export enum ReportReason {
     SPAM = "spam",
-    HARASSMENT_VIOLENCE = "harassment_violence",
+    HARASSMENT = "harassment",
     HATE_SPEECH = "hate_speech",
     SENSITIVE = "sensitive",
     SCAM_IMPERSONATION = "scam_impersonation",

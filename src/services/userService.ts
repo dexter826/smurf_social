@@ -1,7 +1,25 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, where, onSnapshot, limit, startAfter, DocumentSnapshot, getCountFromServer, Timestamp, serverTimestamp, writeBatch, deleteDoc, updateDoc } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  query,
+  where,
+  onSnapshot,
+  limit,
+  startAfter,
+  DocumentSnapshot,
+  getCountFromServer,
+  Timestamp,
+  serverTimestamp,
+  deleteDoc,
+  writeBatch
+} from 'firebase/firestore';
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { User, MediaObject, UserRole, BlockOptions, UserSettings, Visibility } from '../types';
+import { User, MediaObject, UserRole, UserStatus, BlockOptions, BlockedUserEntry, UserSettings, Visibility } from '../types';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
@@ -21,7 +39,7 @@ function convertDocToUser(doc: DocumentSnapshot): User {
 }
 
 export const userService = {
-  // Lấy thông tin người dùng theo ID
+  // Lấy thông tin user
   getUserById: async (id: string): Promise<User | undefined> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', id));
@@ -37,7 +55,7 @@ export const userService = {
 
 
 
-  // Lấy toàn bộ bạn bè
+  // Lấy danh sách bạn bè
   getAllFriends: async (currentUserId: string): Promise<User[]> => {
     try {
       const snap = await getDocs(collection(db, 'users', currentUserId, 'friends'));
@@ -51,7 +69,7 @@ export const userService = {
     }
   },
 
-  // Đăng ký nhận cập nhật danh sách bạn bè
+  // Theo dõi bạn bè realtime
   subscribeToFriends: (userId: string, callback: (friends: User[]) => void): (() => void) => {
     const friendsRef = collection(db, 'users', userId, 'friends');
     let previousFriendIds: string[] = [];
@@ -81,7 +99,7 @@ export const userService = {
     });
   },
 
-  // Cloud Function searchUsers thay thế full collection scan
+  // Cloud Function tìm kiếm user
   searchUsers: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
       const fn = httpsCallable<{ searchTerm: string; currentUserId: string }, { users: User[] }>(functions, 'searchUsers');
@@ -114,48 +132,58 @@ export const userService = {
     }
   },
 
-  // Tạo mới hoặc cập nhật thông tin cá nhân
+  // Cập nhật hồ sơ
   updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
     try {
       const userRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userRef);
-
-      let updatedData: User;
-      if (userDoc.exists()) {
-        updatedData = {
-          ...userDoc.data() as User,
-          ...data,
-          updatedAt: Timestamp.now(),
-        };
-      } else {
-        updatedData = {
-          id: userId,
-          fullName: data.fullName || 'Người dùng mới',
-          avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0 },
-          email: data.email || '',
-          status: 'active',
-          role: data.role || UserRole.USER,
-          bio: data.bio || '',
-          cover: data.cover,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-          ...data
-        };
-      }
-
-      const cleanData = Object.fromEntries(
-        Object.entries(updatedData).filter(([k, v]) => v !== undefined)
-      );
-
-      await setDoc(userRef, { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
-      return updatedData;
+      await updateDoc(userRef, {
+        ...data,
+        updatedAt: serverTimestamp()
+      });
+      return { ...data, id: userId } as User;
     } catch (error) {
       console.error("Lỗi cập nhật profile", error);
       throw error;
     }
   },
 
-  // Tải lên ảnh đại diện
+  // Khởi tạo document người dùng khi đăng ký mới
+  createUserDocument: async (userId: string, data: Partial<User>): Promise<void> => {
+    try {
+      const batch = writeBatch(db);
+      
+      const userRef = doc(db, 'users', userId);
+      batch.set(userRef, {
+        fullName: data.fullName || '',
+        email: data.email || '',
+        bio: '',
+        avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
+        cover: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
+        dob: null,
+        gender: '',
+        location: '',
+        status: UserStatus.ACTIVE,
+        role: UserRole.USER,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      const settingsRef = doc(db, 'users', userId, 'private', 'settings');
+      batch.set(settingsRef, {
+        showOnlineStatus: true,
+        showReadReceipts: true,
+        defaultPostVisibility: Visibility.PUBLIC,
+        updatedAt: serverTimestamp()
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error("Lỗi khởi tạo document user", error);
+      throw error;
+    }
+  },
+
+  // Tải lên avatar
   uploadAvatar: async (
     userId: string,
     file: File,
@@ -237,18 +265,21 @@ export const userService = {
 
 
 
-  // Lấy map blockedUserId → options từ subcollection
-  getBlockedUsers: async (userId: string): Promise<Record<string, BlockOptions>> => {
+  // Danh sách user bị chặn
+  getBlockedUsers: async (userId: string): Promise<Record<string, BlockedUserEntry>> => {
     try {
       const snap = await getDocs(collection(db, 'users', userId, 'blockedUsers'));
-      const result: Record<string, BlockOptions> = {};
+      const result: Record<string, BlockedUserEntry> = {};
       snap.docs.forEach(d => {
         const data = d.data();
         result[d.id] = {
+          blockedUid: data.blockedUid,
           blockMessages: data.blockMessages ?? false,
           blockCalls: data.blockCalls ?? false,
           blockViewMyActivity: data.blockViewMyActivity ?? false,
           hideTheirActivity: data.hideTheirActivity ?? false,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
         };
       });
       return result;
@@ -257,7 +288,7 @@ export const userService = {
     }
   },
 
-  // Chặn với options — không xóa kết bạn
+  // Chặn người dùng
   blockUser: async (userId: string, blockedUserId: string, options: BlockOptions): Promise<void> => {
     try {
       await setDoc(
@@ -299,7 +330,7 @@ export const userService = {
     }
   },
 
-  // Đăng ký nhận cập nhật thông tin người dùng theo thời gian thực
+  // Theo dõi user realtime
   subscribeToUser: (userId: string, callback: (user: User) => void): (() => void) => {
     const userRef = doc(db, 'users', userId);
     return onSnapshot(userRef, (snapshot) => {
@@ -309,7 +340,7 @@ export const userService = {
     });
   },
 
-  // API dành riêng cho Admin - Lấy danh sách users có phân trang
+  // Danh sách user cho Admin
   getAdminUsers: async (
     limitCount: number = PAGINATION.ADMIN_USERS,
     lastVisibleDoc?: DocumentSnapshot
@@ -336,7 +367,7 @@ export const userService = {
     }
   },
 
-  // Lấy thống kê tổng hợp cho Admin dashboard
+  // Thống kê cho Admin
   getAdminStats: async (): Promise<{ total: number, active: number, banned: number }> => {
     try {
       const usersRef = collection(db, 'users');
@@ -356,7 +387,7 @@ export const userService = {
     }
   },
 
-  // Đăng ký nhận danh sách người dùng cho Admin (Realtime)
+  // Theo dõi user cho Admin
   subscribeToAdminUsers: (
     limitCount: number = PAGINATION.ADMIN_USERS,
     callback: (users: User[]) => void,

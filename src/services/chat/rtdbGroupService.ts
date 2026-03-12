@@ -40,6 +40,7 @@ export const rtdbGroupService = {
                 avatar: avatar || null,
                 creatorId,
                 members,
+                typing: {},
                 lastMessage: null,
                 createdAt: Date.now(),
                 updatedAt: Date.now()
@@ -56,7 +57,8 @@ export const rtdbGroupService = {
                     isArchived: false,
                     unreadCount: 0,
                     lastReadMsgId: null,
-                    lastMsgTimestamp: Date.now()
+                    lastMsgTimestamp: Date.now(),
+                    clearedAt: 0
                 } as RtdbUserChat;
             });
 
