@@ -178,12 +178,12 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         isOpen={showBlockConfirm}
         onClose={() => setShowBlockConfirm(false)}
         onConfirm={() => onToggleBlock?.()}
-        title={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE : CONFIRM_MESSAGES.FRIEND.BLOCK.TITLE}
+        title={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE : CONFIRM_MESSAGES.CHAT.BLOCK_USER.TITLE}
         message={isBlocked
           ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(partner?.fullName || 'Người dùng')
-          : CONFIRM_MESSAGES.FRIEND.BLOCK.MESSAGE(partner?.fullName || 'Người dùng')
+          : CONFIRM_MESSAGES.CHAT.BLOCK_USER.MESSAGE
         }
-        confirmLabel={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM : CONFIRM_MESSAGES.FRIEND.BLOCK.CONFIRM}
+        confirmLabel={isBlocked ? CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM : CONFIRM_MESSAGES.CHAT.BLOCK_USER.CONFIRM}
         variant="danger"
       />
 
