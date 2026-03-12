@@ -156,12 +156,8 @@ export const userService = {
       batch.set(userRef, {
         fullName: data.fullName || '',
         email: data.email || '',
-        bio: '',
         avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
         cover: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
-        dob: null,
-        gender: '',
-        location: '',
         status: UserStatus.ACTIVE,
         role: UserRole.USER,
         createdAt: serverTimestamp(),

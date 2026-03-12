@@ -128,19 +128,18 @@ export const commentService = {
     preGeneratedId?: string
   ): Promise<string> => {
     try {
-      const commentData = {
+      const commentData: any = {
         postId,
         authorId: userId,
         content,
         status: CommentStatus.ACTIVE,
-        parentId,
-        image: image || null,
         replyCount: 0,
-        isEdited: false,
-        editedAt: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
+
+      if (parentId) commentData.parentId = parentId;
+      if (image) commentData.image = image;
 
       let docRefId = preGeneratedId;
       if (preGeneratedId) {

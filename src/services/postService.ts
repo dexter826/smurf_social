@@ -291,18 +291,22 @@ export const postService = {
   createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status' | 'reactions'>, predefinedId?: string): Promise<string> => {
     try {
       const postRef = predefinedId ? doc(db, 'posts', predefinedId) : doc(collection(db, 'posts'));
-      await setDoc(postRef, {
+
+      const dataToSave: any = {
         authorId: postData.authorId,
         content: postData.content || '',
-        visibility: postData.visibility || Visibility.PUBLIC,
-        media: postData.media || [],
         status: PostStatus.ACTIVE,
+        visibility: postData.visibility || Visibility.PUBLIC,
         commentCount: 0,
-        isEdited: false,
-        editedAt: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      });
+      };
+
+      if (postData.media && postData.media.length > 0) {
+        dataToSave.media = postData.media;
+      }
+      
+      await setDoc(postRef, dataToSave);
       return postRef.id;
     } catch (error) {
       console.error("Lỗi tạo bài viết", error);
