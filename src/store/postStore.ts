@@ -28,13 +28,10 @@ interface PostState {
   uploadingStates: Record<string, { progress: number; error?: string }>;
   isError: boolean;
   lastFetchTime: number | null;
-  newPostsAvailable: number;
-  pendingPosts: Post[];
   selectedPostUnsubscribe: (() => void) | null;
 
   fetchPosts: (currentUserId: string, loadMore?: boolean, force?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string) => () => void;
-  loadNewPosts: () => void;
   refreshFeed: (currentUserId: string) => Promise<void>;
   createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
@@ -62,8 +59,6 @@ export const usePostStore = create<PostState>()(
       uploadingStates: {},
       selectedPost: null,
       lastFetchTime: null,
-      newPostsAvailable: 0,
-      pendingPosts: [],
       selectedPostUnsubscribe: null,
 
       reset: () => {
@@ -81,8 +76,6 @@ export const usePostStore = create<PostState>()(
           selectedPost: null,
           uploadingStates: {},
           lastFetchTime: null,
-          newPostsAvailable: 0,
-          pendingPosts: [],
           selectedPostUnsubscribe: null
         });
       },
@@ -170,22 +163,21 @@ export const usePostStore = create<PostState>()(
               }
 
               if (action === 'add') {
-                const existingIds = new Set([...state.posts.map(p => p.id), ...state.pendingPosts.map(p => p.id)]);
+                const existingIds = new Set(state.posts.map(p => p.id));
                 const newPosts = changedPosts.filter(p => !existingIds.has(p.id));
 
                 if (newPosts.length === 0) return {};
 
-                const uniquePending = [...newPosts, ...state.pendingPosts];
+                const uniquePosts = [...newPosts, ...state.posts];
                 const seenIds = new Set<string>();
-                const deduped = uniquePending.filter(p => {
+                const deduped = uniquePosts.filter(p => {
                   if (seenIds.has(p.id)) return false;
                   seenIds.add(p.id);
                   return true;
                 }).sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
                 return {
-                  pendingPosts: deduped,
-                  newPostsAvailable: state.newPostsAvailable + newPosts.length
+                  posts: deduped
                 };
               }
 
@@ -195,14 +187,8 @@ export const usePostStore = create<PostState>()(
                   return updated || p;
                 });
 
-                const updatedPending = state.pendingPosts.map(p => {
-                  const updated = changedPosts.find(cp => cp.id === p.id);
-                  return updated || p;
-                });
-
                 return {
                   posts: updatedPosts,
-                  pendingPosts: updatedPending,
                   selectedPost: state.selectedPost?.id === changedPosts[0]?.id ? changedPosts[0] : state.selectedPost
                 };
               }
@@ -211,8 +197,6 @@ export const usePostStore = create<PostState>()(
                 const removedIds = new Set(changedPosts.map(p => p.id));
                 return {
                   posts: state.posts.filter(p => !removedIds.has(p.id)),
-                  pendingPosts: state.pendingPosts.filter(p => !removedIds.has(p.id)),
-                  newPostsAvailable: Math.max(0, state.newPostsAvailable - changedPosts.filter(p => state.pendingPosts.some(pp => pp.id === p.id)).length),
                   selectedPost: removedIds.has(state.selectedPost?.id || '') ? null : state.selectedPost
                 };
               }
@@ -226,29 +210,9 @@ export const usePostStore = create<PostState>()(
         return unsubscribe;
       },
 
-      loadNewPosts: () => {
-        set((state) => {
-          const allPosts = [...state.pendingPosts, ...state.posts];
-          const seenIds = new Set<string>();
-          const dedupedPosts = allPosts.filter(p => {
-            if (seenIds.has(p.id)) return false;
-            seenIds.add(p.id);
-            return true;
-          }).sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-
-          return {
-            posts: dedupedPosts,
-            pendingPosts: [],
-            newPostsAvailable: 0
-          };
-        });
-      },
-
       refreshFeed: async (currentUserId: string) => {
         set({
           posts: [],
-          pendingPosts: [],
-          newPostsAvailable: 0,
           lastDoc: null,
           hasMore: true,
           lastFetchTime: null
