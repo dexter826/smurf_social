@@ -325,8 +325,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               )}
 
               {/* Noi dung van ban */}
-              <div className="px-5 md:px-6 py-4 pb-3">
-                <p className="text-text-primary whitespace-pre-line text-[15px] md:text-[16px] leading-[1.6]">
+              <div className="px-5 md:px-6 py-4 pb-3 w-full overflow-hidden">
+                <p className="text-text-primary whitespace-pre-line break-words break-all text-[15px] md:text-[16px] leading-[1.6] w-full">
                   <TruncatedText content={post.content} threshold={300} />
                 </p>
               </div>

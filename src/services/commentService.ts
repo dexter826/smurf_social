@@ -278,10 +278,13 @@ export const commentService = {
     return onSnapshot(rootQuery, { includeMetadataChanges: true }, async (snapshot) => {
       if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
 
+      const wasInitialLoad = isInitialLoad;
+      isInitialLoad = false;
+
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-      if (isInitialLoad) {
+      if (wasInitialLoad) {
         const hasMore = snapshot.docs.length > limitCount;
         const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
@@ -294,7 +297,6 @@ export const commentService = {
           lastDoc: docsToProcess[docsToProcess.length - 1] || null,
           hasMore
         });
-        isInitialLoad = false;
         return;
       }
 
@@ -341,10 +343,13 @@ export const commentService = {
     return onSnapshot(q, { includeMetadataChanges: true }, async (snapshot) => {
       if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
 
+      const wasInitialLoad = isInitialLoad;
+      isInitialLoad = false;
+
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-      if (isInitialLoad) {
+      if (wasInitialLoad) {
         const hasMore = snapshot.docs.length > limitCount;
         const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
@@ -357,7 +362,6 @@ export const commentService = {
           lastDoc: docsToProcess[docsToProcess.length - 1] || null,
           hasMore
         });
-        isInitialLoad = false;
         return;
       }
 

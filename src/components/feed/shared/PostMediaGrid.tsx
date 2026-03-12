@@ -48,6 +48,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
         ) : (
           <LazyImage
             src={item.url}
+            placeholder={item.thumbnailUrl}
             alt=""
             className={`w-full h-full object-cover transition-all duration-base ${isBlob ? 'blur-[2px] opacity-70' : ''}`}
           />
@@ -99,6 +100,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
           ) : (
             <LazyImage
               src={item.url}
+              placeholder={item.thumbnailUrl}
               alt=""
               className={`relative z-10 w-full h-auto max-h-[600px] object-contain transition-all duration-base ${isBlob ? 'blur-[2px] opacity-70' : ''}`}
             />
