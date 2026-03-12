@@ -133,11 +133,11 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
     });
   }
 
-  // Delete - creator có thể xóa group, hoặc xóa chat 1-1
-  if ((!isGroup || isCreator) && onDelete) {
+  // Delete - cho phép mọi thành viên xóa lịch sử hội thoại
+  if (onDelete) {
     actions.push({
       icon: <Trash2 size={20} />,
-      label: isGroup ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện',
+      label: isGroup && isCreator ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện',
       onClick: () => setShowDeleteConfirm(true),
       variant: 'danger' as const,
     });

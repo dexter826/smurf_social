@@ -119,10 +119,13 @@ export const rtdbConversationService = {
 
                 const unsubConv = onValue(convRef, (convSnap) => {
                     if (convSnap.exists()) {
+                        const data = convSnap.val() as RtdbConversation;
+                        const userChat = userChats[convId];
+                        
                         conversationsMap.set(convId, {
                             id: convId,
-                            data: convSnap.val() as RtdbConversation,
-                            userChat: userChats[convId]
+                            data,
+                            userChat
                         });
                         updateCallback();
                     } else {
@@ -202,12 +205,15 @@ export const rtdbConversationService = {
     },
 
     /**
-     * Delete conversation for user (remove from user_chats)
+     * Xóa cuộc hội thoại (Ẩn lịch sử trò chuyện phía người dùng)
      */
     deleteConversation: async (uid: string, convId: string): Promise<void> => {
         try {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
-            await remove(userChatRef);
+            await update(userChatRef, {
+                clearedAt: Date.now(),
+                unreadCount: 0
+            });
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi deleteConversation:', error);
             throw error;

@@ -54,7 +54,10 @@ export const useConversationItem = ({
   const lastMessage = conversation.data.lastMessage;
 
   const lastMessagePreview = useMemo(() => {
-    if (!lastMessage) return 'Chưa có tin nhắn';
+    const clearedAt = conversation.userChat?.clearedAt || 0;
+    if (!lastMessage || (lastMessage.timestamp && lastMessage.timestamp <= clearedAt)) {
+      return 'Chưa có tin nhắn';
+    }
 
     let content = lastMessage.content;
 

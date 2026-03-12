@@ -264,7 +264,8 @@ export const rtdbMessageService = {
     subscribeToMessages: (
         convId: string,
         limitCount: number,
-        callback: (messages: Array<{ id: string; data: RtdbMessage }>) => void
+        callback: (messages: Array<{ id: string; data: RtdbMessage }>) => void,
+        sinceTimestamp: number = 0
     ) => {
         const messagesRef = ref(rtdb, `messages/${convId}`);
         const messagesQuery = query(messagesRef, orderByChild('createdAt'), limitToLast(limitCount));
@@ -274,6 +275,8 @@ export const rtdbMessageService = {
         const childAddedHandler = (snapshot: any) => {
             const msgId = snapshot.key;
             const msgData = snapshot.val() as RtdbMessage;
+
+            if (msgData.createdAt <= sinceTimestamp) return;
 
             const existingIndex = messages.findIndex(m => m.id === msgId);
             if (existingIndex === -1) {
@@ -309,9 +312,12 @@ export const rtdbMessageService = {
     loadMoreMessages: async (
         convId: string,
         beforeTimestamp: number,
-        limitCount: number
+        limitCount: number,
+        sinceTimestamp: number = 0
     ): Promise<Array<{ id: string; data: RtdbMessage }>> => {
         try {
+            if (beforeTimestamp <= sinceTimestamp) return [];
+
             const messagesRef = ref(rtdb, `messages/${convId}`);
             const messagesQuery = query(
                 messagesRef,
@@ -325,10 +331,13 @@ export const rtdbMessageService = {
 
             if (snapshot.exists()) {
                 snapshot.forEach((childSnap) => {
-                    messages.push({
-                        id: childSnap.key!,
-                        data: childSnap.val() as RtdbMessage
-                    });
+                    const data = childSnap.val() as RtdbMessage;
+                    if (data.createdAt > sinceTimestamp) {
+                        messages.push({
+                            id: childSnap.key!,
+                            data
+                        });
+                    }
                 });
             }
 

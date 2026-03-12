@@ -161,6 +161,7 @@ export interface RtdbUserChat {
   unreadCount: number;
   lastReadMsgId?: string;
   lastMsgTimestamp?: number;
+  clearedAt?: number;
 }
 
 export interface RtdbPresence {
