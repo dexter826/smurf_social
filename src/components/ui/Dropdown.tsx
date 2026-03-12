@@ -25,6 +25,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
     className={`
       w-full px-4 py-2.5 text-left text-sm flex items-center justify-start gap-3 transition-all duration-base
       hover:bg-bg-hover active:bg-bg-active font-medium
+      first:rounded-t-[inherit] last:rounded-b-[inherit]
       ${variant === 'danger'
         ? 'text-error hover:text-error'
         : 'text-text-primary'
