@@ -46,6 +46,7 @@ interface DropdownProps {
   isOpen?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
   disableTriggerScale?: boolean;
+  matchTriggerWidth?: boolean;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -56,7 +57,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   menuClassName = '',
   isOpen: controlledIsOpen,
   onOpenChange,
-  disableTriggerScale = false
+  disableTriggerScale = false,
+  matchTriggerWidth = false
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -108,6 +110,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             left: align === 'right'
               ? `${left + width - (dropdownRef.current?.offsetWidth || 180)}px`
               : `${left}px`,
+            width: matchTriggerWidth ? `${width}px` : undefined,
           }}
           onClick={() => handleOpenChange(false)}
         >

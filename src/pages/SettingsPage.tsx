@@ -10,22 +10,27 @@ import {
   Phone,
   EyeOff,
   Settings2,
+  Eye,
+  Globe,
+  Users,
+  Lock,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
-import { User, BlockOptions } from '../types';
-import { UserAvatar, ConfirmDialog, Button, Skeleton, BlockOptionsModal } from '../components/ui';
+import { User, BlockOptions, UserSettings, Visibility } from '../types';
+import { UserAvatar, ConfirmDialog, Button, Skeleton, BlockOptionsModal, Dropdown, DropdownItem } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 import { userService } from '../services/userService';
 
-type SettingSection = 'appearance' | 'security' | 'blocked';
+type SettingSection = 'appearance' | 'privacy' | 'security' | 'blocked';
 
 const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   { id: 'appearance', label: 'Giao diện', icon: <Moon size={20} /> },
+  { id: 'privacy', label: 'Quyền riêng tư', icon: <Eye size={20} /> },
   { id: 'security', label: 'Bảo mật', icon: <Shield size={20} /> },
   { id: 'blocked', label: 'Người dùng đã chặn', icon: <Ban size={20} /> },
 ];
@@ -103,6 +108,7 @@ const SettingsPage: React.FC = () => {
 
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance');
   const [blockedList, setBlockedList] = useState<BlockedUserWithOptions[]>([]);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const setLoading = useLoadingStore(state => state.setLoading);
   const isLoading = useLoadingStore(state => state.loadingStates['settings']);
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
@@ -111,6 +117,16 @@ const SettingsPage: React.FC = () => {
 
   const isAdmin = !!currentUser;
   const MENU_ITEMS = BASE_MENU_ITEMS.filter(item => !item.adminOnly || isAdmin);
+
+  const loadSettings = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const data = await userService.getUserSettings(currentUser.id);
+      setSettings(data);
+    } catch (error) {
+      console.error("Lỗi load settings", error);
+    }
+  }, [currentUser?.id]);
 
   const loadBlockedUsers = useCallback(async () => {
     if (!currentUser) return;
@@ -132,8 +148,9 @@ const SettingsPage: React.FC = () => {
   }, [currentUser?.id, fetchUsers]);
 
   useEffect(() => {
+    loadSettings();
     loadBlockedUsers();
-  }, [loadBlockedUsers]);
+  }, [loadSettings, loadBlockedUsers]);
 
   // Cập nhật lại khi userCache thay đổi
   useEffect(() => {
@@ -180,6 +197,98 @@ const SettingsPage: React.FC = () => {
               description={mode === 'dark' ? 'Đang bật' : 'Đang tắt'}
               action={<Toggle enabled={mode === 'dark'} onToggle={toggleTheme} />}
             />
+          </div>
+        );
+      case 'privacy':
+        if (!settings) return <Skeleton height={200} />;
+        return (
+          <div className="space-y-4">
+            <SettingItem
+              icon={<Eye size={20} />}
+              title="Trạng thái online"
+              description="Cho phép người khác thấy bạn đang hoạt động"
+              action={
+                <Toggle
+                  enabled={settings.showOnlineStatus}
+                  onToggle={async () => {
+                    const newValue = !settings.showOnlineStatus;
+                    setSettings({ ...settings, showOnlineStatus: newValue });
+                    await userService.updateUserSettings(currentUser!.id, { showOnlineStatus: newValue });
+                  }}
+                />
+              }
+            />
+            <SettingItem
+              icon={<MessageCircle size={20} />}
+              title="Thông báo đã xem"
+              description="Cho phép người khác biết khi bạn đã xem tin nhắn"
+              action={
+                <Toggle
+                  enabled={settings.showReadReceipts}
+                  onToggle={async () => {
+                    const newValue = !settings.showReadReceipts;
+                    setSettings({ ...settings, showReadReceipts: newValue });
+                    await userService.updateUserSettings(currentUser!.id, { showReadReceipts: newValue });
+                  }}
+                />
+              }
+            />
+            <div className="p-4 bg-bg-primary rounded-xl border-2 border-border-light">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="p-2 bg-primary-light rounded-lg text-primary">
+                  <Globe size={20} />
+                </div>
+                <div>
+                  <h3 className="font-medium text-text-primary">Quyền riêng tư bài viết mặc định</h3>
+                  <p className="text-sm text-text-tertiary">Áp dụng cho các bài viết mới của bạn</p>
+                </div>
+              </div>
+              <Dropdown
+                align="left"
+                className="w-full"
+                matchTriggerWidth
+                trigger={
+                  <div className="flex items-center justify-between w-full px-4 py-2.5 bg-bg-secondary rounded-xl border border-border-light hover:bg-bg-hover transition-all duration-base cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      {settings.defaultPostVisibility === Visibility.PUBLIC && <Globe size={16} className="text-primary" />}
+                      {settings.defaultPostVisibility === Visibility.FRIENDS && <Users size={16} className="text-primary" />}
+                      {settings.defaultPostVisibility === Visibility.PRIVATE && <Lock size={16} className="text-primary" />}
+                      <span className="text-sm font-medium text-text-primary">
+                        {settings.defaultPostVisibility === Visibility.PUBLIC && 'Công khai'}
+                        {settings.defaultPostVisibility === Visibility.FRIENDS && 'Bạn bè'}
+                        {settings.defaultPostVisibility === Visibility.PRIVATE && 'Chỉ mình tôi'}
+                      </span>
+                    </div>
+                    <Settings2 size={14} className="text-text-tertiary" />
+                  </div>
+                }
+              >
+                <DropdownItem
+                  icon={<Globe size={16} />}
+                  label="Công khai"
+                  onClick={async () => {
+                    setSettings({ ...settings, defaultPostVisibility: Visibility.PUBLIC });
+                    await userService.updateUserSettings(currentUser!.id, { defaultPostVisibility: Visibility.PUBLIC });
+                  }}
+                />
+                <DropdownItem
+                  icon={<Users size={16} />}
+                  label="Bạn bè"
+                  onClick={async () => {
+                    setSettings({ ...settings, defaultPostVisibility: Visibility.FRIENDS });
+                    await userService.updateUserSettings(currentUser!.id, { defaultPostVisibility: Visibility.FRIENDS });
+                  }}
+                />
+                <DropdownItem
+                  icon={<Lock size={16} />}
+                  label="Chỉ mình tôi"
+                  onClick={async () => {
+                    setSettings({ ...settings, defaultPostVisibility: Visibility.PRIVATE });
+                    await userService.updateUserSettings(currentUser!.id, { defaultPostVisibility: Visibility.PRIVATE });
+                  }}
+                />
+              </Dropdown>
+            </div>
           </div>
         );
       case 'security':

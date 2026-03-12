@@ -91,6 +91,15 @@ export interface MediaObject {
   isSensitive?: boolean;
 }
 
+// ========== USER SETTINGS ==========
+
+export interface UserSettings {
+  showOnlineStatus: boolean;
+  showReadReceipts: boolean;
+  defaultPostVisibility: Visibility;
+  updatedAt: Timestamp;
+}
+
 // ========== CORE INTERFACES ==========
 
 export interface User extends BaseEntity {
@@ -106,6 +115,9 @@ export interface User extends BaseEntity {
   cover?: MediaObject;
   updatedAt?: Timestamp;
   deletedAt?: Timestamp;
+  // Metadata settings có thể được gộp để tối ưu đọc, 
+  // nhưng lưu trữ chính vẫn nằm ở sub-collection.
+  settings?: UserSettings;
 }
 
 export interface FriendRequest extends BaseEntity {

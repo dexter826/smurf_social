@@ -39,6 +39,11 @@ service cloud.firestore {
         allow write: if isOwner(userId) && isNotBanned();
       }
 
+      match /private/settings {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) && isNotBanned();
+      }
+
       allow read: if isAuthenticated();
 
       allow create: if isAuthenticated() && isOwner(userId) &&

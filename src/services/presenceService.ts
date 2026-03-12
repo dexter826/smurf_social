@@ -16,15 +16,23 @@ export const presenceService = {
      */
     setOnline: async (uid: string): Promise<void> => {
         try {
+            const { userService } = await import('./userService');
+            const settings = await userService.getUserSettings(uid);
+
             const userPresenceRef = presenceRef(uid);
 
-            // Set online
-            await set(userPresenceRef, {
-                isOnline: true,
-                lastSeen: rtdbServerTimestamp()
-            });
+            if (settings.showOnlineStatus) {
+                await set(userPresenceRef, {
+                    isOnline: true,
+                    lastSeen: rtdbServerTimestamp()
+                });
+            } else {
+                await update(userPresenceRef, {
+                    isOnline: false,
+                    lastSeen: rtdbServerTimestamp()
+                });
+            }
 
-            // Cài đặt onDisconnect để tự động set offline khi mất kết nối
             const disconnectRef = onDisconnect(userPresenceRef);
             await disconnectRef.update({
                 isOnline: false,

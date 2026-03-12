@@ -353,6 +353,9 @@ export const rtdbMessageService = {
      */
     markAsRead: async (convId: string, uid: string, lastMsgId?: string): Promise<void> => {
         try {
+            const { userService } = await import('../userService');
+            const settings = await userService.getUserSettings(uid);
+
             const messagesRef = ref(rtdb, `messages/${convId}`);
             const snapshot = await get(messagesRef);
 
@@ -372,10 +375,13 @@ export const rtdbMessageService = {
                     lastMessageId = msgId;
                 }
 
+                // Chỉ đánh dấu đã đọc nếu người dùng bật showReadReceipts hoặc đó là tin nhắn của chính mình
                 if (msgData.senderId !== uid && !msgData.readBy?.[uid]) {
-                    updates[`messages/${convId}/${msgId}/readBy/${uid}`] = Date.now();
-                    updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = Date.now();
-                    hasUpdates = true;
+                    if (settings.showReadReceipts) {
+                        updates[`messages/${convId}/${msgId}/readBy/${uid}`] = Date.now();
+                        updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = Date.now();
+                        hasUpdates = true;
+                    }
                 }
             });
 
