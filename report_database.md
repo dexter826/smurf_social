@@ -96,7 +96,6 @@ Lưu trữ các cấu hình riêng tư của người dùng. Mỗi người dùn
 - `content` (String).
 - `visibility` (String): `public`, `friends`, `private`.
 - `media` (Array of MediaObject): Tối đa 10 file.
-- `reactions` (Map): `{ like: 10, love: 5, haha: 2... }`. Denormalized để hiển thị nhanh.
 - `commentCount` (Number).
 - `isEdited` (Boolean).
 - `editedAt` (Timestamp).
@@ -105,8 +104,6 @@ Lưu trữ các cấu hình riêng tư của người dùng. Mỗi người dùn
 - `deletedBy` (String): UID người thực hiện xóa (nếu status = deleted).
 
 **3.1. Sub-collection `reactions` (Bên trong `posts/{postId}`)**
-
-Lưu chi tiết ai đã thả cảm xúc.
 
 - `userId` (String): Document ID.
 - `type` (String): `like`, `love`, `haha`...
@@ -120,7 +117,6 @@ Lưu chi tiết ai đã thả cảm xúc.
 - `parentId` (String): `null` nếu là bình luận gốc.
 - `content` (String): Max 2000 ký tự.
 - `image` (MediaObject): Tối đa 1 ảnh.
-- `reactions` (Map): Denormalized để hiển thị nhanh.
 - `replyCount` (Number).
 - `isEdited` (Boolean).
 - `editedAt` (Timestamp).

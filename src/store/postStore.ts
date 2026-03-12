@@ -239,7 +239,6 @@ export const usePostStore = create<PostState>()(
           commentCount: 0,
           createdAt: Timestamp.now(),
           status: PostStatus.ACTIVE,
-          reactions: {},
         };
 
         set(state => ({
@@ -400,31 +399,7 @@ export const usePostStore = create<PostState>()(
         if (!post) return;
 
         const prevMyReaction = get().myPostReactions[postId];
-        const prevReactions = { ...post.reactions };
-        const prevSelectedPost = get().selectedPost;
-
-        const isRemove = reaction === 'REMOVE' || prevMyReaction === reaction;
-        const oldType = prevMyReaction;
-
-        const applyOptimistic = (p: Post): Post => {
-          const newReactions = { ...p.reactions };
-
-          if (isRemove && oldType) {
-            newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
-            if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
-          } else if (!isRemove) {
-            if (oldType) {
-              newReactions[oldType as ReactionType] = Math.max(0, (newReactions[oldType as ReactionType] ?? 1) - 1);
-              if (newReactions[oldType as ReactionType] === 0) delete newReactions[oldType as ReactionType];
-            }
-            newReactions[reaction as ReactionType] = (newReactions[reaction as ReactionType] ?? 0) + 1;
-          }
-
-          return {
-            ...p,
-            reactions: newReactions,
-          };
-        };
+        const isRemove = prevMyReaction === reaction || reaction === 'REMOVE';
 
         // Update myPostReactions
         const newMyReactions = { ...get().myPostReactions };
@@ -435,8 +410,6 @@ export const usePostStore = create<PostState>()(
         }
 
         set((state) => ({
-          posts: state.posts.map(p => p.id === postId ? applyOptimistic(p) : p),
-          selectedPost: state.selectedPost?.id === postId ? applyOptimistic(state.selectedPost) : state.selectedPost,
           myPostReactions: newMyReactions,
         }));
 
@@ -445,8 +418,6 @@ export const usePostStore = create<PostState>()(
         } catch (error) {
           console.error("Lỗi react bài viết:", error);
           set((state) => ({
-            posts: state.posts.map(p => p.id === postId ? { ...p, reactions: prevReactions } : p),
-            selectedPost: prevSelectedPost,
             myPostReactions: { ...state.myPostReactions, [postId]: prevMyReaction },
           }));
         }

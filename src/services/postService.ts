@@ -298,7 +298,6 @@ export const postService = {
         media: postData.media || [],
         status: PostStatus.ACTIVE,
         commentCount: 0,
-        reactions: {},
         isEdited: false,
         editedAt: null,
         createdAt: serverTimestamp(),

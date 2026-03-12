@@ -85,8 +85,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   const { filteredSummary, filteredCount } = useFilteredReactions(
     comment.id,
     'comment',
-    comment.authorId,
-    comment.reactions,
+    comment.authorId
   );
 
   const handleReact = useCallback((reaction: ReactionType | 'REMOVE') => {

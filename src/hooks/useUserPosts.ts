@@ -130,27 +130,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     const oldReaction = myPostReactions[postId];
     const isRemove = oldReaction === reaction;
 
-    const prevReactions = post.reactions || {};
-    const newReactions = { ...prevReactions };
-
-    if (isRemove) {
-      if (oldReaction && newReactions[oldReaction]) {
-        newReactions[oldReaction] = Math.max(0, newReactions[oldReaction] - 1);
-        if (newReactions[oldReaction] === 0) delete newReactions[oldReaction];
-      }
-    } else if (oldReaction) {
-      if (newReactions[oldReaction]) {
-        newReactions[oldReaction] = Math.max(0, newReactions[oldReaction] - 1);
-        if (newReactions[oldReaction] === 0) delete newReactions[oldReaction];
-      }
-      newReactions[reaction] = (newReactions[reaction] ?? 0) + 1;
-    } else {
-      newReactions[reaction] = (newReactions[reaction] ?? 0) + 1;
-    }
-
-    setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
-      ...p, reactions: newReactions
-    }));
+    // Logic optimistic count nay duoc thay the bang useFilteredReactions
 
     // Update myPostReactions in store
     const newMyReactions = { ...myPostReactions };
@@ -164,10 +144,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     try {
       await postService.reactToPost(postId, currentUser.id, isRemove ? 'REMOVE' : reaction);
     } catch (error) {
-      // Rollback
-      setDbPosts(prev => prev.map(p => p.id !== postId ? p : {
-        ...p, reactions: prevReactions
-      }));
+      // Rollback myPostReactions in store
       usePostStore.setState({ myPostReactions: { ...usePostStore.getState().myPostReactions, [postId]: oldReaction } });
     }
   }, [posts, currentUser.id]);

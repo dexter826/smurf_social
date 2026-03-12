@@ -47,9 +47,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const { filteredSummary, filteredCount } = useFilteredReactions(
     post.id,
     'post',
-    post.authorId,
-    post.reactions,
-    0 // Không cần pass totalCount vì hook sẽ tự tính hoặc fallback
+    post.authorId
   );
 
   const hasMedia = (post.media?.length ?? 0) > 0;
