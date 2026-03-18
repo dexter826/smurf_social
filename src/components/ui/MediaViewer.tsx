@@ -124,14 +124,14 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[var(--z-overlay)] bg-black/95 backdrop-blur-sm flex flex-col select-none animate-in fade-in duration-200"
+            className="fixed inset-0 z-[var(--z-dialog)] bg-black/95 backdrop-blur-sm flex flex-col select-none animate-in fade-in duration-200"
             onClick={onClose}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
         >
             {/* Top bar — close + counter */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 z-[var(--z-dialog)]" onClick={e => e.stopPropagation()}>
+            <div className="relative flex-shrink-0 flex items-center justify-between px-4 py-3 z-[var(--z-dialog)]" onClick={e => e.stopPropagation()}>
                 {/* Counter (căn giữa) */}
                 <div className="flex-1 flex justify-center">
                     {media.length > 1 && (
