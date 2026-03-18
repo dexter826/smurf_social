@@ -128,6 +128,7 @@ const ProfilePage: React.FC = () => {
           onCoverChange={handleCoverChange}
           onAvatarDelete={() => setConfirmType('deleteAvatar')}
           onCoverDelete={() => setConfirmType('deleteCover')}
+          onBlockClick={handleOpenBlockModal}
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
           uploadingType={uploadingType}

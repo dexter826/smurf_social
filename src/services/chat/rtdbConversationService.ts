@@ -18,12 +18,13 @@ export const rtdbConversationService = {
             const updates: Record<string, any> = {};
 
             if (!convSnap.exists()) {
+                const otherUserId = creatorId === user1Id ? user2Id : user1Id;
                 updates[`conversations/${convId}`] = {
                     isGroup: false,
                     name: null,
                     avatar: null,
                     creatorId,
-                    members: { [user1Id]: 'admin', [user2Id]: 'member' },
+                    members: { [creatorId]: 'admin', [otherUserId]: 'member' },
                     typing: {},
                     lastMessage: null,
                     createdAt: now,

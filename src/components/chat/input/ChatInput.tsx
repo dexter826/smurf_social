@@ -155,6 +155,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [detectedActiveMentions]);
 
+  const renderMentionOverlay = useCallback((value: string) => (
+    <>
+      {value.split(/(@[^\n\u200B]+\u200B)/g).map((part, i) => {
+        if (part.startsWith('@') && part.endsWith('\u200B')) {
+          return (
+            <span key={i} className="text-primary bg-primary/10 rounded box-decoration-clone font-medium border-b-2 border-primary/20">
+              {part.slice(0, -1)}
+            </span>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+      {value.endsWith('\n') && <br />}
+    </>
+  ), []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setInputText(text);
@@ -441,21 +457,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             maxHeight={120}
             containerClassName="flex-1"
             className="rounded-2xl"
-            renderOverlay={useCallback((value: string) => (
-              <>
-                {value.split(/(@[^\n\u200B]+\u200B)/g).map((part, i) => {
-                  if (part.startsWith('@') && part.endsWith('\u200B')) {
-                    return (
-                      <span key={i} className="text-primary bg-primary/10 rounded box-decoration-clone font-medium border-b-2 border-primary/20">
-                        {part.slice(0, -1)}
-                      </span>
-                    );
-                  }
-                  return <span key={i}>{part}</span>;
-                })}
-                {value.endsWith('\n') && <br />}
-              </>
-            ), [])}
+            renderOverlay={renderMentionOverlay}
             rightElement={
               <EmojiPicker
                 onEmojiSelect={(emoji) => {
