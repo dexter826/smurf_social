@@ -6,8 +6,11 @@ import {
   persistentMultipleTabManager
 } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
-import { getStorage } from "firebase/storage";
-import { getFunctions } from "firebase/functions";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { connectAuthEmulator } from "firebase/auth";
+import { connectFirestoreEmulator } from "firebase/firestore";
+import { connectDatabaseEmulator } from "firebase/database";
 import { getValidatedEnvConfig } from "../utils/validateEnv";
 
 const envConfig = getValidatedEnvConfig();
@@ -34,5 +37,15 @@ export const db = initializeFirestore(app, {
 export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app, 'us-central1');
+
+// Kết nối Emulator nếu chạy ở localhost
+if (window.location.hostname === 'localhost') {
+  console.log('--- Đang kết nối với Firebase Emulator ---');
+  connectAuthEmulator(auth, 'http://localhost:9099');
+  connectFirestoreEmulator(db, 'localhost', 8080);
+  connectDatabaseEmulator(rtdb, 'localhost', 9000);
+  connectStorageEmulator(storage, 'localhost', 9199);
+  connectFunctionsEmulator(functions, 'localhost', 5001);
+}
 
 export default app;
