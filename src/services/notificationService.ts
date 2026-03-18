@@ -2,6 +2,7 @@ import React from 'react';
 import {
   collection,
   getDocs,
+  getDoc,
   query,
   where,
   orderBy,
@@ -155,9 +156,15 @@ export const notificationService = {
         });
 
         if (token) {
+          const fcmRef = doc(db, 'users', userId, 'private', 'fcm');
+          const fcmSnap = await getDoc(fcmRef);
           await setDoc(
-            doc(db, 'users', userId, 'private', 'fcm'),
-            { fcmTokens: arrayUnion(token), updatedAt: serverTimestamp() },
+            fcmRef,
+            {
+              fcmTokens: arrayUnion(token),
+              ...(fcmSnap.exists() ? {} : { createdAt: serverTimestamp() }),
+              updatedAt: serverTimestamp()
+            },
             { merge: true }
           );
           return token;

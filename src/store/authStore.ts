@@ -209,23 +209,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   updateSettings: (settingsUpdates) => {
-    const { settings, user } = get();
+    const { settings } = get();
     if (!settings) return;
-    const newSettings = { ...settings, ...settingsUpdates };
-    set({ settings: newSettings });
-
-    if (user) {
-      const updatedUser = { 
-        ...user, 
-        settings: {
-          ...user.settings,
-          ...newSettings,
-          updatedAt: Timestamp.now()
-        } as UserSettings
-      };
-      set({ user: updatedUser });
-      useUserCache.getState().setUser(updatedUser);
-    }
+    set({ settings: { ...settings, ...settingsUpdates } });
   },
 
   updateBlockEntry: (action, targetUserId, options?) => {

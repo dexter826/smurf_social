@@ -182,7 +182,6 @@ export interface User extends BaseEntity {
     cover?: MediaObject;
     updatedAt: Timestamp;
     deletedAt?: Timestamp;
-    settings?: UserSettings;
 }
 
 export interface FriendRequest extends BaseEntity {
