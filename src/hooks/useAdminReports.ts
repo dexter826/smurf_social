@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Report, ReportStatus, ReportType, User } from '../../shared/types';
+import { Report, ReportStatus, ReportType, User, UserRole } from '../../shared/types';
 import { reportService } from '../services/reportService';
 import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
@@ -34,7 +34,7 @@ export function useAdminReports() {
 
   // Chặn truy cập phi admin
   useEffect(() => {
-    if (user && !user.id) {
+    if (user && user.role !== UserRole.ADMIN) {
       toast.error(TOAST_MESSAGES.ADMIN.NO_PERMISSION);
       navigate('/');
     }

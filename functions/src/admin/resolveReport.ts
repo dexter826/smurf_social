@@ -92,14 +92,16 @@ export const resolveReport = onCall(
 
     const typeLabel = REPORT_TYPE_LABELS[reportData.targetType as ReportType] || reportData.targetType;
     const reasonLabel = REPORT_REASON_LABELS[reportData.reason as ReportReason] || reportData.reason;
+    const targetId: string = reportData.targetId;
 
+    // Notify reporter
     await createNotification({
       receiverId: reportData.reporterId,
       actorId: adminId,
       type: NotificationType.REPORT,
-      data: { 
-        reportId, 
-        contentSnippet: `Báo cáo của bạn về ${typeLabel} đã được xử lý. Cảm ơn bạn đã góp phần xây dựng cộng đồng.` 
+      data: {
+        reportId,
+        contentSnippet: `Báo cáo của bạn về ${typeLabel} đã được xử lý. Cảm ơn bạn đã góp phần xây dựng cộng đồng.`
       },
     });
     await sendPushNotification({
@@ -109,28 +111,44 @@ export const resolveReport = onCall(
       data: { reportId },
     });
 
-    if (reportData.targetOwnerId) {
-      const victimMessage = `Nội dung ${typeLabel} của bạn đã bị gỡ bỏ do vi phạm quy tắc: ${reasonLabel}.`;
+    if (action === 'delete_content' && reportData.targetOwnerId) {
+      const msg = `Nội dung ${typeLabel} của bạn đã bị gỡ bỏ do vi phạm quy tắc: ${reasonLabel}.`;
       await createNotification({
         receiverId: reportData.targetOwnerId,
         actorId: adminId,
         type: NotificationType.REPORT,
-        data: { contentSnippet: victimMessage },
+        data: { contentSnippet: msg },
       });
       await sendPushNotification({
         receiverId: reportData.targetOwnerId,
         type: NotificationType.REPORT,
-        body: 'Thông báo về nội dung vi phạm.',
+        body: msg,
       });
-    }
-
-    if (reportData.targetType === ReportType.USER && action === 'warn_user' && reportData.targetId) {
-      const reasonLabel = REPORT_REASON_LABELS[reportData.reason as ReportReason] || reportData.reason;
+    } else if (action === 'warn_user' && targetId) {
+      const msg = `Cảnh báo: Tài khoản của bạn bị báo cáo vì: ${reasonLabel}. Vui lòng tuân thủ quy tắc cộng đồng.`;
       await createNotification({
-        receiverId: reportData.targetId,
+        receiverId: targetId,
         actorId: adminId,
         type: NotificationType.REPORT,
-        data: { contentSnippet: `Cảnh báo: Tài khoản của bạn bị báo cáo vì: ${reasonLabel}. Vui lòng tuân thủ quy tắc cộng đồng.` },
+        data: { contentSnippet: msg },
+      });
+      await sendPushNotification({
+        receiverId: targetId,
+        type: NotificationType.REPORT,
+        body: msg,
+      });
+    } else if (action === 'ban_user' && targetId) {
+      const msg = `Tài khoản của bạn đã bị khóa do vi phạm quy tắc cộng đồng: ${reasonLabel}.`;
+      await createNotification({
+        receiverId: targetId,
+        actorId: adminId,
+        type: NotificationType.REPORT,
+        data: { contentSnippet: msg },
+      });
+      await sendPushNotification({
+        receiverId: targetId,
+        type: NotificationType.REPORT,
+        body: msg,
       });
     }
 

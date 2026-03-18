@@ -5,11 +5,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Eye,
   AlertTriangle,
   FileX,
-  Search,
-  Filter
 } from 'lucide-react';
 import { ReportStatus, ReportType } from '../../../shared/types';
 import { Button, UserAvatar, Skeleton, Select } from '../ui';
@@ -31,7 +28,6 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
     setStatusFilter,
     setTypeFilter,
     getUser,
-    openConfirmDialog,
   } = useAdminReports();
 
   const tabs = [

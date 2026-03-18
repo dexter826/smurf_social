@@ -46,9 +46,9 @@ export const rejectReport = onCall(
       receiverId: reportData.reporterId,
       actorId: adminId,
       type: NotificationType.REPORT,
-      data: { 
-        reportId, 
-        contentSnippet: `Báo cáo của bạn về ${typeLabel} đã được xem xét. Chúng tôi không phát hiện thấy vi phạm quy tắc cộng đồng trong nội dung này.` 
+      data: {
+        reportId,
+        contentSnippet: `Báo cáo của bạn về ${typeLabel} đã được xem xét. Chúng tôi không phát hiện thấy vi phạm quy tắc cộng đồng trong nội dung này.`
       },
     });
     await sendPushNotification({

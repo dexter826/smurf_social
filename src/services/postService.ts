@@ -167,6 +167,10 @@ export const postService = {
   /** Lấy danh sách bài viết của người dùng cụ thể */
   getUserPosts: async (userId: string, currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.USER_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
+      if (!currentUserId) {
+        return { posts: [], lastDoc: null };
+      }
+
       const isOwner = userId === currentUserId;
       const isFriend = friendIds?.includes(userId) || false;
       const visibilityFilter = getVisibilityFilter(isOwner, isFriend);
@@ -215,6 +219,11 @@ export const postService = {
 
   /** Theo dõi bài viết của người dùng thời gian thực */
   subscribeToUserPosts: (userId: string, currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.USER_POSTS) => {
+    if (!currentUserId) {
+      callback([]);
+      return () => { };
+    }
+
     const isOwner = userId === currentUserId;
     const isFriend = friendIds?.includes(userId) || false;
     const visibilityFilter = getVisibilityFilter(isOwner, isFriend);
@@ -233,17 +242,33 @@ export const postService = {
 
     const setup = async () => {
       const user = await userService.getUserById(userId);
+      const currentUser = await userService.getUserById(currentUserId);
       if (isCancelled) return;
-      if (user?.status === 'banned') {
+
+      if (user?.status === 'banned' || currentUser?.status === 'banned') {
         callback([]);
         return;
       }
 
+      if (userId !== currentUserId) {
+        const blockedByTarget = await getDoc(doc(db, 'users', userId, 'blockedUsers', currentUserId));
+        const blockedByMe = await getDoc(doc(db, 'users', currentUserId, 'blockedUsers', userId));
+
+        if ((blockedByTarget.exists() && blockedByTarget.data().blockViewMyActivity === true) ||
+            (blockedByMe.exists() && blockedByMe.data().hideTheirActivity === true)) {
+          callback([]);
+          return;
+        }
+      }
+
       unsubscribe = onSnapshot(q, (snapshot) => {
         const posts = convertDocs<Post>(snapshot.docs);
-
         callback(posts);
       }, (error) => {
+        if (error?.code === 'permission-denied') {
+          callback([]);
+          return;
+        }
         console.error("Lỗi subscribe bài viết của user", error);
       });
     };

@@ -4,12 +4,7 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  User as UserIcon,
   Trash2,
-  Lock,
-  Unlock,
-  ChevronLeft,
-  ChevronRight
 } from 'lucide-react';
 import { Report, ReportStatus, ReportType, User, Post, Comment, PostStatus, CommentStatus } from '../../../shared/types';
 import { reportService } from '../../services/reportService';
@@ -46,7 +41,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [actionType, setActionType] = useState<'resolve' | 'reject' | 'warn' | 'ban' | 'unban' | null>(null);
+  const [actionType, setActionType] = useState<'resolve' | 'reject' | 'warn' | 'ban' | null>(null);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -424,8 +419,19 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleAction}
-        title="Xác nhận xử lý"
-        message="Hành động này sẽ thay đổi trạng thái và thực hiện các biện pháp kỷ luật tương ứng."
+        title={
+          actionType === 'resolve' ? 'Xác nhận xử lý' :
+          actionType === 'reject' ? 'Bỏ qua báo cáo' :
+          actionType === 'warn' ? 'Gửi cảnh báo' :
+          actionType === 'ban' ? 'Khóa tài khoản' : 'Xác nhận'
+        }
+        message={
+          actionType === 'resolve' ? 'Nội dung vi phạm sẽ bị xóa. Hành động này không thể hoàn tác.' :
+          actionType === 'reject' ? 'Báo cáo sẽ được đóng lại và nội dung vẫn được giữ nguyên.' :
+          actionType === 'warn' ? 'Người dùng sẽ nhận được cảnh báo về vi phạm này.' :
+          actionType === 'ban' ? 'Tài khoản sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị ngay lập tức.' : ''
+        }
+        variant={actionType === 'resolve' || actionType === 'ban' ? 'danger' : 'primary'}
       />
 
       {/* Lightbox - Image Viewer */}
