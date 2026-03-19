@@ -18,7 +18,7 @@ interface PostModalProps {
   currentUser: User;
   initialPost?: Post;
   initialFiles?: File[];
-  onSubmit: (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
+  onSubmit: (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
   onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<MediaObject[]>;
 }
 
@@ -61,6 +61,7 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   const [pendingFiles, setPendingFiles] = React.useState<File[]>([]);
   const [previews, setPreviews] = React.useState<{ url: string; type: 'image' | 'video' }[]>([]);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
 
   const initializedRef = React.useRef(false);
 
@@ -173,19 +174,22 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   const onFormSubmit = async (data: PostFormValues) => {
     try {
+      setUploadProgress(0);
       await onSubmit(
         data.content || '',
         data.media,
         data.visibility,
-        pendingFiles
+        pendingFiles,
+        (p) => setUploadProgress(Math.round(p))
       );
 
       previews.forEach(p => URL.revokeObjectURL(p.url));
       setPendingFiles([]);
       setPreviews([]);
-      
+      setUploadProgress(0);
       onClose();
     } catch (error) {
+      setUploadProgress(0);
       console.error('[PostModal] Lỗi khi đăng bài:', error);
     }
   };
@@ -259,13 +263,28 @@ export const PostModal: React.FC<PostModalProps> = ({
             <Button
               variant="primary"
               size="md"
-              className="w-full text-[15px] font-bold shadow-sm"
+              className="w-full text-[15px] font-bold shadow-sm overflow-hidden relative"
               onClick={handleSubmit(onFormSubmit)}
               disabled={isSubmitting || !isValid}
-              isLoading={isSubmitting}
+              isLoading={isSubmitting && uploadProgress === 0}
             >
-              {isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
+              {isSubmitting && uploadProgress > 0 ? (
+                <span className="flex items-center gap-2 w-full justify-center">
+                  <span>Đang tải lên {uploadProgress}%</span>
+                </span>
+              ) : isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
             </Button>
+            {isSubmitting && uploadProgress > 0 && (
+              <div className="mt-2 px-1">
+                <div className="w-full bg-black/10 h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-slow"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
           </div>
         }
       >
@@ -343,9 +362,9 @@ export const PostModal: React.FC<PostModalProps> = ({
                         {isSubmitting && item.isPending && (
                           <CircularProgressOverlay
                             isVisible={true}
-                            progress={0}
+                            progress={uploadProgress}
                             size={40}
-                            showPercentage={false}
+                            showPercentage={uploadProgress > 0}
                           />
                         )}
 

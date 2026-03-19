@@ -1,4 +1,30 @@
 import React from 'react';
+
+interface LinearProgressBarProps {
+  progress: number;
+  error?: boolean;
+  label?: string;
+  className?: string;
+}
+
+export const LinearProgressBar: React.FC<LinearProgressBarProps> = ({
+  progress,
+  error,
+  label,
+  className = '',
+}) => (
+  <div className={`flex flex-col gap-1 w-full ${className}`}>
+    <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+      <div
+        className={`h-full transition-all duration-slow ${error ? 'bg-red-400' : 'bg-primary'}`}
+        style={{ width: `${Math.min(progress, 100)}%` }}
+      />
+    </div>
+    {label !== undefined && (
+      <span className="text-[10px] text-white font-medium">{label}</span>
+    )}
+  </div>
+);
 import { X, Check } from 'lucide-react';
 
 interface CircularProgressProps {
@@ -73,7 +99,6 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   );
 };
 
-// Overlay dùng trên media item (ảnh/video đang upload)
 interface CircularProgressOverlayProps extends CircularProgressProps {
   isVisible: boolean;
 }

@@ -16,7 +16,7 @@ interface UseFeedReturn {
   handleLoadMore: () => void;
   handleRefresh: () => Promise<void>;
   handleReact: (postId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
-  handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility) => Promise<void>;
+  handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
   handleDelete: (postId: string, media?: any[]) => Promise<void>;
   observerRef: RefObject<HTMLDivElement | null>;
 }
@@ -88,9 +88,11 @@ export const useFeed = (): UseFeedReturn => {
     postId: string,
     content: string,
     media: any[],
-    visibility: Visibility
+    visibility: Visibility,
+    pendingFiles?: File[],
+    onProgress?: (progress: number) => void
   ) => {
-    await updatePost(postId, content, media, visibility);
+    await updatePost(postId, content, media, visibility, pendingFiles, onProgress);
   }, [updatePost]);
 
   const handleDelete = useCallback(async (

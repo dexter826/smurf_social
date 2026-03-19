@@ -26,8 +26,8 @@ interface PostState {
   fetchPosts: (currentUserId: string, loadMore?: boolean, force?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string) => () => void;
   refreshFeed: (currentUserId: string) => Promise<void>;
-  createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
-  updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
+  createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
+  updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
   deletePost: (postId: string, userId: string, images?: string[], videos?: string[]) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<MediaObject[]>;
@@ -211,7 +211,7 @@ export const usePostStore = create<PostState>()(
         await get().fetchPosts(currentUserId, false, true);
       },
 
-      createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.PUBLIC, pendingFiles?: File[]) => {
+      createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.PUBLIC, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
         const postId = postService.generatePostId();
         const previewMedia = pendingFiles ? pendingFiles.map(f => ({
           url: URL.createObjectURL(f),
@@ -244,6 +244,7 @@ export const usePostStore = create<PostState>()(
 
           if (pendingFiles && pendingFiles.length > 0) {
             const uploadedMedia = await postService.uploadPostMedia(pendingFiles, userId, (progress) => {
+              onProgress?.(progress);
               set(state => ({
                 uploadingStates: {
                   ...state.uploadingStates,
@@ -291,7 +292,7 @@ export const usePostStore = create<PostState>()(
         }
       },
 
-      updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => {
+      updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
         const { posts } = get();
         const post = posts.find(p => p.id === postId);
         if (!post) return;
@@ -327,6 +328,7 @@ export const usePostStore = create<PostState>()(
 
             if (pendingFiles && pendingFiles.length > 0) {
               const uploadedMedia = await postService.uploadPostMedia(pendingFiles, post.authorId, (progress) => {
+                onProgress?.(progress);
                 set(state => ({
                   uploadingStates: {
                     ...state.uploadingStates,

@@ -31,12 +31,15 @@ const FeedPage: React.FC = () => {
   const handleEditPost = useCallback(async (
     content: string,
     media: any[],
-    visibility: Visibility
+    visibility: Visibility,
+    pendingFiles?: File[],
+    onProgress?: (progress: number) => void
   ) => {
     if (!showEditModal) return;
-    await handleUpdate(showEditModal, content, media, visibility);
+    await handleUpdate(showEditModal, content, media, visibility, pendingFiles, onProgress);
     setShowEditModal(null);
   }, [showEditModal, handleUpdate]);
+
 
   const handleDeletePost = useCallback(async () => {
     if (!postToDelete) return;

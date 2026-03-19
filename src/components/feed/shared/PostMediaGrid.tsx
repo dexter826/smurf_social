@@ -59,9 +59,10 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
             isVisible={true}
             progress={uploadProgress ?? 0}
             size={32}
-            showPercentage={false}
+            showPercentage={(uploadProgress ?? 0) > 0}
           />
         )}
+
 
         {!isBlob && item.type === 'video' && (
           <div className="absolute top-2 right-2 p-1 bg-black/20 backdrop-blur-md rounded-full text-white pointer-events-none">
