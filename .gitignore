@@ -38,3 +38,4 @@ dist-ssr
 # Firebase
 .firebase/
 *-debug.log
+emulator-data/
