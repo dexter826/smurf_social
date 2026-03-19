@@ -16,6 +16,7 @@ interface MessageListProps {
   onReply?: (message: { id: string; data: RtdbMessage }) => void;
   onEdit?: (message: { id: string; data: RtdbMessage }) => void;
   onCall?: (isVideo: boolean) => void;
+  onJoinCall?: (callType: 'voice' | 'video') => void;
   chatName: string;
   avatarSrc?: string;
   partner?: User;
@@ -35,6 +36,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
   onReply,
   onEdit,
   onCall,
+  onJoinCall,
   chatName,
   avatarSrc,
   partner,
@@ -140,6 +142,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
                       onCall(isVideo);
                     }
                   }}
+                  onJoinCall={onJoinCall}
                   currentUserId={currentUserId}
                   usersMap={usersMap}
                   isGroup={conversation.data.isGroup}

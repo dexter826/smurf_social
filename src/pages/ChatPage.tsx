@@ -131,7 +131,7 @@ const ChatPage: React.FC = () => {
     closeBlockModal();
   };
 
-  const { startCall, endCall } = useCallManager(currentUser?.id || '');
+  const { startCall, endCall, joinActiveCall } = useCallManager(currentUser?.id || '');
 
 
   const partner = selectedConversation?.data.isGroup
@@ -288,6 +288,7 @@ const ChatPage: React.FC = () => {
               onCall={(isVideo) => handleInitiateCall(isVideo ? 'video' : 'voice')}
               onVideoCall={() => handleInitiateCall('video')}
               canCall={canCall}
+              onJoinCall={(callType) => joinActiveCall(selectedConversation.id, callType)}
             />
               <ChatInput
                 key={selectedConversationId}

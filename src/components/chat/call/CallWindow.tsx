@@ -110,14 +110,8 @@ export const CallWindow: React.FC<CallWindowProps> = ({
           },
 
           onLeaveRoom: async () => {
-            try {
-              await rtdbCallService.updateCallParticipant(roomId, userId, false);
-            } catch (error) {
-              console.error('[CallWindow] Lỗi khi rời phòng:', error);
-            } finally {
-              destroyZego();
-              onCloseRef.current();
-            }
+            destroyZego();
+            onCloseRef.current();
           },
         });
 

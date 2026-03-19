@@ -212,6 +212,13 @@ export interface RtdbConversation {
     createdAt: number;
     updatedAt: number;
     isDisbanded?: boolean;
+    activeCall?: {
+        callerId: string;
+        callType: 'voice' | 'video';
+        messageId: string;
+        startedAt: number;
+        participants?: Record<string, number>;
+    };
 }
 
 export interface RtdbUserChat {

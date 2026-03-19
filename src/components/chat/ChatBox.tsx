@@ -41,6 +41,7 @@ interface ChatBoxProps {
   onCall?: (isVideo: boolean) => void;
   onVideoCall?: () => void;
   canCall?: boolean;
+  onJoinCall?: (callType: 'voice' | 'video') => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -75,6 +76,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onCall,
   onVideoCall,
   canCall = true,
+  onJoinCall,
 }) => {
   const {
     messagesEndRef,
@@ -115,9 +117,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       participantIds.forEach(uid => {
         if (uid === currentUserId) return;
         
-        // Chỉ hiển thị nếu người dùng bật "Thông báo đã xem" trong hồ sơ công khai
         const user = usersMap[uid];
-        if (user?.settings?.showReadReceipts === false) return;
 
         const lastReadMsg = reversed.find(m => m.data.readBy?.[uid]);
         if (lastReadMsg) {
@@ -141,7 +141,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       const partnerId = participantIds.find(id => id !== currentUserId);
       const partner = partnerId ? usersMap[partnerId] : null;
 
-      if (partnerId && partner && partner.settings?.showReadReceipts !== false) {
+      if (partnerId && partner) {
         const lastReadMsg = reversed.find(m => m.data.readBy?.[partnerId]);
         if (lastReadMsg) {
           map[lastReadMsg.id] = [partner];
@@ -214,6 +214,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               partner={partner || undefined}
               isBlocked={isBlocked}
               onCall={onCall}
+              onJoinCall={onJoinCall}
               onEdit={onEdit}
             />
 

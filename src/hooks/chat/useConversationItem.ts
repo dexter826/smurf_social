@@ -64,6 +64,45 @@ export const useConversationItem = ({
     if (lastMessage.type === 'text') {
       return content.replace(/@\[([^\]]+)\]/g, '@$1');
     }
+
+    if (lastMessage.type === 'call') {
+      const isMine = lastMessage.senderId === currentUserId;
+      try {
+        const parsed = JSON.parse(content);
+        const isVideo = parsed.callType === 'video';
+        const status = parsed.status;
+        
+        if (status === 'started') {
+          return isVideo ? 'Cuộc gọi video đang diễn ra' : 'Cuộc gọi thoại đang diễn ra';
+        }
+        if (status === 'missed') {
+          return isMine ? (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại') : (isVideo ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ');
+        }
+        if (status === 'rejected' || status === 'busy') {
+            return isMine ? (isVideo ? 'Cuộc gọi video bị từ chối' : 'Cuộc gọi thoại bị từ chối') : (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại');
+        }
+
+        if (status === 'ended') {
+            const timeStr = parsed.duration ? ` (${Math.floor(parsed.duration / 60)}:${(parsed.duration % 60).toString().padStart(2, '0')})` : '';
+            return isMine 
+                ? (isVideo ? `Cuộc gọi video đi${timeStr}` : `Cuộc gọi thoại đi${timeStr}`)
+                : (isVideo ? `Cuộc gọi video đến${timeStr}` : `Cuộc gọi thoại đến${timeStr}`);
+        }
+
+        return isMine 
+            ? (isVideo ? 'Cuộc gọi video đi' : 'Cuộc gọi thoại đi')
+            : (isVideo ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
+      } catch (e) {
+        if (content.includes('nhỡ')) return content.includes('video') ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ';
+        if (content.includes('kết thúc')) {
+            return isMine ? (content.includes('video') ? 'Cuộc gọi video đi' : 'Cuộc gọi thoại đi') : (content.includes('video') ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
+        }
+        if (content.includes('diễn ra')) return content.includes('video') ? 'Cuộc gọi video đang diễn ra' : 'Cuộc gọi thoại đang diễn ra';
+        
+        return content.replace(/[\[\]]/g, '');
+      }
+    }
+
     return content;
   }, [lastMessage]);
 
@@ -73,7 +112,7 @@ export const useConversationItem = ({
     return Object.keys(readBy)
       .filter(uid => uid !== currentUserId)
       .map(uid => participants.find(p => p.id === uid) ?? usersMap[uid])
-      .filter((u): u is User => !!u && u.settings?.showReadReceipts !== false);
+      .filter((u): u is User => !!u);
   }, [lastMessage, participants, usersMap, currentUserId, isMessageRequest]);
 
   const deliveredUsers = useMemo(() => {

@@ -34,6 +34,9 @@ export function useCallManager(currentUserId: string) {
         const unsubscribe = rtdbCallService.subscribeToIncomingCall(currentUserId, async (data) => {
             if (!data) {
                 if (phaseRef.current !== 'idle') {
+                    if (sessionRef.current?.isGroupCall && phaseRef.current === 'in-call') {
+                        return; 
+                    }
                     if (phaseRef.current === 'in-call') playSound('ended');
                     cleanup();
                 }
@@ -50,10 +53,16 @@ export function useCallManager(currentUserId: string) {
                             startTime: Date.now(),
                         });
                         playSound('connected');
+                        const recipientIds = sessionRef.current.participants || [];
+                        if (!sessionRef.current.isGroupCall) {
+                            await rtdbCallService.clearSignalingForUsers(recipientIds);
+                        }
                     }
                     if (timeoutRef.current) clearTimeout(timeoutRef.current);
                 } 
                 else if (data.status === 'rejected' || data.status === 'busy') {
+                    if (data.isGroupCall) return;
+
                     if (sessionRef.current?.conversationId) {
                         await rtdbCallService.endCallSession(
                             sessionRef.current.conversationId, 
@@ -153,6 +162,11 @@ export function useCallManager(currentUserId: string) {
             isCaller: false,
             roomId: incomingSignal.conversationId
         });
+
+        await rtdbCallService.updateCallParticipant(
+            incomingSignal.conversationId, currentUserId, true
+        );
+
         playSound('connected');
     }, [currentUserId, incomingSignal, setPhase, setSession, playSound]);
 
@@ -179,11 +193,37 @@ export function useCallManager(currentUserId: string) {
             await rtdbCallService.answerCall(currentUserId, currentSession.participants[0], 'ended');
         }
 
-        await rtdbCallService.endCallSession(currentSession.conversationId, updateCallMessage, status);
+        await rtdbCallService.endCallSession(
+            currentSession.conversationId, 
+            updateCallMessage, 
+            status, 
+            currentSession.isGroupCall ? currentUserId : undefined
+        );
         
         if (phaseRef.current === 'in-call') playSound('ended');
         cleanup();
     }, [currentUserId, updateCallMessage, cleanup, playSound]);
+
+    const joinActiveCall = useCallback((
+        conversationId: string,
+        callType: 'voice' | 'video',
+    ) => {
+        setPhase('in-call');
+        setSession({
+            conversationId,
+            callType,
+            isGroupCall: true,
+            participants: [currentUserId],
+            startTime: Date.now(),
+            isCaller: false,
+            roomId: conversationId
+        });
+
+        // Đồng bộ lên RTDB
+        rtdbCallService.updateCallParticipant(conversationId, currentUserId, true);
+
+        playSound('connected');
+    }, [currentUserId, setPhase, setSession, playSound]);
 
     return {
         phase,
@@ -192,6 +232,7 @@ export function useCallManager(currentUserId: string) {
         startCall,
         acceptCall,
         rejectCall,
-        endCall
+        endCall,
+        joinActiveCall
     };
 }

@@ -276,6 +276,7 @@ export const ConversationItem = Object.assign(
     const nextLast = next.conversation.data.lastMessage;
     const lastMessageEqual =
       prevLast?.messageId === nextLast?.messageId &&
+      prevLast?.content === nextLast?.content &&
       JSON.stringify(prevLast?.readBy) === JSON.stringify(nextLast?.readBy) &&
       JSON.stringify(prevLast?.deliveredTo) === JSON.stringify(nextLast?.deliveredTo);
 

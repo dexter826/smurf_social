@@ -40,6 +40,7 @@ interface MessageBubbleProps {
   lastReadByUsers?: User[];
   isBlocked?: boolean;
   onCall?: () => void;
+  onJoinCall?: (callType: 'voice' | 'video') => void;
   conversationId: string;
   allMessages?: Array<{ id: string; data: RtdbMessage }>;
 }
@@ -62,6 +63,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   lastReadByUsers = [],
   isBlocked = false,
   onCall,
+  onJoinCall,
   conversationId,
   allMessages = [],
 }) => {
@@ -263,6 +265,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 onToggleVoice={handleToggleVoice}
                 onOpenImage={setSelectedImageIndex}
                 onCall={onCall}
+                onJoinCall={onJoinCall}
               />
 
               {/* Thời gian & Trạng thái */}

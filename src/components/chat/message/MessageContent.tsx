@@ -14,6 +14,7 @@ interface MessageContentProps {
   onToggleVoice: (e: React.MouseEvent) => void;
   onOpenImage: (index: number) => void;
   onCall?: () => void;
+  onJoinCall?: (callType: 'voice' | 'video') => void;
 }
 
 const MessageContentInner: React.FC<MessageContentProps> = ({
@@ -24,6 +25,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
   onToggleVoice,
   onOpenImage,
   onCall,
+  onJoinCall,
 }) => {
   if (message.data.isRecalled) {
     return (
@@ -346,13 +348,9 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
           {status === 'started' ? (
             <button
               onClick={() => {
-                const event = new CustomEvent('join-active-call', {
-                  detail: {
-                    senderId: message.data.senderId,
-                    msgId: message.id
-                  }
-                });
-                window.dispatchEvent(event);
+                if (onJoinCall) {
+                  onJoinCall(callType);
+                }
               }}
               className={buttonClass}
             >

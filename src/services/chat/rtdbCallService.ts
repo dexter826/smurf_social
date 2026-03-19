@@ -52,9 +52,7 @@ export const rtdbCallService = {
         recipientIds.forEach((id) => {
             updates[`call_signaling/${id}`] = signalingData;
         });
-        if (!isGroupCall) {
-            updates[`call_signaling/${callerId}`] = signalingData;
-        }
+        updates[`call_signaling/${callerId}`] = signalingData;
 
         await update(ref(rtdb), updates);
         return { success: true };
@@ -74,9 +72,11 @@ export const rtdbCallService = {
 
         updates[`call_signaling/${calleeId}`] = null;
 
-        if (!isGroupCall && calleeId !== callerId) {
-            updates[`call_signaling/${callerId}/status`] = status;
-            updates[`call_signaling/${callerId}/updatedAt`] = now;
+        if (calleeId !== callerId) {
+            if (!isGroupCall || status === 'accepted') {
+                updates[`call_signaling/${callerId}/status`] = status;
+                updates[`call_signaling/${callerId}/updatedAt`] = now;
+            }
         }
 
         await update(ref(rtdb), updates);
@@ -137,14 +137,24 @@ export const rtdbCallService = {
         convId: string,
         userId: string,
         isJoining: boolean,
-    ): Promise<void> => {
+    ): Promise<number> => {
         const participantRef = ref(rtdb, `conversations/${convId}/activeCall/participants/${userId}`);
         if (isJoining) {
             await set(participantRef, Date.now());
             onDisconnect(participantRef).remove();
+            
+            const snapshot = await get(ref(rtdb, `conversations/${convId}/activeCall/participants`));
+            const data = snapshot.val();
+            return data ? Object.keys(data).length : 0;
         } else {
             await remove(participantRef);
             onDisconnect(participantRef).cancel();
+            
+            const snapshot = await get(ref(rtdb, `conversations/${convId}/activeCall/participants`));
+            const data = snapshot.val();
+            const count = data ? Object.keys(data).length : 0;
+            
+            return count;
         }
     },
 
@@ -166,11 +176,19 @@ export const rtdbCallService = {
     endCallSession: async (
         convId: string,
         updateMessageFn: (convId: string, msgId: string, payload: any) => Promise<void>,
-        status: 'ended' | 'missed' | 'rejected' | 'busy' = 'ended'
+        status: 'ended' | 'missed' | 'rejected' | 'busy' = 'ended',
+        userId?: string
     ): Promise<void> => {
         try {
             const activeCall = await rtdbCallService.getActiveCall(convId);
             if (!activeCall) return;
+
+            if (userId) {
+                const remainingCount = await rtdbCallService.updateCallParticipant(convId, userId, false);
+                if (remainingCount > 0) {
+                    return;
+                }
+            }
 
             if (activeCall.messageId) {
                 const duration = Math.max(0, Math.floor((Date.now() - activeCall.startedAt) / 1000));

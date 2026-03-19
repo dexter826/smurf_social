@@ -923,8 +923,7 @@ export const rtdbMessageService = {
 
             await set(newMsgRef, messageData);
 
-            const displayContent = payload.callType === 'video' ? '[Cuộc gọi video]' : '[Cuộc gọi thoại]';
-            await updateConversationAfterMessage(convId, senderId, messageData, displayContent, msgId);
+            await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
 
             return msgId;
         } catch (error) {
@@ -952,17 +951,7 @@ export const rtdbMessageService = {
                 if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
                     let displayContent = newContent;
                     if (payload && payload.callType && payload.status) {
-                        const isVideo = payload.callType === 'video';
-                        const status = payload.status;
-                        if (status === 'missed') {
-                            displayContent = isVideo ? '[Cuộc gọi video nhỡ]' : '[Cuộc gọi thoại nhỡ]';
-                        } else if (status === 'rejected') {
-                            displayContent = isVideo ? '[Cuộc gọi video bị từ chối]' : '[Cuộc gọi thoại bị từ chối]';
-                        } else if (status === 'ended') {
-                            displayContent = isVideo ? '[Cuộc gọi video đã kết thúc]' : '[Cuộc gọi thoại đã kết thúc]';
-                        } else {
-                            displayContent = isVideo ? '[Cuộc gọi video]' : '[Cuộc gọi thoại]';
-                        }
+                        displayContent = JSON.stringify(payload);
                     }
                     await update(convRef, {
                         'lastMessage/content': displayContent,
