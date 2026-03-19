@@ -150,6 +150,8 @@ export const notificationService = {
           scope: '/'
         });
 
+        await navigator.serviceWorker.ready;
+
         const token = await getToken(messaging, {
           vapidKey: fbConfig.vapidKey,
           serviceWorkerRegistration: registration
@@ -242,16 +244,6 @@ export const notificationService = {
 
       const bc = new BroadcastChannel('fcm_notifications');
       bc.onmessage = (event) => {
-        const data = event.data?.data;
-        if (!data) return;
-        if (data.senderId === userId) return;
-        const isMention = data.type === NotificationType.MENTION;
-        const isChat = data.type === NotificationType.CHAT;
-        if (!isChat && !isMention) return;
-        const chatStore = useRtdbChatStore.getState();
-        const convMetadata = chatStore.conversations.find(c => c.id === data.convId);
-        if (convMetadata?.userChat?.isMuted && !isMention) return;
-        lastPlayedTimestamp = notificationService.playSound(lastPlayedTimestamp);
       };
 
       return () => {

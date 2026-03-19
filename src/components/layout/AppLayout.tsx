@@ -77,7 +77,6 @@ export const AppLayout: React.FC = () => {
     if (!user) return;
     let shouldPlay = false;
     conversations.forEach(c => {
-      if (c.id === selectedConversationId) return;
       const prev = prevUnreadRef.current[c.id] ?? 0;
       const curr = c.userChat?.unreadCount ?? 0;
       if (curr > prev && !c.userChat?.isMuted) shouldPlay = true;
