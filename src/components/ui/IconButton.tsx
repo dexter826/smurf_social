@@ -43,7 +43,9 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>((
       disabled={disabled}
       {...props}
     >
-      {icon}
+      <span className="inline-flex pointer-events-none">
+        {icon}
+      </span>
     </button>
   );
 });

@@ -198,7 +198,9 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           <div className="w-full h-full relative z-10 flex items-center justify-center">
             {/* Media Content */}
             <div className="w-full h-full flex items-center justify-center">
-              {allMedia[mediaIndex].type === 'video' ? (
+              {!allMedia[mediaIndex] ? (
+                <div className="text-white/40">Không tìm thấy nội dung</div>
+              ) : allMedia[mediaIndex].type === 'video' ? (
                 <video
                   src={allMedia[mediaIndex].url}
                   poster={allMedia[mediaIndex].thumbnailUrl}
@@ -220,37 +222,47 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             {allMedia.length > 1 && (
               <>
                 {/* Nut chuyen anh - Trai */}
-                <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-start pl-4 z-20 group-hover:opacity-100 opacity-0 transition-all duration-base">
+                <div className="absolute inset-y-0 left-0 w-24 flex items-center justify-start pl-4 z-30 pointer-events-none">
                   <button
-                    onClick={() => setMediaIndex(mediaIndex - 1)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMediaIndex(prev => (prev === 0 ? allMedia.length - 1 : prev - 1));
+                    }}
                     className={`
                         w-12 h-12 flex items-center justify-center 
-                        bg-white/10 hover:bg-white/20 backdrop-blur-md text-white 
-                        rounded-full border border-white/10 outline-none
-                        transition-all duration-base
-                        ${mediaIndex === 0 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
+                        bg-black/20 hover:bg-black/50 backdrop-blur-md text-white 
+                        rounded-full border border-white/20 shadow-xl outline-none
+                        transition-all duration-base pointer-events-auto
+                        active:scale-95
                       `}
                   >
-                    <ChevronLeft size={32} strokeWidth={2} />
+                    <ChevronLeft size={32} strokeWidth={2.5} className="pointer-events-none" />
                   </button>
                 </div>
 
                 {/* Nut chuyen anh - Phai */}
-                <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-end pr-4 z-20 group-hover:opacity-100 opacity-0 transition-all duration-base">
+                <div className="absolute inset-y-0 right-0 w-24 flex items-center justify-end pr-4 z-30 pointer-events-none">
                   <button
-                    onClick={() => setMediaIndex(mediaIndex + 1)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMediaIndex(prev => (prev === allMedia.length - 1 ? 0 : prev + 1));
+                    }}
                     className={`
                         w-12 h-12 flex items-center justify-center 
-                        bg-white/10 hover:bg-white/20 backdrop-blur-md text-white 
-                        rounded-full border border-white/10 outline-none
-                        transition-all duration-base
-                        ${mediaIndex === allMedia.length - 1 ? 'pointer-events-none invisible' : 'pointer-events-auto visible'}
+                        bg-black/20 hover:bg-black/50 backdrop-blur-md text-white 
+                        rounded-full border border-white/20 shadow-xl outline-none
+                        transition-all duration-base pointer-events-auto
+                        active:scale-95
                       `}
                   >
-                    <ChevronRight size={32} strokeWidth={2} />
+                    <ChevronRight size={32} strokeWidth={2.5} className="pointer-events-none" />
                   </button>
                 </div>
 
+                {/* Bo dem Media */}
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 text-white/90 text-[13px] font-medium tracking-wide shadow-lg pointer-events-none">
+                  {mediaIndex + 1} / {allMedia.length}
+                </div>
               </>
             )}
           </div>
@@ -351,6 +363,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   </div>
                   {allMedia.length > 1 && (
                     <>
+                      {/* Bo dem Media Mobile */}
+                      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-white/90 text-[12px] font-medium pointer-events-none">
+                        {mediaIndex + 1} / {allMedia.length}
+                      </div>
+
                       <div className="absolute inset-y-0 left-0 flex items-center px-2">
                         <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-black/30 backdrop-blur-md text-white rounded-full w-11 h-11 flex items-center justify-center outline-none transition-all active:scale-90 ${mediaIndex === 0 ? 'invisible' : ''}`}>
                           <ChevronLeft size={28} strokeWidth={2.5} />
