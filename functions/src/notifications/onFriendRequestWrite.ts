@@ -78,7 +78,10 @@ export const onFriendRequestWrite = onDocumentWritten(
                         receiverId: senderId,
                         actorId: receiverId,
                         type: NotificationType.SYSTEM,
-                        data: { contentSnippet: `${acceptorName} đã chấp nhận lời mời kết bạn.` },
+                        data: { 
+                            friendRequestId: reqId,
+                            contentSnippet: `đã chấp nhận lời mời kết bạn.` 
+                        },
                     });
 
                     await sendPushNotification({
