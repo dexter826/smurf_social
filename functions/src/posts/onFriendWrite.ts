@@ -1,5 +1,6 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
-import * as admin from 'firebase-admin';
+import { FieldValue, FieldPath } from 'firebase-admin/firestore';
+import { db } from '../app';
 
 /**
  * Xử lý tất cả thay đổi trên quan hệ bạn bè (Add, Remove)
@@ -15,7 +16,6 @@ export const onFriendWrite = onDocumentWritten(
         // 1. Xử lý ADD (Fan-out bài viết của bạn mới vào feed của user)
         if (!before && after) {
             try {
-                const db = admin.firestore();
                 const friendPostsSnapshot = await db.collection('posts')
                     .where('authorId', '==', friendId)
                     .where('status', '==', 'active')
@@ -33,7 +33,7 @@ export const onFriendWrite = onDocumentWritten(
                         postId: postDoc.id,
                         authorId: friendId,
                         createdAt: postDoc.data().createdAt,
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: FieldValue.serverTimestamp(),
                     });
                     batchCount++;
                     if (batchCount >= 500) {
@@ -52,20 +52,19 @@ export const onFriendWrite = onDocumentWritten(
         // 2. Xử lý REMOVE (Xóa bài viết của bạn cũ khỏi feed của user)
         if (before && !after) {
             try {
-                const db = admin.firestore();
                 const feedSnapshot = await db.collection('users').doc(userId).collection('feeds').get();
                 if (feedSnapshot.empty) return;
 
-                const postIds = feedSnapshot.docs.map(doc => doc.data().postId);
+                const postIds = feedSnapshot.docs.map(d => d.data().postId as string).filter(Boolean);
                 const postsToRemove: string[] = [];
 
                 for (let i = 0; i < postIds.length; i += 10) {
                     const chunk = postIds.slice(i, i + 10);
                     const postsSnapshot = await db.collection('posts')
-                        .where(admin.firestore.FieldPath.documentId(), 'in', chunk)
+                        .where(FieldPath.documentId(), 'in', chunk)
                         .where('authorId', '==', friendId)
                         .get();
-                    postsSnapshot.docs.forEach(doc => postsToRemove.push(doc.id));
+                    postsSnapshot.docs.forEach(d => postsToRemove.push(d.id));
                 }
 
                 if (postsToRemove.length === 0) return;

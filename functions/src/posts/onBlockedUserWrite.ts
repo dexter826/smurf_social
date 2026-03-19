@@ -1,5 +1,6 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
-import * as admin from 'firebase-admin';
+import { FieldPath, Firestore } from 'firebase-admin/firestore';
+import { db } from '../app';
 
 /**
  * Đồng bộ feed khi block options thay đổi
@@ -9,7 +10,7 @@ export const onBlockedUserWrite = onDocumentWritten(
     async (event) => {
         const userId = event.params.userId;
         const blockedUid = event.params.blockedUid;
-        const db = admin.firestore();
+
 
         const before = event.data?.before?.data();
         const after = event.data?.after?.data();
@@ -33,7 +34,7 @@ export const onBlockedUserWrite = onDocumentWritten(
 /**
  * Xóa bài viết khỏi feed
  */
-async function removePostsFromFeed(db: admin.firestore.Firestore, targetUserId: string, authorId: string): Promise<void> {
+async function removePostsFromFeed(db: Firestore, targetUserId: string, authorId: string): Promise<void> {
     try {
         const feedSnap = await db.collection('users').doc(targetUserId).collection('feeds').get();
         if (feedSnap.empty) return;
@@ -46,7 +47,7 @@ async function removePostsFromFeed(db: admin.firestore.Firestore, targetUserId: 
 
         for (let i = 0; i < postIds.length; i += chunkSize) {
             const snap = await db.collection('posts')
-                .where(admin.firestore.FieldPath.documentId(), 'in', postIds.slice(i, i + chunkSize))
+                .where(FieldPath.documentId(), 'in', postIds.slice(i, i + chunkSize))
                 .where('authorId', '==', authorId)
                 .get();
             snap.docs.forEach(d => toRemove.push(d.id));
@@ -67,7 +68,7 @@ async function removePostsFromFeed(db: admin.firestore.Firestore, targetUserId: 
 /**
  * Khôi phục bài viết vào feed nếu là bạn
  */
-async function restorePostsIfFriend(db: admin.firestore.Firestore, targetUserId: string, authorId: string): Promise<void> {
+async function restorePostsIfFriend(db: Firestore, targetUserId: string, authorId: string): Promise<void> {
     try {
         const friendSnap = await db.collection('users').doc(targetUserId).collection('friends').doc(authorId).get();
         if (!friendSnap.exists) return;

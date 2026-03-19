@@ -1,5 +1,6 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
-import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { db } from '../app';
 
 /**
  * Xử lý tất cả thay đổi trên bài viết (Create, Soft-delete)
@@ -17,14 +18,14 @@ export const onPostWrite = onDocumentWritten(
             if (!authorId) return;
 
             try {
-                const db = admin.firestore();
                 const batch = db.batch();
                 const feedEntry = {
                     postId,
                     authorId,
-                    createdAt: after.createdAt || admin.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    createdAt: after.createdAt || FieldValue.serverTimestamp(),
+                    updatedAt: FieldValue.serverTimestamp(),
                 };
+
 
                 // Add to author's feed
                 batch.set(db.collection('users').doc(authorId).collection('feeds').doc(postId), feedEntry);
@@ -77,7 +78,6 @@ export const onPostWrite = onDocumentWritten(
             if (!authorId) return;
 
             try {
-                const db = admin.firestore();
                 const batch = db.batch();
 
                 // Remove from author's feed

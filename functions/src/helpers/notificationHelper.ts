@@ -1,12 +1,13 @@
-import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../app';
 import { NotificationType, NotificationData } from '../types';
+
 
 /**
  * Tạo thông báo
  */
 export async function createNotification(data: NotificationData): Promise<string> {
-  const { FieldValue } = admin.firestore;
+
   const docRef = await db.collection('notifications').add({
     ...data,
     isRead: false,

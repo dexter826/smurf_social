@@ -2,7 +2,8 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { NotificationType, FriendRequestStatus } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
-import * as admin from 'firebase-admin';
+import { db } from '../app';
+
 
 /**
  * Xử lý tất cả thay đổi trên friendRequests
@@ -43,7 +44,6 @@ export const onFriendRequestWrite = onDocumentWritten(
         // 2. Xử lý DELETE
         if (before && !after) {
             try {
-                const db = admin.firestore();
                 const notificationsSnapshot = await db.collection('notifications')
                     .where('type', '==', NotificationType.FRIEND_REQUEST)
                     .where('data.friendRequestId', '==', reqId)
@@ -52,7 +52,7 @@ export const onFriendRequestWrite = onDocumentWritten(
                 if (notificationsSnapshot.empty) return;
 
                 const batch = db.batch();
-                notificationsSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
+                notificationsSnapshot.docs.forEach(({ ref }) => batch.delete(ref));
                 await batch.commit();
                 console.log(`[onFriendRequestWrite/Delete] Đã xóa ${notificationsSnapshot.size} thông báo rác cho request ${reqId}`);
             } catch (error) {
