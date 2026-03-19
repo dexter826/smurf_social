@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { ReactionType } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
@@ -7,53 +7,60 @@ import { useAuthStore } from '../store/authStore';
 export const useFilteredReactions = (
   sourceId: string,
   sourceType: 'post' | 'comment',
-  authorId: string
+  authorId: string,
+  initialCount?: number
 ) => {
   const currentUser = useAuthStore(state => state.user);
   const [reactionsMap, setReactionsMap] = useState<Record<string, ReactionType>>({});
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!sourceId || !currentUser) return;
 
-    let cancelled = false;
     const colPath = sourceType === 'post'
       ? `posts/${sourceId}/reactions`
       : `comments/${sourceId}/reactions`;
 
-    setIsLoaded(false);
-    setReactionsMap({});
-
-    getDocs(collection(db, colPath))
-      .then(snap => {
-        if (cancelled) return;
-        const map: Record<string, ReactionType> = {};
-        snap.forEach(d => { map[d.id] = d.data().type; });
-        setReactionsMap(map);
-      })
-      .catch(error => {
-        if (cancelled) return;
-        if (error.code !== 'permission-denied') {
-          console.error('useFilteredReactions error:', error);
-        }
-        setReactionsMap({});
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoaded(true);
+    const q = query(collection(db, colPath), orderBy('createdAt', 'desc'));
+    
+    setIsLoading(true);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const map: Record<string, ReactionType> = {};
+      snapshot.forEach(doc => {
+        map[doc.id] = doc.data().type as ReactionType;
       });
+      setReactionsMap(map);
+      setIsLoading(false);
+    }, (error) => {
+      if (error.code !== 'permission-denied') {
+        console.error(`Error subscribing to reactions for ${sourceId}:`, error);
+      }
+      setIsLoading(false);
+    });
 
-    return () => { cancelled = true; };
-  }, [sourceId, sourceType, currentUser?.id, authorId]);
+    return () => unsubscribe();
+  }, [sourceId, sourceType, currentUser?.id]);
 
-  const { filteredSummary, filteredCount } = useMemo(() => {
+  const { filteredSummary, filteredCount, isReacted } = useMemo(() => {
     const summary: Partial<Record<ReactionType, number>> = {};
     let count = 0;
     Object.values(reactionsMap).forEach(type => {
       summary[type] = (summary[type] || 0) + 1;
       count++;
     });
-    return { filteredSummary: summary, filteredCount: count };
-  }, [reactionsMap]);
 
-  return { filteredSummary, filteredCount, reactionsMap, isLoaded };
+    const isReacted = !!reactionsMap[currentUser?.id || ''];
+    
+    // Logic: Nếu initialCount thấp hơn thực tế (do server delay) thì dùng thực tế.
+    // Nếu count cực thấp (do privacy rules) thì dùng initialCount.
+    let finalCount = initialCount !== undefined ? Math.max(initialCount, count) : count;
+    
+    return { 
+      filteredSummary: summary, 
+      filteredCount: finalCount,
+      isReacted
+    };
+  }, [reactionsMap, initialCount, currentUser?.id]);
+
+  return { filteredSummary, filteredCount, reactionsMap, isLoaded: !isLoading, isReacted };
 };

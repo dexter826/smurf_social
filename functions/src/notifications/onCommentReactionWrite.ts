@@ -1,4 +1,5 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../app';
 import { NotificationType } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
@@ -14,13 +15,24 @@ export const onCommentReactionWrite = onDocumentWritten(
     const afterData = event.data?.after?.data() as { type: string } | undefined;
 
     const isCreate = !beforeData && !!afterData;
-
-    if (!isCreate) return;
-
+    const isDelete = !!beforeData && !afterData;
     const commentId = event.params.commentId;
     const userId = event.params.userId;
 
     try {
+      const batch = db.batch();
+      const commentRef = db.collection('comments').doc(commentId);
+
+      if (isCreate) {
+        batch.update(commentRef, { reactionCount: FieldValue.increment(1) });
+      } else if (isDelete) {
+        batch.update(commentRef, { reactionCount: FieldValue.increment(-1) });
+      }
+
+      await batch.commit();
+
+      if (!isCreate) return;
+
       const commentSnap = await db.collection('comments').doc(commentId).get();
       if (!commentSnap.exists) return;
 
@@ -45,7 +57,7 @@ export const onCommentReactionWrite = onDocumentWritten(
         data: { postId, commentId },
       });
     } catch (error) {
-      console.error('[onCommentReactionWrite] Lỗi thông báo:', error);
+      console.error('[onCommentReactionWrite] Lỗi:', error);
     }
   }
 );

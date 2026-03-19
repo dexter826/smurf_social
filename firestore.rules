@@ -107,7 +107,8 @@ service cloud.firestore {
         allow read: if isNotBanned() && (
           isOwner(get(/databases/$(database)/documents/posts/$(postId)).data.authorId) ||
           reactorId == request.auth.uid ||
-          isFriend(get(/databases/$(database)/documents/posts/$(postId)).data.authorId)
+          isFriend(get(/databases/$(database)/documents/posts/$(postId)).data.authorId) ||
+          get(/databases/$(database)/documents/posts/$(postId)).data.visibility == 'public'
         );
         allow write: if isNotBanned() && reactorId == request.auth.uid;
       }
@@ -115,11 +116,12 @@ service cloud.firestore {
 
     // Bình luận
     match /comments/{commentId} {
-      allow read: if isNotBanned() && (
-        let post = get(/databases/$(database)/documents/posts/$(resource.data.postId)).data;
-        post.visibility == 'public' || 
-        post.authorId == request.auth.uid || 
-        (post.visibility == 'friends' && isFriend(post.authorId)) || 
+      allow read: if isNotBanned() && 
+        'postId' in resource.data && (
+        isOwner(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) || 
+        resource.data.authorId == request.auth.uid || 
+        isFriend(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
+        get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.visibility == 'public' ||
         isAdmin()
       );
       allow create: if isNotBanned() && request.resource.data.authorId == request.auth.uid;

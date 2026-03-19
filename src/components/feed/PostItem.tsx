@@ -47,7 +47,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const { filteredSummary, filteredCount } = useFilteredReactions(
     post.id,
     'post',
-    post.authorId
+    post.authorId,
+    post.reactionCount
   );
 
   const hasMedia = (post.media?.length ?? 0) > 0;
@@ -181,6 +182,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         authorId={post.authorId}
         context="POST"
         friendsIds={friendIds}
+        initialCount={post.reactionCount}
       />
     </div>
   );

@@ -9,7 +9,6 @@ import { db } from '../../firebase/config';
 interface ReactionDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // CHAT: truyền reactions map. POST/COMMENT/MESSAGE: truyền sourceId + sourceType
   reactions?: Record<string, string | ReactionType>;
   sourceId?: string;
   sourceType?: 'post' | 'comment' | 'message';
@@ -17,6 +16,7 @@ interface ReactionDetailsModalProps {
   authorId?: string;
   context?: 'POST' | 'CHAT';
   friendsIds?: string[];
+  initialCount?: number;
 }
 
 export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
@@ -29,6 +29,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
   authorId,
   context = 'CHAT',
   friendsIds = [],
+  initialCount,
 }) => {
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -120,7 +121,10 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
       const friends = list.filter(item =>
         item.userId === currentUserId || item.userId === authorId || friendsIds.includes(item.userId)
       );
-      const othersCount = list.length - friends.length;
+      
+      // Nếu có counter từ server, dùng nó để tính tổng số người bị ẩn
+      const totalCount = initialCount !== undefined ? Math.max(initialCount, list.length) : list.length;
+      const othersCount = totalCount - friends.length;
 
       return {
         displayList: friends.filter(item => activeTab === 'ALL' || item.type === activeTab),
@@ -180,50 +184,49 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                 </div>
               ))}
             </div>
-          ) : displayList.length > 0 ? (
-            <div className="space-y-1">
-              {displayList.map(({ user, type, userId }) => (
-                <div
-                  key={userId}
-                  className="flex items-center justify-between p-2 hover:bg-bg-secondary rounded-lg transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <UserAvatar
-                        userId={userId}
-                        src={typeof user.avatar === 'string' ? user.avatar : user.avatar.url}
-                        name={user.fullName}
-                        size="md"
-                        showStatus={false}
-                      />
-                      <div className="absolute -bottom-1 -right-1 bg-bg-primary rounded-full p-0.5 shadow-sm border border-divider">
-                        {getReactionIcon(type, "", 14)}
+          ) : (displayList.length > 0 || othersCount > 0) ? (
+            <div className={`flex flex-col h-full ${displayList.length === 0 ? 'items-center justify-center p-10' : 'p-2'}`}>
+              {displayList.length > 0 && (
+                <div className="space-y-1 w-full">
+                  {displayList.map(({ user, type, userId }) => (
+                    <div
+                      key={userId}
+                      className="flex items-center justify-between p-2 hover:bg-bg-secondary rounded-lg transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <UserAvatar
+                            userId={userId}
+                            src={typeof user.avatar === 'string' ? user.avatar : user.avatar.url}
+                            name={user.fullName}
+                            size="md"
+                            showStatus={false}
+                          />
+                          <div className="absolute -bottom-1 -right-1 bg-bg-primary rounded-full p-0.5 shadow-sm border border-divider">
+                            {getReactionIcon(type, "", 14)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-text-primary group-hover:text-primary transition-colors">
+                            {userId === currentUserId ? 'Bạn' : user.fullName}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-text-primary group-hover:text-primary transition-colors">
-                        {userId === currentUserId ? 'Bạn' : user.fullName}
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
 
               {context === 'POST' && othersCount > 0 && (
-                <div className="px-4 py-4 text-center border-t border-divider mt-2">
-                  <p className="text-xs text-text-tertiary italic">
-                    {displayList.length > 0
-                      ? `và ${othersCount} người khác đã bày tỏ cảm xúc`
-                      : `${othersCount} người đã bày tỏ cảm xúc`}
-                  </p>
-                  <p className="text-[10px] text-text-tertiary mt-1">
-                    (Chi tiết chỉ hiển thị với bạn bè)
+                <div className={`text-center ${displayList.length > 0 ? 'px-4 py-8 border-t border-divider/30 bg-bg-secondary/5 mt-4 w-full' : 'p-6'}`}>
+                  <p className="text-sm text-text-secondary italic">
+                    Có {Math.max(initialCount || 0, displayList.length + othersCount)} lượt bày tỏ cảm xúc. Bạn chỉ có thể thấy của bạn bè.
                   </p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-text-tertiary">
+            <div className="h-full flex flex-col items-center justify-center text-text-tertiary p-10">
               <p className="italic text-sm">Chưa có ai bày tỏ cảm xúc này</p>
             </div>
           )}

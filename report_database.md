@@ -123,6 +123,7 @@ _Mô tả: Bảng trung tâm lưu diễn đàn bài viết/trạng thái (Status
 | `status`       | String Enum        | **Required**      | `"active"`, `"deleted"`                          |
 | `visibility`   | String Enum        | **Required**      | `"public"`, `"friends"`, `"private"`             |
 | `commentCount` | Number             | **Required**      | Số lượng bình luận. Mặc định `0`                 |
+| `reactionCount`| Number             | **Required**      | Số lượng cảm xúc. Mặc định `0`                   |
 | `media`        | Array<MediaObject> | _Optional_        | Danh sách hình ảnh/video                         |
 | `createdAt`    | Timestamp          | **Required**      | Thời điểm tạo                                    |
 | `updatedAt`    | Timestamp          | **Required**      | Thời điểm cập nhật                               |
@@ -154,6 +155,7 @@ _Mô tả: Chứa mọi bình luận của bài viết. Áp dụng cấu trúc p
 | `replyToId`     | String      | _Optional_        | ID comment được phản hồi cụ thể          |
 | `image`         | MediaObject | _Optional_        | Hình ảnh đính kèm                        |
 | `replyCount`    | Number      | **Required**      | Số lượng phản hồi. Mặc định `0`          |
+| `reactionCount` | Number      | **Required**      | Số lượng cảm xúc. Mặc định `0`           |
 | `createdAt`     | Timestamp   | **Required**      | Thời điểm tạo                            |
 | `updatedAt`     | Timestamp   | **Required**      | Thời điểm cập nhật                       |
 | `deletedAt`     | Timestamp   | _Optional_        | Thời điểm xóa                            |

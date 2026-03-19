@@ -282,6 +282,7 @@ export interface Comment extends BaseEntity, SoftDeletableEntity {
     status: CommentStatus;
     image?: MediaObject;
     replyCount?: number;
+    reactionCount?: number;
     updatedAt: Timestamp;
 }
 
@@ -300,6 +301,7 @@ export interface Post extends BaseEntity, SoftDeletableEntity {
     status: PostStatus;
     media?: MediaObject[];
     commentCount: number;
+    reactionCount?: number;
     visibility: Visibility;
     updatedAt: Timestamp;
 }

@@ -96,7 +96,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   const { filteredSummary, filteredCount } = useFilteredReactions(
     comment.id,
     'comment',
-    comment.authorId
+    comment.authorId,
+    comment.reactionCount
   );
 
   const handleReact = useCallback((reaction: ReactionType | 'REMOVE') => {
@@ -336,6 +337,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
           authorId={comment.authorId}
           context="POST"
           friendsIds={friendIds}
+          initialCount={comment.reactionCount}
         />
       )}
     </div>
