@@ -19,8 +19,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
 }) => (
   <button
     type="button"
-    onClick={(e) => {
-      e.stopPropagation();
+    onClick={() => {
       onClick();
     }}
     className={`
@@ -62,31 +61,33 @@ function calcPosition(
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  const spaceBelow = vh - triggerRect.bottom - VIEWPORT_PADDING;
+  const spaceBelow = vh - triggerRect.bottom - MENU_GAP;
   const spaceAbove = triggerRect.top - VIEWPORT_PADDING;
   const openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
 
-  // Horizontal: start from align preference, then clamp
-  let left = align === 'right'
-    ? triggerRect.right - menuWidth
-    : triggerRect.left;
-
-  left = Math.max(VIEWPORT_PADDING, Math.min(left, vw - menuWidth - VIEWPORT_PADDING));
-
-  if (openUp) {
-    const bottom = vh - triggerRect.top + MENU_GAP;
-    return {
-      bottom,
-      left,
-      transformOrigin: align === 'right' ? 'bottom right' : 'bottom left',
-    };
-  }
-
-  return {
-    top: triggerRect.bottom + MENU_GAP,
-    left,
+  const pos: DropdownPosition = {
     transformOrigin: align === 'right' ? 'top right' : 'top left',
   };
+
+  if (openUp) {
+    pos.bottom = vh - triggerRect.top + MENU_GAP;
+    pos.transformOrigin = align === 'right' ? 'bottom right' : 'bottom left';
+  } else {
+    pos.top = triggerRect.bottom + MENU_GAP;
+  }
+
+  if (align === 'right') {
+    pos.right = vw - triggerRect.right;
+    if (vw - pos.right - menuWidth < VIEWPORT_PADDING) {
+      pos.right = undefined;
+      pos.left = VIEWPORT_PADDING;
+    }
+  } else {
+    pos.left = triggerRect.left;
+    pos.left = Math.max(VIEWPORT_PADDING, Math.min(pos.left, vw - menuWidth - VIEWPORT_PADDING));
+  }
+
+  return pos;
 }
 
 interface DropdownProps {
@@ -130,34 +131,32 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
   useClickOutside([triggerRef, menuRef], () => handleOpenChange(false), isOpen);
 
-  // Recalculate position after menu mounts so we know its real dimensions
   useLayoutEffect(() => {
     if (!isOpen || !triggerRef.current || !menuRef.current) return;
 
-    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const triggerEl = triggerRef.current;
     const menuEl = menuRef.current;
-    const mw = matchTriggerWidth ? triggerRect.width : Math.max(menuEl.offsetWidth, MIN_MENU_WIDTH);
-    const mh = menuEl.offsetHeight;
-
-    setMenuWidth(matchTriggerWidth ? triggerRect.width : undefined);
-    setPosition(calcPosition(triggerRect, mw, mh, align));
-  }, [isOpen, align, matchTriggerWidth]);
-
-  // Reposition on scroll/resize while open
-  useLayoutEffect(() => {
-    if (!isOpen) return;
 
     const update = () => {
-      if (!triggerRef.current || !menuRef.current) return;
-      const triggerRect = triggerRef.current.getBoundingClientRect();
-      const mw = matchTriggerWidth ? triggerRect.width : Math.max(menuRef.current.offsetWidth, MIN_MENU_WIDTH);
-      const mh = menuRef.current.offsetHeight;
+      const triggerRect = triggerEl.getBoundingClientRect();
+      const mw = matchTriggerWidth ? triggerRect.width : Math.max(menuEl.offsetWidth, MIN_MENU_WIDTH);
+      const mh = menuEl.offsetHeight;
+
+      setMenuWidth(matchTriggerWidth ? triggerRect.width : undefined);
       setPosition(calcPosition(triggerRect, mw, mh, align));
     };
 
+    update();
+
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(menuEl);
+    resizeObserver.observe(triggerEl);
+
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
+
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener('scroll', update, true);
       window.removeEventListener('resize', update);
     };

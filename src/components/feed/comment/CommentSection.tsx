@@ -264,7 +264,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <div className="text-center py-10 px-6">
               <p className="text-text-secondary text-sm italic">
                 {hiddenInfo.total > 0
-                  ? `Có ${hiddenInfo.total} bình luận bị ẩn. Bạn chỉ xem được bình luận của bạn bè.`
+                  ? `Có ${hiddenInfo.total} bình luận. Bạn chỉ xem được bình luận của bạn bè.`
                   : 'Hãy là người đầu tiên bình luận!'}
               </p>
             </div>

@@ -47,35 +47,46 @@ export const Select: React.FC<SelectProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const selectedOption = options.find(opt => opt.value === value);
 
-  const calcPos = useCallback(() => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    const spaceBelow = vh - rect.bottom - VIEWPORT_PADDING;
-    const spaceAbove = rect.top - VIEWPORT_PADDING;
-    const openUp = spaceBelow < MAX_MENU_HEIGHT && spaceAbove > spaceBelow;
-
-    const width = Math.max(rect.width, 160);
-    const left = Math.max(VIEWPORT_PADDING, Math.min(rect.left, vw - width - VIEWPORT_PADDING));
-
-    setPos(openUp
-      ? { bottom: window.innerHeight - rect.top + MENU_GAP, left, width, openUp: true }
-      : { top: rect.bottom + MENU_GAP, left, width, openUp: false }
-    );
-  }, []);
 
   useLayoutEffect(() => {
-    if (!isOpen) { setPos(null); return; }
-    calcPos();
-    window.addEventListener('scroll', calcPos, true);
-    window.addEventListener('resize', calcPos);
-    return () => {
-      window.removeEventListener('scroll', calcPos, true);
-      window.removeEventListener('resize', calcPos);
+    if (!isOpen || !containerRef.current || !menuRef.current) return;
+
+    const containerEl = containerRef.current;
+    const menuEl = menuRef.current;
+
+    const update = () => {
+      const rect = containerEl.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const spaceBelow = vh - rect.bottom - MENU_GAP;
+      const spaceAbove = rect.top - VIEWPORT_PADDING;
+      const openUp = spaceBelow < MAX_MENU_HEIGHT && spaceAbove > spaceBelow;
+
+      const width = Math.max(rect.width, 160);
+      const left = Math.max(VIEWPORT_PADDING, Math.min(rect.left, vw - width - VIEWPORT_PADDING));
+
+      setPos(openUp
+        ? { bottom: window.innerHeight - rect.top + MENU_GAP, left, width, openUp: true }
+        : { top: rect.bottom + MENU_GAP, left, width, openUp: false }
+      );
     };
-  }, [isOpen, calcPos]);
+
+    update();
+
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(menuEl);
+    resizeObserver.observe(containerEl);
+
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [isOpen]);
 
   useClickOutside([containerRef, menuRef], () => setIsOpen(false), isOpen);
 
