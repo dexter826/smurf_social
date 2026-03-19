@@ -5,6 +5,8 @@ import { User, Visibility, MediaObject } from '../../../shared/types';
 import { Avatar, Button, Skeleton } from '../ui';
 import { usePostStore } from '../../store/postStore';
 import { postService } from '../../services/postService';
+import { toast } from '../../store/toastStore';
+import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../constants';
 
 interface CreatePostProps {
   currentUser: User;
@@ -19,11 +21,25 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   const onMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setPendingFiles(files);
-      setShowCreateModal(true);
+    let files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const isVideoSelection = e.target.accept.includes('video');
+
+    if (isVideoSelection) {
+      if (files.length > MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST) {
+        toast.error(TOAST_MESSAGES.POST.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
+        files = files.slice(0, MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST);
+      }
+    } else {
+      if (files.length > MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST) {
+        toast.error(TOAST_MESSAGES.POST.MEDIA_LIMIT(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST));
+        files = files.slice(0, MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST);
+      }
     }
+
+    setPendingFiles(files);
+    setShowCreateModal(true);
     e.target.value = '';
   };
 

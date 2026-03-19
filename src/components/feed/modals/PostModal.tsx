@@ -8,6 +8,7 @@ import { toast } from '../../../store/toastStore';
 import { validateFileSize } from '../../../utils';
 import { User, Post, Visibility, MediaObject } from '../../../../shared/types';
 import { postSchema, PostFormValues } from '../../../utils/validation';
+import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../../constants';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
 import { useAutoResizeTextarea } from '../../../hooks/utils';
 import { userService } from '../../../services/userService';
@@ -142,10 +143,76 @@ export const PostModal: React.FC<PostModalProps> = ({
 
     if (validFiles.length === 0) return;
 
+    const currentTotal = formData.media.length + pendingFiles.length;
+    const remainingSlots = MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST - currentTotal;
+
+    if (remainingSlots <= 0) {
+      toast.error(TOAST_MESSAGES.POST.MEDIA_LIMIT(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST));
+      return;
+    }
+
+    // Kiểm tra giới hạn video (tối đa 3)
+    const existingVideoCount = 
+      formData.media.filter(m => m.mimeType.startsWith('video/')).length + 
+      pendingFiles.filter(f => f.type.startsWith('video/')).length;
+    
+    const remainingVideoSlots = MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST - existingVideoCount;
+    
+    let processedFiles = validFiles;
+    let processedPreviews = newPreviews;
+
+    const newVideosInBatch = processedFiles.filter(f => f.type.startsWith('video/'));
+
+    if (newVideosInBatch.length > 0) {
+      if (remainingVideoSlots <= 0) {
+        toast.error(TOAST_MESSAGES.POST.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
+        processedFiles = validFiles.filter(f => !f.type.startsWith('video/'));
+        processedPreviews = newPreviews.filter(p => p.type !== 'video');
+      } else if (newVideosInBatch.length > remainingVideoSlots) {
+        toast.error(TOAST_MESSAGES.POST.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
+        
+        let videosAdded = 0;
+        const tempFiles: File[] = [];
+        const tempPreviews: { url: string; type: 'image' | 'video' }[] = [];
+
+        processedFiles.forEach((f, i) => {
+          if (f.type.startsWith('video/')) {
+            if (videosAdded < remainingVideoSlots) {
+              tempFiles.push(f);
+              tempPreviews.push(processedPreviews[i]);
+              videosAdded++;
+            } else {
+              URL.revokeObjectURL(processedPreviews[i].url);
+            }
+          } else {
+            tempFiles.push(f);
+            tempPreviews.push(processedPreviews[i]);
+          }
+        });
+        processedFiles = tempFiles;
+        processedPreviews = tempPreviews;
+      }
+    }
+
+    if (processedFiles.length === 0) return;
+
+    // Kiểm tra giới hạn tổng số lượng một lần nữa sau khi lọc video
+    let filesToAdd = processedFiles;
+    if (processedFiles.length > remainingSlots) {
+      toast.error(TOAST_MESSAGES.POST.MEDIA_LIMIT(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST));
+      filesToAdd = processedFiles.slice(0, remainingSlots);
+    }
+
     // Chỉ lưu file vào state, không upload ngay
-    const allFiles = [...pendingFiles, ...validFiles];
+    const allFiles = [...pendingFiles, ...filesToAdd];
+    const addedPreviews = processedPreviews.slice(0, filesToAdd.length);
+    
+    // Thu hồi URL của những file bị cắt bỏ
+    if (processedPreviews.length > filesToAdd.length) {
+      processedPreviews.slice(filesToAdd.length).forEach(p => URL.revokeObjectURL(p.url));
+    }
     setPendingFiles(allFiles);
-    setPreviews(prev => [...prev, ...newPreviews]);
+    setPreviews(prev => [...prev, ...addedPreviews]);
     setValue('hasPendingFiles', allFiles.length > 0, { shouldValidate: true });
 
     if (fileInputRef.current) fileInputRef.current.value = '';

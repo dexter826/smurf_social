@@ -35,7 +35,7 @@ export const TIME_LIMITS = {
 // Giới hạn Media
 export const MEDIA_CONSTRAINTS = {
   MAX_IMAGES_PER_POST: 10,
-  MAX_VIDEOS_PER_POST: 1,
+  MAX_VIDEOS_PER_POST: 3,
   MAX_IMAGES_PER_COMMENT: 1,
 } as const;
 

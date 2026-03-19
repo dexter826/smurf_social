@@ -17,6 +17,8 @@ export const TOAST_MESSAGES = {
     CREATE_FAILED: (detail?: string) => detail ? `Không thể đăng bài viết: ${detail}` : 'Không thể đăng bài viết.',
     UPDATE_FAILED: (detail?: string) => detail ? `Không thể cập nhật bài viết: ${detail}` : 'Không thể cập nhật bài viết.',
     DELETE_FAILED: 'Không thể xóa bài viết.',
+    MEDIA_LIMIT: (max: number) => `Chỉ được chọn tối đa ${max} ảnh/video cho mỗi bài viết.`,
+    VIDEO_LIMIT: (max: number) => `Mỗi bài viết chỉ được tải lên tối đa ${max} video.`,
   },
 
   PROFILE: {
