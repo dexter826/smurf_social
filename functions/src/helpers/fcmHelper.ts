@@ -9,6 +9,7 @@ const NOTIFICATION_TITLES: Partial<Record<NotificationType, string>> = {
   [NotificationType.SYSTEM]: 'Thông báo hệ thống',
   [NotificationType.REPORT]: 'Báo cáo vi phạm',
   [NotificationType.CHAT]: 'Tin nhắn mới',
+  [NotificationType.MENTION]: 'Bạn được nhắc đến',
 };
 
 /**
