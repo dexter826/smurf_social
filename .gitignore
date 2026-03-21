@@ -33,6 +33,7 @@ dist-ssr
 # Agent Skill
 /.agent
 /.kiro
+/rules.md
 
 # Firebase
 .firebase/
