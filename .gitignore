@@ -29,9 +29,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Agent Skill
-/.agent
 /.kiro
 /rules.md
 
