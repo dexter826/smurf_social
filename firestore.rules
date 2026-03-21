@@ -102,7 +102,7 @@ service cloud.firestore {
       );
       allow delete: if isAdmin() || (resource.data.authorId == request.auth.uid);
 
-      // Cảm xúc bài viết (Zalo-style)
+      // Cảm xúc bài viết
       match /reactions/{reactorId} {
         allow read: if isNotBanned() && (
           isOwner(get(/databases/$(database)/documents/posts/$(postId)).data.authorId) ||
@@ -138,7 +138,7 @@ service cloud.firestore {
       allow delete: if isAdmin() || resource.data.authorId == request.auth.uid || 
         get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId == request.auth.uid;
 
-      // Cảm xúc bình luận (Zalo-style)
+      // Cảm xúc bình luận
       match /reactions/{reactorId} {
         allow read: if isNotBanned() && (
           isOwner(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId) ||
