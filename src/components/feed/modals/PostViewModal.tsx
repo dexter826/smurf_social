@@ -8,7 +8,8 @@ import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
 import { usePostStore } from '../../../store/postStore';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
-import { VisibilityBadge, TruncatedText, ReactionActions } from '../shared';
+import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from '../shared';
+import { MediaViewer } from '../../ui';
 
 interface PostViewModalProps {
   post: Post | null;
@@ -37,7 +38,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const { openReportModal } = useReportStore();
   const friendIds = useFriendIds();
   const myReaction = usePostStore(state => state.myPostReactions[post?.id || '']);
-  const [mediaIndex, setMediaIndex] = useState(0);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
 
   const { filteredSummary, filteredCount } = useFilteredReactions(
@@ -53,37 +55,10 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     }
   }, [author?.id, onClose, navigate]);
 
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-
-  // Min swipe distance (pixels)
-  const minSwipeDistance = 50;
-
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  }, []);
-
-  const onTouchMove = useCallback((e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX), []);
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe && post && mediaIndex < allMedia.length - 1) {
-      setMediaIndex(prev => prev + 1);
-    }
-    if (isRightSwipe && mediaIndex > 0) {
-      setMediaIndex(prev => prev - 1);
-    }
-  };
-
   // Reset trạng thái khi đổi bài viết
   React.useEffect(() => {
     if (isOpen) {
-      setMediaIndex(0);
+      setActiveMediaIndex(0);
     }
   }, [isOpen, post?.id]);
 
@@ -92,7 +67,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     return (post.media || []).map(m => ({
       url: m.url,
       type: m.mimeType.startsWith('video/') ? 'video' as const : 'image' as const,
-      thumbnailUrl: m.thumbnailUrl
+      thumbnail: m.thumbnailUrl
     }));
   }, [post?.media]);
 
@@ -198,12 +173,12 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           <div className="w-full h-full relative z-10 flex items-center justify-center">
             {/* Media Content */}
             <div className="w-full h-full flex items-center justify-center">
-              {!allMedia[mediaIndex] ? (
+              {!allMedia[activeMediaIndex] ? (
                 <div className="text-white/40">Không tìm thấy nội dung</div>
-              ) : allMedia[mediaIndex].type === 'video' ? (
+              ) : allMedia[activeMediaIndex].type === 'video' ? (
                 <video
-                  src={allMedia[mediaIndex].url}
-                  poster={allMedia[mediaIndex].thumbnailUrl}
+                  src={allMedia[activeMediaIndex].url}
+                  poster={allMedia[activeMediaIndex].thumbnail}
                   controls
                   playsInline
                   preload="none"
@@ -211,9 +186,10 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 />
               ) : (
                 <img
-                  src={allMedia[mediaIndex].url}
+                  src={allMedia[activeMediaIndex].url}
                   alt=""
                   className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-base"
+                  onClick={() => setIsMediaViewerOpen(true)}
                 />
               )}
             </div>
@@ -226,7 +202,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMediaIndex(prev => (prev === 0 ? allMedia.length - 1 : prev - 1));
+                      setActiveMediaIndex(prev => (prev === 0 ? allMedia.length - 1 : prev - 1));
                     }}
                     className={`
                         w-12 h-12 flex items-center justify-center 
@@ -245,7 +221,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMediaIndex(prev => (prev === allMedia.length - 1 ? 0 : prev + 1));
+                      setActiveMediaIndex(prev => (prev === allMedia.length - 1 ? 0 : prev + 1));
                     }}
                     className={`
                         w-12 h-12 flex items-center justify-center 
@@ -261,7 +237,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
                 {/* Bo dem Media */}
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 text-white/90 text-[13px] font-medium tracking-wide shadow-lg pointer-events-none">
-                  {mediaIndex + 1} / {allMedia.length}
+                  {activeMediaIndex + 1} / {allMedia.length}
                 </div>
               </>
             )}
@@ -346,40 +322,16 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           totalCommentCount={post.commentCount}
           header={
             <div className="flex flex-col">
-              {/* Media cho Mobile */}
+              {/* Media Grid cho Mobile */}
               {hasMedia && (
-                <div
-                  className="lg:hidden w-full bg-[#0a0c10] aspect-video sm:aspect-square max-h-[60vh] flex items-center justify-center relative select-none overflow-hidden touch-none"
-                  onTouchStart={onTouchStart}
-                  onTouchMove={onTouchMove}
-                  onTouchEnd={onTouchEnd}
-                >
-                  <div className="w-full h-full flex items-center justify-center">
-                    {allMedia[mediaIndex].type === 'video' ? (
-                      <video src={allMedia[mediaIndex].url} poster={allMedia[mediaIndex].thumbnailUrl} controls playsInline className="max-w-full max-h-full" />
-                    ) : (
-                      <img src={allMedia[mediaIndex].url} alt="" className="max-w-full max-h-full object-contain" />
-                    )}
-                  </div>
-                  {allMedia.length > 1 && (
-                    <>
-                      {/* Bo dem Media Mobile */}
-                      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-white/90 text-[12px] font-medium pointer-events-none">
-                        {mediaIndex + 1} / {allMedia.length}
-                      </div>
-
-                      <div className="absolute inset-y-0 left-0 flex items-center px-2">
-                        <button onClick={() => setMediaIndex(mediaIndex - 1)} className={`bg-black/30 backdrop-blur-md text-white rounded-full w-11 h-11 flex items-center justify-center outline-none transition-all active:scale-90 ${mediaIndex === 0 ? 'invisible' : ''}`}>
-                          <ChevronLeft size={28} strokeWidth={2.5} />
-                        </button>
-                      </div>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2">
-                        <button onClick={() => setMediaIndex(mediaIndex + 1)} className={`bg-black/30 backdrop-blur-md text-white rounded-full w-11 h-11 flex items-center justify-center outline-none transition-all active:scale-90 ${mediaIndex === allMedia.length - 1 ? 'invisible' : ''}`}>
-                          <ChevronRight size={28} strokeWidth={2.5} />
-                        </button>
-                      </div>
-                    </>
-                  )}
+                <div className="lg:hidden w-full">
+                  <PostMediaGrid
+                    media={post.media || []}
+                    onItemClick={(index) => {
+                      setActiveMediaIndex(index);
+                      setIsMediaViewerOpen(true);
+                    }}
+                  />
                 </div>
               )}
 
@@ -417,6 +369,12 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         authorId={post.authorId}
         context="POST"
         friendsIds={friendIds}
+      />
+      <MediaViewer
+        media={allMedia}
+        initialIndex={activeMediaIndex}
+        isOpen={isMediaViewerOpen}
+        onClose={() => setIsMediaViewerOpen(false)}
       />
     </Modal>
   );

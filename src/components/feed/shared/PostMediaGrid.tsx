@@ -12,11 +12,12 @@ interface MediaItem {
 interface PostMediaGridProps {
   media: MediaObject[];
   onClick?: () => void;
+  onItemClick?: (index: number) => void;
   uploadProgress?: number;
 }
 
 const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
-  media, onClick, uploadProgress
+  media, onClick, onItemClick, uploadProgress
 }) => {
   const allMedia = useMemo<MediaItem[]>(() =>
     media.map(m => ({
@@ -30,11 +31,19 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
 
   const count = allMedia.length;
 
-  const renderMediaItem = (item: MediaItem, className: string = '', overlay?: React.ReactNode) => {
+  const renderMediaItem = (item: MediaItem, index: number, className: string = '', overlay?: React.ReactNode) => {
     const isBlob = item.url.startsWith('blob:');
 
     return (
-      <div className={`relative group overflow-hidden bg-bg-tertiary ${className}`}>
+      <div 
+        className={`relative group overflow-hidden bg-bg-tertiary cursor-pointer ${className}`}
+        onClick={(e) => {
+          if (onItemClick) {
+            e.stopPropagation();
+            onItemClick(index);
+          }
+        }}
+      >
         {item.type === 'video' ? (
           <video
             src={item.url}
@@ -82,7 +91,14 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
       <div className="bg-bg-secondary relative select-none overflow-hidden">
         <div
           className="relative group cursor-pointer bg-black/5 flex items-center justify-center overflow-hidden max-h-[600px]"
-          onClick={onClick}
+          onClick={(e) => {
+            if (onItemClick) {
+              e.stopPropagation();
+              onItemClick(0);
+            } else if (onClick) {
+              onClick();
+            }
+          }}
         >
           <div
             className={`absolute inset-0 blur-2xl grayscale pointer-events-none transition-opacity duration-700 ${isBlob ? 'opacity-10' : 'opacity-20'}`}
@@ -144,7 +160,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
 
           return (
             <React.Fragment key={idx}>
-              {renderMediaItem(item, isLarge ? 'row-span-2' : '', overlay)}
+              {renderMediaItem(item, idx, isLarge ? 'row-span-2' : '', overlay)}
             </React.Fragment>
           );
         })}

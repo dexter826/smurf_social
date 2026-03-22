@@ -100,11 +100,11 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
         const isLeftSwipe = distance > minSwipeDistance;
         const isRightSwipe = distance < -minSwipeDistance;
 
-        if (isLeftSwipe && currentIndex < media.length - 1) {
-            setCurrentIndex(prev => prev + 1);
+        if (isLeftSwipe) {
+            setCurrentIndex(prev => (prev < media.length - 1 ? prev + 1 : 0));
         }
-        if (isRightSwipe && currentIndex > 0) {
-            setCurrentIndex(prev => prev - 1);
+        if (isRightSwipe) {
+            setCurrentIndex(prev => (prev > 0 ? prev - 1 : media.length - 1));
         }
     };
 
