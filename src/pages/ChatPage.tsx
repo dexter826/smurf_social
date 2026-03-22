@@ -103,8 +103,11 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     setIsChatVisible(true);
-    return () => setIsChatVisible(false);
-  }, [setIsChatVisible]);
+    return () => {
+      setIsChatVisible(false);
+      handleSelectConversation(null);
+    };
+  }, [setIsChatVisible, handleSelectConversation]);
 
   const [searchParams] = useSearchParams();
   const convIdFromUrl = searchParams.get('conv');

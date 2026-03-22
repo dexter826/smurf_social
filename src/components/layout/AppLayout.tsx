@@ -23,6 +23,7 @@ import { OutgoingCallDialog } from '../chat/call/OutgoingCallDialog';
 import { CallWindow } from '../chat/call/CallWindow';
 import { CONFIRM_MESSAGES } from '../../constants';
 import { notificationService } from '../../services/notificationService';
+import { soundManager } from '../../services/soundManager';
 
 export const AppLayout: React.FC = () => {
   const { user } = useAuthStore();
@@ -71,19 +72,22 @@ export const AppLayout: React.FC = () => {
       .forEach(c => markAsDelivered(c.id, user.id));
   }, [conversations, selectedConversationId, user?.id]);
 
-  const prevUnreadRef = useRef<Record<string, number>>({});
-  const lastSoundRef = useRef<number>(0);
   useEffect(() => {
-    if (!user) return;
-    let shouldPlay = false;
-    conversations.forEach(c => {
-      const prev = prevUnreadRef.current[c.id] ?? 0;
-      const curr = c.userChat?.unreadCount ?? 0;
-      if (curr > prev && !c.userChat?.isMuted) shouldPlay = true;
-      prevUnreadRef.current[c.id] = curr;
-    });
-    if (shouldPlay) lastSoundRef.current = notificationService.playSound(lastSoundRef.current);
-  }, [conversations, selectedConversationId, user?.id]);
+    const handleUnlock = () => {
+      soundManager.unlock();
+      window.removeEventListener('click', handleUnlock);
+      window.removeEventListener('keydown', handleUnlock);
+      window.removeEventListener('touchstart', handleUnlock);
+    };
+    window.addEventListener('click', handleUnlock);
+    window.addEventListener('keydown', handleUnlock);
+    window.addEventListener('touchstart', handleUnlock);
+    return () => {
+      window.removeEventListener('click', handleUnlock);
+      window.removeEventListener('keydown', handleUnlock);
+      window.removeEventListener('touchstart', handleUnlock);
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedPost && !usersMap[selectedPost.authorId]) {

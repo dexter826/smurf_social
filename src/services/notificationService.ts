@@ -18,47 +18,14 @@ import {
 } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { db } from '../firebase/config';
-import NotificationSound from '../assets/sounds/message-notification.mp3';
 import type { Notification } from '../../shared/types';
 import { NotificationType } from '../../shared/types';
 import { getValidatedEnvConfig } from '../utils/validateEnv';
 import { convertDocs } from '../utils/firebaseUtils';
 import { useRtdbChatStore } from '../store/rtdbChatStore';
-
-const NOTIFICATION_SOUND_URL = NotificationSound;
-let notificationAudio: HTMLAudioElement | null = null;
+import { soundManager } from './soundManager';
 
 export const notificationService = {
-  unlockAudio: () => {
-    if (notificationAudio) return;
-    notificationAudio = new Audio(NOTIFICATION_SOUND_URL);
-    notificationAudio.load();
-    notificationAudio.play().then(() => {
-      notificationAudio!.pause();
-      notificationAudio!.currentTime = 0;
-    }).catch(() => {
-    });
-  },
-
-  // Phát âm báo
-  playSound: (lastPlayedTimestamp: number): number => {
-    const now = Date.now();
-    if (now - lastPlayedTimestamp < 1500) return lastPlayedTimestamp;
-
-    try {
-      if (!notificationAudio) {
-        notificationAudio = new Audio(NOTIFICATION_SOUND_URL);
-      }
-      notificationAudio.currentTime = 0;
-      notificationAudio.volume = 1.0;
-      notificationAudio.play().catch(err => console.debug('Audio play blocked:', err));
-      return now;
-    } catch (err) {
-      console.error('Lỗi khi phát âm thanh:', err);
-      return lastPlayedTimestamp;
-    }
-  },
-
   // Theo dõi thông báo mới nhất
   subscribeToNotifications: (userId: string, callback: (notifications: Notification[]) => void, limitCount: number = 20) => {
     const q = query(
@@ -220,7 +187,6 @@ export const notificationService = {
   initForegroundMessageHandler: (userId: string, selectedConversationRef?: React.RefObject<string | null>) => {
     try {
       const messaging = getMessaging();
-      let lastPlayedTimestamp = 0;
 
       const handlePayload = (payload: any) => {
         const data = payload.data;
@@ -237,18 +203,20 @@ export const notificationService = {
           const convMetadata = chatStore.conversations.find(c => c.id === convId);
           const isMuted = convMetadata?.userChat?.isMuted === true;
           if (isMuted && !isMention) return;
+
+          const currentSelectedId = selectedConversationRef?.current;
+          const isTabFocused = document.visibilityState === 'visible';
+
+          if (currentSelectedId !== convId || !isTabFocused) {
+            soundManager.play('message');
+          }
         }
       };
 
       const unsubscribeFCM = onMessage(messaging, handlePayload);
 
-      const bc = new BroadcastChannel('fcm_notifications');
-      bc.onmessage = (event) => {
-      };
-
       return () => {
         unsubscribeFCM();
-        bc.close();
       };
     } catch (err) {
       console.error('Lỗi khởi tạo Handler thông báo:', err);
