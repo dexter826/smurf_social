@@ -38,14 +38,21 @@ export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app, 'us-central1');
 
-// Kết nối Emulator nếu chạy ở localhost
-if (window.location.hostname === 'localhost') {
-  console.log('--- Đang kết nối với Firebase Emulator ---');
-  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  connectDatabaseEmulator(rtdb, 'localhost', 9000);
-  connectStorageEmulator(storage, 'localhost', 9199);
-  connectFunctionsEmulator(functions, 'localhost', 5001);
+// Kết nối Emulator nếu chạy ở localhost hoặc IP nội bộ
+const hostname = window.location.hostname;
+const isLocal = hostname === 'localhost' || 
+                hostname === '127.0.0.1' || 
+                hostname.startsWith('192.168.') || 
+                hostname.startsWith('10.') || 
+                hostname.startsWith('172.');
+
+if (isLocal) {
+  console.log(`--- Đang kết nối với Firebase Emulator tại ${hostname} ---`);
+  connectAuthEmulator(auth, `http://${hostname}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, hostname, 8080);
+  connectDatabaseEmulator(rtdb, hostname, 9000);
+  connectStorageEmulator(storage, hostname, 9199);
+  connectFunctionsEmulator(functions, hostname, 5001);
 }
 
 export default app;
