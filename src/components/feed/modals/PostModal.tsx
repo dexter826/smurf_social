@@ -11,7 +11,7 @@ import { postSchema, PostFormValues } from '../../../utils/validation';
 import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../../constants';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
 import { useAutoResizeTextarea } from '../../../hooks/utils';
-import { userService } from '../../../services/userService';
+import { useAuthStore } from '../../../store/authStore';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -67,17 +67,6 @@ export const PostModal: React.FC<PostModalProps> = ({
   const initializedRef = React.useRef(false);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const settings = await userService.getUserSettings(currentUser.id);
-        if (settings) {
-          setValue('visibility', settings.defaultPostVisibility);
-        }
-      } catch (error) {
-        console.error('Lỗi lấy settings mặc định:', error);
-      }
-    };
-
     if (isOpen && !initializedRef.current) {
       if (isEdit && initialPost) {
         reset({
@@ -87,13 +76,13 @@ export const PostModal: React.FC<PostModalProps> = ({
           visibility: initialPost.visibility
         });
       } else {
+        const defaultVisibility = useAuthStore.getState().settings?.defaultPostVisibility || Visibility.PUBLIC;
         reset({
           content: '',
           media: [],
           hasPendingFiles: initialFiles.length > 0,
-          visibility: Visibility.PUBLIC // Giá trị tạm thời
+          visibility: defaultVisibility
         });
-        fetchSettings(); // Ghi đè bằng settings từ DB
         if (initialFiles.length > 0) processFiles(initialFiles);
       }
       initializedRef.current = true;

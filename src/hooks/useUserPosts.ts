@@ -101,9 +101,11 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
             if (index !== -1) {
               updatedPosts[index] = npm;
             } else {
-              const firstPostTime = getSafeMillis(updatedPosts[0]?.createdAt);
-              if (getSafeMillis(npm.createdAt) > firstPostTime) {
+              const firstPostTime = updatedPosts[0] ? getSafeMillis(updatedPosts[0].createdAt) : 0;
+              if (getSafeMillis(npm.createdAt) >= firstPostTime) {
                 updatedPosts.unshift(npm);
+              } else {
+                updatedPosts.push(npm);
               }
             }
           });

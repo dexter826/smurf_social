@@ -41,7 +41,7 @@ export const functions = getFunctions(app, 'us-central1');
 // Kết nối Emulator nếu chạy ở localhost
 if (window.location.hostname === 'localhost') {
   console.log('--- Đang kết nối với Firebase Emulator ---');
-  connectAuthEmulator(auth, 'http://localhost:9099');
+  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
   connectFirestoreEmulator(db, 'localhost', 8080);
   connectDatabaseEmulator(rtdb, 'localhost', 9000);
   connectStorageEmulator(storage, 'localhost', 9199);

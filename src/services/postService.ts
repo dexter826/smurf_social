@@ -282,7 +282,7 @@ export const postService = {
   },
 
   /** Tạo bài viết mới */
-  createPost: async (postData: Omit<Post, 'id' | 'createdAt' | 'commentCount' | 'status'>, predefinedId?: string): Promise<string> => {
+  createPost: async (postData: Partial<Post> & { authorId: string, content?: string, media?: MediaObject[], visibility?: Visibility, type?: PostType }, predefinedId?: string): Promise<string> => {
     try {
       if (postData.content) {
         validatePostContent(postData.content);
@@ -297,8 +297,8 @@ export const postService = {
         status: PostStatus.ACTIVE,
         visibility: postData.visibility || Visibility.PUBLIC,
         commentCount: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        createdAt: postData.createdAt || serverTimestamp(),
+        updatedAt: postData.updatedAt || serverTimestamp()
       };
 
       if (postData.media && postData.media.length > 0) {

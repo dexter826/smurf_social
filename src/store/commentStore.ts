@@ -323,7 +323,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     }
 
     try {
-      await commentService.createComment(postId, userId, content, parentId || null, replyToUserId, replyToId, image, realId);
+      await commentService.createComment(postId, userId, content, parentId || null, replyToUserId, replyToId, image, realId, optimisticComment.createdAt, optimisticComment.updatedAt);
 
       return realId;
     } catch (error) {

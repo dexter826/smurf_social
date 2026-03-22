@@ -124,7 +124,9 @@ export const commentService = {
     replyToUserId?: string,
     replyToId?: string,
     image?: MediaObject,
-    preGeneratedId?: string
+    preGeneratedId?: string,
+    createdAt?: Timestamp,
+    updatedAt?: Timestamp
   ): Promise<string> => {
     try {
       validateCommentContent(content);
@@ -137,8 +139,8 @@ export const commentService = {
         replyToId: replyToId || null,
         status: CommentStatus.ACTIVE,
         replyCount: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        createdAt: createdAt || serverTimestamp(),
+        updatedAt: updatedAt || serverTimestamp()
       };
 
       if (image) commentData.image = image;

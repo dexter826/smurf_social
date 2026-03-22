@@ -261,7 +261,8 @@ export const usePostStore = create<PostState>()(
             content,
             media: finalMedia,
             visibility,
-            updatedAt: serverTimestamp() as any
+            createdAt: tempPost.createdAt as any,
+            updatedAt: tempPost.updatedAt as any
           }, postId);
 
           set(state => {
