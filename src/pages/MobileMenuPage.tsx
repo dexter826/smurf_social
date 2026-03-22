@@ -18,7 +18,7 @@ import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { useContactStore } from '../store/contactStore';
 import { useNotificationStore } from '../store/notificationStore';
-import { UserAvatar, ConfirmDialog, Button } from '../components/ui';
+import { UserAvatar, ConfirmDialog } from '../components/ui';
 import { useUnreadCount } from '../hooks/utils/useUnreadCount';
 import { useLogout } from '../hooks/utils/useLogout';
 
@@ -134,19 +134,19 @@ export const MobileMenuPage: React.FC = () => {
           <div className="h-3" />
 
           {/* Đăng xuất */}
-          <Button
-            variant="ghost"
-            fullWidth
+          <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="!justify-start p-3.5 h-auto rounded-xl bg-bg-primary hover:bg-error/5 border-2 border-error/20 text-error"
-            icon={
-              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-error/10 text-error">
-                <LogOut size={22} />
-              </div>
-            }
+            className="w-full flex items-center gap-3 p-3.5 min-h-[60px] rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light group"
           >
-            Đăng xuất
-          </Button>
+            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-error/10 text-error transition-colors group-hover:bg-error/20">
+              <LogOut size={22} />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="font-semibold text-error">Đăng xuất</span>
+              <p className="text-xs text-text-tertiary mt-0.5">Rời khỏi phiên làm việc</p>
+            </div>
+            <ChevronRight size={20} className="text-text-tertiary" />
+          </button>
         </div>
       </div>
 

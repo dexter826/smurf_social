@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Ban,
   Shield,
-  Moon,
-  Sun,
   Eye,
   ChevronLeft,
   ChevronRight,
@@ -21,7 +19,6 @@ import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 import { userService } from '../services/userService';
 
 // Modular components
-import AppearanceSection from '../components/settings/AppearanceSection';
 import PrivacySection from '../components/settings/PrivacySection';
 import SecuritySection from '../components/settings/SecuritySection';
 import BlockedUsersSection from '../components/settings/BlockedUsersSection';
@@ -35,7 +32,6 @@ interface BlockedUserWithOptions {
 }
 
 const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNode }[] = [
-  { id: 'appearance', label: 'Giao diện', icon: <Moon size={20} /> },
   { id: 'privacy', label: 'Quyền riêng tư', icon: <Eye size={20} /> },
   { id: 'security', label: 'Bảo mật', icon: <Shield size={20} /> },
   { id: 'blocked', label: 'Người dùng đã chặn', icon: <Ban size={20} /> },
@@ -43,16 +39,14 @@ const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNod
 
 /**
  * Settings Page
- * Đã refactor hoàn toàn: tách component, tối ưu mobile UI theo dạng menu page.
  */
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const { users: userCache, fetchUsers } = useUserCache();
   
-  // Mobile: Mặc định không chọn section nào để hiện menu
   const [activeSection, setActiveSection] = useState<SettingSection | null>(
-    window.innerWidth >= 768 ? 'appearance' : null
+    window.innerWidth >= 768 ? 'privacy' : null
   );
   
   const [blockedList, setBlockedList] = useState<BlockedUserWithOptions[]>([]);
@@ -131,7 +125,6 @@ const SettingsPage: React.FC = () => {
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'appearance': return <AppearanceSection />;
       case 'privacy': return <PrivacySection />;
       case 'security': return <SecuritySection onOpenChangePassword={() => setIsChangePasswordOpen(true)} />;
       case 'blocked': return (
