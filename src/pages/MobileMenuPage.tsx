@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   User as UserIcon,
   Settings,
@@ -7,47 +7,26 @@ import {
   Sun,
   LogOut,
   ChevronRight,
-  MessageCircle,
-  Users,
-  LayoutGrid,
-  Bell,
-  Menu,
   Shield
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
-import { useContactStore } from '../store/contactStore';
-import { useNotificationStore } from '../store/notificationStore';
 import { UserAvatar, ConfirmDialog } from '../components/ui';
-import { useUnreadCount } from '../hooks/utils/useUnreadCount';
 import { useLogout } from '../hooks/utils/useLogout';
 
 export const MobileMenuPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
-  const { receivedRequests } = useContactStore();
   const handleConfirmLogout = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
-  const isAdmin = !!user;
-
-  const totalUnread = useUnreadCount();
-  const hasNewRequests = receivedRequests.length > 0;
-  const unreadNotifications = useNotificationStore(state => state.unreadCount);
-
-  // Bottom nav items
-  const navItems = [
-    { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
-    { to: '/', Icon: MessageCircle, label: 'Tin nhắn', badge: totalUnread > 0 },
-    { to: '/contacts', Icon: Users, label: 'Bạn bè', badge: hasNewRequests },
-    { to: '/notifications', Icon: Bell, label: 'Thông báo', badge: unreadNotifications > 0 },
-  ];
+  const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full bg-bg-secondary">
+    <div className="flex flex-col min-h-full w-full bg-bg-secondary">
       {/* Header */}
-      <div className="bg-bg-primary border-b border-border-light p-4">
+      <div className="bg-bg-primary border-b border-border-light p-4 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           {user && (
             <UserAvatar
@@ -65,7 +44,7 @@ export const MobileMenuPage: React.FC = () => {
       </div>
 
       {/* Menu Items */}
-      <div className="flex-1 overflow-y-auto p-3 pb-[calc(4rem+env(safe-area-inset-bottom))]">
+      <div className="flex-1 p-3">
         <div className="space-y-1">
           {/* Xem hồ sơ */}
           <button
@@ -149,34 +128,6 @@ export const MobileMenuPage: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-stretch z-50 shadow-sm" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-base ${isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
-              }`
-            }
-          >
-            <div className="relative">
-              <item.Icon size={24} />
-              {item.badge && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
-              )}
-            </div>
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </NavLink>
-        ))}
-
-        {/* Menu active */}
-        <div className="flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 text-primary">
-          <Menu size={24} />
-          <span className="text-[10px] font-medium">Menu</span>
-        </div>
-      </nav>
 
       {/* Logout Dialog */}
       <ConfirmDialog

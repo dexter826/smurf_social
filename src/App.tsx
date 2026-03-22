@@ -56,6 +56,7 @@ const App: React.FC = () => {
               <Route path="profile/:userId/*" element={<ProfilePage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="menu" element={<MobileMenuPage />} />
               <Route path="post/:postId" element={null} />
             </Route>
 
@@ -68,12 +69,6 @@ const App: React.FC = () => {
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="users" element={<AdminUsersPage />} />
             </Route>
-
-            <Route path="/menu" element={
-              <ProtectedRoute>
-                <MobileMenuPage />
-              </ProtectedRoute>
-            } />
 
             <Route path="/verify-email" element={<EmailVerificationPage />} />
             <Route path="/banned" element={<BannedPage />} />
