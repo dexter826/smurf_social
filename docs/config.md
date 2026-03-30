@@ -20,6 +20,7 @@ Tài liệu này chứa các cấu hình hệ thống quan trọng mà đội Mo
 ## 3. Thời gian và Timeout (Time Limits)
 
 - **Thời gian cho phép thu hồi tin nhắn**: `300.000` ms (5 phút).
+- **Thời gian cho phép chỉnh sửa tin nhắn**: `300.000` ms (5 phút) (`MESSAGE_EDIT_WINDOW`).
 - **Thời gian chờ hiển thị "Đang gõ..." (`TYPING_TIMEOUT`)**: `3000` ms.
 - **Thời gian hiển thị thông báo Toast (`TOAST_DURATION`)**: `3000` ms.
 - **Độ dài tối đa đoạn ghi âm tin nhắn (`VOICE_MAX_DURATION`)**: `300.000` ms (5 phút).
@@ -27,6 +28,7 @@ Tài liệu này chứa các cấu hình hệ thống quan trọng mà đội Mo
 ## 4. Báo cáo vi phạm (Report Config)
 
 Mô tả vi phạm (`description`) tối đa `500` ký tự.
+Số lượng ảnh minh họa báo cáo tối đa (`MAX_IMAGES_PER_REPORT`): `5` ảnh.
 Dưới đây là các loại hình báo cáo và ý nghĩa mà UI cần hiển thị:
 
 - **`spam`**: Spam (Tin rác, quảng cáo không mong muốn).

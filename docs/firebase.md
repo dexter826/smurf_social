@@ -41,14 +41,14 @@ Tối ưu cho tốc độ và khả năng đồng bộ theo thời gian thực (
   - Cho phép người dùng khác xem trạng thái đang online/offline của mình. Chỉ chính chủ mới được cập nhật.
 - **`conversations` (Cuộc hội thoại / Nhóm chat)**:
   - Đọc/ghi yêu cầu người dùng phải là thành viên trong mảng `members`.
-  - Có các validate ngặt nghèo khi thêm/bớt nhóm, đảm bảo chỉ nhóm trưởng (admin) mới được thay đổi thành viên hoặc xóa nhóm (`isDisbanded`).
+  - Có các validate khi thêm/bớt nhóm, đảm bảo chỉ nhóm trưởng (admin) mới được thay đổi thành viên, và chỉ **người tạo nhóm gốc (creator)** mới được phép xóa nhóm (`isDisbanded`).
   - `activeCall`: Đánh dấu trạng thái đang có cuộc gọi, yêu cầu là thành viên mới được tham gia.
 - **`messages` (Tin nhắn)**:
   - Người dùng là thành viên hội thoại mới xem/gửi được tin nhắn.
   - Validate cho phép thu hồi tin nhắn trong vòng 5 phút (300.000ms).
   - Đọc/nhận (readBy, deliveredTo): Tự động đánh dấu khi mở máy.
 - **`user_chats` (Danh sách chat UI)**:
-  - Giữ danh sách nhóm chat hiển thị trên màn hình người dùng, chỉ người dùng đó đọc/ghi được.
+  - Giữ danh sách nhóm chat hiển thị trên màn hình người dùng. Chỉ người dùng đó có quyền đọc. Tuy nhiên, để thực hiện fan-out (cập nhật UI tin nhắn mới), **các thành viên trong cùng hội thoại cũng có quyền ghi chèn** (cập nhật `lastMsgTimestamp`, `unreadCount`).
 - **`call_signaling` (Tín hiệu WebRTC/Call)**:
   - Dùng để gửi tín hiệu khởi tạo cuộc gọi, nghe máy, ngắt máy. Có quyền đọc/ghi chung miễn là đã xác thực.
 
@@ -59,12 +59,12 @@ Tối ưu cho tốc độ và khả năng đồng bộ theo thời gian thực (
 Quản lý file đính kèm, hình ảnh và bảo mật file tĩnh.
 
 - **Avatar / Cover**: Bất kỳ ai cũng có thể xem ảnh đại diện/ảnh bìa. Chỉ chủ tài khoản mới được tải lên và xóa (giới hạn dung lượng cụ thể, kiểm tra `contentType` ảnh hợp lệ).
-  - *Pattern gửi file*: `avatars/{userId}/{filename}`
-  - *Pattern gửi file*: `covers/{userId}/{filename}`
+  - _Pattern gửi file_: `avatars/{userId}/{filename}`
+  - _Pattern gửi file_: `covers/{userId}/{filename}`
 - **Post Media (Ảnh/Video bài viết)**: Xem công khai. Tác giả tạo gốc mới được ghi đè/xóa.
-  - *Pattern gửi file*: `posts/{userId}/{filename}`
-- **Chat Media (File trong tin nhắn)**: Chỉ những người đã đăng nhập (isAuthenticated) mới có quyền truy cập, tránh lộ lọt file nhóm công khai. 
-  - *Pattern gửi file bắt buộc*: `chats/{convId}/{timestamp}_{filename}`
+  - _Pattern gửi file_: `posts/{userId}/{filename}`
+- **Chat Media (File trong tin nhắn)**: Chỉ những người đã đăng nhập (isAuthenticated) mới có quyền truy cập, tránh lộ lọt file nhóm công khai.
+  - _Pattern gửi file bắt buộc_: `chats/{convId}/{timestamp}_{filename}`
   - Trong đó `convId` có thể là `direct_{uid1}_{uid2}` hoặc `group_{groupId}`.
 - **Thumbnail / Report Images**: Tương tự, tải file lên cần kiểm tra đúng định dạng ảnh.
-  - *Pattern gửi file*: `thumbnails/{filename}` hoặc `reports/{userId}/{filename}`
+  - _Pattern gửi file_: `thumbnails/{filename}` hoặc `reports/{userId}/{filename}`
