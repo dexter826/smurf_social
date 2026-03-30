@@ -116,14 +116,6 @@ export const rtdbConversationService = {
             latestUserChats = snapshot.val() as Record<string, RtdbUserChat>;
             const currentConvIds = new Set(Object.keys(latestUserChats));
 
-            for (const convId of conversationListeners.keys()) {
-                if (!currentConvIds.has(convId)) {
-                    conversationListeners.get(convId)?.();
-                    conversationListeners.delete(convId);
-                    conversationsMap.delete(convId);
-                }
-            }
-
             const updateCallback = () => {
                 const conversations = Array.from(conversationsMap.values())
                     .filter(c => {
@@ -136,7 +128,18 @@ export const rtdbConversationService = {
                 callback(conversations);
             };
 
-            // Subscribe item mới
+            let hasRemoved = false;
+            for (const convId of conversationListeners.keys()) {
+                if (!currentConvIds.has(convId)) {
+                    conversationListeners.get(convId)?.();
+                    conversationListeners.delete(convId);
+                    conversationsMap.delete(convId);
+                    hasRemoved = true;
+                }
+            }
+
+            if (hasRemoved) updateCallback();
+
             for (const convId of currentConvIds) {
                 if (!conversationListeners.has(convId)) {
                     const convRef = ref(rtdb, `conversations/${convId}`);

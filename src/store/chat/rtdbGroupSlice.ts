@@ -3,6 +3,7 @@ import { MediaObject } from '../../../shared/types';
 import { rtdbGroupService } from '../../services/chat/rtdbGroupService';
 import { useAuthStore } from '../authStore';
 import { RtdbConversationSlice } from './rtdbConversationSlice';
+import { RtdbMessageSlice } from './rtdbMessageSlice';
 
 export interface RtdbGroupSlice {
     createGroup: (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: File | MediaObject) => Promise<string>;
@@ -15,7 +16,7 @@ export interface RtdbGroupSlice {
     sendGroupSystemMessage: (conversationId: string, actorId: string, content: string) => Promise<void>;
 }
 
-type RtdbGroupSliceWithConversation = RtdbGroupSlice & RtdbConversationSlice;
+type RtdbGroupSliceWithConversation = RtdbGroupSlice & RtdbConversationSlice & RtdbMessageSlice;
 
 export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, [], [], RtdbGroupSlice> = (set, get) => ({
     createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: File | MediaObject) => {
@@ -78,6 +79,10 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
             conversations: state.conversations.filter(c => c.id !== conversationId),
             selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
         }));
+
+        if (get().clearMessages) {
+            get().clearMessages(conversationId);
+        }
 
         try {
             await rtdbGroupService.leaveGroup(conversationId, userId);

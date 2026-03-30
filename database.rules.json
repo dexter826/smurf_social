@@ -55,7 +55,7 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         "$convId": {
-          ".write": "auth != null && (auth.uid === $uid || newData.exists())"
+          ".write": "auth != null && (auth.uid === $uid || newData.exists() || root.child('conversations').child($convId).child('members').child(auth.uid).val() === 'admin')"
         }
       }
     },

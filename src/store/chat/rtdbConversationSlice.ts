@@ -52,6 +52,14 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         useLoadingStore.getState().setLoading('chat', !hasCache);
 
         const unsubscribe = rtdbConversationService.subscribeToUserConversations(userId, (conversations) => {
+            const prevIds = new Set(get().conversations.map(c => c.id));
+            const newIds = new Set(conversations.map(c => c.id));
+            for (const id of prevIds) {
+                if (!newIds.has(id) && get().clearMessages) {
+                    get().clearMessages(id);
+                }
+            }
+
             set({ conversations });
             useLoadingStore.getState().setLoading('chat', false);
         });

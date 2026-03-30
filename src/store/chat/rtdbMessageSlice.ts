@@ -54,14 +54,14 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         const unsubscribe = rtdbMessageService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (newIncomingMessages) => {
             set((state) => {
                 const currentMessages = state.messages[conversationId] || [];
-                
+
                 const messageMap = new Map();
-                
+
                 currentMessages.forEach(m => messageMap.set(m.id, m));
-                
                 newIncomingMessages.forEach(m => messageMap.set(m.id, m));
-                
+
                 const mergedMessages = Array.from(messageMap.values())
+                    .filter(m => m.data.createdAt > clearedAt)
                     .sort((a, b) => a.data.createdAt - b.data.createdAt);
 
                 return {

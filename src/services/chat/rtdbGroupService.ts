@@ -157,7 +157,7 @@ export const rtdbGroupService = {
                         unreadCount: 0,
                         lastReadMsgId: null,
                         lastMsgTimestamp: now,
-                        clearedAt: 0,
+                        clearedAt: now,
                         createdAt: now,
                         updatedAt: now
                     } as RtdbUserChat;
