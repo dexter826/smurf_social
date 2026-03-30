@@ -20,9 +20,9 @@ export const presenceService = {
             const settings = await userService.getUserSettings(uid);
             const userPresenceRef = presenceRef(uid);
             const isOnlineStatus = settings.showOnlineStatus;
-            
+
             const now = rtdbServerTimestamp();
-            
+
             const updateData: any = {
                 isOnline: isOnlineStatus,
                 updatedAt: now
@@ -31,7 +31,7 @@ export const presenceService = {
             if (isOnlineStatus) {
                 updateData.lastSeen = now;
             } else {
-                updateData.lastSeen = null; 
+                updateData.lastSeen = null;
             }
 
             await update(userPresenceRef, updateData);
@@ -63,7 +63,7 @@ export const presenceService = {
             const userPresenceRef = presenceRef(uid);
             await update(userPresenceRef, {
                 isOnline: false,
-                lastSeen: Date.now(),
+                lastSeen: rtdbServerTimestamp(),
                 updatedAt: rtdbServerTimestamp()
             });
         } catch (error: any) {

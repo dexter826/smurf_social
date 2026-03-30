@@ -122,7 +122,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
       const friends = list.filter(item =>
         canViewInteraction(item.userId, authorId || '', currentUserId, friendsIds)
       );
-      
+
       const totalCount = initialCount !== undefined ? Math.max(initialCount, list.length) : list.length;
       const othersCount = totalCount - friends.length;
 
@@ -157,8 +157,8 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
                 className={`py-3 px-1 border-b-2 transition-all text-sm font-bold whitespace-nowrap flex items-center gap-1.5 ${activeTab === tab
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-text-secondary hover:text-text-primary'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
                   }`}
               >
                 {tab === 'ALL' ? (
@@ -197,7 +197,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                         <div className="relative">
                           <UserAvatar
                             userId={userId}
-                            src={typeof user.avatar === 'string' ? user.avatar : user.avatar.url}
+                            src={user.avatar?.url}
                             name={user.fullName}
                             size="md"
                             showStatus={false}

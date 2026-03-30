@@ -68,6 +68,11 @@ export const useReportStore = create<ReportState>((set, get) => ({
       return false;
     }
 
+    if (targetType === ReportType.USER && targetId === reporterId) {
+      set({ error: 'Không thể báo cáo chính mình' });
+      return false;
+    }
+
     set({ isSubmitting: true, error: null });
 
     try {
@@ -79,12 +84,12 @@ export const useReportStore = create<ReportState>((set, get) => ({
 
       if (hasReported) {
         if (blockUser && targetOwnerId) {
-        const defaultBlockOptions = { 
-          blockMessages: true, 
-          blockCalls: true, 
-          blockViewMyActivity: true, 
-          hideTheirActivity: true 
-        };
+          const defaultBlockOptions = {
+            blockMessages: true,
+            blockCalls: true,
+            blockViewMyActivity: true,
+            hideTheirActivity: true
+          };
           await userService.blockUser(reporterId, targetOwnerId, defaultBlockOptions);
           useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);
           set({ isOpen: false, isSubmitting: false });
@@ -105,11 +110,11 @@ export const useReportStore = create<ReportState>((set, get) => ({
       });
 
       if (blockUser && targetOwnerId) {
-        const defaultBlockOptions = { 
-          blockMessages: true, 
-          blockCalls: true, 
-          blockViewMyActivity: true, 
-          hideTheirActivity: true 
+        const defaultBlockOptions = {
+          blockMessages: true,
+          blockCalls: true,
+          blockViewMyActivity: true,
+          hideTheirActivity: true
         };
         await userService.blockUser(reporterId, targetOwnerId, defaultBlockOptions);
         useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);

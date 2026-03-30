@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Gender, ReactionType } from '../../shared/types';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams as useRouterParams } from 'react-router-dom';
+import { Gender } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
-import { PostItem } from '../components/feed';
+import { PostViewModal } from '../components/feed';
 import { usePostStore } from '../store/postStore';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
@@ -14,13 +14,22 @@ import { PhotosTab } from '../components/profile/PhotosTab';
 import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
 import { User as UserIcon, Lock, Cake, MapPin } from 'lucide-react';
 import { useProfile, usePostNavigation } from '../hooks';
+import { useUserCache } from '../store/userCacheStore';
+import { useFriendIds } from '../hooks/utils';
 import { toDate } from '../utils/dateUtils';
 
 type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const routerParams = useRouterParams<{ '*': string }>();
   const { user: currentUser } = useAuthStore();
+  const friendIds = useFriendIds();
+  const { fetchPostById, selectedPost } = usePostStore();
+  const { getUser, fetchUser } = useUserCache();
+  const { viewPost, closePost } = usePostNavigation();
+
+  const urlPostId = routerParams['*']?.startsWith('post/') ? routerParams['*'].replace('post/', '') : null;
   const {
     profile,
     latestMedia,
@@ -51,10 +60,19 @@ const ProfilePage: React.FC = () => {
     closeBlockModal,
   } = useProfile();
 
-  const { viewPost } = usePostNavigation();
-
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [confirmType, setConfirmType] = useState<ConfirmType | null>(null);
+
+  useEffect(() => {
+    if (!urlPostId || !currentUser) return;
+    fetchPostById(urlPostId, currentUser.id, friendIds);
+  }, [urlPostId, currentUser?.id]);
+
+  useEffect(() => {
+    if (selectedPost?.authorId) {
+      fetchUser(selectedPost.authorId);
+    }
+  }, [selectedPost?.authorId]);
 
   const onFriendActionClick = async () => {
     const { needConfirm } = await handleFriendAction();
@@ -260,6 +278,15 @@ const ProfilePage: React.FC = () => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveProfile}
+      />
+
+      <PostViewModal
+        isOpen={!!urlPostId}
+        onClose={closePost}
+        post={selectedPost}
+        author={selectedPost ? (getUser(selectedPost.authorId) ?? null) : null}
+        currentUser={currentUser}
+        onReact={(postId, reaction) => usePostStore.getState().reactToPost(postId, currentUser.id, reaction)}
       />
 
       {confirmType && (

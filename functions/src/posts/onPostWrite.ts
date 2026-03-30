@@ -28,7 +28,7 @@ export const onPostWrite = onDocumentWritten(
         if (before && after && before.status === 'active' && after.status === 'active') {
             const visibilityChanged = before.visibility !== after.visibility;
             const contentChanged = before.content !== after.content ||
-                                 JSON.stringify(before.media) !== JSON.stringify(after.media);
+                JSON.stringify(before.media) !== JSON.stringify(after.media);
 
             if (!visibilityChanged && !contentChanged) return;
 
@@ -136,15 +136,23 @@ async function removeFeedEntries(postId: string, authorId: string) {
  */
 async function updateFeedEntries(postId: string, authorId: string) {
     try {
-        const batch = db.batch();
         const updatedAt = FieldValue.serverTimestamp();
-        
-        batch.update(db.collection('users').doc(authorId).collection('feeds').doc(postId), { updatedAt });
+
+        const batch = db.batch();
+        batch.set(
+            db.collection('users').doc(authorId).collection('feeds').doc(postId),
+            { updatedAt },
+            { merge: true }
+        );
 
         const friendsSnapshot = await db.collection('users').doc(authorId).collection('friends').get();
         let batchCount = 0;
         for (const friendDoc of friendsSnapshot.docs) {
-            batch.update(db.collection('users').doc(friendDoc.id).collection('feeds').doc(postId), { updatedAt });
+            batch.set(
+                db.collection('users').doc(friendDoc.id).collection('feeds').doc(postId),
+                { updatedAt },
+                { merge: true }
+            );
             batchCount++;
             if (batchCount >= 500) {
                 await batch.commit();

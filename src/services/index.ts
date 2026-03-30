@@ -5,5 +5,4 @@ export { notificationService } from './notificationService';
 export { postService } from './postService';
 export { reportService } from './reportService';
 export { userService } from './userService';
-export { adminService } from './adminService';
 export { presenceService } from './presenceService';

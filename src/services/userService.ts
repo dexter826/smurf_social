@@ -10,6 +10,7 @@ import {
   onSnapshot,
   limit,
   startAfter,
+  orderBy,
   DocumentSnapshot,
   getCountFromServer,
   Timestamp,
@@ -299,6 +300,7 @@ export const userService = {
       const usersRef = collection(db, 'users');
       let q = query(
         usersRef,
+        orderBy('createdAt', 'desc'),
         limit(limitCount)
       );
 

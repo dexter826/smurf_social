@@ -43,7 +43,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       case NotificationType.REACTION:
       case NotificationType.COMMENT:
         if (notification.data.postId) {
-          navigate(`/post/${notification.data.postId}`);
+          navigate(`/feed/post/${notification.data.postId}`);
         }
         break;
       case NotificationType.FRIEND_REQUEST:
@@ -77,9 +77,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
 
   return (
     <div
-      className={`group relative flex items-start gap-4 p-4 cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-all duration-base rounded-2xl mb-1 ${
-        !notification.isRead ? 'bg-primary/[0.02]' : 'bg-transparent'
-      }`}
+      className={`group relative flex items-start gap-4 p-4 cursor-pointer hover:bg-bg-hover active:bg-bg-active transition-all duration-base rounded-2xl mb-1 ${!notification.isRead ? 'bg-primary/[0.02]' : 'bg-transparent'
+        }`}
       onClick={handleItemClick}
     >
       {/* Chỉ báo chưa đọc bên trái */}
@@ -91,9 +90,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
         {shouldShowAvatar ? (
           <UserAvatar userId={notification.actorId} size="lg" showStatus={false} className="shadow-sm" />
         ) : (
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
-            notification.type === NotificationType.REPORT ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary'
-          }`}>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm ${notification.type === NotificationType.REPORT ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary'
+            }`}>
             {notification.type === NotificationType.REPORT ? <ShieldAlert size={24} strokeWidth={2.5} /> : <Bell size={24} strokeWidth={2.5} />}
           </div>
         )}
@@ -118,16 +116,16 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
                 })()}
               </span>
             </p>
-            
+
             <div className="mt-1 flex items-center gap-2">
               <span className="text-[12px] text-text-tertiary opacity-70" title={formatDateTime(notification.createdAt)}>
                 {formatRelativeTime(notification.createdAt)}
               </span>
             </div>
           </div>
-          
+
           <div className="flex flex-col items-center gap-2 shrink-0">
-             {!notification.isRead && (
+            {!notification.isRead && (
               <div className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]" />
             )}
             <Button

@@ -37,7 +37,7 @@ const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <UserAvatar
           userId={user.id}
-          src={user.avatar.url}
+          src={user.avatar?.url}
           name={user.fullName}
           size="lg"
           initialStatus={user.status}

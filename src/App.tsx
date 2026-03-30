@@ -57,7 +57,7 @@ const App: React.FC = () => {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="menu" element={<MobileMenuPage />} />
-              <Route path="post/:postId" element={null} />
+              <Route path="post/:postId" element={<Navigate to="/feed" replace />} />
             </Route>
 
             <Route path="/admin" element={

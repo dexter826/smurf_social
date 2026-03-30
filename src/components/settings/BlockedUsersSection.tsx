@@ -79,7 +79,7 @@ const BlockedUsersSection: React.FC<BlockedUsersSectionProps> = ({
         >
           <UserAvatar
             userId={item.user.id}
-            src={item.user.avatar.url}
+            src={item.user.avatar?.url}
             name={item.user.fullName}
             size="lg"
             className="border-2 border-border-light"

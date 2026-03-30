@@ -29,7 +29,7 @@ export const onCommentWrite = onDocumentWritten(
                 await batch.commit();
 
                 const senderName = await getSenderName(senderId);
-                
+
                 let receiverId = after.replyToUserId;
                 if (!receiverId) {
                     const postDoc = await db.collection('posts').doc(postId).get();
@@ -63,20 +63,19 @@ export const onCommentWrite = onDocumentWritten(
             const { postId, parentId } = after;
             try {
                 const batch = db.batch();
+
                 if (parentId) {
                     batch.update(db.collection('comments').doc(parentId), { replyCount: FieldValue.increment(-1) });
+                    batch.update(db.collection('posts').doc(postId), { commentCount: FieldValue.increment(-1) });
+                } else {
+                    batch.update(db.collection('posts').doc(postId), { commentCount: FieldValue.increment(-1) });
                 }
-                batch.update(db.collection('posts').doc(postId), { commentCount: FieldValue.increment(-1) });
 
-                const notifsSnapshot = await db.collection('notifications')
+                const notifsSnap = await db.collection('notifications')
                     .where('data.commentId', '==', commentId)
                     .get();
-                
-                if (!notifsSnapshot.empty) {
-                    notifsSnapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                }
+
+                notifsSnap.docs.forEach(doc => batch.delete(doc.ref));
 
                 await batch.commit();
                 console.log(`[onCommentWrite/Delete] Đã dọn dẹp thông báo và counter cho ${commentId}`);

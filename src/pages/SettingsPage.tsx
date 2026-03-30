@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Settings,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
@@ -41,23 +40,21 @@ const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNod
  * Settings Page
  */
 const SettingsPage: React.FC = () => {
-  const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-  const { users: userCache, fetchUsers } = useUserCache();
-  
+  const { fetchUsers } = useUserCache();
+
   const [activeSection, setActiveSection] = useState<SettingSection | null>(
     window.innerWidth >= 768 ? 'privacy' : null
   );
-  
+
   const [blockedList, setBlockedList] = useState<BlockedUserWithOptions[]>([]);
   const setLoading = useLoadingStore(state => state.setLoading);
   const isLoading = useLoadingStore(state => state.loadingStates['settings']);
-  
+
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [manageBlockTarget, setManageBlockTarget] = useState<BlockedUserWithOptions | null>(null);
 
-  // Sync blocked users
   const loadBlockedUsers = useCallback(async () => {
     if (!currentUser) return;
     setLoading('settings', true);
@@ -69,9 +66,10 @@ const SettingsPage: React.FC = () => {
         return;
       }
       await fetchUsers(ids);
+      const latestCache = useUserCache.getState().users;
       const list: BlockedUserWithOptions[] = ids
         .map(id => {
-          const user = userCache[id];
+          const user = latestCache[id];
           if (!user) return null;
           return { user, options: blockedMap[id] };
         })
@@ -80,7 +78,7 @@ const SettingsPage: React.FC = () => {
     } finally {
       setLoading('settings', false);
     }
-  }, [currentUser?.id, fetchUsers, userCache]);
+  }, [currentUser?.id, fetchUsers]);
 
   useEffect(() => {
     loadBlockedUsers();
@@ -101,9 +99,9 @@ const SettingsPage: React.FC = () => {
   const handleUpdateBlockOptions = async (options: BlockOptions) => {
     if (!manageBlockTarget || !currentUser) return;
     const targetId = manageBlockTarget.user.id;
-    
+
     const hasAnyOption = Object.values(options).some(Boolean);
-    
+
     if (!hasAnyOption) {
       setUnblockUserId(targetId);
       setManageBlockTarget(null);
@@ -112,7 +110,7 @@ const SettingsPage: React.FC = () => {
 
     await userService.blockUser(currentUser.id, targetId, options);
     useAuthStore.getState().updateBlockEntry('add', targetId, options);
-    
+
     if (options.hideTheirActivity) {
       usePostStore.getState().filterPostsByAuthor(targetId);
     }
@@ -128,19 +126,19 @@ const SettingsPage: React.FC = () => {
       case 'privacy': return <PrivacySection />;
       case 'security': return <SecuritySection onOpenChangePassword={() => setIsChangePasswordOpen(true)} />;
       case 'blocked': return (
-        <BlockedUsersSection 
-          isLoading={isLoading} 
-          blockedList={blockedList} 
-          onManageBlock={setManageBlockTarget} 
+        <BlockedUsersSection
+          isLoading={isLoading}
+          blockedList={blockedList}
+          onManageBlock={setManageBlockTarget}
         />
       );
       default: return null;
     }
   };
 
-  const currentLabel = useMemo(() => 
+  const currentLabel = useMemo(() =>
     BASE_MENU_ITEMS.find(m => m.id === activeSection)?.label || 'Cài đặt'
-  , [activeSection]);
+    , [activeSection]);
 
   return (
     <div className="flex h-full w-full bg-bg-secondary overflow-hidden">
@@ -152,17 +150,16 @@ const SettingsPage: React.FC = () => {
             Cài đặt
           </h1>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto px-3 space-y-1">
           {BASE_MENU_ITEMS.map(item => (
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 cursor-pointer rounded-xl transition-all duration-base ${
-                activeSection === item.id
-                  ? 'bg-primary-light text-primary font-semibold shadow-sm'
-                  : 'hover:bg-bg-hover text-text-secondary'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 cursor-pointer rounded-xl transition-all duration-base ${activeSection === item.id
+                ? 'bg-primary-light text-primary font-semibold shadow-sm'
+                : 'hover:bg-bg-hover text-text-secondary'
+                }`}
             >
               <div className={activeSection === item.id ? 'text-primary' : 'text-text-tertiary'}>
                 {item.icon}
@@ -184,7 +181,7 @@ const SettingsPage: React.FC = () => {
         <div className="h-[60px] md:h-auto p-4 border-b border-border-light bg-bg-primary flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             {/* Back button (Mobile only) */}
-            <button 
+            <button
               onClick={() => setActiveSection(null)}
               className={`md:hidden p-2 hover:bg-bg-hover rounded-full transition-colors ${!activeSection ? 'hidden' : ''}`}
             >

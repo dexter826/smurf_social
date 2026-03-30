@@ -1,5 +1,5 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
-import { FieldPath, Firestore } from 'firebase-admin/firestore';
+import { FieldPath, FieldValue, Firestore } from 'firebase-admin/firestore';
 import { db } from '../app';
 
 /**
@@ -87,7 +87,12 @@ async function restorePostsIfFriend(db: Firestore, targetUserId: string, authorI
         postsSnap.docs.forEach(postDoc => {
             batch.set(
                 db.collection('users').doc(targetUserId).collection('feeds').doc(postDoc.id),
-                { postId: postDoc.id, createdAt: postDoc.data().createdAt }
+                {
+                    postId: postDoc.id,
+                    authorId,
+                    createdAt: postDoc.data().createdAt,
+                    updatedAt: FieldValue.serverTimestamp()
+                }
             );
         });
         await batch.commit();

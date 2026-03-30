@@ -138,7 +138,7 @@ export const postService = {
       if (addedIds.length > 0) {
         const postPromises = addedIds.map(id => getDoc(doc(db, 'posts', id)));
         const postResults = await Promise.allSettled(postPromises);
-        
+
         const posts: Post[] = [];
         for (const result of postResults) {
           if (result.status === 'fulfilled' && result.value.exists()) {
@@ -148,7 +148,7 @@ export const postService = {
             }
           }
         }
-        
+
         if (posts.length > 0) callback('add', posts);
       }
 
@@ -283,7 +283,7 @@ export const postService = {
         const blockedByMe = await getDoc(doc(db, 'users', currentUserId, 'blockedUsers', userId));
 
         if ((blockedByTarget.exists() && blockedByTarget.data().blockViewMyActivity === true) ||
-            (blockedByMe.exists() && blockedByMe.data().hideTheirActivity === true)) {
+          (blockedByMe.exists() && blockedByMe.data().hideTheirActivity === true)) {
           callback([]);
           return;
         }
@@ -402,15 +402,15 @@ export const postService = {
         await deleteDoc(reactionRef);
       } else {
         const now = serverTimestamp();
-        const reactionData: Partial<ReactionDoc> = { 
-          type: reaction as ReactionType, 
-          updatedAt: now as Timestamp 
+        const reactionData: Partial<ReactionDoc> = {
+          type: reaction as ReactionType,
+          updatedAt: now as Timestamp
         };
-        
+
         if (!snap.exists()) {
           reactionData.createdAt = now as Timestamp;
         }
-        
+
         await setDoc(reactionRef, reactionData, { merge: true });
       }
     } catch (error) {
@@ -527,7 +527,7 @@ export const postService = {
           // Trích xuất và upload thumbnail
           try {
             const thumbFile = await generateVideoThumbnail(file);
-            const thumbPath = `posts/${userId}/thumbnails/${createdAt}_${thumbFile.name}`;
+            const thumbPath = `thumbnails/${userId}/${createdAt}_${thumbFile.name}`;
             thumbnailUrl = await uploadWithProgress(thumbPath, thumbFile);
           } catch (e) {
             console.error("Lỗi tạo/up thumbnail:", e);

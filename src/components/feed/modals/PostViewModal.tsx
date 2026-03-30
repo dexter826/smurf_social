@@ -252,7 +252,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           <div className="flex gap-3 items-center flex-1 min-w-0">
             <UserAvatar
               userId={author?.id}
-              src={author?.avatar.url}
+              src={author?.avatar?.url}
               name={author?.fullName}
               size="md"
               initialStatus={author?.status}

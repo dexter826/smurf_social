@@ -293,7 +293,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             {/* Hiển thị người tạo (bạn) */}
             {currentUser && (
               <div className="flex items-center gap-2 bg-primary-light px-3 py-2 rounded-lg border border-primary/30">
-                <Avatar src={currentUser.avatar.url} name={currentUser.fullName} size="xs" />
+                <Avatar src={currentUser.avatar?.url} name={currentUser.fullName} size="xs" />
                 <span className="text-sm text-primary font-medium">{currentUser.fullName}</span>
                 <Crown size={12} className="text-primary" />
               </div>
@@ -304,7 +304,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               if (!friend) return null;
               return (
                 <div key={id} className="flex items-center gap-2 bg-bg-secondary px-3 py-2 rounded-lg">
-                  <Avatar src={friend.avatar.url} name={friend.fullName} size="xs" />
+                  <Avatar src={friend.avatar?.url} name={friend.fullName} size="xs" />
                   <span className="text-sm text-text-primary">{friend.fullName}</span>
                 </div>
               );

@@ -44,23 +44,21 @@ export function useAdminReports() {
     if (!user) return;
 
     setLoading('admin.reports', true);
+    let unsubscribeFn: (() => void) | undefined;
 
     try {
-      const unsubscribe = reportService.subscribeToReports(
+      unsubscribeFn = reportService.subscribeToReports(
         (allReports) => {
-          // Tính stats từ tất cả reports
           setStats({
             pending: allReports.filter(r => r.status === ReportStatus.PENDING).length,
             resolved: allReports.filter(r => r.status === ReportStatus.RESOLVED).length,
             rejected: allReports.filter(r => r.status === ReportStatus.REJECTED).length
           });
 
-          // Lọc theo status filter
           let filtered = statusFilter === 'pending'
             ? allReports.filter(r => r.status === ReportStatus.PENDING)
             : allReports.filter(r => r.status === statusFilter);
 
-          // Lọc theo type filter
           if (typeFilter !== 'all') {
             filtered = filtered.filter(r => r.targetType === typeFilter);
           }
@@ -68,7 +66,6 @@ export function useAdminReports() {
           setReports(filtered);
           setLoading('admin.reports', false);
 
-          // Fetch user info từ cache
           const userIds = [...new Set([
             ...filtered.map(r => r.reporterId),
             ...filtered.map(r => r.targetOwnerId)
@@ -76,15 +73,18 @@ export function useAdminReports() {
           fetchUsers(userIds);
         },
         undefined,
-        PAGINATION.ADMIN_REPORTS
+        500
       );
-
-      return () => unsubscribe();
     } catch (error) {
       console.error('Lỗi subscription reports:', error);
       setLoading('admin.reports', false);
       toast.error(TOAST_MESSAGES.REPORT.LOAD_FAILED);
     }
+
+    return () => {
+      if (unsubscribeFn) unsubscribeFn();
+      setLoading('admin.reports', false);
+    };
   }, [user, statusFilter, typeFilter, fetchUsers]);
 
   // Lấy user info từ cache

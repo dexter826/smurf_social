@@ -29,7 +29,7 @@ export const MentionList: React.FC<MentionListProps> = ({
           >
             <UserAvatar
               userId={user.id}
-              src={user.avatar.url}
+              src={user.avatar?.url}
               initialStatus={user.status}
               size="xs"
             />

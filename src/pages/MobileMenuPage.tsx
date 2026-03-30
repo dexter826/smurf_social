@@ -31,7 +31,7 @@ export const MobileMenuPage: React.FC = () => {
           {user && (
             <UserAvatar
               userId={user.id}
-              src={user.avatar.url}
+              src={user.avatar?.url}
               size="lg"
               initialStatus={user.status}
             />

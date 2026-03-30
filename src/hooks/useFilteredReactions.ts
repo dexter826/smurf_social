@@ -22,7 +22,7 @@ export const useFilteredReactions = (
       : `comments/${sourceId}/reactions`;
 
     const q = query(collection(db, colPath), orderBy('createdAt', 'desc'));
-    
+
     setIsLoading(true);
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const map: Record<string, ReactionType> = {};
@@ -51,11 +51,11 @@ export const useFilteredReactions = (
 
     const currentUserReaction = reactionsMap[currentUser?.id || ''] || null;
     const isReacted = !!currentUserReaction;
-    
+
     let finalCount = initialCount !== undefined ? Math.max(initialCount, count) : count;
-    
-    return { 
-      filteredSummary: summary, 
+
+    return {
+      filteredSummary: summary,
       filteredCount: finalCount,
       isReacted,
       currentUserReaction

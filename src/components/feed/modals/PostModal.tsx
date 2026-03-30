@@ -141,12 +141,12 @@ export const PostModal: React.FC<PostModalProps> = ({
     }
 
     // Kiểm tra giới hạn video (tối đa 3)
-    const existingVideoCount = 
-      formData.media.filter(m => m.mimeType.startsWith('video/')).length + 
+    const existingVideoCount =
+      formData.media.filter(m => m.mimeType.startsWith('video/')).length +
       pendingFiles.filter(f => f.type.startsWith('video/')).length;
-    
+
     const remainingVideoSlots = MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST - existingVideoCount;
-    
+
     let processedFiles = validFiles;
     let processedPreviews = newPreviews;
 
@@ -159,7 +159,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         processedPreviews = newPreviews.filter(p => p.type !== 'video');
       } else if (newVideosInBatch.length > remainingVideoSlots) {
         toast.error(TOAST_MESSAGES.POST.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
-        
+
         let videosAdded = 0;
         const tempFiles: File[] = [];
         const tempPreviews: { url: string; type: 'image' | 'video' }[] = [];
@@ -195,7 +195,7 @@ export const PostModal: React.FC<PostModalProps> = ({
     // Chỉ lưu file vào state, không upload ngay
     const allFiles = [...pendingFiles, ...filesToAdd];
     const addedPreviews = processedPreviews.slice(0, filesToAdd.length);
-    
+
     // Thu hồi URL của những file bị cắt bỏ
     if (processedPreviews.length > filesToAdd.length) {
       processedPreviews.slice(filesToAdd.length).forEach(p => URL.revokeObjectURL(p.url));
@@ -347,7 +347,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         <div className="flex flex-col min-h-[150px]">
           <div className="sticky top-[-1px] z-10 bg-bg-primary px-4 md:px-6 py-3 border-b border-divider flex items-center justify-between flex-none">
             <div className="flex items-center gap-3">
-              <UserAvatar userId={currentUser.id} src={currentUser.avatar.url} name={currentUser.fullName} size="md" initialStatus={currentUser.status} />
+              <UserAvatar userId={currentUser.id} src={currentUser.avatar?.url} name={currentUser.fullName} size="md" initialStatus={currentUser.status} />
               <h3 className="font-semibold text-text-primary text-sm md:text-base">{currentUser.fullName}</h3>
             </div>
             <Select

@@ -146,7 +146,7 @@ const ChatPage: React.FC = () => {
     if (!selectedConversationId || !currentUser) return;
 
     const isGroup = selectedConversation?.data.isGroup || false;
-    const recipientIds = isGroup 
+    const recipientIds = isGroup
       ? Object.keys(selectedConversation?.data.members || {}).filter(id => id !== currentUser.id)
       : (partner ? [partner.id] : []);
 
@@ -166,12 +166,14 @@ const ChatPage: React.FC = () => {
     const result = await startCall(
       recipientIds,
       currentUser.fullName,
-      currentUser.avatar.url,
+      currentUser.avatar?.url ?? '',
       type,
       selectedConversationId,
       isGroup,
       !isGroup ? partner?.fullName : (selectedConversation?.data.groupName || 'Cuộc gọi nhóm'),
-      !isGroup ? partner?.avatar.url : (selectedConversation?.data.groupAvatar?.url)
+      !isGroup ? partner?.avatar?.url : (selectedConversation?.data.groupAvatar?.url),
+      isCallBlockedByPartner,
+      isCallBlockedByMe
     );
 
     if (result && !result.success) {
@@ -301,30 +303,30 @@ const ChatPage: React.FC = () => {
               canCall={canCall}
               onJoinCall={(callType) => joinActiveCall(selectedConversation.id, callType)}
             />
-              <ChatInput
-                key={selectedConversationId}
-                onSendText={handleSendText}
-                onSendImages={handleSendImage}
-                onSendFile={handleSendFile}
-                onSendVideo={handleSendVideo}
-                onSendVoice={handleSendVoice}
-                onTyping={handleTyping}
-                blockedMessage={blockedMessage}
-                onManageBlock={openBlockModal}
-                replyingTo={replyingTo}
-                editingMessage={editingMessage}
-                currentUserId={currentUser.id}
-                usersMap={usersMap}
-                participants={participants}
-                isGroup={selectedConversation.data.isGroup}
-                isDisbanded={selectedConversation.data.isDisbanded}
-                onDeleteConversation={() => handleDelete(selectedConversation.id)}
-                onCancelAction={() => {
-                  setReplyingTo(null);
-                  setEditingMessage(null);
-                }}
-                onEditMessage={editingMessage ? (text) => handleEditMessage(editingMessage.id, text) : undefined}
-              />
+            <ChatInput
+              key={selectedConversationId}
+              onSendText={handleSendText}
+              onSendImages={handleSendImage}
+              onSendFile={handleSendFile}
+              onSendVideo={handleSendVideo}
+              onSendVoice={handleSendVoice}
+              onTyping={handleTyping}
+              blockedMessage={blockedMessage}
+              onManageBlock={openBlockModal}
+              replyingTo={replyingTo}
+              editingMessage={editingMessage}
+              currentUserId={currentUser.id}
+              usersMap={usersMap}
+              participants={participants}
+              isGroup={selectedConversation.data.isGroup}
+              isDisbanded={selectedConversation.data.isDisbanded}
+              onDeleteConversation={() => handleDelete(selectedConversation.id)}
+              onCancelAction={() => {
+                setReplyingTo(null);
+                setEditingMessage(null);
+              }}
+              onEditMessage={editingMessage ? (text) => handleEditMessage(editingMessage.id, text) : undefined}
+            />
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center bg-bg-secondary p-4 text-center">

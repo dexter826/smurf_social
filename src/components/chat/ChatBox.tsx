@@ -96,7 +96,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     , [conversation.data.isGroup, participants, currentUserId]);
 
   const chatName = conversation.data.isGroup ? conversation.data.name : partner?.fullName || 'Không rõ';
-  const avatarSrc = conversation.data.isGroup ? conversation.data.avatar?.url : partner?.avatar.url;
+  const avatarSrc = conversation.data.isGroup ? conversation.data.avatar?.url : partner?.avatar?.url;
 
   const isMessageRequest = useMemo(() =>
     !conversation.data.isGroup && partner &&
@@ -110,13 +110,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     const map: Record<string, User[]> = {};
     const reversed = [...messages].reverse();
     const participantIds = Object.keys(conversation.data.members);
-    
+
     if (settings?.showReadReceipts === false) return map;
 
     if (conversation.data.isGroup) {
       participantIds.forEach(uid => {
         if (uid === currentUserId) return;
-        
+
         const user = usersMap[uid];
 
         const lastReadMsg = reversed.find(m => m.data.readBy?.[uid]);

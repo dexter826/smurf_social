@@ -104,7 +104,7 @@ export const useConversationItem = ({
     }
 
     return content;
-  }, [lastMessage]);
+  }, [lastMessage, currentUserId]);
 
   const readers = useMemo(() => {
     if (!lastMessage || isMessageRequest) return [];

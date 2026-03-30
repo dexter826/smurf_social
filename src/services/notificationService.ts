@@ -1,4 +1,4 @@
-import React from 'react';
+import { RefObject } from 'react';
 import {
   collection,
   getDocs,
@@ -44,9 +44,9 @@ export const notificationService = {
   markAsRead: async (notificationId: string): Promise<void> => {
     try {
       const docRef = doc(db, 'notifications', notificationId);
-      await updateDoc(docRef, { 
-        isRead: true, 
-        updatedAt: serverTimestamp() 
+      await updateDoc(docRef, {
+        isRead: true,
+        updatedAt: serverTimestamp()
       });
     } catch (err) {
       console.error('Lỗi markAsRead:', err);
@@ -64,9 +64,9 @@ export const notificationService = {
       const snapshot = await getDocs(q);
       const batch = writeBatch(db);
       snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { 
-          isRead: true, 
-          updatedAt: serverTimestamp() 
+        batch.update(doc.ref, {
+          isRead: true,
+          updatedAt: serverTimestamp()
         });
       });
       await batch.commit();
@@ -88,16 +88,24 @@ export const notificationService = {
   // Xóa tất cả thông báo
   deleteAllNotifications: async (userId: string): Promise<void> => {
     try {
-      const q = query(
-        collection(db, 'notifications'),
-        where('receiverId', '==', userId)
-      );
-      const snapshot = await getDocs(q);
-      const batch = writeBatch(db);
-      snapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
+      const CHUNK_SIZE = 400;
+      let hasMore = true;
+
+      while (hasMore) {
+        const q = query(
+          collection(db, 'notifications'),
+          where('receiverId', '==', userId),
+          limit(CHUNK_SIZE)
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) break;
+
+        const batch = writeBatch(db);
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+
+        hasMore = snapshot.size === CHUNK_SIZE;
+      }
     } catch (error) {
       console.error('Lỗi deleteAllNotifications:', error);
       throw error;
@@ -184,7 +192,7 @@ export const notificationService = {
   },
 
   // Lắng nghe tin nhắn khi đang mở app
-  initForegroundMessageHandler: (userId: string, selectedConversationRef?: React.RefObject<string | null>) => {
+  initForegroundMessageHandler: (userId: string, selectedConversationRef?: RefObject<string | null>) => {
     try {
       const messaging = getMessaging();
 
@@ -220,7 +228,7 @@ export const notificationService = {
       };
     } catch (err) {
       console.error('Lỗi khởi tạo Handler thông báo:', err);
-      return () => {};
+      return () => { };
     }
   }
 };

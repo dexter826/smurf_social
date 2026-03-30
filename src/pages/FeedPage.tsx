@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { StickyNote } from 'lucide-react';
-import { PostItem, PostModal, CreatePost, FeedSkeleton } from '../components/feed';
+import { useParams } from 'react-router-dom';
+import { PostItem, PostModal, CreatePost, FeedSkeleton, PostViewModal } from '../components/feed';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store/postStore';
@@ -8,9 +9,13 @@ import { useLoadingStore } from '../store/loadingStore';
 import { Visibility } from '../../shared/types';
 import { useFeed, usePostNavigation } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
+import { useUserCache } from '../store/userCacheStore';
+import { useFriendIds } from '../hooks/utils';
 
 const FeedPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
+  const params = useParams<{ '*': string }>();
+  const friendIds = useFriendIds();
   const {
     posts,
     isLoading,
@@ -23,10 +28,25 @@ const FeedPage: React.FC = () => {
   } = useFeed();
   const isLoadingMore = useLoadingStore(state => state.loadingStates['feed.loadMore']);
 
-  const { viewPost } = usePostNavigation();
+  const { viewPost, closePost } = usePostNavigation();
+  const { fetchPostById, selectedPost } = usePostStore();
+  const { getUser, fetchUser } = useUserCache();
+
+  const urlPostId = params['*']?.startsWith('post/') ? params['*'].replace('post/', '') : null;
 
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!urlPostId || !currentUser) return;
+    fetchPostById(urlPostId, currentUser.id, friendIds);
+  }, [urlPostId, currentUser?.id]);
+
+  useEffect(() => {
+    if (selectedPost?.authorId) {
+      fetchUser(selectedPost.authorId);
+    }
+  }, [selectedPost?.authorId]);
 
   const handleEditPost = useCallback(async (
     content: string,
@@ -132,6 +152,17 @@ const FeedPage: React.FC = () => {
         initialPost={editPost}
         onSubmit={handleEditPost}
         onUploadImages={handleUploadImages}
+      />
+
+      <PostViewModal
+        isOpen={!!urlPostId}
+        onClose={closePost}
+        post={selectedPost}
+        author={selectedPost ? (getUser(selectedPost.authorId) ?? null) : null}
+        currentUser={currentUser}
+        onReact={handleReact}
+        onEdit={(postId) => { closePost(); setShowEditModal(postId); }}
+        onDelete={(postId) => { closePost(); setPostToDelete(postId); }}
       />
 
       <ConfirmDialog

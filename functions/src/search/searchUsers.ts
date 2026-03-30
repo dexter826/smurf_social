@@ -1,13 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../app';
-
-interface SearchResult {
-  id: string;
-  fullName: string;
-  avatar: string;
-  email: string;
-  status?: string;
-}
+import { User } from '../types';
 
 /**
  * Tìm kiếm người dùng theo email
@@ -36,8 +29,8 @@ export const searchUsers = onCall(
         .limit(10)
         .get();
 
-      let users: SearchResult[] = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() } as SearchResult))
+      let users = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() } as User))
         .filter((u) => u.id !== currentUserId && u.status !== 'banned');
 
       if (currentUserId && users.length > 0) {
@@ -47,12 +40,16 @@ export const searchUsers = onCall(
           .collection('blockedUsers')
           .get();
 
-        const myBlockedUsers: string[] = blockedUsersSnap.docs.map(doc => doc.id);
+        const myHiddenUsers = new Set(
+          blockedUsersSnap.docs
+            .filter(d => d.data().hideTheirActivity === true)
+            .map(d => d.id)
+        );
 
-        users = users.filter((u) => !myBlockedUsers.includes(u.id));
+        users = users.filter((u) => !myHiddenUsers.has(u.id));
 
         if (users.length > 0) {
-          const safeUsers: SearchResult[] = [];
+          const safeUsers: User[] = [];
 
           for (const targetUser of users) {
             const targetBlockedSnap = await db
@@ -62,7 +59,7 @@ export const searchUsers = onCall(
               .doc(currentUserId)
               .get();
 
-            if (!targetBlockedSnap.exists) {
+            if (!targetBlockedSnap.exists || targetBlockedSnap.data()?.blockViewMyActivity !== true) {
               safeUsers.push(targetUser);
             }
           }

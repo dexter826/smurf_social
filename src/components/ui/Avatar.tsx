@@ -98,11 +98,11 @@ const AvatarInner: React.FC<AvatarProps> = ({
                   </div>
                 ) : (
                   <>
-                    {(member.avatar && (typeof member.avatar === 'string' ? member.avatar : member.avatar.url)) ? (
+                    {member.avatar?.url ? (
                       <img
-                        src={typeof member.avatar === 'string' ? member.avatar : member.avatar.url}
+                        src={member.avatar.url}
                         alt=""
-                        className={`w-full h-full object-cover ${typeof member.avatar === 'object' && member.avatar.isSensitive ? 'blur-sm' : ''}`}
+                        className={`w-full h-full object-cover ${member.avatar.isSensitive ? 'blur-sm' : ''}`}
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}

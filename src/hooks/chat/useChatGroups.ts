@@ -42,8 +42,8 @@ export const useChatGroups = ({
     if (!currentUserId) return;
     const conversationId = await createGroup(currentUserId, memberIds, groupName, groupAvatar);
     await sendGroupSystemMessage(
-      conversationId, 
-      currentUserId, 
+      conversationId,
+      currentUserId,
       systemMessages.CREATE_GROUP(getActorName())
     );
   }, [currentUserId, createGroup, sendGroupSystemMessage, getActorName]);
@@ -55,8 +55,8 @@ export const useChatGroups = ({
       if (currentUserId) {
         const names = userIds.map((id) => getName(id)).join(', ');
         await sendGroupSystemMessage(
-          selectedConversationId, 
-          currentUserId, 
+          selectedConversationId,
+          currentUserId,
           systemMessages.ADD_MEMBERS(getActorName(), names)
         );
       }
@@ -70,8 +70,8 @@ export const useChatGroups = ({
     await removeMember(selectedConversationId, userId);
     if (currentUserId) {
       await sendGroupSystemMessage(
-        selectedConversationId, 
-        currentUserId, 
+        selectedConversationId,
+        currentUserId,
         systemMessages.REMOVE_MEMBER(getActorName(), getName(userId))
       );
     }
@@ -89,7 +89,10 @@ export const useChatGroups = ({
       }
     }
 
-    await sendGroupSystemMessage(selectedConversationId, currentUserId, systemMessages.LEAVE_GROUP(getActorName()));
+    try {
+      await sendGroupSystemMessage(selectedConversationId, currentUserId, systemMessages.LEAVE_GROUP(getActorName()));
+    } catch {
+    }
     await leaveGroup(selectedConversationId, currentUserId);
     return { needAssignAdmin: false };
   }, [selectedConversationId, currentUserId, conversations, leaveGroup, sendGroupSystemMessage, getActorName]);
@@ -98,8 +101,8 @@ export const useChatGroups = ({
     if (!selectedConversationId || !currentUserId) return;
     await updateMemberRole(selectedConversationId, newAdminId, 'admin');
     await sendGroupSystemMessage(
-      selectedConversationId, 
-      currentUserId, 
+      selectedConversationId,
+      currentUserId,
       systemMessages.CHANGE_ADMIN_ROLE(getActorName(), getName(newAdminId))
     );
     await sendGroupSystemMessage(selectedConversationId, currentUserId, systemMessages.LEAVE_GROUP(getActorName()));
@@ -111,8 +114,8 @@ export const useChatGroups = ({
     await updateMemberRole(selectedConversationId, userId, 'admin');
     if (currentUserId) {
       await sendGroupSystemMessage(
-        selectedConversationId, 
-        currentUserId, 
+        selectedConversationId,
+        currentUserId,
         systemMessages.PROMOTE_TO_ADMIN(getActorName(), getName(userId))
       );
     }
@@ -123,8 +126,8 @@ export const useChatGroups = ({
     await updateMemberRole(selectedConversationId, userId, 'member');
     if (currentUserId) {
       await sendGroupSystemMessage(
-        selectedConversationId, 
-        currentUserId, 
+        selectedConversationId,
+        currentUserId,
         systemMessages.DEMOTE_FROM_ADMIN(getActorName(), getName(userId))
       );
     }
@@ -137,7 +140,7 @@ export const useChatGroups = ({
       const conv = conversations.find(c => c.id === selectedConversationId);
       const nameChanged = updates.name && updates.name !== conv?.data?.name;
       const avatarChanged = !!updates.avatar;
-      
+
       let content = '';
       if (nameChanged && avatarChanged) {
         content = systemMessages.UPDATE_GROUP_BOTH(getActorName(), updates.name!);
@@ -146,7 +149,7 @@ export const useChatGroups = ({
       } else if (avatarChanged) {
         content = systemMessages.UPDATE_GROUP_AVATAR(getActorName());
       }
-      
+
       if (content) {
         await sendGroupSystemMessage(selectedConversationId, currentUserId, content);
       }

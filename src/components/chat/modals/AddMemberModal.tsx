@@ -180,7 +180,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
               >
                 <UserAvatar
                   userId={friend.id}
-                  src={friend.avatar.url}
+                  src={friend.avatar?.url}
                   name={friend.fullName}
                   size="sm"
                   initialStatus={friend.status}

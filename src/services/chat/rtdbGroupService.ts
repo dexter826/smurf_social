@@ -139,7 +139,7 @@ export const rtdbGroupService = {
             }
 
             const currentMemberIds = Object.keys(conversation.members || {});
-            
+
             if (currentMemberIds.length + memberIds.length > GROUP_LIMITS.MAX_MEMBERS) {
                 throw new Error(`Nhóm chỉ được tối đa ${GROUP_LIMITS.MAX_MEMBERS} thành viên`);
             }
@@ -231,12 +231,13 @@ export const rtdbGroupService = {
             };
 
             const memberIds = Object.keys(conversation.members || {});
-            
+
             memberIds.forEach(uid => {
                 if (uid === actorId) {
                     updates[`user_chats/${uid}/${convId}`] = null;
                 } else {
                     updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = now;
+                    updates[`user_chats/${uid}/${convId}/isArchived`] = true;
                     updates[`user_chats/${uid}/${convId}/updatedAt`] = now;
                 }
             });

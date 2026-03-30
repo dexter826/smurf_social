@@ -75,7 +75,7 @@ export const useChatMessages = ({
 
   const replyToMessage = useCallback(async (text: string, replyToId: string) => {
     if (!selectedConversationId || !currentUserId) return;
-    await sendTextMessage(selectedConversationId, currentUserId, text, undefined);
+    await sendTextMessage(selectedConversationId, currentUserId, text, undefined, replyToId);
   }, [selectedConversationId, currentUserId, sendTextMessage]);
 
   const handleSendCall = useCallback(async (

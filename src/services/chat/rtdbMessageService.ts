@@ -564,64 +564,48 @@ export const rtdbMessageService = {
             const lastMessagesQuery = query(messagesRef, orderByChild('createdAt'), limitToLast(50));
             const snapshot = await get(lastMessagesQuery);
 
-            if (!snapshot.exists()) return;
+            const updates: Record<string, any> = {
+                [`user_chats/${uid}/${convId}/unreadCount`]: 0,
+                [`user_chats/${uid}/${convId}/updatedAt`]: now,
+                [`conversations/${convId}/updatedAt`]: now
+            };
 
-            const updates: Record<string, any> = {};
+            if (lastMsgId) {
+                updates[`user_chats/${uid}/${convId}/lastReadMsgId`] = lastMsgId;
+            }
 
-            snapshot.forEach((childSnap) => {
-                const msgId = childSnap.key!;
-                const msgData = childSnap.val() as RtdbMessage;
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnap) => {
+                    const msgId = childSnap.key!;
+                    const msgData = childSnap.val() as RtdbMessage;
 
-                if (msgData.senderId === uid) return;
+                    if (msgData.senderId === uid) return;
 
-                if (!msgData.deliveredTo?.[uid]) {
-                    updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = now;
-                }
+                    if (!msgData.deliveredTo?.[uid]) {
+                        updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = now;
+                    }
 
-                if (settings.showReadReceipts && !msgData.readBy?.[uid]) {
-                    updates[`messages/${convId}/${msgId}/readBy/${uid}`] = now;
-                }
-            });
-
-            if (Object.keys(updates).length > 0) {
-                await update(ref(rtdb), updates);
+                    if (settings.showReadReceipts && !msgData.readBy?.[uid]) {
+                        updates[`messages/${convId}/${msgId}/readBy/${uid}`] = now;
+                    }
+                });
             }
 
             const lastMsgPath = `conversations/${convId}/lastMessage`;
             const lastMsgSnap = await get(ref(rtdb, lastMsgPath));
-
             if (lastMsgSnap.exists()) {
                 const lastMsg = lastMsgSnap.val();
                 if (lastMsg.senderId !== uid) {
-                    const convUpdates: Record<string, any> = {};
-
                     if (!lastMsg.deliveredTo?.[uid]) {
-                        convUpdates[`${lastMsgPath}/deliveredTo/${uid}`] = now;
+                        updates[`${lastMsgPath}/deliveredTo/${uid}`] = now;
                     }
                     if (settings.showReadReceipts && !lastMsg.readBy?.[uid]) {
-                        convUpdates[`${lastMsgPath}/readBy/${uid}`] = now;
-                    }
-
-                    if (Object.keys(convUpdates).length > 0) {
-                        await update(ref(rtdb), convUpdates);
+                        updates[`${lastMsgPath}/readBy/${uid}`] = now;
                     }
                 }
             }
 
-            const userChatUpdates: Record<string, any> = {
-                [`user_chats/${uid}/${convId}/unreadCount`]: 0,
-                [`user_chats/${uid}/${convId}/updatedAt`]: now
-            };
-
-            if (lastMsgId) {
-                userChatUpdates[`user_chats/${uid}/${convId}/lastReadMsgId`] = lastMsgId;
-            }
-
-            await update(ref(rtdb), userChatUpdates);
-
-            await update(ref(rtdb), {
-                [`conversations/${convId}/updatedAt`]: now
-            });
+            await update(ref(rtdb), updates);
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi markAsRead:', error);
             throw error;
@@ -665,7 +649,7 @@ export const rtdbMessageService = {
 
             const lastMsgPath = `conversations/${convId}/lastMessage`;
             const lastMsgSnap = await get(ref(rtdb, lastMsgPath));
-            
+
             if (lastMsgSnap.exists()) {
                 const lastMsg = lastMsgSnap.val();
                 if (lastMsg.senderId !== uid && !lastMsg.deliveredTo?.[uid]) {
@@ -883,8 +867,8 @@ export const rtdbMessageService = {
                 updatedAt: Date.now()
             };
 
-            await set(newMsgRef, messageData);
             await updateConversationAfterMessage(convId, 'system', messageData, content, msgId);
+            await set(newMsgRef, messageData);
 
             return msgId;
         } catch (error) {
@@ -925,9 +909,8 @@ export const rtdbMessageService = {
                 updatedAt: Date.now()
             };
 
-            await set(newMsgRef, messageData);
-
             await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
+            await set(newMsgRef, messageData);
 
             return msgId;
         } catch (error) {
@@ -942,45 +925,48 @@ export const rtdbMessageService = {
     updateMessageContent: async (convId: string, msgId: string, newContent: string, payload?: any): Promise<void> => {
         try {
             const msgRef = ref(rtdb, `messages/${convId}/${msgId}`);
-            
+
             const msgSnap = await get(msgRef);
             if (!msgSnap.exists()) return;
             const msgData = msgSnap.val() as RtdbMessage;
-            
-            const updates: any = {
-                content: newContent,
-                updatedAt: Date.now()
+
+            const updates: Record<string, any> = {
+                [`messages/${convId}/${msgId}/content`]: newContent,
+                [`messages/${convId}/${msgId}/updatedAt`]: Date.now()
             };
-            await update(msgRef, updates);
 
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
             if (convSnap.exists()) {
                 const conv = convSnap.val() as RtdbConversation;
-                
+
                 if (payload?.status === 'missed') {
                     const memberIds = Object.keys(conv.members || {});
-                    const chatUpdates: any = {};
-                    for (const mId of memberIds) {
-                        if (mId !== msgData.senderId) {
-                            chatUpdates[`user_chats/${mId}/${convId}/unreadCount`] = increment(1);
+                    const userChatChecks = await Promise.all(
+                        memberIds
+                            .filter(mId => mId !== msgData.senderId)
+                            .map(async mId => ({
+                                mId,
+                                exists: (await get(ref(rtdb, `user_chats/${mId}/${convId}`))).exists()
+                            }))
+                    );
+                    for (const { mId, exists } of userChatChecks) {
+                        if (exists) {
+                            updates[`user_chats/${mId}/${convId}/unreadCount`] = increment(1);
                         }
-                    }
-                    if (Object.keys(chatUpdates).length > 0) {
-                        await update(ref(rtdb), chatUpdates);
                     }
                 }
 
                 if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
-                    let displayContent = newContent;
-                    if (payload && payload.callType && payload.status) {
-                        displayContent = JSON.stringify(payload);
-                    }
-                    await update(convRef, {
-                        'lastMessage/content': displayContent,
-                        updatedAt: Date.now()
-                    });
+                    updates[`conversations/${convId}/lastMessage/content`] = payload
+                        ? JSON.stringify(payload)
+                        : newContent;
+                    updates[`conversations/${convId}/updatedAt`] = Date.now();
                 }
+            }
+
+            if (Object.keys(updates).length > 0) {
+                await update(ref(rtdb), updates);
             }
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi updateMessageContent:', error);

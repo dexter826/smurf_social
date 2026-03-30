@@ -15,7 +15,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && 
+      return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active' &&
@@ -23,7 +23,7 @@ service cloud.firestore {
     }
 
     function isNotBanned() {
-      return isAuthenticated() && 
+      return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
     }
@@ -32,8 +32,23 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
 
+    function theyBlockedMyView(theirId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(theirId)/blockedUsers/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(theirId)/blockedUsers/$(request.auth.uid)).data.blockViewMyActivity == true;
+    }
 
-    function isBlockedWith(otherUserId) {
+    function iHideTheirActivity(theirId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(theirId)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(theirId)).data.hideTheirActivity == true;
+    }
+
+    function isContentBlocked(contentOwnerId) {
+      return theyBlockedMyView(contentOwnerId) || iHideTheirActivity(contentOwnerId);
+    }
+
+    function isBlockedEitherWay(otherUserId) {
       return isAuthenticated() && (
         exists(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(otherUserId)) ||
         exists(/databases/$(database)/documents/users/$(otherUserId)/blockedUsers/$(request.auth.uid))
@@ -80,18 +95,29 @@ service cloud.firestore {
 
     // Lời mời kết bạn
     match /friendRequests/{requestId} {
-      allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
-      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow read: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow create: if isNotBanned() &&
+        request.resource.data.senderId == request.auth.uid &&
+        request.resource.data.senderId != request.resource.data.receiverId &&
+        !isBlockedEitherWay(request.resource.data.receiverId);
+      allow update, delete: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
     }
 
     // Bài viết
     match /posts/{postId} {
-      allow read: if isNotBanned() && !isBlockedWith(resource.data.authorId) && (
-        resource.data.authorId == request.auth.uid ||
-        (resource.data.visibility == 'friends' && isFriend(resource.data.authorId)) ||
-        isAdmin()
-      );
+      allow read: if isNotBanned() &&
+        !isContentBlocked(resource.data.authorId) &&
+        resource.data.status != 'deleted' && (
+          resource.data.authorId == request.auth.uid ||
+          (resource.data.visibility == 'friends' && isFriend(resource.data.authorId)) ||
+          isAdmin()
+        );
 
       allow create: if isNotBanned() && request.resource.data.authorId == request.auth.uid;
       allow update: if isNotBanned() && (
@@ -108,21 +134,26 @@ service cloud.firestore {
           reactorId == request.auth.uid ||
           isFriend(get(/databases/$(database)/documents/posts/$(postId)).data.authorId)
         );
-        allow write: if isNotBanned() && reactorId == request.auth.uid;
+        allow write: if isNotBanned() &&
+          reactorId == request.auth.uid &&
+          !isContentBlocked(get(/databases/$(database)/documents/posts/$(postId)).data.authorId);
       }
     }
 
     // Bình luận
     match /comments/{commentId} {
-      allow read: if isNotBanned() && 
+      allow read: if isNotBanned() &&
         'postId' in resource.data && (
-        isOwner(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) || 
-        resource.data.authorId == request.auth.uid || 
-        isFriend(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
-        isAdmin()
-      );
-      allow create: if isNotBanned() && request.resource.data.authorId == request.auth.uid;
-      
+          isOwner(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
+          resource.data.authorId == request.auth.uid ||
+          isFriend(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
+          isAdmin()
+        );
+
+      allow create: if isNotBanned() &&
+        request.resource.data.authorId == request.auth.uid &&
+        !isContentBlocked(get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.authorId);
+
       allow update: if isNotBanned() && (
         isAdmin() ||
         resource.data.authorId == request.auth.uid ||
@@ -132,7 +163,8 @@ service cloud.firestore {
         )) ||
         changed().hasOnly(['replyCount', 'updatedAt', 'replyToUserId', 'replyToId'])
       );
-      allow delete: if isAdmin() || resource.data.authorId == request.auth.uid || 
+      allow delete: if isAdmin() ||
+        resource.data.authorId == request.auth.uid ||
         get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId == request.auth.uid;
 
       // Cảm xúc bình luận
@@ -142,7 +174,9 @@ service cloud.firestore {
           reactorId == request.auth.uid ||
           isFriend(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId)
         );
-        allow write: if isNotBanned() && reactorId == request.auth.uid;
+        allow write: if isNotBanned() &&
+          reactorId == request.auth.uid &&
+          !isContentBlocked(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId);
       }
     }
 
@@ -155,7 +189,7 @@ service cloud.firestore {
 
     // Báo cáo vi phạm
     match /reports/{reportId} {
-      allow create: if isAuthenticated();
+      allow create: if isNotBanned() && request.resource.data.reporterId == request.auth.uid;
       allow read, update, delete: if isAdmin() || resource.data.reporterId == request.auth.uid;
     }
   }

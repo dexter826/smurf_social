@@ -275,7 +275,7 @@ export const usePostStore = create<PostState>()(
         } catch (error) {
           console.error("[postStore] Lỗi đăng bài:", error);
           const message = (error as any)?.message || 'Lỗi không xác định';
-          
+
           set(state => ({
             posts: state.posts.filter(p => p.id !== postId),
             uploadingStates: {
@@ -293,7 +293,7 @@ export const usePostStore = create<PostState>()(
       updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
         const { posts, selectedPost } = get();
         const existingPost = posts.find(p => p.id === postId) || (selectedPost?.id === postId ? selectedPost : null);
-        
+
         // Vẫn cho phép update Firestore ngay cả khi post chưa có trong store cục bộ
         const authorId = existingPost?.authorId || '';
 
@@ -332,13 +332,13 @@ export const usePostStore = create<PostState>()(
             : state.uploadingStates
         }));
 
+        const previousPost = existingPost;
+
         const processUpdate = async () => {
           try {
             let finalMedia = [...media];
 
             if (pendingFiles && pendingFiles.length > 0) {
-              // Nếu không có existingPost (trường hợp hy hữu), dùng UID hiện tại từ auth hoặc store khác nếu cần
-              // Ở đây ta giả định authorId có sẵn từ post được tìm thấy
               const uploadedMedia = await postService.uploadPostMedia(pendingFiles, authorId, (progress) => {
                 onProgress?.(progress);
                 set(state => ({
@@ -373,12 +373,18 @@ export const usePostStore = create<PostState>()(
           } catch (error) {
             console.error("Lỗi cập nhật bài viết:", error);
             const errorMessage = (error as any)?.message || 'Lỗi tải lên';
-            set(state => ({
-              uploadingStates: {
-                ...state.uploadingStates,
-                [postId]: { ...state.uploadingStates[postId], error: errorMessage }
-              }
-            }));
+
+            // Rollback về state cũ
+            if (previousPost) {
+              set(state => ({
+                posts: state.posts.map(p => p.id === postId ? previousPost : p),
+                selectedPost: state.selectedPost?.id === postId ? previousPost : state.selectedPost,
+                uploadingStates: {
+                  ...state.uploadingStates,
+                  [postId]: { ...state.uploadingStates[postId], error: errorMessage }
+                }
+              }));
+            }
             toast.error(TOAST_MESSAGES.POST.UPDATE_FAILED(errorMessage));
           } finally {
             previewMedia.forEach(m => URL.revokeObjectURL(m.url));
@@ -491,7 +497,7 @@ export const usePostStore = create<PostState>()(
 
         const loadingStore = useLoadingStore.getState();
         loadingStore.setLoading('post.detail', true);
-        
+
         try {
           const post = await postService.getPostById(postId, currentUserId, friendIds);
 
@@ -502,7 +508,7 @@ export const usePostStore = create<PostState>()(
           }
 
 
-          
+
           setSelectedPost(post);
         } catch (error) {
           console.error("[PostStore] Lỗi lấy chi tiết bài viết:", error);

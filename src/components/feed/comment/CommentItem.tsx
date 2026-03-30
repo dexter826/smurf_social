@@ -71,8 +71,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   const [showReactionDetails, setShowReactionDetails] = useState(false);
 
   const author = users[comment.authorId];
-  
-  const { visibleReplies: filteredReplies, hiddenCount: hiddenRepliesCount } = React.useMemo(() => 
+
+  const { visibleReplies: filteredReplies, hiddenCount: hiddenRepliesCount } = React.useMemo(() =>
     getFilteredReplies(postId, comment.id, postOwnerId || '', currentUser.id, friendIds),
     [getFilteredReplies, postId, comment.id, postOwnerId, currentUser.id, friendIds, replies]
   );
@@ -108,7 +108,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   return (
     <div className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
       <div className="flex gap-3">
-        <UserAvatar userId={comment.authorId} src={author?.avatar.url} name={author?.fullName} size={isReply ? 'xs' : 'sm'} onClick={onProfileNavigate} />
+        <UserAvatar userId={comment.authorId} src={author?.avatar?.url} name={author?.fullName} size={isReply ? 'xs' : 'sm'} onClick={onProfileNavigate} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-1.5 group/comment">
             <div className="relative inline-block max-w-full">
@@ -279,9 +279,9 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 <>
                   {hiddenRepliesCount > 0 && (
                     <div className="mx-2 mb-2 p-1.5 px-2 bg-text-tertiary/5 rounded-lg">
-                       <p className="text-[10px] text-text-tertiary italic font-medium">
+                      <p className="text-[10px] text-text-tertiary italic font-medium">
                         Có {comment.replyCount || 0} phản hồi. Bạn chỉ có thể xem phản hồi của bạn bè.
-                       </p>
+                      </p>
                     </div>
                   )}
                   <div className="space-y-1">

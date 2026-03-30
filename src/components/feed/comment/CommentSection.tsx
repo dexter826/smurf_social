@@ -12,7 +12,6 @@ import { useFriendIds, useBlockedUsers } from '../../../hooks';
 import { CommentSkeleton } from './CommentSkeleton';
 import { CommentInput } from './CommentInput';
 import { CommentItem } from './CommentItem';
-import { canViewInteraction } from '../../../utils/privacyUtils';
 
 interface CommentSectionProps {
   postId: string;
@@ -186,7 +185,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         const parentId = replyingTo ? (replyingTo.parentId || replyingTo.id) : null;
         const replyToUserId = replyingTo ? replyingTo.authorId : undefined;
         const replyToId = replyingTo ? replyingTo.id : undefined;
-        
+
         await createComment(
           postId,
           currentUser.id,
@@ -230,8 +229,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const hasAnyHidden = useMemo(() => {
     if (rootHiddenCount > 0) return true;
-    
-    // Kiểm tra xem có reply nào bị ẩn trong các root comment đang hiển thị không
+
     const postReplies = replies[postId] || {};
     return filteredRootComments.some(root => {
       const { hiddenCount } = getFilteredReplies(postId, root.id, postOwnerId || '', currentUser.id, friendIds);

@@ -221,7 +221,7 @@ export const AppLayout: React.FC = () => {
               {user && (
                 <UserAvatar
                   userId={user.id}
-                  src={user.avatar.url}
+                  src={user.avatar?.url}
                   size="sm"
                   className="cursor-pointer"
                   showBorder={false}
@@ -354,7 +354,7 @@ export const AppLayout: React.FC = () => {
           roomId={session.conversationId}
           userId={user.id}
           userName={user.fullName}
-          userAvatar={user.avatar.url}
+          userAvatar={user.avatar?.url ?? ''}
           isGroupCall={session.isGroupCall}
           callType={session.callType}
           onClose={() => endCall('ended')}

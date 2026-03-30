@@ -83,29 +83,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw err;
       }
 
-        const [userData, userSettings] = await Promise.all([
-          userService.getUserById(firebaseUser.uid),
-          userService.getUserSettings(firebaseUser.uid)
-        ]);
+      const [userData, userSettings] = await Promise.all([
+        userService.getUserById(firebaseUser.uid),
+        userService.getUserSettings(firebaseUser.uid)
+      ]);
 
-        if (userData) {
-          if (userData.status === 'banned') {
-            await authService.logout();
-            const err = new Error("Account banned") as Error & { code?: string };
-            err.code = 'auth/user-disabled';
-            throw err;
-          }
-
-          set({
-            user: userData,
-            settings: userSettings,
-            isPendingVerification: false,
-            isInitialized: true,
-          });
-          useUserCache.getState().setUser(userData);
-        } else {
-          set({ isPendingVerification: false });
+      if (userData) {
+        if (userData.status === 'banned') {
+          await authService.logout();
+          const err = new Error("Account banned") as Error & { code?: string };
+          err.code = 'auth/user-disabled';
+          throw err;
         }
+
+        set({
+          user: userData,
+          settings: userSettings,
+          isPendingVerification: false,
+          isInitialized: true,
+        });
+        useUserCache.getState().setUser(userData);
+      } else {
+        set({ isPendingVerification: false });
+      }
     } catch (error) {
       set({ isPendingVerification: false });
       throw error;
@@ -276,7 +276,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               async (updatedUser) => {
                 if (updatedUser.status === 'banned') {
                   set({ user: updatedUser });
-                  get().logout();
+                  await get().logout();
                   return;
                 }
 

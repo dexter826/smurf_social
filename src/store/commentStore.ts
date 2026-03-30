@@ -14,9 +14,9 @@ const mergeOptimisticComments = (
   sortOrder: SortOrder
 ): { merged: Comment[]; hasChanges: boolean } => {
   const mergedIds = new Set(incoming.map(c => c.id));
-  
+
   const filteredExisting = existing.filter(e => !mergedIds.has(e.id));
-  
+
   const isAllNewInExisting = incoming.every(c => existing.some(e => e.id === c.id));
   const isCountSame = existing.length === incoming.length;
 
@@ -334,7 +334,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   updateComment: async (postId: string, commentId: string, content: string, parentId?: string, replyToUserId?: string, replyToId?: string, image?: any) => {
     try {
       await commentService.updateComment(commentId, content, image);
-      const comment = parentId 
+      const comment = parentId
         ? get().replies[postId]?.[parentId]?.find(r => r.id === commentId)
         : get().rootComments[postId]?.find(c => c.id === commentId);
       get().updateCommentInStore(postId, commentId, content, parentId, comment?.replyToUserId, comment?.replyToId, image);
@@ -367,10 +367,16 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           }
         };
       } else {
+        const postReplies = { ...(state.replies[postId] || {}) };
+        delete postReplies[commentId];
         return {
           rootComments: {
             ...state.rootComments,
             [postId]: (state.rootComments[postId] || []).filter(c => c.id !== commentId)
+          },
+          replies: {
+            ...state.replies,
+            [postId]: postReplies
           }
         };
       }

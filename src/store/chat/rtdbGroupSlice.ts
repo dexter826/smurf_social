@@ -75,15 +75,6 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
     },
 
     leaveGroup: async (conversationId: string, userId: string) => {
-        set((state) => ({
-            conversations: state.conversations.filter(c => c.id !== conversationId),
-            selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
-        }));
-
-        if (get().clearMessages) {
-            get().clearMessages(conversationId);
-        }
-
         try {
             await rtdbGroupService.leaveGroup(conversationId, userId);
         } catch (error) {

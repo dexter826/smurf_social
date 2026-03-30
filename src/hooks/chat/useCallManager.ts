@@ -5,14 +5,14 @@ import { rtdbCallService } from '../../services/chat/rtdbCallService';
 import { useRtdbChatStore } from '../../store';
 
 export function useCallManager(currentUserId: string) {
-    const { 
-        phase, session, incomingSignal, 
-        setPhase, setSession, setIncomingSignal, setCallEndReason, resetCall 
+    const {
+        phase, session, incomingSignal,
+        setPhase, setSession, setIncomingSignal, setCallEndReason, resetCall
     } = useCallStore();
 
     const { playSound } = useCallSounds();
     const updateCallMessage = useRtdbChatStore((s) => s.updateCallMessage);
-    
+
     const phaseRef = useRef(phase);
     const sessionRef = useRef(session);
     useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -61,7 +61,7 @@ export function useCallManager(currentUserId: string) {
                         }
                     }
                     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                } 
+                }
                 else if (data.status === 'rejected' || data.status === 'busy') {
                     if (data.isGroupCall) return;
 
@@ -69,13 +69,13 @@ export function useCallManager(currentUserId: string) {
 
                     if (sessionRef.current?.conversationId) {
                         await rtdbCallService.endCallSession(
-                            sessionRef.current.conversationId, 
-                            updateCallMessage, 
+                            sessionRef.current.conversationId,
+                            updateCallMessage,
                             'missed'
                         );
                     }
                 }
-            } 
+            }
             else {
                 if (data.status === 'ringing') {
                     if (phaseRef.current !== 'idle') {
@@ -105,16 +105,17 @@ export function useCallManager(currentUserId: string) {
         conversationId: string,
         isGroupCall = false,
         calleeName?: string,
-        calleeAvatar?: string
+        calleeAvatar?: string,
+        isBlocked = false,
+        isBlockedByMe = false
     ) => {
-        // Guard: không gọi khi đang bận
         if (phaseRef.current !== 'idle') {
             return { success: false, reason: 'already_in_call' };
         }
 
-        // Kiểm tra trước, tạo data sau — tránh message/activeCall rác
         const preCheck = await rtdbCallService.initiateCall(
-            currentUserId, recipientIds, conversationId, callType, callerName, callerAvatar, isGroupCall
+            currentUserId, recipientIds, conversationId, callType, callerName, callerAvatar,
+            isGroupCall, isBlocked, isBlockedByMe
         );
 
         if (!preCheck.success) {
@@ -152,7 +153,7 @@ export function useCallManager(currentUserId: string) {
 
     const acceptCall = useCallback(async () => {
         if (!incomingSignal) return;
-        
+
         await rtdbCallService.answerCall(
             currentUserId, incomingSignal.callerId, 'accepted', incomingSignal.isGroupCall
         );
@@ -179,7 +180,7 @@ export function useCallManager(currentUserId: string) {
 
     const rejectCall = useCallback(async () => {
         if (!incomingSignal) return;
-        
+
         await rtdbCallService.answerCall(
             currentUserId, incomingSignal.callerId, 'rejected', incomingSignal.isGroupCall
         );
@@ -197,12 +198,12 @@ export function useCallManager(currentUserId: string) {
         await rtdbCallService.clearSignalingForUsers(allIds);
 
         await rtdbCallService.endCallSession(
-            currentSession.conversationId, 
-            updateCallMessage, 
-            status, 
+            currentSession.conversationId,
+            updateCallMessage,
+            status,
             currentSession.isGroupCall ? currentUserId : undefined
         );
-        
+
         if (phaseRef.current === 'in-call') playSound('ended');
         cleanup();
     }, [currentUserId, updateCallMessage, cleanup, playSound]);

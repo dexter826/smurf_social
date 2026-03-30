@@ -17,7 +17,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
 }) => {
   const isGroup = conversation.data.isGroup;
   const displayName = isGroup ? conversation.data.name : partner?.fullName || 'Unknown';
-  const avatarSrc = isGroup ? conversation.data.avatar?.url : partner?.avatar.url;
+  const avatarSrc = isGroup ? conversation.data.avatar?.url : partner?.avatar?.url;
 
   return (
     <div className="flex flex-col items-center py-6 px-4 border-b border-border-light">
