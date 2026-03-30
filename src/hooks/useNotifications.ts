@@ -45,14 +45,14 @@ export const useNotifications = () => {
 
             if (lastMsg.timestamp > prevTimestamp) {
                 const isNotMe = lastMsg.senderId !== user.id;
-                const isNotSystem = lastMsg.type !== 'system';
+                const isNotSilent = lastMsg.type !== 'system' && lastMsg.type !== 'call';
                 const isNotMuted = !conv.userChat?.isMuted;
                 const isNotSelected = selectedConversationId !== conv.id;
                 const isTabHidden = document.visibilityState === 'hidden';
 
                 const isVeryRecent = lastMsg.timestamp > (Date.now() - 30000);
 
-                if (isVeryRecent && isNotMe && isNotSystem && isNotMuted && (isNotSelected || isTabHidden)) {
+                if (isVeryRecent && isNotMe && isNotSilent && isNotMuted && (isNotSelected || isTabHidden)) {
                     soundManager.play('message');
                 }
             }

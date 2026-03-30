@@ -79,11 +79,15 @@ async function updateConversationAfterMessage(
         };
         updates[`conversations/${convId}/updatedAt`] = now;
 
+        const isSilentMessage = messageData.type === MessageType.SYSTEM || messageData.type === MessageType.CALL;
+
         for (const memberId of memberIds) {
             updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = now;
             updates[`user_chats/${memberId}/${convId}/updatedAt`] = now;
             if (memberId !== senderId) {
-                updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
+                if (!isSilentMessage) {
+                    updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
+                }
                 updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
             }
         }
@@ -938,6 +942,11 @@ export const rtdbMessageService = {
     updateMessageContent: async (convId: string, msgId: string, newContent: string, payload?: any): Promise<void> => {
         try {
             const msgRef = ref(rtdb, `messages/${convId}/${msgId}`);
+            
+            const msgSnap = await get(msgRef);
+            if (!msgSnap.exists()) return;
+            const msgData = msgSnap.val() as RtdbMessage;
+            
             const updates: any = {
                 content: newContent,
                 updatedAt: Date.now()
@@ -948,6 +957,20 @@ export const rtdbMessageService = {
             const convSnap = await get(convRef);
             if (convSnap.exists()) {
                 const conv = convSnap.val() as RtdbConversation;
+                
+                if (payload?.status === 'missed') {
+                    const memberIds = Object.keys(conv.members || {});
+                    const chatUpdates: any = {};
+                    for (const mId of memberIds) {
+                        if (mId !== msgData.senderId) {
+                            chatUpdates[`user_chats/${mId}/${convId}/unreadCount`] = increment(1);
+                        }
+                    }
+                    if (Object.keys(chatUpdates).length > 0) {
+                        await update(ref(rtdb), chatUpdates);
+                    }
+                }
+
                 if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
                     let displayContent = newContent;
                     if (payload && payload.callType && payload.status) {
