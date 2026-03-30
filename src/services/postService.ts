@@ -39,11 +39,11 @@ const postConverter = (doc: DocumentSnapshot) => convertDoc<Post>(doc);
 // Phân quyền hiển thị
 function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] {
   if (isOwner) {
-    return [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
+    return [Visibility.FRIENDS, Visibility.PRIVATE];
   } else if (isFriend) {
-    return [Visibility.PUBLIC, Visibility.FRIENDS];
+    return [Visibility.FRIENDS];
   }
-  return [Visibility.PUBLIC];
+  return [];
 }
 
 export const postService = {
@@ -174,6 +174,9 @@ export const postService = {
       const isOwner = userId === currentUserId;
       const isFriend = friendIds?.includes(userId) || false;
       const visibilityFilter = getVisibilityFilter(isOwner, isFriend);
+      if (visibilityFilter.length === 0) {
+        return { posts: [], lastDoc: null };
+      }
 
       let q = query(
         collection(db, 'posts'),
@@ -227,6 +230,10 @@ export const postService = {
     const isOwner = userId === currentUserId;
     const isFriend = friendIds?.includes(userId) || false;
     const visibilityFilter = getVisibilityFilter(isOwner, isFriend);
+    if (visibilityFilter.length === 0) {
+      callback([]);
+      return () => { };
+    }
 
     const q = query(
       collection(db, 'posts'),
@@ -295,7 +302,7 @@ export const postService = {
         type: postData.type || PostType.REGULAR,
         content: postData.content || '',
         status: PostStatus.ACTIVE,
-        visibility: postData.visibility || Visibility.PUBLIC,
+        visibility: postData.visibility || Visibility.FRIENDS,
         commentCount: 0,
         createdAt: postData.createdAt || serverTimestamp(),
         updatedAt: postData.updatedAt || serverTimestamp()

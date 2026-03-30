@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, MessageCircle, Globe, Users, Lock, Settings2 } from 'lucide-react';
+import { Eye, MessageCircle, Users, Lock, Settings2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { presenceService } from '../../services/presenceService';
@@ -57,7 +57,7 @@ const PrivacySection: React.FC = () => {
       <div className="p-4 bg-bg-primary rounded-xl border-2 border-border-light shadow-sm">
         <div className="flex items-center gap-4 mb-4">
           <div className="p-2 bg-primary-light rounded-lg text-primary">
-            <Globe size={20} />
+            <Users size={20} />
           </div>
           <div>
             <h3 className="font-medium text-text-primary">Quyền riêng tư bài viết mặc định</h3>
@@ -72,11 +72,9 @@ const PrivacySection: React.FC = () => {
           trigger={
             <div className="flex items-center justify-between w-full px-4 py-3 bg-bg-secondary rounded-xl border border-border-light hover:bg-bg-hover active:bg-bg-active transition-all duration-base cursor-pointer">
               <div className="flex items-center gap-3">
-                {settings.defaultPostVisibility === Visibility.PUBLIC && <Globe size={18} className="text-primary" />}
                 {settings.defaultPostVisibility === Visibility.FRIENDS && <Users size={18} className="text-primary" />}
                 {settings.defaultPostVisibility === Visibility.PRIVATE && <Lock size={18} className="text-primary" />}
                 <span className="text-sm font-semibold text-text-primary">
-                  {settings.defaultPostVisibility === Visibility.PUBLIC && 'Công khai'}
                   {settings.defaultPostVisibility === Visibility.FRIENDS && 'Bạn bè'}
                   {settings.defaultPostVisibility === Visibility.PRIVATE && 'Chỉ mình tôi'}
                 </span>
@@ -85,11 +83,7 @@ const PrivacySection: React.FC = () => {
             </div>
           }
         >
-          <DropdownItem
-            icon={<Globe size={16} />}
-            label="Công khai"
-            onClick={() => handleChangeVisibility(Visibility.PUBLIC)}
-          />
+
           <DropdownItem
             icon={<Users size={16} />}
             label="Bạn bè"

@@ -113,7 +113,7 @@ export const userService = {
       batch.set(settingsRef, {
         showOnlineStatus: true,
         showReadReceipts: true,
-        defaultPostVisibility: Visibility.PUBLIC,
+        defaultPostVisibility: Visibility.FRIENDS,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -368,7 +368,7 @@ export const userService = {
         return {
           showOnlineStatus: data.showOnlineStatus ?? true,
           showReadReceipts: data.showReadReceipts ?? true,
-          defaultPostVisibility: data.defaultPostVisibility || Visibility.PUBLIC,
+          defaultPostVisibility: data.defaultPostVisibility || Visibility.FRIENDS,
           createdAt: data.createdAt as Timestamp || Timestamp.now(),
           updatedAt: data.updatedAt as Timestamp || Timestamp.now()
         } as UserSettings;
@@ -378,7 +378,7 @@ export const userService = {
       return {
         showOnlineStatus: true,
         showReadReceipts: true,
-        defaultPostVisibility: Visibility.PUBLIC,
+        defaultPostVisibility: Visibility.FRIENDS,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };

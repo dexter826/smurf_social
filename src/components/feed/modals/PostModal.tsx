@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { X, Image as ImageIcon, Video, Globe, Users, Lock } from 'lucide-react';
+import { X, Image as ImageIcon, Video, Users, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, ConfirmDialog } from '../../ui';
@@ -53,7 +53,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       content: '',
       media: [],
       hasPendingFiles: false,
-      visibility: Visibility.PUBLIC
+      visibility: Visibility.FRIENDS
     }
   });
 
@@ -76,7 +76,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           visibility: initialPost.visibility
         });
       } else {
-        const defaultVisibility = useAuthStore.getState().settings?.defaultPostVisibility || Visibility.PUBLIC;
+        const defaultVisibility = useAuthStore.getState().settings?.defaultPostVisibility || Visibility.FRIENDS;
         reset({
           content: '',
           media: [],
@@ -354,7 +354,6 @@ export const PostModal: React.FC<PostModalProps> = ({
               value={formData.visibility}
               onChange={(v) => setValue('visibility', v as Visibility, { shouldDirty: true })}
               options={[
-                { value: Visibility.PUBLIC, label: 'Công khai', icon: <Globe size={14} /> },
                 { value: Visibility.FRIENDS, label: 'Bạn bè', icon: <Users size={14} /> },
                 { value: Visibility.PRIVATE, label: 'Chỉ mình tôi', icon: <Lock size={14} /> }
               ]}

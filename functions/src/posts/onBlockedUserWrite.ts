@@ -76,7 +76,7 @@ async function restorePostsIfFriend(db: Firestore, targetUserId: string, authorI
         const postsSnap = await db.collection('posts')
             .where('authorId', '==', authorId)
             .where('status', '==', 'active')
-            .where('visibility', 'in', ['public', 'friends'])
+            .where('visibility', '==', 'friends')
             .orderBy('createdAt', 'desc')
             .limit(100)
             .get();

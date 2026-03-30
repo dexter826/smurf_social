@@ -19,7 +19,7 @@ export const onFriendWrite = onDocumentWritten(
                 const friendPostsSnapshot = await db.collection('posts')
                     .where('authorId', '==', friendId)
                     .where('status', '==', 'active')
-                    .where('visibility', 'in', ['public', 'friends'])
+                    .where('visibility', '==', 'friends')
                     .orderBy('createdAt', 'desc')
                     .limit(100)
                     .get();

@@ -88,7 +88,6 @@ service cloud.firestore {
     // Bài viết
     match /posts/{postId} {
       allow read: if isNotBanned() && !isBlockedWith(resource.data.authorId) && (
-        resource.data.visibility == 'public' ||
         resource.data.authorId == request.auth.uid ||
         (resource.data.visibility == 'friends' && isFriend(resource.data.authorId)) ||
         isAdmin()
@@ -107,8 +106,7 @@ service cloud.firestore {
         allow read: if isNotBanned() && (
           isOwner(get(/databases/$(database)/documents/posts/$(postId)).data.authorId) ||
           reactorId == request.auth.uid ||
-          isFriend(get(/databases/$(database)/documents/posts/$(postId)).data.authorId) ||
-          get(/databases/$(database)/documents/posts/$(postId)).data.visibility == 'public'
+          isFriend(get(/databases/$(database)/documents/posts/$(postId)).data.authorId)
         );
         allow write: if isNotBanned() && reactorId == request.auth.uid;
       }
@@ -121,7 +119,6 @@ service cloud.firestore {
         isOwner(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) || 
         resource.data.authorId == request.auth.uid || 
         isFriend(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
-        get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.visibility == 'public' ||
         isAdmin()
       );
       allow create: if isNotBanned() && request.resource.data.authorId == request.auth.uid;
