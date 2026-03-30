@@ -1,4 +1,5 @@
 import { RefObject } from 'react';
+import { ReactionType } from '../../shared/types';
 
 // Cuộn đến tin nhắn và hiệu ứng highlight
 export const scrollToMessage = (messageId: string) => {
@@ -32,4 +33,40 @@ export const insertTextAtCursor = (
     ref.current?.focus();
     ref.current?.setSelectionRange(newPos, newPos);
   }, 0);
+};
+
+export const getReactionColorClass = (type: ReactionType | string | null) => {
+  if (!type) return 'text-text-tertiary';
+  const rt = type.toLowerCase();
+  switch (rt) {
+    case 'like':
+      return '!text-primary hover:!text-primary-hover';
+    case 'love':
+    case 'angry':
+      return '!text-error hover:!text-error/90';
+    case 'haha':
+    case 'wow':
+    case 'sad':
+      return '!text-warning hover:!text-warning/90';
+    default:
+      return '!text-primary hover:!text-primary-hover';
+  }
+};
+
+export const getReactionBgClass = (type: ReactionType | string | null) => {
+  if (!type) return '';
+  const rt = type.toLowerCase();
+  switch (rt) {
+    case 'like':
+      return '!bg-primary/5';
+    case 'love':
+    case 'angry':
+      return '!bg-error/5';
+    case 'haha':
+    case 'wow':
+    case 'sad':
+      return '!bg-warning/10';
+    default:
+      return '!bg-primary/5';
+  }
 };

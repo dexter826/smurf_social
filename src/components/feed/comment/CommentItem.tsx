@@ -10,6 +10,7 @@ import { useCommentStore } from '../../../store/commentStore';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
 import { REACTION_LABELS } from '../../../constants';
 import { canViewInteraction } from '../../../utils/privacyUtils';
+import { getReactionColorClass } from '../../../utils';
 
 interface CommentItemProps {
   comment: Comment;
@@ -231,7 +232,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 <button
                   onMouseEnter={() => setShowReactions(true)}
                   onClick={() => handleReact(displayReaction ? 'REMOVE' : ReactionType.LIKE)}
-                  className={`hover:underline active:underline transition-all duration-base cursor-pointer ${displayReaction ? 'text-primary' : ''}`}
+                  className={`hover:underline active:underline transition-all duration-base cursor-pointer ${displayReaction ? getReactionColorClass(displayReaction) : ''}`}
                 >
                   {displayReaction ? REACTION_LABELS[displayReaction] : 'Thích'}
                 </button>

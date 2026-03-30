@@ -4,6 +4,7 @@ import { Button, ReactionSelector, ReactionDisplay } from '../../ui';
 import { ReactionType } from '../../../../shared/types';
 import { REACTION_LABELS } from '../../../constants';
 import { getReactionIcon } from '../../chat/reactions/ReactionIcons';
+import { getReactionColorClass, getReactionBgClass } from '../../../utils';
 
 interface ReactionActionsProps {
   reactionSummary: Partial<Record<ReactionType, number>>;
@@ -97,7 +98,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             variant="ghost"
             fullWidth
             className={`h-10 transition-all duration-200 ${
-              myReaction ? 'text-primary bg-primary/5 font-bold' : 'text-text-secondary hover:bg-black/5'
+              myReaction ? `${getReactionColorClass(myReaction)} ${getReactionBgClass(myReaction)} font-bold` : 'text-text-secondary hover:bg-black/5'
             }`}
             onClick={handleLikeClick}
             onMouseEnter={() => setShowReactions(true)}
