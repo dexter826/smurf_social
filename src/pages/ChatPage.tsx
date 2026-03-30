@@ -174,8 +174,16 @@ const ChatPage: React.FC = () => {
       !isGroup ? partner?.avatar.url : (selectedConversation?.data.groupAvatar?.url)
     );
 
-    if (result && !result.success && result.reason === 'busy') {
-      import('../store/toastStore').then(({ toast }) => toast.error('Người dùng này hiện đang bận.'));
+    if (result && !result.success) {
+      import('../store/toastStore').then(({ toast }) => {
+        switch (result.reason) {
+          case 'busy': return toast.error('Người dùng này hiện đang bận.');
+          case 'blocked': return toast.error('Không thể thực hiện cuộc gọi với người dùng này.');
+          case 'not_friend': return toast.error('Chỉ có thể gọi cho bạn bè.');
+          case 'already_in_call': return toast.error('Bạn đang trong một cuộc gọi khác.');
+          default: return toast.error('Không thể thực hiện cuộc gọi.');
+        }
+      });
     }
   };
 

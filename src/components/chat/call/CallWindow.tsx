@@ -3,7 +3,7 @@ import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../firebase/config';
 import { useUserCache } from '../../../store/userCacheStore';
-import { rtdbCallService } from '../../../services/chat/rtdbCallService';
+
 
 interface CallWindowProps {
   roomId: string;
@@ -115,7 +115,6 @@ export const CallWindow: React.FC<CallWindowProps> = ({
           },
         });
 
-        await rtdbCallService.updateCallParticipant(roomId, userId, true);
       } catch (error) {
         console.error('[CallWindow] Lỗi khởi tạo cuộc gọi:', error);
         onCloseRef.current();

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { RtdbCallSignaling } from '../../shared/types';
 
 export type CallPhase = 'idle' | 'outgoing' | 'incoming' | 'in-call';
+export type CallEndReason = 'rejected' | 'busy' | null;
 
 interface CallSession {
   conversationId: string;
@@ -16,19 +17,15 @@ interface CallSession {
 }
 
 interface CallState {
-  // Trạng thái chính
   phase: CallPhase;
-  
-  // Thông tin phiên hiện tại
   session: CallSession | null;
-  
-  // Tín hiệu cuộc gọi đến đang chờ xử lý
   incomingSignal: RtdbCallSignaling | null;
+  callEndReason: CallEndReason;
 
-  // Actions
   setPhase: (phase: CallPhase) => void;
   setSession: (session: CallSession | null) => void;
   setIncomingSignal: (signal: RtdbCallSignaling | null) => void;
+  setCallEndReason: (reason: CallEndReason) => void;
   resetCall: () => void;
 }
 
@@ -36,6 +33,7 @@ const initialState = {
   phase: 'idle' as CallPhase,
   session: null as CallSession | null,
   incomingSignal: null as RtdbCallSignaling | null,
+  callEndReason: null as CallEndReason,
 };
 
 export const useCallStore = create<CallState>((set) => ({
@@ -44,6 +42,7 @@ export const useCallStore = create<CallState>((set) => ({
   setPhase: (phase) => set({ phase }),
   setSession: (session) => set({ session }),
   setIncomingSignal: (incomingSignal) => set({ incomingSignal }),
+  setCallEndReason: (callEndReason) => set({ callEndReason }),
 
   resetCall: () => set(initialState),
 }));

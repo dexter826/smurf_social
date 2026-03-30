@@ -895,7 +895,7 @@ export const rtdbMessageService = {
     sendCallMessage: async (
         convId: string,
         senderId: string,
-        payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started' | 'busy'; duration?: number }
+        payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }
     ): Promise<string> => {
         try {
             const newMsgRef = push(ref(rtdb, `messages/${convId}`));

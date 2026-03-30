@@ -49,7 +49,8 @@ export const AppLayout: React.FC = () => {
   const isChatRoom = location.pathname === '/' && !!selectedConversationId;
 
   // Global Call Manager
-  const { phase, session, incomingSignal, acceptCall, rejectCall, endCall } = useCallManager(user?.id || '');
+  const callEndReason = useCallStore((s) => s.callEndReason);
+  const { phase, session, incomingSignal, acceptCall, rejectCall, endCall, dismissEndedCall } = useCallManager(user?.id || '');
 
   useEffect(() => {
     if (!user) return;
@@ -342,7 +343,9 @@ export const AppLayout: React.FC = () => {
           calleeId={session.participants[0]}
           calleeAvatar={session.calleeAvatar}
           callType={session.callType}
+          endReason={callEndReason}
           onCancel={() => endCall('missed')}
+          onDismiss={dismissEndedCall}
         />
       )}
 

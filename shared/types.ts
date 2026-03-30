@@ -234,7 +234,7 @@ export interface RtdbUserChat {
 
 export interface CallMessagePayload {
     callType: 'voice' | 'video';
-    status: 'started' | 'ended' | 'missed' | 'rejected' | 'busy';
+    status: 'started' | 'ended' | 'missed' | 'rejected';
     duration?: number;
 }
 

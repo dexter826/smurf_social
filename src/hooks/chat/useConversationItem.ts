@@ -78,7 +78,7 @@ export const useConversationItem = ({
         if (status === 'missed') {
           return isMine ? (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại') : (isVideo ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ');
         }
-        if (status === 'rejected' || status === 'busy') {
+        if (status === 'rejected') {
             return isMine ? (isVideo ? 'Cuộc gọi video bị từ chối' : 'Cuộc gọi thoại bị từ chối') : (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại');
         }
 

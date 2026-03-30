@@ -288,7 +288,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
       );
 
     case MessageType.CALL: {
-      let parsed: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started' | 'busy'; duration?: number };
+      let parsed: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number };
       try { parsed = JSON.parse(message.data.content); }
       catch { parsed = { callType: 'voice', status: 'missed' }; }
 
@@ -304,8 +304,6 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         title = isMe ? `Cuộc gọi ${typeStr} đi` : `Cuộc gọi ${typeStr} đến`;
       } else if (status === 'missed') {
         title = isVideo ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ';
-      } else if (status === 'busy') {
-        title = isVideo ? 'Cuộc gọi video (Máy bận)' : 'Cuộc gọi thoại (Máy bận)';
       } else {
         title = isVideo ? 'Cuộc gọi video bị từ chối' : 'Cuộc gọi thoại bị từ chối';
       }

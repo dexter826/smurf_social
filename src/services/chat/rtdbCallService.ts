@@ -133,6 +133,12 @@ export const rtdbCallService = {
         onDisconnect(participantRef).remove();
     },
 
+    markCallConnected: async (convId: string): Promise<void> => {
+        await update(ref(rtdb, `conversations/${convId}/activeCall`), {
+            startedAt: Date.now(),
+        });
+    },
+
     updateCallParticipant: async (
         convId: string,
         userId: string,
@@ -176,7 +182,7 @@ export const rtdbCallService = {
     endCallSession: async (
         convId: string,
         updateMessageFn: (convId: string, msgId: string, payload: any) => Promise<void>,
-        status: 'ended' | 'missed' | 'rejected' | 'busy' = 'ended',
+        status: 'ended' | 'missed' | 'rejected' = 'ended',
         userId?: string
     ): Promise<void> => {
         try {
