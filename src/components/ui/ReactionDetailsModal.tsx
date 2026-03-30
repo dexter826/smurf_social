@@ -5,6 +5,7 @@ import { batchGetUsers } from '../../utils/batchUtils';
 import { getReactionIcon } from '../chat/reactions/ReactionIcons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { canViewInteraction } from '../../utils/privacyUtils';
 
 interface ReactionDetailsModalProps {
   isOpen: boolean;
@@ -119,10 +120,9 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
       }
 
       const friends = list.filter(item =>
-        item.userId === currentUserId || item.userId === authorId || friendsIds.includes(item.userId)
+        canViewInteraction(item.userId, authorId || '', currentUserId, friendsIds)
       );
       
-      // Nếu có counter từ server, dùng nó để tính tổng số người bị ẩn
       const totalCount = initialCount !== undefined ? Math.max(initialCount, list.length) : list.length;
       const othersCount = totalCount - friends.length;
 

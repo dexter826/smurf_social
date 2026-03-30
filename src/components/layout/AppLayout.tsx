@@ -208,7 +208,7 @@ export const AppLayout: React.FC = () => {
             </NavLink>
 
             <NavLink
-              to="/profile"
+              to={`/profile/${user.id}`}
               className={({ isActive }) =>
                 `w-10 h-10 flex items-center justify-center rounded-full transition-all duration-base outline-none ${isActive
                   ? 'ring-2 ring-primary ring-offset-1 ring-offset-bg-primary'

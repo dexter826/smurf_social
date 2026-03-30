@@ -12,6 +12,7 @@ import { useFriendIds, useBlockedUsers } from '../../../hooks';
 import { CommentSkeleton } from './CommentSkeleton';
 import { CommentInput } from './CommentInput';
 import { CommentItem } from './CommentItem';
+import { canViewInteraction } from '../../../utils/privacyUtils';
 
 interface CommentSectionProps {
   postId: string;
@@ -48,7 +49,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     subscribeToReplies,
     createComment,
     updateComment,
-    deleteComment
+    deleteComment,
+    getFilteredRootComments,
+    getFilteredReplies
   } = useCommentStore();
 
   const { users, fetchUsers } = useUserCache();
@@ -73,12 +76,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const currentHasMoreRoot = hasMoreRoot[postId] ?? false;
   const isLoading = isLoadingPost(postId);
 
-  const filteredRootComments = useMemo(() =>
-    currentRootComments.filter(c =>
-      c.authorId === currentUser.id ||
-      c.authorId === postOwnerId ||
-      friendIds.includes(c.authorId)
-    ), [currentRootComments, currentUser.id, friendIds, postOwnerId]
+  const { visibleComments: filteredRootComments, hiddenCount: rootHiddenCount } = useMemo(() =>
+    getFilteredRootComments(postId, postOwnerId || '', currentUser.id, friendIds),
+    [getFilteredRootComments, postId, postOwnerId, currentUser.id, friendIds, currentRootComments]
   );
 
   // Cuộn tới ô nhập liệu khi active
@@ -228,29 +228,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }, [currentUser.id]);
 
-  const hiddenInfo = useMemo(() => {
-    if (isLoading && currentRootComments.length === 0) return { root: 0, total: 0 };
+  const hasAnyHidden = useMemo(() => {
+    if (rootHiddenCount > 0) return true;
     
-    const rootHidden = currentRootComments.length - filteredRootComments.length;
-    
-    let replyHidden = 0;
+    // Kiểm tra xem có reply nào bị ẩn trong các root comment đang hiển thị không
     const postReplies = replies[postId] || {};
-    
-    filteredRootComments.forEach(root => {
-      const allReplies = postReplies[root.id] || [];
-      const visibleReplies = allReplies.filter(r => 
-        r.authorId === currentUser.id || 
-        r.authorId === postOwnerId || 
-        friendIds.includes(r.authorId)
-      );
-      replyHidden += (allReplies.length - visibleReplies.length);
+    return filteredRootComments.some(root => {
+      const { hiddenCount } = getFilteredReplies(postId, root.id, postOwnerId || '', currentUser.id, friendIds);
+      return hiddenCount > 0;
     });
-
-    return {
-      root: rootHidden,
-      total: rootHidden + replyHidden
-    };
-  }, [currentRootComments, filteredRootComments, replies, postId, currentUser.id, postOwnerId, friendIds, isLoading]);
+  }, [rootHiddenCount, filteredRootComments, getFilteredReplies, postId, postOwnerId, currentUser.id, friendIds, replies]);
 
   return (
     <div className={`flex flex-col min-h-0 transition-all duration-base ${className} ${!header ? 'border-t border-border-light bg-bg-secondary/20' : 'h-full bg-bg-primary'}`}>
@@ -261,19 +248,20 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           {isLoading && filteredRootComments.length === 0 ? (
             <div className="px-4 py-4"><CommentSkeleton /></div>
           ) : filteredRootComments.length === 0 ? (
-            <div className="text-center py-10 px-6">
-              <p className="text-text-secondary text-sm italic">
-                {hiddenInfo.total > 0
-                  ? `Có ${hiddenInfo.total} bình luận. Bạn chỉ xem được bình luận của bạn bè.`
-                  : 'Hãy là người đầu tiên bình luận!'}
+            <div className="text-center py-12 px-6">
+              <p className="text-text-secondary text-sm font-medium italic">
+                {hasAnyHidden
+                  ? `Có ${totalCommentCount} bình luận. Bạn chỉ có thể xem bình luận của bạn bè.`
+                  : 'Hãy là người đầu tiên bình luận cho bài viết này.'}
               </p>
+              {!hasAnyHidden && <p className="text-text-tertiary text-xs mt-1">Gửi gắm suy nghĩ của bạn vào đây nào!</p>}
             </div>
           ) : (
             <div className="flex flex-col">
-              {hiddenInfo.root > 0 && (
-                <div className="text-center py-3 px-6 mb-2 border-b border-border-light/30 bg-bg-secondary/10">
-                  <p className="text-text-tertiary text-[12px] italic">
-                    Có {hiddenInfo.root} bình luận. Bạn chỉ xem được bình luận của bạn bè.
+              {rootHiddenCount > 0 && (
+                <div className="mx-6 my-2 py-3 border-b border-border-light/30 text-center">
+                  <p className="text-text-tertiary text-[11px] italic">
+                    Có {totalCommentCount} bình luận. Bạn chỉ có thể xem bình luận của bạn bè.
                   </p>
                 </div>
               )}
@@ -301,6 +289,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     resetInput={resetInput}
                     onProfileClick={onProfileClick}
                     openReportModal={openReportModal}
+                    getFilteredReplies={getFilteredReplies}
                   />
                 </div>
               ))}

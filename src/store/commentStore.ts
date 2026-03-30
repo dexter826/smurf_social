@@ -4,6 +4,7 @@ import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { commentService } from '../services/commentService';
 import { PAGINATION } from '../constants';
 import { getSafeMillis } from '../utils/timestampHelpers';
+import { canViewInteraction, filterInteractions } from '../utils/privacyUtils';
 
 type SortOrder = 'asc' | 'desc';
 
@@ -65,6 +66,8 @@ interface CommentState {
   clearComments: (postId: string) => void;
   updateCommentInStore: (postId: string, commentId: string, content: string, parentId?: string | null, replyToUserId?: string, replyToId?: string, image?: any) => void;
   isLoadingPost: (postId: string) => boolean;
+  getFilteredRootComments: (postId: string, postOwnerId: string, currentUserId: string, friendIds: string[]) => { visibleComments: Comment[]; hiddenCount: number };
+  getFilteredReplies: (postId: string, parentId: string, postOwnerId: string, currentUserId: string, friendIds: string[]) => { visibleReplies: Comment[]; hiddenCount: number };
   reset: () => void;
 }
 
@@ -79,6 +82,19 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   loadingPosts: {},
 
   isLoadingPost: (postId: string) => get().loadingPosts[postId] || false,
+
+  getFilteredRootComments: (postId, postOwnerId, currentUserId, friendIds) => {
+    const comments = get().rootComments[postId] || [];
+    const { visibleItems, hiddenCount } = filterInteractions(comments, postOwnerId, currentUserId, friendIds);
+    return { visibleComments: visibleItems, hiddenCount };
+  },
+
+  getFilteredReplies: (postId, parentId, postOwnerId, currentUserId, friendIds) => {
+    const postReplies = get().replies[postId] || {};
+    const replies = postReplies[parentId] || [];
+    const { visibleItems, hiddenCount } = filterInteractions(replies, postOwnerId, currentUserId, friendIds);
+    return { visibleReplies: visibleItems, hiddenCount };
+  },
 
   reset: () => {
     set({

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { User } from '../../../shared/types';
 import { useFriendIds } from '../utils';
 import { userService } from '../../services/userService';
@@ -20,18 +20,26 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
   const [latestMedia, setLatestMedia] = useState<string[]>([]);
 
   const isOwnProfile = currentUser?.id === profileUserId;
-  const friendIds = useFriendIds();
+  const rawFriendIds = useFriendIds();
+  const friendIds = useMemo(() => rawFriendIds, [JSON.stringify(rawFriendIds)]);
+  
   const { isActivityBlocked, isBlocked } = useBlockedUsers();
+  const lastIdRef = useRef<string | undefined>(undefined);
 
-  const loadProfile = useCallback(async () => {
+  const loadProfile = useCallback(async (isInitial = false) => {
     if (!profileUserId) return;
 
-    setLoading(true);
+    const isDifferentUser = lastIdRef.current !== profileUserId;
+    if (isInitial && isDifferentUser) {
+      setLoading(true);
+    }
+    
+    lastIdRef.current = profileUserId;
     try {
       const isBlockedWith = profileUserId ? isActivityBlocked(profileUserId) || isBlocked(profileUserId) : false;
       const [userData, userPosts] = await Promise.all([
         userService.getUserById(profileUserId),
-        isBlockedWith ? Promise.resolve({ posts: [], lastDoc: null }) : postService.getUserPosts(profileUserId, currentUser?.id || '', friendIds, 20)
+        isBlockedWith ? Promise.resolve({ posts: [], lastDoc: null }) : postService.getUserPosts(profileUserId, currentUser?.id || '', rawFriendIds, 20)
       ]);
 
       setProfile(userData || null);
@@ -47,13 +55,15 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
     } catch (error) {
       console.error("Lỗi load profile", error);
     } finally {
-      setLoading(false);
+      if (isInitial && isDifferentUser) {
+        setLoading(false);
+      }
     }
-  }, [profileUserId, currentUser?.id, friendIds, isActivityBlocked, isBlocked]);
+  }, [profileUserId, currentUser?.id, rawFriendIds, isActivityBlocked, isBlocked]);
 
   useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+    loadProfile(true);
+  }, [profileUserId]);
 
   useEffect(() => {
     if (!profileUserId) return;

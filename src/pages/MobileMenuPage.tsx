@@ -48,7 +48,7 @@ export const MobileMenuPage: React.FC = () => {
         <div className="space-y-1">
           {/* Xem hồ sơ */}
           <button
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate(`/profile/${user?.id}`)}
             className="w-full flex items-center gap-3 p-3.5 min-h-[60px] rounded-xl bg-bg-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base border-2 border-border-light"
           >
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">

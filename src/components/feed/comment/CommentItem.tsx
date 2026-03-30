@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Ellipsis, Flag, PenTool, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Ellipsis, Flag, PenTool, Pencil, Trash2, X } from 'lucide-react';
 import { UserAvatar, LazyImage, Skeleton, ReactionSelector, ReactionDisplay, ReactionDetailsModal, Dropdown, DropdownItem } from '../../ui';
 import { CommentInput } from './CommentInput';
 import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../../shared/types';
@@ -9,6 +9,7 @@ import { TruncatedText } from '../shared';
 import { useCommentStore } from '../../../store/commentStore';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
 import { REACTION_LABELS } from '../../../constants';
+import { canViewInteraction } from '../../../utils/privacyUtils';
 
 interface CommentItemProps {
   comment: Comment;
@@ -33,6 +34,7 @@ interface CommentItemProps {
   resetInput: () => void;
   onProfileClick?: () => void;
   openReportModal: (type: ReportType, id: string, userId: string) => void;
+  getFilteredReplies: (postId: string, parentId: string, postOwnerId: string, currentUserId: string, friendIds: string[]) => { visibleReplies: Comment[]; hiddenCount: number };
 }
 
 const CommentItemInner: React.FC<CommentItemProps> = ({
@@ -57,7 +59,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   loadReplies,
   resetInput,
   onProfileClick,
-  openReportModal
+  openReportModal,
+  getFilteredReplies
 }) => {
   const navigate = useNavigate();
   const { reactToComment } = useCommentStore();
@@ -67,17 +70,11 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   const [showReactionDetails, setShowReactionDetails] = useState(false);
 
   const author = users[comment.authorId];
-  const commentReplies = replies[comment.id] || [];
   
-  const filteredReplies = React.useMemo(() => 
-    commentReplies.filter(r => 
-      r.authorId === currentUser.id || 
-      r.authorId === postOwnerId || 
-      friendIds.includes(r.authorId)
-    ), [commentReplies, currentUser.id, postOwnerId, friendIds]
+  const { visibleReplies: filteredReplies, hiddenCount: hiddenRepliesCount } = React.useMemo(() => 
+    getFilteredReplies(postId, comment.id, postOwnerId || '', currentUser.id, friendIds),
+    [getFilteredReplies, postId, comment.id, postOwnerId, currentUser.id, friendIds, replies]
   );
-
-  const hiddenRepliesCount = commentReplies.length - filteredReplies.length;
 
   const hasMoreR = hasMoreReply[comment.id];
   const isLoadingR = isLoadingReplyMap[comment.id];
@@ -278,8 +275,10 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
               ) : (
                 <>
                   {hiddenRepliesCount > 0 && (
-                    <div className="px-2 py-1 mb-1 bg-bg-secondary/30 rounded text-[10px] text-text-tertiary italic">
-                      {hiddenRepliesCount} phản hồi bị ẩn do quyền riêng tư.
+                    <div className="mx-2 mb-2 p-1.5 px-2 bg-text-tertiary/5 rounded-lg">
+                       <p className="text-[10px] text-text-tertiary italic font-medium">
+                        Có {comment.replyCount || 0} phản hồi. Bạn chỉ có thể xem phản hồi của bạn bè.
+                       </p>
                     </div>
                   )}
                   <div className="space-y-1">
@@ -308,6 +307,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                         resetInput={resetInput}
                         onProfileClick={onProfileClick}
                         openReportModal={openReportModal}
+                        getFilteredReplies={getFilteredReplies}
                       />
                     ))}
                   </div>

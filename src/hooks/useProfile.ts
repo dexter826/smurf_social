@@ -18,7 +18,7 @@ export const useProfile = () => {
   const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-  const profileUserId = userId || currentUser?.id;
+  const profileUserId = (userId === 'me' || !userId) ? currentUser?.id : userId;
   const [activeTab, setActiveTab] = useState<TabType>('posts');
 
   const data = useProfileData({ profileUserId, currentUser: currentUser ?? null });
