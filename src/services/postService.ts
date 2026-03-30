@@ -159,6 +159,27 @@ export const postService = {
       if (removedIds.length > 0) {
         callback('remove', removedIds.map(id => ({ id } as Post)));
       }
+
+      const modifiedIds = snapshot.docChanges()
+        .filter(c => c.type === 'modified')
+        .map(c => c.doc.data().postId);
+
+      if (modifiedIds.length > 0) {
+        const postPromises = modifiedIds.map(id => getDoc(doc(db, 'posts', id)));
+        const postResults = await Promise.allSettled(postPromises);
+
+        const posts: Post[] = [];
+        for (const result of postResults) {
+          if (result.status === 'fulfilled' && result.value.exists()) {
+            const postData = result.value.data();
+            if (postData.status === PostStatus.ACTIVE) {
+              posts.push(convertDoc<Post>(result.value));
+            }
+          }
+        }
+
+        if (posts.length > 0) callback('update', posts);
+      }
     }, (error) => {
       console.error("[postService] Lỗi subscribe feed:", error);
     });
