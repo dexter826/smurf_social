@@ -17,8 +17,8 @@ interface BlockOptionsModalProps {
 }
 
 const DEFAULT_OPTIONS: BlockOptions = {
-  blockMessages: true,
-  blockCalls: true,
+  blockMessages: false,
+  blockCalls: false,
   blockViewMyActivity: false,
   hideTheirActivity: false,
 };

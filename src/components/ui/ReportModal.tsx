@@ -54,9 +54,9 @@ export const ReportModal: React.FC = () => {
       });
       setSelectedImages([]);
       setPreviewUrls([]);
-      setShouldBlock(reportContext?.type === ReportType.USER);
+      setShouldBlock(false);
     }
-  }, [isOpen, reset, reportContext?.type]);
+  }, [isOpen, reset]);
 
   // Thu hồi URL preview.
   useEffect(() => {

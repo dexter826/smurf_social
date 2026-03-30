@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Post, User, ReactionType } from '../../shared/types';
+import { Post, User, ReactionType, Visibility } from '../../shared/types';
 import { postService } from '../services/postService';
 import { userService } from '../services/userService';
 import { useFriendIds } from './utils';
@@ -17,6 +17,7 @@ interface UseUserPostsReturn {
   handleLoadMore: () => void;
   handleReact: (postId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   handleDelete: (postId: string, media?: any[]) => Promise<void>;
+  handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -164,6 +165,18 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     }
   }, [deleteStorePost, currentUser.id]);
 
+  const handleUpdate = useCallback(async (
+    postId: string,
+    content: string,
+    media: any[],
+    visibility: Visibility,
+    pendingFiles?: File[],
+    onProgress?: (progress: number) => void
+  ) => {
+    const { updatePost } = usePostStore.getState();
+    await updatePost(postId, content, media, visibility, pendingFiles, onProgress);
+  }, []);
+
   const refresh = useCallback(async () => {
     await loadPosts(true);
   }, [loadPosts]);
@@ -177,6 +190,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     handleLoadMore,
     handleReact,
     handleDelete,
+    handleUpdate,
     refresh
   };
 };

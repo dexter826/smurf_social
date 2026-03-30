@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Post, User } from '../../../shared/types';
-import { PostItem, CreatePost } from '../feed';
+import React, { useState, useCallback } from 'react';
+import { Post, User, Visibility } from '../../../shared/types';
+import { PostItem, CreatePost, PostModal } from '../feed';
 import { ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
 import { usePostStore } from '../../store/postStore';
 import { useUserPosts, useIntersectionObserver } from '../../hooks';
+import { postService } from '../../services/postService';
 import { FileText } from 'lucide-react';
 
 interface PostsTabProps {
@@ -25,11 +26,36 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser, onViewP
     handleLoadMore,
     handleReact,
     handleDelete: performDelete,
+    handleUpdate: performUpdate,
   } = useUserPosts(userId, currentUser);
+
+  const [showEditModal, setShowEditModal] = useState<string | null>(null);
 
   const observerRef = useIntersectionObserver(handleLoadMore, {
     enabled: hasMore && !loading && !loadingMore
   });
+
+  const handleEditPost = useCallback(async (
+    content: string,
+    media: any[],
+    visibility: Visibility,
+    pendingFiles?: File[],
+    onProgress?: (progress: number) => void
+  ) => {
+    if (!showEditModal) return;
+    try {
+      await performUpdate(showEditModal, content, media, visibility, pendingFiles, onProgress);
+      setShowEditModal(null);
+    } catch (error) {
+      console.error("Lỗi cập nhật bài viết", error);
+    }
+  }, [showEditModal, performUpdate]);
+
+  const handleUploadImages = useCallback(async (files: File[], onProgress?: (progress: number) => void) => {
+    return await postService.uploadPostMedia(files, currentUser.id, (overallProgress) => {
+      onProgress?.(overallProgress);
+    });
+  }, [currentUser.id]);
 
   const handleDelete = async () => {
     if (!postToDelete) return;
@@ -79,7 +105,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser, onViewP
               author={users[post.authorId]}
               currentUser={currentUser}
               onReact={handleReact}
-              onEdit={() => { }}
+              onEdit={(postId) => setShowEditModal(postId)}
               onDelete={(id) => setPostToDelete(id)}
               onViewDetail={onViewPost}
             />
@@ -95,6 +121,15 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser, onViewP
           )}
         </>
       )}
+
+      <PostModal
+        isOpen={!!showEditModal}
+        onClose={() => setShowEditModal(null)}
+        currentUser={currentUser}
+        initialPost={posts.find(p => p.id === showEditModal)}
+        onSubmit={handleEditPost}
+        onUploadImages={handleUploadImages}
+      />
 
       <ConfirmDialog
         isOpen={!!postToDelete}
