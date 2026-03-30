@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 import { useFriendIds } from './utils';
 import { useUserCache } from '../store/userCacheStore';
 import { usePostStore } from '../store/postStore';
-import { DocumentSnapshot } from 'firebase/firestore';
+import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { getSafeMillis } from '../utils/timestampHelpers';
 
 interface UseUserPostsReturn {
@@ -35,14 +35,24 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   const friendIds = useFriendIds();
 
   const posts = useMemo(() => {
-    if (userId !== currentUser.id) return dbPosts;
+    const storePostMap = new Map(allStorePosts.map(p => [p.id, p]));
 
-    const dbPostIds = new Set(dbPosts.map(p => p.id));
+    const mergedPosts = dbPosts.map(p => {
+      const storePost = storePostMap.get(p.id);
+      if (storePost && userId === currentUser.id) {
+        return storePost;
+      }
+      return p;
+    });
+
+    if (userId !== currentUser.id) return mergedPosts;
+
+    const dbPostIds = new Set(mergedPosts.map(p => p.id));
     const uploadingPosts = allStorePosts.filter(p =>
       p.authorId === userId && !dbPostIds.has(p.id)
     );
 
-    return [...uploadingPosts, ...dbPosts];
+    return [...uploadingPosts, ...mergedPosts];
   }, [dbPosts, allStorePosts, userId, currentUser.id]);
 
   const loadPosts = useCallback(async (isFirstPage: boolean = false) => {
@@ -174,6 +184,13 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     onProgress?: (progress: number) => void
   ) => {
     const { updatePost } = usePostStore.getState();
+    
+    setDbPosts(prev => prev.map(p => 
+      p.id === postId 
+        ? { ...p, content, media, visibility, updatedAt: Timestamp.now() } 
+        : p
+    ));
+
     await updatePost(postId, content, media, visibility, pendingFiles, onProgress);
   }, []);
 

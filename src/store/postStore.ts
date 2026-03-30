@@ -211,7 +211,7 @@ export const usePostStore = create<PostState>()(
         await get().fetchPosts(currentUserId, false, true);
       },
 
-      createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.PUBLIC, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
+      createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.FRIENDS, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
         const postId = postService.generatePostId();
         const previewMedia = pendingFiles ? pendingFiles.map(f => ({
           url: URL.createObjectURL(f),
@@ -294,9 +294,11 @@ export const usePostStore = create<PostState>()(
       },
 
       updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
-        const { posts } = get();
-        const post = posts.find(p => p.id === postId);
-        if (!post) return;
+        const { posts, selectedPost } = get();
+        const existingPost = posts.find(p => p.id === postId) || (selectedPost?.id === postId ? selectedPost : null);
+        
+        // Vẫn cho phép update Firestore ngay cả khi post chưa có trong store cục bộ
+        const authorId = existingPost?.authorId || '';
 
         const previewMedia = pendingFiles ? pendingFiles.map(f => ({
           url: URL.createObjectURL(f),
@@ -306,6 +308,7 @@ export const usePostStore = create<PostState>()(
           isSensitive: false,
         } as MediaObject)) : [];
 
+        // Cập nhật optimistic cho posts và selectedPost
         set(state => ({
           posts: state.posts.map(p =>
             p.id === postId
@@ -318,6 +321,15 @@ export const usePostStore = create<PostState>()(
               }
               : p
           ),
+          selectedPost: state.selectedPost?.id === postId
+            ? {
+              ...state.selectedPost,
+              content,
+              media: [...media, ...previewMedia],
+              visibility,
+              updatedAt: Timestamp.now()
+            }
+            : state.selectedPost,
           uploadingStates: pendingFiles && pendingFiles.length > 0
             ? { ...state.uploadingStates, [postId]: { progress: 0 } }
             : state.uploadingStates
@@ -328,7 +340,9 @@ export const usePostStore = create<PostState>()(
             let finalMedia = [...media];
 
             if (pendingFiles && pendingFiles.length > 0) {
-              const uploadedMedia = await postService.uploadPostMedia(pendingFiles, post.authorId, (progress) => {
+              // Nếu không có existingPost (trường hợp hy hữu), dùng UID hiện tại từ auth hoặc store khác nếu cần
+              // Ở đây ta giả định authorId có sẵn từ post được tìm thấy
+              const uploadedMedia = await postService.uploadPostMedia(pendingFiles, authorId, (progress) => {
                 onProgress?.(progress);
                 set(state => ({
                   uploadingStates: {
@@ -351,7 +365,10 @@ export const usePostStore = create<PostState>()(
                   p.id === postId
                     ? { ...p, media: finalMedia }
                     : p
-                )
+                ),
+                selectedPost: state.selectedPost?.id === postId
+                  ? { ...state.selectedPost, media: finalMedia }
+                  : state.selectedPost
               };
             });
 

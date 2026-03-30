@@ -9,7 +9,7 @@ import { authService } from "../services/authService";
 const DEFAULT_SETTINGS: UserSettings = {
   showOnlineStatus: true,
   showReadReceipts: true,
-  defaultPostVisibility: Visibility.PUBLIC,
+  defaultPostVisibility: Visibility.FRIENDS,
   createdAt: Timestamp.now(),
   updatedAt: Timestamp.now(),
 };
