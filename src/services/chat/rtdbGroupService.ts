@@ -46,9 +46,6 @@ export const rtdbGroupService = {
             memberIds.forEach(uid => {
                 updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = now;
                 updates[`user_chats/${uid}/${convId}/updatedAt`] = now;
-                if (uid !== actorId) {
-                    updates[`user_chats/${uid}/${convId}/unreadCount`] = increment(1);
-                }
             });
 
             await update(ref(rtdb), updates);
@@ -240,7 +237,6 @@ export const rtdbGroupService = {
                     updates[`user_chats/${uid}/${convId}`] = null;
                 } else {
                     updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = now;
-                    updates[`user_chats/${uid}/${convId}/unreadCount`] = increment(1);
                     updates[`user_chats/${uid}/${convId}/updatedAt`] = now;
                 }
             });
