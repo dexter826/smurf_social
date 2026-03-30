@@ -51,7 +51,8 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     resolver: zodResolver(commentSchema),
     defaultValues: {
       content: initialValue,
-      image: initialImage?.url || undefined
+      image: initialImage?.url || undefined,
+      hasPendingImage: false
     }
   });
 
@@ -102,6 +103,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     }
     setPendingImage(file);
     setPreviewUrl(URL.createObjectURL(file));
+    setValue('hasPendingImage', true, { shouldValidate: true, shouldDirty: true });
     if (e.target) e.target.value = '';
   };
 
@@ -138,7 +140,11 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     }
     setPendingImage(null);
     setPreviewUrl(null);
-    reset();
+    reset({
+      content: '',
+      image: undefined,
+      hasPendingImage: false
+    });
 
     try {
       await onSubmit(submittedData.content || '', imageMedia);
@@ -153,7 +159,8 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     }
     setPendingImage(null);
     setPreviewUrl(null);
-    setValue('image', undefined, { shouldDirty: true });
+    setValue('image', undefined, { shouldDirty: true, shouldValidate: true });
+    setValue('hasPendingImage', false, { shouldDirty: true, shouldValidate: true });
   };
 
   return (
@@ -248,7 +255,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
               <Button
                 type="submit"
                 variant="primary"
-                disabled={(!isDirty && !pendingImage) || isSubmitting || isUploading}
+                disabled={(!formData.content?.trim() && !pendingImage && !formData.image) || isSubmitting || isUploading}
                 isLoading={isSubmitting}
                 className="w-9 h-9 rounded-full shadow-sm p-0 flex-shrink-0"
                 icon={<Send size={16} className="fill-current" />}

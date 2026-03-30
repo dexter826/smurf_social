@@ -122,7 +122,8 @@ export const commentSchema = z.object({
     .optional()
     .or(z.literal('')),
   image: z.string().optional(),
-}).refine(data => data.content?.trim() || data.image, {
+  hasPendingImage: z.boolean().optional(),
+}).refine(data => data.content?.trim() || data.image || data.hasPendingImage, {
   message: "Bình luận không được để trống",
   path: ["content"],
 });
