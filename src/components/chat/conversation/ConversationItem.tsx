@@ -148,14 +148,14 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <div className={`text-sm truncate flex-1 ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+        <div className="flex items-center justify-between gap-2 overflow-hidden">
+          <div className={`text-sm truncate flex-1 min-w-0 ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
             {typingText ? (
               <span className="text-primary italic text-[13px] truncate block">
                 {typingText}
               </span>
             ) : (
-              <span className={`flex items-center gap-1 truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : (lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u) || lastMessagePreview.match(/^[A-Z_]+\s/)) ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
+              <span className={`block truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : (lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u) || lastMessagePreview.match(/^[A-Z_]+\s/)) ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
                 {isLastMessageMine ? 'Bạn: ' : ''}
                 {(() => {
                   const enumEmojiRegex = /^([A-Z_]+)\s+(.+)$/;
@@ -166,10 +166,10 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
                     const icon = getReactionIcon(type as ReactionType, "inline-block mb-0.5", 14);
                     if (icon) {
                       return (
-                        <>
+                        <span className="inline-flex items-center gap-1 truncate max-w-full">
                           <span className="flex-shrink-0">{icon}</span>
                           <span className="truncate">{text}</span>
-                        </>
+                        </span>
                       );
                     }
                   }
