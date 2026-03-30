@@ -42,7 +42,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
 
-  const { filteredSummary, filteredCount } = useFilteredReactions(
+  const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     post?.id || '',
     'post',
     post?.authorId || ''
@@ -347,7 +347,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               <ReactionActions
                 reactionSummary={filteredSummary}
                 reactionCount={filteredCount}
-                myReaction={myReaction}
+                myReaction={myReaction || currentUserReaction}
                 commentCount={post.commentCount}
                 onReact={(type) => onReact(post.id, type)}
                 onViewReactions={() => setIsReactionsModalOpen(true)}

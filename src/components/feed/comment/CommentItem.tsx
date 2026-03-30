@@ -90,12 +90,14 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
 
   const myReaction = useCommentStore(state => state.myCommentReactions[comment.id] as ReactionType | null);
 
-  const { filteredSummary, filteredCount } = useFilteredReactions(
+  const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     comment.id,
     'comment',
     comment.authorId,
     comment.reactionCount
   );
+
+  const displayReaction = myReaction || currentUserReaction;
 
   const handleReact = useCallback((reaction: ReactionType | 'REMOVE') => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);
@@ -228,10 +230,10 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 )}
                 <button
                   onMouseEnter={() => setShowReactions(true)}
-                  onClick={() => handleReact(myReaction ? 'REMOVE' : ReactionType.LIKE)}
-                  className={`hover:underline active:underline transition-all duration-base cursor-pointer ${myReaction ? 'text-primary' : ''}`}
+                  onClick={() => handleReact(displayReaction ? 'REMOVE' : ReactionType.LIKE)}
+                  className={`hover:underline active:underline transition-all duration-base cursor-pointer ${displayReaction ? 'text-primary' : ''}`}
                 >
-                  {myReaction ? REACTION_LABELS[myReaction] : 'Thích'}
+                  {displayReaction ? REACTION_LABELS[displayReaction] : 'Thích'}
                 </button>
               </div>
               <button onClick={() => handleReplyClick(comment)} className="hover:underline active:underline transition-all duration-base cursor-pointer">Trả lời</button>

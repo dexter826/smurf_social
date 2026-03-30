@@ -118,15 +118,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       const lastDoc = loadMore ? lastRootDoc[postId] : undefined;
       const result = await commentService.getRootComments(postId, blockedUserIds, PAGINATION.COMMENTS, lastDoc || undefined);
 
-      const commentIds = result.comments.map(c => c.id);
-      const currentUserId = get().myCommentReactions ? Object.keys(get().myCommentReactions)[0]?.split('-')[0] : '';
-      if (commentIds.length > 0 && currentUserId) {
-        const myReactions = await commentService.batchLoadMyReactionsForComments(commentIds, currentUserId);
-        set(state => ({
-          myCommentReactions: loadMore ? { ...state.myCommentReactions, ...myReactions } : { ...state.myCommentReactions, ...myReactions }
-        }));
-      }
-
       if (loadMore) {
         get().addRootComments(postId, result.comments, result.lastDoc, result.hasMore);
       } else {
@@ -147,15 +138,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const lastDoc = loadMore ? lastReplyDoc[postId]?.[parentId] : undefined;
       const result = await commentService.getReplies(postId, parentId, blockedUserIds, PAGINATION.REPLIES, lastDoc || undefined);
-
-      const commentIds = result.replies.map(c => c.id);
-      const currentUserId = get().myCommentReactions ? Object.keys(get().myCommentReactions)[0]?.split('-')[0] : '';
-      if (commentIds.length > 0 && currentUserId) {
-        const myReactions = await commentService.batchLoadMyReactionsForComments(commentIds, currentUserId);
-        set(state => ({
-          myCommentReactions: { ...state.myCommentReactions, ...myReactions }
-        }));
-      }
 
       if (loadMore) {
         get().addReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);

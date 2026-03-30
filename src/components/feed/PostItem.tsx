@@ -44,7 +44,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const myReaction = usePostStore(state => state.myPostReactions[post.id] as ReactionType | null);
   const isOwner = post.authorId === currentUser.id;
 
-  const { filteredSummary, filteredCount } = useFilteredReactions(
+  const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     post.id,
     'post',
     post.authorId,
@@ -165,7 +165,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
       <ReactionActions
         reactionSummary={filteredSummary}
         reactionCount={filteredCount}
-        myReaction={myReaction}
+        myReaction={myReaction || currentUserReaction}
         commentCount={post.commentCount}
         onReact={onReact}
         onCommentClick={handleViewDetail}

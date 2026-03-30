@@ -112,9 +112,6 @@ export const usePostStore = create<PostState>()(
 
           if (newController.signal.aborted) return;
 
-          const postIds = result.posts.map(p => p.id);
-          const myReactions = await postService.batchLoadMyReactions(postIds, currentUserId);
-
           const mergedPosts = loadMore ? [...posts, ...result.posts] : result.posts;
           const seenIds = new Set<string>();
           const dedupedPosts = mergedPosts.filter(p => {
@@ -125,7 +122,7 @@ export const usePostStore = create<PostState>()(
 
           set({
             posts: dedupedPosts,
-            myPostReactions: loadMore ? { ...get().myPostReactions, ...myReactions } : myReactions,
+            myPostReactions: get().myPostReactions,
             lastDoc: result.lastDoc,
             hasMore: result.hasMore,
             abortController: null,
@@ -504,11 +501,7 @@ export const usePostStore = create<PostState>()(
             return;
           }
 
-          const myReaction = await postService.getMyReactionForPost(postId, currentUserId);
 
-          set(state => ({
-            myPostReactions: { ...state.myPostReactions, [postId]: myReaction || '' }
-          }));
           
           setSelectedPost(post);
         } catch (error) {

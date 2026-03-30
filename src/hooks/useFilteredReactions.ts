@@ -41,7 +41,7 @@ export const useFilteredReactions = (
     return () => unsubscribe();
   }, [sourceId, sourceType, currentUser?.id]);
 
-  const { filteredSummary, filteredCount, isReacted } = useMemo(() => {
+  const { filteredSummary, filteredCount, isReacted, currentUserReaction } = useMemo(() => {
     const summary: Partial<Record<ReactionType, number>> = {};
     let count = 0;
     Object.values(reactionsMap).forEach(type => {
@@ -49,18 +49,18 @@ export const useFilteredReactions = (
       count++;
     });
 
-    const isReacted = !!reactionsMap[currentUser?.id || ''];
+    const currentUserReaction = reactionsMap[currentUser?.id || ''] || null;
+    const isReacted = !!currentUserReaction;
     
-    // Logic: Nếu initialCount thấp hơn thực tế (do server delay) thì dùng thực tế.
-    // Nếu count cực thấp (do privacy rules) thì dùng initialCount.
     let finalCount = initialCount !== undefined ? Math.max(initialCount, count) : count;
     
     return { 
       filteredSummary: summary, 
       filteredCount: finalCount,
-      isReacted
+      isReacted,
+      currentUserReaction
     };
   }, [reactionsMap, initialCount, currentUser?.id]);
 
-  return { filteredSummary, filteredCount, reactionsMap, isLoaded: !isLoading, isReacted };
+  return { filteredSummary, filteredCount, reactionsMap, isLoaded: !isLoading, isReacted, currentUserReaction };
 };
