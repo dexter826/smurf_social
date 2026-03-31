@@ -23,7 +23,6 @@ Tài liệu này liệt kê các tài nguyên tĩnh (`assets`) của ứng dụn
 - `wait_ring.mp3`: Tiếng tút thuôn dài khi đang gọi đi chờ người khác bắt máy (Outgoing Call).
 - `connected.mp3`: Âm thanh bíp báo hiệu kết nối cuộc gọi thành công.
 - `ended.mp3`: Âm thanh tút tút khi kết thúc cuộc gọi hoặc khi ai đó gác máy.
-- `action.mp3`: Âm báo thao tác (click, bật/tắt mic...).
 
 **Âm thanh thông báo (Notifications):**
 - `message-notification.mp3`: Âm báo ting khi có tin nhắn mới hoặc thông báo mới tới.

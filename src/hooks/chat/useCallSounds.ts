@@ -2,9 +2,8 @@ import { useRef, useCallback } from 'react';
 
 import connectedSound from '../../assets/sounds/connected.mp3';
 import endedSound from '../../assets/sounds/ended.mp3';
-import actionSound from '../../assets/sounds/action.mp3';
 
-export type CallSoundType = 'connected' | 'ended' | 'action';
+export type CallSoundType = 'connected' | 'ended';
 
 export const useCallSounds = () => {
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
@@ -15,7 +14,6 @@ export const useCallSounds = () => {
       switch (type) {
         case 'connected': src = connectedSound; break;
         case 'ended': src = endedSound; break;
-        case 'action': src = actionSound; break;
       }
       audioRefs.current[type] = new Audio(src);
     }
