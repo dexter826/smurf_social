@@ -6,12 +6,12 @@ import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
 import { friendService } from '../services/friendService';
-import { 
-  useChatActions, 
-  useChatMessages, 
-  useChatBlock, 
-  useChatGroups, 
-  useConversationParticipants 
+import {
+  useChatActions,
+  useChatMessages,
+  useChatBlock,
+  useChatGroups,
+  useConversationParticipants
 } from './chat';
 
 const EMPTY_MESSAGES: Array<{ id: string; data: RtdbMessage }> = [];
@@ -176,6 +176,11 @@ export const useChat = () => {
     currentUserName: currentUser?.fullName,
   });
 
+  const isConversationInStore = useMemo(
+    () => conversations.some(c => c.id === selectedConversationId),
+    [conversations, selectedConversationId]
+  );
+
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
     const unsubMessages = subscribeToMessages(selectedConversationId);
@@ -185,7 +190,7 @@ export const useChat = () => {
       unsubMessages();
       unsubTyping();
     };
-  }, [selectedConversationId, currentUser, subscribeToMessages, subscribeToTyping, markAsDelivered]);
+  }, [selectedConversationId, currentUser, isConversationInStore, subscribeToMessages, subscribeToTyping, markAsDelivered]);
 
 
   useEffect(() => {

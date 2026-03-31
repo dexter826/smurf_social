@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { RtdbMessage } from '../../../shared/types';
+import { RtdbMessage, MessageType } from '../../../shared/types';
 import { rtdbMessageService } from '../../services/chat/rtdbMessageService';
 import { useAuthStore } from '../authStore';
 import type { RtdbChatState } from '../rtdbChatStore';
@@ -87,13 +87,13 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         try {
             const oldestMessage = currentMessages[0];
             const beforeTimestamp = oldestMessage.data.createdAt;
-            
+
             const conversation = get().conversations.find(c => c.id === conversationId);
             const clearedAt = conversation?.userChat?.clearedAt || 0;
 
             const olderMessages = await rtdbMessageService.loadMoreMessages(
-                conversationId, 
-                beforeTimestamp, 
+                conversationId,
+                beforeTimestamp,
                 LIMIT_PER_PAGE,
                 clearedAt
             );
@@ -119,9 +119,42 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
 
     sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => {
         try {
-            await rtdbMessageService.sendTextMessage(conversationId, senderId, content, {
+            const msgId = await rtdbMessageService.sendTextMessage(conversationId, senderId, content, {
                 mentions,
                 replyToId
+            });
+
+            set((state) => {
+                const existing = state.messages[conversationId] || [];
+                if (existing.some(m => m.id === msgId)) return state;
+
+                const optimisticMsg = {
+                    id: msgId,
+                    data: {
+                        senderId,
+                        type: MessageType.TEXT,
+                        content,
+                        media: [],
+                        mentions: mentions || [],
+                        isForwarded: false,
+                        replyToId: replyToId || null,
+                        isEdited: false,
+                        isRecalled: false,
+                        deletedBy: {},
+                        readBy: {},
+                        deliveredTo: {},
+                        reactions: {},
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    } as RtdbMessage
+                };
+
+                return {
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                    }
+                };
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendTextMessage:', error);
