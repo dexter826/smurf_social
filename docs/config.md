@@ -1,6 +1,6 @@
 # Common Configurations (App Config)
 
-Tài liệu này chứa các cấu hình hệ thống quan trọng mà đội Mobile cần phải đồng bộ để đảm bảo validate dữ liệu chính xác ở phía client trước khi gửi lên server.
+Tài liệu này chứa các cấu hình hệ thống quan trọng, bao gồm giới hạn dữ liệu, validation và các hằng số dùng chung.
 
 ## 1. Giới hạn Nhóm Chat (Group Limits)
 
@@ -46,8 +46,6 @@ Các đối tượng (Object Type) hỗ trợ báo cáo:
 
 ## 5. Giới hạn Media & Tệp tin (Media & File Limits)
 
-Đội Mobile cần chú ý cấu hình block người dùng khi vượt quá giới hạn file hoặc dung lượng trước khi upload.
-
 **Số lượng file tối đa:**
 
 - **Bài viết (Post)**: Tối đa `10` ảnh, `3` video.
@@ -58,9 +56,12 @@ Các đối tượng (Object Type) hỗ trợ báo cáo:
 
 - **Avatar**: `5MB`
 - **Ảnh bìa (Cover)**: `10MB`
-- **Ảnh thông thường**: `5MB`
+- **Ảnh thông thường** (bài viết, bình luận): `5MB`
 - **Video**: `50MB`
-- **File đính kèm (Chat/Files)**: `10MB`
+- **File đính kèm (Chat)**: `10MB`
+- **Ảnh báo cáo vi phạm**: `5MB`
+- **Avatar nhóm chat**: `5MB`
+- **Video thumbnail**: `2MB`
 
 ## 6. Cảm xúc (Reactions)
 
@@ -75,4 +76,4 @@ Danh sách Cảm xúc hỗ trợ để render icon/emoji:
 
 ## 7. API Endpoints
 
-- **Tỉnh/Thành phố**: Sử dụng biến `API_ENDPOINTS.PROVINCES` chứa đường dẫn lấy dữ liệu địa giới hành chính. Đội Mobile có thể gọi endpoint này nếu cần map dữ liệu vị trí người dùng mà không có database nội bộ riêng. Link: https://provinces.open-api.vn/
+- **Tỉnh/Thành phố**: `API_ENDPOINTS.PROVINCES` — lấy dữ liệu địa giới hành chính. Link: https://provinces.open-api.vn/

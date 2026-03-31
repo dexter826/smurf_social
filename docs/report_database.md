@@ -201,7 +201,7 @@ _Mô tả: Lưu trữ mọi thông báo (Tương tác, Hệ thống) đẩy tớ
 | `receiverId` | String      | **Required**      | ID người nhận                                                                                                                        |
 | `actorId`    | String      | **Required**      | ID người thực hiện hành động (Nếu là hệ thống thì để `"system"`)                                                                     |
 | `type`       | String Enum | **Required**      | `reaction`, `comment`, `friend_request`, `system`, `report`. (Lưu ý: Loại `chat` và `mention` chỉ gửi Push, không lưu vào Firestore) |
-| `data`       | Map         | **Required**      | Chứa `postId`, `commentId`, `friendRequestId`, `contentSnippet`, `reportId`, `targetTypeLabel`, `reasonLabel`, `resolution`.         |
+| `data`       | Map         | **Required**      | Chứa các key tùy theo `type`: `postId`, `commentId`, `friendRequestId`, `reportId`, `contentSnippet`. Các thông tin như tên loại vi phạm, lý do, kết quả xử lý không lưu thành key riêng mà được gộp vào `contentSnippet` dưới dạng chuỗi văn bản. |
 | `isRead`     | Boolean     | **Required**      | Đã đọc hay chưa. Mặc định `false`                                                                                                    |
 | `createdAt`  | Timestamp   | **Required**      | Thời điểm tạo                                                                                                                        |
 | `updatedAt`  | Timestamp   | **Required**      | Thời điểm cập nhật                                                                                                                   |
@@ -232,8 +232,8 @@ _Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Grou
 | `createdAt`   | Number      | **Required**      | Timestamp tạo                                                                    |
 | `updatedAt`   | Number      | **Required**      | Timestamp cập nhật                                                               |
 | `members`     | Map         | **Required**      | Danh sách thành viên (UID: Vai trò)                                              |
-| `name`        | String      | _Optional_        | Tên nhóm                                                                         |
-| `avatar`      | MediaObject | _Optional_        | Ảnh đại diện nhóm                                                                |
+| `name`        | String      | _Optional_        | Tên nhóm. `null` với chat 1-1                                                    |
+| `avatar`      | MediaObject | _Optional_        | Ảnh đại diện nhóm. `null` với chat 1-1 hoặc nhóm chưa đặt ảnh                   |
 | `isDisbanded` | Boolean     | _Optional_        | Đã giải tán hay chưa. Mặc định `false`. *(Chỉ Người tạo nhóm mới có quyền xóa)* |
 | `typing`      | Map         | _Optional_        | Trạng thái đang gõ (UID: Timestamp)                                              |
 | `lastMessage` | Object      | _Optional_        | Snippet tin nhắn mới nhất                                                        |
@@ -247,7 +247,7 @@ _Mô tả: Nơi lưu raw data từng cục tin nhắn riêng lẻ được gắn
 | :------------ | :---------- | :---------------- | :---------------------------------------------------------------------- |
 | `senderId`    | String      | **Required**      | ID người gửi                                                            |
 | `type`        | String Enum | **Required**      | `text`, `image`, `video`, `file`, `voice`, `system`, `call`             |
-| `content`     | String      | **Required**      | Nội dung tin nhắn                                                       |
+| `content`     | String      | **Required**      | Nội dung tin nhắn. Với `type = "call"`, chứa JSON string gồm `callType` (`"voice"` hoặc `"video"`), `status` (`"started"`, `"ended"`, `"missed"`, `"rejected"`), và `duration` (số giây, chỉ có khi `status = "ended"`). Ví dụ: `{"callType":"video","status":"ended","duration":42}` |
 | `createdAt`   | Number      | **Required**      | Timestamp tạo                                                           |
 | `media`       | Array       | _Optional_        | Danh sách file đính kèm                                                 |
 | `mentions`    | Array       | _Optional_        | Danh sách UID được nhắc tên                                             |
@@ -258,9 +258,6 @@ _Mô tả: Nơi lưu raw data từng cục tin nhắn riêng lẻ được gắn
 | `deletedBy`   | Map         | _Optional_        | Danh sách người đã xóa (UID: true)                                      |
 | `readBy`      | Map         | _Optional_        | Trạng thái đã xem (UID: Timestamp)                                      |
 | `deliveredTo` | Map         | _Optional_        | Trạng thái đã phát (UID: Timestamp)                                     |
-| `callType`    | String Enum | _Optional_        | **Chỉ dành cho `type: call`**: `voice`, `video`                         |
-| `status`      | String Enum | _Optional_        | **Chỉ dành cho `type: call`**: `started`, `ended`, `missed`, `rejected` |
-| `duration`    | Number      | _Optional_        | **Chỉ dành cho `type: call`**: Thời lượng cuộc gọi (giây)               |
 | `reactions`   | Map         | _Optional_        | Cảm xúc (UID: Type)                                                     |
 | `updatedAt`   | Number      | **Required**      | Timestamp cập nhật                                                      |
 
