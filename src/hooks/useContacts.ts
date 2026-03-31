@@ -74,12 +74,10 @@ export const useContacts = (): UseContactsReturn => {
     }
   }, [receivedRequests, sentRequests, fetchUsers]);
 
-  const activeFriends = useMemo(() => friends.filter(f => f.status !== 'banned'), [friends]);
-
-  const filteredFriends = useMemo(() => activeFriends.filter(friend =>
+  const filteredFriends = useMemo(() => friends.filter(friend =>
     friend.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ), [activeFriends, searchTerm]);
+  ), [friends, searchTerm]);
 
   const groupedFriends = useMemo(() => {
     const groups: Record<string, User[]> = {};
@@ -133,7 +131,7 @@ export const useContacts = (): UseContactsReturn => {
 
   return {
     currentUser,
-    friends: activeFriends,
+    friends,
     receivedRequests,
     sentRequests,
     filteredFriends,
