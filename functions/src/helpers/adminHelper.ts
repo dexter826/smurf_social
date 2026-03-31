@@ -30,6 +30,7 @@ export async function banUserById(userId: string): Promise<void> {
         for (const [convId, conv] of Object.entries(conversations)) {
             if (conv.isGroup && conv.members?.[userId]) {
                 updates[`conversations/${convId}/members/${userId}`] = null;
+                updates[`user_chats/${userId}/${convId}`] = null;
             }
         }
         if (Object.keys(updates).length > 0) {

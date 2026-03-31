@@ -5,15 +5,12 @@ import {
   Lock,
   Unlock,
   Eye,
-  CheckCircle,
-  Plus,
-  Shield
 } from 'lucide-react';
 import { User, UserStatus } from '../../../shared/types';
 import { userService } from '../../services/userService';
 import { functions } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { Button, UserAvatar, Skeleton, IconButton, Select, Input, ConfirmDialog } from '../ui';
+import { Button, UserAvatar, Skeleton, IconButton, Select, ConfirmDialog } from '../ui';
 import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
 import { useNavigate } from 'react-router-dom';
@@ -90,15 +87,15 @@ export const UsersView: React.FC = () => {
     try {
       const fn = httpsCallable(functions, 'banUser');
       await fn({ userId, action: type });
-      
+
       if (type === 'ban') {
         toast.success(TOAST_MESSAGES.ADMIN.BAN_SUCCESS(userName));
       } else {
         toast.success(TOAST_MESSAGES.ADMIN.UNBAN_SUCCESS(userName));
       }
-      
+
       fetchStats();
-    } catch (error) {
+    } catch {
       toast.error(type === 'ban' ? TOAST_MESSAGES.ADMIN.BAN_FAILED : TOAST_MESSAGES.ADMIN.UNBAN_FAILED);
     } finally {
       setConfirmDialog(prev => ({ ...prev, isOpen: false }));
@@ -218,7 +215,7 @@ export const UsersView: React.FC = () => {
                         onClick={() => navigate(`/profile/${user.id}`)}
                       />
                     </div>
-                    
+
                     <div className="min-w-0 flex flex-col">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-sm font-bold text-text-primary truncate">{user.fullName}</span>

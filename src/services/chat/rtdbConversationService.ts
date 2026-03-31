@@ -101,11 +101,51 @@ export const rtdbConversationService = {
         const userChatsRef = ref(rtdb, `user_chats/${userId}`);
         const conversationListeners = new Map<string, () => void>();
         const conversationsMap = new Map<string, { id: string; data: RtdbConversation; userChat: RtdbUserChat }>();
+        const userChatCreatedAt = new Map<string, number>();
         let latestUserChats: Record<string, RtdbUserChat> = {};
+
+        const updateCallback = () => {
+            const conversations = Array.from(conversationsMap.values())
+                .filter(c => {
+                    const lastTs = c.userChat.lastMsgTimestamp || 0;
+                    const clearedTs = c.userChat.clearedAt || 0;
+                    return lastTs > clearedTs;
+                });
+
+            conversations.sort((a, b) => (b.userChat.lastMsgTimestamp || 0) - (a.userChat.lastMsgTimestamp || 0));
+            callback(conversations);
+        };
+
+        const subscribeToConversation = (convId: string) => {
+            if (conversationListeners.has(convId)) {
+                conversationListeners.get(convId)?.();
+                conversationListeners.delete(convId);
+                conversationsMap.delete(convId);
+            }
+
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const unsubConv = onValue(convRef, (convSnap) => {
+                if (convSnap.exists()) {
+                    const data = convSnap.val() as RtdbConversation;
+                    const userChat = latestUserChats[convId];
+                    if (userChat) {
+                        conversationsMap.set(convId, { id: convId, data, userChat });
+                        updateCallback();
+                    }
+                } else {
+                    if (conversationsMap.has(convId)) {
+                        conversationsMap.delete(convId);
+                        updateCallback();
+                    }
+                }
+            });
+            conversationListeners.set(convId, unsubConv);
+        };
 
         const mainUnsubscribe = onValue(userChatsRef, (snapshot) => {
             if (!snapshot.exists()) {
                 latestUserChats = {};
+                userChatCreatedAt.clear();
                 conversationsMap.clear();
                 conversationListeners.forEach(unsub => unsub());
                 conversationListeners.clear();
@@ -116,50 +156,29 @@ export const rtdbConversationService = {
             latestUserChats = snapshot.val() as Record<string, RtdbUserChat>;
             const currentConvIds = new Set(Object.keys(latestUserChats));
 
-            const updateCallback = () => {
-                const conversations = Array.from(conversationsMap.values())
-                    .filter(c => {
-                        const lastTs = c.userChat.lastMsgTimestamp || 0;
-                        const clearedTs = c.userChat.clearedAt || 0;
-                        return lastTs > clearedTs;
-                    });
-
-                conversations.sort((a, b) => (b.userChat.lastMsgTimestamp || 0) - (a.userChat.lastMsgTimestamp || 0));
-                callback(conversations);
-            };
-
-            let hasRemoved = false;
             for (const convId of conversationListeners.keys()) {
                 if (!currentConvIds.has(convId)) {
                     conversationListeners.get(convId)?.();
                     conversationListeners.delete(convId);
                     conversationsMap.delete(convId);
-                    hasRemoved = true;
+                    userChatCreatedAt.delete(convId);
                 }
             }
 
-            if (hasRemoved) updateCallback();
-
             for (const convId of currentConvIds) {
+                const userChat = latestUserChats[convId];
+                const prevCreatedAt = userChatCreatedAt.get(convId);
+                const currCreatedAt = userChat.createdAt || 0;
+
                 if (!conversationListeners.has(convId)) {
-                    const convRef = ref(rtdb, `conversations/${convId}`);
-                    const unsubConv = onValue(convRef, (convSnap) => {
-                        if (convSnap.exists()) {
-                            const data = convSnap.val() as RtdbConversation;
-                            const userChat = latestUserChats[convId];
-                            conversationsMap.set(convId, { id: convId, data, userChat });
-                            updateCallback();
-                        } else {
-                            if (conversationsMap.has(convId)) {
-                                conversationsMap.delete(convId);
-                                updateCallback();
-                            }
-                        }
-                    });
-                    conversationListeners.set(convId, unsubConv);
+                    // New conversation entry - subscribe fresh
+                    userChatCreatedAt.set(convId, currCreatedAt);
+                    subscribeToConversation(convId);
+                } else if (prevCreatedAt !== undefined && prevCreatedAt !== currCreatedAt) {
+                    userChatCreatedAt.set(convId, currCreatedAt);
+                    subscribeToConversation(convId);
                 } else {
                     const existing = conversationsMap.get(convId);
-                    const userChat = latestUserChats[convId];
                     if (existing && existing.userChat.updatedAt !== userChat.updatedAt) {
                         conversationsMap.set(convId, { ...existing, userChat });
                         updateCallback();
@@ -196,7 +215,7 @@ export const rtdbConversationService = {
     togglePin: async (uid: string, convId: string, isPinned: boolean): Promise<void> => {
         try {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
-            await update(userChatRef, { 
+            await update(userChatRef, {
                 isPinned,
                 updatedAt: Date.now()
             });
@@ -212,7 +231,7 @@ export const rtdbConversationService = {
     toggleMute: async (uid: string, convId: string, isMuted: boolean): Promise<void> => {
         try {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
-            await update(userChatRef, { 
+            await update(userChatRef, {
                 isMuted,
                 updatedAt: Date.now()
             });
@@ -228,7 +247,7 @@ export const rtdbConversationService = {
     toggleArchive: async (uid: string, convId: string, isArchived: boolean): Promise<void> => {
         try {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
-            await update(userChatRef, { 
+            await update(userChatRef, {
                 isArchived,
                 updatedAt: Date.now()
             });
@@ -328,12 +347,12 @@ export const rtdbConversationService = {
      */
     setTyping: async (convId: string, uid: string, isTyping: boolean): Promise<void> => {
         try {
-      const typingRef = ref(rtdb, `conversations/${convId}/typing/${uid}`);
-      if (isTyping) {
-        await set(typingRef, serverTimestamp());
-      } else {
-        await remove(typingRef);
-      }
+            const typingRef = ref(rtdb, `conversations/${convId}/typing/${uid}`);
+            if (isTyping) {
+                await set(typingRef, serverTimestamp());
+            } else {
+                await remove(typingRef);
+            }
         } catch (error) {
             if (!(error as any).message?.includes('PERMISSION_DENIED')) {
                 console.error('[rtdbConversationService] Lỗi setTyping:', error);
