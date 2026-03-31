@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Users, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban } from 'lucide-react';
+import { Users, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, ReportType } from '../../../shared/types';
 import { FriendStatus } from '../../../shared/types';
@@ -367,10 +367,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       <Button
                         variant="secondary"
                         onClick={onFriendClick}
-                        icon={<UserPlus size={18} />}
-                        className="border-border-medium text-text-tertiary bg-bg-secondary cursor-pointer hover:bg-bg-hover"
+                        icon={<X size={18} />}
+                        className="border-border-medium text-text-primary hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors"
                       >
-                        Đã gửi lời mời
+                        Hủy lời mời
                       </Button>
                     ) : friendStatus === FriendStatus.PENDING_RECEIVED ? (
                       <Button
