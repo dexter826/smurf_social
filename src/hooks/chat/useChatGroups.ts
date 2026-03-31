@@ -53,12 +53,13 @@ export const useChatGroups = ({
     try {
       await addMember(selectedConversationId, userIds);
       if (currentUserId) {
-        const names = userIds.map((id) => getName(id)).join(', ');
-        await sendGroupSystemMessage(
-          selectedConversationId,
-          currentUserId,
-          systemMessages.ADD_MEMBERS(getActorName(), names)
-        );
+        for (const id of userIds) {
+          await sendGroupSystemMessage(
+            selectedConversationId,
+            currentUserId,
+            systemMessages.ADD_MEMBERS(getActorName(), getName(id))
+          );
+        }
       }
     } catch (error) {
       console.error('[useChatGroups] Lỗi thêm thành viên:', error);
