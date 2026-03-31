@@ -18,13 +18,14 @@ const BannedPage: React.FC = () => {
       try {
         const notifications = await notificationService.getLatestSystemNotifications(userId);
         const banNotification = notifications.find(n =>
-          n.data?.contentSnippet?.includes('khóa')
+          (n.data?.contentSnippet ?? '').includes('bị khóa')
         );
-        if (banNotification?.data?.contentSnippet) {
-          setBanReason(banNotification.data.contentSnippet);
-        }
+        setBanReason(
+          banNotification?.data?.contentSnippet ??
+          'Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng.'
+        );
       } catch {
-        // Không hiển thị lý do nếu lỗi fetch
+        setBanReason('Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng.');
       }
     };
 

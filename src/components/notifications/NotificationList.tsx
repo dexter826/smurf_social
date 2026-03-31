@@ -4,6 +4,7 @@ import { useLoadingStore } from '../../store/loadingStore';
 import { NotificationItem } from './NotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { BellOff } from 'lucide-react';
+import { NotificationType } from '../../../shared/types';
 
 interface NotificationListProps {
   onItemClick?: () => void;
@@ -14,11 +15,16 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onItemClick,
   const { notifications } = useNotificationStore();
   const isLoading = useLoadingStore(state => state.loadingStates['notifications']);
 
-  if (isLoading && notifications.length === 0) {
+  const visibleNotifications = notifications.filter(n => {
+    if (n.type !== NotificationType.REPORT) return true;
+    return !(n.data?.contentSnippet ?? '').includes('bị khóa');
+  });
+
+  if (isLoading && visibleNotifications.length === 0) {
     return <NotificationSkeleton />;
   }
 
-  if (notifications.length === 0) {
+  if (visibleNotifications.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-text-tertiary">
         <BellOff size={40} className="mb-2 opacity-20" />
@@ -28,15 +34,15 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onItemClick,
   }
 
   return (
-    <div 
-      className="overflow-y-auto custom-scrollbar relative" 
+    <div
+      className="overflow-y-auto custom-scrollbar relative"
       style={{ maxHeight }}
     >
       <div className="flex flex-col">
-        {notifications.map((notification) => (
-          <NotificationItem 
-            key={notification.id} 
-            notification={notification} 
+        {visibleNotifications.map((notification) => (
+          <NotificationItem
+            key={notification.id}
+            notification={notification}
             onClick={onItemClick}
           />
         ))}

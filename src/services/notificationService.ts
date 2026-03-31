@@ -154,13 +154,13 @@ export const notificationService = {
     }
   },
 
-  // Lấy thông báo hệ thống mới nhất
+  // Lấy thông báo mới nhất
   getLatestSystemNotifications: async (userId: string): Promise<Notification[]> => {
     try {
       const q = query(
         collection(db, 'notifications'),
         where('receiverId', '==', userId),
-        where('type', 'in', [NotificationType.SYSTEM, NotificationType.REPORT]),
+        where('type', '==', NotificationType.REPORT),
         orderBy('createdAt', 'desc'),
         limit(5)
       );

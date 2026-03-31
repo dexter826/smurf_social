@@ -1,7 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../app';
-import { NotificationType, UserStatus } from '../types';
-import { createNotification } from '../helpers/notificationHelper';
+import { UserStatus } from '../types';
 import { banUserById } from '../helpers/adminHelper';
 
 /**
@@ -25,31 +24,11 @@ export const banUser = onCall(
     if (!userId) throw new HttpsError('invalid-argument', 'Thiếu userId');
     if (userId === request.auth.uid) throw new HttpsError('invalid-argument', 'Không thể tự ban chính mình');
 
-    const adminId = request.auth.uid;
-
     if (action === 'ban') {
       await banUserById(userId);
-
-      await createNotification({
-        receiverId: userId,
-        actorId: adminId,
-        type: NotificationType.SYSTEM,
-        data: {
-          contentSnippet: 'Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng. Vui lòng liên hệ admin để biết thêm chi tiết.'
-        }
-      });
     } else {
       await db.collection('users').doc(userId).update({
         status: UserStatus.ACTIVE
-      });
-
-      await createNotification({
-        receiverId: userId,
-        actorId: adminId,
-        type: NotificationType.SYSTEM,
-        data: {
-          contentSnippet: 'Tài khoản của bạn đã được mở khóa. Bạn có thể đăng nhập lại.'
-        }
       });
     }
 
