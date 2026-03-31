@@ -76,19 +76,10 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
     const partnerId = participantIds.find(id => id !== currentUserId);
 
     if (!conv.data.isGroup && partnerId) {
-      const partner = usersMap[partnerId];
-
-      if (partner?.status === 'banned') {
-        return false;
-      }
-
-      if (myBlockedUsers[partnerId]) {
-        return false;
-      }
-
-      if (blockedByPartners.has(partnerId)) {
-        return false;
-      }
+      if (myBlockedUsers[partnerId]) return false;
+      if (blockedByPartners.has(partnerId)) return false;
+      const cachedPartner = usersMap[partnerId];
+      if (cachedPartner?.status === 'banned') return false;
     }
 
     const name = conv.data.isGroup
@@ -192,6 +183,9 @@ const ConversationForwardItem: React.FC<ConversationForwardItemProps> = ({
 }) => {
   const participants = useConversationParticipants(Object.keys(conversation.data.members));
   const partner = participants.find(p => p.id !== currentUserId);
+
+  if (!conversation.data.isGroup && partner?.status === 'banned') return null;
+
   const name = conversation.data.isGroup ? conversation.data.name : partner?.fullName || 'Unknown';
   const avatar = conversation.data.isGroup ? conversation.data.avatar : partner?.avatar;
 

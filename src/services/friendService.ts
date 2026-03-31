@@ -51,6 +51,9 @@ export const friendService = {
       ]);
 
       if (!receiverSnap.exists()) throw new Error("Người dùng không tồn tại");
+      if ((receiverSnap.data() as any)?.status === 'banned') {
+        throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
+      }
       if (receiverBlockedSnap.exists()) {
         throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
       }
