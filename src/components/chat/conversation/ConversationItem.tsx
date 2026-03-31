@@ -280,6 +280,9 @@ export const ConversationItem = Object.assign(
       JSON.stringify(prevLast?.readBy) === JSON.stringify(nextLast?.readBy) &&
       JSON.stringify(prevLast?.deliveredTo) === JSON.stringify(nextLast?.deliveredTo);
 
+    const prevMemberKeys = Object.keys(prev.conversation.data.members).sort().join(',');
+    const nextMemberKeys = Object.keys(next.conversation.data.members).sort().join(',');
+
     return (
       prev.isActive === next.isActive &&
       prev.conversation.id === next.conversation.id &&
@@ -289,6 +292,7 @@ export const ConversationItem = Object.assign(
       prev.onClick === next.onClick &&
       prev.onPin === next.onPin &&
       prev.onMute === next.onMute &&
+      prevMemberKeys === nextMemberKeys &&
       lastMessageEqual
     );
   }),

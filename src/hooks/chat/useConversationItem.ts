@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
-import { RtdbConversation, User, RtdbUserChat } from '../../../shared/types';
+import { RtdbConversation, RtdbUserChat } from '../../../shared/types';
 import { formatChatTime } from '../../utils/dateUtils';
 import { useUserCache } from '../../store/userCacheStore';
+import { useRtdbChatStore } from '../../store';
 import { useConversationParticipants } from './useConversationParticipants';
+import { useMessageStatus } from './useMessageStatus';
 
 interface UseConversationItemProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
@@ -11,15 +13,15 @@ interface UseConversationItemProps {
   currentUserFriendIds: string[];
 }
 
-// Logic dữ liệu cho từng hội thoại (RTDB version)
 export const useConversationItem = ({
   conversation,
   currentUserId,
   isActive,
   currentUserFriendIds
 }: UseConversationItemProps) => {
-
   const { users: usersMap } = useUserCache();
+  const storeMessages = useRtdbChatStore(state => state.messages[conversation.id] ?? []);
+
   const participantIds = Object.keys(conversation.data.members);
   const participants = useConversationParticipants(participantIds);
 
@@ -59,7 +61,7 @@ export const useConversationItem = ({
       return 'Chưa có tin nhắn';
     }
 
-    let content = lastMessage.content;
+    const content = lastMessage.content;
 
     if (lastMessage.type === 'text') {
       return content.replace(/@\[([^\]]+)\]/g, '@$1');
@@ -71,34 +73,39 @@ export const useConversationItem = ({
         const parsed = JSON.parse(content);
         const isVideo = parsed.callType === 'video';
         const status = parsed.status;
-        
+
         if (status === 'started') {
           return isVideo ? 'Cuộc gọi video đang diễn ra' : 'Cuộc gọi thoại đang diễn ra';
         }
         if (status === 'missed') {
-          return isMine ? (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại') : (isVideo ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ');
+          return isMine
+            ? (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại')
+            : (isVideo ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ');
         }
         if (status === 'rejected') {
-            return isMine ? (isVideo ? 'Cuộc gọi video bị từ chối' : 'Cuộc gọi thoại bị từ chối') : (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại');
+          return isMine
+            ? (isVideo ? 'Cuộc gọi video bị từ chối' : 'Cuộc gọi thoại bị từ chối')
+            : (isVideo ? 'Cuộc gọi video' : 'Cuộc gọi thoại');
         }
-
         if (status === 'ended') {
-            const timeStr = parsed.duration ? ` (${Math.floor(parsed.duration / 60)}:${(parsed.duration % 60).toString().padStart(2, '0')})` : '';
-            return isMine 
-                ? (isVideo ? `Cuộc gọi video đi${timeStr}` : `Cuộc gọi thoại đi${timeStr}`)
-                : (isVideo ? `Cuộc gọi video đến${timeStr}` : `Cuộc gọi thoại đến${timeStr}`);
+          const timeStr = parsed.duration
+            ? ` (${Math.floor(parsed.duration / 60)}:${(parsed.duration % 60).toString().padStart(2, '0')})`
+            : '';
+          return isMine
+            ? (isVideo ? `Cuộc gọi video đi${timeStr}` : `Cuộc gọi thoại đi${timeStr}`)
+            : (isVideo ? `Cuộc gọi video đến${timeStr}` : `Cuộc gọi thoại đến${timeStr}`);
         }
-
-        return isMine 
-            ? (isVideo ? 'Cuộc gọi video đi' : 'Cuộc gọi thoại đi')
-            : (isVideo ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
-      } catch (e) {
+        return isMine
+          ? (isVideo ? 'Cuộc gọi video đi' : 'Cuộc gọi thoại đi')
+          : (isVideo ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
+      } catch {
         if (content.includes('nhỡ')) return content.includes('video') ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ';
         if (content.includes('kết thúc')) {
-            return isMine ? (content.includes('video') ? 'Cuộc gọi video đi' : 'Cuộc gọi thoại đi') : (content.includes('video') ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
+          return isMine
+            ? (content.includes('video') ? 'Cuộc gọi video đi' : 'Cuộc gọi thoại đi')
+            : (content.includes('video') ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
         }
         if (content.includes('diễn ra')) return content.includes('video') ? 'Cuộc gọi video đang diễn ra' : 'Cuộc gọi thoại đang diễn ra';
-        
         return content.replace(/[\[\]]/g, '');
       }
     }
@@ -106,27 +113,50 @@ export const useConversationItem = ({
     return content;
   }, [lastMessage, currentUserId]);
 
-  const readers = useMemo(() => {
-    if (!lastMessage || isMessageRequest) return [];
-    const readBy = lastMessage.readBy || {};
-    return Object.keys(readBy)
-      .filter(uid => uid !== currentUserId)
-      .map(uid => participants.find(p => p.id === uid) ?? usersMap[uid])
-      .filter((u): u is User => !!u);
-  }, [lastMessage, participants, usersMap, currentUserId, isMessageRequest]);
+  // Use the shared status hook — reads from actual messages store (same source as ChatBox)
+  // Falls back to lastMessage snapshot when messages haven't been loaded yet
+  const messagesForStatus = useMemo(() => {
+    if (isMessageRequest) return [];
+    if (storeMessages.length > 0) return storeMessages;
 
-  const deliveredUsers = useMemo(() => {
-    if (!lastMessage) return [];
-    const deliveredTo = lastMessage.deliveredTo || {};
-    return Object.keys(deliveredTo).filter(uid => uid !== currentUserId);
-  }, [lastMessage, currentUserId]);
+    // Fallback: synthesize a minimal message from lastMessage snapshot
+    // so status is never blank before messages are loaded
+    if (!lastMessage?.messageId || !lastMessage.senderId) return [];
+    return [{
+      id: lastMessage.messageId,
+      data: {
+        senderId: lastMessage.senderId,
+        type: lastMessage.type,
+        content: lastMessage.content,
+        readBy: lastMessage.readBy ?? {},
+        deliveredTo: lastMessage.deliveredTo ?? {},
+        isRecalled: false,
+        createdAt: lastMessage.timestamp ?? 0,
+        updatedAt: lastMessage.timestamp ?? 0,
+        media: [],
+        mentions: [],
+        isForwarded: false,
+        replyToId: null,
+        isEdited: false,
+        deletedBy: {},
+        reactions: {},
+      } as any,
+    }];
+  }, [isMessageRequest, storeMessages, lastMessage]);
+
+  const { lastMessageReaders, isLastMessageRead, isLastMessageDelivered } = useMessageStatus({
+    messages: messagesForStatus,
+    conversation,
+    currentUserId,
+    usersMap,
+  });
 
   const displayTime = useMemo(() => {
     const time = conversation.data.updatedAt;
     return time ? formatChatTime(new Date(time)) : '';
   }, [conversation.data.updatedAt]);
 
-  return useMemo(() => ({
+  return {
     partner,
     participants,
     isDataMissing,
@@ -137,23 +167,9 @@ export const useConversationItem = ({
     lastMessage,
     lastMessagePreview,
     isLastMessageMine: lastMessage?.senderId === currentUserId,
-    readers,
-    isLastMessageRead: readers.length > 0,
-    isLastMessageDelivered: deliveredUsers.length > 0,
-    displayTime
-  }), [
-    partner,
-    participants,
-    isDataMissing,
-    chatInfo,
-    isMessageRequest,
-    isUnread,
-    unreadCount,
-    lastMessage,
-    lastMessagePreview,
-    currentUserId,
-    readers,
-    deliveredUsers,
-    displayTime
-  ]);
+    readers: lastMessageReaders,
+    isLastMessageRead,
+    isLastMessageDelivered,
+    displayTime,
+  };
 };

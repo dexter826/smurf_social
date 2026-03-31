@@ -7,7 +7,7 @@ import { useChatScroll } from '../../hooks/chat/useChatScroll';
 import { ChatBoxHeader } from './ChatBoxHeader';
 import { MessageList } from './MessageList';
 import { TypingIndicator } from './TypingIndicator';
-import { useAuthStore } from '../../store';
+import { useMessageStatus } from '../../hooks/chat/useMessageStatus';
 
 interface ChatBoxProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
@@ -104,52 +104,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     !isBlockedByMe && !isBlocked
     , [conversation.data.isGroup, partner, currentUserFriendIds, isBlockedByMe, isBlocked]);
 
-  const { settings } = useAuthStore();
-
-  const lastReadByMap = useMemo(() => {
-    const map: Record<string, User[]> = {};
-    const reversed = [...messages].reverse();
-    const participantIds = Object.keys(conversation.data.members);
-
-    if (settings?.showReadReceipts === false) return map;
-
-    if (conversation.data.isGroup) {
-      participantIds.forEach(uid => {
-        if (uid === currentUserId) return;
-
-        const user = usersMap[uid];
-
-        const lastReadMsg = reversed.find(m => m.data.readBy?.[uid]);
-        if (lastReadMsg) {
-          if (!map[lastReadMsg.id]) map[lastReadMsg.id] = [];
-          if (user) map[lastReadMsg.id].push(user);
-        }
-      });
-
-      Object.keys(map).forEach(msgId => {
-        const msg = messages.find(m => m.id === msgId);
-        if (msg?.data.readBy) {
-          const readByEntries = Object.entries(msg.data.readBy);
-          map[msgId].sort((a, b) => {
-            const aTime = readByEntries.find(([uid]) => uid === a.id)?.[1] || 0;
-            const bTime = readByEntries.find(([uid]) => uid === b.id)?.[1] || 0;
-            return aTime - bTime;
-          });
-        }
-      });
-    } else if (messages.length > 0) {
-      const partnerId = participantIds.find(id => id !== currentUserId);
-      const partner = partnerId ? usersMap[partnerId] : null;
-
-      if (partnerId && partner) {
-        const lastReadMsg = reversed.find(m => m.data.readBy?.[partnerId]);
-        if (lastReadMsg) {
-          map[lastReadMsg.id] = [partner];
-        }
-      }
-    }
-    return map;
-  }, [messages, conversation, usersMap, currentUserId, settings?.showReadReceipts]);
+  const { lastReadByMap } = useMessageStatus({
+    messages,
+    conversation,
+    currentUserId,
+    usersMap,
+  });
 
   return (
     <div className="relative flex-1 flex flex-col min-h-0 bg-secondary transition-theme">
