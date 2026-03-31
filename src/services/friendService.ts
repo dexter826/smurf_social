@@ -72,7 +72,7 @@ export const friendService = {
       if (!reverseSnap.empty) {
         const requestId = reverseSnap.docs[0].id;
         await friendService.acceptFriendRequest(requestId, receiverId, senderId);
-        return; 
+        return;
       }
 
       const alreadySent = await friendService.checkFriendRequestExists(senderId, receiverId);
@@ -169,9 +169,9 @@ export const friendService = {
 
       batch.set(doc(db, 'users', senderId, 'friends', receiverId), { friendId: receiverId, createdAt: now, updatedAt: now });
       batch.set(doc(db, 'users', receiverId, 'friends', senderId), { friendId: senderId, createdAt: now, updatedAt: now });
-      batch.update(doc(db, 'friendRequests', requestId), { 
-        status: FriendRequestStatus.ACCEPTED, 
-        updatedAt: now 
+      batch.update(doc(db, 'friendRequests', requestId), {
+        status: FriendRequestStatus.ACCEPTED,
+        updatedAt: now
       });
 
       await batch.commit();
@@ -190,9 +190,9 @@ export const friendService = {
   rejectFriendRequest: async (requestId: string): Promise<void> => {
     try {
       const requestRef = doc(db, 'friendRequests', requestId);
-      await updateDoc(requestRef, { 
-        status: FriendRequestStatus.REJECTED, 
-        updatedAt: serverTimestamp() 
+      await updateDoc(requestRef, {
+        status: FriendRequestStatus.REJECTED,
+        updatedAt: serverTimestamp()
       });
     } catch (error) {
       console.error("Lỗi từ chối kết bạn", error);
@@ -272,8 +272,7 @@ export const friendService = {
 
       try {
         const friendsMap = await batchGetUsers(friendIds);
-        const friends = Object.values(friendsMap).filter(u => u.status !== 'banned');
-        callback(friends);
+        callback(Object.values(friendsMap));
       } catch (error) {
         console.error("Lỗi fetch friends realtime", error);
       }

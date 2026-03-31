@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { RtdbMessage, User, FriendStatus, FriendRequest } from '../../shared/types';
+import { RtdbMessage, User } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { useRtdbChatStore } from '../store';
 import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
-import { friendService } from '../services/friendService';
 import {
   useChatActions,
   useChatMessages,
@@ -113,11 +112,6 @@ export const useChat = () => {
   const partner = partnerId ? (usersMap[partnerId] ?? null) : null;
 
   const friendIds = useContactStore(state => state.friends.map(f => f.id));
-  const partnerFriendStatus = useMemo(() => {
-    if (!partnerId) return undefined;
-    return friendIds.includes(partnerId) ? FriendStatus.FRIEND : undefined;
-  }, [partnerId, friendIds]);
-
   const isFriend = useMemo(() => {
     if (!partnerId) return false;
     return friendIds.includes(partnerId);
@@ -127,14 +121,6 @@ export const useChat = () => {
     if (selectedConversation?.data.isGroup) return true;
     return isFriend;
   }, [selectedConversation?.data.isGroup, isFriend]);
-
-  const partnerPendingRequestId = useMemo(() => {
-    if (!partnerId) return undefined;
-    const sent = sentRequests.find(r => r.receiverId === partnerId);
-    if (sent) return sent.id;
-    const received = receivedRequests.find(r => r.senderId === partnerId);
-    return received?.id;
-  }, [partnerId, sentRequests, receivedRequests]);
 
   const friendRequestStatus = useMemo(() => {
     if (!partnerId) return 'none' as const;
