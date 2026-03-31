@@ -20,11 +20,50 @@ export function useCallManager(currentUserId: string) {
 
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isBusyRespondingRef = useRef(false);
+    const participantUnsubRef = useRef<(() => void) | null>(null);
 
     const cleanup = useCallback(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (participantUnsubRef.current) {
+            participantUnsubRef.current();
+            participantUnsubRef.current = null;
+        }
         resetCall();
     }, [resetCall]);
+
+    const subscribeGroupParticipants = useCallback((conversationId: string) => {
+        if (participantUnsubRef.current) {
+            participantUnsubRef.current();
+        }
+        let hasReachedMultiple = false;
+
+        participantUnsubRef.current = rtdbCallService.subscribeToParticipantCount(
+            conversationId,
+            async (count) => {
+                if (count >= 2) {
+                    hasReachedMultiple = true;
+                }
+
+                if (hasReachedMultiple && count <= 1 && phaseRef.current === 'in-call') {
+                    const currentSession = sessionRef.current;
+                    if (!currentSession?.isGroupCall) return;
+
+                    if (participantUnsubRef.current) {
+                        participantUnsubRef.current();
+                        participantUnsubRef.current = null;
+                    }
+
+                    await rtdbCallService.endCallSession(
+                        conversationId,
+                        updateCallMessage,
+                        'ended',
+                    );
+                    playSound('ended');
+                    cleanup();
+                }
+            }
+        );
+    }, [updateCallMessage, playSound, cleanup]);
 
     useEffect(() => {
         if (!currentUserId) return;
@@ -55,7 +94,9 @@ export function useCallManager(currentUserId: string) {
                             startTime: Date.now(),
                         });
                         playSound('connected');
-                        if (!sessionRef.current.isGroupCall) {
+                        if (sessionRef.current.isGroupCall) {
+                            subscribeGroupParticipants(sessionRef.current.conversationId);
+                        } else {
                             const recipientIds = sessionRef.current.participants || [];
                             await rtdbCallService.clearSignalingForUsers(recipientIds);
                         }
@@ -95,7 +136,7 @@ export function useCallManager(currentUserId: string) {
             unsubscribe();
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
-    }, [currentUserId, setPhase, setSession, setIncomingSignal, setCallEndReason, playSound, cleanup, updateCallMessage]);
+    }, [currentUserId, setPhase, setSession, setIncomingSignal, setCallEndReason, playSound, cleanup, updateCallMessage, subscribeGroupParticipants]);
 
     const startCall = useCallback(async (
         recipientIds: string[],
@@ -175,8 +216,12 @@ export function useCallManager(currentUserId: string) {
 
         await rtdbCallService.markCallConnected(incomingSignal.conversationId);
 
+        if (incomingSignal.isGroupCall) {
+            subscribeGroupParticipants(incomingSignal.conversationId);
+        }
+
         playSound('connected');
-    }, [currentUserId, incomingSignal, setPhase, setSession, playSound]);
+    }, [currentUserId, incomingSignal, setPhase, setSession, playSound, subscribeGroupParticipants]);
 
     const rejectCall = useCallback(async () => {
         if (!incomingSignal) return;
@@ -229,9 +274,9 @@ export function useCallManager(currentUserId: string) {
         });
 
         rtdbCallService.updateCallParticipant(conversationId, currentUserId, true);
-
+        subscribeGroupParticipants(conversationId);
         playSound('connected');
-    }, [currentUserId, setPhase, setSession, playSound]);
+    }, [currentUserId, setPhase, setSession, playSound, subscribeGroupParticipants]);
 
     return {
         phase,

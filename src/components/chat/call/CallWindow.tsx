@@ -101,7 +101,8 @@ export const CallWindow: React.FC<CallWindowProps> = ({
 
           onUserLeave: (users: any[]) => {
             users.forEach((u) => activeParticipants.delete(u.userID));
-            if (activeParticipants.size === 0 && !isGroupCall) {
+            const shouldEnd = activeParticipants.size === 0;
+            if (shouldEnd) {
               setTimeout(() => {
                 destroyZego();
                 onCloseRef.current();

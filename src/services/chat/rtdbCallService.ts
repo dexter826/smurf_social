@@ -120,7 +120,7 @@ export const rtdbCallService = {
     ): Promise<void> => {
         const activeCallRef = ref(rtdb, `conversations/${convId}/activeCall`);
         const participantRef = ref(rtdb, `conversations/${convId}/activeCall/participants/${callerId}`);
-        
+
         await set(activeCallRef, {
             callerId,
             callType,
@@ -129,7 +129,6 @@ export const rtdbCallService = {
             participants: { [callerId]: Date.now() },
         });
 
-        // Tự động dọn dẹp khi mất kết nối
         onDisconnect(participantRef).remove();
     },
 
@@ -148,18 +147,18 @@ export const rtdbCallService = {
         if (isJoining) {
             await set(participantRef, Date.now());
             onDisconnect(participantRef).remove();
-            
+
             const snapshot = await get(ref(rtdb, `conversations/${convId}/activeCall/participants`));
             const data = snapshot.val();
             return data ? Object.keys(data).length : 0;
         } else {
             await remove(participantRef);
             onDisconnect(participantRef).cancel();
-            
+
             const snapshot = await get(ref(rtdb, `conversations/${convId}/activeCall/participants`));
             const data = snapshot.val();
             const count = data ? Object.keys(data).length : 0;
-            
+
             return count;
         }
     },
@@ -179,6 +178,19 @@ export const rtdbCallService = {
         await remove(ref(rtdb, `conversations/${convId}/activeCall`));
     },
 
+    subscribeToParticipantCount: (
+        convId: string,
+        callback: (count: number) => void,
+    ): (() => void) => {
+        const participantsRef = ref(rtdb, `conversations/${convId}/activeCall/participants`);
+        const handler = (snapshot: any) => {
+            const data = snapshot.val();
+            callback(data ? Object.keys(data).length : 0);
+        };
+        onValue(participantsRef, handler);
+        return () => off(participantsRef, 'value', handler);
+    },
+
     endCallSession: async (
         convId: string,
         updateMessageFn: (convId: string, msgId: string, payload: any) => Promise<void>,
@@ -191,14 +203,14 @@ export const rtdbCallService = {
 
             if (userId) {
                 const remainingCount = await rtdbCallService.updateCallParticipant(convId, userId, false);
-                if (remainingCount > 0) {
+                if (remainingCount > 1) {
                     return;
                 }
             }
 
             if (activeCall.messageId) {
                 const duration = Math.max(0, Math.floor((Date.now() - activeCall.startedAt) / 1000));
-                
+
                 await updateMessageFn(convId, activeCall.messageId, {
                     callType: activeCall.callType,
                     status: status,
