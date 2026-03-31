@@ -12,52 +12,41 @@ const BannedPage: React.FC = () => {
 
   useEffect(() => {
     const fetchBanReason = async () => {
-      if (!user?.id) return;
+      const userId = user?.id;
+      if (!userId) return;
 
       try {
-        const notifications = await notificationService.getLatestSystemNotifications(user.id);
+        const notifications = await notificationService.getLatestSystemNotifications(userId);
         const banNotification = notifications.find(n =>
-          n.type === 'system' &&
           n.data?.contentSnippet?.includes('khóa')
         );
-
         if (banNotification?.data?.contentSnippet) {
           setBanReason(banNotification.data.contentSnippet);
         }
-      } catch (error) {
-        console.error('Lỗi lấy lý do khóa:', error);
+      } catch {
+        // Không hiển thị lý do nếu lỗi fetch
       }
     };
 
     fetchBanReason();
   }, [user?.id]);
 
-  const handleAction = async () => {
-    if (user) {
-      await logout();
-    }
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-bg-secondary flex items-center justify-center p-4">
       <div className="bg-bg-primary rounded-2xl shadow-lg border border-border-light max-w-md w-full p-8 text-center">
-        {/* Icon */}
         <div className="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <Lock size={40} className="text-error" />
         </div>
 
-        {/* Title */}
         <h1 className="text-2xl font-black text-text-primary mb-3">
           TÀI KHOẢN ĐÃ BỊ KHÓA
         </h1>
 
-        {/* Description */}
-        <p className="text-text-secondary mb-4 font-medium">
-          Tài khoản của bạn đã bị khóa do vi phạm bộ quy tắc cộng đồng của Smurfy Social.
-        </p>
-
-        {/* Ban Reason */}
         {banReason && (
           <div className="bg-error/5 border border-error/20 rounded-xl p-4 mb-6 text-left">
             <div className="flex items-start gap-3">
@@ -70,10 +59,8 @@ const BannedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Divider */}
         <div className="border-t border-border-light my-6" />
 
-        {/* Appeal Section */}
         <div className="text-left bg-bg-secondary/50 rounded-2xl p-5 mb-6 border border-border-light">
           <h3 className="font-bold text-text-primary mb-2 flex items-center gap-2">
             <Mail size={18} className="text-primary" />
@@ -93,14 +80,13 @@ const BannedPage: React.FC = () => {
           </a>
         </div>
 
-        {/* Action Button */}
         <Button
-          variant={user ? "danger" : "primary"}
+          variant="danger"
           className="w-full h-12 rounded-xl font-bold"
-          icon={user ? <LogOut size={18} /> : undefined}
-          onClick={handleAction}
+          icon={<LogOut size={18} />}
+          onClick={handleLogout}
         >
-          {user ? 'Đăng xuất' : 'Quay lại đăng nhập'}
+          Đăng xuất
         </Button>
       </div>
     </div>

@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin }) => {
-  const { user, isPendingVerification, isInitialized } = useAuthStore();
+  const { user, isPendingVerification, isInitialized, isBanned } = useAuthStore();
 
   if (!isInitialized) {
     return <ScreenLoader />;
@@ -19,12 +19,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return <Navigate to="/verify-email" replace />;
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (isBanned || user?.status === 'banned') {
+    return <Navigate to="/banned" replace />;
   }
 
-  if (user.status === 'banned') {
-    return <Navigate to="/banned" replace />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   if (requireAdmin && user?.role !== 'admin') {

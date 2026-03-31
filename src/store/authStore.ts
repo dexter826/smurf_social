@@ -30,6 +30,7 @@ interface AuthState {
   blockedUsers: Record<string, BlockOptions>;
   isPendingVerification: boolean;
   isInitialized: boolean;
+  isBanned: boolean;
   login: (email: string, pass: string, remember?: boolean) => Promise<void>;
   register: (email: string, pass: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -68,6 +69,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   blockedUsers: {},
   isPendingVerification: false,
   isInitialized: false,
+  isBanned: false,
 
   setUser: (user) => set({ user }),
 
@@ -146,7 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error("Lỗi logout:", error);
     } finally {
-      set({ user: null, isPendingVerification: false });
+      set({ user: null, isPendingVerification: false, isBanned: false });
     }
   },
 
@@ -255,9 +257,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           if (userData) {
             if (userData.status === 'banned') {
-              set({ user: userData, isInitialized: true });
+              set({ user: userData, isInitialized: true, isBanned: true });
               useLoadingStore.getState().setLoading("auth", false);
-              get().logout();
               return;
             }
 
@@ -275,8 +276,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               firebaseUser.uid,
               async (updatedUser) => {
                 if (updatedUser.status === 'banned') {
-                  set({ user: updatedUser });
-                  await get().logout();
+                  if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
+                  if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
+                  try { await presenceService.setOffline(updatedUser.id); } catch { /* ignore */ }
+                  clearAllStores();
+                  set({ user: updatedUser, isBanned: true, isInitialized: true });
                   return;
                 }
 
@@ -305,6 +309,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           useLoadingStore.getState().setLoading("auth", false);
         }
       } else {
+        if (get().isBanned) {
+          set({ isInitialized: true });
+          useLoadingStore.getState().setLoading("auth", false);
+          return;
+        }
         clearAllStores();
         set({ user: null, isInitialized: true });
         useLoadingStore.getState().setLoading("auth", false);

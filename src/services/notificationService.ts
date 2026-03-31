@@ -160,7 +160,7 @@ export const notificationService = {
       const q = query(
         collection(db, 'notifications'),
         where('receiverId', '==', userId),
-        where('type', '==', NotificationType.SYSTEM),
+        where('type', 'in', [NotificationType.SYSTEM, NotificationType.REPORT]),
         orderBy('createdAt', 'desc'),
         limit(5)
       );
