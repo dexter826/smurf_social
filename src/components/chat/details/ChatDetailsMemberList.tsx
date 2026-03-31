@@ -31,7 +31,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
 
   if (!conversation.data.isGroup) return null;
 
-  const members = participants.filter(m => m.status !== 'banned');
+  const members = participants;
   const creatorId = conversation.data.creatorId;
   const memberRoles = conversation.data.members;
   const currentUserRole = memberRoles[currentUserId];
@@ -83,34 +83,35 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
           const isCurrentUser = member.id === currentUserId;
           const role = getMemberRole(member.id);
           const canManage = canManageMember(member.id);
+          const isBanned = member.status === 'banned';
 
           return (
             <div
               key={member.id}
-              className="flex items-center gap-3 px-4 py-2.5 transition-all duration-base hover:bg-bg-hover active:bg-bg-active group"
+              className={`flex items-center gap-3 px-4 py-2.5 transition-all duration-base group ${isBanned ? 'opacity-60' : 'hover:bg-bg-hover active:bg-bg-active'}`}
             >
               <div
-                onClick={() => !isCurrentUser && onMemberClick?.(member.id)}
-                className={`flex items-center gap-3 flex-1 min-w-0 ${!isCurrentUser ? 'cursor-pointer' : ''}`}
+                onClick={() => !isCurrentUser && !isBanned && onMemberClick?.(member.id)}
+                className={`flex items-center gap-3 flex-1 min-w-0 ${!isCurrentUser && !isBanned ? 'cursor-pointer' : ''}`}
               >
                 <UserAvatar
                   userId={member.id}
                   size="sm"
-                  showStatus
-                  onClick={() => handleMemberProfileClick(member.id)}
+                  showStatus={!isBanned}
+                  onClick={() => !isBanned && handleMemberProfileClick(member.id)}
                 />
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-sm font-medium text-text-primary truncate ${!isCurrentUser ? 'cursor-pointer hover:underline' : ''}`}
-                      onClick={() => handleMemberProfileClick(member.id)}
+                      className={`text-sm font-medium text-text-primary truncate ${!isCurrentUser && !isBanned ? 'cursor-pointer hover:underline' : ''}`}
+                      onClick={() => !isBanned && handleMemberProfileClick(member.id)}
                     >
                       {member.fullName}
                       {isCurrentUser && <span className="text-text-tertiary"> (Bạn)</span>}
                     </span>
 
-                    {/* Role badges - chỉ icon */}
+                    {/* Role badges */}
                     {role === 'creator' && (
                       <span className="text-warning" title="Trưởng nhóm">
                         <Crown size={14} />
@@ -121,17 +122,27 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                         <Shield size={14} />
                       </span>
                     )}
+
+                    {/* Banned badge */}
+                    {isBanned && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-error/10 text-error flex-shrink-0">
+                        <Lock size={10} />
+                        Đã khóa
+                      </span>
+                    )}
                   </div>
-                  <UserStatusText
-                    userId={member.id}
-                    initialStatus={member.status}
-                    className="text-xs text-text-tertiary"
-                  />
+                  {!isBanned && (
+                    <UserStatusText
+                      userId={member.id}
+                      initialStatus={member.status}
+                      className="text-xs text-text-tertiary"
+                    />
+                  )}
                 </div>
               </div>
 
-              {/* Menu quản lý */}
-              {canManage && (
+              {/* Menu quản lý — ẩn khi member bị ban */}
+              {canManage && !isBanned && (
                 <Dropdown
                   isOpen={menuOpenId === member.id}
                   onOpenChange={(open) => setMenuOpenId(open ? member.id : null)}

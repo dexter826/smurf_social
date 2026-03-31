@@ -22,6 +22,15 @@ const MobileMenuPage = React.lazy(() => import('./pages/MobileMenuPage'));
 const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 
+const BannedRoute: React.FC = () => {
+  const { user, isBanned, isInitialized } = useAuthStore();
+  if (!isInitialized) return <ScreenLoader />;
+  if (!isBanned && user?.status !== 'banned') {
+    return <Navigate to={user ? '/' : '/login'} replace />;
+  }
+  return <BannedPage />;
+};
+
 const App: React.FC = () => {
   const { user } = useAuthStore();
   const initializeAuth = useAuthStore(state => state.initialize);
@@ -71,7 +80,7 @@ const App: React.FC = () => {
             </Route>
 
             <Route path="/verify-email" element={<EmailVerificationPage />} />
-            <Route path="/banned" element={<BannedPage />} />
+            <Route path="/banned" element={<BannedRoute />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
