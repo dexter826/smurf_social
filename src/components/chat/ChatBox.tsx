@@ -34,6 +34,7 @@ interface ChatBoxProps {
   onLoadMore?: () => void;
   isBlocked?: boolean;
   isBlockedByMe?: boolean;
+  partnerStatus?: 'active' | 'banned';
   myBlockOptions?: { blockMessages: boolean; blockCalls: boolean; blockViewMyActivity: boolean; hideTheirActivity: boolean };
   onUnblock?: () => void;
   onManageBlock?: () => void;
@@ -69,6 +70,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onLoadMore,
   isBlocked = false,
   isBlockedByMe = false,
+  partnerStatus,
   myBlockOptions,
   onUnblock,
   onManageBlock,
@@ -98,11 +100,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   const chatName = conversation.data.isGroup ? conversation.data.name : partner?.fullName || 'Không rõ';
   const avatarSrc = conversation.data.isGroup ? conversation.data.avatar?.url : partner?.avatar?.url;
 
+  const isPartnerBanned = partnerStatus === 'banned' || partner?.status === 'banned';
+
   const isMessageRequest = useMemo(() =>
-    !conversation.data.isGroup && partner &&
+    !conversation.data.isGroup &&
+    partner !== null &&
+    partner !== undefined &&
+    !isPartnerBanned &&
     !currentUserFriendIds.includes(partner.id) &&
-    !isBlockedByMe && !isBlocked
-    , [conversation.data.isGroup, partner, currentUserFriendIds, isBlockedByMe, isBlocked]);
+    !isBlockedByMe &&
+    !isBlocked
+    , [conversation.data.isGroup, partner, isPartnerBanned, currentUserFriendIds, isBlockedByMe, isBlocked]);
 
   const { lastReadByMap } = useMessageStatus({
     messages,

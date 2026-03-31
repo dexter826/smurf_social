@@ -32,6 +32,7 @@ interface ChatInputProps {
   isDisbanded?: boolean;
   onDeleteConversation?: () => void;
   onManageBlock?: () => void;
+  isBlockedByMe?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -53,7 +54,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   isGroup = false,
   isDisbanded = false,
   onDeleteConversation,
-  onManageBlock
+  onManageBlock,
+  isBlockedByMe = false,
 }) => {
   const [inputText, setInputText] = useState('');
   const [activeMentions, setActiveMentions] = useState<{ id: string; name: string }[]>([]);
@@ -108,15 +110,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   });
 
   const onSelectMention = useCallback((user: User) => {
-      const userSelected = handleSelectMentionInternal(user);
-      
-      if (userSelected) {
-        setActiveMentions(prev => {
-          if (prev.find(m => m.id === userSelected.id)) return prev;
-          return [...prev, { id: userSelected.id, name: userSelected.fullName }];
-        });
-      }
-    }, [handleSelectMentionInternal]);
+    const userSelected = handleSelectMentionInternal(user);
+
+    if (userSelected) {
+      setActiveMentions(prev => {
+        if (prev.find(m => m.id === userSelected.id)) return prev;
+        return [...prev, { id: userSelected.id, name: userSelected.fullName }];
+      });
+    }
+  }, [handleSelectMentionInternal]);
 
   useEffect(() => {
     if (!isSending && !disabled) {
@@ -138,14 +140,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const detectedActiveMentions = useMemo(() => {
     if (!inputText) return [];
-    
+
     const mentionRegex = /@([^\n\u200B]+)\u200B/g;
     const namesInText: string[] = [];
     let match;
     while ((match = mentionRegex.exec(inputText)) !== null) {
       namesInText.push(match[1]);
     }
-    
+
     return activeMentions.filter(m => namesInText.includes(m.name));
   }, [inputText, activeMentions]);
 
@@ -275,7 +277,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           const mentions: string[] = [];
 
           const tempActiveMentions = [...activeMentions];
-          
+
           finalContent = finalContent.replace(/@([^\n\u200B]+)\u200B/g, (match, fullName) => {
             const index = tempActiveMentions.findIndex(m => m.name === fullName);
             if (index !== -1) {
@@ -310,7 +312,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       const cursor = e.currentTarget.selectionStart;
       const text = e.currentTarget.value;
       const beforeCursor = text.slice(0, cursor);
-      
+
       const mentionMatch = beforeCursor.match(/@([^\n\u200B]+)\u200B ?$/);
 
       if (mentionMatch) {
@@ -319,9 +321,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         const name = mentionMatch[1];
         const newText = text.substring(0, cursor - deleteLength) + text.substring(cursor);
         setInputText(newText);
-        
+
         setActiveMentions(prev => prev.filter(m => m.name !== name || newText.includes(`@${m.name}\u200B`)));
-        
+
         setTimeout(() => {
           if (inputRef.current) {
             const newPos = cursor - deleteLength;
@@ -364,7 +366,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               {isDisbanded ? 'Nhóm này đã giải tán.' : blockedMessage}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2 flex-shrink-0">
             {isDisbanded && onDeleteConversation && (
               <Button
@@ -376,7 +378,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 Xóa hội thoại
               </Button>
             )}
-            {!isDisbanded && onManageBlock && (
+            {!isDisbanded && onManageBlock && isBlockedByMe && (
               <Button
                 onClick={onManageBlock}
                 variant="primary"

@@ -306,6 +306,7 @@ export const useChat = () => {
     isCallBlockedByPartner: block.isCallBlockedByPartner,
     myBlockOptions: block.myBlockOptions,
     partnerId,
+    partnerStatus: block.partnerStatus,
     blockedMessage: block.blockedMessage,
     getBlockedMessage: block.getBlockedMessage,
     handleApplyBlock: block.handleApplyBlock,

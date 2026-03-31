@@ -40,6 +40,7 @@ const ChatPage: React.FC = () => {
     isBlockedByMe,
     isCallBlockedByMe,
     isCallBlockedByPartner,
+    partnerStatus,
     blockedMessage,
     forwardingMessage,
     setForwardingMessage,
@@ -294,6 +295,7 @@ const ChatPage: React.FC = () => {
               onLoadMore={handleLoadMoreMessages}
               isBlocked={isBlocked}
               isBlockedByMe={isBlockedByMe}
+              partnerStatus={partnerStatus}
               myBlockOptions={myBlockOptions}
               onUnblock={handleUnblock}
               onManageBlock={openBlockModal}
@@ -313,6 +315,7 @@ const ChatPage: React.FC = () => {
               onTyping={handleTyping}
               blockedMessage={blockedMessage}
               onManageBlock={openBlockModal}
+              isBlockedByMe={isBlockedByMe}
               replyingTo={replyingTo}
               editingMessage={editingMessage}
               currentUserId={currentUser.id}
