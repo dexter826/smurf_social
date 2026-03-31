@@ -181,6 +181,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               avatarSrc={avatarSrc}
               partner={partner || undefined}
               isBlocked={isBlocked}
+              partnerStatus={partnerStatus}
               onCall={onCall}
               onJoinCall={onJoinCall}
               onEdit={onEdit}

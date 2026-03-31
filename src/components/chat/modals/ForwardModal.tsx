@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Send } from 'lucide-react';
 import { Modal, Avatar, UserAvatar, Input, Button } from '../../ui';
 import { RtdbMessage, RtdbConversation, User, RtdbUserChat } from '../../../../shared/types';
 import { useRtdbChatStore } from '../../../store';
+import { useAuthStore } from '../../../store/authStore';
 import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../firebase/config';
 
 interface ForwardModalProps {
   isOpen: boolean;
@@ -25,15 +28,72 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [sendingTo, setSendingTo] = useState<string | null>(null);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+  const [blockedByPartners, setBlockedByPartners] = useState<Set<string>>(new Set());
   const forwardMessage = useRtdbChatStore(state => state.forwardMessage);
+  const myBlockedUsers = useAuthStore(state => state.blockedUsers);
+
+  useEffect(() => {
+    if (!isOpen || !currentUserId) return;
+
+    const checkBlockedByPartners = async () => {
+      const blockedSet = new Set<string>();
+
+      const directConversations = conversations.filter(conv => !conv.data.isGroup);
+
+      await Promise.all(
+        directConversations.map(async (conv) => {
+          const participantIds = Object.keys(conv.data.members);
+          const partnerId = participantIds.find(id => id !== currentUserId);
+
+          if (partnerId) {
+            try {
+              const blockRef = doc(db, 'users', partnerId, 'blockedUsers', currentUserId);
+              const blockSnap = await getDoc(blockRef);
+
+              if (blockSnap.exists()) {
+                const blockData = blockSnap.data();
+                if (blockData.blockMessages === true) {
+                  blockedSet.add(partnerId);
+                }
+              }
+            } catch (error) {
+              console.error(`Error checking block status for ${partnerId}:`, error);
+            }
+          }
+        })
+      );
+
+      setBlockedByPartners(blockedSet);
+    };
+
+    checkBlockedByPartners();
+  }, [isOpen, currentUserId, conversations]);
 
   if (!message) return null;
 
   const filteredConversations = conversations.filter(conv => {
     const participantIds = Object.keys(conv.data.members);
+    const partnerId = participantIds.find(id => id !== currentUserId);
+
+    if (!conv.data.isGroup && partnerId) {
+      const partner = usersMap[partnerId];
+
+      if (partner?.status === 'banned') {
+        return false;
+      }
+
+      if (myBlockedUsers[partnerId]) {
+        return false;
+      }
+
+      if (blockedByPartners.has(partnerId)) {
+        return false;
+      }
+    }
+
     const name = conv.data.isGroup
       ? conv.data.name
-      : usersMap[participantIds.find(id => id !== currentUserId) || '']?.fullName || '';
+      : usersMap[partnerId || '']?.fullName || '';
     return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -52,6 +112,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
   const handleClose = () => {
     setSearchTerm('');
     setSentIds(new Set());
+    setBlockedByPartners(new Set());
     onClose();
   };
 

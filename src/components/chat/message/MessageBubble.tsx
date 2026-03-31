@@ -39,6 +39,7 @@ interface MessageBubbleProps {
   isGroup?: boolean;
   lastReadByUsers?: User[];
   isBlocked?: boolean;
+  partnerStatus?: 'active' | 'banned';
   onCall?: () => void;
   onJoinCall?: (callType: 'voice' | 'video') => void;
   conversationId: string;
@@ -62,6 +63,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   isGroup = false,
   lastReadByUsers = [],
   isBlocked = false,
+  partnerStatus,
   onCall,
   onJoinCall,
   conversationId,
@@ -97,6 +99,9 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
   const isDelivered = message.data.deliveredTo &&
     Object.keys(message.data.deliveredTo).some(uid => uid !== currentUserId);
+
+  const isPartnerBanned = !isGroup && partnerStatus === 'banned';
+  const isInteractionDisabled = isBlocked || isPartnerBanned;
 
   const canEdit = isMe && !message.data.isRecalled && message.data.type === MessageType.TEXT && (
     (Date.now() - message.data.createdAt) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW
@@ -239,18 +244,18 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                       {replyToMsg.data.type === 'text'
                         ? replyToMsg.data.content.replace(/@\[([^\]]+)\]/g, '@$1')
                         : replyToMsg.data.type === 'image' ? ((replyToMsg.data.media?.length || 0) > 1 ? '[Album ảnh]' : '[Hình ảnh]')
-                        : replyToMsg.data.type === 'video' ? '[Video]'
-                          : replyToMsg.data.type === 'file' ? `[File] ${replyToMsg.data.media?.[0]?.fileName || 'File'}`
-                            : replyToMsg.data.type === 'voice' ? '[Tin nhắn thoại]'
-                              : replyToMsg.data.type === 'call' ? (() => {
-                                try {
-                                  const parsed = JSON.parse(replyToMsg.data.content) as { callType?: 'voice' | 'video' };
-                                  return parsed.callType === 'video' ? '[Cuộc gọi video]' : '[Cuộc gọi thoại]';
-                                } catch {
-                                  return '[Cuộc gọi]';
-                                }
-                              })()
-                                : `[${replyToMsg.data.type}]`
+                          : replyToMsg.data.type === 'video' ? '[Video]'
+                            : replyToMsg.data.type === 'file' ? `[File] ${replyToMsg.data.media?.[0]?.fileName || 'File'}`
+                              : replyToMsg.data.type === 'voice' ? '[Tin nhắn thoại]'
+                                : replyToMsg.data.type === 'call' ? (() => {
+                                  try {
+                                    const parsed = JSON.parse(replyToMsg.data.content) as { callType?: 'voice' | 'video' };
+                                    return parsed.callType === 'video' ? '[Cuộc gọi video]' : '[Cuộc gọi thoại]';
+                                  } catch {
+                                    return '[Cuộc gọi]';
+                                  }
+                                })()
+                                  : `[${replyToMsg.data.type}]`
                       }
                     </div>
                   </div>
@@ -288,7 +293,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                     />
                   )}
 
-                  {!isBlocked && (
+                  {!isInteractionDisabled && (
                     <div className={`relative ${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-all duration-base flex items-center z-[var(--z-popover)]`}>
                       <button
                         className="flex items-center justify-center w-8 h-[26px] bg-bg-secondary rounded-full border border-divider shadow-sm text-text-secondary hover:text-primary hover:border-primary hover:shadow-md transition-all duration-base"
@@ -340,6 +345,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 setShowRecallConfirm={setShowRecallConfirm}
                 onDeleteForMe={onDeleteForMe}
                 isBlocked={isBlocked}
+                isPartnerBanned={isPartnerBanned}
               />
             )}
           </div>

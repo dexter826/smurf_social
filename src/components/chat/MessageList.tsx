@@ -21,6 +21,7 @@ interface MessageListProps {
   avatarSrc?: string;
   partner?: User;
   isBlocked?: boolean;
+  partnerStatus?: 'active' | 'banned';
 }
 
 const MessageListInner: React.FC<MessageListProps> = ({
@@ -40,7 +41,8 @@ const MessageListInner: React.FC<MessageListProps> = ({
   chatName,
   avatarSrc,
   partner,
-  isBlocked = false
+  isBlocked = false,
+  partnerStatus
 }) => {
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Array<{ id: string; data: RtdbMessage }> }[] = [];
@@ -148,6 +150,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
                   isGroup={conversation.data.isGroup}
                   allMessages={messages}
                   isBlocked={isBlocked}
+                  partnerStatus={partnerStatus}
                   conversationId={conversation.id}
                 />
               );

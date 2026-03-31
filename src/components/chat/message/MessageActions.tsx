@@ -16,6 +16,7 @@ interface MessageActionsProps {
   setShowRecallConfirm: (show: boolean) => void;
   onDeleteForMe?: (messageId: string) => void;
   isBlocked: boolean;
+  isPartnerBanned?: boolean;
 }
 
 export const MessageActions: React.FC<MessageActionsProps> = ({
@@ -30,7 +31,10 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   setShowRecallConfirm,
   onDeleteForMe,
   isBlocked,
+  isPartnerBanned = false,
 }) => {
+  const isInteractionDisabled = isBlocked || isPartnerBanned;
+
   return (
     <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-all duration-base flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
       <Dropdown
@@ -47,7 +51,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       >
         {message.data.type !== 'call' && (
           <>
-            {!isBlocked && (
+            {!isInteractionDisabled && (
               <DropdownItem
                 icon={<Reply size={14} />}
                 label="Trả lời"
@@ -65,7 +69,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 setShowMenu(false);
               }}
             />
-            {!isBlocked && canEdit && (
+            {!isInteractionDisabled && canEdit && (
               <DropdownItem
                 icon={<Edit2 size={14} />}
                 label="Chỉnh sửa"
@@ -75,7 +79,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 }}
               />
             )}
-            {!isBlocked && isMe && (
+            {!isInteractionDisabled && isMe && (
               <DropdownItem
                 icon={<RotateCcw size={14} />}
                 label="Thu hồi"
@@ -88,7 +92,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
             )}
           </>
         )}
-        {!isBlocked && (
+        {!isInteractionDisabled && (
           <DropdownItem
             icon={<Trash2 size={14} />}
             label="Xóa phía tôi"
