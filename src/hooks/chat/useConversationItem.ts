@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { RtdbConversation, RtdbUserChat } from '../../../shared/types';
 import { formatChatTime } from '../../utils/dateUtils';
 import { useUserCache } from '../../store/userCacheStore';
 import { useRtdbChatStore } from '../../store';
 import { useConversationParticipants } from './useConversationParticipants';
 import { useMessageStatus } from './useMessageStatus';
+import { userService } from '../../services/userService';
 
 interface UseConversationItemProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
@@ -38,6 +39,14 @@ export const useConversationItem = ({
   );
 
   const isDataMissing = !conversation.data.isGroup && (!partner || !partner.fullName);
+
+  useEffect(() => {
+    if (conversation.data.isGroup || !partnerId) return;
+    const unsub = userService.subscribeToUser(partnerId, (u) => {
+      useUserCache.getState().setUser(u);
+    });
+    return () => unsub();
+  }, [partnerId, conversation.data.isGroup]);
 
   const chatInfo = useMemo(() => ({
     name: conversation.data.isGroup ? conversation.data.name || 'Nhóm chưa đặt tên' : partner?.fullName || '',
@@ -149,6 +158,7 @@ export const useConversationItem = ({
     conversation,
     currentUserId,
     usersMap,
+    partnerStatus: partner?.status as 'active' | 'banned' | undefined,
   });
 
   const displayTime = useMemo(() => {

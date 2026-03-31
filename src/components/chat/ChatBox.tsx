@@ -112,11 +112,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     !isBlocked
     , [conversation.data.isGroup, partner, isPartnerBanned, currentUserFriendIds, isBlockedByMe, isBlocked]);
 
+  const resolvedPartnerStatus = isPartnerBanned ? 'banned' : (partnerStatus ?? partner?.status as 'active' | 'banned' | undefined);
+
   const { lastReadByMap } = useMessageStatus({
     messages,
     conversation,
     currentUserId,
     usersMap,
+    partnerStatus: resolvedPartnerStatus,
   });
 
   return (
@@ -181,7 +184,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               avatarSrc={avatarSrc}
               partner={partner || undefined}
               isBlocked={isBlocked}
-              partnerStatus={partnerStatus}
+              partnerStatus={resolvedPartnerStatus}
               onCall={onCall}
               onJoinCall={onJoinCall}
               onEdit={onEdit}

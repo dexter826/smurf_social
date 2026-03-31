@@ -1,35 +1,28 @@
 import { useMemo } from 'react';
-import { RtdbMessage, RtdbConversation, User } from '../../../shared/types';
+import { RtdbMessage, RtdbConversation, User, UserStatus } from '../../../shared/types';
 import { useAuthStore } from '../../store/authStore';
 
 interface UseMessageStatusOptions {
-    /** Actual message objects from the messages store (most accurate source) */
     messages: Array<{ id: string; data: RtdbMessage }>;
     conversation: { data: RtdbConversation };
     currentUserId: string;
     usersMap: Record<string, User>;
+    partnerStatus?: 'active' | 'banned';
 }
 
 export interface MessageStatusResult {
-    /** Map of messageId → users who last read up to that message */
     lastReadByMap: Record<string, User[]>;
-    /** Readers of the last sent message by currentUser */
     lastMessageReaders: User[];
-    /** Whether the last sent message has been read by at least one other member */
     isLastMessageRead: boolean;
-    /** Whether the last sent message has been delivered to at least one other member */
     isLastMessageDelivered: boolean;
 }
 
-/**
- * Single source of truth for message read/delivered status.
- * Used by both ConversationItem (LastMessagePreview) and ChatBox to ensure consistency.
- */
 export function useMessageStatus({
     messages,
     conversation,
     currentUserId,
     usersMap,
+    partnerStatus,
 }: UseMessageStatusOptions): MessageStatusResult {
     const { settings } = useAuthStore();
 
@@ -38,26 +31,44 @@ export function useMessageStatus({
         [conversation.data.members]
     );
 
+    const isPartnerBanned = useMemo(() => {
+        if (conversation.data.isGroup) return false;
+        if (partnerStatus === 'banned') return true;
+        const memberIds = [...activeMembers].filter(uid => uid !== currentUserId);
+        const partnerId = memberIds[0];
+        if (!partnerId) return false;
+        return usersMap[partnerId]?.status === UserStatus.BANNED;
+    }, [conversation.data.isGroup, partnerStatus, activeMembers, currentUserId, usersMap]);
+
+    const eligibleMemberIds = useMemo(() => {
+        if (isPartnerBanned) return [];
+        return [...activeMembers].filter(uid => {
+            if (uid === currentUserId) return false;
+            const user = usersMap[uid];
+            return !user || user.status !== UserStatus.BANNED;
+        });
+    }, [isPartnerBanned, activeMembers, currentUserId, usersMap]);
+
     const lastReadByMap = useMemo(() => {
         const map: Record<string, User[]> = {};
 
         if (settings?.showReadReceipts === false) return map;
         if (messages.length === 0) return map;
+        if (eligibleMemberIds.length === 0) return map;
 
         const reversed = [...messages].reverse();
-        const memberIds = [...activeMembers].filter(uid => uid !== currentUserId);
 
         if (conversation.data.isGroup) {
-            memberIds.forEach(uid => {
+            eligibleMemberIds.forEach(uid => {
                 const user = usersMap[uid];
+                if (!user) return;
                 const lastReadMsg = reversed.find(m => m.data.readBy?.[uid]);
-                if (lastReadMsg && user) {
+                if (lastReadMsg) {
                     if (!map[lastReadMsg.id]) map[lastReadMsg.id] = [];
                     map[lastReadMsg.id].push(user);
                 }
             });
 
-            // Sort readers within each message by read timestamp
             Object.keys(map).forEach(msgId => {
                 const msg = messages.find(m => m.id === msgId);
                 if (msg?.data.readBy) {
@@ -70,7 +81,7 @@ export function useMessageStatus({
                 }
             });
         } else {
-            const partnerId = memberIds[0];
+            const partnerId = eligibleMemberIds[0];
             const partner = partnerId ? usersMap[partnerId] : null;
             if (partnerId && partner) {
                 const lastReadMsg = reversed.find(m => m.data.readBy?.[partnerId]);
@@ -81,9 +92,8 @@ export function useMessageStatus({
         }
 
         return map;
-    }, [messages, conversation.data.isGroup, activeMembers, currentUserId, usersMap, settings?.showReadReceipts]);
+    }, [messages, conversation.data.isGroup, eligibleMemberIds, usersMap, settings?.showReadReceipts]);
 
-    // Find the last message sent by currentUser to determine its status
     const lastSentMessage = useMemo(() => {
         for (let i = messages.length - 1; i >= 0; i--) {
             const msg = messages[i];
@@ -102,10 +112,12 @@ export function useMessageStatus({
     const isLastMessageRead = lastMessageReaders.length > 0;
 
     const isLastMessageDelivered = useMemo(() => {
-        if (!lastSentMessage) return false;
+        if (!lastSentMessage || eligibleMemberIds.length === 0) return false;
         const deliveredTo = lastSentMessage.data.deliveredTo || {};
-        return Object.keys(deliveredTo).some(uid => uid !== currentUserId && activeMembers.has(uid));
-    }, [lastSentMessage, currentUserId, activeMembers]);
+        return Object.keys(deliveredTo).some(
+            uid => uid !== currentUserId && eligibleMemberIds.includes(uid)
+        );
+    }, [lastSentMessage, currentUserId, eligibleMemberIds]);
 
     return {
         lastReadByMap,

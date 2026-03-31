@@ -97,8 +97,11 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
   const senderName = sender?.fullName || 'Người dùng';
 
-  const isDelivered = message.data.deliveredTo &&
-    Object.keys(message.data.deliveredTo).some(uid => uid !== currentUserId);
+  const isDelivered = useMemo(() => {
+    if (!isGroup && partnerStatus === 'banned') return false;
+    return !!(message.data.deliveredTo &&
+      Object.keys(message.data.deliveredTo).some(uid => uid !== currentUserId));
+  }, [message.data.deliveredTo, currentUserId, isGroup, partnerStatus]);
 
   const isPartnerBanned = !isGroup && partnerStatus === 'banned';
   const isInteractionDisabled = isBlocked || isPartnerBanned;
