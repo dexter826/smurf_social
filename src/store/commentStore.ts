@@ -5,6 +5,7 @@ import { commentService } from '../services/commentService';
 import { PAGINATION } from '../constants';
 import { getSafeMillis } from '../utils/timestampHelpers';
 import { canViewInteraction, filterInteractions } from '../utils/privacyUtils';
+import { useReactionStore } from './reactionStore';
 
 type SortOrder = 'asc' | 'desc';
 
@@ -40,7 +41,6 @@ const mergeOptimisticComments = (
 interface CommentState {
   rootComments: Record<string, Comment[]>;
   replies: Record<string, Record<string, Comment[]>>;
-  myCommentReactions: Record<string, string>; // commentId -> reactionType
 
   lastRootDoc: Record<string, DocumentSnapshot | null>;
   hasMoreRoot: Record<string, boolean>;
@@ -74,7 +74,6 @@ interface CommentState {
 export const useCommentStore = create<CommentState>((set, get) => ({
   rootComments: {},
   replies: {},
-  myCommentReactions: {},
   lastRootDoc: {},
   hasMoreRoot: {},
   lastReplyDoc: {},
@@ -100,7 +99,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     set({
       rootComments: {},
       replies: {},
-      myCommentReactions: {},
       lastRootDoc: {},
       hasMoreRoot: {},
       lastReplyDoc: {},
@@ -392,34 +390,21 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   },
 
   reactToComment: async (postId, commentId, userId, reaction, parentId) => {
-    const { rootComments, replies, myCommentReactions } = get();
+    const { setOptimisticReaction, clearOptimisticReaction } = useReactionStore.getState();
 
-    const findComment = (): Comment | undefined => parentId
-      ? replies[postId]?.[parentId]?.find(c => c.id === commentId)
-      : rootComments[postId]?.find(c => c.id === commentId);
-
-    const comment = findComment();
-    const prevMyReaction = myCommentReactions[commentId];
-    const isRemove = prevMyReaction === reaction || reaction === 'REMOVE';
-
-    // Update myCommentReactions
-    const newMyReactions = { ...myCommentReactions };
-    if (isRemove) {
-      delete newMyReactions[commentId];
-    } else {
-      newMyReactions[commentId] = reaction;
-    }
-
-    set({ myCommentReactions: newMyReactions });
+    const isRemove = reaction === 'REMOVE';
+    setOptimisticReaction(commentId, isRemove ? null : reaction);
 
     try {
       await commentService.reactToComment(commentId, userId, reaction);
+
+      setTimeout(() => {
+        clearOptimisticReaction(commentId);
+      }, 500);
     } catch (error) {
       console.error('Lỗi bày tỏ cảm xúc:', error);
-      // Rollback myCommentReactions
-      set(state => ({
-        myCommentReactions: { ...state.myCommentReactions, [commentId]: prevMyReaction },
-      }));
+      clearOptimisticReaction(commentId);
+      throw error;
     }
   },
 

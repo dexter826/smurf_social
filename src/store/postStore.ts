@@ -1,6 +1,6 @@
 import { Post, Visibility, PostStatus, ReactionType, MediaObject, PostType } from '../../shared/types';
 import { postService } from '../services/postService';
-import { DocumentSnapshot, Timestamp, onSnapshot, doc, serverTimestamp } from 'firebase/firestore';
+import { DocumentSnapshot, Timestamp, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { toast } from './toastStore';
 import { create } from 'zustand';
@@ -9,12 +9,10 @@ import { TOAST_MESSAGES, PAGINATION } from '../constants';
 import { getSafeMillis } from '../utils/timestampHelpers';
 import { convertDoc } from '../utils/firebaseUtils';
 import { useLoadingStore } from './loadingStore';
-
-// Xóa convertDocToPost cũ vì đã có convertDoc từ utils
+import { useReactionStore } from './reactionStore';
 
 interface PostState {
   posts: Post[];
-  myPostReactions: Record<string, string>;
   hasMore: boolean;
   lastDoc: DocumentSnapshot | null;
   abortController: AbortController | null;
@@ -45,7 +43,6 @@ export const usePostStore = create<PostState>()(
   persist(
     (set, get) => ({
       posts: [],
-      myPostReactions: {},
       hasMore: true,
       lastDoc: null,
       abortController: null,
@@ -62,7 +59,6 @@ export const usePostStore = create<PostState>()(
 
         set({
           posts: [],
-          myPostReactions: {},
           hasMore: true,
           lastDoc: null,
           abortController: null,
@@ -122,7 +118,6 @@ export const usePostStore = create<PostState>()(
 
           set({
             posts: dedupedPosts,
-            myPostReactions: get().myPostReactions,
             lastDoc: result.lastDoc,
             hasMore: result.hasMore,
             abortController: null,
@@ -426,30 +421,21 @@ export const usePostStore = create<PostState>()(
       },
 
       reactToPost: async (postId: string, userId: string, reaction: ReactionType | 'REMOVE') => {
-        const post = get().posts.find(p => p.id === postId) ?? get().selectedPost;
-        if (!post) return;
+        const { setOptimisticReaction, clearOptimisticReaction } = useReactionStore.getState();
 
-        const prevMyReaction = get().myPostReactions[postId];
-        const isRemove = prevMyReaction === reaction || reaction === 'REMOVE';
-
-        const newMyReactions = { ...get().myPostReactions };
-        if (isRemove) {
-          delete newMyReactions[postId];
-        } else {
-          newMyReactions[postId] = reaction;
-        }
-
-        set((state) => ({
-          myPostReactions: newMyReactions,
-        }));
+        const isRemove = reaction === 'REMOVE';
+        setOptimisticReaction(postId, isRemove ? null : reaction);
 
         try {
           await postService.reactToPost(postId, userId, reaction);
+
+          setTimeout(() => {
+            clearOptimisticReaction(postId);
+          }, 500);
         } catch (error) {
           console.error("Lỗi react bài viết:", error);
-          set((state) => ({
-            myPostReactions: { ...state.myPostReactions, [postId]: prevMyReaction },
-          }));
+          clearOptimisticReaction(postId);
+          throw error;
         }
       },
 
@@ -541,8 +527,7 @@ export const usePostStore = create<PostState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         posts: state.posts.slice(0, PAGINATION.FEED_CACHE_LIMIT),
-        lastFetchTime: state.lastFetchTime,
-        myPostReactions: state.myPostReactions
+        lastFetchTime: state.lastFetchTime
       }),
     }
   )

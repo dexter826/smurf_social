@@ -5,6 +5,7 @@ import { userService } from '../services/userService';
 import { useFriendIds } from './utils';
 import { useUserCache } from '../store/userCacheStore';
 import { usePostStore } from '../store/postStore';
+import { useReactionStore } from '../store/reactionStore';
 import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { getSafeMillis } from '../utils/timestampHelpers';
 
@@ -137,31 +138,23 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   }, [loading, loadingMore, hasMore, loadPosts]);
 
   const handleReact = useCallback(async (postId: string, reaction: ReactionType | 'REMOVE') => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
+    const { setOptimisticReaction, clearOptimisticReaction } = useReactionStore.getState();
 
-    const { myPostReactions } = usePostStore.getState();
-    const oldReaction = myPostReactions[postId];
-    const isRemove = oldReaction === reaction;
-
-    // Logic optimistic count nay duoc thay the bang useFilteredReactions
-
-    // Update myPostReactions in store
-    const newMyReactions = { ...myPostReactions };
-    if (isRemove) {
-      delete newMyReactions[postId];
-    } else {
-      newMyReactions[postId] = reaction;
-    }
-    usePostStore.setState({ myPostReactions: newMyReactions });
+    const isRemove = reaction === 'REMOVE';
+    setOptimisticReaction(postId, isRemove ? null : reaction);
 
     try {
-      await postService.reactToPost(postId, currentUser.id, isRemove ? 'REMOVE' : reaction);
+      await postService.reactToPost(postId, currentUser.id, reaction);
+
+      setTimeout(() => {
+        clearOptimisticReaction(postId);
+      }, 500);
     } catch (error) {
-      // Rollback myPostReactions in store
-      usePostStore.setState({ myPostReactions: { ...usePostStore.getState().myPostReactions, [postId]: oldReaction } });
+      console.error("Lỗi react bài viết:", error);
+      clearOptimisticReaction(postId);
+      throw error;
     }
-  }, [posts, currentUser.id]);
+  }, [currentUser.id]);
 
   const handleDelete = useCallback(async (postId: string, media?: any[]) => {
     try {
@@ -184,10 +177,10 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     onProgress?: (progress: number) => void
   ) => {
     const { updatePost } = usePostStore.getState();
-    
-    setDbPosts(prev => prev.map(p => 
-      p.id === postId 
-        ? { ...p, content, media, visibility, updatedAt: Timestamp.now() } 
+
+    setDbPosts(prev => prev.map(p =>
+      p.id === postId
+        ? { ...p, content, media, visibility, updatedAt: Timestamp.now() }
         : p
     ));
 

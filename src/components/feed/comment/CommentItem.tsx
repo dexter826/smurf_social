@@ -89,8 +89,6 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
     }
   }, [comment.authorId, onProfileClick, navigate]);
 
-  const myReaction = useCommentStore(state => state.myCommentReactions[comment.id] as ReactionType | null);
-
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     comment.id,
     'comment',
@@ -98,7 +96,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
     comment.reactionCount
   );
 
-  const displayReaction = myReaction || currentUserReaction;
+  const displayReaction = currentUserReaction;
 
   const handleReact = useCallback((reaction: ReactionType | 'REMOVE') => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);

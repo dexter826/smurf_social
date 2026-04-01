@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { ReactionType } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
+import { useReactionStore } from '../store/reactionStore';
 
 export const useFilteredReactions = (
   sourceId: string,
@@ -13,6 +14,11 @@ export const useFilteredReactions = (
   const currentUser = useAuthStore(state => state.user);
   const [reactionsMap, setReactionsMap] = useState<Record<string, ReactionType>>({});
   const [isLoading, setIsLoading] = useState(true);
+
+  const optimisticReaction = useReactionStore(state => state.optimisticReactions[sourceId]);
+  const clearOptimisticReaction = useReactionStore(state => state.clearOptimisticReaction);
+
+  const prevOptimisticRef = useRef<ReactionType | null | undefined>(undefined);
 
   useEffect(() => {
     if (!sourceId || !currentUser) return;
@@ -31,6 +37,23 @@ export const useFilteredReactions = (
       });
       setReactionsMap(map);
       setIsLoading(false);
+
+      if (optimisticReaction !== undefined && currentUser?.id) {
+        const firestoreReaction = map[currentUser.id];
+        const prevOptimistic = prevOptimisticRef.current;
+
+        const isSynced =
+          (optimisticReaction === null && !firestoreReaction) ||
+          (optimisticReaction && firestoreReaction === optimisticReaction);
+
+        if (isSynced && prevOptimistic === optimisticReaction) {
+          setTimeout(() => {
+            clearOptimisticReaction(sourceId);
+          }, 150);
+        }
+      }
+
+      prevOptimisticRef.current = optimisticReaction;
     }, (error) => {
       if (error.code !== 'permission-denied') {
         console.error(`Error subscribing to reactions for ${sourceId}:`, error);
@@ -39,28 +62,41 @@ export const useFilteredReactions = (
     });
 
     return () => unsubscribe();
-  }, [sourceId, sourceType, currentUser?.id]);
+  }, [sourceId, sourceType, currentUser?.id, optimisticReaction, clearOptimisticReaction]);
 
   const { filteredSummary, filteredCount, isReacted, currentUserReaction } = useMemo(() => {
     const summary: Partial<Record<ReactionType, number>> = {};
     let count = 0;
-    Object.values(reactionsMap).forEach(type => {
+
+    const firestoreReaction = reactionsMap[currentUser?.id || ''];
+    const hasOptimistic = optimisticReaction !== undefined;
+    const effectiveUserReaction = hasOptimistic ? optimisticReaction : firestoreReaction || null;
+
+    const tempMap = { ...reactionsMap };
+
+    if (hasOptimistic) {
+      if (optimisticReaction) {
+        tempMap[currentUser?.id || ''] = optimisticReaction;
+      } else {
+        delete tempMap[currentUser?.id || ''];
+      }
+    }
+
+    Object.values(tempMap).forEach(type => {
       summary[type] = (summary[type] || 0) + 1;
       count++;
     });
 
-    const currentUserReaction = reactionsMap[currentUser?.id || ''] || null;
-    const isReacted = !!currentUserReaction;
-
+    const isReacted = !!effectiveUserReaction;
     let finalCount = initialCount !== undefined ? Math.max(initialCount, count) : count;
 
     return {
       filteredSummary: summary,
       filteredCount: finalCount,
       isReacted,
-      currentUserReaction
+      currentUserReaction: effectiveUserReaction
     };
-  }, [reactionsMap, initialCount, currentUser?.id]);
+  }, [reactionsMap, initialCount, currentUser?.id, optimisticReaction]);
 
   return { filteredSummary, filteredCount, reactionsMap, isLoaded: !isLoading, isReacted, currentUserReaction };
 };

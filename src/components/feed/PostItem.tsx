@@ -41,7 +41,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const isUploading = !!uploadState && !uploadState.error;
   const error = uploadState?.error;
 
-  const myReaction = usePostStore(state => state.myPostReactions[post.id] as ReactionType | null);
   const isOwner = post.authorId === currentUser.id;
 
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
@@ -50,6 +49,8 @@ const PostItemInner: React.FC<PostItemProps> = ({
     post.authorId,
     post.reactionCount
   );
+
+  const displayReaction = currentUserReaction;
 
   const hasMedia = (post.media?.length ?? 0) > 0;
 
@@ -82,27 +83,27 @@ const PostItemInner: React.FC<PostItemProps> = ({
             initialStatus={author?.status}
             onClick={handleProfileClick}
           />
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h3
-                  className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
-                  onClick={handleProfileClick}
-                >
-                  {author?.fullName || 'Unknown User'}
-                </h3>
-                {post.type === PostType.AVATAR_UPDATE && (
-                  <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh đại diện mới.</span>
-                )}
-                {post.type === PostType.COVER_UPDATE && (
-                  <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh bìa mới.</span>
-                )}
-                {isUploading && !hasMedia && (
-                  <span className="text-xs text-info font-medium">
-                    Đang đăng...
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3
+                className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
+                onClick={handleProfileClick}
+              >
+                {author?.fullName || 'Unknown User'}
+              </h3>
+              {post.type === PostType.AVATAR_UPDATE && (
+                <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh đại diện mới.</span>
+              )}
+              {post.type === PostType.COVER_UPDATE && (
+                <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh bìa mới.</span>
+              )}
+              {isUploading && !hasMedia && (
+                <span className="text-xs text-info font-medium">
+                  Đang đăng...
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
               <span title={formatDateTime(post.createdAt)}>
                 {formatRelativeTime(post.createdAt)}
               </span>
@@ -165,7 +166,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
       <ReactionActions
         reactionSummary={filteredSummary}
         reactionCount={filteredCount}
-        myReaction={myReaction || currentUserReaction}
+        myReaction={displayReaction}
         commentCount={post.commentCount}
         onReact={onReact}
         onCommentClick={handleViewDetail}

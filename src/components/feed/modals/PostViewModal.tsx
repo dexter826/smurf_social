@@ -37,7 +37,6 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const navigate = useNavigate();
   const { openReportModal } = useReportStore();
   const friendIds = useFriendIds();
-  const myReaction = usePostStore(state => state.myPostReactions[post?.id || '']);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
@@ -45,7 +44,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     post?.id || '',
     'post',
-    post?.authorId || ''
+    post?.authorId || '',
+    post?.reactionCount
   );
 
   const handleProfileClick = useCallback(() => {
@@ -347,7 +347,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               <ReactionActions
                 reactionSummary={filteredSummary}
                 reactionCount={filteredCount}
-                myReaction={myReaction || currentUserReaction}
+                myReaction={currentUserReaction}
                 commentCount={post.commentCount}
                 onReact={(type) => onReact(post.id, type)}
                 onViewReactions={() => setIsReactionsModalOpen(true)}
