@@ -49,10 +49,14 @@ export function useAdminReports() {
     try {
       unsubscribeFn = reportService.subscribeToReports(
         (allReports) => {
+          const filteredStats = typeFilter === 'all'
+            ? allReports
+            : allReports.filter(r => r.targetType === typeFilter);
+
           setStats({
-            pending: allReports.filter(r => r.status === ReportStatus.PENDING).length,
-            resolved: allReports.filter(r => r.status === ReportStatus.RESOLVED).length,
-            rejected: allReports.filter(r => r.status === ReportStatus.REJECTED).length
+            pending: filteredStats.filter(r => r.status === ReportStatus.PENDING).length,
+            resolved: filteredStats.filter(r => r.status === ReportStatus.RESOLVED).length,
+            rejected: filteredStats.filter(r => r.status === ReportStatus.REJECTED).length,
           });
 
           let filtered = statusFilter === 'pending'

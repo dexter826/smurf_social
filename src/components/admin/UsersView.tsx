@@ -130,15 +130,15 @@ export const UsersView: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[80px]">
+              <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
                 <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Tổng</span>
                 <span className="text-lg font-black text-primary">{stats.total}</span>
               </div>
-              <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[80px]">
+              <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
                 <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Hoạt động</span>
                 <span className="text-lg font-black text-success">{stats.active}</span>
               </div>
-              <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[80px]">
+              <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
                 <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Bị khóa</span>
                 <span className="text-lg font-black text-error">{stats.banned}</span>
               </div>
@@ -146,7 +146,7 @@ export const UsersView: React.FC = () => {
           </div>
 
           {/* Search & Sort */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             <div className="flex-1 relative group">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary group-focus-within:text-primary transition-colors">
                 <Search size={18} />

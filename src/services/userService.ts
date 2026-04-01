@@ -323,7 +323,6 @@ export const userService = {
   getAdminStats: async (): Promise<{ total: number, active: number, banned: number }> => {
     try {
       const usersRef = collection(db, 'users');
-      // 2 count queries song song thay vì tải toàn bộ docs
       const [totalSnap, bannedSnap] = await Promise.all([
         getCountFromServer(usersRef),
         getCountFromServer(query(usersRef, where('status', '==', 'banned')))

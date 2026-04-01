@@ -31,9 +31,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
   } = useAdminReports();
 
   const tabs = [
-    { label: 'Chờ xử lý', value: 'pending', color: 'warning', icon: <Clock size={16} />, count: stats.pending },
-    { label: 'Đã xử lý', value: ReportStatus.RESOLVED, color: 'success', icon: <CheckCircle size={16} />, count: stats.resolved },
-    { label: 'Từ chối', value: ReportStatus.REJECTED, color: 'error', icon: <XCircle size={16} />, count: stats.rejected },
+    { label: 'Chờ xử lý', value: 'pending', color: 'warning', icon: <Clock size={16} /> },
+    { label: 'Đã xử lý', value: ReportStatus.RESOLVED, color: 'success', icon: <CheckCircle size={16} /> },
+    { label: 'Từ chối', value: ReportStatus.REJECTED, color: 'error', icon: <XCircle size={16} /> },
   ];
 
   const typeOptions = [
@@ -57,9 +57,40 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Filters & Tabs */}
-      <div className="bg-bg-primary p-4 border-b border-border-light space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+      {/* Header section */}
+      <div className="bg-bg-primary p-4 md:p-6 border-b border-border-light shadow-sm z-10 space-y-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-xl font-black text-text-primary flex items-center gap-2">
+              <Flag className="text-primary" size={24} />
+              Quản lý báo cáo
+            </h1>
+            <p className="text-xs text-text-tertiary mt-1">Xử lý các báo cáo vi phạm nội dung và người dùng</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
+              <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Chờ xử lý</span>
+              <span className="text-lg font-black text-warning">
+                {stats.pending || 0}
+              </span>
+            </div>
+            <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
+              <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Đã xử lý</span>
+              <span className="text-lg font-black text-success">
+                {stats.resolved || 0}
+              </span>
+            </div>
+            <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
+              <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Từ chối</span>
+              <span className="text-lg font-black text-error">
+                {stats.rejected || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="flex bg-bg-secondary p-1 rounded-xl border border-border-light w-full sm:w-auto">
             {tabs.map(tab => (
               <button
@@ -71,7 +102,6 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
                   }`}
               >
                 {tab.label}
-                <span className="opacity-50 font-medium">({tab.count})</span>
               </button>
             ))}
           </div>
