@@ -155,14 +155,11 @@ export const rtdbConversationService = {
                     const userChat = latestUserChats[convId];
                     if (userChat) {
                         conversationsMap.set(convId, { id: convId, data, userChat });
-                        updateCallback();
                     }
                 } else {
-                    if (conversationsMap.has(convId)) {
-                        conversationsMap.delete(convId);
-                        updateCallback();
-                    }
+                    conversationsMap.delete(convId);
                 }
+                updateCallback();
             });
             conversationListeners.set(convId, unsubConv);
         };

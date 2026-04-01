@@ -250,18 +250,22 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     },
 
     markAsRead: async (conversationId: string, userId: string) => {
-        try {
-            await rtdbMessageService.markAsRead(conversationId, userId);
-        } catch (error) {
-            console.error('[rtdbMessageSlice] Lỗi markAsRead:', error);
+        if (get().conversations.some(c => c.id === conversationId)) {
+            try {
+                await rtdbMessageService.markAsRead(conversationId, userId);
+            } catch (error) {
+                console.error('[rtdbMessageSlice] Lỗi markAsRead:', error);
+            }
         }
     },
 
     markAsDelivered: async (conversationId: string, userId: string) => {
-        try {
-            await rtdbMessageService.markAsDelivered(conversationId, userId);
-        } catch (error) {
-            console.error('[rtdbMessageSlice] Lỗi markAsDelivered:', error);
+        if (get().conversations.some(c => c.id === conversationId)) {
+            try {
+                await rtdbMessageService.markAsDelivered(conversationId, userId);
+            } catch (error) {
+                console.error('[rtdbMessageSlice] Lỗi markAsDelivered:', error);
+            }
         }
     },
 

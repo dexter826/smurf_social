@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { RtdbMessage, User, UserStatus } from '../../shared/types';
+import { RtdbMessage, RtdbConversation, RtdbUserChat, MemberRole, User, UserStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { useRtdbChatStore } from '../store';
 import { useContactStore } from '../store/contactStore';
@@ -51,10 +51,42 @@ export const useChat = () => {
   const sentRequests = useContactStore(state => state.sentRequests);
   const receivedRequests = useContactStore(state => state.receivedRequests);
 
-  const selectedConversation = useMemo(
-    () => conversations.find(c => c.id === selectedConversationId),
-    [conversations, selectedConversationId]
-  );
+  const selectedConversation = useMemo(() => {
+    const found = conversations.find(c => c.id === selectedConversationId);
+    if (found) return found;
+
+    if (!selectedConversationId?.startsWith('direct_') || !currentUser) return undefined;
+
+    const uids = selectedConversationId.replace('direct_', '').split('_');
+    const now = Date.now();
+    const members: Record<string, MemberRole> = {
+      [uids[0]]: 'admin',
+      [uids[1]]: 'member',
+    };
+    return {
+      id: selectedConversationId,
+      isVirtual: true,
+      data: {
+        isGroup: false,
+        creatorId: currentUser.id,
+        members,
+        typing: {},
+        createdAt: now,
+        updatedAt: now,
+      } as RtdbConversation,
+      userChat: {
+        isPinned: false,
+        isMuted: false,
+        isArchived: false,
+        unreadCount: 0,
+        lastReadMsgId: null,
+        lastMsgTimestamp: 0,
+        clearedAt: 0,
+        createdAt: now,
+        updatedAt: now,
+      } as RtdbUserChat,
+    };
+  }, [conversations, selectedConversationId, currentUser]);
 
   const filteredConversations = conversations;
 
@@ -153,7 +185,7 @@ export const useChat = () => {
 
 
   useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
+    if (!selectedConversationId || !currentUser || !isConversationInStore) return;
 
     const selectedConvData = conversations.find(c => c.id === selectedConversationId)?.data;
     const isGroup = selectedConvData?.isGroup || false;
@@ -166,10 +198,10 @@ export const useChat = () => {
     }
 
     markAsRead(selectedConversationId, currentUser.id);
-  }, [selectedConversationId, currentUser?.id]);
+  }, [selectedConversationId, currentUser?.id, isConversationInStore]);
 
   useEffect(() => {
-    if (!selectedConversationId || !currentUser) return;
+    if (!selectedConversationId || !currentUser || !isConversationInStore) return;
 
     const selectedConvData = conversations.find(c => c.id === selectedConversationId)?.data;
     const isGroup = selectedConvData?.isGroup || false;
@@ -186,7 +218,7 @@ export const useChat = () => {
       m.data.senderId !== currentUser.id && (!m.data.readBy || !m.data.readBy[currentUser.id])
     );
     if (hasUnread) markAsRead(selectedConversationId, currentUser.id);
-  }, [messages, selectedConversationId, currentUser, markAsRead, conversations, friendIds]);
+  }, [messages, selectedConversationId, currentUser, markAsRead, conversations, friendIds, isConversationInStore]);
 
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;

@@ -242,8 +242,7 @@ const ChatPage: React.FC = () => {
           onClearHistory={clearSearchHistory}
           onSelectUser={async (user) => {
             addToSearchHistory(user);
-            const convId = await getOrCreateConversation(currentUser.id, user.id);
-            handleSelectConversation(convId);
+            await getOrCreateConversation(currentUser.id, user.id);
             setSearchFocused(false);
           }}
           onSelectConversation={(id) => {

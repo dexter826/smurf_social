@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { User } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
-import { rtdbConversationService } from '../services/chat/rtdbConversationService';
 import { toast } from '../store/toastStore';
 import { useUserCache } from '../store/userCacheStore';
 import { TOAST_MESSAGES } from '../constants';
@@ -50,18 +49,15 @@ export const useProfile = () => {
 
   const canViewContent = isOwnProfile || !block.isActivityBlockedByPartner;
 
-  const handleMessage = useCallback(async () => {
+  const handleMessage = useCallback(() => {
     if (!currentUser || !profile) return;
     if (profile.status === 'banned') {
       toast.error(TOAST_MESSAGES.CHAT.BLOCKED_USER);
       return;
     }
-    try {
-      const conversationId = await rtdbConversationService.getOrCreateDirect(currentUser.id, profile.id);
-      navigate(`/?conv=${conversationId}`);
-    } catch {
-      toast.error(TOAST_MESSAGES.CHAT.OPEN_FAILED);
-    }
+    const sortedIds = [currentUser.id, profile.id].sort();
+    const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
+    navigate(`/?conv=${convId}`);
   }, [currentUser, profile, navigate]);
 
   const handleSaveProfile = useCallback(async (data: Partial<User>) => {

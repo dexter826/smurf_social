@@ -1,7 +1,6 @@
 import { StateCreator } from 'zustand';
 import { RtdbConversation, RtdbUserChat, User } from '../../../shared/types';
 import { rtdbConversationService } from '../../services/chat/rtdbConversationService';
-import { userService } from '../../services/userService';
 import { friendService } from '../../services/friendService';
 import { useAuthStore } from '../authStore';
 import { useLoadingStore } from '../loadingStore';
@@ -69,9 +68,8 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
 
     selectConversation: (conversationId: string | null) => {
         set({ selectedConversationId: conversationId });
-
-        // Mark as read when selecting conversation
-        if (conversationId) {
+        
+        if (conversationId && get().conversations.some(c => c.id === conversationId)) {
             const { user } = useAuthStore.getState();
             if (user) {
                 rtdbConversationService.resetUnreadCount(user.id, conversationId).catch(err => {
@@ -82,14 +80,10 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
     },
 
     getOrCreateConversation: async (user1Id: string, user2Id: string) => {
-        try {
-            const conversationId = await rtdbConversationService.getOrCreateDirect(user1Id, user2Id);
-            set({ selectedConversationId: conversationId });
-            return conversationId;
-        } catch (error) {
-            console.error("Lỗi lấy hoặc tạo hội thoại:", error);
-            throw error;
-        }
+        const sortedIds = [user1Id, user2Id].sort();
+        const conversationId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
+        set({ selectedConversationId: conversationId });
+        return conversationId;
     },
 
     searchConversations: async (userId: string, term: string) => {
