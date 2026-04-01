@@ -929,44 +929,42 @@ export const rtdbMessageService = {
             if (!msgSnap.exists()) return;
             const msgData = msgSnap.val() as RtdbMessage;
 
-            await update(ref(rtdb), {
-                [`messages/${convId}/${msgId}/content`]: newContent,
-                [`messages/${convId}/${msgId}/updatedAt`]: Date.now(),
-            });
-
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
             if (!convSnap.exists()) return;
 
             const conv = convSnap.val() as RtdbConversation;
-            const convUpdates: Record<string, any> = {};
 
-            if (payload?.status === 'missed') {
-                const memberIds = Object.keys(conv.members || {});
-                const userChatChecks = await Promise.all(
-                    memberIds
-                        .filter(mId => mId !== msgData.senderId)
-                        .map(async mId => ({
-                            mId,
-                            exists: (await get(ref(rtdb, `user_chats/${mId}/${convId}`))).exists()
-                        }))
-                );
-                for (const { mId, exists } of userChatChecks) {
-                    if (exists) {
-                        convUpdates[`user_chats/${mId}/${convId}/unreadCount`] = increment(1);
-                    }
-                }
-            }
+            const coreUpdates: Record<string, any> = {
+                [`messages/${convId}/${msgId}/content`]: newContent,
+                [`messages/${convId}/${msgId}/updatedAt`]: Date.now(),
+            };
 
             if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
-                convUpdates[`conversations/${convId}/lastMessage/content`] = payload
+                coreUpdates[`conversations/${convId}/lastMessage/content`] = payload
                     ? JSON.stringify(payload)
                     : newContent;
-                convUpdates[`conversations/${convId}/updatedAt`] = Date.now();
+                coreUpdates[`conversations/${convId}/updatedAt`] = Date.now();
             }
 
-            if (Object.keys(convUpdates).length > 0) {
-                await update(ref(rtdb), convUpdates);
+            await update(ref(rtdb), coreUpdates);
+
+            if (payload?.status === 'missed') {
+                try {
+                    const memberIds = Object.keys(conv.members || {});
+                    const unreadUpdates: Record<string, any> = {};
+
+                    memberIds
+                        .filter(mId => mId !== msgData.senderId)
+                        .forEach(mId => {
+                            unreadUpdates[`user_chats/${mId}/${convId}/unreadCount`] = increment(1);
+                        });
+
+                    if (Object.keys(unreadUpdates).length > 0) {
+                        await update(ref(rtdb), unreadUpdates);
+                    }
+                } catch {
+                }
             }
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi updateMessageContent:', error);

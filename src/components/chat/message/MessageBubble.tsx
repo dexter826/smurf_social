@@ -268,6 +268,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               <MessageContent
                 message={message}
                 isMe={isMe}
+                isGroup={isGroup}
                 uploadProgress={uploadProgress}
                 isPlaying={isPlaying}
                 onToggleVoice={handleToggleVoice}

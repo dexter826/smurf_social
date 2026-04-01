@@ -9,6 +9,7 @@ import { downloadFile } from '../../../utils';
 interface MessageContentProps {
   message: { id: string; data: RtdbMessage };
   isMe: boolean;
+  isGroup?: boolean;
   uploadProgress: Record<string, { progress: number; error?: boolean }>;
   isPlaying: boolean;
   onToggleVoice: (e: React.MouseEvent) => void;
@@ -20,6 +21,7 @@ interface MessageContentProps {
 const MessageContentInner: React.FC<MessageContentProps> = ({
   message,
   isMe,
+  isGroup = false,
   uploadProgress,
   isPlaying,
   onToggleVoice,
@@ -295,19 +297,26 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
       const { callType, status, duration } = parsed;
       const isVideo = callType === 'video';
 
-      // Nhãn tiêu đề
       let title = '';
-      if (status === 'started') {
-        title = isVideo ? 'Cuộc gọi video đang diễn ra' : 'Cuộc gọi thoại đang diễn ra';
-      } else if (status === 'ended') {
-        const typeStr = isVideo ? 'video' : 'thoại';
-        title = isMe ? `Cuộc gọi ${typeStr} đi` : `Cuộc gọi ${typeStr} đến`;
-      } else if (status === 'missed') {
-        title = isVideo ? 'Cuộc gọi video nhỡ' : 'Cuộc gọi thoại nhỡ';
+      if (isGroup) {
+        if (status === 'started') {
+          title = 'Cuộc gọi nhóm đang diễn ra';
+        } else if (status === 'ended') {
+          title = 'Cuộc gọi nhóm';
+        } else {
+          title = 'Cuộc gọi nhóm đã kết thúc';
+        }
       } else {
-        title = isVideo ? 'Cuộc gọi video bị từ chối' : 'Cuộc gọi thoại bị từ chối';
+        if (status === 'ended') {
+          title = isMe ? 'Cuộc gọi đi' : 'Cuộc gọi đến';
+        } else if (status === 'missed') {
+          title = 'Cuộc gọi nhỡ';
+        } else if (status === 'rejected') {
+          title = isMe ? 'Cuộc gọi bị từ chối' : 'Cuộc gọi';
+        } else {
+          title = 'Cuộc gọi';
+        }
       }
-
 
       // Thời lượng
       let durationStr = '';
@@ -317,7 +326,10 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`;
       }
 
-      const isMissedOrRejected = status === 'missed' || status === 'rejected';
+      const isMissedOrRejected = !isGroup && (
+        (status === 'missed' && !isMe) ||
+        (status === 'rejected' && isMe)
+      );
       const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-primary');
 
       const buttonClass = `mt-2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all outline-none shadow-sm ${isMe
