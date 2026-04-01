@@ -8,7 +8,7 @@ import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
 import { usePostStore } from '../../../store/postStore';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
-import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from '../shared';
+import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from '../shared';
 import { MediaViewer } from '../../ui';
 
 interface PostViewModalProps {
@@ -152,6 +152,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
   const isOwner = post.authorId === currentUser.id;
   const hasMedia = allMedia.length > 0;
+  const isSystemPost = post.type === PostType.AVATAR_UPDATE || post.type === PostType.COVER_UPDATE;
 
   return (
     <Modal
@@ -161,9 +162,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       maxWidth={hasMedia ? 'full' : '2xl'}
       padding="none"
       fullScreen={hasMedia ? true : 'mobile'}
-      className={`
-        transition-all duration-base overflow-hidden
-      `}
+      className="transition-all duration-base overflow-hidden"
       bodyClassName={`overflow-hidden flex flex-col ${hasMedia ? 'lg:flex-row h-full' : 'h-auto max-h-[90vh]'}`}
     >
 
@@ -175,6 +174,13 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             <div className="w-full h-full flex items-center justify-center">
               {!allMedia[activeMediaIndex] ? (
                 <div className="text-white/40">Không tìm thấy nội dung</div>
+              ) : isSystemPost ? (
+                <SystemPostMedia 
+                  type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
+                  media={post.media || []}
+                  variant="cinema"
+                  onClick={() => setIsMediaViewerOpen(true)}
+                />
               ) : allMedia[activeMediaIndex].type === 'video' ? (
                 <video
                   src={allMedia[activeMediaIndex].url}
@@ -188,7 +194,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 <img
                   src={allMedia[activeMediaIndex].url}
                   alt=""
-                  className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-base"
+                  className="max-width-full max-h-full object-contain cursor-pointer transition-all hover:opacity-95 animate-in fade-in zoom-in-95 duration-base"
                   onClick={() => setIsMediaViewerOpen(true)}
                 />
               )}
@@ -288,7 +294,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               <Dropdown
                 trigger={<IconButton icon={<MoreHorizontal size={20} />} size="md" variant="ghost" />}
               >
-                <DropdownItem icon={<Edit size={18} />} label="Chỉnh sửa bài viết" onClick={() => onEdit?.(post.id)} />
+                <DropdownItem 
+                  icon={<Edit size={18} />} 
+                  label={isSystemPost ? "Chỉnh sửa quyền riêng tư" : "Chỉnh sửa bài viết"} 
+                  onClick={() => onEdit?.(post.id)} 
+                />
                 <DropdownItem icon={<Trash2 size={18} />} label="Xóa bài viết" variant="danger" onClick={() => onDelete?.(post.id)} />
               </Dropdown>
             ) : (
@@ -325,18 +335,27 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               {/* Media Grid cho Mobile */}
               {hasMedia && (
                 <div className="lg:hidden w-full">
-                  <PostMediaGrid
-                    media={post.media || []}
-                    onItemClick={(index) => {
-                      setActiveMediaIndex(index);
-                      setIsMediaViewerOpen(true);
-                    }}
-                  />
+                  {!isSystemPost ? (
+                    <PostMediaGrid
+                      media={post.media || []}
+                      onItemClick={(index) => {
+                        setActiveMediaIndex(index);
+                        setIsMediaViewerOpen(true);
+                      }}
+                    />
+                  ) : (
+                    <SystemPostMedia 
+                      type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
+                      media={post.media || []}
+                      variant="cinema"
+                      onClick={() => setIsMediaViewerOpen(true)}
+                    />
+                  )}
                 </div>
               )}
 
               {/* Noi dung van ban */}
-              {(post.type === PostType.REGULAR || post.content) && post.type === PostType.REGULAR && (
+              {!isSystemPost && post.content && (
                 <div className="px-5 md:px-6 py-4 pb-3 w-full overflow-hidden">
                   <p className="text-text-primary whitespace-pre-line break-words break-all text-[15px] md:text-[16px] leading-[1.6] w-full">
                     <TruncatedText content={post.content} threshold={300} />

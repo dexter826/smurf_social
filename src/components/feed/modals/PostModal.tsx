@@ -6,7 +6,7 @@ import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, ConfirmDial
 import { CircularProgressOverlay } from '../../ui/CircularProgress';
 import { toast } from '../../../store/toastStore';
 import { validateFileSize } from '../../../utils';
-import { User, Post, Visibility, MediaObject } from '../../../../shared/types';
+import { User, Post, Visibility, MediaObject, PostType } from '../../../../shared/types';
 import { postSchema, PostFormValues } from '../../../utils/validation';
 import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../../constants';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
@@ -39,6 +39,7 @@ export const PostModal: React.FC<PostModalProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isEdit = !!initialPost;
+  const isSystemPost = isEdit && initialPost?.type !== PostType.REGULAR;
 
   const {
     register,
@@ -254,7 +255,7 @@ export const PostModal: React.FC<PostModalProps> = ({
     const hasContent = !!formData.content?.trim();
     const hasMedia = formData.media.length > 0 || pendingFiles.length > 0;
 
-    if (hasContent || hasMedia) {
+    if (!isSystemPost && (hasContent || hasMedia)) {
       setShowDiscardConfirm(true);
     } else {
       onClose();
@@ -268,53 +269,55 @@ export const PostModal: React.FC<PostModalProps> = ({
       <Modal
         isOpen={isOpen}
         onClose={handleCloseAttempt}
-        title={isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
+        title={isSystemPost ? 'Chỉnh sửa quyền riêng tư' : isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
         maxWidth="2xl"
         padding="none"
         fullScreen="mobile"
         footer={
           <div className="w-full">
             {/* Media Actions */}
-            <div className="flex items-center justify-between mb-4 bg-bg-secondary p-2.5 md:p-3 rounded-xl border border-border-light shadow-sm">
-              <span className="text-[13px] md:text-sm font-semibold text-text-secondary leading-none">Thêm vào bài viết</span>
-              <div className="flex gap-0.5 md:gap-1">
-                <IconButton
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="group rounded-full"
-                  title="Ảnh"
-                  disabled={isSubmitting}
-                  icon={<ImageIcon className="text-success transition-all duration-base" size={20} />}
-                  size="md"
-                />
-                <IconButton
-                  type="button"
-                  onClick={() => videoInputRef.current?.click()}
-                  className="group rounded-full"
-                  title="Video"
-                  disabled={isSubmitting}
-                  icon={<Video className="text-info transition-all duration-base" size={20} />}
-                  size="md"
-                />
-                <div className="flex items-center">
-                  <EmojiPicker
-                    buttonClassName="hover:bg-bg-hover rounded-full group w-11 h-11 flex items-center justify-center transition-all duration-base"
-                    onEmojiSelect={(emoji) => {
-                      insertTextAtCursor(textareaRef, formData.content || '', emoji, (newText) => {
-                        setValue('content', newText, { shouldDirty: true });
-                      });
-                    }}
+            {!isSystemPost && (
+              <div className="flex items-center justify-between mb-4 bg-bg-secondary p-2.5 md:p-3 rounded-xl border border-border-light shadow-sm">
+                <span className="text-[13px] md:text-sm font-semibold text-text-secondary leading-none">Thêm vào bài viết</span>
+                <div className="flex gap-0.5 md:gap-1">
+                  <IconButton
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="group rounded-full"
+                    title="Ảnh"
                     disabled={isSubmitting}
-                    size={22}
-                    buttonSize="lg"
-                    iconClassName="text-warning transition-all duration-base"
+                    icon={<ImageIcon className="text-success transition-all duration-base" size={20} />}
+                    size="md"
                   />
+                  <IconButton
+                    type="button"
+                    onClick={() => videoInputRef.current?.click()}
+                    className="group rounded-full"
+                    title="Video"
+                    disabled={isSubmitting}
+                    icon={<Video className="text-info transition-all duration-base" size={20} />}
+                    size="md"
+                  />
+                  <div className="flex items-center">
+                    <EmojiPicker
+                      buttonClassName="hover:bg-bg-hover rounded-full group w-11 h-11 flex items-center justify-center transition-all duration-base"
+                      onEmojiSelect={(emoji) => {
+                        insertTextAtCursor(textareaRef, formData.content || '', emoji, (newText) => {
+                          setValue('content', newText, { shouldDirty: true });
+                        });
+                      }}
+                      disabled={isSubmitting}
+                      size={22}
+                      buttonSize="lg"
+                      iconClassName="text-warning transition-all duration-base"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
-              <input ref={videoInputRef} type="file" accept="video/*" multiple onChange={handleFileSelect} className="hidden" />
-            </div>
+                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
+                <input ref={videoInputRef} type="file" accept="video/*" multiple onChange={handleFileSelect} className="hidden" />
+              </div>
+            )}
 
             <Button
               variant="primary"
@@ -363,22 +366,24 @@ export const PostModal: React.FC<PostModalProps> = ({
           </div>
 
           <div className="flex-1 px-4 md:px-6 pt-3 md:pt-4 pb-6">
-            <div className="relative group">
-              <textarea
-                {...register('content')}
-                ref={(e) => {
-                  register('content').ref(e);
-                  (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
-                }}
-                placeholder="Hãy viết gì đó..."
-                className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 ${(formData.content?.length || 0) < 85 && formData.media.length === 0 && previews.length === 0
-                  ? 'text-xl md:text-2xl font-medium min-h-[120px]'
-                  : 'text-base md:text-lg min-h-[100px]'
-                  }`}
-                disabled={isSubmitting}
-                autoFocus
-              />
-            </div>
+            {!isSystemPost && (
+              <div className="relative group">
+                <textarea
+                  {...register('content')}
+                  ref={(e) => {
+                    register('content').ref(e);
+                    (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
+                  }}
+                  placeholder="Hãy viết gì đó..."
+                  className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 ${(formData.content?.length || 0) < 85 && formData.media.length === 0 && previews.length === 0
+                    ? 'text-xl md:text-2xl font-medium min-h-[120px]'
+                    : 'text-base md:text-lg min-h-[100px]'
+                    }`}
+                  disabled={isSubmitting}
+                  autoFocus
+                />
+              </div>
+            )}
 
 
             {/* Media Preview Section */}
@@ -423,21 +428,23 @@ export const PostModal: React.FC<PostModalProps> = ({
                           />
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (item.isPending) {
-                              const pIdx = previews.findIndex(p => p.url === item.url);
-                              if (pIdx !== -1) handleRemovePending(pIdx);
-                            } else {
-                              const mIdx = formData.media.findIndex(m => m.url === item.url);
-                              if (mIdx !== -1) handleRemoveMedia(mIdx);
-                            }
-                          }}
-                          className="absolute top-2 right-2 p-1.5 min-w-[36px] min-h-[36px] flex items-center justify-center bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90 z-30"
-                        >
-                          <X size={18} />
-                        </button>
+                        {!isSystemPost && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (item.isPending) {
+                                const pIdx = previews.findIndex(p => p.url === item.url);
+                                if (pIdx !== -1) handleRemovePending(pIdx);
+                              } else {
+                                const mIdx = formData.media.findIndex(m => m.url === item.url);
+                                if (mIdx !== -1) handleRemoveMedia(mIdx);
+                              }
+                            }}
+                            className="absolute top-2 right-2 p-1.5 min-w-[36px] min-h-[36px] flex items-center justify-center bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base hover:bg-black/70 active:bg-black/90 z-30"
+                          >
+                            <X size={18} />
+                          </button>
+                        )}
                       </div>
                     );
                   })}

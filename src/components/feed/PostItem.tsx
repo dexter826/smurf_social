@@ -7,7 +7,7 @@ import { Post, PostStatus, Visibility, PostType, User, ReportType, ReactionType 
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store/postStore';
 import { useFriendIds, useFilteredReactions } from '../../hooks';
-import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid } from './shared';
+import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from './shared';
 import { ReactionDetailsModal } from '../ui';
 
 interface PostItemProps {
@@ -69,47 +69,40 @@ const PostItemInner: React.FC<PostItemProps> = ({
     onReactProp(post.id, type);
   };
 
-  return (
-    <div className="bg-bg-primary rounded-xl shadow-sm border-2 border-border-light overflow-hidden mb-4 transition-all duration-base relative">
+  const isSystemPost = post.type === PostType.AVATAR_UPDATE || post.type === PostType.COVER_UPDATE;
 
-      {/* Header */}
-      <div className="p-4 flex items-start justify-between">
-        <div className="flex gap-3">
-          <UserAvatar
-            userId={author?.id}
-            src={author?.avatar?.url}
-            name={author?.fullName}
-            size="md"
-            initialStatus={author?.status}
-            onClick={handleProfileClick}
-          />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3
-                className="font-semibold text-text-primary text-[15px] cursor-pointer hover:underline"
-                onClick={handleProfileClick}
-              >
-                {author?.fullName || 'Unknown User'}
-              </h3>
-              {post.type === PostType.AVATAR_UPDATE && (
-                <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh đại diện mới.</span>
-              )}
-              {post.type === PostType.COVER_UPDATE && (
-                <span className="text-[14.5px] text-text-secondary font-normal">vừa cập nhật ảnh bìa mới.</span>
-              )}
-              {isUploading && !hasMedia && (
-                <span className="text-xs text-info font-medium">
-                  Đang đăng...
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-0.5">
-              <span title={formatDateTime(post.createdAt)}>
-                {formatRelativeTime(post.createdAt)}
-              </span>
-              <span>•</span>
-              <VisibilityBadge visibility={post.visibility} size={12} />
-            </div>
+  return (
+    <div className="bg-bg-primary border border-border-light sm:rounded-xl overflow-hidden transition-theme group/post animate-in fade-in duration-base mb-4">
+      <div className="flex items-center px-4 py-3 gap-3">
+        <UserAvatar
+          userId={author?.id}
+          src={author?.avatar?.url}
+          name={author?.fullName}
+          size="md"
+          initialStatus={author?.status}
+          onClick={handleProfileClick}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h4
+              className="font-bold text-text-primary text-[15px] hover:underline cursor-pointer truncate"
+              onClick={handleProfileClick}
+            >
+              {author?.fullName || 'Người dùng'}
+            </h4>
+            {post.type === PostType.AVATAR_UPDATE && (
+              <span className="text-[14px] text-text-secondary font-normal">vừa cập nhật ảnh đại diện mới.</span>
+            )}
+            {post.type === PostType.COVER_UPDATE && (
+              <span className="text-[14px] text-text-secondary font-normal">vừa cập nhật ảnh bìa mới.</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-[12px] text-text-tertiary mt-0.5">
+            <span title={formatDateTime(post.createdAt)}>
+              {formatRelativeTime(post.createdAt)}
+            </span>
+            <span className="opacity-40">•</span>
+            <VisibilityBadge visibility={post.visibility} size={12} />
           </div>
         </div>
 
@@ -119,7 +112,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
           >
             <DropdownItem
               icon={<Edit size={16} />}
-              label="Chỉnh sửa"
+              label={isSystemPost ? "Chỉnh sửa quyền riêng tư" : "Chỉnh sửa"}
               onClick={() => onEdit?.(post.id)}
             />
             <DropdownItem
@@ -143,7 +136,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      {(post.type === PostType.REGULAR || post.content) && post.type === PostType.REGULAR && (
+      {!isSystemPost && post.content && (
         <div className="px-4 pb-3 relative w-full overflow-hidden">
           <p className="text-text-primary whitespace-pre-line break-words break-all text-[15px] leading-relaxed w-full">
             <TruncatedText content={post.content} threshold={300} />
@@ -157,11 +150,19 @@ const PostItemInner: React.FC<PostItemProps> = ({
         </div>
       )}
 
-      <PostMediaGrid
-        media={post.media || []}
-        onClick={handleViewDetail}
-        uploadProgress={uploadState?.progress}
-      />
+      {!isSystemPost ? (
+        <PostMediaGrid
+          media={post.media || []}
+          onClick={handleViewDetail}
+          uploadProgress={uploadState?.progress}
+        />
+      ) : (
+        <SystemPostMedia 
+          type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
+          media={post.media || []}
+          onClick={handleViewDetail}
+        />
+      )}
 
       <ReactionActions
         reactionSummary={filteredSummary}

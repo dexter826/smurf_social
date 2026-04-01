@@ -31,7 +31,6 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
         }
     }, [isOpen, initialIndex]);
 
-    // Dừng video khi chuyển slide.
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.pause();
@@ -130,28 +129,25 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
         >
-            {/* Top bar — close + counter */}
-            <div className="relative flex-shrink-0 flex items-center justify-between px-4 py-3 z-[var(--z-dialog)]" onClick={e => e.stopPropagation()}>
-                {/* Counter (căn giữa) */}
-                <div className="flex-1 flex justify-center">
+            <div className="relative flex-shrink-0 flex items-center justify-between px-4 py-3 min-h-[64px] z-[var(--z-dialog)] bg-gradient-to-b from-black/60 to-transparent" onClick={e => e.stopPropagation()}>
+                <div className="w-12 h-12 hidden md:block" />
+                <div className="flex-1 flex justify-center items-center">
                     {media.length > 1 && (
-                        <span className="text-white/90 font-medium text-base bg-black/40 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10">
+                        <span className="text-white/90 font-medium text-base bg-black/40 px-5 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-lg">
                             {currentIndex + 1} / {media.length}
                         </span>
                     )}
                 </div>
-                {/* Close button — absolute right để không đẩy counter lệch */}
                 <button
-                    className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full transition-all duration-base backdrop-blur-md border border-white/5"
+                    className="p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full transition-all duration-base backdrop-blur-md border border-white/5 shadow-xl hover:scale-105 active:scale-95"
                     onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    title="Đóng (Esc)"
                 >
                     <X size={24} />
                 </button>
             </div>
 
-            {/* Media area — chiếm phần còn lại, không tràn lên top bar */}
             <div className="flex-1 min-h-0 relative flex items-center justify-center px-4 pb-4 md:px-20">
-                {/* Prev / Next */}
                 {media.length > 1 && (
                     <>
                         <button
@@ -168,8 +164,6 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                         </button>
                     </>
                 )}
-
-                {/* Video Play/Pause overlay */}
                 {currentMedia?.type === 'video' && (
                     <button
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-full backdrop-blur-md border border-white/10 z-[var(--z-dialog)] transition-all duration-base"

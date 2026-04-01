@@ -175,7 +175,7 @@ export const userService = {
         await postService.createPost({
           authorId: userId,
           type: type === 'avatar' ? PostType.AVATAR_UPDATE : PostType.COVER_UPDATE,
-          content: SOCIAL_MESSAGES[type === 'avatar' ? 'UPDATE_AVATAR' : 'UPDATE_COVER'],
+          content: '',
           media: [mediaObject],
           visibility: settings.defaultPostVisibility,
           updatedAt: serverTimestamp() as any
