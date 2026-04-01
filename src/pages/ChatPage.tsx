@@ -114,10 +114,10 @@ const ChatPage: React.FC = () => {
   const convIdFromUrl = searchParams.get('conv');
 
   useEffect(() => {
-    if (convIdFromUrl && convIdFromUrl !== selectedConversationId) {
-      handleSelectConversation(convIdFromUrl);
-    }
-  }, [convIdFromUrl, selectedConversationId, handleSelectConversation]);
+    if (!convIdFromUrl) return;
+    handleSelectConversation(convIdFromUrl);
+    navigate('/', { replace: true });
+  }, [convIdFromUrl]);
 
 
   const [showDetails, setShowDetails] = useState(false);
@@ -171,8 +171,8 @@ const ChatPage: React.FC = () => {
       type,
       selectedConversationId,
       isGroup,
-      !isGroup ? partner?.fullName : (selectedConversation?.data.groupName || 'Cuộc gọi nhóm'),
-      !isGroup ? partner?.avatar?.url : (selectedConversation?.data.groupAvatar?.url),
+      !isGroup ? partner?.fullName : (selectedConversation?.data.name || 'Cuộc gọi nhóm'),
+      !isGroup ? partner?.avatar?.url : (selectedConversation?.data.avatar?.url),
       isCallBlockedByPartner,
       isCallBlockedByMe
     );
@@ -215,6 +215,7 @@ const ChatPage: React.FC = () => {
 
   const handleBackToList = () => {
     handleSelectConversation(null);
+    navigate('/', { replace: true });
   };
 
   return (

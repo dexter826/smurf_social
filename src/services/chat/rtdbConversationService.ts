@@ -69,18 +69,43 @@ export const rtdbConversationService = {
         try {
             const sortedIds = [user1Id, user2Id].sort();
             const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
+            const now = Date.now();
 
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
 
-            if (convSnap.exists()) {
+            if (!convSnap.exists()) {
+                const updates: Record<string, any> = {};
+                updates[`conversations/${convId}`] = {
+                    isGroup: false,
+                    name: null,
+                    avatar: null,
+                    creatorId: user1Id,
+                    members: { [user1Id]: 'admin', [user2Id]: 'member' },
+                    typing: {},
+                    lastMessage: null,
+                    createdAt: now,
+                    updatedAt: now
+                } as RtdbConversation;
+                [user1Id, user2Id].forEach(uid => {
+                    updates[`user_chats/${uid}/${convId}`] = {
+                        isPinned: false,
+                        isMuted: false,
+                        isArchived: false,
+                        unreadCount: 0,
+                        lastReadMsgId: null,
+                        lastMsgTimestamp: now,
+                        clearedAt: 0,
+                        createdAt: now,
+                        updatedAt: now
+                    } as RtdbUserChat;
+                });
+                await update(ref(rtdb), updates);
+            } else {
                 const updates: Record<string, any> = {};
                 updates[`user_chats/${user1Id}/${convId}/isArchived`] = false;
-                updates[`user_chats/${user2Id}/${convId}/isArchived`] = false;
-                updates[`user_chats/${user1Id}/${convId}/clearedAt`] = 0;
-                updates[`user_chats/${user2Id}/${convId}/clearedAt`] = 0;
-                updates[`user_chats/${user1Id}/${convId}/updatedAt`] = Date.now();
-                updates[`user_chats/${user2Id}/${convId}/updatedAt`] = Date.now();
+                updates[`user_chats/${user1Id}/${convId}/lastMsgTimestamp`] = now;
+                updates[`user_chats/${user1Id}/${convId}/updatedAt`] = now;
                 await update(ref(rtdb), updates);
             }
 
