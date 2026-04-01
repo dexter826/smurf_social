@@ -26,11 +26,6 @@ export const rtdbCallService = {
             if (!friendDoc.exists()) {
                 return { success: false, reason: 'not_friend' };
             }
-
-            const existing = await rtdbCallService.getCallSignaling(recipientId);
-            if (existing?.status === 'ringing' || existing?.status === 'accepted') {
-                return { success: false, reason: 'busy' };
-            }
         }
 
         const now = Date.now();

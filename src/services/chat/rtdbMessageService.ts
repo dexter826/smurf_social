@@ -920,53 +920,53 @@ export const rtdbMessageService = {
     },
 
     /**
-     * Cập nhật nội dung tin nhắn hiện có
+     * Cập nhật nội dung call message
      */
     updateMessageContent: async (convId: string, msgId: string, newContent: string, payload?: any): Promise<void> => {
         try {
             const msgRef = ref(rtdb, `messages/${convId}/${msgId}`);
-
             const msgSnap = await get(msgRef);
             if (!msgSnap.exists()) return;
             const msgData = msgSnap.val() as RtdbMessage;
 
-            const updates: Record<string, any> = {
+            await update(ref(rtdb), {
                 [`messages/${convId}/${msgId}/content`]: newContent,
-                [`messages/${convId}/${msgId}/updatedAt`]: Date.now()
-            };
+                [`messages/${convId}/${msgId}/updatedAt`]: Date.now(),
+            });
 
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
-            if (convSnap.exists()) {
-                const conv = convSnap.val() as RtdbConversation;
+            if (!convSnap.exists()) return;
 
-                if (payload?.status === 'missed') {
-                    const memberIds = Object.keys(conv.members || {});
-                    const userChatChecks = await Promise.all(
-                        memberIds
-                            .filter(mId => mId !== msgData.senderId)
-                            .map(async mId => ({
-                                mId,
-                                exists: (await get(ref(rtdb, `user_chats/${mId}/${convId}`))).exists()
-                            }))
-                    );
-                    for (const { mId, exists } of userChatChecks) {
-                        if (exists) {
-                            updates[`user_chats/${mId}/${convId}/unreadCount`] = increment(1);
-                        }
+            const conv = convSnap.val() as RtdbConversation;
+            const convUpdates: Record<string, any> = {};
+
+            if (payload?.status === 'missed') {
+                const memberIds = Object.keys(conv.members || {});
+                const userChatChecks = await Promise.all(
+                    memberIds
+                        .filter(mId => mId !== msgData.senderId)
+                        .map(async mId => ({
+                            mId,
+                            exists: (await get(ref(rtdb, `user_chats/${mId}/${convId}`))).exists()
+                        }))
+                );
+                for (const { mId, exists } of userChatChecks) {
+                    if (exists) {
+                        convUpdates[`user_chats/${mId}/${convId}/unreadCount`] = increment(1);
                     }
-                }
-
-                if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
-                    updates[`conversations/${convId}/lastMessage/content`] = payload
-                        ? JSON.stringify(payload)
-                        : newContent;
-                    updates[`conversations/${convId}/updatedAt`] = Date.now();
                 }
             }
 
-            if (Object.keys(updates).length > 0) {
-                await update(ref(rtdb), updates);
+            if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
+                convUpdates[`conversations/${convId}/lastMessage/content`] = payload
+                    ? JSON.stringify(payload)
+                    : newContent;
+                convUpdates[`conversations/${convId}/updatedAt`] = Date.now();
+            }
+
+            if (Object.keys(convUpdates).length > 0) {
+                await update(ref(rtdb), convUpdates);
             }
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi updateMessageContent:', error);
