@@ -115,6 +115,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
       <div className="relative flex-shrink-0">
         <UserAvatar
           userId={conversation.data.isGroup ? '' : partner?.id}
+          src={conversation.data.isGroup ? conversation.data.avatar?.url : undefined}
           size="md"
           isGroup={conversation.data.isGroup}
           members={participants}
@@ -287,6 +288,8 @@ export const ConversationItem = Object.assign(
       prev.isActive === next.isActive &&
       prev.conversation.id === next.conversation.id &&
       prev.conversation.data.updatedAt === next.conversation.data.updatedAt &&
+      prev.conversation.data.avatar?.url === next.conversation.data.avatar?.url &&
+      prev.conversation.data.name === next.conversation.data.name &&
       prev.conversation.userChat.updatedAt === next.conversation.userChat.updatedAt &&
       prev.currentUserId === next.currentUserId &&
       prev.onClick === next.onClick &&
