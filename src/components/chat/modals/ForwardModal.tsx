@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Send } from 'lucide-react';
 import { Modal, Avatar, UserAvatar, Input, Button } from '../../ui';
-import { RtdbMessage, RtdbConversation, User, RtdbUserChat } from '../../../../shared/types';
+import { RtdbMessage, RtdbConversation, User, UserStatus, RtdbUserChat } from '../../../../shared/types';
 import { useRtdbChatStore } from '../../../store';
 import { useAuthStore } from '../../../store/authStore';
 import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
@@ -79,7 +79,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
       if (myBlockedUsers[partnerId]) return false;
       if (blockedByPartners.has(partnerId)) return false;
       const cachedPartner = usersMap[partnerId];
-      if (cachedPartner?.status === 'banned') return false;
+      if (cachedPartner?.status === UserStatus.BANNED) return false;
     }
 
     const name = conv.data.isGroup
@@ -184,7 +184,7 @@ const ConversationForwardItem: React.FC<ConversationForwardItemProps> = ({
   const participants = useConversationParticipants(Object.keys(conversation.data.members));
   const partner = participants.find(p => p.id !== currentUserId);
 
-  if (!conversation.data.isGroup && partner?.status === 'banned') return null;
+  if (!conversation.data.isGroup && partner?.status === UserStatus.BANNED) return null;
 
   const name = conversation.data.isGroup ? conversation.data.name : partner?.fullName || 'Unknown';
   const avatar = conversation.data.isGroup ? conversation.data.avatar : partner?.avatar;

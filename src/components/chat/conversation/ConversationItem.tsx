@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2, User as UserIcon } from 'lucide-react';
-import { RtdbConversation, RtdbUserChat, ReactionType } from '../../../../shared/types';
+import { RtdbConversation, RtdbUserChat, ReactionType, UserStatus } from '../../../../shared/types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
 import { useConversationMemberSettings } from '../../../hooks/chat/useConversationMemberSettings';
@@ -128,7 +128,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
             <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {chatInfo.name}
             </h3>
-            {!conversation.data.isGroup && partner?.status === 'banned' && <BannedBadge size="sm" />}
+            {!conversation.data.isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="sm" />}
             {showMessageRequestBadge && isMessageRequest && (
               <span className="text-[10px] text-warning bg-warning-light px-1.5 py-0.5 rounded-full border border-warning/30 flex-shrink-0">
                 Người lạ
@@ -217,7 +217,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onPin(conversation.id, !(memberSettings?.isPinned || false))}
             />
           )}
-          {onViewProfile && !conversation.data.isGroup && partner?.status !== 'banned' && (
+          {onViewProfile && !conversation.data.isGroup && (
             <DropdownItem
               icon={<UserIcon size={16} />}
               label="Xem trang cá nhân"
@@ -238,7 +238,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onArchive(conversation.id, !(memberSettings?.isArchived || false))}
             />
           )}
-          {onBlock && !conversation.data.isGroup && partner?.status !== 'banned' && (
+          {onBlock && !conversation.data.isGroup && partner?.status !== UserStatus.BANNED && (
             <DropdownItem
               icon={<Ban size={16} />}
               label="Quản lý chặn"

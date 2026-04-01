@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { RtdbConversation, RtdbUserChat } from '../../../../shared/types';
+import { RtdbConversation, RtdbUserChat, ReportType, User, UserStatus } from '../../../../shared/types';
 import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User as UserIcon, Flag } from 'lucide-react';
 import { ConfirmDialog, Button } from '../../ui';
 import { useReportStore } from '../../../store/reportStore';
-import { ReportType, User } from '../../../../shared/types';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 import { Archive as ArchiveIcon } from 'lucide-react';
 import { useConversationMemberSettings } from '../../../hooks/chat/useConversationMemberSettings';
@@ -91,7 +90,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   }
 
   // Xem trang cá nhân - chỉ cho chat 1-1
-  if (!isGroup && onViewProfile && partner?.status !== 'banned') {
+  if (!isGroup && onViewProfile) {
     actions.push({
       icon: <UserIcon size={20} />,
       label: 'Xem trang cá nhân',
@@ -101,7 +100,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   }
 
   // Block - chỉ cho chat 1-1
-  if (!isGroup && partner?.status !== 'banned') {
+  if (!isGroup && partner?.status !== UserStatus.BANNED) {
     actions.push({
       icon: <Ban size={20} />,
       label: 'Quản lý chặn',

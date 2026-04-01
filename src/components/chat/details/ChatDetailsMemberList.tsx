@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, RtdbConversation, RtdbUserChat } from '../../../../shared/types';
+import { User, RtdbConversation, RtdbUserChat, UserStatus } from '../../../../shared/types';
 import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button, IconButton } from '../../ui';
 import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMinus, LogOut, Lock } from 'lucide-react';
 
@@ -83,7 +83,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
           const isCurrentUser = member.id === currentUserId;
           const role = getMemberRole(member.id);
           const canManage = canManageMember(member.id);
-          const isBanned = member.status === 'banned';
+          const isBanned = member.status === UserStatus.BANNED;
 
           return (
             <div

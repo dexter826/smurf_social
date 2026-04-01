@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { RtdbMessage, User, RtdbConversation, RtdbUserChat } from '../../../shared/types';
+import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat } from '../../../shared/types';
 import { Loading } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageRequestBanner } from './message/MessageRequestBanner';
@@ -34,7 +34,7 @@ interface ChatBoxProps {
   onLoadMore?: () => void;
   isBlocked?: boolean;
   isBlockedByMe?: boolean;
-  partnerStatus?: 'active' | 'banned';
+  partnerStatus?: UserStatus;
   myBlockOptions?: { blockMessages: boolean; blockCalls: boolean; blockViewMyActivity: boolean; hideTheirActivity: boolean };
   onUnblock?: () => void;
   onManageBlock?: () => void;
@@ -100,7 +100,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   const chatName = conversation.data.isGroup ? conversation.data.name : partner?.fullName || 'Không rõ';
   const avatarSrc = conversation.data.isGroup ? conversation.data.avatar?.url : partner?.avatar?.url;
 
-  const isPartnerBanned = partnerStatus === 'banned' || partner?.status === 'banned';
+  const isPartnerBanned = partnerStatus === UserStatus.BANNED || partner?.status === UserStatus.BANNED;
 
   const isMessageRequest = useMemo(() =>
     !conversation.data.isGroup &&
@@ -112,7 +112,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     !isBlocked
     , [conversation.data.isGroup, partner, isPartnerBanned, currentUserFriendIds, isBlockedByMe, isBlocked]);
 
-  const resolvedPartnerStatus = isPartnerBanned ? 'banned' : (partnerStatus ?? partner?.status as 'active' | 'banned' | undefined);
+  const resolvedPartnerStatus = isPartnerBanned ? UserStatus.BANNED : (partnerStatus ?? partner?.status);
 
   const { lastReadByMap } = useMessageStatus({
     messages,

@@ -7,7 +7,7 @@ interface UseMessageStatusOptions {
     conversation: { data: RtdbConversation };
     currentUserId: string;
     usersMap: Record<string, User>;
-    partnerStatus?: 'active' | 'banned';
+    partnerStatus?: UserStatus;
 }
 
 export interface MessageStatusResult {
@@ -33,7 +33,7 @@ export function useMessageStatus({
 
     const isPartnerBanned = useMemo(() => {
         if (conversation.data.isGroup) return false;
-        if (partnerStatus === 'banned') return true;
+        if (partnerStatus === UserStatus.BANNED) return true;
         const memberIds = [...activeMembers].filter(uid => uid !== currentUserId);
         const partnerId = memberIds[0];
         if (!partnerId) return false;

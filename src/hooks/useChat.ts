@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { RtdbMessage, User } from '../../shared/types';
+import { RtdbMessage, User, UserStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { useRtdbChatStore } from '../store';
 import { useContactStore } from '../store/contactStore';
@@ -117,20 +117,11 @@ export const useChat = () => {
     return friendIds.includes(partnerId);
   }, [partnerId, friendIds]);
 
-  const block = useChatBlock({
-    partnerId,
-    currentUser: currentUser ?? null,
-    partner,
-    isGroup: selectedConversation?.data.isGroup ?? false,
-    usersMap,
-    conversation: selectedConversation?.data,
-  });
-
   const canCall = useMemo(() => {
-    if (block.partnerStatus === 'banned' || partner?.status === 'banned') return false;
     if (selectedConversation?.data.isGroup) return true;
+    if (partner?.status === UserStatus.BANNED) return false;
     return isFriend;
-  }, [selectedConversation?.data.isGroup, isFriend, block.partnerStatus, partner?.status]);
+  }, [selectedConversation?.data.isGroup, isFriend, partner?.status]);
 
   const friendRequestStatus = useMemo(() => {
     if (!partnerId) return 'none' as const;
@@ -153,6 +144,15 @@ export const useChat = () => {
   const chatMessages = useChatMessages({
     selectedConversationId,
     currentUserId: currentUser?.id ?? null,
+  });
+
+  const block = useChatBlock({
+    partnerId,
+    currentUser: currentUser ?? null,
+    partner,
+    isGroup: selectedConversation?.data.isGroup ?? false,
+    usersMap,
+    conversation: selectedConversation?.data,
   });
 
   const groups = useChatGroups({

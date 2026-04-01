@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { RtdbConversation, RtdbUserChat } from '../../../shared/types';
+import { RtdbConversation, RtdbUserChat, UserStatus } from '../../../shared/types';
 import { formatChatTime } from '../../utils/dateUtils';
 import { useUserCache } from '../../store/userCacheStore';
 import { useRtdbChatStore } from '../../store';
@@ -158,7 +158,7 @@ export const useConversationItem = ({
     conversation,
     currentUserId,
     usersMap,
-    partnerStatus: partner?.status as 'active' | 'banned' | undefined,
+    partnerStatus: partner?.status as UserStatus | undefined,
   });
 
   const displayTime = useMemo(() => {

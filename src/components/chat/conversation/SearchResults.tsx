@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, X, Clock } from 'lucide-react';
 import { Button, Skeleton, Avatar, UserAvatar } from '../../ui';
-import { RtdbConversation, User, RtdbUserChat } from '../../../../shared/types';
+import { RtdbConversation, User, UserStatus, RtdbUserChat } from '../../../../shared/types';
 import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
 interface SearchResultsProps {
@@ -73,7 +73,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
         <div className="space-y-1">
           {history.filter(item => {
             if ('status' in item) {
-              return item.status !== 'banned';
+              return item.status !== UserStatus.BANNED;
             }
             if ('data' in item) {
               return true;
@@ -152,7 +152,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
         </span>
       </div>
       <div className="space-y-0.5">
-        {results.users.map((user) => (
+        {results.users.filter(u => u.status !== UserStatus.BANNED).map((user) => (
           <div
             key={user.id}
             onClick={() => onSelectUser(user)}

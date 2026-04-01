@@ -1,6 +1,6 @@
 import React from 'react';
 import { Phone, Video, Info, ChevronLeft } from 'lucide-react';
-import { RtdbConversation, RtdbUserChat, User } from '../../../shared/types';
+import { RtdbConversation, RtdbUserChat, User, UserStatus } from '../../../shared/types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, Button, BannedBadge } from '../ui';
 
 interface ChatBoxHeaderProps {
@@ -67,7 +67,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <div className="flex items-center gap-1.5">
             <h2 className="text-sm font-bold text-text-primary truncate leading-tight">{chatName}</h2>
-            {!conversation.data.isGroup && partner && usersMap[partner.id]?.status === 'banned' && <BannedBadge />}
+            {!conversation.data.isGroup && partner && usersMap[partner.id]?.status === UserStatus.BANNED && <BannedBadge />}
           </div>
           {!conversation.data.isGroup && partner && (
             <UserStatusText

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { RtdbMessage, User, RtdbConversation, RtdbUserChat } from '../../../shared/types';
+import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat } from '../../../shared/types';
 import { UserAvatar } from '../ui';
 import { MessageBubble } from './message/MessageBubble';
 
@@ -21,7 +21,7 @@ interface MessageListProps {
   avatarSrc?: string;
   partner?: User;
   isBlocked?: boolean;
-  partnerStatus?: 'active' | 'banned';
+  partnerStatus?: UserStatus;
 }
 
 const MessageListInner: React.FC<MessageListProps> = ({

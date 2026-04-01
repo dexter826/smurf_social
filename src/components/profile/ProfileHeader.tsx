@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Users, MessageCircle, UserPlus, UserCheck, Edit, Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { User, ReportType } from '../../../shared/types';
+import { User, ReportType, UserStatus } from '../../../shared/types';
 import { FriendStatus } from '../../../shared/types';
 import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
 import { toast } from '../../store/toastStore';
@@ -298,28 +298,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       Cài đặt
                     </Button>
                   </>
-                ) : user.status === 'banned' ? (
+                ) : user.status === UserStatus.BANNED ? (
                   <div className="flex items-center gap-2">
                     <div className="px-4 py-2 rounded-lg bg-error/10 text-error text-sm font-medium">
                       Tài khoản đã bị khóa
                     </div>
-                    <Dropdown
-                      trigger={
-                        <Button
-                          variant="secondary"
-                          icon={<MoreHorizontal size={18} />}
-                          className="border-border-medium text-text-primary hover:bg-bg-hover"
-                        />
-                      }
-                      align="right"
-                    >
-                      <DropdownItem
-                        icon={<Flag size={16} />}
-                        label="Báo cáo"
-                        variant="danger"
-                        onClick={() => openReportModal(ReportType.USER, user.id, user.id)}
-                      />
-                    </Dropdown>
                   </div>
                 ) : isBlockedByMe ? (
                   <Dropdown

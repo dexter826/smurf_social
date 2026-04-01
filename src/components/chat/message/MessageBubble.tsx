@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Smile } from 'lucide-react';
 
-import { RtdbMessage, User, MessageType } from '../../../../shared/types';
+import { RtdbMessage, User, MessageType, UserStatus } from '../../../../shared/types';
 import {
   UserAvatar,
   ReactionDisplay,
@@ -39,7 +39,7 @@ interface MessageBubbleProps {
   isGroup?: boolean;
   lastReadByUsers?: User[];
   isBlocked?: boolean;
-  partnerStatus?: 'active' | 'banned';
+  partnerStatus?: UserStatus;
   onCall?: () => void;
   onJoinCall?: (callType: 'voice' | 'video') => void;
   conversationId: string;
@@ -98,12 +98,12 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const senderName = sender?.fullName || 'Người dùng';
 
   const isDelivered = useMemo(() => {
-    if (!isGroup && partnerStatus === 'banned') return false;
+    if (!isGroup && partnerStatus === UserStatus.BANNED) return false;
     return !!(message.data.deliveredTo &&
       Object.keys(message.data.deliveredTo).some(uid => uid !== currentUserId));
   }, [message.data.deliveredTo, currentUserId, isGroup, partnerStatus]);
 
-  const isPartnerBanned = !isGroup && partnerStatus === 'banned';
+  const isPartnerBanned = !isGroup && partnerStatus === UserStatus.BANNED;
   const isInteractionDisabled = isBlocked || isPartnerBanned;
 
   const canEdit = isMe && !message.data.isRecalled && message.data.type === MessageType.TEXT && (

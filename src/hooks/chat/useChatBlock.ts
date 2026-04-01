@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { User, RtdbConversation, BlockOptions } from '../../../shared/types';
+import { User, RtdbConversation, BlockOptions, UserStatus } from '../../../shared/types';
 import { userService } from '../../services/userService';
 import { useUserCache } from '../../store/userCacheStore';
 import { useAuthStore } from '../../store/authStore';
@@ -27,7 +27,7 @@ export const useChatBlock = ({
   usersMap,
   conversation,
 }: UseChatBlockProps) => {
-  const [partnerStatus, setPartnerStatus] = useState<'active' | 'banned' | undefined>();
+  const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
   const [isBlockedByPartner, setIsBlockedByPartner] = useState(false);
   const [isCallBlockedByPartner, setIsCallBlockedByPartner] = useState(false);
 
@@ -41,7 +41,7 @@ export const useChatBlock = ({
   const isBlockedByMe = !!myBlockOptions;
   const isMessageBlockedByMe = !!myBlockOptions?.blockMessages;
   const isCallBlockedByMe = !!myBlockOptions?.blockCalls;
-  const isBlocked = isMessageBlockedByMe || isBlockedByPartner;
+  const isBlocked = isMessageBlockedByMe || isBlockedByPartner || partnerStatus === UserStatus.BANNED;
   const shouldShowBlockBanner = isBlockedByMe;
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export const useChatBlock = ({
   const getBlockedMessage = useCallback((): string | undefined => {
     if (!isGroup && partnerId) {
       const currentStatus = partnerStatus || partner?.status || usersMap[partnerId]?.status;
-      if (currentStatus === 'banned') return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
+      if (currentStatus === UserStatus.BANNED) return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
       if (isMessageBlockedByMe) return 'Bạn đã chặn tin nhắn từ người này. Bỏ chặn để gửi tin nhắn.';
       if (isBlockedByPartner) return 'Không thể gửi tin nhắn cho người dùng này.';
     }

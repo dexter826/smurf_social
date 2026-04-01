@@ -11,7 +11,7 @@ import {
   Clock,
   ShieldAlert,
 } from 'lucide-react';
-import { Report, ReportStatus, ReportType, User, Post, Comment, PostStatus, CommentStatus } from '../../../shared/types';
+import { Report, ReportStatus, ReportType, User, UserStatus, Post, Comment, PostStatus, CommentStatus } from '../../../shared/types';
 import { reportService } from '../../services/reportService';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
@@ -477,22 +477,30 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                     <div className="flex gap-2">
                       {report?.targetType === ReportType.USER ? (
                         <>
-                          <Button
-                            variant="secondary"
-                            className="flex-1 font-semibold border-warning/30 text-warning hover:bg-warning/10"
-                            disabled={isProcessing}
-                            onClick={() => openAction('warn')}
-                          >
-                            Cảnh báo
-                          </Button>
-                          <Button
-                            variant="danger"
-                            className="flex-1 font-bold shadow-md shadow-error/20"
-                            isLoading={isProcessing}
-                            onClick={() => openAction('ban')}
-                          >
-                            Khóa TK
-                          </Button>
+                          {targetOwner?.status === UserStatus.BANNED ? (
+                            <div className="flex-1 px-4 py-2 bg-error/5 text-error rounded-xl border border-error/20 text-xs font-bold text-center">
+                              Tài khoản đã bị khóa
+                            </div>
+                          ) : (
+                            <>
+                              <Button
+                                variant="secondary"
+                                className="flex-1 font-semibold border-warning/30 text-warning hover:bg-warning/10"
+                                disabled={isProcessing}
+                                onClick={() => openAction('warn')}
+                              >
+                                Cảnh báo
+                              </Button>
+                              <Button
+                                variant="danger"
+                                className="flex-1 font-bold shadow-md shadow-error/20"
+                                isLoading={isProcessing}
+                                onClick={() => openAction('ban')}
+                              >
+                                Khóa TK
+                              </Button>
+                            </>
+                          )}
                         </>
                       ) : (
                         <Button

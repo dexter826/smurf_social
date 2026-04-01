@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, RtdbConversation, RtdbUserChat } from '../../../../shared/types';
+import { User, UserStatus, RtdbConversation, RtdbUserChat } from '../../../../shared/types';
 import { UserAvatar, Avatar, UserStatusText, BannedBadge } from '../../ui';
 
 interface ChatDetailsHeaderProps {
@@ -36,7 +36,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
 
       <h2 className="mt-4 text-lg font-bold text-text-primary text-center flex items-center gap-2">
         {displayName}
-        {!isGroup && partner?.status === 'banned' && <BannedBadge size="lg" />}
+        {!isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="lg" />}
       </h2>
 
       {!isGroup && partner && (

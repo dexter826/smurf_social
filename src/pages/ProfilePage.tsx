@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams as useRouterParams } from 'react-router-dom';
-import { Gender } from '../../shared/types';
+import { Gender, UserStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
@@ -89,7 +89,7 @@ const ProfilePage: React.FC = () => {
     return <ProfileSkeleton />;
   }
 
-  const isBannedProfile = profile.status === 'banned';
+  const isBannedProfile = profile.status === UserStatus.BANNED;
 
   const confirmConfig: Record<ConfirmType, { title: string; message: string; confirmLabel: string }> = {
     unfriend: {
