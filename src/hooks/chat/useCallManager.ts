@@ -124,6 +124,18 @@ export function useCallManager(currentUserId: string) {
                         await rtdbCallService.answerCall(currentUserId, data.callerId, 'busy', data.isGroupCall);
                         return;
                     }
+
+                    if (data.isGroupCall) {
+                        const signalAge = Date.now() - (data.createdAt || 0);
+                        if (signalAge > 30000) {
+                            const activeCall = await rtdbCallService.getActiveCall(data.conversationId);
+                            if (!activeCall) {
+                                await rtdbCallService.clearSignaling(currentUserId);
+                                return;
+                            }
+                        }
+                    }
+
                     setIncomingSignal(data);
                     setPhase('incoming');
                 } else {

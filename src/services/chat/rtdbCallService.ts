@@ -214,6 +214,15 @@ export const rtdbCallService = {
             }
 
             await rtdbCallService.endActiveCall(convId);
+
+            try {
+                const convSnap = await get(ref(rtdb, `conversations/${convId}/members`));
+                if (convSnap.exists()) {
+                    const allMemberIds = Object.keys(convSnap.val());
+                    await rtdbCallService.clearSignalingForUsers(allMemberIds);
+                }
+            } catch {
+            }
         } catch (error) {
             console.error('[rtdbCallService] Lỗi endCallSession:', error);
         }
