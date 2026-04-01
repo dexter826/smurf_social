@@ -217,7 +217,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onPin(conversation.id, !(memberSettings?.isPinned || false))}
             />
           )}
-          {onViewProfile && !conversation.data.isGroup && (
+          {onViewProfile && !conversation.data.isGroup && partner?.status !== 'banned' && (
             <DropdownItem
               icon={<UserIcon size={16} />}
               label="Xem trang cá nhân"
@@ -238,7 +238,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onArchive(conversation.id, !(memberSettings?.isArchived || false))}
             />
           )}
-          {onBlock && !conversation.data.isGroup && (
+          {onBlock && !conversation.data.isGroup && partner?.status !== 'banned' && (
             <DropdownItem
               icon={<Ban size={16} />}
               label="Quản lý chặn"

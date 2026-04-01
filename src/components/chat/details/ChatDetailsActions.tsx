@@ -91,7 +91,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   }
 
   // Xem trang cá nhân - chỉ cho chat 1-1
-  if (!isGroup && onViewProfile) {
+  if (!isGroup && onViewProfile && partner?.status !== 'banned') {
     actions.push({
       icon: <UserIcon size={20} />,
       label: 'Xem trang cá nhân',
@@ -101,7 +101,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   }
 
   // Block - chỉ cho chat 1-1
-  if (!isGroup) {
+  if (!isGroup && partner?.status !== 'banned') {
     actions.push({
       icon: <Ban size={20} />,
       label: 'Quản lý chặn',

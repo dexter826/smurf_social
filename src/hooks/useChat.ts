@@ -117,10 +117,20 @@ export const useChat = () => {
     return friendIds.includes(partnerId);
   }, [partnerId, friendIds]);
 
+  const block = useChatBlock({
+    partnerId,
+    currentUser: currentUser ?? null,
+    partner,
+    isGroup: selectedConversation?.data.isGroup ?? false,
+    usersMap,
+    conversation: selectedConversation?.data,
+  });
+
   const canCall = useMemo(() => {
+    if (block.partnerStatus === 'banned' || partner?.status === 'banned') return false;
     if (selectedConversation?.data.isGroup) return true;
     return isFriend;
-  }, [selectedConversation?.data.isGroup, isFriend]);
+  }, [selectedConversation?.data.isGroup, isFriend, block.partnerStatus, partner?.status]);
 
   const friendRequestStatus = useMemo(() => {
     if (!partnerId) return 'none' as const;
@@ -143,15 +153,6 @@ export const useChat = () => {
   const chatMessages = useChatMessages({
     selectedConversationId,
     currentUserId: currentUser?.id ?? null,
-  });
-
-  const block = useChatBlock({
-    partnerId,
-    currentUser: currentUser ?? null,
-    partner,
-    isGroup: selectedConversation?.data.isGroup ?? false,
-    usersMap,
-    conversation: selectedConversation?.data,
   });
 
   const groups = useChatGroups({
