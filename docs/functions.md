@@ -79,12 +79,12 @@ Tự động kích hoạt khi dữ liệu Firestore thay đổi.
 ### `onPostWrite`
 Trigger: `posts/{postId}` — onDocumentWritten
 
-Xử lý 3 trường hợp:
+Xử lý các trường hợp:
 - **Tạo mới**: Fan-out bài viết vào `feeds` của tác giả và toàn bộ bạn bè (bỏ qua bạn bè đang ẩn hoạt động của tác giả).
-- **Soft-delete** (`status` chuyển sang `"deleted"`): Xóa bài khỏi tất cả feeds.
-- **Cập nhật nội dung/media**: Cập nhật `updatedAt` trong feeds để kích hoạt listener phía client.
-- **Đổi visibility `friends` → `private`**: Xóa khỏi feeds bạn bè.
+- **Soft-delete** (`status` chuyển sang `"deleted"`): Xóa bài khỏi tất cả feeds (bao gồm cả feed của tác giả).
+- **Đổi visibility `friends` → `private`**: Xóa khỏi feeds của bạn bè, **giữ lại feed của tác giả** (để tác giả vẫn thấy bài viết PRIVATE của mình).
 - **Đổi visibility `private` → `friends`**: Fan-out lại cho bạn bè.
+- **Cập nhật nội dung/media** (không đổi visibility): Cập nhật `updatedAt` trong feeds để kích hoạt listener phía client.
 
 ---
 

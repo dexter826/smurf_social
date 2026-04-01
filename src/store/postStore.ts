@@ -162,7 +162,6 @@ export const usePostStore = create<PostState>()(
                     return timeB - timeA;
                   });
 
-                // Dedup lần cuối để chắc chắn
                 const seen = new Set<string>();
                 const deduped = allPosts.filter(p => seen.has(p.id) ? false : seen.add(p.id));
 
@@ -172,12 +171,30 @@ export const usePostStore = create<PostState>()(
               if (action === 'update') {
                 const updatedPosts = state.posts.map(p => {
                   const updated = changedPosts.find(cp => cp.id === p.id);
-                  return updated || p;
-                });
+                  if (updated) {
+                    const isOwner = updated.authorId === currentUserId;
+                    if (updated.visibility === Visibility.PRIVATE && !isOwner) {
+                      return null;
+                    }
+                    return updated;
+                  }
+                  return p;
+                }).filter((p): p is Post => p !== null);
+
+                const updatedPost = changedPosts[0];
+                let newSelectedPost = state.selectedPost;
+                if (updatedPost && state.selectedPost?.id === updatedPost.id) {
+                  const isOwner = updatedPost.authorId === currentUserId;
+                  if (updatedPost.visibility === Visibility.PRIVATE && !isOwner) {
+                    newSelectedPost = null;
+                  } else {
+                    newSelectedPost = updatedPost;
+                  }
+                }
 
                 return {
                   posts: updatedPosts,
-                  selectedPost: state.selectedPost?.id === changedPosts[0]?.id ? changedPosts[0] : state.selectedPost
+                  selectedPost: newSelectedPost
                 };
               }
 

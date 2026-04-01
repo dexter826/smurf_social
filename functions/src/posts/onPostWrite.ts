@@ -20,7 +20,7 @@ export const onPostWrite = onDocumentWritten(
 
         // 2. Xử lý DELETE (Soft-delete) hoặc Thay đổi trạng thái
         if (before && after && before.status !== 'deleted' && after.status === 'deleted') {
-            await removeFeedEntries(postId, after.authorId);
+            await removeFeedEntriesIncludingAuthor(postId, after.authorId);
             return;
         }
 
@@ -32,9 +32,9 @@ export const onPostWrite = onDocumentWritten(
 
             if (!visibilityChanged && !contentChanged) return;
 
-            // Nếu đổi sang Private: Xóa khỏi feeds của bạn bè
+            // Nếu đổi sang Private: Xóa khỏi feeds của bạn bè (giữ lại feed của tác giả)
             if (visibilityChanged && after.visibility === 'private') {
-                await removeFeedEntries(postId, after.authorId);
+                await removeFeedEntriesExcludingAuthor(postId, after.authorId);
             }
             // Nếu đổi từ Private sang Friends: Fan-out lại cho bạn bè
             else if (visibilityChanged && before.visibility === 'private' && after.visibility === 'friends') {
@@ -107,9 +107,33 @@ async function handleFanout(postId: string, postData: any) {
 }
 
 /**
- * Xóa bài viết khỏi Feed của bạn bè
+ * Xóa bài viết khỏi Feed của bạn bè (không xóa khỏi feed của chính tác giả)
  */
-async function removeFeedEntries(postId: string, authorId: string) {
+async function removeFeedEntriesExcludingAuthor(postId: string, authorId: string) {
+    try {
+        const batch = db.batch();
+
+        const friendsSnapshot = await db.collection('users').doc(authorId).collection('friends').get();
+        let batchCount = 0;
+        for (const friendDoc of friendsSnapshot.docs) {
+            batch.delete(db.collection('users').doc(friendDoc.id).collection('feeds').doc(postId));
+            batchCount++;
+            if (batchCount >= 500) {
+                await batch.commit();
+                batchCount = 0;
+            }
+        }
+        if (batchCount > 0) await batch.commit();
+        console.log(`[removeFeedEntriesExcludingAuthor] ${postId} from ${friendsSnapshot.size} friend feeds`);
+    } catch (error) {
+        console.error('[removeFeedEntriesExcludingAuthor] Lỗi:', error);
+    }
+}
+
+/**
+ * Xóa bài viết khỏi Feed của tất cả (bao gồm cả tác giả)
+ */
+async function removeFeedEntriesIncludingAuthor(postId: string, authorId: string) {
     try {
         const batch = db.batch();
         batch.delete(db.collection('users').doc(authorId).collection('feeds').doc(postId));
@@ -125,9 +149,9 @@ async function removeFeedEntries(postId: string, authorId: string) {
             }
         }
         if (batchCount > 0) await batch.commit();
-        console.log(`[removeFeedEntries] ${postId} from ${friendsSnapshot.size + 1} feeds`);
+        console.log(`[removeFeedEntriesIncludingAuthor] ${postId} from ${friendsSnapshot.size + 1} feeds`);
     } catch (error) {
-        console.error('[removeFeedEntries] Lỗi:', error);
+        console.error('[removeFeedEntriesIncludingAuthor] Lỗi:', error);
     }
 }
 
