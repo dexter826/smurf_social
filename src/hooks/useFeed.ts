@@ -1,7 +1,7 @@
 import { useEffect, useCallback, RefObject } from 'react';
 import { Post, User, Visibility, ReactionType } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
-import { usePostStore } from '../store/postStore';
+import { usePostStore } from '../store';
 import { useUserCache } from '../store/userCacheStore';
 import { useIntersectionObserver } from './utils/useIntersectionObserver';
 import { useLoadingStore } from '../store/loadingStore';
@@ -100,7 +100,7 @@ export const useFeed = (): UseFeedReturn => {
     media?: any[]
   ) => {
     if (!currentUser) return;
-    await deletePost(postId, currentUser.id, media);
+    await deletePost(postId, currentUser.id);
   }, [deletePost, currentUser]);
 
   return {

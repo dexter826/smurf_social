@@ -11,7 +11,7 @@ import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
 import { User, BlockOptions, BlockedUserEntry } from '../../shared/types';
-import { usePostStore } from '../store/postStore';
+import { usePostStore } from '../store';
 import { ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import ChangePasswordModal from '../components/settings/ChangePasswordModal';

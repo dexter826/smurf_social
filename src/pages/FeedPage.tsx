@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { PostItem, PostModal, CreatePost, FeedSkeleton, PostViewModal } from '../components/feed';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
-import { usePostStore } from '../store/postStore';
+import { usePostStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
 import { Visibility } from '../../shared/types';
 import { useFeed, usePostNavigation } from '../hooks';

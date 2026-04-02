@@ -254,17 +254,6 @@ export const commentService = {
     }
   },
 
-  /** Tải hàng loạt reaction của người dùng cho danh sách bình luận */
-  batchLoadMyReactionsForComments: async (commentIds: string[], userId: string): Promise<Record<string, string>> => {
-    const results: Record<string, string> = {};
-    await Promise.all(
-      commentIds.map(async (commentId) => {
-        const snap = await getDoc(doc(db, 'comments', commentId, 'reactions', userId));
-        if (snap.exists()) results[commentId] = snap.data().type;
-      })
-    );
-    return results;
-  },
 
   /** Lấy thông tin bình luận chi tiết theo ID */
   getCommentById: async (commentId: string, isAdmin: boolean = false): Promise<Comment | null> => {

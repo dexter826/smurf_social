@@ -9,7 +9,7 @@ import { useLoadingStore } from '../../store/loadingStore';
 import { UserAvatar, ConfirmDialog, IconButton, ScreenLoader } from '../ui';
 import { ReactionType } from '../../../shared/types';
 import { PostViewModal } from '../feed';
-import { usePostStore } from '../../store/postStore';
+import { usePostStore } from '../../store';
 import { usePostNavigation } from '../../hooks/usePostNavigation';
 import { useUserCache } from '../../store/userCacheStore';
 import { useNotificationStore } from '../../store/notificationStore';

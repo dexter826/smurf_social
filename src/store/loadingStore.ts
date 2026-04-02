@@ -111,3 +111,5 @@ export const useLoadingStore = create<LoadingState>((set, get) => ({
         set({ loadingStates: { ...initialLoadingStates } });
     },
 }));
+import { registerStore } from './storeUtils';
+registerStore(() => useLoadingStore.getState().reset());

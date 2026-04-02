@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import { PostViewModal } from '../components/feed';
-import { usePostStore } from '../store/postStore';
+import { usePostStore } from '../store';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
 import { EditProfileModal } from '../components/profile/EditProfileModal';

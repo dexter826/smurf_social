@@ -1,7 +1,7 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useCallback } from 'react';
 import { Post } from '../../shared/types';
-import { usePostStore } from '../store/postStore';
+import { usePostStore } from '../store';
 import { useAuthStore } from '../store/authStore';
 
 /**

@@ -429,17 +429,6 @@ export const postService = {
     }
   },
 
-  /** Tải hàng loạt reaction của người dùng cho danh sách bài viết */
-  batchLoadMyReactions: async (postIds: string[], userId: string): Promise<Record<string, string>> => {
-    const results: Record<string, string> = {};
-    await Promise.all(
-      postIds.map(async (postId) => {
-        const snap = await getDoc(doc(db, 'posts', postId, 'reactions', userId));
-        if (snap.exists()) results[postId] = snap.data().type;
-      })
-    );
-    return results;
-  },
 
   /** Lấy thông tin bài viết theo ID kèm phân quyền (Admin bypass) */
   getPostById: async (postId: string, currentUserId: string, friendIds: string[], isAdmin: boolean = false): Promise<Post | null> => {
@@ -566,33 +555,5 @@ export const postService = {
     }
   },
 
-  /** Tải lên ảnh cho bình luận */
-  uploadCommentImage: async (
-    file: File,
-    userId: string,
-    onProgress?: ProgressCallback
-  ): Promise<MediaObject> => {
-    try {
-      // Compress ảnh
-      const compressedFile = await compressImage(file, IMAGE_COMPRESSION.COMMENT);
-
-      const createdAt = Date.now();
-      const fileName = `comment_img_${createdAt}_${file.name}`;
-      const path = `comments/${userId}/images/${fileName}`;
-
-      const url = await withRetry(() => uploadWithProgress(path, compressedFile, onProgress));
-
-      return {
-        url,
-        fileName,
-        mimeType: file.type,
-        size: compressedFile.size,
-        isSensitive: false,
-      };
-    } catch (error) {
-      console.error("Lỗi upload ảnh bình luận", error);
-      throw error;
-    }
-  }
 };
 

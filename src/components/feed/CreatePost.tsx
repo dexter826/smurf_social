@@ -3,7 +3,7 @@ import { Image as ImageIcon, Video } from 'lucide-react';
 import { PostModal } from './modals/PostModal';
 import { User, Visibility, MediaObject } from '../../../shared/types';
 import { Avatar, Button, Skeleton } from '../ui';
-import { usePostStore } from '../../store/postStore';
+import { usePostStore } from '../../store';
 import { postService } from '../../services/postService';
 import { toast } from '../../store/toastStore';
 import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../constants';

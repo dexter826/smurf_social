@@ -4,7 +4,7 @@ import { postService } from '../services/postService';
 import { userService } from '../services/userService';
 import { useFriendIds } from './utils';
 import { useUserCache } from '../store/userCacheStore';
-import { usePostStore } from '../store/postStore';
+import { usePostStore } from '../store';
 import { useReactionStore } from '../store/reactionStore';
 import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { getSafeMillis } from '../utils/timestampHelpers';
@@ -159,7 +159,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
   const handleDelete = useCallback(async (postId: string, media?: any[]) => {
     try {
       // Gọi hàm xóa từ store để cập nhật trạng thái toàn cục
-      await deleteStorePost(postId, currentUser.id, media);
+      await deleteStorePost(postId, currentUser.id);
       // Cập nhật trạng thái local
       setDbPosts(prev => prev.filter(p => p.id !== postId));
     } catch (error) {

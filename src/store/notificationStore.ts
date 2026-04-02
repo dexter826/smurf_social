@@ -140,3 +140,5 @@ export const useNotificationStore = create<NotificationState>()(
       unreadCount: state.unreadCount
     }),
   }));
+import { registerStore } from './storeUtils';
+registerStore(() => useNotificationStore.getState().reset());

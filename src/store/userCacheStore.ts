@@ -94,3 +94,5 @@ export const useUserCache = create<UserCacheState>()(
   storage: createJSONStorage(() => localStorage),
   partialize: (state) => ({ users: state.users }),
 }));
+import { registerStore } from './storeUtils';
+registerStore(() => useUserCache.getState().reset());

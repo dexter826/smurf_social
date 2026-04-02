@@ -5,7 +5,8 @@ import { CONFIRM_MESSAGES } from '../../../constants';
 import { toast } from '../../../store/toastStore';
 import { Comment, User, ReportType, MediaObject } from '../../../../shared/types';
 import { postService } from '../../../services/postService';
-import { useCommentStore } from '../../../store/commentStore';
+import { commentService } from '../../../services/commentService';
+import { useCommentStore } from '../../../store';
 import { useUserCache } from '../../../store/userCacheStore';
 import { useReportStore } from '../../../store/reportStore';
 import { useFriendIds, useBlockedUsers } from '../../../hooks';
@@ -216,9 +217,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const handleUploadMedia = useCallback(async (file: File) => {
     setUploadProgress(0);
     try {
-      const onProgress = (p: { progress: number }) => setUploadProgress(p.progress);
+      const onProgress = (p: number) => setUploadProgress(p);
       if (file.type.startsWith('image/')) {
-        const mediaObject = await postService.uploadCommentImage(file, currentUser.id, onProgress);
+        const mediaObject = await commentService.uploadCommentImage(file, currentUser.id, onProgress);
         return mediaObject;
       }
       throw new Error('Chỉ hỗ trợ tải ảnh');

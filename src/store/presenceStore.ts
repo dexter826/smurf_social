@@ -82,3 +82,6 @@ export const usePresenceStore = create<PresenceState>()((set, get) => ({
     set({ presenceMap: {}, subscriberCounts: {}, unsubscribes: {} });
   }
 }));
+
+import { registerStore } from './storeUtils';
+registerStore(() => usePresenceStore.getState().reset());

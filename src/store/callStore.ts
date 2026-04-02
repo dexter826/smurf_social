@@ -48,3 +48,5 @@ export const useCallStore = create<CallState>((set) => ({
   resetCall: () => set(initialState),
   reset: () => set(initialState),
 }));
+import { registerStore } from './storeUtils';
+registerStore(() => useCallStore.getState().reset());

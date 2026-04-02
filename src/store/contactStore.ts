@@ -163,3 +163,5 @@ export const useContactStore = create<ContactState>()(
     }
   )
 );
+import { registerStore } from './storeUtils';
+registerStore(() => useContactStore.getState().reset());

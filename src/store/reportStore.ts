@@ -147,3 +147,5 @@ export const useReportStore = create<ReportState>((set, get) => ({
     }
   }
 }));
+import { registerStore } from './storeUtils';
+registerStore(() => useReportStore.getState().reset());

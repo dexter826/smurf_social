@@ -1,9 +1,9 @@
 export { useAuthStore } from './authStore';
 export { useRtdbChatStore } from './rtdbChatStore';
-export { usePostStore } from './postStore';
+export { usePostStore } from './posts';
 export { useContactStore } from './contactStore';
 export { useNotificationStore } from './notificationStore';
-export { useCommentStore } from './commentStore';
+export { useCommentStore } from './comments';
 export { useReportStore } from './reportStore';
 export { useThemeStore } from './themeStore';
 export { useToastStore, toast } from './toastStore';

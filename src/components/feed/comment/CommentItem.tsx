@@ -6,7 +6,7 @@ import { CommentInput } from './CommentInput';
 import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../../shared/types';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { TruncatedText } from '../shared';
-import { useCommentStore } from '../../../store/commentStore';
+import { useCommentStore } from '../../../store';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
 import { REACTION_LABELS } from '../../../constants';
 import { canViewInteraction } from '../../../utils/privacyUtils';

@@ -13,17 +13,10 @@ const DEFAULT_SETTINGS: UserSettings = {
   createdAt: Timestamp.now(),
   updatedAt: Timestamp.now(),
 };
-import { useUserCache } from "./userCacheStore";
-import { useRtdbChatStore } from "./rtdbChatStore";
-import { usePostStore } from "./postStore";
-import { useContactStore } from "./contactStore";
-import { useNotificationStore } from "./notificationStore";
-import { useCommentStore } from "./commentStore";
-import { useReportStore } from "./reportStore";
-import { useLoadingStore } from "./loadingStore";
-import { usePresenceStore } from "./presenceStore";
-import { useCallStore } from "./callStore";
 import { presenceService } from "../services/presenceService";
+import { resetAllStores } from "./storeUtils";
+import { useUserCache } from "./userCacheStore";
+import { useLoadingStore } from "./loadingStore";
 
 interface AuthState {
   user: User | null;
@@ -45,26 +38,6 @@ interface AuthState {
   updateSettings: (settings: Partial<UserSettings>) => void;
   updateBlockEntry: (action: "add" | "remove", targetUserId: string, options?: BlockOptions) => void;
 }
-
-const clearAllStores = () => {
-  usePresenceStore.getState().reset();
-  useRtdbChatStore.getState().reset();
-  usePostStore.getState().reset();
-  useContactStore.getState().reset();
-  useNotificationStore.getState().reset();
-  useCommentStore.getState().reset();
-  useReportStore.getState().reset();
-  useCallStore.getState().reset();
-  useUserCache.getState().reset();
-  useLoadingStore.getState().setMultipleLoading(
-    ['chat', 'chat.messages', 'chat.send', 'chat.loadMore',
-      'feed', 'feed.posts', 'feed.loadMore', 'feed.create', 'feed.update', 'feed.delete',
-      'contacts', 'contacts.friends', 'contacts.requests', 'contacts.search',
-      'profile', 'profile.data', 'profile.upload', 'profile.update',
-      'notifications', 'settings', 'admin.reports', 'admin.users'],
-    false
-  );
-};
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -146,7 +119,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (user) {
         await presenceService.setOffline(user.id);
       }
-      clearAllStores();
+      resetAllStores();
       await authService.logout();
     } catch (error) {
       console.error("Lỗi logout:", error);
@@ -341,7 +314,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           useLoadingStore.getState().setLoading("auth", false);
           return;
         }
-        clearAllStores();
+        resetAllStores();
         set({ user: null, isInitialized: true });
         useLoadingStore.getState().setLoading("auth", false);
       }

@@ -3,7 +3,7 @@ import { Post, User, Visibility } from '../../../shared/types';
 import { PostItem, CreatePost, PostModal } from '../feed';
 import { ConfirmDialog } from '../ui';
 import { toast } from '../../store/toastStore';
-import { usePostStore } from '../../store/postStore';
+import { usePostStore } from '../../store';
 import { useUserPosts, useIntersectionObserver } from '../../hooks';
 import { postService } from '../../services/postService';
 import { FileText } from 'lucide-react';

@@ -5,7 +5,7 @@ import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton } from '../ui';
 import { Post, PostStatus, Visibility, PostType, User, ReportType, ReactionType } from '../../../shared/types';
 import { useReportStore } from '../../store/reportStore';
-import { usePostStore } from '../../store/postStore';
+import { usePostStore } from '../../store';
 import { useFriendIds, useFilteredReactions } from '../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from './shared';
 import { ReactionDetailsModal } from '../ui';

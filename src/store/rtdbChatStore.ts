@@ -56,3 +56,6 @@ export const useRtdbChatStore = create<RtdbChatState>()(
         }
     )
 );
+const useRtdbChatStoreClone = useRtdbChatStore;
+import { registerStore } from './storeUtils';
+registerStore(() => useRtdbChatStoreClone.getState().reset());

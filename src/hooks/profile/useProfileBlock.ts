@@ -5,7 +5,7 @@ import { userService } from '../../services/userService';
 import { toast } from '../../store/toastStore';
 import { BlockOptions } from '../../../shared/types';
 import { TOAST_MESSAGES } from '../../constants';
-import { usePostStore } from '../../store/postStore';
+import { usePostStore } from '../../store';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 

@@ -6,7 +6,7 @@ import { Post, User, ReportType, ReactionType, PostType } from '../../../../shar
 import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
-import { usePostStore } from '../../../store/postStore';
+import { usePostStore } from '../../../store';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from '../shared';
 import { MediaViewer } from '../../ui';
