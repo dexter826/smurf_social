@@ -47,7 +47,7 @@ export const useProfile = () => {
 
   const isBannedProfile = profile?.status === 'banned';
 
-  const canViewContent = isOwnProfile || !block.isActivityBlockedByPartner;
+  const canViewContent = true;
 
   const handleMessage = useCallback(() => {
     if (!currentUser || !profile) return;

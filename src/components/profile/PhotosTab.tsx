@@ -11,11 +11,15 @@ const MEDIA_PAGE_SIZE = 15;
 
 interface PhotosTabProps {
   userId: string;
+  isActivityBlockedByPartner?: boolean;
 }
 
 type MediaItem = { url: string; type: MessageType.IMAGE | MessageType.VIDEO; thumbnailUrl?: string };
 
-const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
+const PhotosTabInner: React.FC<PhotosTabProps> = ({ 
+  userId,
+  isActivityBlockedByPartner = false
+}) => {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -69,11 +73,17 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
   }, [userId, currentUser, extractMedia]);
 
   useEffect(() => {
+    if (isActivityBlockedByPartner) {
+      setLoading(false);
+      setMedia([]);
+      setHasMore(false);
+      return;
+    }
     lastDocRef.current = null;
     setMedia([]);
     setHasMore(true);
     loadMedia(false);
-  }, [userId]);
+  }, [userId, isActivityBlockedByPartner]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -98,9 +108,9 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({ userId }) => {
     [media]
   );
 
-  if (loading) return <PhotosTabSkeleton />;
+  if (loading && !isActivityBlockedByPartner) return <PhotosTabSkeleton />;
 
-  if (media.length === 0) {
+  if (media.length === 0 || isActivityBlockedByPartner) {
     return (
       <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-4 sm:p-8 text-center transition-theme">
         <ImageIcon size={48} className="mx-auto mb-3 text-text-secondary" />

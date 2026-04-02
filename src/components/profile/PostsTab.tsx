@@ -12,9 +12,15 @@ interface PostsTabProps {
   userId: string;
   currentUser: User;
   onViewPost?: (post: Post) => void;
+  isActivityBlockedByPartner?: boolean;
 }
 
-export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser, onViewPost }) => {
+export const PostsTab: React.FC<PostsTabProps> = ({ 
+  userId, 
+  currentUser, 
+  onViewPost,
+  isActivityBlockedByPartner = false
+}) => {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const {
@@ -70,7 +76,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser, onViewP
     }
   };
 
-  if (loading) {
+  if (loading && !isActivityBlockedByPartner) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
@@ -79,6 +85,8 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser, onViewP
       </div>
     );
   }
+
+  const showEmptyState = isActivityBlockedByPartner || posts.length === 0;
 
   return (
     <div className="space-y-4">
@@ -91,7 +99,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({ userId, currentUser, onViewP
         <h3 className="font-bold text-lg text-text-primary">Bài viết</h3>
       </div>
 
-      {posts.length === 0 ? (
+      {showEmptyState ? (
         <div className="bg-bg-primary rounded-lg shadow-sm border border-border-light p-8 text-center transition-theme">
           <FileText size={48} className="mx-auto mb-3 text-text-secondary" />
           <p className="text-text-secondary">Chưa có bài viết nào</p>

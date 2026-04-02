@@ -218,7 +218,7 @@ const ProfilePage: React.FC = () => {
                       Xem tất cả
                     </Button>
                   </div>
-                  {latestMedia.length > 0 && (
+                  {latestMedia.length > 0 && !isActivityBlockedByPartner && (
                     <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                       {latestMedia.map((url, idx) => (
                         <div
@@ -235,16 +235,27 @@ const ProfilePage: React.FC = () => {
                       ))}
                     </div>
                   )}
+                  {latestMedia.length === 0 || (isActivityBlockedByPartner && !isOwnProfile) ? (
+                    <p className="text-text-secondary text-sm text-center py-2">
+                      Chưa có ảnh hoặc video nào
+                    </p>
+                  ) : null}
+
                 </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <PostsTab userId={profile.id} currentUser={currentUser} onViewPost={viewPost} />
+                <PostsTab 
+                  userId={profile.id} 
+                  currentUser={currentUser} 
+                  onViewPost={viewPost} 
+                  isActivityBlockedByPartner={isActivityBlockedByPartner}
+                />
               </div>
             </div>
           ) : (
             <div>
-              {activeTab === 'media' && <PhotosTab userId={profile.id} />}
+              {activeTab === 'media' && <PhotosTab userId={profile.id} isActivityBlockedByPartner={isActivityBlockedByPartner} />}
             </div>
           )}
         </div>
