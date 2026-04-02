@@ -246,8 +246,16 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                     <div className="truncate">
                       {replyToMsg.data.type === 'text'
                         ? replyToMsg.data.content.replace(/@\[([^\]]+)\]/g, '@$1')
-                        : replyToMsg.data.type === 'image' ? ((replyToMsg.data.media?.length || 0) > 1 ? '[Album ảnh]' : '[Hình ảnh]')
-                          : replyToMsg.data.type === 'video' ? '[Video]'
+                        : replyToMsg.data.type === MessageType.IMAGE ? (() => {
+                          const media = replyToMsg.data.media || [];
+                          if (media.length <= 1) return '[Hình ảnh]';
+                          const hasImages = media.some(m => m.mimeType?.startsWith('image/'));
+                          const hasVideos = media.some(m => m.mimeType?.startsWith('video/'));
+                          if (hasImages && hasVideos) return '[Album Media]';
+                          if (hasVideos) return '[Album Video]';
+                          return '[Album ảnh]';
+                        })()
+                          : replyToMsg.data.type === MessageType.VIDEO ? '[Video]'
                             : replyToMsg.data.type === 'file' ? `[File] ${replyToMsg.data.media?.[0]?.fileName || 'File'}`
                               : replyToMsg.data.type === 'voice' ? '[Tin nhắn thoại]'
                                 : replyToMsg.data.type === 'call' ? (() => {
@@ -405,8 +413,14 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
       <MediaViewer
         media={(message.data.media && message.data.media.length > 0)
-          ? message.data.media.map(m => ({ type: 'image' as const, url: m.url }))
-          : [{ type: 'image' as const, url: message.data.content }]}
+          ? message.data.media.map(m => ({
+            type: m.mimeType?.startsWith('video/') ? 'video' as const : 'image' as const,
+            url: m.url
+          }))
+          : [{
+            type: message.data.type === MessageType.VIDEO ? 'video' as const : 'image' as const,
+            url: message.data.content
+          }]}
         initialIndex={selectedImageIndex ?? 0}
         isOpen={selectedImageIndex !== null}
         onClose={() => setSelectedImageIndex(null)}

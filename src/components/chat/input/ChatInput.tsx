@@ -246,16 +246,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onTyping(false);
 
     try {
-      const allImages = selectedFiles.filter(f => f.type === 'image').map(f => f.file);
-      const otherFiles = selectedFiles.filter(f => f.type !== 'image');
+      const albumFiles = selectedFiles.filter(f => f.type === 'image' || f.type === 'video').map(f => f.file);
+      const otherFiles = selectedFiles.filter(f => f.type !== 'image' && f.type !== 'video');
 
-      if (allImages.length > 0) {
-        await onSendImages(allImages, replyingTo?.id);
+      if (albumFiles.length > 0) {
+        await onSendImages(albumFiles, replyingTo?.id);
       }
 
       for (const item of otherFiles) {
-        if (item.type === 'video') await onSendVideo?.(item.file, replyingTo?.id);
-        else if (item.type === 'voice') await onSendVoice?.(item.file, replyingTo?.id);
+        if (item.type === 'voice') await onSendVoice?.(item.file, replyingTo?.id);
         else await onSendFile(item.file, replyingTo?.id);
       }
 

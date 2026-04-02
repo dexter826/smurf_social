@@ -39,17 +39,17 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
   switch (message.data.type) {
     case 'image':
-      const imageMedia = message.data.media && message.data.media.length > 0
+      const mediaItems = message.data.media && message.data.media.length > 0
         ? message.data.media
         : message.data.content
           ? [{ url: message.data.content, fileName: '', mimeType: '', size: 0, isSensitive: false }]
           : [];
-      const mediaCount = imageMedia.length;
-      const imageUrls = imageMedia.map(m => m.url).filter(Boolean);
+      const mediaCount = mediaItems.length;
       const isAlbum = mediaCount > 1;
-      const isUploading = isMe && uploadProgress[message.id] && imageUrls.length === 0 && mediaCount > 0;
+      const validUrls = mediaItems.map(m => m.url).filter(Boolean);
+      const isUploading = isMe && uploadProgress[message.id] && validUrls.length === 0 && mediaCount > 0;
 
-      if (mediaCount === 0 && imageUrls.length === 0) return null;
+      if (mediaCount === 0 && validUrls.length === 0) return null;
 
       if (isUploading) {
         if (isAlbum) {
@@ -98,21 +98,32 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         const count = mediaCount;
         return (
           <div className="relative rounded-xl overflow-hidden grid gap-0.5 grid-cols-2 border border-border-light shadow-sm bg-bg-secondary w-full max-w-[320px]">
-            {imageUrls.slice(0, 4).map((url, index) => {
+            {mediaItems.slice(0, 4).map((item, index) => {
               const isOverlay = index === 3 && count > 4;
+              const isVideo = item.mimeType?.startsWith('video/');
+              
               return (
                 <div
-                  key={`${message.id}-img-${index}`}
+                  key={`${message.id}-media-${index}`}
                   className={`relative overflow-hidden cursor-pointer ${count === 3 && index === 0 ? 'col-span-2 row-span-2 aspect-video' : 'aspect-square'}`}
                   onClick={() => onOpenImage(index)}
                 >
                   <LazyImage
-                    src={url}
+                    src={item.url}
                     alt="sent"
                     className="w-full h-full object-cover transition-all duration-base"
                   />
+                  
+                  {isVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <div className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
+                        <Play size={20} className="text-text-primary ml-0.5 fill-current" />
+                      </div>
+                    </div>
+                  )}
+
                   {isOverlay && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold">
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold z-10">
                       +{count - 3}
                     </div>
                   )}
@@ -136,17 +147,27 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         );
       }
 
-      const imageUrl = imageUrls[0] || '';
+      const firstMedia = mediaItems[0];
+      const isVideo = firstMedia.mimeType?.startsWith('video/');
+      
       return (
         <div
           className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative"
           onClick={() => onOpenImage(0)}
         >
-          <LazyImage
-            src={imageUrl}
-            alt="sent"
-            className="w-full h-auto"
-          />
+          {isVideo ? (
+            <LazyVideo
+              src={firstMedia.url}
+              className="w-full h-auto max-h-[400px] object-contain"
+            />
+          ) : (
+            <LazyImage
+              src={firstMedia.url}
+              alt="sent"
+              className="w-full h-auto"
+            />
+          )}
+
           {isMe && uploadProgress[message.id] && (
             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
               <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-2">
@@ -160,9 +181,11 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
               </span>
             </div>
           )}
-          <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/10 transition-all duration-base flex items-center justify-center">
-            <ImageIcon className="opacity-0 md:group-hover:opacity-100 text-white transition-all duration-base" size={32} />
-          </div>
+          {!isVideo && (
+            <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/10 transition-all duration-base flex items-center justify-center">
+              <ImageIcon className="opacity-0 md:group-hover:opacity-100 text-white transition-all duration-base" size={32} />
+            </div>
+          )}
         </div>
       );
 
