@@ -104,7 +104,7 @@ export const resolveReport = onCall(
     await Promise.all([
       createNotification({
         receiverId: reportData.reporterId,
-        actorId: adminId,
+        actorId: 'system',
         type: NotificationType.REPORT,
         data: {
           reportId,
@@ -125,7 +125,7 @@ export const resolveReport = onCall(
       await Promise.all([
         createNotification({
           receiverId: reportData.targetOwnerId,
-          actorId: adminId,
+          actorId: 'system',
           type: NotificationType.REPORT,
           data: { contentSnippet: msg },
         }),
@@ -142,7 +142,7 @@ export const resolveReport = onCall(
       await Promise.all([
         createNotification({
           receiverId: targetId,
-          actorId: adminId,
+          actorId: 'system',
           type: NotificationType.REPORT,
           data: { contentSnippet: msg },
         }),
