@@ -53,7 +53,7 @@ export const AppLayout: React.FC = () => {
   const { phase, session, incomingSignal, acceptCall, rejectCall, endCall, dismissEndedCall } = useCallManager(user?.id || '');
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || useAuthStore.getState().isBanned) return;
     const unsubscribeChat = subscribeToConversations(user.id);
     const unsubscribeContacts = subscribeToRequests(user.id);
     const unsubscribeFriends = subscribeToFriends(user.id);

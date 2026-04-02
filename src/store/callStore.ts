@@ -27,6 +27,7 @@ interface CallState {
   setIncomingSignal: (signal: RtdbCallSignaling | null) => void;
   setCallEndReason: (reason: CallEndReason) => void;
   resetCall: () => void;
+  reset: () => void;
 }
 
 const initialState = {
@@ -45,4 +46,5 @@ export const useCallStore = create<CallState>((set) => ({
   setCallEndReason: (callEndReason) => set({ callEndReason }),
 
   resetCall: () => set(initialState),
+  reset: () => set(initialState),
 }));

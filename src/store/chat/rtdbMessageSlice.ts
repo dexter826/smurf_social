@@ -118,6 +118,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     },
 
     sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
             const msgId = await rtdbMessageService.sendTextMessage(conversationId, senderId, content, {
                 mentions,
@@ -163,6 +164,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     },
 
     sendImageMessage: async (conversationId: string, senderId: string, files: File[], replyToId?: string) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
             await rtdbMessageService.sendImageMessage(conversationId, senderId, files, {
                 replyToId,
@@ -180,6 +182,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     },
 
     sendFileMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
             await rtdbMessageService.sendFileMessage(conversationId, senderId, file, {
                 replyToId,
@@ -197,6 +200,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     },
 
     sendVideoMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
             await rtdbMessageService.sendVideoMessage(conversationId, senderId, file, {
                 replyToId,
@@ -214,6 +218,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     },
 
     sendVoiceMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
             await rtdbMessageService.sendVoiceMessage(conversationId, senderId, file, {
                 replyToId,
@@ -231,6 +236,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     },
 
     sendCallMessage: async (conversationId: string, senderId: string, payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
             return await rtdbMessageService.sendCallMessage(conversationId, senderId, payload);
         } catch (error) {

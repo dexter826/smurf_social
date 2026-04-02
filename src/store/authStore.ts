@@ -22,6 +22,7 @@ import { useCommentStore } from "./commentStore";
 import { useReportStore } from "./reportStore";
 import { useLoadingStore } from "./loadingStore";
 import { usePresenceStore } from "./presenceStore";
+import { useCallStore } from "./callStore";
 import { presenceService } from "../services/presenceService";
 
 interface AuthState {
@@ -36,7 +37,7 @@ interface AuthState {
   resetPassword: (email: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
   checkVerificationStatus: () => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (keepBanned?: boolean) => Promise<void>;
   setUser: (user: User | null) => void;
   initialize: () => () => void;
   updateUserProfile: (updates: Partial<User>) => void;
@@ -53,6 +54,8 @@ const clearAllStores = () => {
   useNotificationStore.getState().reset();
   useCommentStore.getState().reset();
   useReportStore.getState().reset();
+  useCallStore.getState().reset();
+  useUserCache.getState().reset();
   useLoadingStore.getState().setMultipleLoading(
     ['chat', 'chat.messages', 'chat.send', 'chat.loadMore',
       'feed', 'feed.posts', 'feed.loadMore', 'feed.create', 'feed.update', 'feed.delete',
@@ -136,7 +139,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  logout: async () => {
+  logout: async (keepBanned = false) => {
     const { user } = get();
 
     try {
@@ -148,7 +151,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error("Lỗi logout:", error);
     } finally {
-      set({ user: null, isPendingVerification: false, isBanned: false });
+      set({ 
+        user: null, 
+        isPendingVerification: false, 
+        isBanned: keepBanned ? get().isBanned : false 
+      });
     }
   },
 
@@ -184,8 +191,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             userService.getUserSettings(firebaseUser.uid)
           ]);
           if (userData) {
-            set({ user: userData, blockedUsers, settings: userSettings });
+            if (userData.status === 'banned') {
+              set({ user: userData, isBanned: true, isInitialized: true });
+              await get().logout(true);
+              return;
+            }
+
+            set({
+              user: userData,
+              blockedUsers,
+              settings: userSettings,
+              isInitialized: true
+            });
             useUserCache.getState().setUser(userData);
+            
+            // Kích hoạt subscription sau khi xác thực thành công
+            const setupSub = (get() as any)._setupUserSubscription;
+            if (setupSub) setupSub(firebaseUser.uid);
           }
         } catch (error) {
           console.error("Lỗi đồng bộ sau xác thực:", error);
@@ -231,15 +253,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     let userUnsubscribe: (() => void) | null = null;
     let settingsUnsubscribe: (() => void) | null = null;
 
+    // Hàm helper để thiết lập các subscription
+    const setupSubscriptions = (uid: string) => {
+      if (userUnsubscribe) userUnsubscribe();
+      if (settingsUnsubscribe) settingsUnsubscribe();
+
+      userUnsubscribe = userService.subscribeToUser(
+        uid,
+        async (updatedUser) => {
+          if (updatedUser.status === 'banned') {
+            if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
+            if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
+            
+            // Xử lý kick-out hoàn toàn
+            set({ user: updatedUser, isBanned: true });
+            await get().logout(true);
+            return;
+          }
+
+          const currentBlocked = get().blockedUsers;
+          set({ user: updatedUser, blockedUsers: currentBlocked });
+          useUserCache.getState().setUser(updatedUser);
+        },
+      );
+
+      settingsUnsubscribe = onSnapshot(
+        doc(db, 'users', uid, 'private', 'settings'),
+        (snapshot) => {
+          if (snapshot.exists()) {
+            set({ settings: snapshot.data() as UserSettings });
+          } else {
+            set({ settings: DEFAULT_SETTINGS });
+          }
+        }
+      );
+    };
+
+    (set as any)({ _setupUserSubscription: setupSubscriptions });
+
     const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (userUnsubscribe) {
-        userUnsubscribe();
-        userUnsubscribe = null;
-      }
-      if (settingsUnsubscribe) {
-        settingsUnsubscribe();
-        settingsUnsubscribe = null;
-      }
+      if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
+      if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
 
       if (firebaseUser) {
         if (!firebaseUser.emailVerified) {
@@ -258,10 +312,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (userData) {
             if (userData.status === 'banned') {
               set({ user: userData, isInitialized: true, isBanned: true });
-              useLoadingStore.getState().setLoading("auth", false);
+              await get().logout(true);
               return;
             }
-
 
             set({
               user: userData,
@@ -272,34 +325,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
             useLoadingStore.getState().setLoading("auth", false);
             useUserCache.getState().setUser(userData);
-            userUnsubscribe = userService.subscribeToUser(
-              firebaseUser.uid,
-              async (updatedUser) => {
-                if (updatedUser.status === 'banned') {
-                  if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
-                  if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
-                  try { await presenceService.setOffline(updatedUser.id); } catch { /* ignore */ }
-                  clearAllStores();
-                  set({ user: updatedUser, isBanned: true, isInitialized: true });
-                  return;
-                }
-
-                const currentBlocked = get().blockedUsers;
-                set({ user: updatedUser, blockedUsers: currentBlocked });
-                useUserCache.getState().setUser(updatedUser);
-              },
-            );
-
-            settingsUnsubscribe = onSnapshot(
-              doc(db, 'users', firebaseUser.uid, 'private', 'settings'),
-              (snapshot) => {
-                if (snapshot.exists()) {
-                  set({ settings: snapshot.data() as UserSettings });
-                } else {
-                  set({ settings: DEFAULT_SETTINGS });
-                }
-              }
-            );
+            
+            setupSubscriptions(firebaseUser.uid);
           } else {
             set({ user: null, isInitialized: true });
             useLoadingStore.getState().setLoading("auth", false);
