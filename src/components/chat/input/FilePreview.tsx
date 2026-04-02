@@ -4,6 +4,7 @@ import { IconButton } from '../../ui';
 import { CircularProgressOverlay } from '../../ui/CircularProgress';
 
 export interface FilePreviewItem {
+  id: string;
   file: File;
   preview?: string;
   type: 'image' | 'video' | 'file' | 'voice';
@@ -32,7 +33,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       <div className="flex gap-2">
         {files.map((item, index) => (
           <div
-            key={index}
+            key={item.id}
             className="relative flex-shrink-0 group w-[72px] h-[72px] bg-bg-secondary rounded-xl border border-border-light overflow-hidden"
           >
             {item.preview ? (

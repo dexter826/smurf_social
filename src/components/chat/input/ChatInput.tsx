@@ -86,7 +86,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           if (f.type === 'voice' && f.preview) URL.revokeObjectURL(f.preview);
         });
         const filtered = prev.filter(f => f.type !== 'voice');
-        return [...filtered, { file: audioFile, preview: url, type: 'voice' }];
+        return [...filtered, { id: `voice-${Date.now()}`, file: audioFile, preview: url, type: 'voice' }];
       });
     },
     onError: (err) => toast.error(err.message)
@@ -136,7 +136,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         if (f.preview) URL.revokeObjectURL(f.preview);
       });
     };
-  }, [selectedFiles]);
+  }, []);
 
   const detectedActiveMentions = useMemo(() => {
     if (!inputText) return [];
@@ -201,7 +201,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       return;
     }
 
-    const newFiles: { file: File; preview?: string; type: 'image' | 'video' | 'file' | 'voice' }[] = [];
+    const newFiles: FilePreviewItem[] = [];
     files.forEach(file => {
       let fileType: 'image' | 'video' | 'file' = 'file';
       if (file.type.startsWith('image/')) fileType = 'image';
@@ -215,7 +215,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       }
 
       const preview = (fileType === 'image' || fileType === 'video') ? URL.createObjectURL(file) : undefined;
-      newFiles.push({ file, preview, type: fileType });
+      newFiles.push({ id: `${file.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, file, preview, type: fileType });
     });
 
     setSelectedFiles(prev => [...prev, ...newFiles]);
@@ -246,27 +246,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onTyping(false);
 
     try {
-      const flushImageBatch = async (batch: File[]) => {
-        if (batch.length === 0) return;
-        await onSendImages(batch, replyingTo?.id);
-      };
+      const allImages = selectedFiles.filter(f => f.type === 'image').map(f => f.file);
+      const otherFiles = selectedFiles.filter(f => f.type !== 'image');
 
-      let imageBatch: File[] = [];
-      for (const item of selectedFiles) {
-        if (item.type === 'image') {
-          imageBatch.push(item.file);
-          continue;
-        }
+      if (allImages.length > 0) {
+        await onSendImages(allImages, replyingTo?.id);
+      }
 
-        await flushImageBatch(imageBatch);
-        imageBatch = [];
-
+      for (const item of otherFiles) {
         if (item.type === 'video') await onSendVideo?.(item.file, replyingTo?.id);
         else if (item.type === 'voice') await onSendVoice?.(item.file, replyingTo?.id);
         else await onSendFile(item.file, replyingTo?.id);
       }
 
-      await flushImageBatch(imageBatch);
       clearAllFiles();
 
       if (inputText.trim()) {
