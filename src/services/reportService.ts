@@ -145,6 +145,7 @@ export const reportService = {
   /** Lắng nghe thay đổi báo cáo theo thời gian thực */
   subscribeToReports: (
     callback: (reports: Report[]) => void,
+    onError?: (error: any) => void,
     statusFilter?: ReportStatus,
     limitCount: number = PAGINATION.ADMIN_REPORTS
   ) => {
@@ -159,12 +160,18 @@ export const reportService = {
 
     const q = query(collection(db, 'reports'), ...constraints);
 
-    return onSnapshot(q, (snapshot) => {
-      callback(convertDocs<Report>(snapshot.docs));
-    });
+    return onSnapshot(
+      q, 
+      (snapshot) => {
+        callback(convertDocs<Report>(snapshot.docs));
+      },
+      (error) => {
+        if (onError) onError(error);
+      }
+    );
   },
 
-  /** Admin xử lý báo cáo qua Cloud Function (có auth check và token revoke) */
+  /** Admin xử lý báo cáo qua Cloud Function */
   resolveReport: async (
     reportId: string,
     resolution: string = 'Đã xử lý',

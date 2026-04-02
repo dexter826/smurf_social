@@ -41,7 +41,7 @@ export function useAdminReports() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role !== UserRole.ADMIN) return;
 
     setLoading('admin.reports', true);
     let unsubscribeFn: (() => void) | undefined;
@@ -76,20 +76,32 @@ export function useAdminReports() {
           ])];
           fetchUsers(userIds);
         },
+        (error: any) => {
+          console.error('[useAdminReports] Subscription error:', error);
+          setLoading('admin.reports', false);
+          if (error.code === 'permission-denied') {
+            toast.error("Bạn không có quyền truy cập dữ liệu quản trị.");
+          } else {
+            toast.error(TOAST_MESSAGES.REPORT.LOAD_FAILED);
+          }
+        },
         undefined,
         500
       );
     } catch (error) {
-      console.error('Lỗi subscription reports:', error);
+      console.error('[useAdminReports] Setup error:', error);
       setLoading('admin.reports', false);
       toast.error(TOAST_MESSAGES.REPORT.LOAD_FAILED);
     }
 
     return () => {
-      if (unsubscribeFn) unsubscribeFn();
+      if (unsubscribeFn) {
+        unsubscribeFn();
+        unsubscribeFn = undefined;
+      }
       setLoading('admin.reports', false);
     };
-  }, [user, statusFilter, typeFilter, fetchUsers]);
+  }, [user, statusFilter, typeFilter, fetchUsers, setLoading]);
 
   // Lấy user info từ cache
   const getUser = useCallback((id: string): User | undefined => {
