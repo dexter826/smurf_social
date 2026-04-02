@@ -98,7 +98,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
             userService.getUserById(postData.deletedBy).then(setDeleter);
           }
         } else if (reportData.targetType === ReportType.COMMENT) {
-          const commentData = await commentService.getCommentById(reportData.targetId);
+          const commentData = await commentService.getCommentById(reportData.targetId, true);
           setContent(commentData);
           if (commentData?.status === CommentStatus.DELETED && commentData.deletedBy) {
             userService.getUserById(commentData.deletedBy).then(setDeleter);

@@ -267,7 +267,7 @@ export const commentService = {
   },
 
   /** Lấy thông tin bình luận chi tiết theo ID */
-  getCommentById: async (commentId: string): Promise<Comment | null> => {
+  getCommentById: async (commentId: string, isAdmin: boolean = false): Promise<Comment | null> => {
     try {
       const commentRef = doc(db, 'comments', commentId);
       const commentSnap = await getDoc(commentRef);
@@ -275,11 +275,12 @@ export const commentService = {
       if (!commentSnap.exists()) return null;
 
       const data = commentSnap.data();
-      return {
-        ...data,
-        id: commentSnap.id,
-        createdAt: data.createdAt as Timestamp,
-      } as Comment;
+      
+      if (!isAdmin && data.status === CommentStatus.DELETED) {
+        return null;
+      }
+
+      return convertDoc<Comment>(commentSnap);
     } catch (error) {
       console.error("Lỗi lấy comment:", error);
       return null;

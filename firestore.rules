@@ -111,13 +111,15 @@ service cloud.firestore {
 
     // Bài viết
     match /posts/{postId} {
-      allow read: if isNotBanned() &&
-        !isContentBlocked(resource.data.authorId) &&
-        resource.data.status != 'deleted' && (
-          resource.data.authorId == request.auth.uid ||
-          (resource.data.visibility == 'friends' && isFriend(resource.data.authorId)) ||
-          isAdmin()
-        );
+      allow read: if isNotBanned() && (
+        isAdmin() || (
+          !isContentBlocked(resource.data.authorId) &&
+          resource.data.status != 'deleted' && (
+            resource.data.authorId == request.auth.uid ||
+            (resource.data.visibility == 'friends' && isFriend(resource.data.authorId))
+          )
+        )
+      );
 
       allow create: if isNotBanned() && request.resource.data.authorId == request.auth.uid;
       allow update: if isNotBanned() && (
@@ -144,10 +146,14 @@ service cloud.firestore {
     match /comments/{commentId} {
       allow read: if isNotBanned() &&
         'postId' in resource.data && (
-          isOwner(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
-          resource.data.authorId == request.auth.uid ||
-          isFriend(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
-          isAdmin()
+          isAdmin() || (
+            !isContentBlocked(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) &&
+            resource.data.status != 'deleted' && (
+              isOwner(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
+              resource.data.authorId == request.auth.uid ||
+              isFriend(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId)
+            )
+          )
         );
 
       allow create: if isNotBanned() &&

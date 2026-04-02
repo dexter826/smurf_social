@@ -441,8 +441,8 @@ export const postService = {
     return results;
   },
 
-  /** Lấy thông tin bài viết theo ID kèm phân quyền */
-  getPostById: async (postId: string, currentUserId: string, friendIds: string[]): Promise<Post | null> => {
+  /** Lấy thông tin bài viết theo ID kèm phân quyền (Admin bypass) */
+  getPostById: async (postId: string, currentUserId: string, friendIds: string[], isAdmin: boolean = false): Promise<Post | null> => {
     try {
       const postRef = doc(db, 'posts', postId);
       const postSnap = await getDoc(postRef);
@@ -450,6 +450,10 @@ export const postService = {
       if (!postSnap.exists()) return null;
 
       const data = postSnap.data();
+
+      if (isAdmin) {
+        return convertDoc<Post>(postSnap);
+      }
 
       if (data.status === PostStatus.DELETED) return null;
 
@@ -478,14 +482,9 @@ export const postService = {
 
       if (!postSnap.exists()) return null;
 
-      const data = postSnap.data();
-      return {
-        ...data,
-        id: postSnap.id,
-        createdAt: data.createdAt as Timestamp,
-      } as Post;
+      return convertDoc<Post>(postSnap);
     } catch (error) {
-      console.error("Lỗi lấy chi tiết bài viết", error);
+      console.error("Lỗi lấy chi tiết bài viết cho admin", error);
       return null;
     }
   },
