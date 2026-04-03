@@ -28,8 +28,8 @@ const SettingsPage: React.FC = () => {
   const setLoading = useLoadingStore(state => state.setLoading);
   const isLoading = useLoadingStore(state => state.loadingStates['settings']);
 
-  const [activeSection, setActiveSection] = useState<SettingSection | null>(
-    window.innerWidth >= 768 ? 'privacy' : null
+  const [activeSection, setActiveSection] = useState<SettingSection | null>(() =>
+    typeof window !== 'undefined' && window.innerWidth >= 768 ? 'privacy' : null
   );
   const [blockedList, setBlockedList] = useState<BlockedUserWithOptions[]>([]);
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
@@ -192,11 +192,9 @@ const SettingsPage: React.FC = () => {
           )}
 
           {/* Section content */}
-          {(activeSection || window.innerWidth >= 768) && (
-            <div className={`p-4 md:p-6 max-w-2xl mx-auto w-full ${!activeSection ? 'hidden md:block' : ''}`}>
-              {renderContent()}
-            </div>
-          )}
+          <div className={`p-4 md:p-6 max-w-2xl mx-auto w-full ${!activeSection ? 'hidden md:block' : ''}`}>
+            {renderContent()}
+          </div>
         </div>
       </div>
 

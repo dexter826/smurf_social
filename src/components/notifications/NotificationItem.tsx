@@ -137,7 +137,7 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
           onClick={handleDelete}
           className="w-7 h-7 flex items-center justify-center rounded-full text-text-tertiary
             hover:text-error hover:bg-error/10 transition-all duration-200
-            opacity-0 group-hover:opacity-100"
+            opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
           title="Xóa thông báo"
         >
           <Trash2 size={14} />

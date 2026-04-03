@@ -270,7 +270,7 @@ export const ReportModal: React.FC = () => {
                 <span className="text-xs text-text-tertiary">{selectedImages.length}/{REPORT_CONFIG.MAX_IMAGES_PER_REPORT}</span>
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {previewUrls.map((url, index) => (
                   <div key={index} className="aspect-square relative group rounded-xl overflow-hidden border border-border-light">
                     <img src={url} alt="Preview" className="w-full h-full object-cover" />

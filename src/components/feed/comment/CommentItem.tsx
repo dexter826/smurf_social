@@ -133,7 +133,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
 
                 {/* Edit mode */}
                 {isEditing ? (
-                  <div className="mt-1.5 min-w-[200px] md:min-w-[280px]">
+                  <div className="mt-1.5 min-w-0 w-full">
                     <CommentInput
                       user={{ id: currentUser.id, fullName: currentUser.fullName, avatar: currentUser.avatar }}
                       initialValue={comment.content}

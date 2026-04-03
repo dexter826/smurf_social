@@ -172,7 +172,7 @@ const ConversationForwardItem: React.FC<ConversationForwardItemProps> = ({
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex-shrink-0
           ${hasSent
             ? 'bg-success/10 text-success cursor-default'
-            : 'bg-primary/10 text-primary hover:bg-primary/20 active:brightness-95 opacity-0 group-hover:opacity-100'
+            : 'bg-primary/10 text-primary hover:bg-primary/20 active:brightness-95 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100'
           }`}
       >
         {isSending ? (

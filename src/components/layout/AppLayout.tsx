@@ -135,7 +135,7 @@ export const AppLayout: React.FC = () => {
         </div>
 
         {/* Center nav */}
-        <nav className="flex items-center gap-0.5">
+        <nav className="flex items-center gap-0.5 flex-shrink-0">
           {navItems.map(({ to, Icon, label }) => (
             <NavLink
               key={to}
@@ -247,7 +247,7 @@ export const AppLayout: React.FC = () => {
                   <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
                 )}
               </div>
-              <span className="text-xs font-medium leading-none">{label}</span>
+              <span className="text-xs font-medium leading-none whitespace-nowrap">{label}</span>
             </NavLink>
           ))}
 
@@ -264,7 +264,7 @@ export const AppLayout: React.FC = () => {
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
               )}
             </div>
-            <span className="text-xs font-medium leading-none">Thông báo</span>
+            <span className="text-xs font-medium leading-none whitespace-nowrap">Thông báo</span>
           </NavLink>
 
           <NavLink
@@ -275,7 +275,7 @@ export const AppLayout: React.FC = () => {
             }
           >
             <Menu size={22} />
-            <span className="text-xs font-medium leading-none">Menu</span>
+            <span className="text-xs font-medium leading-none whitespace-nowrap">Menu</span>
           </NavLink>
         </nav>
       )}

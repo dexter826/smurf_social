@@ -138,14 +138,14 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] bg-bg-primary overflow-hidden transition-theme">
+    <div className="flex min-h-[100dvh] bg-bg-primary transition-theme">
       <AuthBrandingPanel
         headline={<>Kết nối <br /> Mọi nơi.</>}
         subtext="Trải nghiệm mạng xã hội thế hệ mới với Smurfy. An toàn và riêng tư."
       />
 
       {/* ── Right panel ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme overflow-y-auto">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme overflow-y-auto min-h-[100dvh] lg:min-h-0">
         <div className="w-full max-w-[420px] animate-fade-in">
 
           {/* Mobile logo */}

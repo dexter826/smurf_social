@@ -27,7 +27,7 @@ export const ToastContainer: React.FC = () => {
 
   return (
     <div
-      className="fixed top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 pointer-events-none w-full px-4"
+      className="fixed top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 pointer-events-none w-full px-4 max-w-[calc(100vw-2rem)] sm:max-w-md"
       style={{ zIndex: 'var(--z-toast)' }}
     >
       {toasts.map((toast) => {

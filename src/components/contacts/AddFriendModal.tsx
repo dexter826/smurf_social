@@ -90,7 +90,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Tìm kiếm người dùng" maxWidth="md">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Tìm kiếm người dùng" maxWidth="md" fullScreen="mobile">
       <div className="space-y-5">
         {/* Search row */}
         <div className="flex gap-2">

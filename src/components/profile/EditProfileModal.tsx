@@ -80,6 +80,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       onClose={onClose}
       title="Chỉnh sửa trang cá nhân"
       maxWidth="2xl"
+      fullScreen="mobile"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>

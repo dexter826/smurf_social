@@ -77,6 +77,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
       onClose={onClose}
       title="Đổi mật khẩu"
       maxWidth="md"
+      fullScreen="mobile"
       footer={
         <div className="flex gap-3 w-full">
           <Button variant="secondary" onClick={onClose} disabled={isLoading} className="flex-1">

@@ -91,7 +91,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
               <IconButton
                 icon={<MoreHorizontal size={18} />}
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100"
+                className="opacity-0 group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100"
               />
             }
           >
@@ -113,7 +113,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
               <IconButton
                 icon={<MoreHorizontal size={18} />}
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100"
+                className="opacity-0 group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100"
               />
             }
           >

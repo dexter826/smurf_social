@@ -15,12 +15,11 @@ export const MobileMenuPage: React.FC = () => {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="flex flex-col min-h-full w-full bg-bg-secondary">
+    <div className="flex flex-col h-full overflow-y-auto w-full bg-bg-secondary">
 
       {/* ── Profile Header ── */}
       <div
-        className="bg-bg-primary border-b border-border-light px-4 py-4 sticky top-0 flex-shrink-0"
-        style={{ zIndex: 'var(--z-header)' }}
+        className="bg-bg-primary border-b border-border-light px-4 py-4 flex-shrink-0"
       >
         <div className="flex items-center gap-3.5">
           {user && (

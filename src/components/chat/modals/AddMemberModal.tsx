@@ -70,6 +70,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       onClose={onClose}
       title="Thêm thành viên"
       maxWidth="md"
+      fullScreen="mobile"
       footer={
         <div className="flex gap-3">
           <Button variant="secondary" onClick={onClose}>Hủy</Button>

@@ -120,7 +120,9 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
   };
 
   const content = (
-    <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-4">
+    <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-4"
+      style={{ zIndex: 'var(--z-modal)' }}
+    >
       <div
         className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-fade-in"
         onClick={onClose}

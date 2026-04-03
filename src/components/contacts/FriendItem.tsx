@@ -61,7 +61,7 @@ const FriendItemInner: React.FC<FriendItemProps> = ({ friend, onUnfriend, onMess
             <IconButton
               icon={<MoreVertical size={15} />}
               size="sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-200"
             />
           }
         >

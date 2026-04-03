@@ -272,6 +272,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         onClose={onClose}
         title={step === 'select' ? 'Tạo nhóm mới' : 'Thông tin nhóm'}
         maxWidth="md"
+        fullScreen="mobile"
         footer={
           <div className="flex gap-3">
             {step === 'details' && (

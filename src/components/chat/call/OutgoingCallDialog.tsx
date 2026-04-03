@@ -56,7 +56,7 @@ export const OutgoingCallDialog: React.FC<OutgoingCallDialogProps> = ({
     >
       <audio ref={audioRef} src={waitRingSound} loop />
 
-      <div className="flex flex-col items-center gap-6 px-10 py-10 bg-[#1a1f2e] rounded-3xl shadow-2xl min-w-[300px] border border-white/10">
+      <div className="w-full sm:w-auto flex flex-col items-center gap-6 px-10 py-10 bg-[#1a1f2e] rounded-3xl shadow-2xl sm:min-w-[300px] border border-white/10">
         {/* Label */}
         <p className="text-white/50 text-xs font-medium tracking-widest uppercase">
           {callType === 'video' ? 'Cuộc gọi video' : 'Cuộc gọi thoại'}

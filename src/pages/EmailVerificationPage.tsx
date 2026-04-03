@@ -58,14 +58,14 @@ const EmailVerificationPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] bg-bg-primary overflow-hidden transition-theme">
+    <div className="flex min-h-[100dvh] bg-bg-primary transition-theme">
       <AuthBrandingPanel
         headline={<>Chỉ một bước <br /> Nữa thôi.</>}
         subtext="Để đảm bảo an toàn, vui lòng xác thực email của bạn trước khi bắt đầu khám phá Smurfy."
       />
 
       {/* ── Right panel ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme overflow-y-auto min-h-[100dvh] lg:min-h-0">
         <div className="w-full max-w-[420px] animate-fade-in">
 
           {/* Mobile logo */}

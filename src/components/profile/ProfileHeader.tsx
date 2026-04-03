@@ -186,7 +186,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0 md:mb-1">
+            <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-center md:justify-end md:mb-1">
               {isOwnProfile ? (
                 <>
                   <Button
