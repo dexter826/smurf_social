@@ -122,7 +122,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     <>
       <div
         id={`msg-${message.id}`}
-        className={`flex w-full mb-0.5 group ${isMe ? 'justify-end' : 'justify-start gap-2'}`}
+        className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start gap-2'}`}
       >
         {/* Avatar (received only) */}
         {!isMe && (
