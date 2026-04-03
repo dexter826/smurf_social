@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, X, Edit2, Reply, Pause, Play, Ban } from 'lucide-react';
+import { Send, X, Edit2, Reply, Ban } from 'lucide-react';
 import { EmojiPicker, Button, IconButton, TextArea } from '../../ui';
 import { MentionList } from './MentionList';
 import { FilePreview, FilePreviewItem } from './FilePreview';
@@ -36,26 +36,12 @@ interface ChatInputProps {
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
-  onSendText,
-  onSendImages,
-  onSendFile,
-  onSendVideo,
-  onSendVoice,
-  onTyping,
-  disabled = false,
-  blockedMessage,
-  replyingTo,
-  editingMessage,
-  onCancelAction,
-  onEditMessage,
-  currentUserId,
-  usersMap,
-  participants = [],
-  isGroup = false,
-  isDisbanded = false,
-  onDeleteConversation,
-  onManageBlock,
-  isBlockedByMe = false,
+  onSendText, onSendImages, onSendFile, onSendVideo, onSendVoice,
+  onTyping, disabled = false, blockedMessage,
+  replyingTo, editingMessage, onCancelAction, onEditMessage,
+  currentUserId, usersMap, participants = [],
+  isGroup = false, isDisbanded = false,
+  onDeleteConversation, onManageBlock, isBlockedByMe = false,
 }) => {
   const [inputText, setInputText] = useState('');
   const [activeMentions, setActiveMentions] = useState<{ id: string; name: string }[]>([]);
@@ -70,84 +56,58 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const typingTimeoutRef = useRef<NodeJS.Timeout>(undefined);
   const isCurrentlyTypingRef = useRef(false);
 
-  const {
-    isRecording,
-    recordingDuration,
-    startRecording,
-    stopRecording,
-    cancelRecording
-  } = useAudioRecorder({
-    onRecordingComplete: (blob, duration) => {
-      const audioFile = new File([blob], `voice_message_${Date.now()}.webm`, { type: 'audio/webm' });
-      const url = URL.createObjectURL(audioFile);
-      setSelectedFiles(prev => {
-        // Remove existing voice previews to avoid memory leaks
-        prev.forEach(f => {
-          if (f.type === 'voice' && f.preview) URL.revokeObjectURL(f.preview);
+  const { isRecording, recordingDuration, startRecording, stopRecording, cancelRecording } =
+    useAudioRecorder({
+      onRecordingComplete: (blob) => {
+        const audioFile = new File([blob], `voice_message_${Date.now()}.webm`, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioFile);
+        setSelectedFiles(prev => {
+          prev.forEach(f => { if (f.type === 'voice' && f.preview) URL.revokeObjectURL(f.preview); });
+          return [
+            ...prev.filter(f => f.type !== 'voice'),
+            { id: `voice-${Date.now()}`, file: audioFile, preview: url, type: 'voice' },
+          ];
         });
-        const filtered = prev.filter(f => f.type !== 'voice');
-        return [...filtered, { id: `voice-${Date.now()}`, file: audioFile, preview: url, type: 'voice' }];
-      });
-    },
-    onError: (err) => toast.error(err.message)
-  });
+      },
+      onError: (err) => toast.error(err.message),
+    });
 
   const {
-    showMentions,
-    setShowMentions,
-    mentionIndex,
-    filteredParticipants,
+    showMentions, setShowMentions, mentionIndex, filteredParticipants,
     handleInputChange: handleMentionInputChange,
     handleSelectMention: handleSelectMentionInternal,
-    handleKeyDown: handleMentionKeyDown
-  } = useMentions({
-    inputText,
-    setInputText,
-    participants,
-    currentUserId,
-    isGroup,
-    inputRef
-  });
+    handleKeyDown: handleMentionKeyDown,
+  } = useMentions({ inputText, setInputText, participants, currentUserId, isGroup, inputRef });
 
   const onSelectMention = useCallback((user: User) => {
     const userSelected = handleSelectMentionInternal(user);
-
     if (userSelected) {
-      setActiveMentions(prev => {
-        if (prev.find(m => m.id === userSelected.id)) return prev;
-        return [...prev, { id: userSelected.id, name: userSelected.fullName }];
-      });
+      setActiveMentions(prev =>
+        prev.find(m => m.id === userSelected.id)
+          ? prev
+          : [...prev, { id: userSelected.id, name: userSelected.fullName }]
+      );
     }
   }, [handleSelectMentionInternal]);
 
   useEffect(() => {
-    if (!isSending && !disabled) {
-      inputRef.current?.focus();
-    }
-    if (editingMessage) {
-      setInputText(editingMessage.data.content);
-    }
+    if (!isSending && !disabled) inputRef.current?.focus();
+    if (editingMessage) setInputText(editingMessage.data.content);
   }, [editingMessage, isSending, disabled]);
 
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      selectedFiles.forEach(f => {
-        if (f.preview) URL.revokeObjectURL(f.preview);
-      });
+      selectedFiles.forEach(f => { if (f.preview) URL.revokeObjectURL(f.preview); });
     };
   }, []);
 
   const detectedActiveMentions = useMemo(() => {
     if (!inputText) return [];
-
     const mentionRegex = /@([^\n\u200B]+)\u200B/g;
     const namesInText: string[] = [];
     let match;
-    while ((match = mentionRegex.exec(inputText)) !== null) {
-      namesInText.push(match[1]);
-    }
-
+    while ((match = mentionRegex.exec(inputText)) !== null) namesInText.push(match[1]);
     return activeMentions.filter(m => namesInText.includes(m.name));
   }, [inputText, activeMentions]);
 
@@ -162,7 +122,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       {value.split(/(@[^\n\u200B]+\u200B)/g).map((part, i) => {
         if (part.startsWith('@') && part.endsWith('\u200B')) {
           return (
-            <span key={i} className="text-primary bg-primary/10 rounded box-decoration-clone font-medium border-b-2 border-primary/20">
+            <span
+              key={i}
+              className="text-primary bg-primary/10 rounded font-medium border-b border-primary/30"
+            >
               {part.slice(0, -1)}
             </span>
           );
@@ -177,12 +140,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const text = e.target.value;
     setInputText(text);
 
-    // Chỉ gọi onTyping(true) một lần khi bắt đầu gõ
     if (!isCurrentlyTypingRef.current) {
       isCurrentlyTypingRef.current = true;
       onTyping(true);
     }
-
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       isCurrentlyTypingRef.current = false;
@@ -209,13 +170,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       const limitType = fileType === 'image' ? 'IMAGE' : fileType === 'video' ? 'VIDEO' : 'FILE';
       const validation = validateFileSize(file, limitType);
-      if (!validation.isValid) {
-        if (validation.error) toast.error(validation.error);
-        return;
-      }
+      if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
 
-      const preview = (fileType === 'image' || fileType === 'video') ? URL.createObjectURL(file) : undefined;
-      newFiles.push({ id: `${file.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, file, preview, type: fileType });
+      const preview = (fileType === 'image' || fileType === 'video')
+        ? URL.createObjectURL(file)
+        : undefined;
+      newFiles.push({
+        id: `${file.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        file, preview, type: fileType,
+      });
     });
 
     setSelectedFiles(prev => [...prev, ...newFiles]);
@@ -224,17 +187,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => {
-      const newFiles = [...prev];
-      const removed = newFiles.splice(index, 1)[0];
+      const next = [...prev];
+      const removed = next.splice(index, 1)[0];
       if (removed.preview) URL.revokeObjectURL(removed.preview);
-      return newFiles;
+      return next;
     });
   };
 
   const clearAllFiles = () => {
-    selectedFiles.forEach(f => {
-      if (f.preview) URL.revokeObjectURL(f.preview);
-    });
+    selectedFiles.forEach(f => { if (f.preview) URL.revokeObjectURL(f.preview); });
     setSelectedFiles([]);
   };
 
@@ -246,12 +207,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onTyping(false);
 
     try {
-      const albumFiles = selectedFiles.filter(f => f.type === 'image' || f.type === 'video').map(f => f.file);
+      const albumFiles = selectedFiles
+        .filter(f => f.type === 'image' || f.type === 'video')
+        .map(f => f.file);
       const otherFiles = selectedFiles.filter(f => f.type !== 'image' && f.type !== 'video');
 
-      if (albumFiles.length > 0) {
-        await onSendImages(albumFiles, replyingTo?.id);
-      }
+      if (albumFiles.length > 0) await onSendImages(albumFiles, replyingTo?.id);
 
       for (const item of otherFiles) {
         if (item.type === 'voice') await onSendVoice?.(item.file, replyingTo?.id);
@@ -266,28 +227,30 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         } else {
           let finalContent = inputText.trim();
           const mentions: string[] = [];
-
-          const tempActiveMentions = [...activeMentions];
+          const tempMentions = [...activeMentions];
 
           finalContent = finalContent.replace(/@([^\n\u200B]+)\u200B/g, (match, fullName) => {
-            const index = tempActiveMentions.findIndex(m => m.name === fullName);
-            if (index !== -1) {
-              const mention = tempActiveMentions[index];
+            const idx = tempMentions.findIndex(m => m.name === fullName);
+            if (idx !== -1) {
+              const mention = tempMentions[idx];
               mentions.push(mention.id);
-              tempActiveMentions.splice(index, 1);
+              tempMentions.splice(idx, 1);
               return `@[${mention.id}:${mention.name}]`;
             }
             return match;
           });
 
-          await onSendText(finalContent, mentions.length > 0 ? [...new Set(mentions)] : undefined, replyingTo?.id);
+          await onSendText(
+            finalContent,
+            mentions.length > 0 ? [...new Set(mentions)] : undefined,
+            replyingTo?.id
+          );
         }
         setInputText('');
         setActiveMentions([]);
       }
       onCancelAction();
-    } catch (error) {
-      console.error("Lỗi gửi tin nhắn", error);
+    } catch {
       toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
     } finally {
       setIsSending(false);
@@ -302,19 +265,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     if (e.key === 'Backspace') {
       const cursor = e.currentTarget.selectionStart;
       const text = e.currentTarget.value;
-      const beforeCursor = text.slice(0, cursor);
-
-      const mentionMatch = beforeCursor.match(/@([^\n\u200B]+)\u200B ?$/);
-
+      const mentionMatch = text.slice(0, cursor).match(/@([^\n\u200B]+)\u200B ?$/);
       if (mentionMatch) {
         e.preventDefault();
         const deleteLength = mentionMatch[0].length;
         const name = mentionMatch[1];
         const newText = text.substring(0, cursor - deleteLength) + text.substring(cursor);
         setInputText(newText);
-
-        setActiveMentions(prev => prev.filter(m => m.name !== name || newText.includes(`@${m.name}\u200B`)));
-
+        setActiveMentions(prev =>
+          prev.filter(m => m.name !== name || newText.includes(`@${m.name}\u200B`))
+        );
         setTimeout(() => {
           if (inputRef.current) {
             const newPos = cursor - deleteLength;
@@ -325,10 +285,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       }
     }
 
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }
   };
 
   const handlePlayVoice = (url: string, index: number) => {
@@ -345,37 +302,32 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
+  const canSend = (inputText.trim() || selectedFiles.length > 0) && !blockedMessage;
+
+  /* ── Blocked / disbanded state ── */
   if (blockedMessage || isDisbanded) {
     return (
-      <div className="flex-shrink-0 border-t border-border-light bg-bg-primary pb-safe z-30">
-        <div className="flex flex-row items-center justify-between px-4 py-3 gap-3">
+      <div
+        className="flex-shrink-0 border-t border-border-light bg-bg-primary pb-safe"
+        style={{ zIndex: 'var(--z-sticky)' }}
+      >
+        <div className="flex items-center justify-between px-4 py-3 gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-error-light flex items-center justify-center flex-shrink-0">
-              <Ban size={16} className="text-error" />
+            <div className="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center flex-shrink-0">
+              <Ban size={15} className="text-error" />
             </div>
-            <span className="text-text-secondary text-sm font-medium truncate">
+            <span className="text-sm text-text-secondary font-medium truncate">
               {isDisbanded ? 'Nhóm này đã giải tán.' : blockedMessage}
             </span>
           </div>
-
           <div className="flex items-center gap-2 flex-shrink-0">
             {isDisbanded && onDeleteConversation && (
-              <Button
-                onClick={onDeleteConversation}
-                variant="danger"
-                size="sm"
-                className="rounded-xl px-4"
-              >
+              <Button onClick={onDeleteConversation} variant="danger" size="sm">
                 Xóa hội thoại
               </Button>
             )}
             {!isDisbanded && onManageBlock && isBlockedByMe && (
-              <Button
-                onClick={onManageBlock}
-                variant="primary"
-                size="sm"
-                className="rounded-xl px-4"
-              >
+              <Button onClick={onManageBlock} size="sm">
                 Quản lý chặn
               </Button>
             )}
@@ -386,7 +338,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }
 
   return (
-    <div className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme pb-safe z-30 relative">
+    <div
+      className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme pb-safe relative"
+      style={{ zIndex: 'var(--z-sticky)' }}
+    >
+      {/* File previews */}
       <FilePreview
         files={selectedFiles}
         onRemove={removeFile}
@@ -395,26 +351,48 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         isSending={isSending}
       />
 
+      {/* Reply / edit banner */}
       {(replyingTo || editingMessage) && (
-        <div className="px-4 py-2 border-b border-border-light bg-bg-secondary flex items-center justify-between animate-in slide-in-from-bottom-1 duration-200">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="text-primary flex-shrink-0 bg-primary/10 p-2 rounded-lg">
-              {editingMessage ? <Edit2 size={16} /> : <Reply size={16} />}
+        <div className="px-4 py-2 border-b border-border-light bg-bg-secondary/50 flex items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              {editingMessage
+                ? <Edit2 size={14} className="text-primary" />
+                : <Reply size={14} className="text-primary" />
+              }
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-bold text-primary mb-0.5">
-                {editingMessage ? 'Đang chỉnh sửa' : (replyingTo?.data.senderId === currentUserId ? 'Trả lời chính bạn' : `Trả lời ${usersMap[replyingTo?.data.senderId || '']?.fullName || ''}`)}
-              </div>
-              <div className="text-[13px] text-text-secondary truncate">
-                {editingMessage ? editingMessage.data.content : (replyingTo?.data.type === 'text' ? replyingTo.data.content : `[${replyingTo?.data.type}]`)}
-              </div>
+              <p className="text-xs font-semibold text-primary leading-none mb-0.5">
+                {editingMessage
+                  ? 'Đang chỉnh sửa'
+                  : replyingTo?.data.senderId === currentUserId
+                    ? 'Trả lời chính bạn'
+                    : `Trả lời ${usersMap[replyingTo?.data.senderId || '']?.fullName || ''}`
+                }
+              </p>
+              <p className="text-xs text-text-secondary truncate">
+                {editingMessage
+                  ? editingMessage.data.content
+                  : replyingTo?.data.type === 'text'
+                    ? replyingTo.data.content
+                    : `[${replyingTo?.data.type}]`
+                }
+              </p>
             </div>
           </div>
-          <IconButton onClick={onCancelAction} icon={<X size={14} />} size="sm" variant="secondary" />
+          <IconButton
+            onClick={onCancelAction}
+            icon={<X size={14} />}
+            size="sm"
+            variant="ghost"
+            className="flex-shrink-0"
+          />
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="relative flex items-center gap-2 px-4 py-3 bg-bg-primary">
+      {/* Input row */}
+      <form onSubmit={handleSubmit} className="relative flex items-end gap-2 px-3 py-2.5">
+        {/* Mention dropdown */}
         {showMentions && filteredParticipants.length > 0 && (
           <MentionList
             users={filteredParticipants}
@@ -434,10 +412,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           disabled={disabled || isSending || isRecording}
         />
 
-        <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
 
         {isRecording ? (
-          <RecordingUI duration={recordingDuration} onCancel={cancelRecording} onStop={stopRecording} />
+          <RecordingUI
+            duration={recordingDuration}
+            onCancel={cancelRecording}
+            onStop={stopRecording}
+          />
         ) : (
           <TextArea
             ref={inputRef}
@@ -449,31 +437,39 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             autoResize
             maxHeight={120}
             containerClassName="flex-1"
-            className="rounded-2xl"
+            className="rounded-2xl bg-bg-secondary border-border-light"
             renderOverlay={renderMentionOverlay}
             rightElement={
               <EmojiPicker
-                onEmojiSelect={(emoji) => {
-                  insertTextAtCursor(inputRef, inputText, emoji, setInputText);
-                }}
+                onEmojiSelect={(emoji) =>
+                  insertTextAtCursor(inputRef, inputText, emoji, setInputText)
+                }
                 disabled={disabled || isSending}
-                buttonClassName="p-1.5 text-text-secondary hover:text-primary"
+                buttonClassName="p-1.5 text-text-tertiary hover:text-primary transition-colors"
               />
             }
           />
         )}
 
-        <Button
+        {/* Send button */}
+        <button
           type="submit"
-          disabled={disabled || !!blockedMessage || (!inputText.trim() && selectedFiles.length === 0)}
-          isLoading={isSending}
-          variant={(inputText.trim() || selectedFiles.length > 0) && !blockedMessage ? 'primary' : 'secondary'}
-          className={`w-11 h-11 shadow-md rounded-full flex-shrink-0 ${((inputText.trim() || selectedFiles.length > 0) && !blockedMessage) ? '' : 'opacity-40'}`}
-          icon={<Send size={20} className={(inputText.trim() || selectedFiles.length > 0) && !blockedMessage ? 'fill-current' : ''} />}
-        />
+          disabled={disabled || !!blockedMessage || (!inputText.trim() && selectedFiles.length === 0) || isSending}
+          className={`
+            w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+            transition-colors duration-200 active:brightness-95
+            ${canSend
+              ? 'btn-gradient text-white shadow-accent hover:brightness-110'
+              : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
+            }
+          `}
+        >
+          {isSending
+            ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            : <Send size={16} className={canSend ? 'fill-current' : ''} />
+          }
+        </button>
       </form>
     </div>
   );
 };
-
-

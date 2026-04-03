@@ -34,27 +34,25 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
   const inputId = id || (label ? `textarea-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
 
   useEffect(() => {
-    if (autoResize && innerRef.current) {
-      const targetHeight = Math.min(innerRef.current.scrollHeight, maxHeight);
-      if (innerRef.current.offsetHeight !== targetHeight) {
-        innerRef.current.style.height = 'auto';
-        innerRef.current.style.height = `${targetHeight}px`;
-      }
+    if (!autoResize || !innerRef.current) return;
+    const el = innerRef.current;
+    const target = Math.min(el.scrollHeight, maxHeight);
+    if (el.offsetHeight !== target) {
+      el.style.height = 'auto';
+      el.style.height = `${target}px`;
     }
   }, [value, autoResize, maxHeight]);
 
-  // Đồng bộ cuộn cho overlay.
   useEffect(() => {
     if (!innerRef.current) return;
-    const observer = new ResizeObserver(() => {
+    const ro = new ResizeObserver(() => {
       if (innerRef.current) {
-        const widthDiff = innerRef.current.offsetWidth - innerRef.current.clientWidth;
-        const sbWidth = Math.max(0, widthDiff - 2);
-        setScrollbarWidth(sbWidth);
+        const diff = innerRef.current.offsetWidth - innerRef.current.clientWidth;
+        setScrollbarWidth(Math.max(0, diff - 2));
       }
     });
-    observer.observe(innerRef.current);
-    return () => observer.disconnect();
+    ro.observe(innerRef.current);
+    return () => ro.disconnect();
   }, []);
 
   return (
@@ -66,35 +64,31 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
       )}
       <div className={`
         relative group overflow-hidden
-        bg-bg-primary border border-border-light transition-all duration-base
-        ${props.disabled ? 'opacity-50 bg-bg-secondary cursor-not-allowed' : 'focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/20'}
+        bg-bg-primary border border-border-light transition-all duration-200
+        ${props.disabled ? 'opacity-50 bg-bg-secondary cursor-not-allowed' : 'focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 hover:border-border-medium'}
         ${!className.includes('rounded-') ? 'rounded-xl' : ''}
-        ${error ? 'border-error ring-4 ring-error/10' : ''} 
+        ${error ? 'border-error ring-2 ring-error/10' : ''}
         ${className}
       `}>
         {renderOverlay && (
           <div
             aria-hidden="true"
+            ref={(el) => {
+              overlayRef.current = el;
+              if (el && innerRef.current) el.scrollTop = innerRef.current.scrollTop;
+            }}
             className={`
               absolute inset-0 w-full h-full pointer-events-none
-              bg-transparent outline-none text-base sm:text-[15px] leading-relaxed resize-none
-              whitespace-pre-wrap break-words
-              text-text-primary
-              ${icon ? 'pl-11' : 'pl-4'} 
+              bg-transparent outline-none text-base leading-relaxed resize-none
+              whitespace-pre-wrap break-words text-text-primary
+              ${icon ? 'pl-11' : 'pl-4'}
               ${!className.includes('py-') ? 'py-2' : ''}
-              overflow-hidden
-              z-20
+              overflow-hidden z-20
             `}
             style={{
               paddingTop: innerRef.current ? getComputedStyle(innerRef.current).paddingTop : '8px',
               paddingBottom: innerRef.current ? getComputedStyle(innerRef.current).paddingBottom : '8px',
               paddingRight: `calc(${rightElement ? '2rem' : '1rem'} + ${scrollbarWidth}px)`,
-            }}
-            ref={(el) => {
-              overlayRef.current = el;
-              if (el && innerRef.current) {
-                el.scrollTop = innerRef.current.scrollTop;
-              }
             }}
           >
             {renderOverlay(value as string || '')}
@@ -102,36 +96,32 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         )}
 
         {icon && (
-          <div className="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none text-text-tertiary group-focus-within:text-primary transition-colors duration-base">
+          <div className="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none text-text-tertiary group-focus-within:text-primary transition-colors duration-200">
             {icon}
           </div>
         )}
+
         <textarea
           ref={innerRef}
           id={inputId}
           className={`
-            block w-full bg-transparent outline-none border-none text-base sm:text-[15px] leading-relaxed resize-none
+            block w-full bg-transparent outline-none border-none text-base leading-relaxed resize-none
             ${renderOverlay ? 'text-transparent caret-text-primary selection:bg-primary/20 selection:text-transparent' : 'text-text-primary'}
             placeholder:text-text-tertiary
-            ${icon ? 'pl-11' : 'pl-4'} 
-            ${rightElement ? 'pr-8' : 'pr-4'} 
+            ${icon ? 'pl-11' : 'pl-4'}
+            ${rightElement ? 'pr-8' : 'pr-4'}
             ${!className.includes('py-') ? 'py-2' : ''}
             ${!className.includes('min-h-') ? 'min-h-[40px]' : ''}
-            overflow-y-auto custom-scrollbar
+            overflow-y-auto scroll-hide
             relative z-10
           `}
           rows={1}
           value={value}
           onScroll={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            if (overlayRef.current) {
-              overlayRef.current.scrollTop = target.scrollTop;
-            }
+            if (overlayRef.current) overlayRef.current.scrollTop = (e.target as HTMLTextAreaElement).scrollTop;
             props.onScroll?.(e);
           }}
-          onChange={(e) => {
-            onChange?.(e);
-          }}
+          onChange={onChange}
           style={{ caretColor: 'var(--color-primary)' }}
           {...props}
         />
@@ -143,7 +133,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         )}
       </div>
       {error && (
-        <p className="mt-0.5 ml-1 text-[11px] font-medium text-error flex items-center gap-1 animate-fade-in">
+        <p className="mt-0.5 ml-1 text-xs font-medium text-error flex items-center gap-1 animate-fade-in">
           {error}
         </p>
       )}

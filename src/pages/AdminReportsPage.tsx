@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ReportsView } from '../components/admin/ReportsView';
-import { ReportDetailModal } from '../components/admin/ReportDetailModal';
 import { useAuthStore } from '../store/authStore';
 import { Skeleton } from '../components/ui';
+import { ReportsView } from '../components/admin/ReportsView';
+import { ReportDetailModal } from '../components/admin/ReportDetailModal';
 
 const AdminReportsPage: React.FC = () => {
   const { user, isInitialized } = useAuthStore();
@@ -10,11 +10,13 @@ const AdminReportsPage: React.FC = () => {
 
   if (!isInitialized) {
     return (
-      <div className="p-6 space-y-6 bg-bg-secondary/20 h-full">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <div className="space-y-4">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+      <div className="p-6 space-y-5 h-full bg-bg-secondary/20 animate-fade-in">
+        <Skeleton className="h-9 w-44 rounded-xl" />
+        <Skeleton className="h-16 w-full rounded-2xl" />
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+          ))}
         </div>
       </div>
     );
@@ -25,11 +27,10 @@ const AdminReportsPage: React.FC = () => {
   return (
     <div className="h-full relative overflow-hidden">
       <ReportsView onSelectReport={setSelectedReportId} />
-      
       {selectedReportId && (
-        <ReportDetailModal 
-          reportId={selectedReportId} 
-          onClose={() => setSelectedReportId(null)} 
+        <ReportDetailModal
+          reportId={selectedReportId}
+          onClose={() => setSelectedReportId(null)}
         />
       )}
     </div>

@@ -3,42 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* === Spacing Scale (4px base, 0.25rem) === */
+  /* === Spacing Scale === */
   --spacing-0: 0;
   --spacing-1: 0.25rem;
-  /* 4px */
   --spacing-2: 0.5rem;
-  /* 8px */
   --spacing-3: 0.75rem;
-  /* 12px */
   --spacing-4: 1rem;
-  /* 16px */
   --spacing-5: 1.25rem;
-  /* 20px */
   --spacing-6: 1.5rem;
-  /* 24px */
   --spacing-8: 2rem;
-  /* 32px */
   --spacing-10: 2.5rem;
-  /* 40px */
   --spacing-12: 3rem;
-  /* 48px */
 
   /* === Typography Scale === */
   --font-size-xs: 0.6875rem;
-  /* 11px */
   --font-size-sm: 0.875rem;
-  /* 14px */
   --font-size-base: 1rem;
-  /* 16px */
   --font-size-lg: 1.125rem;
-  /* 18px */
   --font-size-xl: 1.25rem;
-  /* 20px */
   --font-size-2xl: 1.5rem;
-  /* 24px */
   --font-size-3xl: 1.875rem;
-  /* 30px */
 
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
@@ -50,15 +34,10 @@
 
   /* === Border Radius Scale === */
   --radius-sm: 0.5rem;
-  /* 8px */
   --radius-md: 0.75rem;
-  /* 12px */
   --radius-lg: 1rem;
-  /* 16px */
   --radius-xl: 1.25rem;
-  /* 20px */
   --radius-2xl: 1.5rem;
-  /* 24px */
   --radius-full: 9999px;
 
   /* === Transitions === */
@@ -78,12 +57,22 @@
   --color-primary-hover: #0056d6;
   --color-primary-active: #0047b3;
   --color-primary-light: #e6f0ff;
+  --color-primary-gradient: #4d8aff;
+
+  /* === Gradient === */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient));
+  --gradient-primary-r: linear-gradient(to right, var(--color-primary), var(--color-primary-gradient));
+
+  /* === Accent Shadow === */
+  --shadow-accent: 0 4px 14px rgba(0, 104, 255, 0.25);
+  --shadow-accent-lg: 0 8px 24px rgba(0, 104, 255, 0.35);
 
   /* === Sidebar Colors === */
   --sidebar-bg: #0068ff;
   --sidebar-item: rgba(255, 255, 255, 0.7);
   --sidebar-item-hover: rgba(0, 0, 0, 0.1);
   --sidebar-item-active: rgba(0, 0, 0, 0.15);
+  --sidebar-border: rgba(0, 0, 0, 0.06);
 
   /* === Background Colors === */
   --bg-primary: #ffffff;
@@ -95,7 +84,6 @@
   --bg-message-sent: #0068ff;
   --bg-message-received: #e9ebef;
   --bg-overlay: rgba(15, 23, 42, 0.45);
-  /* Màu Slate đậm hơn nhưng trong suốt hơn */
 
   /* === Text Colors === */
   --text-primary: #081c36;
@@ -105,13 +93,13 @@
   --text-link: #0068ff;
   --text-on-primary: #ffffff;
 
-  /* === Border & Status === */
+  /* === Border === */
   --border-light: #e4e6eb;
   --border-medium: #d1d5db;
-  --sidebar-border: rgba(0, 0, 0, 0.06);
   --border-dark: #9ca3af;
   --divider: #e9ebef;
 
+  /* === Status Colors === */
   --color-success: #10b981;
   --color-success-light: #d1fae5;
   --color-error: #ef4444;
@@ -159,18 +147,26 @@
   --color-primary-hover: #2563eb;
   --color-primary-active: #1d4ed8;
   --color-primary-light: rgba(59, 130, 246, 0.25);
+  --color-primary-gradient: #4d8aff;
+
+  /* === Gradient === */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient));
+  --gradient-primary-r: linear-gradient(to right, var(--color-primary), var(--color-primary-gradient));
+
+  /* === Accent Shadow === */
+  --shadow-accent: 0 4px 14px rgba(0, 104, 255, 0.3);
+  --shadow-accent-lg: 0 8px 24px rgba(0, 104, 255, 0.4);
 
   /* === Sidebar Colors === */
   --sidebar-bg: #080a0f;
   --sidebar-item: rgba(248, 250, 252, 0.65);
   --sidebar-item-hover: rgba(248, 250, 252, 0.08);
   --sidebar-item-active: rgba(248, 250, 252, 0.12);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
 
   /* === Background Colors === */
   --bg-primary: #12161f;
-  /* Làm sáng hơn một chút từ #0b0e14 */
   --bg-secondary: #1a1f29;
-  /* Làm sáng hơn một chút từ #14181f */
   --bg-tertiary: #1e242d;
   --bg-hover: #1e2530;
   --bg-active: #28303d;
@@ -187,13 +183,13 @@
   --text-link: #60a5fa;
   --text-on-primary: #ffffff;
 
-  /* === Border & Status === */
+  /* === Border === */
   --border-light: #1e2530;
   --border-medium: #2d333b;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
   --border-dark: #484f58;
   --divider: #1e2530;
 
+  /* === Status Colors === */
   --color-success: #10b981;
   --color-success-light: rgba(16, 185, 129, 0.1);
   --color-error: #ef4444;
@@ -216,17 +212,13 @@
   --surface-elevated: var(--bg-secondary);
   --surface-overlay: var(--bg-tertiary);
 
-  /* === Shadow System (darker for dark mode) === */
+  /* === Shadow System === */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
   --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.7);
   --shadow-xl: 0 8px 24px 0 rgba(0, 0, 0, 0.8);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.8);
-}
-
-.shadow-soft-md {
-  box-shadow: var(--shadow-md);
 }
 
 body {
@@ -236,18 +228,17 @@ body {
   padding: 0;
 }
 
-/* === Hide browser native password reveal button === */
+/* Ẩn nút reveal mặc định của browser */
 input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
 
-/* === Scrollbar Styles === */
+/* === Scrollbar === */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -271,7 +262,6 @@ input::-ms-clear {
   background: var(--border-medium);
 }
 
-/* === Selection === */
 ::selection {
   background-color: var(--color-primary);
   color: #ffffff;
@@ -280,40 +270,6 @@ input::-ms-clear {
 .dark ::selection {
   background-color: rgba(59, 130, 246, 0.4);
   color: #ffffff;
-}
-
-/* === Animations === */
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 0.2s ease-in-out forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.slide-in-right {
-  animation: slideInRight 0.3s ease-out forwards;
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
 }
 
 /* === Utility Classes === */
@@ -340,71 +296,36 @@ input::-ms-clear {
   @apply flex items-center justify-center;
 }
 
-/* === Mobile Safe Area === */
+/* Safe area cho mobile */
 .pb-safe {
-  padding-bottom: constant(safe-area-inset-bottom);
-  /* iOS 11.0 */
   padding-bottom: env(safe-area-inset-bottom);
-  /* iOS 11.2+ */
 }
 
-/* === Dynamic Viewport Height === */
 @supports (height: 100dvh) {
   body {
     height: 100dvh;
   }
 }
 
-/* === Highlight Animation === */
-@keyframes highlight-fade {
-  0% {
-    background-color: rgba(0, 104, 255, 0.2);
-    box-shadow: 0 0 0 4px rgba(0, 104, 255, 0.3);
-  }
-
-  100% {
-    background-color: transparent;
-    box-shadow: 0 0 0 0 rgba(0, 104, 255, 0);
-  }
+/* === Gradient Utilities === */
+.btn-gradient {
+  background: var(--gradient-primary-r);
 }
 
-.animate-highlight {
-  animation: highlight-fade 2s ease-out;
+.btn-gradient:hover {
+  filter: brightness(1.08);
+}
+
+.btn-gradient:active {
+  filter: brightness(0.96);
+  transform: scale(0.98);
 }
 
 /* === Screen Loader === */
-@keyframes cube-pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 15px var(--color-primary-light), inset 0 0 8px var(--color-primary-light);
-  }
-
-  50% {
-    transform: scale(1.3);
-    box-shadow: 0 0 25px var(--color-primary), inset 0 0 12px var(--color-primary);
-  }
-}
-
-@keyframes rotateLoader {
-  0% {
-    transform: rotate(45deg);
-  }
-
-  50% {
-    transform: rotate(225deg);
-  }
-
-  100% {
-    transform: rotate(405deg);
-  }
-}
-
 .screen-loader-cube {
-  background: linear-gradient(145deg, var(--color-primary-light), var(--color-primary));
+  background: var(--gradient-primary);
   box-shadow: 0 0 12px var(--color-primary-light), inset 0 0 8px var(--color-primary-light), inset 3px 3px 8px var(--color-primary-active);
-  animation: cube-pulse 1.6s ease-in-out infinite;
+  @apply animate-cube-pulse;
 }
 
 .screen-loader-cube:nth-child(1) {
@@ -417,4 +338,17 @@ input::-ms-clear {
 
 .screen-loader-cube:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+/* === Gradient Border Utility === */
+.gradient-border {
+  position: relative;
+  background: var(--gradient-primary);
+  padding: 2px;
+  border-radius: inherit;
+}
+
+.gradient-border>* {
+  background: var(--bg-primary);
+  border-radius: calc(inherit - 2px);
 }

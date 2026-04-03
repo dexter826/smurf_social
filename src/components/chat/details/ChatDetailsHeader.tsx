@@ -10,10 +10,7 @@ interface ChatDetailsHeaderProps {
 }
 
 export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
-  conversation,
-  currentUserId,
-  participants,
-  partner
+  conversation, currentUserId, participants, partner,
 }) => {
   const isGroup = conversation.data.isGroup;
   const displayName = isGroup ? conversation.data.name : partner?.fullName || 'Unknown';
@@ -22,7 +19,13 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
   return (
     <div className="flex flex-col items-center py-6 px-4 border-b border-border-light">
       {isGroup ? (
-        <Avatar src={avatarSrc} name={displayName} size="xl" isGroup members={participants} />
+        <Avatar
+          src={avatarSrc}
+          name={displayName}
+          size="xl"
+          isGroup
+          members={participants}
+        />
       ) : (
         <UserAvatar
           userId={partner?.id ?? ''}
@@ -34,28 +37,32 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
         />
       )}
 
-      <h2 className="mt-4 text-lg font-bold text-text-primary text-center flex items-center gap-2">
-        {displayName}
-        {!isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="lg" />}
-      </h2>
+      <div className="mt-4 flex items-center gap-2 justify-center">
+        <h2 className="text-base font-semibold text-text-primary text-center">
+          {displayName}
+        </h2>
+        {!isGroup && partner?.status === UserStatus.BANNED && (
+          <BannedBadge size="lg" />
+        )}
+      </div>
 
       {!isGroup && partner && (
         <UserStatusText
           userId={partner.id}
           initialStatus={partner.status}
-          className="text-sm text-text-secondary mt-1"
+          className="text-xs text-text-secondary mt-1"
         />
       )}
 
       {isGroup && (
-        <p className="text-sm text-text-secondary mt-1">
+        <p className="text-xs text-text-secondary mt-1">
           {participants.length} thành viên
         </p>
       )}
 
       {partner?.bio && (
-        <p className="text-sm text-text-tertiary mt-2 text-center max-w-[250px] line-clamp-2">
-          {partner.bio}
+        <p className="text-xs text-text-tertiary mt-2 text-center max-w-[240px] line-clamp-2 italic">
+          "{partner.bio}"
         </p>
       )}
     </div>

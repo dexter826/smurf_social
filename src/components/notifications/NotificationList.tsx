@@ -1,52 +1,49 @@
 import React from 'react';
+import { BellOff } from 'lucide-react';
+import { NotificationType } from '../../../shared/types';
 import { useNotificationStore } from '../../store/notificationStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { NotificationItem } from './NotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
-import { BellOff } from 'lucide-react';
-import { NotificationType } from '../../../shared/types';
 
 interface NotificationListProps {
   onItemClick?: () => void;
   maxHeight?: string;
 }
 
-export const NotificationList: React.FC<NotificationListProps> = ({ onItemClick, maxHeight = '400px' }) => {
-  const { notifications } = useNotificationStore();
+export const NotificationList: React.FC<NotificationListProps> = ({
+  onItemClick,
+  maxHeight = '420px',
+}) => {
+  const notifications = useNotificationStore(state => state.notifications);
   const isLoading = useLoadingStore(state => state.loadingStates['notifications']);
 
-  const visibleNotifications = notifications.filter(n => {
+  const visible = notifications.filter(n => {
     if (n.type !== NotificationType.REPORT) return true;
     return !(n.data?.contentSnippet ?? '').includes('bị khóa');
   });
 
-  if (isLoading && visibleNotifications.length === 0) {
-    return <NotificationSkeleton />;
-  }
+  if (isLoading && visible.length === 0) return <NotificationSkeleton />;
 
-  if (visibleNotifications.length === 0) {
+  if (visible.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-text-tertiary">
-        <BellOff size={40} className="mb-2 opacity-20" />
-        <p className="text-sm">Chưa có thông báo nào</p>
+      <div className="flex flex-col items-center justify-center py-10 text-text-tertiary">
+        <div className="w-12 h-12 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
+          <BellOff size={20} className="opacity-50" />
+        </div>
+        <p className="text-sm font-medium">Chưa có thông báo nào</p>
       </div>
     );
   }
 
   return (
     <div
-      className="overflow-y-auto custom-scrollbar relative"
+      className="overflow-y-auto scroll-hide"
       style={{ maxHeight }}
     >
-      <div className="flex flex-col">
-        {visibleNotifications.map((notification) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            onClick={onItemClick}
-          />
-        ))}
-      </div>
+      {visible.map(n => (
+        <NotificationItem key={n.id} notification={n} onClick={onItemClick} />
+      ))}
     </div>
   );
 };

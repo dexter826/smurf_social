@@ -1,7 +1,6 @@
 import React from 'react';
 import { ReactionType } from '../../../../shared/types';
 
-// Import SVG files as React components using ?react suffix
 import SVGLike from '../../../assets/icons/like.svg?react';
 import SVGLove from '../../../assets/icons/love.svg?react';
 import SVGHaha from '../../../assets/icons/haha.svg?react';
@@ -56,7 +55,7 @@ export const getReactionIcon = (type: ReactionType, className?: string, size: nu
       return <IconSad className={className} size={size} />;
     case ReactionType.ANGRY:
       return <IconAngry className={className} size={size} />;
-    default: 
+    default:
       return null;
   }
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { PhoneOff, PhoneMissed } from 'lucide-react';
+import { PhoneOff, PhoneMissed, X } from 'lucide-react';
 import { UserAvatar } from '../../ui';
 import { CallEndReason } from '../../../store/callStore';
 import waitRingSound from '../../../assets/sounds/wait_ring.mp3';
@@ -14,97 +14,88 @@ interface OutgoingCallDialogProps {
   onDismiss: () => void;
 }
 
+const endReasonConfig = {
+  busy: {
+    icon: <PhoneMissed size={26} className="text-white" />,
+    label: 'Đang bận',
+    subtitle: 'Người dùng đang trong cuộc gọi khác',
+    btnColor: 'bg-orange-500 hover:bg-orange-600',
+  },
+  rejected: {
+    icon: <PhoneOff size={26} className="text-white" />,
+    label: 'Từ chối',
+    subtitle: 'Cuộc gọi bị từ chối',
+    btnColor: 'bg-red-500 hover:bg-red-600',
+  },
+} as const;
+
 export const OutgoingCallDialog: React.FC<OutgoingCallDialogProps> = ({
-  calleeName,
-  calleeId,
-  calleeAvatar,
-  callType,
-  endReason,
-  onCancel,
-  onDismiss,
+  calleeName, calleeId, calleeAvatar, callType, endReason, onCancel, onDismiss,
 }) => {
   const [dots, setDots] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setDots(d => d.length >= 3 ? '' : d + '.');
-    }, 500);
+    const id = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 500);
     return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
-    if (endReason && audioRef.current) {
-      audioRef.current.pause();
-    }
+    if (endReason) audioRef.current?.pause();
+    else audioRef.current?.play().catch(() => { });
   }, [endReason]);
 
-  useEffect(() => {
-    if (!endReason && audioRef.current) {
-      audioRef.current.play().catch(e => {
-        console.warn("Trình duyệt chặn autoplay âm thanh chờ:", e);
-      });
-    }
-  }, [endReason]);
-
-  const endReasonConfig = {
-    busy: {
-      icon: <PhoneMissed size={28} className="text-white" />,
-      label: 'Đang bận',
-      subtitle: 'Người dùng đang trong cuộc gọi khác',
-      bg: 'bg-orange-500',
-    },
-    rejected: {
-      icon: <PhoneOff size={28} className="text-white" />,
-      label: 'Từ chối',
-      subtitle: 'Cuộc gọi bị từ chối',
-      bg: 'bg-red-500',
-    },
-  };
-
-  const reasonConfig = endReason ? endReasonConfig[endReason] : null;
+  const config = endReason
+    ? endReasonConfig[endReason as keyof typeof endReasonConfig]
+    : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in">
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md animate-fade-in"
+      style={{ zIndex: 'var(--z-dialog)' }}
+    >
       <audio ref={audioRef} src={waitRingSound} loop />
-      <div className="flex flex-col items-center gap-6 px-10 py-10 bg-gray-900 rounded-3xl shadow-2xl min-w-[300px]">
-        <p className="text-gray-400 text-sm tracking-wide">
+
+      <div className="flex flex-col items-center gap-6 px-10 py-10 bg-[#1a1f2e] rounded-3xl shadow-2xl min-w-[300px] border border-white/10">
+        {/* Label */}
+        <p className="text-white/50 text-xs font-medium tracking-widest uppercase">
           {callType === 'video' ? 'Cuộc gọi video' : 'Cuộc gọi thoại'}
         </p>
 
+        {/* Avatar */}
         <UserAvatar userId={calleeId} name={calleeName} src={calleeAvatar} size="xl" />
 
+        {/* Name + status */}
         <div className="text-center">
           <h3 className="text-white text-xl font-semibold">{calleeName}</h3>
-          {reasonConfig ? (
-            <div className="mt-2 flex flex-col items-center gap-1">
-              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                endReason === 'busy' ? 'text-orange-400' : 'text-red-400'
-              }`}>
-                {reasonConfig.label}
-              </span>
-              <span className="text-gray-500 text-xs">{reasonConfig.subtitle}</span>
+          {config ? (
+            <div className="mt-2 space-y-0.5">
+              <p className="text-sm font-semibold text-white/80">{config.label}</p>
+              <p className="text-xs text-white/40">{config.subtitle}</p>
             </div>
           ) : (
-            <p className="text-gray-400 text-sm mt-1">Đang gọi{dots}</p>
+            <p className="text-white/50 text-sm mt-1 tabular-nums">
+              Đang gọi{dots}
+            </p>
           )}
         </div>
 
-        {reasonConfig ? (
+        {/* Action button */}
+        {config ? (
           <button
             onClick={onDismiss}
-            className={`w-16 h-16 rounded-full ${reasonConfig.bg} hover:opacity-80 flex items-center justify-center transition-colors shadow-lg`}
+            className={`w-16 h-16 rounded-full ${config.btnColor} flex items-center justify-center transition-all duration-200 shadow-lg active:scale-95`}
             title="Đóng"
           >
-            {reasonConfig.icon}
+            <X size={24} className="text-white" />
           </button>
         ) : (
           <button
             onClick={onCancel}
-            className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors shadow-lg"
+            className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-200 shadow-lg active:scale-95"
             title="Hủy cuộc gọi"
           >
-            <PhoneOff size={28} className="text-white" />
+            <PhoneOff size={24} className="text-white" />
           </button>
         )}
       </div>

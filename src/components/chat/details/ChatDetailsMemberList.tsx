@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, RtdbConversation, RtdbUserChat, UserStatus } from '../../../../shared/types';
-import { UserAvatar, UserStatusText, Dropdown, DropdownItem, ConfirmDialog, Button, IconButton } from '../../ui';
-import { Crown, Shield, UserPlus, MoreVertical, UserMinus, ShieldPlus, ShieldMinus, LogOut, Lock } from 'lucide-react';
+import {
+  UserAvatar, UserStatusText, Dropdown, DropdownItem,
+  ConfirmDialog, IconButton,
+} from '../../ui';
+import {
+  Crown, Shield, UserPlus, MoreVertical,
+  UserMinus, ShieldPlus, ShieldMinus, Lock,
+} from 'lucide-react';
 
 interface ChatDetailsMemberListProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
@@ -16,14 +22,9 @@ interface ChatDetailsMemberListProps {
 }
 
 export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
-  conversation,
-  currentUserId,
-  participants,
-  onMemberClick,
-  onAddMember,
-  onRemoveMember,
-  onPromoteToAdmin,
-  onDemoteFromAdmin
+  conversation, currentUserId, participants,
+  onMemberClick, onAddMember, onRemoveMember,
+  onPromoteToAdmin, onDemoteFromAdmin,
 }) => {
   const navigate = useNavigate();
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -31,18 +32,10 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
 
   if (!conversation.data.isGroup) return null;
 
-  const members = participants;
   const creatorId = conversation.data.creatorId;
   const memberRoles = conversation.data.members;
-  const currentUserRole = memberRoles[currentUserId];
-  const isCurrentUserAdmin = currentUserRole === 'admin';
+  const isCurrentUserAdmin = memberRoles[currentUserId] === 'admin';
   const isCurrentUserCreator = creatorId === currentUserId;
-
-  const handleMemberProfileClick = (memberId: string) => {
-    if (memberId !== currentUserId) {
-      navigate(`/profile/${memberId}`);
-    }
-  };
 
   const getMemberRole = (memberId: string) => {
     if (memberId === creatorId) return 'creator';
@@ -59,27 +52,25 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
   };
 
   return (
-    <div className="py-4">
-      {/* Header với nút thêm thành viên */}
-      <div className="flex items-center justify-between px-4 mb-2">
-        <h3 className="text-sm font-semibold text-text-secondary">
-          Thành viên ({members.length})
-        </h3>
-        {isCurrentUserAdmin && onAddMember && (
-          <Button
-            variant="ghost"
-            size="sm"
+    <div className="py-3">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2">
+        <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">
+          Thành viên ({participants.length})
+        </p>
+        {(isCurrentUserAdmin || isCurrentUserCreator) && onAddMember && (
+          <button
             onClick={onAddMember}
-            className="text-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
-            icon={<UserPlus size={16} />}
+            className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors duration-200"
           >
+            <UserPlus size={13} />
             Thêm
-          </Button>
+          </button>
         )}
       </div>
 
-      <div className="space-y-1">
-        {members.map((member) => {
+      <div>
+        {participants.map((member) => {
           const isCurrentUser = member.id === currentUserId;
           const role = getMemberRole(member.id);
           const canManage = canManageMember(member.id);
@@ -88,8 +79,10 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
           return (
             <div
               key={member.id}
-              className={`flex items-center gap-3 px-4 py-2.5 transition-all duration-base group ${isBanned ? 'opacity-60' : 'hover:bg-bg-hover active:bg-bg-active'}`}
+              className={`flex items-center gap-3 px-4 py-2.5 transition-colors duration-200 group
+                ${isBanned ? 'opacity-60' : 'hover:bg-bg-hover active:bg-bg-active'}`}
             >
+              {/* Avatar + info */}
               <div
                 onClick={() => !isCurrentUser && !isBanned && onMemberClick?.(member.id)}
                 className={`flex items-center gap-3 flex-1 min-w-0 ${!isCurrentUser && !isBanned ? 'cursor-pointer' : ''}`}
@@ -98,39 +91,32 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                   userId={member.id}
                   size="sm"
                   showStatus={!isBanned}
-                  onClick={() => !isBanned && handleMemberProfileClick(member.id)}
+                  onClick={() => !isBanned && navigate(`/profile/${member.id}`)}
                 />
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-sm font-medium text-text-primary truncate ${!isCurrentUser && !isBanned ? 'cursor-pointer hover:underline' : ''}`}
-                      onClick={() => !isBanned && handleMemberProfileClick(member.id)}
-                    >
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-medium text-text-primary truncate">
                       {member.fullName}
-                      {isCurrentUser && <span className="text-text-tertiary"> (Bạn)</span>}
+                      {isCurrentUser && (
+                        <span className="text-text-tertiary font-normal"> (Bạn)</span>
+                      )}
                     </span>
 
-                    {/* Role badges */}
                     {role === 'creator' && (
-                      <span className="text-warning" title="Trưởng nhóm">
-                        <Crown size={14} />
-                      </span>
+                      <Crown size={13} className="text-warning flex-shrink-0" title="Trưởng nhóm" />
                     )}
                     {role === 'admin' && (
-                      <span className="text-info" title="Admin">
-                        <Shield size={14} />
-                      </span>
+                      <Shield size={13} className="text-info flex-shrink-0" title="Admin" />
                     )}
-
-                    {/* Banned badge */}
                     {isBanned && (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-error/10 text-error flex-shrink-0">
-                        <Lock size={10} />
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-error/10 text-error flex-shrink-0">
+                        <Lock size={9} />
                         Đã khóa
                       </span>
                     )}
                   </div>
+
                   {!isBanned && (
                     <UserStatusText
                       userId={member.id}
@@ -141,48 +127,39 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                 </div>
               </div>
 
-              {/* Menu quản lý — ẩn khi member bị ban */}
+              {/* Context menu */}
               {canManage && !isBanned && (
                 <Dropdown
                   isOpen={menuOpenId === member.id}
                   onOpenChange={(open) => setMenuOpenId(open ? member.id : null)}
                   trigger={
                     <IconButton
-                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base min-w-[44px]"
-                      icon={<MoreVertical size={18} />}
-                      size="md"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      icon={<MoreVertical size={16} />}
+                      size="sm"
                     />
                   }
                 >
                   {role === 'member' && onPromoteToAdmin && (
                     <DropdownItem
-                      icon={<ShieldPlus size={16} />}
+                      icon={<ShieldPlus size={14} />}
                       label="Thăng làm Admin"
-                      onClick={() => {
-                        onPromoteToAdmin(member.id);
-                        setMenuOpenId(null);
-                      }}
+                      onClick={() => { onPromoteToAdmin(member.id); setMenuOpenId(null); }}
                     />
                   )}
                   {role === 'admin' && isCurrentUserCreator && onDemoteFromAdmin && (
                     <DropdownItem
-                      icon={<ShieldMinus size={16} />}
+                      icon={<ShieldMinus size={14} />}
                       label="Hạ quyền Admin"
-                      onClick={() => {
-                        onDemoteFromAdmin(member.id);
-                        setMenuOpenId(null);
-                      }}
+                      onClick={() => { onDemoteFromAdmin(member.id); setMenuOpenId(null); }}
                     />
                   )}
                   {onRemoveMember && (
                     <DropdownItem
-                      icon={<UserMinus size={16} />}
+                      icon={<UserMinus size={14} />}
                       label="Xóa khỏi nhóm"
                       variant="danger"
-                      onClick={() => {
-                        setConfirmRemove(member.id);
-                        setMenuOpenId(null);
-                      }}
+                      onClick={() => { setConfirmRemove(member.id); setMenuOpenId(null); }}
                     />
                   )}
                 </Dropdown>
@@ -192,16 +169,10 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
         })}
       </div>
 
-      {/* Confirm dialog xóa thành viên */}
       <ConfirmDialog
         isOpen={!!confirmRemove}
         onClose={() => setConfirmRemove(null)}
-        onConfirm={() => {
-          if (confirmRemove && onRemoveMember) {
-            onRemoveMember(confirmRemove);
-          }
-          setConfirmRemove(null);
-        }}
+        onConfirm={() => { if (confirmRemove) onRemoveMember?.(confirmRemove); setConfirmRemove(null); }}
         title="Xóa thành viên"
         message="Bạn có chắc chắn muốn xóa thành viên này khỏi nhóm?"
         confirmLabel="Xóa ngay"

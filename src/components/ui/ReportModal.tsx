@@ -17,7 +17,7 @@ import { reportService } from '../../services/reportService';
 
 export const ReportModal: React.FC = () => {
   const { user } = useAuthStore();
-  const { isOpen, data: reportContext, isSubmitting: isStoreSubmitting, closeReportModal, submitReport, error } = useReportStore();
+  const { isOpen, data: reportContext, isSubmitting: isStoreSubmitting, closeReportModal, submitReport } = useReportStore();
 
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -30,7 +30,6 @@ export const ReportModal: React.FC = () => {
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
     reset,
     formState: { errors }
@@ -152,7 +151,7 @@ export const ReportModal: React.FC = () => {
     <div className="flex flex-col gap-3 w-full">
       {/* Tùy chọn chặn */}
       {formData.reason !== '' && (
-        <div className="flex items-start gap-3 p-3 rounded-lg border border-warning/30 bg-warning/5 hover:bg-warning/10 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="flex items-start gap-3 p-3 rounded-xl border border-warning/20 bg-warning/5 hover:bg-warning/10 transition-colors duration-200 animate-fade-in">
           <div className="flex-shrink-0 mt-0.5">
             <Checkbox
               id="report-block-user"
@@ -205,8 +204,8 @@ export const ReportModal: React.FC = () => {
     >
       <form id="report-form" onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
         {/* Header info */}
-        <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-lg">
-          <AlertTriangle size={16} className="text-warning flex-shrink-0" />
+        <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-xl border border-warning/20">
+          <AlertTriangle size={15} className="text-warning flex-shrink-0" />
           <span>{isUserReport
             ? "Hãy cho chúng tôi biết người dùng này đang vi phạm điều gì"
             : "Chọn lý do phù hợp nhất để giúp chúng tôi xử lý nhanh hơn"}
@@ -219,9 +218,9 @@ export const ReportModal: React.FC = () => {
             <label
               key={key}
               className={`
-                flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-base
+                flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200
                 border ${formData.reason === key
-                  ? 'border-primary bg-primary/5 shadow-sm'
+                  ? 'border-primary bg-primary/5'
                   : 'border-border-light hover:bg-bg-hover active:bg-bg-active hover:border-border-medium'
                 }
               `}
@@ -247,7 +246,7 @@ export const ReportModal: React.FC = () => {
 
         {/* Mô tả thêm */}
         {(formData.reason === ReportReason.OTHER || formData.reason !== '') && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="space-y-4 animate-fade-in">
             <div className="space-y-2">
               <label className="text-sm font-medium text-text-primary">
                 Mô tả chi tiết {formData.reason === ReportReason.OTHER && <span className="text-text-secondary">(bắt buộc)</span>}
@@ -273,12 +272,12 @@ export const ReportModal: React.FC = () => {
 
               <div className="grid grid-cols-4 gap-2">
                 {previewUrls.map((url, index) => (
-                  <div key={index} className="aspect-square relative group rounded-lg overflow-hidden border border-border-light">
+                  <div key={index} className="aspect-square relative group rounded-xl overflow-hidden border border-border-light">
                     <img src={url} alt="Preview" className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base active:bg-black/70"
+                      className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 active:bg-black/70"
                     >
                       <X size={12} />
                     </button>
@@ -289,10 +288,10 @@ export const ReportModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border-light rounded-lg hover:bg-bg-hover active:bg-bg-active hover:border-primary/50 transition-all duration-base text-text-tertiary hover:text-primary"
+                    className="aspect-square flex flex-col items-center justify-center gap-1 border border-dashed border-border-light rounded-xl hover:bg-bg-hover active:bg-bg-active hover:border-primary/50 transition-all duration-200 text-text-tertiary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
                     <ImageIcon size={20} />
-                    <span className="text-[10px]">Thêm ảnh</span>
+                    <span className="text-xs">Thêm ảnh</span>
                   </button>
                 )}
               </div>

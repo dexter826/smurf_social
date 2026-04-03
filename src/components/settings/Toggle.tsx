@@ -6,25 +6,25 @@ interface ToggleProps {
   disabled?: boolean;
 }
 
-/**
- * Switch Toggle Component
- * Đã tối ưu hóa cho hiệu năng bằng React.memo.
- */
-const Toggle: React.FC<ToggleProps> = ({ enabled, onToggle, disabled = false }) => {
-  return (
+const Toggle: React.FC<ToggleProps> = ({ enabled, onToggle, disabled = false }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={enabled}
+    disabled={disabled}
+    onClick={onToggle}
+    className={`
+      w-11 h-6 rounded-full p-0.5 transition-all duration-300
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2
+      ${enabled ? 'btn-gradient shadow-accent' : 'bg-bg-tertiary'}
+      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+    `}
+  >
     <div
-      onClick={!disabled ? onToggle : undefined}
-      className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-all duration-base ${
-        enabled ? 'bg-primary' : 'bg-bg-tertiary'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-    >
-      <div
-        className={`w-4 h-4 bg-bg-primary rounded-full shadow-md transition-transform duration-base ${
-          enabled ? 'translate-x-6' : 'translate-x-0'
-        }`}
-      />
-    </div>
-  );
-};
+      className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300
+        ${enabled ? 'translate-x-5' : 'translate-x-0'}`}
+    />
+  </button>
+);
 
 export default React.memo(Toggle);

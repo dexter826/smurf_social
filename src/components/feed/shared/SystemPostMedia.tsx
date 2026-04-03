@@ -9,11 +9,11 @@ interface SystemPostMediaProps {
   onClick?: () => void;
 }
 
-export const SystemPostMedia: React.FC<SystemPostMediaProps> = ({ 
-  type, 
-  media, 
+export const SystemPostMedia: React.FC<SystemPostMediaProps> = ({
+  type,
+  media,
   variant = 'feed',
-  onClick 
+  onClick
 }) => {
   const mainMedia = media[0];
   if (!mainMedia) return null;
@@ -22,13 +22,13 @@ export const SystemPostMedia: React.FC<SystemPostMediaProps> = ({
   const isCinema = variant === 'cinema';
 
   return (
-    <div 
+    <div
       className={`relative w-full overflow-hidden cursor-pointer ${isCinema ? 'h-full flex items-center justify-center bg-black' : 'bg-bg-secondary/30 border-y border-border-light'}`}
       onClick={onClick}
     >
       {/* Nền mờ chỉ xuất hiện ở chế độ Cinema để lấp đầy không gian trống */}
       {isCinema && (
-        <div 
+        <div
           className="absolute inset-0 z-0 blur-3xl opacity-40 scale-110 pointer-events-none"
           style={{
             backgroundImage: `url(${mainMedia.url})`,
@@ -41,17 +41,17 @@ export const SystemPostMedia: React.FC<SystemPostMediaProps> = ({
       <div className={`relative z-10 w-full flex items-center justify-center ${isAvatar ? (isCinema ? 'p-12' : 'py-8 md:py-12') : ''}`}>
         {isAvatar ? (
           <div className={`relative rounded-full border-[8px] border-bg-primary shadow-xl overflow-hidden ${isCinema ? 'w-64 h-64 sm:w-80 sm:h-80 md:w-[450px] md:h-[450px]' : 'w-60 h-60 sm:w-80 sm:h-80'}`}>
-            <LazyImage 
-              src={mainMedia.url} 
-              alt="Avatar update" 
+            <LazyImage
+              src={mainMedia.url}
+              alt="Avatar update"
               className="w-full h-full object-cover"
             />
           </div>
         ) : (
           <div className={`relative w-full overflow-hidden ${isCinema ? 'aspect-video md:aspect-[21/9] max-w-5xl shadow-2xl' : 'aspect-video sm:aspect-[21/9]'}`}>
-            <LazyImage 
-              src={mainMedia.url} 
-              alt="Cover update" 
+            <LazyImage
+              src={mainMedia.url}
+              alt="Cover update"
               className="w-full h-full object-cover"
             />
           </div>

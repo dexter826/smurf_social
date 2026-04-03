@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Image as ImageIcon, X, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,11 +13,7 @@ import { MEDIA_CONSTRAINTS } from '../../../constants';
 import { MediaObject } from '../../../../shared/types';
 
 interface CommentInputProps {
-  user: {
-    id: string;
-    fullName: string;
-    avatar?: MediaObject;
-  };
+  user: { id: string; fullName: string; avatar?: MediaObject };
   placeholder?: string;
   initialValue?: string;
   initialImage?: MediaObject;
@@ -35,90 +31,65 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   onSubmit,
   onCancel,
   onUploadMedia,
-  autoFocus = false
+  autoFocus = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    formState: { isSubmitting, isDirty }
-  } = useForm<CommentFormValues>({
+  const { register, handleSubmit, setValue, watch, reset } = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
     defaultValues: {
       content: initialValue,
       image: initialImage?.url || undefined,
-      hasPendingImage: false
-    }
+      hasPendingImage: false,
+    },
   });
 
   const formData = watch();
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-
-  // State cho file pending (chưa upload) và preview blob URL
-  const [pendingImage, setPendingImage] = React.useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (autoFocus && textareaRef.current) {
-      textareaRef.current.focus();
-    }
+    if (autoFocus) textareaRef.current?.focus();
   }, [autoFocus]);
 
-  // Initialize preview from initialImage if it's a MediaObject
   useEffect(() => {
-    if (initialImage && typeof initialImage === 'object' && 'url' in initialImage) {
-      setValue('image', initialImage.url);
-    }
+    if (initialImage && 'url' in initialImage) setValue('image', initialImage.url);
   }, [initialImage, setValue]);
 
-  // Adjust textarea height
   useAutoResizeTextarea(textareaRef, formData.content || '');
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Kiểm tra giới hạn số ảnh
-    const hasImage = formData.image || previewUrl;
-    if (hasImage && MEDIA_CONSTRAINTS.MAX_IMAGES_PER_COMMENT <= 1) {
+    if ((formData.image || previewUrl) && MEDIA_CONSTRAINTS.MAX_IMAGES_PER_COMMENT <= 1) {
       toast.error(`Chỉ được đăng tối đa ${MEDIA_CONSTRAINTS.MAX_IMAGES_PER_COMMENT} ảnh`);
       return;
     }
 
     const validation = validateFileSize(file, 'IMAGE');
-    if (!validation.isValid) {
-      if (validation.error) toast.error(validation.error);
-      return;
-    }
+    if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
 
-    // Chỉ lưu file và tạo preview, không upload ngay
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPendingImage(file);
     setPreviewUrl(URL.createObjectURL(file));
     setValue('hasPendingImage', true, { shouldValidate: true, shouldDirty: true });
-    if (e.target) e.target.value = '';
+    e.target.value = '';
   };
 
   const handleFormSubmit = async (data: CommentFormValues) => {
-    const submittedData = { ...data };
+    let imageMedia: MediaObject | undefined;
 
-    // Upload pending image khi submit
-    let imageMedia: MediaObject | undefined = undefined;
     if (pendingImage) {
       setIsUploading(true);
       setUploadProgress(0);
       try {
         imageMedia = await onUploadMedia(pendingImage);
         setUploadProgress(100);
-      } catch (error) {
+      } catch {
         setIsUploading(false);
         setUploadProgress(0);
         return;
@@ -126,144 +97,145 @@ export const CommentInput: React.FC<CommentInputProps> = ({
         setIsUploading(false);
         setUploadProgress(0);
       }
-    } else if (submittedData.image) {
-      // If there's an existing image URL (from initialImage), wrap it as MediaObject
-      // This is a fallback - ideally initialImage should already be MediaObject
-      imageMedia = typeof initialImage === 'object' && 'url' in initialImage
-        ? initialImage
-        : undefined;
+    } else if (data.image && initialImage && 'url' in initialImage) {
+      imageMedia = initialImage;
     }
 
-    // Cleanup
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPendingImage(null);
     setPreviewUrl(null);
-    reset({
-      content: '',
-      image: undefined,
-      hasPendingImage: false
-    });
-
-    try {
-      await onSubmit(submittedData.content || '', imageMedia);
-    } catch (error) {
-      console.error('Lỗi gửi bình luận:', error);
-    }
+    reset({ content: '', image: undefined, hasPendingImage: false });
+    await onSubmit(data.content || '', imageMedia);
   };
 
   const handleRemoveMedia = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPendingImage(null);
     setPreviewUrl(null);
     setValue('image', undefined, { shouldDirty: true, shouldValidate: true });
     setValue('hasPendingImage', false, { shouldDirty: true, shouldValidate: true });
   };
 
-  return (
-    <div className="flex gap-3">
-      <UserAvatar userId={user.id} src={user.avatar?.url} name={user.fullName} size="xs" />
-      <div className="flex-1 min-w-0">
-        <form
-          onSubmit={handleSubmit(handleFormSubmit)}
-          className="bg-bg-secondary rounded-2xl transition-all duration-base p-2"
-        >
-          <textarea
-            {...register('content')}
-            ref={(e) => {
-              register('content').ref(e);
-              (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
-            }}
-            placeholder={placeholder}
-            rows={1}
-            className="w-full bg-transparent border-none outline-none text-sm resize-none py-1 placeholder:text-text-tertiary max-h-32 custom-scrollbar"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(handleFormSubmit)();
-              }
-              if (e.key === 'Escape' && onCancel) {
-                onCancel();
-              }
-            }}
-          />
+  const canSubmit = (!!formData.content?.trim() || !!pendingImage || !!formData.image) && !isUploading;
 
-          {(formData.image || previewUrl || isUploading) && (
-            <div className="mt-2 relative inline-block">
-              {(formData.image || previewUrl) ? (
-                <div className="relative group">
-                  <img
-                    src={previewUrl || formData.image}
-                    alt="Preview"
-                    className={`h-20 w-auto rounded-lg object-cover ${isUploading ? 'opacity-60' : ''}`}
-                  />
-                  <CircularProgressOverlay
-                    isVisible={isUploading}
-                    progress={uploadProgress}
-                    size={36}
-                    showPercentage={false}
-                  />
-                  {!isUploading && (
-                    <IconButton
-                      type="button"
-                      onClick={handleRemoveMedia}
-                      className="absolute -top-2 -right-2 bg-text-primary text-bg-primary shadow-md"
-                      size="sm"
-                      icon={<X size={12} />}
-                    />
+  return (
+    <div className="flex gap-2.5 items-end">
+      <UserAvatar userId={user.id} src={user.avatar?.url} name={user.fullName} size="xs" />
+
+      <div className="flex-1 min-w-0">
+        <form onSubmit={handleSubmit(handleFormSubmit)}>
+          {/* Input bubble */}
+          <div className="bg-bg-secondary border border-border-light rounded-2xl transition-all duration-200 focus-within:border-primary/30 focus-within:bg-bg-primary">
+            <textarea
+              {...register('content')}
+              ref={(e) => {
+                register('content').ref(e);
+                (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
+              }}
+              placeholder={placeholder}
+              rows={1}
+              className="w-full bg-transparent border-none outline-none text-sm resize-none px-3.5 pt-2.5 pb-1 placeholder:text-text-tertiary max-h-32 scroll-hide text-text-primary"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(handleFormSubmit)();
+                }
+                if (e.key === 'Escape' && onCancel) onCancel();
+              }}
+            />
+
+            {/* Image preview */}
+            {(formData.image || previewUrl || isUploading) && (
+              <div className="px-3 pb-2">
+                <div className="relative inline-block">
+                  {(formData.image || previewUrl) && (
+                    <div className="relative group/img">
+                      <img
+                        src={previewUrl || formData.image}
+                        alt="Preview"
+                        className={`h-20 w-auto rounded-xl object-cover border border-border-light ${isUploading ? 'opacity-50' : ''}`}
+                      />
+                      <CircularProgressOverlay
+                        isVisible={isUploading}
+                        progress={uploadProgress}
+                        size={32}
+                        showPercentage={false}
+                      />
+                      {!isUploading && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveMedia}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-text-primary text-bg-primary rounded-full flex items-center justify-center shadow-md transition-colors duration-200 hover:bg-text-secondary"
+                        >
+                          <X size={11} />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
-              ) : null}
-            </div>
-          )}
+              </div>
+            )}
 
-          <div className="flex items-center justify-between mt-1 pt-1">
-            <div className="flex items-center gap-1">
-              <IconButton
-                type="button"
-                className="text-text-tertiary hover:text-success active:text-success"
-                onClick={() => fileInputRef.current?.click()}
-                icon={<ImageIcon size={16} />}
-                size="sm"
-                title="Thêm ảnh"
-                disabled={isSubmitting || isUploading}
-              />
-              <EmojiPicker
-                onEmojiSelect={(emoji) => {
-                  insertTextAtCursor(textareaRef, formData.content || '', emoji, (newText) => {
-                    setValue('content', newText, { shouldDirty: true });
-                  });
-                }}
-                size={16}
-                disabled={isSubmitting || isUploading}
-              />
-            </div>
-            <div className="flex items-center gap-1">
-              {onCancel && (
-                <Button
-                  variant="ghost"
+            {/* Toolbar */}
+            <div className="flex items-center justify-between px-2 pb-1.5">
+              <div className="flex items-center gap-0.5">
+                <IconButton
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  icon={<ImageIcon size={15} />}
                   size="sm"
-                  onClick={onCancel}
-                  className="!h-auto !py-1.5 !px-2.5 text-xs font-semibold"
+                  title="Thêm ảnh"
+                  disabled={isUploading}
+                  className="text-text-tertiary hover:text-success"
+                />
+                <EmojiPicker
+                  onEmojiSelect={(emoji) =>
+                    insertTextAtCursor(
+                      textareaRef,
+                      formData.content || '',
+                      emoji,
+                      (t) => setValue('content', t, { shouldDirty: true })
+                    )
+                  }
+                  size={15}
+                  disabled={isUploading}
+                />
+              </div>
+
+              <div className="flex items-center gap-1">
+                {onCancel && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onCancel}
+                    className="!h-7 !py-0 !px-2.5 text-xs"
+                  >
+                    Hủy
+                  </Button>
+                )}
+                <button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200 flex-shrink-0
+                    ${canSubmit
+                      ? 'btn-gradient text-white shadow-sm hover:brightness-110 active:brightness-95'
+                      : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
+                    }`}
                 >
-                  Hủy
-                </Button>
-              )}
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={(!formData.content?.trim() && !pendingImage && !formData.image) || isSubmitting || isUploading}
-                isLoading={isSubmitting}
-                className="w-9 h-9 rounded-full shadow-sm p-0 flex-shrink-0"
-                icon={<Send size={16} className="fill-current" />}
-              />
+                  <Send size={14} className={canSubmit ? 'fill-current' : ''} />
+                </button>
+              </div>
             </div>
           </div>
         </form>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e)} />
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleMediaUpload}
+        />
       </div>
     </div>
   );

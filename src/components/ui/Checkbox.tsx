@@ -14,9 +14,10 @@ export const Checkbox: React.FC<CheckboxProps> = ({ label, className = '', id, .
           type="checkbox"
           id={checkboxId}
           className={`
-            peer h-4 w-4 cursor-pointer appearance-none rounded border border-border-light bg-bg-primary 
-            transition-all duration-base checked:bg-primary checked:border-primary 
-            focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:ring-offset-1
+            peer h-4 w-4 cursor-pointer appearance-none rounded border border-border-light bg-bg-primary
+            transition-all duration-200
+            checked:bg-primary checked:border-primary
+            focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1
             hover:border-primary/50
             disabled:opacity-50 disabled:cursor-not-allowed
             ${className}
@@ -24,7 +25,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ label, className = '', id, .
           {...props}
         />
         <svg
-          className="absolute left-0.5 top-0.5 h-3 w-3 pointer-events-none text-text-on-primary opacity-0 peer-checked:opacity-100 transition-all duration-base"
+          className="absolute left-0.5 top-0.5 h-3 w-3 pointer-events-none text-text-on-primary opacity-0 peer-checked:opacity-100 transition-all duration-200"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="none"
@@ -37,8 +38,8 @@ export const Checkbox: React.FC<CheckboxProps> = ({ label, className = '', id, .
         </svg>
       </div>
       {label && (
-        <label 
-          htmlFor={checkboxId} 
+        <label
+          htmlFor={checkboxId}
           className="select-none text-sm font-medium text-text-secondary cursor-pointer !p-0 !m-0 leading-none"
         >
           {label}

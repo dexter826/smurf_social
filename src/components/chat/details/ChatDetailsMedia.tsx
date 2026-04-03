@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { RtdbMessage, MediaObject } from '../../../../shared/types';
-import { Image, Film, FileText, Download, ExternalLink } from 'lucide-react';
+import { Image, Film, FileText, Download, Play } from 'lucide-react';
 import { LazyImage, MediaViewer } from '../../ui';
 import { downloadFile } from '../../../utils';
 
@@ -28,7 +28,6 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
   const [activeTab, setActiveTab] = useState<MediaTab>('images');
   const [viewer, setViewer] = useState<MediaViewerState>({ isOpen: false, index: 0, items: [] });
 
-  // Sắp xếp messages mới nhất lên đầu
   const sortedMessages = useMemo(
     () => [...messages].sort((a, b) => b.data.createdAt - a.data.createdAt),
     [messages]
@@ -41,19 +40,12 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
 
     sortedMessages.forEach((msg) => {
       if (!msg.data.media || msg.data.media.length === 0) return;
-
       if (msg.data.type === 'image') {
-        msg.data.media.forEach((media, index) => {
-          images.push({ key: `${msg.id}_${index}`, msgId: msg.id, media });
-        });
+        msg.data.media.forEach((media, i) => images.push({ key: `${msg.id}_${i}`, msgId: msg.id, media }));
       } else if (msg.data.type === 'video') {
-        msg.data.media.forEach((media, index) => {
-          videos.push({ key: `${msg.id}_${index}`, msgId: msg.id, media });
-        });
+        msg.data.media.forEach((media, i) => videos.push({ key: `${msg.id}_${i}`, msgId: msg.id, media }));
       } else if (msg.data.type === 'file') {
-        msg.data.media.forEach((media, index) => {
-          files.push({ key: `${msg.id}_${index}`, msgId: msg.id, media });
-        });
+        msg.data.media.forEach((media, i) => files.push({ key: `${msg.id}_${i}`, msgId: msg.id, media }));
       }
     });
 
@@ -67,25 +59,15 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
 
   const videoViewerItems = useMemo(
     () => mediaItems.videos.map(i => ({
-      type: 'video' as const,
-      url: i.media.url,
-      thumbnail: i.media.thumbnailUrl,
+      type: 'video' as const, url: i.media.url, thumbnail: i.media.thumbnailUrl,
     })),
     [mediaItems.videos]
   );
 
-  const openImageViewer = (index: number) =>
-    setViewer({ isOpen: true, index, items: imageViewerItems });
-
-  const openVideoViewer = (index: number) =>
-    setViewer({ isOpen: true, index, items: videoViewerItems });
-
-  const closeViewer = () => setViewer(v => ({ ...v, isOpen: false }));
-
   const tabs: { id: MediaTab; label: string; icon: React.ReactNode; count: number }[] = [
-    { id: 'images', label: 'Ảnh', icon: <Image size={15} />, count: mediaItems.images.length },
-    { id: 'videos', label: 'Video', icon: <Film size={15} />, count: mediaItems.videos.length },
-    { id: 'files', label: 'File', icon: <FileText size={15} />, count: mediaItems.files.length },
+    { id: 'images', label: 'Ảnh', icon: <Image size={14} />, count: mediaItems.images.length },
+    { id: 'videos', label: 'Video', icon: <Film size={14} />, count: mediaItems.videos.length },
+    { id: 'files', label: 'File', icon: <FileText size={14} />, count: mediaItems.files.length },
   ];
 
   const renderContent = () => {
@@ -93,15 +75,19 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
       case 'images':
         if (mediaItems.images.length === 0) return <EmptyState message="Chưa có ảnh nào được chia sẻ" />;
         return (
-          <div className="grid grid-cols-3 gap-1 p-2">
+          <div className="grid grid-cols-3 gap-0.5 p-0.5">
             {mediaItems.images.map((item, index) => (
               <button
                 key={item.key}
                 type="button"
-                onClick={() => openImageViewer(index)}
-                className="aspect-square rounded-lg overflow-hidden hover:opacity-80 active:opacity-70 transition-all duration-base"
+                onClick={() => setViewer({ isOpen: true, index, items: imageViewerItems })}
+                className="aspect-square overflow-hidden hover:opacity-85 active:opacity-70 transition-opacity duration-200 group relative"
               >
-                <LazyImage src={item.media.url || ''} alt="" className="w-full h-full object-cover" />
+                <LazyImage
+                  src={item.media.url || ''}
+                  alt=""
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
               </button>
             ))}
           </div>
@@ -110,23 +96,24 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
       case 'videos':
         if (mediaItems.videos.length === 0) return <EmptyState message="Chưa có video nào được chia sẻ" />;
         return (
-          <div className="grid grid-cols-2 gap-2 p-2">
+          <div className="grid grid-cols-2 gap-1 p-1">
             {mediaItems.videos.map((item, index) => (
               <button
                 key={item.key}
                 type="button"
-                onClick={() => openVideoViewer(index)}
-                className="aspect-video rounded-lg overflow-hidden bg-bg-tertiary hover:opacity-80 active:opacity-70 transition-all duration-base relative group"
+                onClick={() => setViewer({ isOpen: true, index, items: videoViewerItems })}
+                className="aspect-video rounded-lg overflow-hidden bg-bg-tertiary relative group"
               >
                 <video
                   src={item.media.url}
                   poster={item.media.thumbnailUrl}
                   className="w-full h-full object-cover"
-                  playsInline
-                  muted
+                  playsInline muted
                 />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-base">
-                  <ExternalLink size={24} className="text-white" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors duration-200">
+                  <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                    <Play size={14} className="text-white fill-white ml-0.5" />
+                  </div>
                 </div>
               </button>
             ))}
@@ -136,20 +123,19 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
       case 'files':
         if (mediaItems.files.length === 0) return <EmptyState message="Chưa có file nào được chia sẻ" />;
         return (
-          <div className="space-y-1 p-2">
+          <div className="space-y-0.5 p-2">
             {mediaItems.files.map((item) => (
               <div
                 key={item.key}
-                className="flex items-center gap-3 p-3 rounded-xl hover:bg-bg-hover transition-all duration-base"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-bg-hover transition-colors duration-200"
               >
-                {/* Click tên/icon → scroll đến tin nhắn */}
                 <button
                   type="button"
                   onClick={() => onMessageClick?.(item.msgId)}
                   className="flex items-center gap-3 flex-1 min-w-0 text-left"
                 >
-                  <div className="w-10 h-10 bg-primary-light rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText size={20} className="text-primary" />
+                  <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <FileText size={17} className="text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-text-primary truncate">
@@ -158,15 +144,13 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
                     <p className="text-xs text-text-tertiary">{formatFileSize(item.media.size)}</p>
                   </div>
                 </button>
-
-                {/* Icon download → tải file */}
                 <button
                   type="button"
                   onClick={() => downloadFile(item.media.url, item.media.fileName || 'file')}
-                  className="p-2 rounded-full hover:bg-bg-active text-text-tertiary hover:text-primary transition-all duration-base flex-shrink-0"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-active text-text-tertiary hover:text-primary transition-all duration-200 flex-shrink-0"
                   title="Tải về"
                 >
-                  <Download size={18} />
+                  <Download size={16} />
                 </button>
               </div>
             ))}
@@ -177,38 +161,28 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <h3 className="px-4 pt-4 text-sm font-semibold text-text-secondary mb-3 flex-shrink-0">
-        Media & File
-      </h3>
-
-      {/* Tabs */}
-      <div className="overflow-x-auto scrollbar-hide border-b border-border-light mx-4 flex-shrink-0">
-        <div className="flex min-w-max">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                flex items-center gap-1.5 px-4 py-2 text-sm font-medium whitespace-nowrap
-                transition-all duration-base relative
-                ${activeTab === tab.id ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'}
-              `}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              {tab.count > 0 && (
-                <span className="text-xs text-text-tertiary">({tab.count})</span>
-              )}
-              {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-              )}
-            </button>
-          ))}
-        </div>
+      {/* Sub-tab bar */}
+      <div className="flex border-b border-border-light flex-shrink-0 px-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 relative outline-none
+              ${activeTab === tab.id ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+          >
+            {tab.icon}
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="text-[10px] text-text-tertiary font-normal">({tab.count})</span>
+            )}
+            {activeTab === tab.id && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* Content — flex-1 để chiếm hết không gian còn lại, overflow-y-auto để scroll */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 overflow-y-auto scroll-hide min-h-0">
         {renderContent()}
       </div>
 
@@ -216,14 +190,14 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
         media={viewer.items}
         initialIndex={viewer.index}
         isOpen={viewer.isOpen}
-        onClose={closeViewer}
+        onClose={() => setViewer(v => ({ ...v, isOpen: false }))}
       />
     </div>
   );
 };
 
 const EmptyState: React.FC<{ message: string }> = ({ message }) => (
-  <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
+  <div className="flex flex-col items-center justify-center py-10 text-text-tertiary">
     <p className="text-sm">{message}</p>
   </div>
 );

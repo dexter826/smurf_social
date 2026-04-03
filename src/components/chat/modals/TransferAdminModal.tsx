@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { LogOut, Loader2, Users } from 'lucide-react';
-import { User, RtdbConversation, RtdbUserChat } from '../../../../shared/types';
+import { LogOut, Crown } from 'lucide-react';
+import { RtdbConversation, RtdbUserChat } from '../../../../shared/types';
 import { Modal, Button, UserAvatar, Select } from '../../ui';
 import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
@@ -13,40 +13,25 @@ interface TransferAdminModalProps {
 }
 
 export const TransferAdminModal: React.FC<TransferAdminModalProps> = ({
-  isOpen,
-  conversation,
-  currentUserId,
-  onClose,
-  onConfirm
+  isOpen, conversation, currentUserId, onClose, onConfirm,
 }) => {
-  const [selectedId, setSelectedId] = useState<string>('');
+  const [selectedId, setSelectedId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const participants = useConversationParticipants(Object.keys(conversation.data.members));
-
-  // Lấy danh sách thành viên khác để chọn làm admin mới
   const otherMembers = participants.filter(p => p.id !== currentUserId);
-
-  const options = otherMembers.map(member => ({
-    value: member.id,
-    label: member.fullName
-  }));
+  const options = otherMembers.map(m => ({ value: m.id, label: m.fullName }));
+  const selectedMember = otherMembers.find(m => m.id === selectedId);
 
   const handleConfirm = async () => {
     if (!selectedId) return;
-
     setIsSubmitting(true);
     try {
       await onConfirm(selectedId);
       onClose();
-    } catch (error) {
-      console.error('Lỗi chuyển quyền trưởng nhóm', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch { /* silent */ }
+    finally { setIsSubmitting(false); }
   };
-
-  const selectedMember = otherMembers.find(m => m.id === selectedId);
 
   return (
     <Modal
@@ -56,15 +41,13 @@ export const TransferAdminModal: React.FC<TransferAdminModalProps> = ({
       maxWidth="sm"
       footer={
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={onClose}>
-            Hủy
-          </Button>
+          <Button variant="secondary" onClick={onClose}>Hủy</Button>
           <Button
             variant="danger"
             onClick={handleConfirm}
             disabled={!selectedId || isSubmitting}
             isLoading={isSubmitting}
-            icon={<LogOut size={18} />}
+            icon={<LogOut size={16} />}
           >
             Chuyển quyền và rời nhóm
           </Button>
@@ -72,43 +55,40 @@ export const TransferAdminModal: React.FC<TransferAdminModalProps> = ({
       }
     >
       <div className="space-y-6">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="w-16 h-16 bg-error/10 text-error rounded-full flex items-center justify-center">
-            <LogOut size={32} />
+        {/* Warning icon + text */}
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="w-14 h-14 bg-warning/10 rounded-full flex items-center justify-center border border-warning/20">
+            <Crown size={26} className="text-warning" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-text-primary">
-              Bạn đang là trưởng nhóm
-            </h3>
-            <p className="text-sm text-text-secondary mt-1">
+            <h3 className="text-base font-semibold text-text-primary">Bạn đang là trưởng nhóm</h3>
+            <p className="text-sm text-text-secondary mt-1 leading-relaxed">
               Vui lòng chọn một thành viên khác làm trưởng nhóm trước khi rời khỏi nhóm này.
             </p>
           </div>
         </div>
 
-        <div className="space-y-4">
+        {/* Select + preview */}
+        <div className="space-y-3">
           <Select
             label="Chọn trưởng nhóm mới"
             options={options}
             value={selectedId}
             onChange={setSelectedId}
-            placeholder="Tìm chọn thành viên..."
+            placeholder="Chọn thành viên..."
+            size="lg"
           />
 
           {selectedMember && (
-            <div className="flex items-center gap-3 p-4 bg-bg-secondary rounded-xl border border-border-light">
-              <UserAvatar
-                userId={selectedMember.id}
-                size="md"
-              />
+            <div className="flex items-center gap-3 p-3 bg-bg-secondary rounded-xl border border-border-light animate-fade-in">
+              <UserAvatar userId={selectedMember.id} size="sm" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-text-primary truncate">
+                <p className="text-sm font-semibold text-text-primary truncate">
                   {selectedMember.fullName}
                 </p>
-                <p className="text-xs text-text-tertiary">
-                  Sẽ trở thành trưởng nhóm mới
-                </p>
+                <p className="text-xs text-text-tertiary">Sẽ trở thành trưởng nhóm mới</p>
               </div>
+              <Crown size={14} className="text-warning flex-shrink-0" />
             </div>
           )}
         </div>

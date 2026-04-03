@@ -1,23 +1,22 @@
 import React, { useRef, useState, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { useClickOutside } from '../../hooks/utils';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useClickOutside } from '../../hooks/utils';
 import { useNotificationStore } from '../../store/notificationStore';
-import { NotificationList } from './NotificationList';
 import { useAuthStore } from '../../store/authStore';
 import { IconButton } from '../ui';
+import { NotificationList } from './NotificationList';
 
+const MENU_WIDTH = 380;
 const MENU_GAP = 8;
-const VIEWPORT_PADDING = 12;
-const MENU_WIDTH = 384; // w-96
+const VIEWPORT_PAD = 12;
 
 export const NotificationDropdown: React.FC = () => {
   const { user } = useAuthStore();
   const { unreadCount, markAllAsRead } = useNotificationStore();
   const [isOpen, setIsOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -29,18 +28,16 @@ export const NotificationDropdown: React.FC = () => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const vw = window.innerWidth;
-
-    // Prefer right-aligned to trigger, clamp to viewport
-    let left = rect.right - MENU_WIDTH;
-    left = Math.max(VIEWPORT_PADDING, Math.min(left, vw - MENU_WIDTH - VIEWPORT_PADDING));
-
+    const left = Math.max(
+      VIEWPORT_PAD,
+      Math.min(rect.right - MENU_WIDTH, vw - MENU_WIDTH - VIEWPORT_PAD)
+    );
     setPos({ top: rect.bottom + MENU_GAP, left });
   }, []);
 
   useLayoutEffect(() => {
     if (!isOpen) return;
     calcPos();
-
     window.addEventListener('scroll', calcPos, true);
     window.addEventListener('resize', calcPos);
     return () => {
@@ -48,6 +45,11 @@ export const NotificationDropdown: React.FC = () => {
       window.removeEventListener('resize', calcPos);
     };
   }, [isOpen, calcPos]);
+
+  const handleViewAll = useCallback(() => {
+    navigate('/notifications');
+    close();
+  }, [navigate, close]);
 
   return (
     <div ref={triggerRef} className="relative">
@@ -63,48 +65,47 @@ export const NotificationDropdown: React.FC = () => {
         }
         variant={isOpen ? 'secondary' : 'ghost'}
         title="Thông báo"
-        className={isOpen ? 'text-primary shadow-sm' : 'text-text-secondary hover:text-primary'}
+        className={isOpen ? 'text-primary' : 'text-text-secondary hover:text-primary'}
       />
 
       {isOpen && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-[var(--z-popover)] bg-bg-primary rounded-xl shadow-xl border border-border-light overflow-hidden animate-in fade-in zoom-in-95 duration-fast origin-top-right"
+          className="fixed bg-bg-primary rounded-2xl shadow-xl border border-border-light overflow-hidden animate-fade-in"
           style={{
+            zIndex: 'var(--z-popover)',
             top: pos ? `${pos.top}px` : undefined,
             left: pos ? `${pos.left}px` : undefined,
             width: `${MENU_WIDTH}px`,
-            maxWidth: `calc(100vw - ${VIEWPORT_PADDING * 2}px)`,
+            maxWidth: `calc(100vw - ${VIEWPORT_PAD * 2}px)`,
             visibility: pos ? 'visible' : 'hidden',
           }}
         >
+          {/* Dropdown header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
-            <h3 className="font-bold text-base text-text-primary">Thông báo</h3>
+            <h3 className="text-sm font-semibold text-text-primary">Thông báo</h3>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={() => user && markAllAsRead(user.id)}
-                className="text-xs font-medium text-primary hover:underline"
+                className="text-xs font-semibold text-primary hover:underline transition-colors duration-200"
               >
                 Đánh dấu tất cả đã đọc
               </button>
             )}
           </div>
 
-          <div className="p-2">
-            <NotificationList onItemClick={close} />
-          </div>
+          {/* List */}
+          <NotificationList onItemClick={close} maxHeight="420px" />
 
-          <div className="px-4 py-3 border-t border-border-light text-center">
+          {/* Footer */}
+          <div className="px-4 py-2.5 border-t border-border-light text-center">
             <button
               type="button"
-              className="text-sm font-semibold text-text-secondary hover:text-primary transition-colors duration-fast"
-              onClick={() => {
-                navigate('/notifications');
-                close();
-              }}
+              className="text-xs font-semibold text-text-secondary hover:text-primary transition-colors duration-200"
+              onClick={handleViewAll}
             >
-              Xem tất cả
+              Xem tất cả thông báo
             </button>
           </div>
         </div>,

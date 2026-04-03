@@ -35,7 +35,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
     const isBlob = item.url.startsWith('blob:');
 
     return (
-      <div 
+      <div
         className={`relative group overflow-hidden bg-bg-tertiary cursor-pointer ${className}`}
         onClick={(e) => {
           if (onItemClick) {
@@ -138,23 +138,22 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
   }
 
   return (
-    <div className="bg-bg-secondary relative select-none overflow-hidden rounded-lg">
+    <div className="bg-bg-secondary relative select-none overflow-hidden">
       <div
-        className={`grid gap-0.5 aspect-[4/3] sm:aspect-video cursor-pointer ${
-          count === 2 ? 'grid-cols-2' :
+        className={`grid gap-0.5 aspect-[4/3] sm:aspect-video cursor-pointer ${count === 2 ? 'grid-cols-2' :
           count === 3 ? 'grid-cols-2 grid-rows-2' :
-          'grid-cols-2 grid-rows-2'
-        }`}
+            'grid-cols-2 grid-rows-2'
+          }`}
         onClick={onClick}
       >
         {allMedia.slice(0, 4).map((item, idx) => {
           const isLarge = count === 3 && idx === 0;
           const isLast = idx === 3 && count > 4;
-          
+
           const overlay = isLast ? (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white z-10 group-hover:bg-black/30 transition-all">
               <span className="text-3xl font-bold drop-shadow-lg">+{count - 4}</span>
-              <span className="text-[10px] uppercase tracking-wider font-semibold opacity-80">Xem thêm</span>
+              <span className="text-xs uppercase tracking-wider font-semibold opacity-80">Xem thêm</span>
             </div>
           ) : null;
 

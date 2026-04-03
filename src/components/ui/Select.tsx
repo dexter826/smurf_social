@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useClickOutside } from '../../hooks/utils';
 import { ChevronDown, Check } from 'lucide-react';
@@ -13,7 +13,7 @@ interface SelectProps {
   label?: string;
   options: SelectOption[];
   value?: string;
-  onChange: (value: string | any) => void;
+  onChange: (value: string) => void;
   error?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -27,16 +27,10 @@ const VIEWPORT_PADDING = 12;
 const MAX_MENU_HEIGHT = 240;
 
 export const Select: React.FC<SelectProps> = ({
-  label,
-  options,
-  value,
-  onChange,
-  error,
+  label, options, value, onChange, error,
   placeholder = 'Chọn một tùy chọn',
-  disabled = false,
-  className = '',
-  variant = 'default',
-  size = 'md'
+  disabled = false, className = '',
+  variant = 'default', size = 'md',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [pos, setPos] = useState<{
@@ -46,7 +40,6 @@ export const Select: React.FC<SelectProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const selectedOption = options.find(opt => opt.value === value);
-
 
   useLayoutEffect(() => {
     if (!isOpen || !containerRef.current || !menuRef.current) return;
@@ -58,11 +51,9 @@ export const Select: React.FC<SelectProps> = ({
       const rect = containerEl.getBoundingClientRect();
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-
       const spaceBelow = vh - rect.bottom - MENU_GAP;
       const spaceAbove = rect.top - VIEWPORT_PADDING;
       const openUp = spaceBelow < MAX_MENU_HEIGHT && spaceAbove > spaceBelow;
-
       const width = Math.max(rect.width, 160);
       const left = Math.max(VIEWPORT_PADDING, Math.min(rect.left, vw - width - VIEWPORT_PADDING));
 
@@ -74,15 +65,14 @@ export const Select: React.FC<SelectProps> = ({
 
     update();
 
-    const resizeObserver = new ResizeObserver(update);
-    resizeObserver.observe(menuEl);
-    resizeObserver.observe(containerEl);
-
+    const ro = new ResizeObserver(update);
+    ro.observe(menuEl);
+    ro.observe(containerEl);
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
 
     return () => {
-      resizeObserver.disconnect();
+      ro.disconnect();
       window.removeEventListener('scroll', update, true);
       window.removeEventListener('resize', update);
     };
@@ -90,15 +80,15 @@ export const Select: React.FC<SelectProps> = ({
 
   useClickOutside([containerRef, menuRef], () => setIsOpen(false), isOpen);
 
-  const sizeClasses = {
+  const sizeClasses: Record<NonNullable<SelectProps['size']>, string> = {
     sm: 'min-h-[36px] px-3 text-sm',
     md: 'min-h-[44px] px-4 text-base',
-    lg: 'min-h-[48px] px-6 text-base'
+    lg: 'min-h-[48px] px-6 text-base',
   };
 
-  const variantClasses = {
-    default: `bg-bg-primary border ${isOpen ? 'border-primary ring-4 ring-primary/20' : 'border-border-light hover:border-primary'}`,
-    ghost: 'bg-transparent border-none hover:bg-bg-hover'
+  const variantClasses: Record<NonNullable<SelectProps['variant']>, string> = {
+    default: `bg-bg-primary border ${isOpen ? 'border-primary ring-2 ring-primary/20' : 'border-border-light hover:border-border-medium'}`,
+    ghost: 'bg-transparent border-none hover:bg-bg-hover',
   };
 
   return (
@@ -115,10 +105,10 @@ export const Select: React.FC<SelectProps> = ({
         aria-haspopup="listbox"
         onClick={() => !disabled && setIsOpen(prev => !prev)}
         className={`
-          w-full flex items-center justify-between outline-none transition-all duration-base rounded-xl font-normal
+          w-full flex items-center justify-between outline-none transition-all duration-200 rounded-xl font-normal
           ${sizeClasses[size]}
           ${variantClasses[variant]}
-          ${error ? 'border-error ring-4 ring-error/10' : ''}
+          ${error ? 'border-error ring-2 ring-error/10' : ''}
           ${disabled ? 'opacity-50 cursor-not-allowed bg-bg-secondary' : 'cursor-pointer'}
         `}
       >
@@ -132,7 +122,7 @@ export const Select: React.FC<SelectProps> = ({
         </div>
         <ChevronDown
           size={size === 'sm' ? 14 : 18}
-          className={`text-text-tertiary transition-transform duration-base flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
+          className={`text-text-tertiary transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
         />
       </div>
 
@@ -140,8 +130,9 @@ export const Select: React.FC<SelectProps> = ({
         <div
           ref={menuRef}
           role="listbox"
-          className="fixed z-[var(--z-popover)] bg-bg-primary border border-border-light rounded-xl shadow-dropdown overflow-hidden animate-in fade-in zoom-in-95 duration-fast"
+          className="fixed bg-bg-primary border border-border-light rounded-xl shadow-dropdown overflow-hidden animate-fade-in"
           style={{
+            zIndex: 'var(--z-popover)',
             top: pos?.top !== undefined ? `${pos.top}px` : undefined,
             bottom: pos?.bottom !== undefined ? `${pos.bottom}px` : undefined,
             left: pos ? `${pos.left}px` : undefined,
@@ -151,7 +142,7 @@ export const Select: React.FC<SelectProps> = ({
             visibility: pos ? 'visible' : 'hidden',
           }}
         >
-          <div className="max-h-60 overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <div className="max-h-60 overflow-y-auto scroll-hide">
             {options.map((option) => (
               <button
                 key={option.value}
@@ -162,7 +153,7 @@ export const Select: React.FC<SelectProps> = ({
                 className={`
                   w-full px-4 py-2.5 text-left text-sm flex items-center justify-between
                   transition-colors duration-fast font-normal hover:bg-bg-hover active:bg-bg-active
-                  ${option.value === value ? 'bg-primary-light text-primary font-medium' : 'text-text-primary'}
+                  ${option.value === value ? 'bg-primary/5 text-primary font-medium' : 'text-text-primary'}
                 `}
               >
                 <div className="flex items-center gap-2">
@@ -178,9 +169,7 @@ export const Select: React.FC<SelectProps> = ({
       )}
 
       {error && (
-        <p className="mt-0.5 ml-1 text-[11px] font-medium text-error animate-fade-in">
-          {error}
-        </p>
+        <p className="mt-0.5 ml-1 text-xs font-medium text-error animate-fade-in">{error}</p>
       )}
     </div>
   );

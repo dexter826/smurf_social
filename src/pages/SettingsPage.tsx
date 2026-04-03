@@ -1,56 +1,37 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Ban,
-  Shield,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
-} from 'lucide-react';
+import { Ban, Shield, Eye, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useLoadingStore } from '../store/loadingStore';
-import { User, BlockOptions, BlockedUserEntry } from '../../shared/types';
+import { BlockOptions } from '../../shared/types';
 import { usePostStore } from '../store';
 import { ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
-import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 import { userService } from '../services/userService';
-
-// Modular components
 import PrivacySection from '../components/settings/PrivacySection';
 import SecuritySection from '../components/settings/SecuritySection';
-import BlockedUsersSection from '../components/settings/BlockedUsersSection';
+import BlockedUsersSection, { BlockedUserWithOptions } from '../components/settings/BlockedUsersSection';
+import ChangePasswordModal from '../components/settings/ChangePasswordModal';
 import { BlockOptionsModal } from '../components/ui/BlockOptionsModal';
 
-type SettingSection = 'appearance' | 'privacy' | 'security' | 'blocked';
+type SettingSection = 'privacy' | 'security' | 'blocked';
 
-interface BlockedUserWithOptions {
-  user: User;
-  options: BlockedUserEntry;
-}
-
-const BASE_MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNode }[] = [
-  { id: 'privacy', label: 'Quyền riêng tư', icon: <Eye size={20} /> },
-  { id: 'security', label: 'Bảo mật', icon: <Shield size={20} /> },
-  { id: 'blocked', label: 'Người dùng đã chặn', icon: <Ban size={20} /> },
+const MENU_ITEMS: { id: SettingSection; label: string; icon: React.ReactNode; desc: string }[] = [
+  { id: 'privacy', label: 'Quyền riêng tư', icon: <Eye size={18} />, desc: 'Trạng thái, bài viết, tin nhắn' },
+  { id: 'security', label: 'Bảo mật', icon: <Shield size={18} />, desc: 'Mật khẩu và xác thực' },
+  { id: 'blocked', label: 'Người dùng đã chặn', icon: <Ban size={18} />, desc: 'Quản lý danh sách chặn' },
 ];
 
-/**
- * Settings Page
- */
 const SettingsPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
   const { fetchUsers } = useUserCache();
+  const setLoading = useLoadingStore(state => state.setLoading);
+  const isLoading = useLoadingStore(state => state.loadingStates['settings']);
 
   const [activeSection, setActiveSection] = useState<SettingSection | null>(
     window.innerWidth >= 768 ? 'privacy' : null
   );
-
   const [blockedList, setBlockedList] = useState<BlockedUserWithOptions[]>([]);
-  const setLoading = useLoadingStore(state => state.setLoading);
-  const isLoading = useLoadingStore(state => state.loadingStates['settings']);
-
   const [unblockUserId, setUnblockUserId] = useState<string | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [manageBlockTarget, setManageBlockTarget] = useState<BlockedUserWithOptions | null>(null);
@@ -61,30 +42,22 @@ const SettingsPage: React.FC = () => {
     try {
       const blockedMap = await userService.getBlockedUsers(currentUser.id);
       const ids = Object.keys(blockedMap);
-      if (ids.length === 0) {
-        setBlockedList([]);
-        return;
-      }
+      if (ids.length === 0) { setBlockedList([]); return; }
       await fetchUsers(ids);
-      const latestCache = useUserCache.getState().users;
-      const list: BlockedUserWithOptions[] = ids
-        .map(id => {
-          const user = latestCache[id];
-          if (!user) return null;
-          return { user, options: blockedMap[id] };
-        })
-        .filter((item): item is BlockedUserWithOptions => !!item);
-      setBlockedList(list);
+      const cache = useUserCache.getState().users;
+      setBlockedList(
+        ids
+          .map(id => cache[id] ? { user: cache[id], options: blockedMap[id] } : null)
+          .filter((item): item is BlockedUserWithOptions => !!item)
+      );
     } finally {
       setLoading('settings', false);
     }
-  }, [currentUser?.id, fetchUsers]);
+  }, [currentUser?.id, fetchUsers, setLoading]);
 
-  useEffect(() => {
-    loadBlockedUsers();
-  }, [currentUser?.id]);
+  useEffect(() => { loadBlockedUsers(); }, [currentUser?.id]);
 
-  const handleUnblock = async () => {
+  const handleUnblock = useCallback(async () => {
     if (!unblockUserId || !currentUser) return;
     try {
       await userService.unblockUser(currentUser.id, unblockUserId);
@@ -94,15 +67,13 @@ const SettingsPage: React.FC = () => {
     } finally {
       setUnblockUserId(null);
     }
-  };
+  }, [unblockUserId, currentUser]);
 
-  const handleUpdateBlockOptions = async (options: BlockOptions) => {
+  const handleUpdateBlockOptions = useCallback(async (options: BlockOptions) => {
     if (!manageBlockTarget || !currentUser) return;
     const targetId = manageBlockTarget.user.id;
 
-    const hasAnyOption = Object.values(options).some(Boolean);
-
-    if (!hasAnyOption) {
+    if (!Object.values(options).some(Boolean)) {
       setUnblockUserId(targetId);
       setManageBlockTarget(null);
       return;
@@ -110,131 +81,140 @@ const SettingsPage: React.FC = () => {
 
     await userService.blockUser(currentUser.id, targetId, options);
     useAuthStore.getState().updateBlockEntry('add', targetId, options);
+    if (options.hideTheirActivity) usePostStore.getState().filterPostsByAuthor(targetId);
 
-    if (options.hideTheirActivity) {
-      usePostStore.getState().filterPostsByAuthor(targetId);
-    }
-
-    setBlockedList(prev => prev.map(item =>
-      item.user.id === targetId ? { ...item, options: { ...item.options, ...options } } : item
-    ));
+    setBlockedList(prev =>
+      prev.map(item =>
+        item.user.id === targetId ? { ...item, options: { ...item.options, ...options } } : item
+      )
+    );
     setManageBlockTarget(null);
-  };
+  }, [manageBlockTarget, currentUser]);
+
+  const currentLabel = useMemo(
+    () => MENU_ITEMS.find(m => m.id === activeSection)?.label ?? 'Cài đặt',
+    [activeSection]
+  );
 
   const renderContent = () => {
     switch (activeSection) {
       case 'privacy': return <PrivacySection />;
       case 'security': return <SecuritySection onOpenChangePassword={() => setIsChangePasswordOpen(true)} />;
-      case 'blocked': return (
-        <BlockedUsersSection
-          isLoading={isLoading}
-          blockedList={blockedList}
-          onManageBlock={setManageBlockTarget}
-        />
-      );
+      case 'blocked': return <BlockedUsersSection isLoading={!!isLoading} blockedList={blockedList} onManageBlock={setManageBlockTarget} />;
       default: return null;
     }
   };
 
-  const currentLabel = useMemo(() =>
-    BASE_MENU_ITEMS.find(m => m.id === activeSection)?.label || 'Cài đặt'
-    , [activeSection]);
-
   return (
     <div className="flex h-full w-full bg-bg-secondary overflow-hidden">
-      {/* Sidebar - Desktop */}
-      <div className="hidden md:flex flex-col w-[280px] lg:w-[320px] border-r border-border-light bg-bg-primary">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-text-primary flex items-center gap-2">
-            <Settings className="text-primary" size={24} />
-            Cài đặt
-          </h1>
+
+      {/* ── Desktop sidebar ── */}
+      <aside className="hidden md:flex flex-col w-[280px] lg:w-[320px] border-r border-border-light bg-bg-primary flex-shrink-0">
+        <div className="px-5 py-5 border-b border-border-light">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 btn-gradient rounded-xl flex items-center justify-center shadow-accent flex-shrink-0">
+              <Settings size={16} className="text-white" />
+            </div>
+            <h1 className="text-base font-semibold text-text-primary">Cài đặt</h1>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 space-y-1">
-          {BASE_MENU_ITEMS.map(item => (
+        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+          {MENU_ITEMS.map(({ id, label, icon }) => (
             <button
-              key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 cursor-pointer rounded-xl transition-all duration-base ${activeSection === item.id
-                ? 'bg-primary-light text-primary font-semibold shadow-sm'
-                : 'hover:bg-bg-hover text-text-secondary'
+              key={id}
+              onClick={() => setActiveSection(id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium text-left
+                ${activeSection === id
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`}
             >
-              <div className={activeSection === item.id ? 'text-primary' : 'text-text-tertiary'}>
-                {item.icon}
-              </div>
-              <span>{item.label}</span>
-              {item.id === 'blocked' && blockedList.length > 0 && (
-                <span className="ml-auto text-[10px] bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light font-bold">
+              <span className={`flex-shrink-0 ${activeSection === id ? 'text-primary' : 'text-text-tertiary'}`}>
+                {icon}
+              </span>
+              <span className="flex-1">{label}</span>
+              {id === 'blocked' && blockedList.length > 0 && (
+                <span className="text-[10px] text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full border border-border-light font-semibold">
                   {blockedList.length}
                 </span>
               )}
             </button>
           ))}
-        </div>
-      </div>
+        </nav>
+      </aside>
 
-      {/* Main Area */}
-      <div className="flex-1 flex flex-col h-full bg-bg-primary md:bg-bg-secondary relative">
-        {/* Header - Mobile & Content Header */}
-        <div className="h-[60px] md:h-auto p-4 border-b border-border-light bg-bg-primary flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            {/* Back button (Mobile only) */}
+      {/* ── Main content ── */}
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-bg-primary md:bg-bg-secondary">
+
+        {/* Header */}
+        <div
+          className="flex-shrink-0 h-16 px-4 border-b border-border-light bg-bg-primary flex items-center gap-2 sticky top-0"
+          style={{ zIndex: 'var(--z-sticky)' }}
+        >
+          {activeSection && (
             <button
               onClick={() => setActiveSection(null)}
-              className={`md:hidden p-2 hover:bg-bg-hover rounded-full transition-colors ${!activeSection ? 'hidden' : ''}`}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-bg-hover text-text-secondary transition-colors duration-200 -ml-1 flex-shrink-0"
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={20} />
             </button>
-            <h2 className="text-lg font-bold text-text-primary">
-              {currentLabel}
-            </h2>
-          </div>
+          )}
+          <h2 className="text-sm font-semibold text-text-primary">{currentLabel}</h2>
         </div>
 
-        {/* Content / Mobile Menu */}
-        <div className="flex-1 overflow-y-auto w-full">
-          {/* Mobile Menu List */}
-          <div className={`md:hidden p-4 space-y-2 ${activeSection ? 'hidden' : 'block animate-fade-in'}`}>
-            <p className="px-2 text-xs font-bold text-text-tertiary uppercase tracking-widest mb-4">Danh mục cài đặt</p>
-            {BASE_MENU_ITEMS.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className="w-full flex items-center justify-between p-4 bg-bg-primary rounded-2xl border-2 border-border-light active:scale-[0.98] transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2.5 bg-primary-light rounded-xl text-primary">
-                    {item.icon}
+        <div className="flex-1 overflow-y-auto scroll-hide">
+          {/* Mobile menu list */}
+          {!activeSection && (
+            <div className="p-4 space-y-2 animate-fade-in md:hidden">
+              <p className="px-1 pb-1 text-xs font-semibold text-text-tertiary uppercase tracking-widest">
+                Danh mục cài đặt
+              </p>
+              {MENU_ITEMS.map(({ id, label, icon, desc }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveSection(id)}
+                  className="w-full flex items-center justify-between p-4 bg-bg-primary rounded-2xl border border-border-light hover:bg-bg-hover active:bg-bg-active transition-all duration-200 group"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+                      {icon}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-text-primary">{label}</p>
+                      <p className="text-xs text-text-tertiary mt-0.5">{desc}</p>
+                    </div>
                   </div>
-                  <span className="font-bold text-text-primary">{item.label}</span>
-                </div>
-                <ChevronRight size={20} className="text-text-tertiary" />
-              </button>
-            ))}
-          </div>
+                  <ChevronRight size={16} className="text-text-tertiary flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
 
-          {/* Section Content */}
-          <div className={`p-4 md:p-6 lg:p-8 max-w-3xl mx-auto w-full ${!activeSection && 'hidden md:block'}`}>
-            {renderContent()}
-          </div>
+          {/* Section content */}
+          {(activeSection || window.innerWidth >= 768) && (
+            <div className={`p-4 md:p-6 max-w-2xl mx-auto w-full ${!activeSection ? 'hidden md:block' : ''}`}>
+              {renderContent()}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Modals & Dialogs */}
+      {/* ── Dialogs ── */}
       <ConfirmDialog
         isOpen={!!unblockUserId}
         onClose={() => setUnblockUserId(null)}
         onConfirm={handleUnblock}
         title={CONFIRM_MESSAGES.FRIEND.UNBLOCK.TITLE}
-        message={CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(blockedList.find(item => item.user.id === unblockUserId)?.user.fullName || 'người này')}
+        message={CONFIRM_MESSAGES.FRIEND.UNBLOCK.MESSAGE(
+          blockedList.find(item => item.user.id === unblockUserId)?.user.fullName ?? 'người này'
+        )}
         confirmLabel={CONFIRM_MESSAGES.FRIEND.UNBLOCK.CONFIRM}
       />
 
       {manageBlockTarget && (
         <BlockOptionsModal
-          isOpen={!!manageBlockTarget}
+          isOpen
           targetName={manageBlockTarget.user.fullName}
           initialOptions={manageBlockTarget.options}
           onApply={handleUpdateBlockOptions}

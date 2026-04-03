@@ -7,23 +7,13 @@ interface SkeletonProps extends SkeletonLibProps {
   variant?: 'line' | 'circle' | 'rect';
 }
 
-export const Skeleton: React.FC<SkeletonProps> = ({
-  className = '',
-  variant = 'rect',
-  ...props
-}) => {
-  const isCircle = variant === 'circle';
+// Wrapper toàn cục — dùng một lần ở root thay vì mỗi instance
+export const SkeletonProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <SkeletonTheme baseColor="var(--bg-hover)" highlightColor="var(--bg-primary)">
+    {children}
+  </SkeletonTheme>
+);
 
-  return (
-    <SkeletonTheme 
-      baseColor="var(--bg-hover)" 
-      highlightColor="var(--bg-primary)"
-    >
-      <SkeletonLib
-        circle={isCircle}
-        className={className}
-        {...props}
-      />
-    </SkeletonTheme>
-  );
-};
+export const Skeleton: React.FC<SkeletonProps> = ({ className = '', variant = 'rect', ...props }) => (
+  <SkeletonLib circle={variant === 'circle'} className={className} {...props} />
+);

@@ -118,7 +118,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                 title="Chọn ảnh khác"
               />
             </div>
-            
+
             <input
               type="file"
               ref={fileInputRef}
@@ -162,10 +162,9 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
           />
         </div>
 
-        {/* Zoom Controls */}
-        <div className="px-4 py-4 bg-bg-secondary border-t border-border-light">
+        <div className="px-4 py-3.5 bg-bg-secondary border-t border-border-light">
           <div className="flex items-center gap-4">
-            <ZoomOut size={18} className="text-text-tertiary flex-shrink-0" />
+            <ZoomOut size={16} className="text-text-tertiary flex-shrink-0" />
             <input
               type="range"
               min={1}
@@ -173,9 +172,9 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
               step={0.1}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="flex-1 h-1.5 bg-bg-third rounded-full appearance-none cursor-pointer accent-primary"
+              className="flex-1 h-1.5 bg-bg-tertiary rounded-full appearance-none cursor-pointer accent-primary"
             />
-            <ZoomIn size={18} className="text-text-tertiary flex-shrink-0" />
+            <ZoomIn size={16} className="text-text-tertiary flex-shrink-0" />
           </div>
         </div>
       </div>

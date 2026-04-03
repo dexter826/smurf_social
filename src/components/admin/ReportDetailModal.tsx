@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  X,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Trash2,
-  User as UserIcon,
-  MessageSquare,
-  FileText,
-  Clock,
-  ShieldAlert,
+  X, AlertTriangle, CheckCircle, XCircle, Trash2,
+  User as UserIcon, MessageSquare, FileText, Clock, ShieldAlert,
 } from 'lucide-react';
-import { Report, ReportStatus, ReportType, User, UserStatus, Post, Comment, PostStatus, CommentStatus } from '../../../shared/types';
+import {
+  Report, ReportStatus, ReportType, User, UserStatus,
+  Post, Comment, PostStatus, CommentStatus,
+} from '../../../shared/types';
 import { reportService } from '../../services/reportService';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
@@ -28,22 +23,66 @@ interface ReportDetailModalProps {
   onClose: () => void;
 }
 
+type ActionType = 'resolve' | 'reject' | 'warn' | 'ban';
+
+interface ViewerState {
+  isOpen: boolean;
+  media: { type: 'image' | 'video'; url: string }[];
+  index: number;
+}
+
+const VIEWER_CLOSED: ViewerState = { isOpen: false, media: [], index: 0 };
+
 const TYPE_CONFIG: Record<ReportType, { label: string; icon: React.ReactNode; color: string }> = {
-  [ReportType.POST]: {
-    label: 'Bài viết',
-    icon: <FileText size={14} />,
-    color: 'bg-info/10 text-info border-info/20',
-  },
-  [ReportType.COMMENT]: {
-    label: 'Bình luận',
-    icon: <MessageSquare size={14} />,
-    color: 'bg-warning/10 text-warning border-warning/20',
-  },
-  [ReportType.USER]: {
-    label: 'Người dùng',
-    icon: <UserIcon size={14} />,
-    color: 'bg-error/10 text-error border-error/20',
-  },
+  [ReportType.POST]: { label: 'Bài viết', icon: <FileText size={13} />, color: 'bg-info/10 text-info border-info/20' },
+  [ReportType.COMMENT]: { label: 'Bình luận', icon: <MessageSquare size={13} />, color: 'bg-warning/10 text-warning border-warning/20' },
+  [ReportType.USER]: { label: 'Người dùng', icon: <UserIcon size={13} />, color: 'bg-error/10 text-error border-error/20' },
+};
+
+const ACTION_CONFIRM: Record<ActionType, { title: string; message: string; variant: 'danger' | 'primary' }> = {
+  resolve: { title: 'Xác nhận xóa nội dung', message: 'Nội dung vi phạm sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.', variant: 'danger' },
+  reject: { title: 'Bỏ qua báo cáo', message: 'Báo cáo sẽ được đóng lại, nội dung vẫn được giữ nguyên.', variant: 'primary' },
+  warn: { title: 'Gửi cảnh báo', message: 'Người dùng sẽ nhận được cảnh báo về hành vi vi phạm.', variant: 'primary' },
+  ban: { title: 'Khóa tài khoản', message: 'Tài khoản sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị ngay lập tức.', variant: 'danger' },
+};
+
+/* ── Status badge ── */
+const StatusBadge: React.FC<{ status: ReportStatus }> = ({ status }) => {
+  const map: Record<ReportStatus, { icon: React.ReactNode; label: string; cls: string }> = {
+    [ReportStatus.PENDING]: { icon: <Clock size={11} />, label: 'Chờ xử lý', cls: 'bg-warning/10 text-warning border-warning/20' },
+    [ReportStatus.RESOLVED]: { icon: <CheckCircle size={11} />, label: 'Đã xử lý', cls: 'bg-success/10 text-success border-success/20' },
+    [ReportStatus.REJECTED]: { icon: <XCircle size={11} />, label: 'Đã từ chối', cls: 'bg-bg-tertiary text-text-secondary border-border-light' },
+  };
+  const { icon, label, cls } = map[status];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cls}`}>
+      {icon} {label}
+    </span>
+  );
+};
+
+/* ── User row ── */
+const UserRow: React.FC<{ user: User | null; isLoading: boolean }> = ({ user, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-3 p-3 bg-bg-secondary/40 rounded-xl">
+        <Skeleton variant="circle" width={32} height={32} />
+        <div className="space-y-1 flex-1">
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="h-2.5 w-1/2" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-3 p-3 bg-bg-secondary/40 rounded-xl">
+      <UserAvatar userId={user?.id ?? ''} src={user?.avatar?.url} name={user?.fullName} size="sm" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-text-primary truncate">{user?.fullName}</p>
+        <p className="text-xs text-text-tertiary truncate">{user?.email}</p>
+      </div>
+    </div>
+  );
 };
 
 export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, onClose }) => {
@@ -54,54 +93,39 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
   const [content, setContent] = useState<Post | Comment | null>(null);
   const [resolver, setResolver] = useState<User | null>(null);
   const [deleter, setDeleter] = useState<User | null>(null);
-
-  const [viewerState, setViewerState] = useState({
-    isOpen: false,
-    media: [] as { type: 'image' | 'video'; url: string }[],
-    index: 0,
-  });
-
+  const [viewer, setViewer] = useState<ViewerState>(VIEWER_CLOSED);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [actionType, setActionType] = useState<'resolve' | 'reject' | 'warn' | 'ban' | null>(null);
+  const [pendingAction, setPendingAction] = useState<ActionType | null>(null);
 
   useEffect(() => {
-    const fetchDetail = async () => {
+    const load = async () => {
       setIsLoading(true);
       try {
-        const reportData = await reportService.getReportById(reportId);
-        if (!reportData) {
-          toast.error(TOAST_MESSAGES.REPORT.NOT_FOUND);
-          onClose();
-          return;
-        }
-        setReport(reportData);
+        const data = await reportService.getReportById(reportId);
+        if (!data) { toast.error(TOAST_MESSAGES.REPORT.NOT_FOUND); onClose(); return; }
+        setReport(data);
 
-        const fetchTasks: Promise<User | null>[] = [
-          userService.getUserById(reportData.reporterId),
-          userService.getUserById(reportData.targetOwnerId),
-        ];
-        if (reportData.resolvedBy) {
-          fetchTasks.push(userService.getUserById(reportData.resolvedBy));
-        }
+        const [rep, owner, res] = await Promise.all([
+          userService.getUserById(data.reporterId),
+          userService.getUserById(data.targetOwnerId),
+          data.resolvedBy ? userService.getUserById(data.resolvedBy) : Promise.resolve(null),
+        ]);
+        setReporter(rep);
+        setTargetOwner(owner);
+        if (res) setResolver(res);
 
-        const [reporterData, ownerData, resolverData] = await Promise.all(fetchTasks);
-        setReporter(reporterData);
-        setTargetOwner(ownerData);
-        if (resolverData) setResolver(resolverData);
-
-        if (reportData.targetType === ReportType.POST) {
-          const postData = await postService.getPostByIdForAdmin(reportData.targetId);
-          setContent(postData);
-          if (postData?.status === PostStatus.DELETED && postData.deletedBy) {
-            userService.getUserById(postData.deletedBy).then(setDeleter);
+        if (data.targetType === ReportType.POST) {
+          const post = await postService.getPostByIdForAdmin(data.targetId);
+          setContent(post);
+          if (post?.status === PostStatus.DELETED && post.deletedBy) {
+            userService.getUserById(post.deletedBy).then(setDeleter);
           }
-        } else if (reportData.targetType === ReportType.COMMENT) {
-          const commentData = await commentService.getCommentById(reportData.targetId, true);
-          setContent(commentData);
-          if (commentData?.status === CommentStatus.DELETED && commentData.deletedBy) {
-            userService.getUserById(commentData.deletedBy).then(setDeleter);
+        } else if (data.targetType === ReportType.COMMENT) {
+          const comment = await commentService.getCommentById(data.targetId, true);
+          setContent(comment);
+          if (comment?.status === CommentStatus.DELETED && comment.deletedBy) {
+            userService.getUserById(comment.deletedBy).then(setDeleter);
           }
         }
       } catch {
@@ -110,24 +134,23 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
         setIsLoading(false);
       }
     };
-
-    fetchDetail();
+    load();
   }, [reportId, onClose]);
 
-  const handleAction = async () => {
-    if (!report || !actionType || !currentUser) return;
+  const handleAction = useCallback(async () => {
+    if (!report || !pendingAction || !currentUser) return;
     setIsProcessing(true);
     try {
-      if (actionType === 'resolve') {
+      if (pendingAction === 'resolve') {
         await reportService.resolveReport(report.id, 'Đã xử lý xóa nội dung', 'delete_content');
         toast.success(TOAST_MESSAGES.REPORT.RESOLVE_SUCCESS);
-      } else if (actionType === 'warn') {
+      } else if (pendingAction === 'warn') {
         await reportService.resolveReport(report.id, 'Đã gửi cảnh báo', 'warn_user');
         toast.success(TOAST_MESSAGES.REPORT.WARN_SUCCESS);
-      } else if (actionType === 'ban') {
+      } else if (pendingAction === 'ban') {
         await reportService.resolveReport(report.id, 'Đã khóa tài khoản', 'ban_user');
         toast.success(TOAST_MESSAGES.REPORT.BAN_SUCCESS);
-      } else if (actionType === 'reject') {
+      } else if (pendingAction === 'reject') {
         await reportService.rejectReport(report.id);
         toast.success(TOAST_MESSAGES.REPORT.REJECT_SUCCESS);
       }
@@ -136,11 +159,16 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
       toast.error(TOAST_MESSAGES.REPORT.PROCESS_FAILED);
     } finally {
       setIsProcessing(false);
-      setShowConfirm(false);
+      setPendingAction(null);
     }
-  };
+  }, [report, pendingAction, currentUser, onClose]);
+
+  const openViewer = useCallback((media: ViewerState['media'], index = 0) => {
+    setViewer({ isOpen: true, media, index });
+  }, []);
 
   if (!report && !isLoading) return null;
+  if (!currentUser) return null;
 
   const reasonConfig = report
     ? REPORT_CONFIG.REASONS[report.reason as keyof typeof REPORT_CONFIG.REASONS]
@@ -150,409 +178,329 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
   const isContentReport = report?.targetType !== ReportType.USER;
   const isDeleted = content && 'status' in content && content.status === 'deleted';
 
-  const openAction = (type: typeof actionType) => {
-    setActionType(type);
-    setShowConfirm(true);
-  };
-
   return (
     <>
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-[var(--z-modal)] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
       <div
-        className="bg-bg-primary w-full max-w-4xl max-h-[92vh] rounded-2xl shadow-xl border border-border-light flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+        style={{ zIndex: 'var(--z-modal)' }}
+        onClick={onClose}
       >
-        {/* ── Header ── */}
-        <div className="px-6 py-4 border-b border-border-light flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-error/10 rounded-xl text-error">
-              <ShieldAlert size={20} />
+        <div
+          className="bg-bg-primary w-full max-w-4xl max-h-[92vh] rounded-2xl shadow-xl border border-border-light flex flex-col overflow-hidden"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* ── Modal header ── */}
+          <div className="px-5 py-4 border-b border-border-light flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-error/10 rounded-xl flex items-center justify-center text-error flex-shrink-0">
+                <ShieldAlert size={18} />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-text-primary leading-tight">Chi tiết báo cáo</h2>
+                {isLoading
+                  ? <Skeleton className="h-3 w-28 mt-1" />
+                  : <p className="text-xs text-text-tertiary mt-0.5">
+                    {report ? formatDateTime(report.createdAt) : ''}
+                  </p>
+                }
+              </div>
             </div>
-            <div>
-              <h2 className="text-base font-bold text-text-primary leading-tight">Chi tiết báo cáo</h2>
+            <div className="flex items-center gap-2">
+              {!isLoading && report && <StatusBadge status={report.status} />}
+              <IconButton icon={<X size={18} />} onClick={onClose} variant="ghost" size="sm" />
+            </div>
+          </div>
+
+          {/* ── Body: 2 columns ── */}
+          <div className="flex-1 overflow-hidden flex flex-col lg:flex-row min-h-0">
+
+            {/* LEFT: Reported content */}
+            <div className="flex-1 overflow-y-auto scroll-hide p-5 space-y-5 lg:border-r border-border-light min-w-0">
+
+              {/* Type + reason */}
               {isLoading ? (
-                <Skeleton className="h-3 w-28 mt-1" />
+                <div className="space-y-2.5">
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <Skeleton className="h-6 w-32 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
               ) : (
-                <p className="text-xs text-text-tertiary mt-0.5">
-                  {report ? formatDateTime(report.createdAt) : ''}
-                </p>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {typeConfig && (
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${typeConfig.color}`}>
+                        {typeConfig.icon} {typeConfig.label}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-error/10 text-error border border-error/20">
+                      <AlertTriangle size={11} /> {reasonConfig?.label}
+                    </span>
+                  </div>
+                  {reasonConfig?.description && (
+                    <p className="text-sm text-text-secondary">{reasonConfig.description}</p>
+                  )}
+                  {report?.description && (
+                    <div className="p-3 bg-bg-secondary rounded-xl border border-dashed border-border-light">
+                      <p className="text-sm text-text-secondary italic">"{report.description}"</p>
+                    </div>
+                  )}
+                </div>
               )}
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {/* Status badge */}
-            {!isLoading && report && (
-              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-                report.status === ReportStatus.PENDING
-                  ? 'bg-warning/10 text-warning border-warning/20'
-                  : report.status === ReportStatus.RESOLVED
-                    ? 'bg-success/10 text-success border-success/20'
-                    : 'bg-text-secondary/10 text-text-secondary border-border-light'
-              }`}>
-                {report.status === ReportStatus.PENDING && <Clock size={12} />}
-                {report.status === ReportStatus.RESOLVED && <CheckCircle size={12} />}
-                {report.status === ReportStatus.REJECTED && <XCircle size={12} />}
-                {report.status === ReportStatus.PENDING
-                  ? 'Chờ xử lý'
-                  : report.status === ReportStatus.RESOLVED
-                    ? 'Đã xử lý'
-                    : 'Đã từ chối'}
-              </span>
-            )}
-            <IconButton icon={<X size={20} />} onClick={onClose} variant="secondary" />
-          </div>
-        </div>
-
-        {/* ── Body: 2-column layout ── */}
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row min-h-0">
-
-          {/* LEFT: Nội dung vi phạm */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 lg:border-r border-border-light min-w-0">
-            {/* Report type + reason hero */}
-            {isLoading ? (
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-24 rounded-full" />
-                  <Skeleton className="h-6 w-32 rounded-full" />
+              {/* Reported content body */}
+              {isLoading ? (
+                <div className="space-y-2.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-36 w-full rounded-xl" />
                 </div>
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {typeConfig && (
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${typeConfig.color}`}>
-                      {typeConfig.icon}
-                      {typeConfig.label}
-                    </span>
-                  )}
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-error/10 text-error border border-error/20">
-                    <AlertTriangle size={12} />
-                    {reasonConfig?.label}
-                  </span>
-                </div>
-                {reasonConfig?.description && (
-                  <p className="text-sm text-text-secondary">{reasonConfig.description}</p>
-                )}
-                {report?.description && (
-                  <div className="p-3 bg-bg-secondary rounded-xl border border-dashed border-border-light">
-                    <p className="text-sm text-text-secondary italic">"{report.description}"</p>
+              ) : isContentReport ? (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">
+                      Nội dung bị báo cáo
+                    </p>
+                    {isDeleted && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-error/10 text-error rounded-full border border-error/20 text-[10px] font-bold uppercase">
+                        <Trash2 size={9} /> Đã xóa
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* Violated content */}
-            {isLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-40 w-full rounded-xl" />
-              </div>
-            ) : isContentReport ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-text-tertiary uppercase tracking-widest">
-                    Nội dung bị báo cáo
-                  </h4>
-                  {isDeleted && (
-                    <span className="flex items-center gap-1 px-2 py-0.5 bg-error/10 text-error rounded-full border border-error/20 text-[10px] font-bold uppercase">
-                      <Trash2 size={10} />
-                      Đã xóa
-                    </span>
-                  )}
-                </div>
-
-                {content ? (
-                  <div className={`bg-bg-secondary/50 p-4 rounded-xl border ${isDeleted ? 'border-error/20' : 'border-border-light'}`}>
-                    {isDeleted && deleter && (
-                      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border-light/50 text-xs text-text-tertiary">
-                        <span className="font-bold uppercase tracking-wider">Xóa bởi:</span>
-                        <UserAvatar userId={deleter.id} src={deleter.avatar?.url} name={deleter.fullName} size="xs" />
-                        <span className="font-semibold text-text-secondary">{deleter.fullName}</span>
-                        {content.deletedAt && (
-                          <span className="ml-auto text-[11px]">{formatRelativeTime(content.deletedAt)}</span>
-                        )}
-                      </div>
-                    )}
-
-                    {content.content ? (
-                      <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{content.content}</p>
-                    ) : (
-                      <p className="text-sm text-text-tertiary italic">(Không có nội dung văn bản)</p>
-                    )}
-
-                    {/* Post media */}
-                    {report?.targetType === ReportType.POST && content && (
-                      <div className="mt-4">
-                        <PostMediaGrid
-                          media={(content as Post).media || []}
-                          onClick={() => setViewerState({
-                            isOpen: true,
-                            media: (content as Post).media?.map(m => ({
-                              type: m.mimeType.startsWith('video') ? 'video' as const : 'image' as const,
-                              url: m.url,
-                            })) || [],
-                            index: 0,
-                          })}
-                        />
-                      </div>
-                    )}
-
-                    {/* Comment image */}
-                    {report?.targetType === ReportType.COMMENT && (content as Comment).image && (
-                      <div
-                        className="mt-4 aspect-video rounded-xl bg-black overflow-hidden cursor-pointer group relative"
-                        onClick={() => setViewerState({
-                          isOpen: true,
-                          media: [{ type: 'image' as const, url: (content as Comment).image!.url }],
-                          index: 0,
-                        })}
-                      >
-                        <img src={(content as Comment).image!.url} className="w-full h-full object-contain" alt="" />
-                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider">
-                          Xem cỡ lớn
+                  {content ? (
+                    <div className={`bg-bg-secondary/50 p-4 rounded-xl border ${isDeleted ? 'border-error/20' : 'border-border-light'}`}>
+                      {isDeleted && deleter && (
+                        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border-light/50 text-xs text-text-tertiary">
+                          <span className="font-semibold uppercase tracking-wide">Xóa bởi:</span>
+                          <UserAvatar userId={deleter.id} src={deleter.avatar?.url} name={deleter.fullName} size="xs" />
+                          <span className="font-semibold text-text-secondary">{deleter.fullName}</span>
+                          {content.deletedAt && (
+                            <span className="ml-auto">{formatRelativeTime(content.deletedAt)}</span>
+                          )}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 bg-bg-secondary/30 rounded-xl border border-dashed border-border-light">
-                    <Trash2 size={28} className="mx-auto text-text-tertiary opacity-30 mb-2" />
-                    <p className="text-sm text-text-tertiary">Nội dung đã bị xóa hoặc không còn tồn tại</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              // User report — show target profile
-              <div className="space-y-3">
-                <h4 className="text-xs font-black text-text-tertiary uppercase tracking-widest">Tài khoản bị báo cáo</h4>
-                {isLoading ? (
-                  <Skeleton className="h-20 w-full rounded-xl" />
-                ) : (
-                  <div className="flex items-center gap-4 p-4 bg-bg-secondary/50 rounded-xl border border-border-light">
-                    <UserAvatar userId={targetOwner?.id || ''} src={targetOwner?.avatar?.url} name={targetOwner?.fullName} size="lg" />
+                      )}
+                      {content.content
+                        ? <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{content.content}</p>
+                        : <p className="text-sm text-text-tertiary italic">(Không có nội dung văn bản)</p>
+                      }
+                      {report?.targetType === ReportType.POST && (
+                        <div className="mt-4">
+                          <PostMediaGrid
+                            media={(content as Post).media ?? []}
+                            onClick={() => openViewer(
+                              ((content as Post).media ?? []).map(m => ({
+                                type: m.mimeType.startsWith('video') ? 'video' as const : 'image' as const,
+                                url: m.url,
+                              }))
+                            )}
+                          />
+                        </div>
+                      )}
+                      {report?.targetType === ReportType.COMMENT && (content as Comment).image && (
+                        <button
+                          type="button"
+                          className="mt-4 w-full aspect-video rounded-xl bg-black overflow-hidden cursor-pointer group relative outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                          onClick={() => openViewer([{ type: 'image', url: (content as Comment).image!.url }])}
+                        >
+                          <img
+                            src={(content as Comment).image!.url}
+                            className="w-full h-full object-contain"
+                            alt="Ảnh bình luận bị báo cáo"
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white text-xs font-semibold uppercase tracking-wider">
+                            Xem cỡ lớn
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 bg-bg-secondary/30 rounded-xl border border-dashed border-border-light">
+                      <Trash2 size={24} className="text-text-tertiary opacity-30 mb-2" />
+                      <p className="text-sm text-text-tertiary">Nội dung đã bị xóa hoặc không còn tồn tại</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* User report */
+                <div className="space-y-2.5">
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">
+                    Tài khoản bị báo cáo
+                  </p>
+                  <div className="flex items-center gap-3.5 p-4 bg-bg-secondary/50 rounded-xl border border-border-light">
+                    <UserAvatar userId={targetOwner?.id ?? ''} src={targetOwner?.avatar?.url} name={targetOwner?.fullName} size="lg" />
                     <div className="min-w-0">
-                      <p className="text-base font-bold text-text-primary truncate">{targetOwner?.fullName}</p>
+                      <p className="text-base font-semibold text-text-primary truncate">{targetOwner?.fullName}</p>
                       <p className="text-sm text-text-tertiary truncate">{targetOwner?.email}</p>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Evidence images */}
-            {!isLoading && report?.images && report.images.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-black text-text-tertiary uppercase tracking-widest">Hình ảnh bằng chứng ({report.images.length})</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  {report.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="aspect-square rounded-xl overflow-hidden border border-border-light bg-bg-secondary group cursor-pointer relative"
-                      onClick={() => setViewerState({
-                        isOpen: true,
-                        media: (report.images || []).map(m => ({ type: 'image' as const, url: m.url })),
-                        index: idx,
-                      })}
-                    >
-                      <img src={img.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="" />
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-wide">
-                        Xem ảnh
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT: Metadata + Actions */}
-          <div className="w-full lg:w-[320px] shrink-0 flex flex-col overflow-y-auto border-t lg:border-t-0 border-border-light">
-            <div className="p-5 space-y-5 flex-1">
-
-              {/* Người báo cáo */}
-              <div className="space-y-2">
-                <span className="text-[11px] font-black text-text-tertiary uppercase tracking-widest block">Người báo cáo</span>
-                {isLoading ? (
-                  <div className="flex items-center gap-3">
-                    <Skeleton variant="circle" width={36} height={36} />
-                    <div className="space-y-1 flex-1">
-                      <Skeleton className="h-3 w-3/4" />
-                      <Skeleton className="h-2.5 w-1/2" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-3 bg-bg-secondary/40 rounded-xl">
-                    <UserAvatar userId={reporter?.id || ''} src={reporter?.avatar?.url} name={reporter?.fullName} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-text-primary truncate">{reporter?.fullName}</p>
-                      <p className="text-xs text-text-tertiary truncate">{reporter?.email}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Bị báo cáo — chỉ hiện khi report content (không phải user type) */}
-              {isContentReport && (
-                <div className="space-y-2">
-                  <span className="text-[11px] font-black text-text-tertiary uppercase tracking-widest block">Chủ nội dung</span>
-                  {isLoading ? (
-                    <div className="flex items-center gap-3">
-                      <Skeleton variant="circle" width={36} height={36} />
-                      <div className="space-y-1 flex-1">
-                        <Skeleton className="h-3 w-3/4" />
-                        <Skeleton className="h-2.5 w-1/2" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 p-3 bg-bg-secondary/40 rounded-xl">
-                      <UserAvatar userId={targetOwner?.id || ''} src={targetOwner?.avatar?.url} name={targetOwner?.fullName} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-text-primary truncate">{targetOwner?.fullName}</p>
-                        <p className="text-xs text-text-tertiary truncate">{targetOwner?.email}</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* Resolution info */}
-              {!isLoading && report && !isPending && (
-                <div className={`p-4 rounded-xl border space-y-3 ${
-                  report.status === ReportStatus.RESOLVED
-                    ? 'bg-success/5 border-success/20'
-                    : 'bg-bg-secondary/40 border-border-light'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {report.status === ReportStatus.RESOLVED
-                        ? <CheckCircle size={16} className="text-success" />
-                        : <XCircle size={16} className="text-text-secondary" />
-                      }
-                      <span className={`text-sm font-bold ${report.status === ReportStatus.RESOLVED ? 'text-success' : 'text-text-secondary'}`}>
-                        {report.status === ReportStatus.RESOLVED ? 'Đã xử lý' : 'Đã từ chối'}
-                      </span>
-                    </div>
-                    {report.resolvedAt && (
-                      <span className="text-[11px] text-text-tertiary">{formatRelativeTime(report.resolvedAt)}</span>
-                    )}
+              {/* Evidence images */}
+              {!isLoading && report?.images && report.images.length > 0 && (
+                <div className="space-y-2.5">
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">
+                    Hình ảnh bằng chứng ({report.images.length})
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {report.images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="aspect-square rounded-xl overflow-hidden border border-border-light bg-bg-secondary group cursor-pointer relative outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        onClick={() => openViewer(report.images!.map(m => ({ type: 'image' as const, url: m.url })), idx)}
+                      >
+                        <img
+                          src={img.url}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          alt={`Bằng chứng ${idx + 1}`}
+                        />
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white text-xs font-semibold uppercase tracking-wide">
+                          Xem ảnh
+                        </div>
+                      </button>
+                    ))}
                   </div>
-
-                  {resolver && (
-                    <div className="flex items-center gap-2 pt-2 border-t border-border-light/50">
-                      <span className="text-[11px] text-text-tertiary font-semibold">Xử lý bởi:</span>
-                      <UserAvatar userId={resolver.id} src={resolver.avatar?.url} name={resolver.fullName} size="xs" />
-                      <span className="text-xs font-semibold text-text-primary">{resolver.fullName}</span>
-                    </div>
-                  )}
-
-                  {report.resolution && (
-                    <p className="text-xs text-text-secondary italic bg-bg-primary/50 px-3 py-2 rounded-lg">
-                      "{report.resolution}"
-                    </p>
-                  )}
                 </div>
               )}
             </div>
 
-            {/* ── Footer Actions ── */}
-            {!isLoading && (
-              <div className="p-5 border-t border-border-light bg-bg-secondary/20 space-y-2.5">
-                {isPending ? (
-                  <>
-                    {/* Action nhẹ: Bỏ qua */}
-                    <Button
-                      variant="secondary"
-                      className="w-full font-semibold"
-                      disabled={isProcessing}
-                      onClick={() => openAction('reject')}
-                    >
-                      Bỏ qua báo cáo
-                    </Button>
+            {/* RIGHT: Metadata + Actions */}
+            <div className="w-full lg:w-[300px] flex-shrink-0 flex flex-col overflow-y-auto scroll-hide border-t lg:border-t-0 border-border-light">
+              <div className="p-5 space-y-4 flex-1">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Người báo cáo</p>
+                  <UserRow user={reporter} isLoading={isLoading} />
+                </div>
 
-                    <div className="flex gap-2">
-                      {report?.targetType === ReportType.USER ? (
-                        <>
-                          {targetOwner?.status === UserStatus.BANNED ? (
-                            <div className="flex-1 px-4 py-2 bg-error/5 text-error rounded-xl border border-error/20 text-xs font-bold text-center">
+                {isContentReport && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Chủ nội dung</p>
+                    <UserRow user={targetOwner} isLoading={isLoading} />
+                  </div>
+                )}
+
+                {/* Resolution result */}
+                {!isLoading && report && !isPending && (
+                  <div className={`p-3.5 rounded-xl border space-y-2.5
+                    ${report.status === ReportStatus.RESOLVED
+                      ? 'bg-success/5 border-success/20'
+                      : 'bg-bg-secondary/40 border-border-light'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {report.status === ReportStatus.RESOLVED
+                          ? <CheckCircle size={15} className="text-success" />
+                          : <XCircle size={15} className="text-text-secondary" />
+                        }
+                        <span className={`text-sm font-semibold ${report.status === ReportStatus.RESOLVED ? 'text-success' : 'text-text-secondary'}`}>
+                          {report.status === ReportStatus.RESOLVED ? 'Đã xử lý' : 'Đã từ chối'}
+                        </span>
+                      </div>
+                      {report.resolvedAt && (
+                        <span className="text-xs text-text-tertiary">
+                          {formatRelativeTime(report.resolvedAt)}
+                        </span>
+                      )}
+                    </div>
+                    {resolver && (
+                      <div className="flex items-center gap-2 pt-2 border-t border-border-light/50">
+                        <span className="text-xs text-text-tertiary font-medium">Xử lý bởi:</span>
+                        <UserAvatar userId={resolver.id} src={resolver.avatar?.url} name={resolver.fullName} size="xs" />
+                        <span className="text-xs font-semibold text-text-primary">{resolver.fullName}</span>
+                      </div>
+                    )}
+                    {report.resolution && (
+                      <p className="text-xs text-text-secondary italic bg-bg-primary/50 px-3 py-2 rounded-lg">
+                        "{report.resolution}"
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Action footer */}
+              {!isLoading && (
+                <div className="p-4 border-t border-border-light bg-bg-secondary/20 space-y-2">
+                  {isPending ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        fullWidth
+                        disabled={isProcessing}
+                        onClick={() => setPendingAction('reject')}
+                      >
+                        Bỏ qua báo cáo
+                      </Button>
+                      <div className="flex gap-2">
+                        {report?.targetType === ReportType.USER ? (
+                          targetOwner?.status === UserStatus.BANNED ? (
+                            <div className="flex-1 px-3 py-2 bg-error/5 text-error rounded-xl border border-error/20 text-xs font-semibold text-center">
                               Tài khoản đã bị khóa
                             </div>
                           ) : (
                             <>
                               <Button
                                 variant="secondary"
-                                className="flex-1 font-semibold border-warning/30 text-warning hover:bg-warning/10"
+                                className="flex-1 border-warning/30 text-warning hover:bg-warning/10"
                                 disabled={isProcessing}
-                                onClick={() => openAction('warn')}
+                                onClick={() => setPendingAction('warn')}
                               >
                                 Cảnh báo
                               </Button>
                               <Button
                                 variant="danger"
-                                className="flex-1 font-bold shadow-md shadow-error/20"
+                                className="flex-1"
                                 isLoading={isProcessing}
-                                onClick={() => openAction('ban')}
+                                onClick={() => setPendingAction('ban')}
                               >
                                 Khóa TK
                               </Button>
                             </>
-                          )}
-                        </>
-                      ) : (
-                        <Button
-                          variant={isDeleted ? 'secondary' : 'danger'}
-                          className="flex-1 font-bold shadow-md shadow-error/20"
-                          isLoading={isProcessing}
-                          onClick={() => openAction('resolve')}
-                        >
-                          {isDeleted ? 'Xác nhận & Đóng' : 'Xóa nội dung vi phạm'}
-                        </Button>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <Button variant="secondary" className="w-full font-semibold" onClick={onClose}>
-                    Đóng
-                  </Button>
-                )}
-              </div>
-            )}
+                          )
+                        ) : (
+                          <Button
+                            variant={isDeleted ? 'secondary' : 'danger'}
+                            fullWidth
+                            isLoading={isProcessing}
+                            onClick={() => setPendingAction('resolve')}
+                          >
+                            {isDeleted ? 'Xác nhận & Đóng' : 'Xóa nội dung vi phạm'}
+                          </Button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <Button variant="secondary" fullWidth onClick={onClose}>
+                      Đóng
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-    </div>
+      {pendingAction && (
+        <ConfirmDialog
+          isOpen
+          onClose={() => setPendingAction(null)}
+          onConfirm={handleAction}
+          title={ACTION_CONFIRM[pendingAction].title}
+          message={ACTION_CONFIRM[pendingAction].message}
+          variant={ACTION_CONFIRM[pendingAction].variant}
+        />
+      )}
 
-    {/* Render ngoài backdrop để thoát stacking context */}
-    <ConfirmDialog
-      isOpen={showConfirm}
-      onClose={() => setShowConfirm(false)}
-      onConfirm={handleAction}
-      title={
-        actionType === 'resolve' ? 'Xác nhận xóa nội dung' :
-        actionType === 'reject' ? 'Bỏ qua báo cáo' :
-        actionType === 'warn' ? 'Gửi cảnh báo' :
-        actionType === 'ban' ? 'Khóa tài khoản' : 'Xác nhận'
-      }
-      message={
-        actionType === 'resolve' ? 'Nội dung vi phạm sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.' :
-        actionType === 'reject' ? 'Báo cáo sẽ được đóng lại, nội dung vẫn được giữ nguyên.' :
-        actionType === 'warn' ? 'Người dùng sẽ nhận được cảnh báo về hành vi vi phạm.' :
-        actionType === 'ban' ? 'Tài khoản sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị ngay lập tức.' : ''
-      }
-      variant={actionType === 'resolve' || actionType === 'ban' ? 'danger' : 'primary'}
-    />
-
-    <MediaViewer
-      media={viewerState.media}
-      initialIndex={viewerState.index}
-      isOpen={viewerState.isOpen}
-      onClose={() => setViewerState(prev => ({ ...prev, isOpen: false }))}
-    />
+      <MediaViewer
+        media={viewer.media}
+        initialIndex={viewer.index}
+        isOpen={viewer.isOpen}
+        onClose={() => setViewer(VIEWER_CLOSED)}
+      />
     </>
   );
 };

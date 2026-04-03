@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useLoadingStore } from '../store/loadingStore';
 import { Button } from '../components/ui';
-import { Mail, RefreshCw, LogOut, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Mail, RefreshCw, CheckCircle, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { toast } from '../store/toastStore';
 import { TOAST_MESSAGES } from '../constants';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { auth } from '../firebase/config';
+import { AuthBrandingPanel } from '../components/layout/AuthBrandingPanel';
 
 const EmailVerificationPage: React.FC = () => {
   const { checkVerificationStatus, sendVerificationEmail, logout } = useAuthStore();
@@ -34,28 +35,21 @@ const EmailVerificationPage: React.FC = () => {
     setIsChecking(true);
     try {
       await checkVerificationStatus();
-
-      const currentStore = useAuthStore.getState();
-      if (!currentStore.isPendingVerification) {
+      if (!useAuthStore.getState().isPendingVerification) {
         toast.success(TOAST_MESSAGES.AUTH.VERIFY_EMAIL_SUCCESS);
         navigate('/');
       } else {
         toast.info(TOAST_MESSAGES.AUTH.VERIFY_EMAIL_PENDING);
       }
-    } catch (error) {
-      toast.error(TOAST_MESSAGES.AUTH.CHECK_STATUS_FAILED);
-    } finally {
-      setIsChecking(false);
-    }
+    } catch { toast.error(TOAST_MESSAGES.AUTH.CHECK_STATUS_FAILED); }
+    finally { setIsChecking(false); }
   };
 
   const handleResend = async () => {
     try {
       await sendVerificationEmail();
       toast.success(TOAST_MESSAGES.AUTH.RESEND_VERIFY_SUCCESS);
-    } catch (error) {
-      toast.error(TOAST_MESSAGES.AUTH.SEND_EMAIL_FAILED);
-    }
+    } catch { toast.error(TOAST_MESSAGES.AUTH.SEND_EMAIL_FAILED); }
   };
 
   const handleLogout = async () => {
@@ -65,75 +59,87 @@ const EmailVerificationPage: React.FC = () => {
 
   return (
     <div className="flex min-h-[100dvh] bg-bg-primary overflow-hidden transition-theme">
-      {/* Cánh trái: Branding (Copy từ LoginPage) */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-primary via-[#4b8df8] to-[#0047b3] relative overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-black/10 rounded-full blur-3xl pointer-events-none" />
+      <AuthBrandingPanel
+        headline={<>Chỉ một bước <br /> Nữa thôi.</>}
+        subtext="Để đảm bảo an toàn, vui lòng xác thực email của bạn trước khi bắt đầu khám phá Smurfy."
+      />
 
-        <div className="relative z-10 flex items-center">
-          <img src="/logo_text_white.png" alt="Smurfy" className="h-12 object-contain" />
-        </div>
-
-        <div className="relative z-10 space-y-6">
-          <h2 className="text-6xl font-bold text-white leading-[1.1]">Chỉ một bước <br /> Nữa thôi.</h2>
-          <p className="text-white/80 text-lg font-medium max-w-md">
-            Để đảm bảo an toàn, vui lòng xác thực email của bạn trước khi bắt đầu khám phá Smurfy.
-          </p>
-        </div>
-
-        <div className="relative z-10 text-white/60 text-sm font-medium">
-          © {new Date().getFullYear()} Smurfy Social.
-        </div>
-      </div>
-
-      {/* Cánh phải: Verification Area */}
+      {/* ── Right panel ── */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme">
-        <div className="w-full max-w-[420px] fade-in text-center sm:text-left">
+        <div className="w-full max-w-[420px] animate-fade-in">
+
+          {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <img src="/logo_text_blue.png" alt="Smurfy" className="h-10 object-contain" />
           </div>
 
+          {/* Icon */}
           <div className="mb-8">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 mx-auto sm:mx-0">
-              <Mail size={32} />
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 rounded-2xl btn-gradient opacity-20 blur-md" />
+              <div className="relative w-20 h-20 btn-gradient rounded-2xl flex items-center justify-center shadow-accent">
+                <Mail size={34} className="text-white" />
+              </div>
             </div>
-            <h1 className="text-3xl font-extrabold text-text-primary mb-2">
+
+            <h1 className="text-2xl font-bold text-text-primary mb-2 text-center">
               Xác thực Email
             </h1>
-            <p className="text-text-tertiary text-sm font-medium">
+            <p className="text-sm text-text-secondary text-center leading-relaxed max-w-sm mx-auto">
               Chúng tôi đã gửi link xác thực đến email của bạn. Vui lòng kiểm tra hộp thư (và cả mục Spam).
             </p>
           </div>
 
-          <div className="space-y-4">
+          {/* Steps hint */}
+          <div className="bg-bg-secondary rounded-xl p-4 mb-6 border border-border-light space-y-3">
+            {[
+              { step: '1', text: 'Mở email từ Smurfy trong hộp thư của bạn' },
+              { step: '2', text: 'Nhấn vào link xác thực trong email' },
+              { step: '3', text: 'Quay lại đây và nhấn "Đã xác thực email"' },
+            ].map(({ step, text }) => (
+              <div key={step} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full btn-gradient flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <span className="text-white text-xs font-bold">{step}</span>
+                </div>
+                <p className="text-sm text-text-secondary">{text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="space-y-3">
             <Button
-              className="w-full h-12 text-sm font-bold rounded-xl shadow-md"
+              fullWidth
+              size="lg"
               onClick={handleCheckStatus}
               isLoading={isChecking || isLoading}
-              icon={<CheckCircle size={20} />}
+              icon={<ShieldCheck size={18} />}
             >
               Đã xác thực email
             </Button>
 
             <Button
               variant="secondary"
-              className="w-full h-12 text-sm font-bold rounded-xl text-text-secondary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
+              fullWidth
+              size="lg"
               onClick={handleResend}
               disabled={isLoading}
-              icon={<RefreshCw size={18} />}
+              icon={<RefreshCw size={17} />}
             >
               Gửi lại email xác thực
             </Button>
+          </div>
 
-            <div className="pt-6 border-t border-border-light mt-8">
-              <button
-                onClick={handleLogout}
-                className="group flex items-center gap-2 text-sm font-bold text-text-tertiary hover:text-error transition-all duration-base mx-auto sm:mx-0"
-              >
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-all duration-base" />
-                Quay lại Đăng nhập
-              </button>
-            </div>
+          {/* Back to login */}
+          <div className="pt-6 mt-2 border-t border-border-light">
+            <button
+              onClick={handleLogout}
+              className="group flex items-center gap-2 text-sm font-medium text-text-tertiary hover:text-error transition-colors duration-200 mx-auto"
+            >
+              <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
+              Quay lại Đăng nhập
+            </button>
           </div>
         </div>
       </div>

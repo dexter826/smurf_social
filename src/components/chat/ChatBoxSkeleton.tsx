@@ -1,25 +1,42 @@
 import React from 'react';
 import { Skeleton } from '../ui/Skeleton';
 
-export const ChatBoxSkeleton: React.FC = () => {
-  return (
-    <div className="space-y-6 p-4 bg-bg-secondary h-full overflow-hidden">
-      <div className="flex flex-col items-start gap-2 max-w-[70%]">
-        <Skeleton height={40} width="60%" className="rounded-2xl rounded-tl-none" />
-        <Skeleton variant="circle" width={32} height={32} />
-      </div>
-      <div className="flex flex-col items-end gap-2 max-w-[70%] ml-auto">
-        <Skeleton height={60} width="80%" className="rounded-2xl rounded-tr-none bg-primary/20" />
-      </div>
-      <div className="flex flex-col items-start gap-2 max-w-[70%]">
-        <Skeleton height={40} width="40%" className="rounded-2xl rounded-tl-none" />
-      </div>
-      <div className="flex flex-col items-end gap-2 max-w-[70%] ml-auto">
-        <Skeleton height={120} width="100%" className="rounded-2xl rounded-tr-none bg-primary/20" />
-      </div>
-      <div className="flex flex-col items-start gap-2 max-w-[70%]">
-        <Skeleton height={40} width="50%" className="rounded-2xl rounded-tl-none" />
+export const ChatBoxSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-5 px-3 md:px-4 py-4 h-full overflow-hidden">
+    {/* Received */}
+    <div className="flex items-end gap-2 max-w-[72%]">
+      <Skeleton variant="circle" width={30} height={30} className="flex-shrink-0 mb-0.5" />
+      <div className="space-y-1.5">
+        <Skeleton height={38} width={200} className="rounded-2xl rounded-bl-sm" />
+        <Skeleton height={38} width={140} className="rounded-2xl rounded-bl-sm opacity-70" />
       </div>
     </div>
-  );
-};
+
+    {/* Sent */}
+    <div className="flex flex-col items-end gap-1.5 max-w-[72%] ml-auto">
+      <Skeleton height={44} width={220} className="rounded-2xl rounded-br-sm bg-primary/15" />
+    </div>
+
+    {/* Received */}
+    <div className="flex items-end gap-2 max-w-[72%]">
+      <Skeleton variant="circle" width={30} height={30} className="flex-shrink-0 mb-0.5" />
+      <Skeleton height={38} width={160} className="rounded-2xl rounded-bl-sm" />
+    </div>
+
+    {/* Sent — image-like */}
+    <div className="flex flex-col items-end gap-1.5 max-w-[72%] ml-auto">
+      <Skeleton height={140} width={220} className="rounded-2xl rounded-br-sm bg-primary/15" />
+    </div>
+
+    {/* Received */}
+    <div className="flex items-end gap-2 max-w-[72%]">
+      <Skeleton variant="circle" width={30} height={30} className="flex-shrink-0 mb-0.5" />
+      <Skeleton height={38} width={180} className="rounded-2xl rounded-bl-sm" />
+    </div>
+
+    {/* Sent */}
+    <div className="flex flex-col items-end gap-1.5 max-w-[72%] ml-auto">
+      <Skeleton height={38} width={160} className="rounded-2xl rounded-br-sm bg-primary/15" />
+    </div>
+  </div>
+);

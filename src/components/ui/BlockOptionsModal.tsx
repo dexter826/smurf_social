@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Ban, MessageCircle, Phone, Eye, EyeOff, ChevronDown, ChevronRight } from 'lucide-react';
+import { Ban, MessageCircle, Phone, Eye, EyeOff, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
-import { X } from 'lucide-react';
 import { BlockOptions } from '../../../shared/types';
 import { useScrollLock } from '../../hooks/utils/useScrollLock';
 
@@ -32,13 +31,12 @@ const OptionRow: React.FC<{
   indent?: boolean;
 }> = ({ icon, label, description, checked, onChange, indent }) => (
   <label
-    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer hover:bg-bg-hover transition-all duration-base ${indent ? 'ml-6' : ''}`}
+    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer hover:bg-bg-hover transition-colors duration-200 ${indent ? 'ml-6' : ''}`}
   >
     <div className="pt-0.5 flex-shrink-0">
       <div
-        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-base ${
-          checked ? 'bg-primary border-primary' : 'border-border-medium bg-bg-primary'
-        }`}
+        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${checked ? 'btn-gradient border-primary' : 'border-border-medium bg-bg-primary'
+          }`}
         onClick={() => onChange(!checked)}
       >
         {checked && (
@@ -105,10 +103,10 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
   const handleApply = async () => {
     setIsLoading(true);
     try {
-      const hasAnyOption = options.blockMessages || 
-                          options.blockCalls || 
-                          options.blockViewMyActivity || 
-                          options.hideTheirActivity;
+      const hasAnyOption = options.blockMessages ||
+        options.blockCalls ||
+        options.blockViewMyActivity ||
+        options.hideTheirActivity;
 
       if (!hasAnyOption && onUnblock) {
         await onUnblock();
@@ -124,14 +122,14 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
   const content = (
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-4">
       <div
-        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-in fade-in duration-base"
+        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
-      <div className="relative bg-bg-primary w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-base">
+      <div className="relative bg-bg-primary w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-light">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-error-light flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-error/10 flex items-center justify-center flex-shrink-0">
               <Ban size={18} className="text-error" />
             </div>
             <div>
@@ -163,13 +161,12 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
           {/* Nhóm Ẩn nhật ký */}
           <div className="rounded-xl border border-border-light overflow-hidden">
             <button
-              className="w-full flex items-center gap-3 p-3 hover:bg-bg-hover transition-all duration-base text-left"
+              className="w-full flex items-center gap-3 p-3 hover:bg-bg-hover transition-colors duration-200 text-left"
               onClick={handleToggleActivity}
             >
               <div
-                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-base flex-shrink-0 ${
-                  activityActive ? 'bg-primary border-primary' : 'border-border-medium bg-bg-primary'
-                }`}
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 ${activityActive ? 'btn-gradient border-primary' : 'border-border-medium bg-bg-primary'
+                  }`}
               >
                 {activityActive && (
                   <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

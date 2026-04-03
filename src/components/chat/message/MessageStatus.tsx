@@ -11,16 +11,13 @@ interface MessageStatusProps {
 }
 
 export const MessageStatus: React.FC<MessageStatusProps> = ({
-  isMine,
-  isRead,
-  isDelivered,
-  readers
+  isMine, isRead, isDelivered, readers,
 }) => {
   if (!isMine) return null;
 
   if (isRead && readers.length > 0) {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         <div className="flex -space-x-1">
           {readers.slice(0, 3).map(user => (
             <Avatar
@@ -32,7 +29,7 @@ export const MessageStatus: React.FC<MessageStatusProps> = ({
           ))}
         </div>
         {readers.length > 3 && (
-          <span className="text-[9px] text-text-tertiary font-bold">
+          <span className="text-[10px] text-text-tertiary font-semibold ml-0.5">
             +{readers.length - 3}
           </span>
         )}
@@ -41,16 +38,8 @@ export const MessageStatus: React.FC<MessageStatusProps> = ({
   }
 
   if (isDelivered) {
-    return (
-      <div className="text-text-tertiary">
-        <CheckCheck size={14} strokeWidth={2.5} />
-      </div>
-    );
+    return <CheckCheck size={13} strokeWidth={2.5} className="text-text-tertiary" />;
   }
 
-  return (
-    <div className="text-text-tertiary">
-      <Check size={14} strokeWidth={2.5} />
-    </div>
-  );
+  return <Check size={13} strokeWidth={2.5} className="text-text-tertiary" />;
 };

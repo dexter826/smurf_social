@@ -11,32 +11,24 @@ interface UserStatusTextProps {
 }
 
 export const UserStatusText: React.FC<UserStatusTextProps> = ({
-  userId,
-  className = '',
-  initialStatus,
-  onlineText = 'Đang hoạt động',
-  offlineText = 'Không hoạt động'
+  userId, className = '', initialStatus,
+  onlineText = 'Đang hoạt động', offlineText = 'Không hoạt động',
 }) => {
   const presence = usePresence(userId, initialStatus);
 
-  if (initialStatus === 'banned') {
-    return null;
-  }
+  if (initialStatus === 'banned') return null;
 
-  const getStatusText = () => {
-    if (presence && 'isOnline' in presence && presence.isOnline) return onlineText;
+  const isOnline = presence && 'isOnline' in presence && presence.isOnline;
 
-    if (presence && 'lastSeen' in presence && presence.lastSeen) {
-      const date = new Date(presence.lastSeen);
-      return formatStatusTime(date);
-    }
-
-    return offlineText;
-  };
+  const statusText = isOnline
+    ? onlineText
+    : (presence && 'lastSeen' in presence && presence.lastSeen)
+      ? formatStatusTime(new Date(presence.lastSeen))
+      : offlineText;
 
   return (
-    <span className={`${className} ${presence && 'isOnline' in presence && presence.isOnline ? '!text-status-online font-medium' : ''}`}>
-      {getStatusText()}
+    <span className={`${isOnline ? 'text-status-online font-medium' : ''} ${className}`}>
+      {statusText}
     </span>
   );
 };

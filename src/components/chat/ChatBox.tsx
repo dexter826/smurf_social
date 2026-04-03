@@ -35,7 +35,10 @@ interface ChatBoxProps {
   isBlocked?: boolean;
   isBlockedByMe?: boolean;
   partnerStatus?: UserStatus;
-  myBlockOptions?: { blockMessages: boolean; blockCalls: boolean; blockViewMyActivity: boolean; hideTheirActivity: boolean };
+  myBlockOptions?: {
+    blockMessages: boolean; blockCalls: boolean;
+    blockViewMyActivity: boolean; hideTheirActivity: boolean;
+  };
   onUnblock?: () => void;
   onManageBlock?: () => void;
   shouldShowBlockBanner?: boolean;
@@ -46,84 +49,59 @@ interface ChatBoxProps {
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
-  conversation,
-  messages,
-  participants,
-  currentUserId,
-  currentUserFriendIds = [],
-  friendRequestStatus = 'none',
-  usersMap,
-  typingUsers,
-  onBack,
-  onInfoClick,
-  onRecall,
-  onDeleteForMe,
-  onForward,
-  onReply,
-  onEdit,
-  onAddFriend,
-  onAcceptFriend,
-  onBlock,
-  isLoading,
-  isLoadingMore,
-  hasMoreMessages,
-  onLoadMore,
-  isBlocked = false,
-  isBlockedByMe = false,
-  partnerStatus,
-  myBlockOptions,
-  onUnblock,
-  onManageBlock,
-  shouldShowBlockBanner = false,
-  onCall,
-  onVideoCall,
-  canCall = true,
-  onJoinCall,
+  conversation, messages, participants, currentUserId,
+  currentUserFriendIds = [], friendRequestStatus = 'none',
+  usersMap, typingUsers, onBack, onInfoClick,
+  onRecall, onDeleteForMe, onForward, onReply, onEdit,
+  onAddFriend, onAcceptFriend, onBlock,
+  isLoading, isLoadingMore, hasMoreMessages, onLoadMore,
+  isBlocked = false, isBlockedByMe = false, partnerStatus,
+  myBlockOptions, onUnblock, onManageBlock, shouldShowBlockBanner = false,
+  onCall, onVideoCall, canCall = true, onJoinCall,
 }) => {
-  const {
-    messagesEndRef,
-    messagesContainerRef,
-    handleScroll
-  } = useChatScroll({
+  const { messagesEndRef, messagesContainerRef, handleScroll } = useChatScroll({
     messages,
     conversationId: conversation.id,
     isLoading: !!isLoading,
     hasMoreMessages: !!hasMoreMessages,
     isLoadingMore: !!isLoadingMore,
-    onLoadMore
+    onLoadMore,
   });
 
   const partner = useMemo(() =>
-    conversation.data.isGroup ? null : participants.find(p => p.id !== currentUserId)
-    , [conversation.data.isGroup, participants, currentUserId]);
+    conversation.data.isGroup ? null : participants.find(p => p.id !== currentUserId),
+    [conversation.data.isGroup, participants, currentUserId]
+  );
 
-  const chatName = conversation.data.isGroup ? conversation.data.name : partner?.fullName || 'Không rõ';
-  const avatarSrc = conversation.data.isGroup ? conversation.data.avatar?.url : partner?.avatar?.url;
+  const chatName = conversation.data.isGroup
+    ? conversation.data.name
+    : partner?.fullName || 'Không rõ';
+  const avatarSrc = conversation.data.isGroup
+    ? conversation.data.avatar?.url
+    : partner?.avatar?.url;
 
   const isPartnerBanned = partnerStatus === UserStatus.BANNED || partner?.status === UserStatus.BANNED;
 
   const isMessageRequest = useMemo(() =>
     !conversation.data.isGroup &&
-    partner !== null &&
-    partner !== undefined &&
+    partner !== null && partner !== undefined &&
     !isPartnerBanned &&
     !currentUserFriendIds.includes(partner.id) &&
-    !isBlockedByMe &&
-    !isBlocked
-    , [conversation.data.isGroup, partner, isPartnerBanned, currentUserFriendIds, isBlockedByMe, isBlocked]);
+    !isBlockedByMe && !isBlocked,
+    [conversation.data.isGroup, partner, isPartnerBanned, currentUserFriendIds, isBlockedByMe, isBlocked]
+  );
 
-  const resolvedPartnerStatus = isPartnerBanned ? UserStatus.BANNED : (partnerStatus ?? partner?.status);
+  const resolvedPartnerStatus = isPartnerBanned
+    ? UserStatus.BANNED
+    : (partnerStatus ?? partner?.status);
 
   const { lastReadByMap } = useMessageStatus({
-    messages,
-    conversation,
-    currentUserId,
-    usersMap,
+    messages, conversation, currentUserId, usersMap,
     partnerStatus: resolvedPartnerStatus,
   });
 
   return (
-    <div className="relative flex-1 flex flex-col min-h-0 bg-secondary transition-theme">
+    <div className="relative flex-1 flex flex-col min-h-0 bg-bg-chat transition-theme">
       <ChatBoxHeader
         conversation={conversation}
         participants={participants}
@@ -133,7 +111,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         usersMap={usersMap}
         onBack={onBack}
         onInfoClick={onInfoClick}
-        onCall={() => onCall && onCall(false)}
+        onCall={() => onCall?.(false)}
         onVideoCall={onVideoCall}
         canCall={canCall}
       />
@@ -151,20 +129,20 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-0 bg-secondary custom-scrollbar"
+        className="flex-1 overflow-y-auto overflow-x-hidden bg-bg-chat scroll-hide"
       >
         {isLoading ? (
           <ChatBoxSkeleton />
         ) : conversation.data.isDisbanded ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <p className="text-text-secondary text-sm mb-2">
+            <p className="text-sm text-text-secondary">
               Nhóm đã giải tán. Bạn có thể xóa hội thoại này.
             </p>
           </div>
         ) : (
-          <div className="space-y-4 px-4 py-4 min-h-full">
+          <div className="px-3 md:px-4 py-4 min-h-full">
             {isLoadingMore && (
-              <div className="flex justify-center py-2">
+              <div className="flex justify-center py-3">
                 <Loading size="sm" />
               </div>
             )}

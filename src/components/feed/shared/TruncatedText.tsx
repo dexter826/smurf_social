@@ -11,23 +11,19 @@ export const TruncatedText: React.FC<TruncatedTextProps> = ({
   content,
   threshold = 300,
   className = '',
-  expandClassName = 'text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all duration-base text-sm tracking-wider'
+  expandClassName = 'text-primary font-semibold cursor-pointer hover:underline ml-1.5 text-sm transition-colors duration-200',
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
   const shouldTruncate = content.length > threshold;
   const displayContent = !shouldTruncate || isExpanded
     ? content
-    : content.slice(0, threshold) + '...';
+    : content.slice(0, threshold) + '…';
 
   return (
     <span className={className}>
       {displayContent}
       {shouldTruncate && (
-        <span
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={expandClassName}
-        >
+        <span onClick={() => setIsExpanded(!isExpanded)} className={expandClassName}>
           {isExpanded ? 'Thu gọn' : 'Xem thêm'}
         </span>
       )}

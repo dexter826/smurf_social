@@ -9,9 +9,19 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chống FOUC: apply theme trước khi render -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('smurf_social_theme');
+        var mode = stored ? JSON.parse(stored).state?.mode : null;
+        if (mode === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
-<body class="antialiased overflow-hidden h-screen w-screen selection:bg-primary-100 selection:text-primary-600">
+<body class="antialiased overflow-hidden h-screen w-screen">
   <div id="root" class="h-full w-full"></div>
   <script type="module" src="/src/index.tsx"></script>
 </body>

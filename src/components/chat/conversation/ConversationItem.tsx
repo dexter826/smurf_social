@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Pin, VolumeX, Trash2, MoreVertical, Ban, Archive, MailCheck, Mail, Volume2, User as UserIcon } from 'lucide-react';
+import {
+  Pin, VolumeX, Trash2, MoreVertical, Ban, Archive,
+  Volume2, User as UserIcon,
+} from 'lucide-react';
 import { RtdbConversation, RtdbUserChat, ReactionType, UserStatus } from '../../../../shared/types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, BannedBadge } from '../../ui';
 import { useConversationItem } from '../../../hooks/chat/useConversationItem';
@@ -10,15 +13,16 @@ import { getReactionIcon } from '../reactions/ReactionIcons';
 import { useRtdbChatStore } from '../../../store';
 import { getLastName } from '../../../utils/uiUtils';
 
+/* ── Skeleton ── */
 const ConversationItemSkeleton: React.FC = () => (
-  <div className="flex items-center gap-3 p-3.5 mx-2.5 my-1.5 rounded-xl animate-pulse">
-    <div className="w-12 h-12 rounded-full bg-bg-tertiary flex-shrink-0" />
-    <div className="flex-1 min-w-0">
-      <div className="flex justify-between mb-2">
-        <div className="h-4 bg-bg-tertiary rounded w-24" />
+  <div className="flex items-center gap-3 px-3 py-3 mx-1 my-0.5 rounded-xl animate-pulse">
+    <div className="w-11 h-11 rounded-full bg-bg-tertiary flex-shrink-0" />
+    <div className="flex-1 min-w-0 space-y-2">
+      <div className="flex justify-between">
+        <div className="h-3.5 bg-bg-tertiary rounded w-24" />
         <div className="h-3 bg-bg-tertiary rounded w-10" />
       </div>
-      <div className="h-3 bg-bg-tertiary rounded w-40" />
+      <div className="h-3 bg-bg-tertiary rounded w-36" />
     </div>
   </div>
 );
@@ -39,20 +43,27 @@ interface ConversationItemProps {
   onViewProfile?: () => void;
 }
 
+const renderMessagePreview = (preview: string): React.ReactNode => {
+  const match = preview.match(/^([A-Z_]+)\s+(.+)$/);
+  if (match) {
+    const [, type, text] = match;
+    const icon = getReactionIcon(type as ReactionType, 'inline-block mb-0.5', 13);
+    if (icon) {
+      return (
+        <span className="inline-flex items-center gap-1 truncate max-w-full">
+          <span className="flex-shrink-0">{icon}</span>
+          <span className="truncate">{text}</span>
+        </span>
+      );
+    }
+  }
+  return preview;
+};
+
 const ConversationItemInner: React.FC<ConversationItemProps> = ({
-  conversation,
-  isActive,
-  currentUserId,
-  currentUserFriendIds = [],
-  showMessageRequestBadge = false,
-  onClick,
-  onPin,
-  onMute,
-  onDelete,
-  onBlock,
-  onArchive,
-  onMarkUnread,
-  onViewProfile
+  conversation, isActive, currentUserId, currentUserFriendIds = [],
+  showMessageRequestBadge = false, onClick,
+  onPin, onMute, onDelete, onBlock, onArchive, onMarkUnread, onViewProfile,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -61,57 +72,37 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
 
   const {
-    partner,
-    participants,
-    isDataMissing,
-    chatInfo,
-    isMessageRequest,
-    isUnread,
-    unreadCount,
-    lastMessagePreview,
-    isLastMessageMine,
-    readers,
-    isLastMessageRead,
-    isLastMessageDelivered,
-    displayTime
-  } = useConversationItem({
-    conversation,
-    currentUserId,
-    isActive,
-    currentUserFriendIds
-  });
+    partner, participants, isDataMissing, chatInfo,
+    isMessageRequest, isUnread, unreadCount,
+    lastMessagePreview, isLastMessageMine, readers,
+    isLastMessageRead, isLastMessageDelivered, displayTime,
+  } = useConversationItem({ conversation, currentUserId, isActive, currentUserFriendIds });
 
   const typingText = useMemo(() => {
-    const activeTypingUsers = typingUsers.filter(id => id !== currentUserId);
-    if (activeTypingUsers.length === 0) return null;
-
-    const typingUserObjects = activeTypingUsers
-      .map(uid => participants.find(p => p.id === uid))
-      .filter(Boolean);
-
-    if (typingUserObjects.length === 1) {
-      return `${getLastName(typingUserObjects[0]?.fullName) || 'Ai đó'} đang soạn tin...`;
-    }
-    if (typingUserObjects.length === 2) {
-      return `${getLastName(typingUserObjects[0]?.fullName)} và ${getLastName(typingUserObjects[1]?.fullName)} đang soạn tin...`;
-    }
-    return `${getLastName(typingUserObjects[0]?.fullName)} và ${typingUserObjects.length - 1} người khác đang soạn tin...`;
+    const active = typingUsers.filter(id => id !== currentUserId);
+    if (active.length === 0) return null;
+    const objs = active.map(uid => participants.find(p => p.id === uid)).filter(Boolean);
+    if (objs.length === 1) return `${getLastName(objs[0]?.fullName) || 'Ai đó'} đang soạn...`;
+    if (objs.length === 2) return `${getLastName(objs[0]?.fullName)} và ${getLastName(objs[1]?.fullName)} đang soạn...`;
+    return `${getLastName(objs[0]?.fullName)} và ${objs.length - 1} người khác đang soạn...`;
   }, [typingUsers, participants, currentUserId]);
 
-  if (isDataMissing) {
-    return <ConversationItemSkeleton />;
-  }
+  if (isDataMissing) return <ConversationItemSkeleton />;
+
+  const isGroupCreator = conversation.data.isGroup && conversation.data.creatorId === currentUserId;
 
   return (
     <div
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 p-3.5 mx-2.5 my-1.5 cursor-pointer transition-all duration-base rounded-xl group
+        relative flex items-center gap-3 px-3 py-3 mx-1 my-0.5 cursor-pointer
+        transition-all duration-200 rounded-xl group
         hover:bg-bg-hover active:bg-bg-active
-        ${isActive ? 'bg-primary-light' : ''}
-        ${memberSettings?.isPinned && !isActive ? 'bg-bg-secondary' : ''}
+        ${isActive ? 'bg-primary/10' : ''}
+        ${memberSettings?.isPinned && !isActive ? 'bg-bg-secondary/60' : ''}
       `}
     >
+      {/* Avatar */}
       <div className="relative flex-shrink-0">
         <UserAvatar
           userId={conversation.data.isGroup ? '' : partner?.id}
@@ -122,65 +113,43 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         />
       </div>
 
+      {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-2">
-            <h3 className={`font-semibold text-sm truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
+        {/* Name row */}
+        <div className="flex items-center justify-between mb-0.5">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <h3 className={`text-sm truncate ${isUnread ? 'font-semibold text-text-primary' : 'font-medium text-text-secondary'}`}>
               {chatInfo.name}
             </h3>
-            {!conversation.data.isGroup && partner?.status === UserStatus.BANNED && <BannedBadge size="sm" />}
-            {showMessageRequestBadge && isMessageRequest && (
-              <span className="text-[10px] text-warning bg-warning-light px-1.5 py-0.5 rounded-full border border-warning/30 flex-shrink-0">
-                Người lạ
-              </span>
+            {!conversation.data.isGroup && partner?.status === UserStatus.BANNED && (
+              <BannedBadge size="sm" />
             )}
             {memberSettings?.isPinned && (
-              <Pin size={14} className="text-primary flex-shrink-0" />
+              <Pin size={12} className="text-primary flex-shrink-0" />
             )}
             {memberSettings?.isMuted && (
-              <VolumeX size={14} className="text-text-tertiary flex-shrink-0" />
-            )}
-            {memberSettings?.isArchived && (
-              <Archive size={14} className="text-text-tertiary flex-shrink-0" />
+              <VolumeX size={12} className="text-text-tertiary flex-shrink-0" />
             )}
           </div>
-          <span className={`text-xs flex-shrink-0 ${isMenuOpen ? 'md:hidden' : 'md:group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
+          <span className={`text-xs flex-shrink-0 ml-2 ${isMenuOpen ? 'md:hidden' : 'md:group-hover:hidden'} ${isUnread ? 'font-semibold text-primary' : 'text-text-tertiary'}`}>
             {displayTime}
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-2 overflow-hidden">
-          <div className={`text-sm truncate flex-1 min-w-0 ${isUnread ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+        {/* Preview row */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1 min-w-0 overflow-hidden">
             {typingText ? (
-              <span className="text-primary italic text-[13px] truncate block">
-                {typingText}
-              </span>
+              <span className="text-xs text-primary italic truncate block">{typingText}</span>
             ) : (
-              <span className={`block truncate text-[13px] ${isUnread ? 'font-bold text-text-primary' : (lastMessagePreview.match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u) || lastMessagePreview.match(/^[A-Z_]+\s/)) ? 'text-text-tertiary italic' : 'text-text-secondary'}`}>
-                {isLastMessageMine ? 'Bạn: ' : ''}
-                {(() => {
-                  const enumEmojiRegex = /^([A-Z_]+)\s+(.+)$/;
-                  const match = lastMessagePreview.match(enumEmojiRegex);
-
-                  if (match) {
-                    const [_, type, text] = match;
-                    const icon = getReactionIcon(type as ReactionType, "inline-block mb-0.5", 14);
-                    if (icon) {
-                      return (
-                        <span className="inline-flex items-center gap-1 truncate max-w-full">
-                          <span className="flex-shrink-0">{icon}</span>
-                          <span className="truncate">{text}</span>
-                        </span>
-                      );
-                    }
-                  }
-                  return lastMessagePreview;
-                })()}
+              <span className={`text-xs truncate block ${isUnread ? 'font-semibold text-text-primary' : 'text-text-tertiary'}`}>
+                {isLastMessageMine && <span className="text-text-tertiary">Bạn: </span>}
+                {renderMessagePreview(lastMessagePreview)}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <MessageStatus
               isMine={isLastMessageMine && !isUnread && !typingText}
               isRead={isLastMessageRead}
@@ -188,68 +157,69 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               readers={readers}
             />
             {isUnread && unreadCount > 0 ? (
-              <span className="flex-shrink-0 bg-error text-text-on-primary text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
-                {unreadCount}
+              <span className="bg-error text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             ) : isUnread ? (
-              <span className="flex-shrink-0 bg-error w-2.5 h-2.5 rounded-full" />
+              <span className="w-2 h-2 rounded-full bg-error flex-shrink-0" />
             ) : null}
           </div>
         </div>
       </div>
 
-      <div className={`md:absolute md:top-2 md:right-2 transition-all duration-base flex-shrink-0 ${isMenuOpen ? 'opacity-100 md:z-10' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
+      {/* Context menu */}
+      <div className={`md:absolute md:top-2 md:right-2 flex-shrink-0 transition-all duration-200 ${isMenuOpen ? 'opacity-100 md:z-10' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
         <Dropdown
           isOpen={isMenuOpen}
           onOpenChange={setIsMenuOpen}
           trigger={
             <IconButton
-              className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-base ${isMenuOpen ? 'opacity-100' : ''}`}
-              icon={<MoreVertical size={16} />}
+              className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"
+              icon={<MoreVertical size={15} />}
               size="sm"
             />
           }
         >
           {onPin && (
             <DropdownItem
-              icon={<Pin size={16} />}
+              icon={<Pin size={14} />}
               label={memberSettings?.isPinned ? 'Bỏ ghim' : 'Ghim'}
               onClick={() => onPin(conversation.id, !(memberSettings?.isPinned || false))}
             />
           )}
           {onViewProfile && !conversation.data.isGroup && (
             <DropdownItem
-              icon={<UserIcon size={16} />}
+              icon={<UserIcon size={14} />}
               label="Xem trang cá nhân"
               onClick={onViewProfile}
             />
           )}
           {onMute && (
             <DropdownItem
-              icon={memberSettings?.isMuted ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              icon={memberSettings?.isMuted ? <Volume2 size={14} /> : <VolumeX size={14} />}
               label={memberSettings?.isMuted ? 'Bật thông báo' : 'Tắt thông báo'}
               onClick={() => onMute(conversation.id, !(memberSettings?.isMuted || false))}
             />
           )}
           {onArchive && (
             <DropdownItem
-              icon={<Archive size={16} />}
+              icon={<Archive size={14} />}
               label={memberSettings?.isArchived ? 'Bỏ lưu trữ' : 'Lưu trữ'}
               onClick={() => onArchive(conversation.id, !(memberSettings?.isArchived || false))}
             />
           )}
           {onBlock && !conversation.data.isGroup && partner?.status !== UserStatus.BANNED && (
             <DropdownItem
-              icon={<Ban size={16} />}
+              icon={<Ban size={14} />}
               label="Quản lý chặn"
               variant="danger"
-              onClick={() => { onBlock?.(); setIsMenuOpen(false); }}
+              onClick={() => { onBlock(); setIsMenuOpen(false); }}
             />
           )}
           {onDelete && (
             <DropdownItem
-              icon={<Trash2 size={16} />}
-              label={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? "Giải tán nhóm" : "Xóa cuộc trò chuyện"}
+              icon={<Trash2 size={14} />}
+              label={isGroupCreator ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}
               variant="danger"
               onClick={() => setShowDeleteConfirm(true)}
             />
@@ -257,14 +227,13 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         </Dropdown>
       </div>
 
-
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => { onDelete?.(); setShowDeleteConfirm(false); }}
-        title={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.TITLE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
-        message={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.MESSAGE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
-        confirmLabel={conversation.data.isGroup && conversation.data.creatorId === currentUserId ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.CONFIRM : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
+        title={isGroupCreator ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.TITLE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
+        message={isGroupCreator ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.MESSAGE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
+        confirmLabel={isGroupCreator ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.CONFIRM : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
         variant="danger"
       />
     </div>

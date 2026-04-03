@@ -4,7 +4,6 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../firebase/config';
 import { useUserCache } from '../../../store/userCacheStore';
 
-
 interface CallWindowProps {
   roomId: string;
   userId: string;
@@ -16,34 +15,27 @@ interface CallWindowProps {
 }
 
 export const CallWindow: React.FC<CallWindowProps> = ({
-  roomId,
-  userId,
-  userName,
-  userAvatar,
-  callType,
-  isGroupCall = false,
-  onClose,
+  roomId, userId, userName, userAvatar, callType, isGroupCall = false, onClose,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const zegoRef = useRef<ZegoUIKitPrebuilt | null>(null);
   const onCloseRef = useRef(onClose);
 
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (!containerRef.current) return;
-
     let destroyed = false;
 
-    const init = async () => {
-      if (!roomId || !userId || !userName) {
-        console.warn('[CallWindow] Thiếu tham số bắt buộc:', { roomId, userId, userName });
-        return;
+    const destroyZego = () => {
+      if (zegoRef.current) {
+        try { zegoRef.current.destroy(); } catch { /* ignored */ }
+        zegoRef.current = null;
       }
+    };
 
-      console.log('[CallWindow] Đang khởi tạo Zego...', { roomId, userId, userName });
+    const init = async () => {
+      if (!roomId || !userId || !userName) return;
 
       const getToken = httpsCallable<
         { roomId: string; userId: string; userName: string },
@@ -55,14 +47,7 @@ export const CallWindow: React.FC<CallWindowProps> = ({
         if (destroyed || !containerRef.current) return;
 
         const appId = Number(import.meta.env.VITE_ZEGO_APP_ID);
-        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
-          appId,
-          data.token,
-          roomId,
-          userId,
-          userName,
-        );
-
+        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(appId, data.token, roomId, userId, userName);
         const zp = ZegoUIKitPrebuilt.create(kitToken);
         zegoRef.current = zp;
 
@@ -70,11 +55,7 @@ export const CallWindow: React.FC<CallWindowProps> = ({
 
         zp.joinRoom({
           container: containerRef.current,
-          scenario: {
-            mode: isGroupCall
-              ? ZegoUIKitPrebuilt.GroupCall
-              : ZegoUIKitPrebuilt.OneONoneCall,
-          },
+          scenario: { mode: isGroupCall ? ZegoUIKitPrebuilt.GroupCall : ZegoUIKitPrebuilt.OneONoneCall },
           turnOnCameraWhenJoining: callType === 'video',
           showPreJoinView: false,
           showTextChat: false,
@@ -86,72 +67,39 @@ export const CallWindow: React.FC<CallWindowProps> = ({
             const usersMap = useUserCache.getState().users;
             userList.forEach((u) => {
               if (!u.setUserAvatar) return;
-              if (u.userID === userId && userAvatar) {
-                u.setUserAvatar(userAvatar);
-              } else {
+              if (u.userID === userId && userAvatar) u.setUserAvatar(userAvatar);
+              else {
                 const cached = usersMap[u.userID];
                 if (cached?.avatar?.url) u.setUserAvatar(cached.avatar.url);
               }
             });
           },
 
-          onUserJoin: (users: any[]) => {
-            users.forEach((u) => activeParticipants.add(u.userID));
-          },
+          onUserJoin: (users: any[]) => { users.forEach(u => activeParticipants.add(u.userID)); },
 
           onUserLeave: (users: any[]) => {
-            users.forEach((u) => activeParticipants.delete(u.userID));
-            const shouldEnd = activeParticipants.size === 0;
-            if (shouldEnd) {
-              setTimeout(() => {
-                destroyZego();
-                onCloseRef.current();
-              }, 500);
+            users.forEach(u => activeParticipants.delete(u.userID));
+            if (activeParticipants.size === 0) {
+              setTimeout(() => { destroyZego(); onCloseRef.current(); }, 500);
             }
           },
 
-          onLeaveRoom: async () => {
-            destroyZego();
-            onCloseRef.current();
-          },
+          onLeaveRoom: async () => { destroyZego(); onCloseRef.current(); },
         });
-
-      } catch (error) {
-        console.error('[CallWindow] Lỗi khởi tạo cuộc gọi:', error);
+      } catch {
         onCloseRef.current();
       }
     };
 
-    init().catch(console.error);
+    init();
 
-    return () => {
-      destroyed = true;
-      destroyZego();
-    };
+    return () => { destroyed = true; destroyZego(); };
   }, [roomId, userId, userName, callType, isGroupCall]);
-
-  function destroyZego() {
-    if (zegoRef.current) {
-      try {
-        zegoRef.current.destroy();
-      } catch {
-        // Ignored
-      }
-      zegoRef.current = null;
-    }
-  }
 
   return (
     <div
       ref={containerRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 100,
-        width: '100%',
-        height: '100%',
-        background: '#000',
-      }}
+      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-toast)', width: '100%', height: '100%', background: '#000' }}
     />
   );
 };

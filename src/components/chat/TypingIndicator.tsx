@@ -9,38 +9,38 @@ interface TypingIndicatorProps {
 }
 
 export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
-  typingUsers,
-  currentUserId,
-  usersMap
+  typingUsers, currentUserId, usersMap,
 }) => {
-  const activeTypingUsers = typingUsers.filter(uid => uid !== currentUserId);
-  if (activeTypingUsers.length === 0) return null;
+  const active = typingUsers.filter(uid => uid !== currentUserId);
+  if (active.length === 0) return null;
 
-  let typingText = '';
-  if (activeTypingUsers.length === 1) {
-    const user = usersMap[activeTypingUsers[0]];
-    const name = getLastName(user?.fullName) || 'Ai đó';
-    typingText = `${name} đang soạn tin...`;
-  } else if (activeTypingUsers.length === 2) {
-    const user1 = usersMap[activeTypingUsers[0]];
-    const user2 = usersMap[activeTypingUsers[1]];
-    const name1 = getLastName(user1?.fullName) || 'Người dùng';
-    const name2 = getLastName(user2?.fullName) || 'người dùng';
-    typingText = `${name1} và ${name2} đang soạn tin...`;
-  } else {
-    const user1 = usersMap[activeTypingUsers[0]];
-    const user2 = usersMap[activeTypingUsers[1]];
-    const name1 = getLastName(user1?.fullName) || 'Người dùng';
-    const name2 = getLastName(user2?.fullName) || 'người dùng';
-    const othersCount = activeTypingUsers.length - 2;
-    typingText = `${name1}, ${name2} và ${othersCount} người khác đang soạn tin...`;
-  }
+  const name = (uid: string) => getLastName(usersMap[uid]?.fullName) || 'Người dùng';
+
+  const typingText =
+    active.length === 1
+      ? `${name(active[0])} đang soạn tin...`
+      : active.length === 2
+        ? `${name(active[0])} và ${name(active[1])} đang soạn tin...`
+        : `${name(active[0])}, ${name(active[1])} và ${active.length - 2} người khác đang soạn tin...`;
 
   return (
-    <div className="absolute bottom-2 left-4 z-10 animate-in fade-in slide-in-from-bottom-2 duration-slow">
-      <span className="text-xs text-text-tertiary italic flex items-center gap-1">
-        {typingText}
-      </span>
+    <div
+      className="absolute bottom-2 left-4 animate-fade-in pointer-events-none"
+      style={{ zIndex: 'var(--z-sticky)' }}
+    >
+      <div className="flex items-center gap-2 bg-bg-primary/80 backdrop-blur-sm border border-border-light rounded-full px-3 py-1.5 shadow-sm">
+        {/* Animated dots */}
+        <div className="flex items-center gap-0.5">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="w-1.5 h-1.5 rounded-full bg-text-tertiary animate-pulse-dot"
+              style={{ animationDelay: `${i * 0.2}s` }}
+            />
+          ))}
+        </div>
+        <span className="text-xs text-text-tertiary font-medium">{typingText}</span>
+      </div>
     </div>
   );
 };

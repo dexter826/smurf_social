@@ -1,6 +1,5 @@
 import React from 'react';
 import { MoreVertical, Reply, Forward, RotateCcw, Edit2, Trash2 } from 'lucide-react';
-
 import { RtdbMessage, MessageType } from '../../../../shared/types';
 import { IconButton, Dropdown, DropdownItem } from '../../ui';
 
@@ -20,23 +19,20 @@ interface MessageActionsProps {
 }
 
 export const MessageActions: React.FC<MessageActionsProps> = ({
-  message,
-  isMe,
-  canEdit,
-  showMenu,
-  setShowMenu,
-  onReply,
-  onForward,
-  onEdit,
-  setShowRecallConfirm,
-  onDeleteForMe,
-  isBlocked,
-  isPartnerBanned = false,
+  message, isMe, canEdit, showMenu, setShowMenu,
+  onReply, onForward, onEdit, setShowRecallConfirm,
+  onDeleteForMe, isBlocked, isPartnerBanned = false,
 }) => {
   const isInteractionDisabled = isBlocked || isPartnerBanned;
 
   return (
-    <div className={`absolute top-0 opacity-0 group-hover/message:opacity-100 transition-all duration-base flex items-center gap-1 ${isMe ? 'right-full mr-2' : 'left-full ml-2'}`}>
+    <div
+      className={`
+        absolute top-0 opacity-0 group-hover/message:opacity-100
+        transition-opacity duration-200 flex items-center gap-0.5
+        ${isMe ? 'right-full mr-1.5' : 'left-full ml-1.5'}
+      `}
+    >
       <Dropdown
         isOpen={showMenu}
         onOpenChange={setShowMenu}
@@ -45,7 +41,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           <IconButton
             icon={<MoreVertical size={14} />}
             size="sm"
-            className={`${showMenu ? 'opacity-100' : ''}`}
+            className={showMenu ? 'opacity-100' : ''}
           />
         }
       >
@@ -55,28 +51,19 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
               <DropdownItem
                 icon={<Reply size={14} />}
                 label="Trả lời"
-                onClick={() => {
-                  onReply?.(message);
-                  setShowMenu(false);
-                }}
+                onClick={() => { onReply?.(message); setShowMenu(false); }}
               />
             )}
             <DropdownItem
               icon={<Forward size={14} />}
               label="Chuyển tiếp"
-              onClick={() => {
-                onForward?.(message);
-                setShowMenu(false);
-              }}
+              onClick={() => { onForward?.(message); setShowMenu(false); }}
             />
             {!isInteractionDisabled && canEdit && (
               <DropdownItem
                 icon={<Edit2 size={14} />}
                 label="Chỉnh sửa"
-                onClick={() => {
-                  onEdit?.(message);
-                  setShowMenu(false);
-                }}
+                onClick={() => { onEdit?.(message); setShowMenu(false); }}
               />
             )}
             {!isInteractionDisabled && isMe && (
@@ -84,10 +71,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 icon={<RotateCcw size={14} />}
                 label="Thu hồi"
                 className="!text-warning hover:!text-warning"
-                onClick={() => {
-                  setShowRecallConfirm(true);
-                  setShowMenu(false);
-                }}
+                onClick={() => { setShowRecallConfirm(true); setShowMenu(false); }}
               />
             )}
           </>
@@ -97,10 +81,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
             icon={<Trash2 size={14} />}
             label="Xóa phía tôi"
             variant="danger"
-            onClick={() => {
-              onDeleteForMe?.(message.id);
-              setShowMenu(false);
-            }}
+            onClick={() => { onDeleteForMe?.(message.id); setShowMenu(false); }}
           />
         )}
       </Dropdown>

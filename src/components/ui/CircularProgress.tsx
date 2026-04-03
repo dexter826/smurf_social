@@ -1,4 +1,5 @@
 import React from 'react';
+import { X, Check } from 'lucide-react';
 
 interface LinearProgressBarProps {
   progress: number;
@@ -8,24 +9,20 @@ interface LinearProgressBarProps {
 }
 
 export const LinearProgressBar: React.FC<LinearProgressBarProps> = ({
-  progress,
-  error,
-  label,
-  className = '',
+  progress, error, label, className = '',
 }) => (
   <div className={`flex flex-col gap-1 w-full ${className}`}>
     <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
       <div
-        className={`h-full transition-all duration-slow ${error ? 'bg-red-400' : 'bg-primary'}`}
+        className={`h-full transition-all duration-slow rounded-full ${error ? 'bg-error' : 'btn-gradient'}`}
         style={{ width: `${Math.min(progress, 100)}%` }}
       />
     </div>
     {label !== undefined && (
-      <span className="text-[10px] text-white font-medium">{label}</span>
+      <span className="text-xs text-white font-medium">{label}</span>
     )}
   </div>
 );
-import { X, Check } from 'lucide-react';
 
 interface CircularProgressProps {
   progress: number;
@@ -38,13 +35,8 @@ interface CircularProgressProps {
 }
 
 export const CircularProgress: React.FC<CircularProgressProps> = ({
-  progress,
-  size = 48,
-  strokeWidth = 3,
-  showPercentage = true,
-  showCancel = false,
-  onCancel,
-  className = '',
+  progress, size = 48, strokeWidth = 3,
+  showPercentage = true, showCancel = false, onCancel, className = '',
 }) => {
   const radius = (size - strokeWidth * 2) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -57,26 +49,15 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
       style={{ width: size, height: size }}
     >
       <svg className="absolute -rotate-90" width={size} height={size}>
-        {/* Track */}
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={strokeWidth} />
         <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          strokeWidth={strokeWidth}
-        />
-        {/* Progress */}
-        <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none"
+          cx={size / 2} cy={size / 2} r={radius} fill="none"
           stroke={isComplete ? 'var(--color-success)' : 'white'}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          strokeWidth={strokeWidth} strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={offset}
           className="transition-[stroke-dashoffset] duration-slow"
         />
       </svg>
-
       <div className="relative z-10 flex items-center justify-center">
         {isComplete ? (
           <Check size={size * 0.35} className="text-white" strokeWidth={2.5} />
@@ -104,11 +85,9 @@ interface CircularProgressOverlayProps extends CircularProgressProps {
 }
 
 export const CircularProgressOverlay: React.FC<CircularProgressOverlayProps> = ({
-  isVisible,
-  ...props
+  isVisible, ...props
 }) => {
   if (!isVisible) return null;
-
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px] z-10">
       <CircularProgress {...props} />

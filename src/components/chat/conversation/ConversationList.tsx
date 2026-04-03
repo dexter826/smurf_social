@@ -44,51 +44,24 @@ interface ConversationListProps {
 }
 
 export const ConversationList = React.memo<ConversationListProps>(({
-  conversations,
-  selectedId,
-  currentUserId,
-  currentUserFriendIds = [],
-  blockedUserIds = [],
-  isLoading,
-  onSelectConversation,
-  onSearch,
-  onPin,
-  onMute,
-  onDelete,
-  onBlock,
-  onArchive,
-  onMarkUnread,
-  onViewProfile,
-  onNewChat,
-  onNewGroup,
-  viewMode = 'normal',
-  archivedCount = 0,
-  onViewModeChange,
-  isSearchFocused = false,
-  onSearchFocus,
-  onSelectUser,
+  conversations, selectedId, currentUserId,
+  currentUserFriendIds = [], blockedUserIds = [],
+  isLoading, onSelectConversation, onSearch,
+  onPin, onMute, onDelete, onBlock, onArchive, onMarkUnread,
+  onViewProfile, onNewChat, onNewGroup,
+  viewMode = 'normal', archivedCount = 0, onViewModeChange,
+  isSearchFocused = false, onSearchFocus, onSelectUser,
   searchResults = { conversations: [], users: [] },
-  searchHistory = [],
-  onRemoveFromHistory,
-  onClearHistory,
-  onMarkAllRead
+  searchHistory = [], onRemoveFromHistory, onClearHistory, onMarkAllRead,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [requestsExpanded, setRequestsExpanded] = useState(true);
 
-  // Phân nhóm hội thoại
-  const {
-    friendConversations,
-    requestConversations,
-    displayConversations
-  } = useConversationGroups({
-    conversations,
-    currentUserId,
-    currentUserFriendIds,
-    blockedUserIds,
+  const { friendConversations, requestConversations, displayConversations } = useConversationGroups({
+    conversations, currentUserId, currentUserFriendIds, blockedUserIds,
     viewMode: (viewMode || 'normal') as 'normal' | 'archived',
-    activeFilter
+    activeFilter,
   });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +76,9 @@ export const ConversationList = React.memo<ConversationListProps>(({
     onSearchFocus?.(false);
   };
 
-  const renderConversationItem = useCallback((conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat }) => {
+  const renderConversationItem = useCallback((
+    conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat }
+  ) => {
     const participantIds = Object.keys(conversation.data.members);
     const partnerId = conversation.data.isGroup
       ? null
@@ -128,17 +103,9 @@ export const ConversationList = React.memo<ConversationListProps>(({
       />
     );
   }, [
-    currentUserId,
-    selectedId,
-    currentUserFriendIds,
-    onSelectConversation,
-    onPin,
-    onMute,
-    onDelete,
-    onBlock,
-    onArchive,
-    onMarkUnread,
-    onViewProfile
+    currentUserId, selectedId, currentUserFriendIds,
+    onSelectConversation, onPin, onMute, onDelete,
+    onBlock, onArchive, onMarkUnread, onViewProfile,
   ]);
 
   return (
@@ -158,34 +125,25 @@ export const ConversationList = React.memo<ConversationListProps>(({
         onMarkAllRead={onMarkAllRead}
       />
 
+      {/* Filter bar / archive label */}
       {!isSearchFocused && !searchTerm && (
         viewMode === 'normal' ? (
-          <ConversationFilters
-            activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
-          />
+          <ConversationFilters activeFilter={activeFilter} onFilterChange={setActiveFilter} />
         ) : (
-          <div className="flex-shrink-0 flex items-center px-4 h-12 bg-bg-secondary border-b border-border-light">
-            <span className="text-sm font-bold text-text-secondary flex items-center gap-2">
-              <Archive size={16} />
+          <div className="flex-shrink-0 flex items-center px-4 h-10 bg-bg-secondary border-b border-border-light">
+            <span className="text-xs font-semibold text-text-secondary flex items-center gap-2">
+              <Archive size={14} />
               Hội thoại đã lưu trữ
             </span>
           </div>
         )
       )}
 
-      {/* Danh sách chính */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scroll-hide">
         {isLoading && conversations.length === 0 ? (
-          <div className="p-2 space-y-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl">
-                <Skeleton variant="circle" width={48} height={48} />
-                <div className="flex-1 space-y-2">
-                  <Skeleton width="60%" height={16} />
-                  <Skeleton width="80%" height={14} />
-                </div>
-              </div>
+          <div className="p-1 pt-2">
+            {[...Array(6)].map((_, i) => (
+              <ConversationItem.Skeleton key={i} />
             ))}
           </div>
         ) : isSearchFocused ? (
@@ -195,50 +153,45 @@ export const ConversationList = React.memo<ConversationListProps>(({
             currentUserId={currentUserId}
             selectedId={selectedId}
             history={searchHistory}
-            onSelectConversation={(id) => {
-              onSelectConversation(id);
-              onSearchFocus?.(false);
-            }}
-            onSelectUser={(user) => {
-              onSelectUser?.(user);
-              onSearchFocus?.(false);
-            }}
-            onRemoveFromHistory={onRemoveFromHistory || (() => { })}
-            onClearHistory={onClearHistory || (() => { })}
+            onSelectConversation={(id) => { onSelectConversation(id); onSearchFocus?.(false); }}
+            onSelectUser={(user) => { onSelectUser?.(user); onSearchFocus?.(false); }}
+            onRemoveFromHistory={onRemoveFromHistory}
+            onClearHistory={onClearHistory}
             isLoading={isLoading && searchTerm !== ''}
             conversations={conversations}
           />
         ) : (friendConversations.length === 0 && requestConversations.length === 0) ? (
+          /* Empty state */
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-              <Users size={32} className="text-text-tertiary" />
+            <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4 border border-border-light">
+              <Users size={26} className="text-text-tertiary" />
             </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
+            <h3 className="text-sm font-semibold text-text-primary mb-1">
               {searchTerm ? 'Không tìm thấy' : 'Chưa có cuộc trò chuyện'}
             </h3>
-            <p className="text-sm text-text-secondary">
+            <p className="text-xs text-text-secondary">
               {searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Bắt đầu trò chuyện với bạn bè'}
             </p>
           </div>
         ) : (
-          <div>
-            {/* Tin nhắn chờ */}
+          <div className="py-1">
+            {/* Message requests section */}
             {viewMode === 'normal' && activeFilter === 'all' && requestConversations.length > 0 && (
               <>
                 <button
                   onClick={() => setRequestsExpanded(!requestsExpanded)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 bg-bg-tertiary border-b border-border-light hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
+                  className="w-full flex items-center justify-between px-4 py-2 hover:bg-bg-hover active:bg-bg-active transition-colors duration-200"
                 >
-                  <span className="flex items-center gap-2 text-sm font-medium text-text-primary">
-                    <MessageCircle size={16} className="text-primary" />
+                  <span className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
+                    <MessageCircle size={14} className="text-primary" />
                     Người lạ
-                    <span className="text-[10px] bg-primary text-text-on-primary px-1.5 py-0.5 rounded-full min-w-[18px]">
+                    <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
                       {requestConversations.length}
                     </span>
                   </span>
                   <ChevronDown
-                    size={16}
-                    className={`text-text-secondary transition-transform duration-base ${requestsExpanded ? 'rotate-180' : ''}`}
+                    size={14}
+                    className={`text-text-tertiary transition-transform duration-200 ${requestsExpanded ? 'rotate-180' : ''}`}
                   />
                 </button>
                 {requestsExpanded && (
@@ -247,7 +200,6 @@ export const ConversationList = React.memo<ConversationListProps>(({
               </>
             )}
 
-            {/* Danh sách hiển thị */}
             {displayConversations.map(renderConversationItem)}
           </div>
         )}

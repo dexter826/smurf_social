@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, AlertTriangle, Info } from 'lucide-react';
 import { Button } from './Button';
@@ -20,96 +20,72 @@ interface ModalProps {
   fullScreen?: boolean | 'mobile';
 }
 
-const maxWidthClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  '2xl': 'max-w-2xl',
-  '4xl': 'max-w-4xl',
-  '5xl': 'max-w-5xl',
-  '6xl': 'max-w-6xl',
-  '7xl': 'max-w-7xl',
-  'full': 'max-w-full',
+const maxWidthClasses: Record<NonNullable<ModalProps['maxWidth']>, string> = {
+  sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-xl',
+  '2xl': 'max-w-2xl', '4xl': 'max-w-4xl', '5xl': 'max-w-5xl',
+  '6xl': 'max-w-6xl', '7xl': 'max-w-7xl', full: 'max-w-full',
 };
 
-const paddingClasses = {
-  none: 'p-0',
-  sm: 'p-2',
-  md: 'p-4',
-  lg: 'p-6',
+const paddingClasses: Record<NonNullable<ModalProps['padding']>, string> = {
+  none: 'p-0', sm: 'p-2', md: 'p-4', lg: 'p-6',
 };
 
 export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  footer,
-  maxWidth = 'md',
-  padding = 'lg',
-  showHeader = true,
-  showCloseButton = true,
-  className = '',
-  bodyClassName = '',
-  fullScreen = false
+  isOpen, onClose, title, children, footer,
+  maxWidth = 'md', padding = 'lg',
+  showHeader = true, showCloseButton = true,
+  className = '', bodyClassName = '', fullScreen = false,
 }) => {
   useScrollLock(isOpen);
-
   if (!isOpen) return null;
 
-  const isFullScreenAlways = typeof fullScreen === 'boolean' && fullScreen === true;
-  const isFullScreenMobile = typeof fullScreen === 'string' && fullScreen === 'mobile';
+  const isFullAlways = fullScreen === true;
+  const isFullMobile = fullScreen === 'mobile';
 
-  const modalContent = (
-    <div className={`fixed inset-0 z-[var(--z-modal)] flex items-center justify-center ${isFullScreenAlways ? 'p-0' : (isFullScreenMobile ? 'max-md:p-0 p-4' : 'p-4')} overflow-hidden`}>
+  return createPortal(
+    <div
+      className={`fixed inset-0 flex items-center justify-center overflow-hidden ${isFullAlways ? 'p-0' : isFullMobile ? 'max-md:p-0 p-4' : 'p-4'}`}
+      style={{ zIndex: 'var(--z-modal)' }}
+    >
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-in fade-in duration-base"
+        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
 
+      {/* Panel */}
       <div className={`
-        relative bg-bg-primary w-full shadow-2xl transition-theme overflow-hidden flex flex-col justify-between md:justify-start 
-        ${isFullScreenAlways
+        relative bg-bg-primary w-full shadow-xl transition-theme overflow-hidden flex flex-col justify-between md:justify-start
+        ${isFullAlways
           ? 'h-full max-h-screen rounded-none'
-          : (isFullScreenMobile
-            ? 'h-full md:h-auto max-md:max-h-screen md:max-h-[90vh] rounded-none md:rounded-2xl animate-in slide-in-from-bottom md:zoom-in-95 duration-slow'
-            : 'rounded-2xl h-auto md:h-auto md:max-h-[90vh] animate-in slide-in-from-bottom md:zoom-in-95 duration-base'
-          )}
+          : isFullMobile
+            ? 'h-full md:h-auto max-md:max-h-screen md:max-h-[90vh] rounded-none md:rounded-2xl animate-slide-in-right md:animate-fade-in duration-slow'
+            : 'rounded-2xl h-auto md:max-h-[90vh] animate-fade-in duration-base'
+        }
         ${maxWidthClasses[maxWidth]} ${className}
       `}>
-        {/* Header */}
         {showHeader && (
-          <div className="flex items-center justify-between p-4 border-b border-border-light">
-            <h3 className="text-lg font-bold text-text-primary px-1">
-              {title || ''}
-            </h3>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border-light flex-shrink-0">
+            <h3 className="text-base font-bold text-text-primary">{title || ''}</h3>
             {showCloseButton && (
-              <IconButton
-                onClick={onClose}
-                icon={<X size={20} />}
-                size="lg"
-              />
+              <IconButton onClick={onClose} icon={<X size={20} />} size="md" />
             )}
           </div>
         )}
 
-        {/* Body */}
         <div className={`overflow-y-auto flex-1 min-h-0 ${paddingClasses[padding]} ${bodyClassName}`}>
           {children}
         </div>
 
-        {/* Footer */}
         {footer && (
-          <div className="px-4 md:px-6 py-3 md:py-4 border-t-2 border-border-light bg-bg-secondary/30 flex justify-end gap-3 pb-[calc(12px+env(safe-area-inset-bottom))] md:pb-4">
+          <div className="px-4 md:px-5 py-3 md:py-4 border-t border-border-light bg-bg-secondary/30 flex justify-end gap-3 pb-[calc(12px+env(safe-area-inset-bottom))] md:pb-4 flex-shrink-0">
             {footer}
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  return createPortal(modalContent, document.body);
 };
 
 interface ConfirmDialogProps {
@@ -124,96 +100,42 @@ interface ConfirmDialogProps {
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  title = 'Xác nhận',
-  message,
-  confirmLabel = 'Xác nhận',
-  cancelLabel = 'Hủy',
-  variant = 'primary'
+  isOpen, onClose, onConfirm,
+  title = 'Xác nhận', message,
+  confirmLabel = 'Xác nhận', cancelLabel = 'Hủy',
+  variant = 'primary',
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   useScrollLock(isOpen);
+  if (!isOpen) return null;
 
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-      requestAnimationFrame(() => {
-        setIsAnimating(true);
-      });
-    } else {
-      setIsAnimating(false);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [isOpen]);
-
-  if (!isVisible) return null;
-
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
-  };
-
-  const dialogContent = (
-    <div className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className={`fixed inset-0 bg-bg-overlay backdrop-blur-sm transition-all duration-base ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
-        onClick={onClose}
-      />
-
-      {/* Dialog */}
-      <div className={`
-        relative bg-bg-primary w-full max-w-[320px] rounded-xl shadow-2xl p-5 transition-all duration-base border-2 border-border-light
-        ${isAnimating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-      `}>
-        {/* Icon + Title + Message */}
+  return createPortal(
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 'var(--z-dialog)' }}>
+      <div className="fixed inset-0 bg-bg-overlay backdrop-blur-sm animate-fade-in" onClick={onClose} />
+      <div className="relative bg-bg-primary w-full max-w-[320px] rounded-2xl shadow-xl p-5 border border-border-light animate-fade-in">
         <div className="flex flex-col items-center text-center mb-5">
           {variant === 'danger' && (
             <div className="w-12 h-12 bg-error-light text-error rounded-full flex items-center justify-center mb-3">
-              <AlertTriangle size={24} />
+              <AlertTriangle size={22} />
             </div>
           )}
-
           {variant === 'primary' && (
-            <div className="w-12 h-12 bg-primary-light text-primary rounded-full flex items-center justify-center mb-3">
-              <Info size={24} />
+            <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-3">
+              <Info size={22} />
             </div>
           )}
-          <h3 className="text-lg font-bold text-text-primary mb-2">
-            {title}
-          </h3>
-          <p className="text-[15px] text-text-secondary leading-relaxed">
-            {message}
-          </p>
+          <h3 className="text-base font-bold text-text-primary mb-2">{title}</h3>
+          <p className="text-sm text-text-secondary leading-relaxed">{message}</p>
         </div>
-
-        {/* Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <Button
-            onClick={onClose}
-            variant="secondary"
-            className="w-full text-text-secondary font-medium"
-          >
+          <Button onClick={onClose} variant="secondary" className="w-full">
             {cancelLabel}
           </Button>
-          <Button
-            onClick={handleConfirm}
-            variant={variant}
-            className="w-full font-bold shadow-sm"
-          >
+          <Button onClick={() => { onConfirm(); onClose(); }} variant={variant} className="w-full font-bold">
             {confirmLabel}
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  return createPortal(dialogContent, document.body);
 };

@@ -1,7 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Ellipsis, Flag, PenTool, Pencil, Trash2, X } from 'lucide-react';
-import { UserAvatar, LazyImage, Skeleton, ReactionSelector, ReactionDisplay, ReactionDetailsModal, Dropdown, DropdownItem } from '../../ui';
+import { ChevronDown, ChevronRight, Ellipsis, Flag, PenTool, Pencil, Trash2 } from 'lucide-react';
+import {
+  UserAvatar, LazyImage, Skeleton, ReactionSelector,
+  ReactionDisplay, ReactionDetailsModal, Dropdown, DropdownItem,
+} from '../../ui';
 import { CommentInput } from './CommentInput';
 import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../../shared/types';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
@@ -9,7 +12,6 @@ import { TruncatedText } from '../shared';
 import { useCommentStore } from '../../../store';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
 import { REACTION_LABELS } from '../../../constants';
-import { canViewInteraction } from '../../../utils/privacyUtils';
 import { getReactionColorClass } from '../../../utils';
 
 interface CommentItemProps {
@@ -35,68 +37,44 @@ interface CommentItemProps {
   resetInput: () => void;
   onProfileClick?: () => void;
   openReportModal: (type: ReportType, id: string, userId: string) => void;
-  getFilteredReplies: (postId: string, parentId: string, postOwnerId: string, currentUserId: string, friendIds: string[]) => { visibleReplies: Comment[]; hiddenCount: number };
+  getFilteredReplies: (
+    postId: string, parentId: string, postOwnerId: string,
+    currentUserId: string, friendIds: string[]
+  ) => { visibleReplies: Comment[]; hiddenCount: number };
 }
 
 const CommentItemInner: React.FC<CommentItemProps> = ({
-  comment,
-  postId,
-  currentUser,
-  users,
-  replies,
-  hasMoreReply,
-  isLoadingReplyMap,
-  variant,
-  postOwnerId,
-  activeInputId,
-  inputMode,
-  isReply = false,
-  rootAuthorId,
-  handleReplyClick,
-  handleEditClick,
-  handleCommentSubmit,
-  handleDeleteClick,
-  handleUploadMedia,
-  loadReplies,
-  resetInput,
-  onProfileClick,
-  openReportModal,
-  getFilteredReplies
+  comment, postId, currentUser, users, replies, hasMoreReply,
+  isLoadingReplyMap, variant, postOwnerId, activeInputId, inputMode,
+  isReply = false, rootAuthorId,
+  handleReplyClick, handleEditClick, handleCommentSubmit, handleDeleteClick,
+  handleUploadMedia, loadReplies, resetInput, onProfileClick,
+  openReportModal, getFilteredReplies,
 }) => {
   const navigate = useNavigate();
   const { reactToComment } = useCommentStore();
   const friendIds = useFriendIds();
-
   const [showReactions, setShowReactions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
 
   const author = users[comment.authorId];
+  const isEditing = activeInputId === comment.id && inputMode === 'edit';
+  const isReplying = activeInputId === comment.id && inputMode === 'reply';
+  const hasMoreR = hasMoreReply[comment.id];
+  const isLoadingR = isLoadingReplyMap[comment.id];
 
-  const { visibleReplies: filteredReplies, hiddenCount: hiddenRepliesCount } = React.useMemo(() =>
+  const { visibleReplies: filteredReplies, hiddenCount: hiddenRepliesCount } = useMemo(() =>
     getFilteredReplies(postId, comment.id, postOwnerId || '', currentUser.id, friendIds),
     [getFilteredReplies, postId, comment.id, postOwnerId, currentUser.id, friendIds, replies]
   );
 
-  const hasMoreR = hasMoreReply[comment.id];
-  const isLoadingR = isLoadingReplyMap[comment.id];
-  const isEditing = activeInputId === comment.id && inputMode === 'edit';
-  const isReplying = activeInputId === comment.id && inputMode === 'reply';
-
-  const onProfileNavigate = useCallback(() => {
-    if (comment.authorId) {
-      onProfileClick?.();
-      navigate(`/profile/${comment.authorId}`);
-    }
-  }, [comment.authorId, onProfileClick, navigate]);
-
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
-    comment.id,
-    'comment',
-    comment.authorId,
-    comment.reactionCount
+    comment.id, 'comment', comment.authorId, comment.reactionCount
   );
 
-  const displayReaction = currentUserReaction;
+  const handleProfileNav = useCallback(() => {
+    if (comment.authorId) { onProfileClick?.(); navigate(`/profile/${comment.authorId}`); }
+  }, [comment.authorId, onProfileClick, navigate]);
 
   const handleReact = useCallback((reaction: ReactionType | 'REMOVE') => {
     reactToComment(postId, comment.id, currentUser.id, reaction, comment.parentId);
@@ -104,56 +82,60 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   }, [postId, comment.id, comment.parentId, currentUser.id, reactToComment]);
 
   return (
-    <div className={`${isReply ? 'ml-2 mt-2' : 'mt-4 px-4'} animate-in fade-in slide-in-from-top-1`}>
-      <div className="flex gap-3">
-        <UserAvatar userId={comment.authorId} src={author?.avatar?.url} name={author?.fullName} size={isReply ? 'xs' : 'sm'} onClick={onProfileNavigate} />
+    <div className={`${isReply ? 'ml-2 mt-1.5' : 'mt-3 px-4'} animate-fade-in`}>
+      <div className="flex gap-2.5">
+        <UserAvatar
+          userId={comment.authorId}
+          src={author?.avatar?.url}
+          name={author?.fullName}
+          size={isReply ? 'xs' : 'sm'}
+          onClick={handleProfileNav}
+        />
+
         <div className="flex-1 min-w-0">
+          {/* Bubble + menu */}
           <div className="flex items-start gap-1.5 group/comment">
-            <div className="relative inline-block max-w-full">
-              <div className={`
-                rounded-2xl px-4 py-2 inline-block max-w-full shadow-sm transition-all
-                ${variant === 'cinema' ? 'bg-bg-secondary py-2.5' : 'bg-bg-secondary'}
-              `}>
-                <div className="flex items-center gap-1.5 mb-1.5 flex-nowrap overflow-hidden">
-                  <h4
-                    className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline leading-none min-w-0"
-                    onClick={onProfileNavigate}
+            <div className="relative inline-block max-w-full min-w-0">
+              <div className={`rounded-2xl px-3.5 py-2.5 inline-block max-w-full bg-bg-secondary border border-transparent transition-colors duration-200 group-hover/comment:border-border-light/50`}>
+
+                {/* Author row */}
+                <div className="flex items-center gap-1.5 flex-nowrap overflow-hidden mb-1">
+                  <button
+                    className="font-semibold text-xs text-text-primary whitespace-nowrap truncate hover:text-primary transition-colors duration-200 leading-none min-w-0"
+                    onClick={handleProfileNav}
                   >
-                    {author?.fullName
-                      ? author.fullName
-                      : <Skeleton width={80} height={12} className="opacity-60" />}
-                  </h4>
+                    {author?.fullName ?? <Skeleton width={80} height={11} className="opacity-60" />}
+                  </button>
+
                   {comment.authorId === postOwnerId && (
-                    <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold flex-shrink-0 leading-none mt-[1px] flex items-center gap-0.5">
-                      <PenTool size={10} className="stroke-[2.5px]" />
+                    <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-semibold flex-shrink-0 leading-none">
+                      <PenTool size={9} strokeWidth={2.5} />
                       Tác giả
                     </span>
                   )}
+
                   {isReply && comment.replyToUserId && users[comment.replyToUserId] && (
                     <>
-                      <ChevronRight size={12} className="text-text-tertiary flex-shrink-0 mx-0.5" />
-                      <h4
-                        className="font-bold text-[13px] text-text-primary whitespace-nowrap truncate cursor-pointer hover:underline"
+                      <ChevronRight size={11} className="text-text-tertiary flex-shrink-0" />
+                      <button
+                        className="font-semibold text-xs text-text-primary whitespace-nowrap truncate hover:text-primary transition-colors duration-200"
                         onClick={() => {
                           onProfileClick?.();
-                          const targetUser = users[comment.replyToUserId!];
-                          if (targetUser) navigate(`/profile/${targetUser.id}`);
+                          const target = users[comment.replyToUserId!];
+                          if (target) navigate(`/profile/${target.id}`);
                         }}
                       >
                         {users[comment.replyToUserId!]?.fullName}
-                      </h4>
+                      </button>
                     </>
                   )}
                 </div>
 
+                {/* Edit mode */}
                 {isEditing ? (
-                  <div className="mt-2 min-w-[200px] md:min-w-[300px]">
+                  <div className="mt-1.5 min-w-[200px] md:min-w-[280px]">
                     <CommentInput
-                      user={{
-                        id: currentUser.id,
-                        fullName: currentUser.fullName,
-                        avatar: currentUser.avatar
-                      }}
+                      user={{ id: currentUser.id, fullName: currentUser.fullName, avatar: currentUser.avatar }}
                       initialValue={comment.content}
                       initialImage={comment.image}
                       onSubmit={handleCommentSubmit}
@@ -164,18 +146,18 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                   </div>
                 ) : (
                   <>
-                    <div className="text-sm text-text-primary mt-1 break-words break-all leading-relaxed">
+                    <p className="text-sm text-text-primary break-words leading-relaxed">
                       <TruncatedText
                         content={comment.content}
                         threshold={200}
-                        expandClassName="text-primary font-bold cursor-pointer hover:underline ml-1.5 transition-all text-[11px] tracking-wider"
+                        expandClassName="text-primary font-semibold cursor-pointer hover:underline ml-1.5 text-xs"
                       />
-                    </div>
+                    </p>
                     {comment.image && (
-                      <div className="mt-3 rounded-xl overflow-hidden bg-bg-primary/50">
+                      <div className="mt-2 rounded-xl overflow-hidden border border-border-light">
                         <LazyImage
                           src={comment.image.url}
-                          className={`max-h-60 w-full object-contain ${comment.image.isSensitive ? 'blur-md' : ''}`}
+                          className={`max-h-52 w-full object-contain ${comment.image.isSensitive ? 'blur-md' : ''}`}
                           alt="attach"
                         />
                       </div>
@@ -183,17 +165,33 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                   </>
                 )}
               </div>
+
+              {/* Reaction badge — floats bottom-right of bubble */}
+              {!isEditing && filteredCount > 0 && (
+                <button
+                  className="absolute -bottom-2.5 -right-1 transition-opacity duration-200 hover:opacity-80"
+                  onClick={() => setShowReactionDetails(true)}
+                >
+                  <ReactionDisplay
+                    reactionSummary={filteredSummary}
+                    reactionCount={filteredCount}
+                    variant="xs"
+                    className="shadow-sm border border-bg-primary bg-bg-primary"
+                  />
+                </button>
+              )}
             </div>
 
+            {/* Options menu — appears on hover */}
             {!isEditing && (
-              <div className="flex items-center opacity-0 group-hover/comment:opacity-100 transition-opacity duration-base pt-1.5">
+              <div className="opacity-0 group-hover/comment:opacity-100 transition-opacity duration-200 pt-1.5 flex-shrink-0">
                 <Dropdown
                   trigger={
                     <button
-                      className="p-1 rounded-full hover:bg-bg-hover transition-all duration-base cursor-pointer text-text-tertiary hover:text-text-primary"
+                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-hover text-text-tertiary hover:text-text-primary transition-all duration-200"
                       title="Tùy chọn"
                     >
-                      <Ellipsis size={16} />
+                      <Ellipsis size={15} />
                     </button>
                   }
                   align="right"
@@ -204,22 +202,39 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                       <DropdownItem icon={<Trash2 size={14} />} label="Xóa" variant="danger" onClick={() => handleDeleteClick(comment)} />
                     </>
                   ) : (
-                    <DropdownItem icon={<Flag size={14} />} label="Báo cáo" onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.authorId)} />
+                    <DropdownItem
+                      icon={<Flag size={14} />}
+                      label="Báo cáo"
+                      onClick={() => openReportModal(ReportType.COMMENT, comment.id, comment.authorId)}
+                    />
                   )}
                 </Dropdown>
               </div>
             )}
           </div>
 
+          {/* Meta row: time · like · reply */}
           {!isEditing && (
-            <div className="flex items-center gap-4 mt-1 ml-2 text-[11px] text-text-tertiary font-bold h-5 leading-none">
-              <span title={formatDateTime(comment.createdAt)}>{formatRelativeTime(comment.createdAt)}</span>
-              <div className="relative group/reaction-btn"
-                onMouseLeave={() => setShowReactions(false)}>
+            <div className="flex items-center gap-3 mt-1.5 ml-1 text-xs text-text-tertiary font-medium">
+              <span
+                className="text-[11px] text-text-tertiary"
+                title={formatDateTime(comment.createdAt)}
+              >
+                {formatRelativeTime(comment.createdAt)}
+              </span>
+
+              {/* Like with hover selector */}
+              <div
+                className="relative group/reaction-btn"
+                onMouseLeave={() => setShowReactions(false)}
+              >
                 {showReactions && (
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 pb-1.5 z-[100]">
+                  <div
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 pb-1.5"
+                    style={{ zIndex: 'var(--z-popover)' }}
+                  >
                     <ReactionSelector
-                      className="relative shadow-dropdown animate-in fade-in zoom-in-95 duration-200"
+                      className="relative shadow-xl animate-fade-in"
                       size="xs"
                       autoClose={false}
                       onSelect={handleReact}
@@ -229,33 +244,28 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 )}
                 <button
                   onMouseEnter={() => setShowReactions(true)}
-                  onClick={() => handleReact(displayReaction ? 'REMOVE' : ReactionType.LIKE)}
-                  className={`hover:underline active:underline transition-all duration-base cursor-pointer ${displayReaction ? getReactionColorClass(displayReaction) : ''}`}
+                  onClick={() => handleReact(currentUserReaction ? 'REMOVE' : ReactionType.LIKE)}
+                  className={`font-semibold hover:text-text-primary transition-colors duration-200
+                    ${currentUserReaction ? getReactionColorClass(currentUserReaction) : 'hover:underline'}`}
                 >
-                  {displayReaction ? REACTION_LABELS[displayReaction] : 'Thích'}
+                  {currentUserReaction ? REACTION_LABELS[currentUserReaction] : 'Thích'}
                 </button>
               </div>
-              <button onClick={() => handleReplyClick(comment)} className="hover:underline active:underline transition-all duration-base cursor-pointer">Trả lời</button>
-              {filteredCount > 0 && (
-                <ReactionDisplay
-                  reactionSummary={filteredSummary}
-                  reactionCount={filteredCount}
-                  variant="xs"
-                  className="bg-transparent border-none shadow-none px-0 py-0 hover:bg-transparent"
-                  onClick={() => setShowReactionDetails(true)}
-                />
-              )}
+
+              <button
+                onClick={() => handleReplyClick(comment)}
+                className="font-semibold hover:text-text-primary hover:underline transition-colors duration-200"
+              >
+                Trả lời
+              </button>
             </div>
           )}
 
+          {/* Reply input */}
           {isReplying && (
-            <div className="mt-3 pl-2">
+            <div className="mt-2.5 pl-1">
               <CommentInput
-                user={{
-                  id: currentUser.id,
-                  fullName: currentUser.fullName,
-                  avatar: currentUser.avatar
-                }}
+                user={{ id: currentUser.id, fullName: currentUser.fullName, avatar: currentUser.avatar }}
                 placeholder={`Trả lời ${author?.fullName}...`}
                 onSubmit={handleCommentSubmit}
                 onCancel={resetInput}
@@ -265,24 +275,29 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
             </div>
           )}
 
+          {/* Replies thread */}
           {!isReply && ((comment.replyCount || 0) > 0 || filteredReplies.length > 0) && (
-            <div className="mt-2 pl-2 border-l-2 border-border-light ml-2">
+            <div className="mt-2 pl-1 border-l-2 border-border-light ml-1">
               {filteredReplies.length === 0 ? (
                 (comment.replyCount || 0) > 0 && (
-                  <button onClick={() => loadReplies(comment.id)} className="flex items-center gap-1.5 text-text-secondary hover:text-primary text-[12px] font-bold py-1 px-2">
-                    <ChevronDown size={14} className="stroke-[3px]" /> Xem {comment.replyCount} trả lời
+                  <button
+                    onClick={() => loadReplies(comment.id)}
+                    className="flex items-center gap-1.5 text-text-secondary hover:text-primary text-xs font-semibold py-1 px-2 transition-colors duration-200"
+                  >
+                    <ChevronDown size={13} strokeWidth={2.5} />
+                    Xem {comment.replyCount} trả lời
                   </button>
                 )
               ) : (
                 <>
                   {hiddenRepliesCount > 0 && (
-                    <div className="mx-2 mb-2 p-1.5 px-2 bg-text-tertiary/5 rounded-lg">
-                      <p className="text-[10px] text-text-tertiary italic font-medium">
+                    <div className="mx-2 mb-1.5 px-2 py-1.5 bg-bg-secondary/60 rounded-lg">
+                      <p className="text-[11px] text-text-tertiary italic">
                         Có {comment.replyCount || 0} phản hồi. Bạn chỉ có thể xem phản hồi của bạn bè.
                       </p>
                     </div>
                   )}
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {filteredReplies.map(reply => (
                       <CommentItem
                         key={reply.id}
@@ -315,10 +330,10 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                   {hasMoreR && (
                     <button
                       onClick={() => loadReplies(comment.id)}
-                      className="text-primary hover:underline text-[10px] font-bold ml-10 mt-2 tracking-wider transition-all"
                       disabled={isLoadingR}
+                      className="text-primary hover:underline text-xs font-semibold ml-8 mt-1.5 transition-colors duration-200 disabled:opacity-50"
                     >
-                      {isLoadingR ? 'Đang tải...' : `Xem thêm trả lời...`}
+                      {isLoadingR ? 'Đang tải...' : 'Xem thêm trả lời...'}
                     </button>
                   )}
                 </>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Users, UserPlus, MoreVertical, Archive, CheckCircle2 } from 'lucide-react';
+import { Search, X, Users, MoreVertical, Archive, CheckCircle2 } from 'lucide-react';
 import { Input, IconButton, Dropdown, Button } from '../../ui';
 
 interface ConversationHeaderProps {
@@ -18,114 +18,92 @@ interface ConversationHeaderProps {
 }
 
 export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
-  searchTerm,
-  onSearchChange,
-  onClearSearch,
-  isSearchFocused,
-  onSearchFocus,
-  onCancelSearch,
-  onNewGroup,
-  onNewChat,
-  viewMode,
-  onViewModeChange,
-  archivedCount,
-  onMarkAllRead,
-}) => {
-  return (
-    <div className="flex-shrink-0 px-3 h-16 flex items-center border-b border-border-light gap-1.5">
-      <div className="flex items-center gap-1.5 flex-1 min-w-0">
-        <div className="relative flex-1 flex items-center">
-          <Input
-            icon={<Search size={16} />}
-            placeholder="Tìm kiếm..."
-            value={searchTerm}
-            onChange={onSearchChange}
-            onFocus={() => onSearchFocus(true)}
-            className="bg-bg-secondary text-sm pr-10"
-            containerClassName="flex-1"
+  searchTerm, onSearchChange, onClearSearch,
+  isSearchFocused, onSearchFocus, onCancelSearch,
+  onNewGroup, onNewChat, viewMode, onViewModeChange,
+  archivedCount, onMarkAllRead,
+}) => (
+  <div className="flex-shrink-0 px-3 h-16 flex items-center border-b border-border-light gap-1.5 bg-bg-primary">
+    {/* Search input */}
+    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+      <div className="relative flex-1 flex items-center">
+        <Input
+          icon={<Search size={15} />}
+          placeholder="Tìm kiếm..."
+          value={searchTerm}
+          onChange={onSearchChange}
+          onFocus={() => onSearchFocus(true)}
+          className="bg-bg-secondary text-sm"
+          containerClassName="flex-1"
+        />
+        {searchTerm && (
+          <IconButton
+            onClick={onClearSearch}
+            className="absolute right-2"
+            icon={<X size={14} />}
+            size="sm"
           />
-          {searchTerm && (
-            <IconButton
-              onClick={onClearSearch}
-              className="absolute right-3"
-              icon={<X size={16} />}
-              size="sm"
-            />
-          )}
-        </div>
-        {isSearchFocused && (
-          <Button
-            onClick={onCancelSearch}
-            variant="ghost"
-            size="md"
-            className="text-primary flex-shrink-0"
-          >
-            Hủy
-          </Button>
         )}
       </div>
+      {isSearchFocused && (
+        <Button
+          onClick={onCancelSearch}
+          variant="ghost"
+          size="sm"
+          className="text-primary flex-shrink-0 font-semibold"
+        >
+          Hủy
+        </Button>
+      )}
+    </div>
 
-      <div className="flex items-center">
-        {!isSearchFocused && !searchTerm && (
-          <>
-            {onNewGroup && (
-              <IconButton
-                onClick={onNewGroup}
-                variant="ghost"
-                size="md"
-                icon={<Users size={20} />}
-                title="Tạo nhóm mới"
-                className="text-primary"
-              />
-            )}
-            {onNewChat && (
-              <IconButton
-                onClick={onNewChat}
-                variant="ghost"
-                size="md"
-                icon={<UserPlus size={20} />}
-                title="Tạo cuộc trò chuyện mới"
-                className="text-primary"
-              />
-            )}
-          </>
+    {/* Action buttons */}
+    {!isSearchFocused && !searchTerm && (
+      <div className="flex items-center gap-0.5 flex-shrink-0">
+        {onNewGroup && (
+          <IconButton
+            onClick={onNewGroup}
+            variant="ghost"
+            size="md"
+            icon={<Users size={19} />}
+            title="Tạo nhóm mới"
+            className="text-primary"
+          />
         )}
 
         <Dropdown
           align="right"
           trigger={
             <IconButton
-              icon={<MoreVertical size={20} />}
+              icon={<MoreVertical size={19} />}
               variant="ghost"
               className="text-text-secondary"
             />
           }
         >
-          <div className="py-1">
-            <button
-              onClick={() => onViewModeChange?.(viewMode === 'archived' ? 'normal' : 'archived')}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
-            >
-              <Archive size={18} className="text-text-tertiary" />
-              {viewMode === 'archived' ? 'Quay lại tin nhắn' : 'Tin nhắn đã lưu trữ'}
-              {archivedCount > 0 && (
-                <span className="ml-auto text-xs bg-bg-tertiary px-1.5 py-0.5 rounded text-text-secondary">
-                  {archivedCount}
-                </span>
-              )}
-            </button>
-            {onMarkAllRead && (
-              <button
-                onClick={onMarkAllRead}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-hover active:bg-bg-active transition-all duration-base"
-              >
-                <CheckCircle2 size={18} className="text-text-tertiary" />
-                Đánh dấu tất cả đã đọc
-              </button>
+          <button
+            onClick={() => onViewModeChange?.(viewMode === 'archived' ? 'normal' : 'archived')}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-hover active:bg-bg-active transition-colors duration-200"
+          >
+            <Archive size={16} className="text-text-tertiary" />
+            {viewMode === 'archived' ? 'Quay lại tin nhắn' : 'Tin nhắn đã lưu trữ'}
+            {archivedCount > 0 && (
+              <span className="ml-auto text-xs bg-bg-tertiary px-1.5 py-0.5 rounded-md text-text-secondary font-medium">
+                {archivedCount}
+              </span>
             )}
-          </div>
+          </button>
+          {onMarkAllRead && (
+            <button
+              onClick={onMarkAllRead}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-hover active:bg-bg-active transition-colors duration-200"
+            >
+              <CheckCircle2 size={16} className="text-text-tertiary" />
+              Đánh dấu tất cả đã đọc
+            </button>
+          )}
         </Dropdown>
       </div>
-    </div>
-  );
-};
+    )}
+  </div>
+);

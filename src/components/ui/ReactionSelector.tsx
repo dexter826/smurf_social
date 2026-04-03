@@ -13,8 +13,8 @@ interface ReactionSelectorProps {
   autoClose?: boolean;
 }
 
-const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({ 
-  onSelect, onClose, className = '', currentReaction, size = 'sm', autoClose = true 
+const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({
+  onSelect, onClose, className = '', currentReaction, size = 'sm', autoClose = true,
 }) => {
   const isXs = size === 'xs';
   const isSmall = size === 'sm';
@@ -22,9 +22,7 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({
 
   const handleMouseLeave = () => {
     if (onClose) {
-      closeTimerRef.current = setTimeout(() => {
-        onClose();
-      }, 500);
+      closeTimerRef.current = setTimeout(() => onClose(), 500);
     }
   };
 
@@ -36,41 +34,31 @@ const ReactionSelectorInner: React.FC<ReactionSelectorProps> = ({
   };
 
   useEffect(() => {
-    return () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    };
+    return () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); };
   }, []);
-  
+
   return (
     <div
-      className={`absolute z-[var(--z-popover)] bg-bg-primary border border-border-light rounded-full shadow-dropdown cursor-pointer 
-      ${isXs ? 'p-1 gap-1' : isSmall ? 'p-1.5 gap-1.5' : 'p-2 gap-2'} flex items-center animate-in fade-in zoom-in duration-fast
-      ${className}`}
+      className={`absolute bg-bg-primary border border-border-light rounded-full shadow-dropdown cursor-pointer
+        ${isXs ? 'p-1 gap-1' : isSmall ? 'p-1.5 gap-1.5' : 'p-2 gap-2'} flex items-center animate-fade-in
+        ${className}`}
       onMouseLeave={autoClose ? handleMouseLeave : undefined}
       onMouseEnter={autoClose ? handleMouseEnter : undefined}
     >
       {currentReaction && (
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect('REMOVE');
-            onClose?.();
-          }}
-          className={`${isXs ? 'w-8 h-8' : isSmall ? 'w-10 h-10' : 'w-12 h-12'} flex items-center justify-center transition-all duration-fast rounded-full hover:bg-bg-hover active:scale-90`}
+          onClick={(e) => { e.stopPropagation(); onSelect('REMOVE'); onClose?.(); }}
+          className={`${isXs ? 'w-8 h-8' : isSmall ? 'w-10 h-10' : 'w-12 h-12'} flex items-center justify-center transition-all duration-200 rounded-full hover:bg-bg-hover active:scale-90`}
           title="Gỡ cảm xúc"
         >
-          <IconCancel size={isXs ? 22 : isSmall ? 28 : 32} className="opacity-60 hover:opacity-100 transition-opacity" />
+          <IconCancel size={isXs ? 22 : isSmall ? 28 : 32} className="opacity-60 hover:opacity-100 transition-opacity duration-200" />
         </button>
       )}
       {REACTIONS.map((emoji) => (
         <button
           key={emoji}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(emoji);
-            onClose?.();
-          }}
-          className={`${isXs ? 'w-8 h-8' : isSmall ? 'w-10 h-10' : 'w-12 h-12'} flex items-center justify-center transition-all duration-fast rounded-full hover:bg-bg-hover hover:-translate-y-1 hover:scale-110 active:scale-95 origin-bottom`}
+          onClick={(e) => { e.stopPropagation(); onSelect(emoji); onClose?.(); }}
+          className={`${isXs ? 'w-8 h-8' : isSmall ? 'w-10 h-10' : 'w-12 h-12'} flex items-center justify-center transition-all duration-200 rounded-full hover:bg-bg-hover hover:-translate-y-1 hover:scale-110 active:scale-95 origin-bottom`}
         >
           {getReactionIcon(emoji, undefined, isXs ? 24 : isSmall ? 34 : 42)}
         </button>

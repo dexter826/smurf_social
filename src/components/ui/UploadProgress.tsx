@@ -9,16 +9,8 @@ interface UploadProgressProps {
   className?: string;
 }
 
-/**
- * Linear progress bar — dùng trong modal/form khi cần hiển thị tiến trình upload
- * theo dạng thanh ngang có label.
- */
 export const UploadProgress: React.FC<UploadProgressProps> = ({
-  progress,
-  bytesTransferred,
-  totalBytes,
-  fileName,
-  className = '',
+  progress, bytesTransferred, totalBytes, fileName, className = '',
 }) => {
   const pct = Math.min(Math.round(progress), 100);
   const isComplete = pct >= 100;
@@ -33,16 +25,14 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
           {isComplete ? 'Hoàn tất' : `${pct}%`}
         </span>
       </div>
-
       <div className="w-full h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-base ${isComplete ? 'bg-success' : 'bg-primary'}`}
+          className={`h-full rounded-full transition-all duration-base ${isComplete ? 'bg-success' : 'btn-gradient'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-
       {bytesTransferred !== undefined && totalBytes !== undefined && !isComplete && (
-        <p className="text-[10px] text-text-tertiary mt-1">
+        <p className="text-xs text-text-tertiary mt-1">
           {formatBytes(bytesTransferred)} / {formatBytes(totalBytes)}
         </p>
       )}

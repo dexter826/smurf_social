@@ -1,171 +1,139 @@
 import React, { useState } from 'react';
 import { RtdbConversation, RtdbUserChat, ReportType, User, UserStatus } from '../../../../shared/types';
-import { Bell, BellOff, Pin, PinOff, Trash2, ChevronRight, Ban, UserCheck, LogOut, Edit3, User as UserIcon, Flag } from 'lucide-react';
-import { ConfirmDialog, Button } from '../../ui';
+import {
+  Bell, BellOff, Pin, PinOff, Trash2, ChevronRight,
+  Ban, LogOut, Edit3, User as UserIcon, Flag, Archive as ArchiveIcon,
+} from 'lucide-react';
+import { ConfirmDialog } from '../../ui';
 import { useReportStore } from '../../../store/reportStore';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
-import { Archive as ArchiveIcon } from 'lucide-react';
 import { useConversationMemberSettings } from '../../../hooks/chat/useConversationMemberSettings';
 
 interface ChatDetailsActionsProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
   currentUserId: string;
-  participants: User[];
   partner?: User;
   isBlocked?: boolean;
   onToggleMute?: () => void;
   onTogglePin?: () => void;
   onToggleBlock?: () => void;
   onToggleArchive?: () => void;
-  onToggleMarkUnread?: () => void;
   onDelete?: () => void;
   onLeaveGroup?: () => void;
   onEditGroup?: () => void;
   onViewProfile?: () => void;
 }
 
+type ActionVariant = 'default' | 'danger';
+
+interface Action {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  variant: ActionVariant;
+}
+
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
-  conversation,
-  currentUserId,
-  participants,
-  partner,
-  isBlocked,
-  onToggleMute,
-  onTogglePin,
-  onToggleBlock,
-  onToggleArchive,
-  onToggleMarkUnread,
-  onDelete,
-  onLeaveGroup,
-  onEditGroup,
-  onViewProfile,
+  conversation, currentUserId, partner,
+  onToggleMute, onTogglePin, onToggleBlock, onToggleArchive,
+  onDelete, onLeaveGroup, onEditGroup, onViewProfile,
 }) => {
   const { openReportModal } = useReportStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
-
   const isGroup = conversation.data.isGroup;
   const isCreator = isGroup && conversation.data.creatorId === currentUserId;
   const isDisbandAction = isGroup && isCreator;
-
-  const actions = [];
-
-  // Mute/Unmute
   const isMuted = memberSettings?.isMuted || false;
-  actions.push({
-    icon: isMuted ? <Bell size={20} /> : <BellOff size={20} />,
-    label: isMuted ? 'Bật thông báo' : 'Tắt thông báo',
-    onClick: onToggleMute,
-    variant: 'default' as const,
-  });
 
-  // Pin/Unpin
-  actions.push({
-    icon: memberSettings?.isPinned ? <PinOff size={20} /> : <Pin size={20} />,
-    label: memberSettings?.isPinned ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
-    onClick: onTogglePin,
-    variant: 'default' as const,
-  });
-
-  // Archive/Unarchive
-  if (onToggleArchive) {
-    actions.push({
-      icon: <ArchiveIcon size={20} />,
+  const actions: Action[] = [
+    {
+      icon: isMuted ? <Bell size={18} /> : <BellOff size={18} />,
+      label: isMuted ? 'Bật thông báo' : 'Tắt thông báo',
+      onClick: onToggleMute,
+      variant: 'default',
+    },
+    {
+      icon: memberSettings?.isPinned ? <PinOff size={18} /> : <Pin size={18} />,
+      label: memberSettings?.isPinned ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
+      onClick: onTogglePin,
+      variant: 'default',
+    },
+    ...(onToggleArchive ? [{
+      icon: <ArchiveIcon size={18} />,
       label: memberSettings?.isArchived ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện',
       onClick: onToggleArchive,
-      variant: 'default' as const,
-    });
-  }
-
-  // Edit group - cho phép mọi thành viên đều có quyền
-  if (isGroup && onEditGroup) {
-    actions.push({
-      icon: <Edit3 size={20} />,
+      variant: 'default' as ActionVariant,
+    }] : []),
+    ...(isGroup && onEditGroup ? [{
+      icon: <Edit3 size={18} />,
       label: 'Chỉnh sửa nhóm',
       onClick: onEditGroup,
-      variant: 'default' as const,
-    });
-  }
-
-  // Xem trang cá nhân - chỉ cho chat 1-1
-  if (!isGroup && onViewProfile) {
-    actions.push({
-      icon: <UserIcon size={20} />,
+      variant: 'default' as ActionVariant,
+    }] : []),
+    ...(!isGroup && onViewProfile ? [{
+      icon: <UserIcon size={18} />,
       label: 'Xem trang cá nhân',
       onClick: onViewProfile,
-      variant: 'default' as const,
-    });
-  }
-
-  // Block - chỉ cho chat 1-1
-  if (!isGroup && partner?.status !== UserStatus.BANNED) {
-    actions.push({
-      icon: <Ban size={20} />,
-      label: 'Quản lý chặn',
-      onClick: onToggleBlock,
-      variant: 'danger' as const,
-    });
-
-    const participantIds = Object.keys(conversation.data.members);
-    const partnerId = participantIds.find(id => id !== currentUserId);
-    if (partnerId) {
-      actions.push({
-        icon: <Flag size={20} />,
-        label: 'Báo cáo người dùng',
-        onClick: () => openReportModal(ReportType.USER, partnerId, partnerId),
-        variant: 'danger' as const,
-      });
-    }
-  }
-
-  // Leave group - cho group
-  if (isGroup && onLeaveGroup) {
-    actions.push({
-      icon: <LogOut size={20} />,
+      variant: 'default' as ActionVariant,
+    }] : []),
+    ...(!isGroup && partner?.status !== UserStatus.BANNED ? [
+      {
+        icon: <Ban size={18} />,
+        label: 'Quản lý chặn',
+        onClick: onToggleBlock,
+        variant: 'danger' as ActionVariant,
+      },
+      ...(() => {
+        const partnerId = Object.keys(conversation.data.members).find(id => id !== currentUserId);
+        return partnerId ? [{
+          icon: <Flag size={18} />,
+          label: 'Báo cáo người dùng',
+          onClick: () => openReportModal(ReportType.USER, partnerId, partnerId),
+          variant: 'danger' as ActionVariant,
+        }] : [];
+      })(),
+    ] : []),
+    ...(isGroup && onLeaveGroup ? [{
+      icon: <LogOut size={18} />,
       label: 'Rời khỏi nhóm',
       onClick: () => setShowLeaveConfirm(true),
-      variant: 'danger' as const,
-    });
-  }
-
-  // Delete - cho phép mọi thành viên xóa lịch sử hội thoại
-  if (onDelete) {
-    actions.push({
-      icon: <Trash2 size={20} />,
+      variant: 'danger' as ActionVariant,
+    }] : []),
+    ...(onDelete ? [{
+      icon: <Trash2 size={18} />,
       label: isDisbandAction ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện',
       onClick: () => setShowDeleteConfirm(true),
-      variant: 'danger' as const,
-    });
-  }
+      variant: 'danger' as ActionVariant,
+    }] : []),
+  ];
 
   return (
-    <div className="py-4 border-t border-border-light">
-      <h3 className="px-4 text-sm font-semibold text-text-secondary mb-2">
+    <div className="py-3 border-t border-border-light">
+      <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wide">
         Tùy chọn
-      </h3>
+      </p>
 
-      <div className="space-y-1">
+      <div>
         {actions.map((action, index) => (
           <button
             key={index}
             onClick={action.onClick}
             className={`
-              w-full flex items-center gap-3 px-4 py-3 transition-all duration-base
+              w-full flex items-center gap-3 px-4 py-3 transition-colors duration-200 text-left
               ${action.variant === 'danger'
-                ? 'text-error hover:bg-error/10'
-                : 'text-text-primary hover:bg-bg-hover'
+                ? 'text-error hover:bg-error/5 active:bg-error/10'
+                : 'text-text-primary hover:bg-bg-hover active:bg-bg-active'
               }
             `}
           >
-            <span className={action.variant === 'danger' ? 'text-error' : 'text-text-secondary'}>
+            <span className={`flex-shrink-0 ${action.variant === 'danger' ? 'text-error' : 'text-text-secondary'}`}>
               {action.icon}
             </span>
-            <span className="flex-1 text-left text-sm font-medium">
-              {action.label}
-            </span>
-            <ChevronRight size={16} className="text-text-tertiary" />
+            <span className="flex-1 text-sm font-medium">{action.label}</span>
+            <ChevronRight size={14} className="text-text-tertiary flex-shrink-0" />
           </button>
         ))}
       </div>
@@ -174,9 +142,15 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => onDelete?.()}
-        title={isDisbandAction ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.TITLE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
-        message={isDisbandAction ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.MESSAGE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
-        confirmLabel={isDisbandAction ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.CONFIRM : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
+        title={isDisbandAction
+          ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.TITLE
+          : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
+        message={isDisbandAction
+          ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.MESSAGE
+          : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
+        confirmLabel={isDisbandAction
+          ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.CONFIRM
+          : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
         variant="danger"
       />
 

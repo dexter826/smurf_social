@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Info, Users, Image, Search } from 'lucide-react';
 import { RtdbConversation, RtdbMessage, RtdbUserChat, User } from '../../../../shared/types';
-import { IconButton, UserAvatar, Avatar, UserStatusText } from '../../ui';
+import { IconButton } from '../../ui';
 import { ChatDetailsHeader } from './ChatDetailsHeader';
 import { ChatDetailsMemberList } from './ChatDetailsMemberList';
 import { ChatDetailsMedia } from './ChatDetailsMedia';
@@ -36,67 +36,30 @@ interface ChatDetailsPanelProps {
 type TabId = 'info' | 'members' | 'media' | 'search';
 
 export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
-  conversation,
-  messages,
-  currentUserId,
-  usersMap,
-  isOpen,
-  isBlocked,
-  onClose,
-  onToggleMute,
-  onTogglePin,
-  onToggleBlock,
-  onToggleArchive,
-  onToggleMarkUnread,
-  onDelete,
-  onMemberClick,
-  onMessageClick,
-  onLeaveGroup,
-  onEditGroup,
-  onAddMember,
-  onRemoveMember,
-  onPromoteToAdmin,
-  onDemoteFromAdmin
+  conversation, messages, currentUserId, usersMap,
+  isOpen, isBlocked, onClose,
+  onToggleMute, onTogglePin, onToggleBlock, onToggleArchive, onToggleMarkUnread,
+  onDelete, onMemberClick, onMessageClick, onLeaveGroup, onEditGroup,
+  onAddMember, onRemoveMember, onPromoteToAdmin, onDemoteFromAdmin,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('info');
-  const [isVisible, setIsVisible] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   const participantIds = Object.keys(conversation.data.members);
   const participants = useConversationParticipants(participantIds);
-
   const partnerId = conversation.data.isGroup
     ? null
     : participantIds.find(id => id !== currentUserId);
-
   const partner = partnerId ? usersMap[partnerId] : null;
 
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-      requestAnimationFrame(() => {
-        setIsAnimating(true);
-      });
-    } else {
-      setIsAnimating(false);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  if (!isVisible) return null;
-
   const tabs: { id: TabId; icon: React.ReactNode; label: string; showFor?: 'group' | 'all' }[] = [
-    { id: 'info', icon: <Info size={18} />, label: 'Thông tin', showFor: 'all' },
-    { id: 'members', icon: <Users size={18} />, label: 'Thành viên', showFor: 'group' },
-    { id: 'media', icon: <Image size={18} />, label: 'Media', showFor: 'all' },
-    { id: 'search', icon: <Search size={18} />, label: 'Tìm kiếm', showFor: 'all' },
+    { id: 'info', icon: <Info size={17} />, label: 'Thông tin', showFor: 'all' },
+    { id: 'members', icon: <Users size={17} />, label: 'Thành viên', showFor: 'group' },
+    { id: 'media', icon: <Image size={17} />, label: 'Media', showFor: 'all' },
+    { id: 'search', icon: <Search size={17} />, label: 'Tìm kiếm', showFor: 'all' },
   ];
 
   const visibleTabs = tabs.filter(
-    tab => tab.showFor === 'all' || (tab.showFor === 'group' && conversation.data.isGroup)
+    t => t.showFor === 'all' || (t.showFor === 'group' && conversation.data.isGroup)
   );
 
   const renderTabContent = () => {
@@ -113,14 +76,12 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
             <ChatDetailsActions
               conversation={conversation}
               currentUserId={currentUserId}
-              participants={participants}
               partner={partner || undefined}
               isBlocked={isBlocked}
               onToggleMute={onToggleMute}
               onTogglePin={onTogglePin}
               onToggleBlock={onToggleBlock}
               onToggleArchive={onToggleArchive}
-              onToggleMarkUnread={onToggleMarkUnread}
               onDelete={onDelete}
               onLeaveGroup={onLeaveGroup}
               onEditGroup={onEditGroup}
@@ -156,63 +117,48 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
-      {/* Backdrop - Mobile only */}
+      {/* Mobile backdrop */}
       <div
         onClick={onClose}
-        className={`
-          fixed inset-0 bg-bg-overlay backdrop-blur-sm z-40 md:hidden
-          transition-all duration-slow
-          ${isAnimating ? 'opacity-100' : 'opacity-0'}
-        `}
+        className="fixed inset-0 bg-bg-overlay backdrop-blur-sm md:hidden"
+        style={{ zIndex: 'var(--z-overlay)' }}
       />
 
       {/* Panel */}
       <div
-        className={`
-          fixed md:relative right-0 top-0 h-full z-50
-          w-full md:w-[320px] bg-bg-primary border-l border-border-light
-          flex flex-col shadow-xl
-          transition-all duration-slow ease-out
-          ${isAnimating ? 'translate-x-0' : 'translate-x-full'}
-        `}
+        className="fixed md:relative right-0 top-0 h-full w-full md:w-[320px] bg-bg-primary border-l border-border-light flex flex-col shadow-xl"
+        style={{ zIndex: 'var(--z-modal)' }}
       >
-        {/* Header */}
+        {/* Panel header */}
         <div className="flex items-center justify-between px-4 h-16 border-b border-border-light flex-shrink-0">
-          <h2 className="text-base font-bold text-text-primary">Chi tiết</h2>
-          <IconButton
-            onClick={onClose}
-            icon={<X size={20} />}
-            size="lg"
-          />
+          <h2 className="text-sm font-semibold text-text-primary">Chi tiết</h2>
+          <IconButton onClick={onClose} icon={<X size={18} />} size="md" />
         </div>
 
-        {/* Tabs */}
+        {/* Tab bar */}
         <div className="flex border-b border-border-light flex-shrink-0">
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`
-                flex-1 flex flex-col items-center gap-1 py-3.5 transition-all duration-base relative
-                ${activeTab === tab.id
-                  ? 'text-primary'
-                  : 'text-text-tertiary hover:text-text-secondary'
-                }
-              `}
+              className={`flex-1 flex flex-col items-center gap-1 py-3 transition-all duration-200 relative outline-none
+                ${activeTab === tab.id ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
             >
               {tab.icon}
-              <span className="text-xs font-medium">{tab.label}</span>
+              <span className="text-[10px] font-medium">{tab.label}</span>
               {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+                <div className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full" />
               )}
             </button>
           ))}
         </div>
 
-        {/* Content */}
-        <div className={`flex-1 min-h-0 flex flex-col ${activeTab === 'media' ? 'overflow-hidden' : 'overflow-y-auto pb-safe'}`}>
+        {/* Tab content */}
+        <div className={`flex-1 min-h-0 flex flex-col ${activeTab === 'media' ? 'overflow-hidden' : 'overflow-y-auto scroll-hide pb-safe'}`}>
           {renderTabContent()}
         </div>
       </div>

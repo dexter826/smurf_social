@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X, Play, Pause } from 'lucide-react';
+import { useScrollLock } from '../../hooks/utils/useScrollLock';
 
 interface MediaItem {
     type: 'image' | 'video';
@@ -16,181 +17,135 @@ interface MediaViewerProps {
 }
 
 export const MediaViewer: React.FC<MediaViewerProps> = ({
-    media,
-    initialIndex = 0,
-    isOpen,
-    onClose
+    media, initialIndex = 0, isOpen, onClose,
 }) => {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
-    const videoRef = useRef<HTMLVideoElement>(null);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useScrollLock(isOpen);
 
     useEffect(() => {
-        if (isOpen) {
-            setCurrentIndex(initialIndex);
-        }
+        if (isOpen) setCurrentIndex(initialIndex);
     }, [isOpen, initialIndex]);
 
     useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.pause();
-            setIsVideoPlaying(false);
-        }
-    }, [currentIndex]);
+        videoRef.current?.pause();
+        setIsVideoPlaying(false);
+    }, [currentIndex, isOpen]);
 
-    useEffect(() => {
-        if (!isOpen && videoRef.current) {
-            videoRef.current.pause();
-            setIsVideoPlaying(false);
-        }
-    }, [isOpen]);
+    const goNext = useCallback(() => setCurrentIndex(p => (p < media.length - 1 ? p + 1 : 0)), [media.length]);
+    const goPrev = useCallback(() => setCurrentIndex(p => (p > 0 ? p - 1 : media.length - 1)), [media.length]);
+
+    const toggleVideo = useCallback(() => {
+        if (!videoRef.current) return;
+        if (isVideoPlaying) { videoRef.current.pause(); } else { videoRef.current.play(); }
+        setIsVideoPlaying(p => !p);
+    }, [isVideoPlaying]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (!isOpen) return;
-
-        if (e.key === 'ArrowLeft') {
-            setCurrentIndex(prev => (prev > 0 ? prev - 1 : media.length - 1));
-        } else if (e.key === 'ArrowRight') {
-            setCurrentIndex(prev => (prev < media.length - 1 ? prev + 1 : 0));
-        } else if (e.key === 'Escape') {
-            onClose();
-        } else if (e.key === ' ' && media[currentIndex]?.type === 'video') {
-            e.preventDefault();
-            toggleVideoPlayback();
-        }
-    }, [isOpen, media.length, currentIndex, onClose]);
-
-    const toggleVideoPlayback = () => {
-        if (videoRef.current) {
-            if (isVideoPlaying) {
-                videoRef.current.pause();
-            } else {
-                videoRef.current.play();
-            }
-            setIsVideoPlaying(!isVideoPlaying);
-        }
-    };
+        if (e.key === 'ArrowLeft') goPrev();
+        else if (e.key === 'ArrowRight') goNext();
+        else if (e.key === 'Escape') onClose();
+        else if (e.key === ' ' && media[currentIndex]?.type === 'video') { e.preventDefault(); toggleVideo(); }
+    }, [isOpen, goPrev, goNext, onClose, currentIndex, media, toggleVideo]);
 
     useEffect(() => {
-        if (isOpen) {
-            window.addEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = 'hidden';
-        }
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = 'unset';
-        };
-    }, [isOpen, handleKeyDown]);
-
-    const [touchStart, setTouchStart] = useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = useState<number | null>(null);
-    const minSwipeDistance = 50;
-
-    const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
-    };
-
-    const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown]);
 
     const onTouchEnd = () => {
         if (!touchStart || !touchEnd) return;
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
-
-        if (isLeftSwipe) {
-            setCurrentIndex(prev => (prev < media.length - 1 ? prev + 1 : 0));
-        }
-        if (isRightSwipe) {
-            setCurrentIndex(prev => (prev > 0 ? prev - 1 : media.length - 1));
-        }
+        const dist = touchStart - touchEnd;
+        if (dist > 50) goNext();
+        else if (dist < -50) goPrev();
     };
 
     if (!isOpen) return null;
 
-    const handleNext = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrentIndex(prev => (prev < media.length - 1 ? prev + 1 : 0));
-    };
-
-    const handlePrev = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrentIndex(prev => (prev > 0 ? prev - 1 : media.length - 1));
-    };
-
-    const currentMedia = media[currentIndex];
+    const current = media[currentIndex];
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[var(--z-dialog)] bg-black/95 backdrop-blur-sm flex flex-col select-none animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/95 backdrop-blur-sm flex flex-col select-none animate-fade-in"
+            style={{ zIndex: 'var(--z-dialog)' }}
             onClick={onClose}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
+            onTouchStart={(e) => { setTouchEnd(null); setTouchStart(e.targetTouches[0].clientX); }}
+            onTouchMove={(e) => setTouchEnd(e.targetTouches[0].clientX)}
             onTouchEnd={onTouchEnd}
         >
-            <div className="relative flex-shrink-0 flex items-center justify-between px-4 py-3 min-h-[64px] z-[var(--z-dialog)] bg-gradient-to-b from-black/60 to-transparent" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div
+                className="relative flex-shrink-0 flex items-center justify-between px-4 py-3 min-h-[64px] bg-gradient-to-b from-black/60 to-transparent"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="w-12 h-12 hidden md:block" />
                 <div className="flex-1 flex justify-center items-center">
                     {media.length > 1 && (
-                        <span className="text-white/90 font-medium text-base bg-black/40 px-5 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-lg">
+                        <span className="text-white/85 font-medium text-sm bg-black/40 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
                             {currentIndex + 1} / {media.length}
                         </span>
                     )}
                 </div>
                 <button
-                    className="p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full transition-all duration-base backdrop-blur-md border border-white/5 shadow-xl hover:scale-105 active:scale-95"
+                    className="p-2.5 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full transition-colors duration-200 backdrop-blur-md border border-white/10 shadow-lg"
                     onClick={(e) => { e.stopPropagation(); onClose(); }}
-                    title="Đóng (Esc)"
+                    aria-label="Đóng"
                 >
-                    <X size={24} />
+                    <X size={22} />
                 </button>
             </div>
 
+            {/* Content */}
             <div className="flex-1 min-h-0 relative flex items-center justify-center px-4 pb-4 md:px-20">
                 {media.length > 1 && (
                     <>
                         <button
-                            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all duration-base"
-                            onClick={handlePrev}
+                            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-200 active:scale-95"
+                            onClick={(e) => { e.stopPropagation(); goPrev(); }}
                         >
-                            <ChevronLeft size={32} />
+                            <ChevronLeft size={28} />
                         </button>
                         <button
-                            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/5 z-[var(--z-dialog)] transition-all duration-base"
-                            onClick={handleNext}
+                            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-200 active:scale-95"
+                            onClick={(e) => { e.stopPropagation(); goNext(); }}
                         >
-                            <ChevronRight size={32} />
+                            <ChevronRight size={28} />
                         </button>
                     </>
                 )}
-                {currentMedia?.type === 'video' && (
+
+                {current?.type === 'video' && (
                     <button
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-full backdrop-blur-md border border-white/10 z-[var(--z-dialog)] transition-all duration-base"
-                        onClick={(e) => { e.stopPropagation(); toggleVideoPlayback(); }}
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white/20 hover:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-200 active:scale-95"
+                        style={{ zIndex: 10 }}
+                        onClick={(e) => { e.stopPropagation(); toggleVideo(); }}
                     >
-                        {isVideoPlaying ? <Pause size={32} /> : <Play size={32} />}
+                        {isVideoPlaying ? <Pause size={28} /> : <Play size={28} />}
                     </button>
                 )}
 
-                {currentMedia?.type === 'video' ? (
+                {current?.type === 'video' ? (
                     <video
                         ref={videoRef}
-                        src={currentMedia.url}
-                        poster={currentMedia.thumbnail}
-                        className="max-w-full max-h-full object-contain animate-in zoom-in-95 duration-200 shadow-2xl rounded-sm"
+                        src={current.url}
+                        poster={current.thumbnail}
+                        className="max-w-full max-h-full object-contain shadow-xl rounded-sm"
                         onClick={(e) => e.stopPropagation()}
-                        controls
-                        playsInline
+                        controls playsInline
                         onPlay={() => setIsVideoPlaying(true)}
                         onPause={() => setIsVideoPlaying(false)}
                     />
                 ) : (
                     <img
-                        src={currentMedia?.url}
-                        className="max-w-full max-h-full object-contain animate-in zoom-in-95 duration-200 shadow-2xl rounded-sm"
+                        src={current?.url}
+                        alt={`Ảnh ${currentIndex + 1}`}
+                        className="max-w-full max-h-full object-contain shadow-xl rounded-sm"
                         onClick={(e) => e.stopPropagation()}
-                        alt={`View ${currentIndex + 1}`}
                     />
                 )}
             </div>

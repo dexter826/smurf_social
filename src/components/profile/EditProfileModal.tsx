@@ -17,21 +17,14 @@ interface EditProfileModalProps {
 }
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
-  user,
-  isOpen,
-  onClose,
-  onSave
+  user, isOpen, onClose, onSave,
 }) => {
   const [saving, setSaving] = useState(false);
-  const [provinces, setProvinces] = useState<{ value: string, label: string }[]>([]);
+  const [provinces, setProvinces] = useState<{ value: string; label: string }[]>([]);
 
   const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    formState: { errors, isDirty }
+    register, handleSubmit, setValue, watch, reset,
+    formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -39,34 +32,28 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       bio: user.bio || '',
       location: user.location || '',
       gender: user.gender as Gender,
-      dob: user.dob ? toDate(user.dob)?.getTime() : undefined
-    }
+      dob: user.dob ? toDate(user.dob)?.getTime() : undefined,
+    },
   });
 
   const formData = watch();
 
   useEffect(() => {
-    if (isOpen) {
-      reset({
-        fullName: user.fullName,
-        bio: user.bio || '',
-        location: user.location || '',
-        gender: user.gender as Gender,
-        dob: user.dob ? toDate(user.dob)?.getTime() : undefined
-      });
-      fetchProvinces();
-    }
+    if (!isOpen) return;
+    reset({
+      fullName: user.fullName,
+      bio: user.bio || '',
+      location: user.location || '',
+      gender: user.gender as Gender,
+      dob: user.dob ? toDate(user.dob)?.getTime() : undefined,
+    });
+    fetch(API_ENDPOINTS.PROVINCES)
+      .then(r => r.json())
+      .then((data: { name: string }[]) =>
+        setProvinces(data.map(p => ({ value: p.name, label: p.name })))
+      )
+      .catch(() => { /* silent */ });
   }, [isOpen, user, reset]);
-
-  const fetchProvinces = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.PROVINCES);
-      const data = await response.json();
-      setProvinces(data.map((p: { name: string }) => ({ value: p.name, label: p.name })));
-    } catch (error) {
-      console.error('Không thể tải danh sách tỉnh/thành phố', error);
-    }
-  };
 
   const handleSave = async (data: ProfileFormValues) => {
     setSaving(true);
@@ -76,11 +63,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         bio: data.bio,
         location: data.location,
         gender: data.gender,
-        dob: data.dob ? Timestamp.fromDate(new Date(data.dob)) : undefined
+        dob: data.dob ? Timestamp.fromDate(new Date(data.dob)) : undefined,
       });
       toast.success(TOAST_MESSAGES.PROFILE.UPDATE_SUCCESS);
       onClose();
-    } catch (error) {
+    } catch {
       toast.error(TOAST_MESSAGES.PROFILE.UPDATE_FAILED);
     } finally {
       setSaving(false);
@@ -100,86 +87,88 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </Button>
           <Button
             variant="primary"
-            onClick={handleSubmit(handleSave as any)}
+            onClick={handleSubmit(handleSave)}
+            isLoading={saving}
             disabled={saving || !isDirty}
           >
-            {saving ? 'Đang lưu...' : 'Lưu'}
+            Lưu thay đổi
           </Button>
         </>
       }
     >
-      <div className="space-y-5">
-        <div>
-          <h3 className="font-semibold mb-3 text-text-primary">Thông tin chung</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="col-span-1 sm:col-span-2">
-              <Input
-                label="Tên hiển thị *"
-                {...register('fullName')}
-                error={errors.fullName?.message}
-                placeholder="Nhập họ và tên"
-              />
-            </div>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Full name — spans full width */}
+          <div className="col-span-1 sm:col-span-2">
+            <Input
+              label="Tên hiển thị *"
+              {...register('fullName')}
+              error={errors.fullName?.message}
+              placeholder="Nhập họ và tên"
+              size="lg"
+            />
+          </div>
 
-            <div className="col-span-1 sm:col-span-2">
-              <TextArea
-                label="Giới thiệu"
-                {...register('bio')}
-                onChange={(e) => {
-                  const val = e.target.value.slice(0, 150);
-                  setValue('bio', val, { shouldDirty: true });
-                }}
-                error={errors.bio?.message}
-                placeholder="Nhập vài dòng giới thiệu về bản thân..."
-                rows={2}
-                className="rounded-xl"
-                rightElement={
-                  <div className="text-xs text-text-secondary pr-1.5 pb-2 pointer-events-none">
-                    {formData.bio?.length || 0}/150
-                  </div>
-                }
-              />
-            </div>
+          {/* Bio — spans full width */}
+          <div className="col-span-1 sm:col-span-2">
+            <TextArea
+              label="Giới thiệu"
+              {...register('bio')}
+              onChange={(e) =>
+                setValue('bio', e.target.value.slice(0, 150), { shouldDirty: true })
+              }
+              error={errors.bio?.message}
+              placeholder="Nhập vài dòng giới thiệu về bản thân..."
+              rows={2}
+              rightElement={
+                <div className="text-xs text-text-tertiary pr-2 pb-2 pointer-events-none">
+                  {formData.bio?.length || 0}/150
+                </div>
+              }
+            />
+          </div>
 
-            <div>
-              <Input
-                label="Email"
-                value={user.email || ''}
-                disabled
-              />
-            </div>
+          {/* Email (read-only) */}
+          <div>
+            <Input label="Email" value={user.email || ''} disabled size="lg" />
+          </div>
 
-            <div>
-              <Select
-                label="Tỉnh/Thành phố"
-                value={formData.location || ''}
-                onChange={(val) => setValue('location', val, { shouldDirty: true })}
-                options={provinces}
-                placeholder="Chọn tỉnh/thành phố"
-              />
-            </div>
+          {/* Province */}
+          <div>
+            <Select
+              label="Tỉnh/Thành phố"
+              value={formData.location || ''}
+              onChange={(val) => setValue('location', val, { shouldDirty: true })}
+              options={provinces}
+              placeholder="Chọn tỉnh/thành phố"
+              size="lg"
+            />
+          </div>
 
-            <div>
-              <Select
-                label="Giới tính"
-                value={formData.gender || ''}
-                onChange={(val) => setValue('gender', val as Gender, { shouldDirty: true })}
-                options={[
-                  { value: 'male', label: 'Nam' },
-                  { value: 'female', label: 'Nữ' }
-                ]}
-                placeholder="Chọn giới tính"
-              />
-            </div>
+          {/* Gender */}
+          <div>
+            <Select
+              label="Giới tính"
+              value={formData.gender || ''}
+              onChange={(val) => setValue('gender', val as Gender, { shouldDirty: true })}
+              options={[
+                { value: 'male', label: 'Nam' },
+                { value: 'female', label: 'Nữ' },
+              ]}
+              placeholder="Chọn giới tính"
+              size="lg"
+            />
+          </div>
 
-            <div>
-              <DatePicker
-                label="Ngày sinh"
-                value={formData.dob}
-                onChange={(ts) => setValue('dob', ts, { shouldDirty: true })}
-                placeholder="Chọn ngày sinh"
-              />
-            </div>
+          {/* DOB */}
+          <div>
+            <DatePicker
+              label="Ngày sinh"
+              value={formData.dob}
+              onChange={(ts) => setValue('dob', ts, { shouldDirty: true })}
+              placeholder="Chọn ngày sinh"
+              size="lg"
+            />
           </div>
         </div>
       </div>

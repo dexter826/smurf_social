@@ -16,67 +16,56 @@ interface FriendRequestItemProps {
 }
 
 const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
-  request,
-  user,
-  type,
-  onAccept,
-  onReject,
-  onCancel,
-  isLoading = false
+  request, user, type, onAccept, onReject, onCancel, isLoading = false,
 }) => {
   const navigate = useNavigate();
 
-  const handleProfileClick = () => {
-    if (user?.id) {
-      navigate(`/profile/${user.id}`);
-    }
-  };
-
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-bg-hover active:bg-bg-active rounded-xl first:rounded-t-xl last:rounded-b-xl transition-all duration-base border-b border-divider last:border-0 gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3.5 transition-colors duration-200 hover:bg-bg-hover border-b border-border-light/60 last:border-0 gap-3">
+      {/* User info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <UserAvatar
           userId={user.id}
           src={user.avatar?.url}
           name={user.fullName}
-          size="lg"
+          size="md"
           initialStatus={user.status}
-          onClick={handleProfileClick}
+          onClick={() => navigate(`/profile/${user.id}`)}
         />
         <div className="flex-1 min-w-0">
-          <h3
-            className="font-semibold text-text-primary cursor-pointer hover:underline truncate"
-            onClick={handleProfileClick}
+          <button
+            className="text-sm font-semibold text-text-primary hover:text-primary transition-colors duration-200 truncate block text-left"
+            onClick={() => navigate(`/profile/${user.id}`)}
           >
             {user.fullName}
-          </h3>
-          <p className="text-xs text-text-tertiary mt-1 flex items-center gap-1">
-            <Clock size={12} />
+          </button>
+          <p className="text-xs text-text-tertiary mt-0.5 flex items-center gap-1">
+            <Clock size={11} />
             {formatRelativeTime(request.createdAt)}
           </p>
         </div>
       </div>
 
-      <div className="flex gap-2 sm:shrink-0">
+      {/* Actions */}
+      <div className="flex gap-2 flex-shrink-0">
         {type === 'received' && (
           <>
             <Button
-              className="flex-1 sm:flex-none"
-              variant="primary"
               size="sm"
-              icon={<Check size={16} />}
+              icon={<Check size={15} />}
               onClick={() => onAccept?.(request.id, user.id)}
               disabled={isLoading}
+              className="flex-1 sm:flex-none"
             >
               Chấp nhận
             </Button>
             <Button
-              className="flex-1 sm:flex-none"
               variant="secondary"
               size="sm"
-              icon={<X size={16} />}
+              icon={<X size={15} />}
               onClick={() => onReject?.(request.id)}
               disabled={isLoading}
+              className="flex-1 sm:flex-none"
             >
               Từ chối
             </Button>
@@ -84,11 +73,11 @@ const FriendRequestItemInner: React.FC<FriendRequestItemProps> = ({
         )}
         {type === 'sent' && (
           <Button
-            className="flex-1 sm:flex-none"
             variant="secondary"
             size="sm"
             onClick={() => onCancel?.(request.id)}
             disabled={isLoading}
+            className="flex-1 sm:flex-none"
           >
             Hủy lời mời
           </Button>

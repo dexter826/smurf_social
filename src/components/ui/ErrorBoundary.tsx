@@ -39,8 +39,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
             return (
                 <div className="flex items-center justify-center min-h-screen bg-bg-secondary">
-                    <div className="max-w-md w-full bg-bg-primary shadow-lg rounded-xl p-6">
-                        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-error-light rounded-full">
+                    <div className="max-w-md w-full bg-bg-primary shadow-xl rounded-2xl border border-border-light p-6">
+                        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-error/10 rounded-full border border-error/20">
                             <svg
                                 className="w-6 h-6 text-error"
                                 fill="none"
@@ -64,7 +64,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                                 : 'Đã xảy ra lỗi không mong muốn. Vui lòng tải lại trang.'}
                         </p>
                         {isEnvError && (
-                            <div className="mt-4 bg-bg-secondary rounded-xl p-4">
+                            <div className="mt-4 bg-bg-secondary rounded-2xl p-4">
                                 <p className="text-sm text-text-primary font-medium mb-2">
                                     Các bước khắc phục:
                                 </p>
@@ -85,7 +85,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                         )}
                         <button
                             onClick={() => window.location.reload()}
-                            className="mt-6 w-full bg-primary text-text-on-primary py-2 px-4 rounded-xl hover:bg-primary-hover active:bg-primary-active transition-all duration-base"
+                            className="mt-6 w-full btn-gradient text-text-on-primary py-2.5 px-4 rounded-xl hover:brightness-110 active:brightness-95 transition-colors duration-200 font-semibold text-sm"
                         >
                             Tải lại trang
                         </button>

@@ -13,27 +13,32 @@ interface MessageRequestBannerProps {
 }
 
 export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
-  partnerName,
-  friendRequestStatus = 'none',
-  onAddFriend,
-  onAcceptFriend,
-  onBlock
+  partnerName, friendRequestStatus = 'none',
+  onAddFriend, onAcceptFriend, onBlock,
 }) => {
+  const getMessage = () => {
+    switch (friendRequestStatus) {
+      case 'sent': return `Đang chờ ${partnerName} chấp nhận lời mời kết bạn`;
+      case 'received': return `${partnerName} đã gửi lời mời kết bạn cho bạn`;
+      default: return `${partnerName} chưa có trong danh sách bạn bè của bạn`;
+    }
+  };
+
   const renderActions = () => {
     switch (friendRequestStatus) {
       case 'sent':
         return (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="flex items-center gap-1.5 text-xs text-text-secondary bg-bg-secondary px-3 py-1.5 rounded-full">
-              <Clock size={14} />
+            <span className="flex items-center gap-1.5 text-xs text-text-secondary bg-bg-secondary px-3 py-1.5 rounded-full border border-border-light">
+              <Clock size={13} />
               Đã gửi lời mời
             </span>
             <Button
               onClick={onBlock}
               variant="ghost"
               size="sm"
-              icon={<Ban size={16} />}
-              className="text-text-secondary hover:text-error hover:bg-error-light"
+              icon={<Ban size={15} />}
+              className="text-text-secondary hover:text-error hover:bg-error/10"
             >
               Chặn
             </Button>
@@ -42,20 +47,15 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
       case 'received':
         return (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              onClick={onAcceptFriend}
-              variant="primary"
-              size="sm"
-              icon={<UserCheck size={16} />}
-            >
+            <Button onClick={onAcceptFriend} size="sm" icon={<UserCheck size={15} />}>
               Chấp nhận
             </Button>
             <Button
               onClick={onBlock}
               variant="ghost"
               size="sm"
-              icon={<Ban size={16} />}
-              className="text-text-secondary hover:text-error hover:bg-error-light"
+              icon={<Ban size={15} />}
+              className="text-text-secondary hover:text-error hover:bg-error/10"
             >
               Chặn
             </Button>
@@ -64,20 +64,15 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
       default:
         return (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              onClick={onAddFriend}
-              variant="primary"
-              size="sm"
-              icon={<UserPlus size={16} />}
-            >
+            <Button onClick={onAddFriend} size="sm" icon={<UserPlus size={15} />}>
               Kết bạn
             </Button>
             <Button
               onClick={onBlock}
               variant="ghost"
               size="sm"
-              icon={<Ban size={16} />}
-              className="text-text-secondary hover:text-error hover:bg-error-light"
+              icon={<Ban size={15} />}
+              className="text-text-secondary hover:text-error hover:bg-error/10"
             >
               Chặn
             </Button>
@@ -86,30 +81,15 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
     }
   };
 
-  const getMessage = () => {
-    switch (friendRequestStatus) {
-      case 'sent':
-        return `Đang chờ ${partnerName} chấp nhận lời mời kết bạn`;
-      case 'received':
-        return `${partnerName} đã gửi lời mời kết bạn cho bạn`;
-      default:
-        return `${partnerName} chưa có trong danh sách bạn bè của bạn`;
-    }
-  };
-
   return (
-    <div className="flex-shrink-0 bg-bg-primary border-b border-border-light px-4 py-3 transition-theme">
+    <div className="flex-shrink-0 bg-bg-primary border-b border-border-light px-4 py-2.5 transition-theme animate-fade-in">
       <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 w-9 h-9 bg-primary-light rounded-full flex items-center justify-center">
-          <MessageCircle size={18} className="text-primary" />
+        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+          <MessageCircle size={16} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-text-primary">
-            Tin nhắn từ người lạ
-          </p>
-          <p className="text-xs text-text-secondary truncate">
-            {getMessage()}
-          </p>
+          <p className="text-xs font-semibold text-text-primary">Tin nhắn từ người lạ</p>
+          <p className="text-xs text-text-secondary truncate">{getMessage()}</p>
         </div>
         {renderActions()}
       </div>

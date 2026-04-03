@@ -11,17 +11,11 @@ interface DropdownItemProps {
 }
 
 export const DropdownItem: React.FC<DropdownItemProps> = ({
-  icon,
-  label,
-  onClick,
-  variant = 'default',
-  className = ''
+  icon, label, onClick, variant = 'default', className = '',
 }) => (
   <button
     type="button"
-    onClick={() => {
-      onClick();
-    }}
+    onClick={onClick}
     className={`
       w-full px-4 py-2.5 text-left text-sm flex items-center gap-3
       transition-colors duration-fast font-medium
@@ -60,7 +54,6 @@ function calcPosition(
 ): DropdownPosition {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-
   const spaceBelow = vh - triggerRect.bottom - MENU_GAP;
   const spaceAbove = triggerRect.top - VIEWPORT_PADDING;
   const openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
@@ -78,13 +71,12 @@ function calcPosition(
 
   if (align === 'right') {
     pos.right = vw - triggerRect.right;
-    if (vw - pos.right - menuWidth < VIEWPORT_PADDING) {
+    if (vw - (pos.right ?? 0) - menuWidth < VIEWPORT_PADDING) {
       pos.right = undefined;
       pos.left = VIEWPORT_PADDING;
     }
   } else {
-    pos.left = triggerRect.left;
-    pos.left = Math.max(VIEWPORT_PADDING, Math.min(pos.left, vw - menuWidth - VIEWPORT_PADDING));
+    pos.left = Math.max(VIEWPORT_PADDING, Math.min(triggerRect.left, vw - menuWidth - VIEWPORT_PADDING));
   }
 
   return pos;
@@ -99,7 +91,6 @@ interface DropdownProps {
   isOpen?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
   matchTriggerWidth?: boolean;
-  /** Override z-index token, defaults to --z-popover */
   zIndex?: string;
 }
 
@@ -141,36 +132,31 @@ export const Dropdown: React.FC<DropdownProps> = ({
       const triggerRect = triggerEl.getBoundingClientRect();
       const mw = matchTriggerWidth ? triggerRect.width : Math.max(menuEl.offsetWidth, MIN_MENU_WIDTH);
       const mh = menuEl.offsetHeight;
-
       setMenuWidth(matchTriggerWidth ? triggerRect.width : undefined);
       setPosition(calcPosition(triggerRect, mw, mh, align));
     };
 
     update();
 
-    const resizeObserver = new ResizeObserver(update);
-    resizeObserver.observe(menuEl);
-    resizeObserver.observe(triggerEl);
-
+    const ro = new ResizeObserver(update);
+    ro.observe(menuEl);
+    ro.observe(triggerEl);
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
 
     return () => {
-      resizeObserver.disconnect();
+      ro.disconnect();
       window.removeEventListener('scroll', update, true);
       window.removeEventListener('resize', update);
     };
   }, [isOpen, align, matchTriggerWidth]);
 
-  const zClass = zIndex ? `z-[${zIndex}]` : 'z-[var(--z-popover)]';
+  const zStyle = zIndex ? { zIndex } : { zIndex: 'var(--z-popover)' };
 
   return (
     <div className={`relative inline-block ${className}`} ref={triggerRef}>
       <div
-        onClick={(e) => {
-          e.stopPropagation();
-          handleOpenChange(!isOpen);
-        }}
+        onClick={(e) => { e.stopPropagation(); handleOpenChange(!isOpen); }}
         className="cursor-pointer"
       >
         {trigger}
@@ -180,19 +166,15 @@ export const Dropdown: React.FC<DropdownProps> = ({
         <div
           ref={menuRef}
           role="menu"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleOpenChange(false);
-          }}
+          onClick={(e) => { e.stopPropagation(); handleOpenChange(false); }}
           className={`
-            fixed ${zClass}
-            min-w-[${MIN_MENU_WIDTH}px] w-max max-w-[calc(100vw-24px)]
+            fixed min-w-[${MIN_MENU_WIDTH}px] w-max max-w-[calc(100vw-24px)]
             bg-bg-primary border border-border-light rounded-xl
-            shadow-dropdown overflow-hidden
-            animate-in fade-in zoom-in-95 duration-fast
+            shadow-dropdown overflow-hidden animate-fade-in
             ${menuClassName}
           `}
           style={{
+            ...zStyle,
             top: position?.top !== undefined ? `${position.top}px` : undefined,
             bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
             left: position?.left !== undefined ? `${position.left}px` : undefined,

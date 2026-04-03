@@ -9,20 +9,27 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-const baseStyle = "inline-flex items-center justify-center font-semibold transition-all duration-base outline-none border-2 border-transparent focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
+const base =
+  'inline-flex items-center justify-center font-semibold transition-colors duration-200 outline-none ' +
+  'focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 ' +
+  'disabled:opacity-50 disabled:cursor-not-allowed ' +
+  'active:brightness-95';
 
-const variants = {
-  primary: "bg-primary hover:bg-primary-hover active:bg-primary-active text-text-on-primary shadow-sm hover:shadow-md",
-  secondary: "bg-bg-secondary hover:bg-bg-hover active:bg-bg-active text-text-primary border-2 border-border-light",
-  ghost: "hover:bg-bg-hover active:bg-bg-active text-text-secondary hover:text-text-primary",
-  danger: "bg-error hover:bg-error/90 active:bg-error/80 text-text-on-primary shadow-sm",
+const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
+  primary:
+    'btn-gradient text-text-on-primary shadow-sm hover:brightness-110 border border-transparent',
+  secondary:
+    'bg-bg-secondary hover:bg-bg-hover active:bg-bg-active text-text-primary border border-border-light',
+  ghost:
+    'hover:bg-bg-hover active:bg-bg-active text-text-secondary hover:text-text-primary border border-transparent',
+  danger:
+    'bg-error hover:bg-error/90 active:bg-error/80 text-text-on-primary shadow-sm border border-transparent',
 };
 
-
-const sizes = {
-  sm: "min-h-[36px] px-3 text-sm gap-2 rounded-lg",
-  md: "min-h-[44px] px-4 text-sm gap-2 rounded-xl",
-  lg: "min-h-[48px] px-6 text-base gap-3 rounded-xl"
+const sizes: Record<NonNullable<ButtonProps['size']>, string> = {
+  sm: 'min-h-[36px] px-3 text-sm gap-2 rounded-lg',
+  md: 'min-h-[44px] px-4 text-sm gap-2 rounded-xl',
+  lg: 'min-h-[48px] px-6 text-base gap-3 rounded-xl',
 };
 
 export const Button: React.FC<ButtonProps> = ({
@@ -40,7 +47,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
-      className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
       disabled={disabled || isLoading}
       {...props}
     >
@@ -50,4 +57,3 @@ export const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
-

@@ -1,15 +1,7 @@
-import React, { useState } from 'react';
-import {
-  Shield,
-  Flag,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  FileX,
-} from 'lucide-react';
+import React, { useCallback } from 'react';
+import { Flag, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { ReportStatus, ReportType } from '../../../shared/types';
-import { Button, UserAvatar, Skeleton, Select } from '../ui';
+import { UserAvatar, Skeleton, Select } from '../ui';
 import { REPORT_CONFIG } from '../../constants';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { useAdminReports } from '../../hooks/useAdminReports';
@@ -18,87 +10,90 @@ interface ReportsViewProps {
   onSelectReport: (reportId: string) => void;
 }
 
+const STATUS_TABS: { label: string; value: ReportStatus | 'pending' }[] = [
+  { label: 'Chờ xử lý', value: 'pending' },
+  { label: 'Đã xử lý', value: ReportStatus.RESOLVED },
+  { label: 'Từ chối', value: ReportStatus.REJECTED },
+];
+
+const TYPE_OPTIONS = [
+  { value: 'all', label: 'Tất cả loại' },
+  { value: ReportType.POST, label: 'Bài viết' },
+  { value: ReportType.COMMENT, label: 'Bình luận' },
+  { value: ReportType.USER, label: 'Người dùng' },
+];
+
+const STATUS_BADGE: Record<ReportStatus, React.ReactNode> = {
+  [ReportStatus.PENDING]: (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning border border-warning/20">
+      <Clock size={9} /> Chờ xử lý
+    </span>
+  ),
+  [ReportStatus.RESOLVED]: (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+      <CheckCircle size={9} /> Đã xử lý
+    </span>
+  ),
+  [ReportStatus.REJECTED]: (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-bg-tertiary text-text-secondary border border-border-light">
+      <XCircle size={9} /> Từ chối
+    </span>
+  ),
+};
+
+const StatCard: React.FC<{ label: string; value: number; color: string }> = ({ label, value, color }) => (
+  <div className="bg-bg-secondary/60 px-4 py-2.5 rounded-xl border border-border-light flex flex-col items-center min-w-[90px]">
+    <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{label}</span>
+    <span className={`text-xl font-black ${color}`}>{value}</span>
+  </div>
+);
+
 export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
   const {
-    reports,
-    stats,
-    isLoading,
-    statusFilter,
-    typeFilter,
-    setStatusFilter,
-    setTypeFilter,
+    reports, stats, isLoading,
+    statusFilter, typeFilter,
+    setStatusFilter, setTypeFilter,
     getUser,
   } = useAdminReports();
 
-  const tabs = [
-    { label: 'Chờ xử lý', value: 'pending', color: 'warning', icon: <Clock size={16} /> },
-    { label: 'Đã xử lý', value: ReportStatus.RESOLVED, color: 'success', icon: <CheckCircle size={16} /> },
-    { label: 'Từ chối', value: ReportStatus.REJECTED, color: 'error', icon: <XCircle size={16} /> },
-  ];
-
-  const typeOptions = [
-    { value: 'all', label: 'Tất cả loại' },
-    { value: ReportType.POST, label: 'Bài viết' },
-    { value: ReportType.COMMENT, label: 'Bình luận' },
-    { value: ReportType.USER, label: 'Người dùng' },
-  ];
-
-  const getStatusBadge = (status: ReportStatus) => {
-    switch (status) {
-      case ReportStatus.PENDING:
-        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning flex items-center gap-1"><Clock size={10} /> Chờ xử lý</span>;
-      case ReportStatus.RESOLVED:
-        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success flex items-center gap-1"><CheckCircle size={10} /> Đã xử lý</span>;
-      case ReportStatus.REJECTED:
-        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-text-secondary/10 text-text-secondary flex items-center gap-1"><XCircle size={10} /> Từ chối</span>;
-      default: return null;
-    }
-  };
+  const handleTypeChange = useCallback(
+    (val: string) => setTypeFilter(val as ReportType | 'all'),
+    [setTypeFilter]
+  );
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header section */}
-      <div className="bg-bg-primary p-4 md:p-6 border-b border-border-light shadow-sm z-10 space-y-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+
+      {/* ── Header ── */}
+      <div className="bg-bg-primary px-4 md:px-6 py-4 border-b border-border-light flex-shrink-0 space-y-4">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-black text-text-primary flex items-center gap-2">
-              <Flag className="text-primary" size={24} />
+            <h1 className="text-base font-bold text-text-primary flex items-center gap-2">
+              <Flag size={18} className="text-primary" />
               Quản lý báo cáo
             </h1>
-            <p className="text-xs text-text-tertiary mt-1">Xử lý các báo cáo vi phạm nội dung và người dùng</p>
+            <p className="text-xs text-text-tertiary mt-0.5">
+              Xử lý các báo cáo vi phạm nội dung và người dùng
+            </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
-              <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Chờ xử lý</span>
-              <span className="text-lg font-black text-warning">
-                {stats.pending || 0}
-              </span>
-            </div>
-            <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
-              <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Đã xử lý</span>
-              <span className="text-lg font-black text-success">
-                {stats.resolved || 0}
-              </span>
-            </div>
-            <div className="bg-bg-secondary/50 px-4 py-2 rounded-2xl border border-border-light flex flex-col items-center min-w-[100px]">
-              <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Từ chối</span>
-              <span className="text-lg font-black text-error">
-                {stats.rejected || 0}
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <StatCard label="Chờ xử lý" value={stats.pending} color="text-warning" />
+            <StatCard label="Đã xử lý" value={stats.resolved} color="text-success" />
+            <StatCard label="Từ chối" value={stats.rejected} color="text-error" />
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 items-center justify-between">
+          {/* Status tabs */}
           <div className="flex bg-bg-secondary p-1 rounded-xl border border-border-light w-full sm:w-auto">
-            {tabs.map(tab => (
+            {STATUS_TABS.map(tab => (
               <button
                 key={tab.value}
-                onClick={() => setStatusFilter(tab.value as ReportStatus | 'pending')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${statusFilter === tab.value
-                  ? `bg-bg-primary text-primary shadow-sm`
-                  : 'text-text-secondary hover:text-text-primary'
+                onClick={() => setStatusFilter(tab.value)}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-semibold transition-colors duration-200
+                  ${statusFilter === tab.value
+                    ? 'bg-bg-primary text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
                   }`}
               >
                 {tab.label}
@@ -106,38 +101,39 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
             ))}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto min-w-[160px]">
+          <div className="w-full sm:w-44">
             <Select
               value={typeFilter}
-              onChange={(val) => setTypeFilter(val as ReportType | 'all')}
-              options={typeOptions}
-              className="flex-1"
+              onChange={handleTypeChange}
+              options={TYPE_OPTIONS}
             />
           </div>
         </div>
       </div>
 
-      {/* List Container */}
-      <div className="flex-1 overflow-y-auto bg-bg-secondary/30 p-4 md:p-6">
-        <div className="max-w-4xl mx-auto space-y-4">
+      {/* ── List ── */}
+      <div className="flex-1 overflow-y-auto scroll-hide p-4 md:p-6 bg-bg-secondary/30">
+        <div className="max-w-3xl mx-auto space-y-3">
           {isLoading ? (
-            [1, 2, 3].map(i => (
-              <div key={i} className="bg-bg-primary p-5 rounded-2xl border border-border-light flex flex-col gap-4">
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="bg-bg-primary p-4 rounded-2xl border border-border-light space-y-3 animate-fade-in">
                 <div className="flex justify-between">
                   <Skeleton className="h-5 w-24 rounded-full" />
                   <Skeleton className="h-4 w-20" />
                 </div>
                 <div className="flex items-center gap-3">
-                  <Skeleton variant="circle" width={32} height={32} />
-                  <Skeleton className="h-4 w-40" />
+                  <Skeleton variant="circle" width={28} height={28} />
+                  <Skeleton className="h-4 w-36" />
                 </div>
-                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-10 w-full rounded-xl" />
               </div>
             ))
           ) : reports.length === 0 ? (
-            <div className="text-center py-20 bg-bg-primary rounded-2xl border border-border-light border-dashed">
-              <Flag size={48} className="text-text-tertiary mx-auto mb-4 opacity-20" />
-              <p className="text-text-secondary font-medium">Không có báo cáo nào</p>
+            <div className="flex flex-col items-center justify-center py-16 bg-bg-primary rounded-2xl border border-dashed border-border-light">
+              <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
+                <Flag size={22} className="text-text-tertiary" />
+              </div>
+              <p className="text-sm font-medium text-text-secondary">Không có báo cáo nào</p>
             </div>
           ) : (
             reports.map(report => {
@@ -145,50 +141,53 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
               const reasonConfig = REPORT_CONFIG.REASONS[report.reason as keyof typeof REPORT_CONFIG.REASONS];
 
               return (
-                <div
+                <button
                   key={report.id}
+                  type="button"
                   onClick={() => onSelectReport(report.id)}
-                  className="bg-bg-primary p-4 rounded-xl border border-border-light shadow-sm hover:border-primary/30 active:bg-bg-hover transition-all duration-base cursor-pointer group"
+                  className="w-full text-left bg-bg-primary p-4 rounded-2xl border border-border-light hover:border-primary/30 hover:shadow-md transition-all duration-200 group outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  {/* Top row */}
+                  <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-2">
-                      {getStatusBadge(report.status)}
-                      <span className="text-[10px] font-bold text-text-tertiary bg-bg-secondary px-2 py-0.5 rounded uppercase">
+                      {STATUS_BADGE[report.status]}
+                      <span className="text-[10px] font-bold text-text-tertiary bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light uppercase tracking-wide">
                         {report.targetType}
                       </span>
                     </div>
-                    <span className="text-[10px] text-text-tertiary">
+                    <span className="text-[11px] text-text-tertiary">
                       {formatRelativeTime(report.createdAt)}
                     </span>
                   </div>
 
-                  <div className="flex items-start gap-4 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-text-primary mb-1 italic">
-                        <AlertTriangle size={14} className="inline-block mr-1 text-error align-text-top" />
-                        {reasonConfig?.label}
-                      </h4>
-                    </div>
-                  </div>
+                  {/* Reason */}
+                  <p className="text-sm font-semibold text-text-primary mb-2.5 flex items-center gap-1.5">
+                    <AlertTriangle size={13} className="text-error flex-shrink-0" />
+                    {reasonConfig?.label}
+                  </p>
 
+                  {/* Description snippet */}
                   {report.description && (
-                    <div className="bg-bg-secondary/30 p-2.5 rounded-lg border border-border-light mb-3">
-                      <p className="text-xs text-text-secondary italic line-clamp-1">"{report.description}"</p>
+                    <div className="bg-bg-secondary/50 px-3 py-2 rounded-xl border border-border-light mb-2.5">
+                      <p className="text-xs text-text-secondary italic line-clamp-1">
+                        "{report.description}"
+                      </p>
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-3 border-t border-border-light">
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-2.5 border-t border-border-light/60">
                     <div className="flex items-center gap-2">
                       <UserAvatar size="xs" userId={report.reporterId} />
-                      <span className="text-[10px] font-medium text-text-tertiary truncate max-w-[120px]">
+                      <span className="text-xs text-text-tertiary truncate max-w-[120px]">
                         {reporter?.fullName}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-primary text-[10px] font-bold uppercase tracking-wider">
-                      Xem chi tiết
-                    </div>
+                    <span className="text-primary text-xs font-semibold group-hover:underline transition-all">
+                      Xem chi tiết →
+                    </span>
                   </div>
-                </div>
+                </button>
               );
             })
           )}

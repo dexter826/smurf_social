@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useConnectionStatus } from '../../hooks/utils/useConnectionStatus';
 
 export const ConnectionStatus: React.FC = () => {
-    const { isFullyConnected, isOnline, isConnected } = useConnectionStatus();
-    const [showReconnected, setShowReconnected] = React.useState(false);
-    const wasDisconnected = React.useRef(false);
+    const { isFullyConnected, isOnline } = useConnectionStatus();
+    const [showReconnected, setShowReconnected] = useState(false);
+    const wasDisconnected = useRef(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!isFullyConnected) {
             wasDisconnected.current = true;
             setShowReconnected(false);
@@ -16,34 +16,26 @@ export const ConnectionStatus: React.FC = () => {
         if (wasDisconnected.current) {
             wasDisconnected.current = false;
             setShowReconnected(true);
-            const timer = setTimeout(() => setShowReconnected(false), 3000);
-            return () => clearTimeout(timer);
+            const t = setTimeout(() => setShowReconnected(false), 3000);
+            return () => clearTimeout(t);
         }
     }, [isFullyConnected]);
 
-    if (isFullyConnected && !showReconnected) {
-        return null;
-    }
+    if (isFullyConnected && !showReconnected) return null;
 
     return (
         <div
-            className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium transition-all duration-slow ${isFullyConnected
-                    ? 'bg-success text-text-on-primary animate-in slide-in-from-top-4 fade-in'
-                    : 'bg-error text-text-on-primary animate-in slide-in-from-top-4 fade-in'
-                }`}
+            className={`
+        fixed top-16 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full shadow-lg
+        flex items-center gap-2 text-sm font-medium animate-fade-in
+        ${isFullyConnected ? 'bg-success text-text-on-primary' : 'bg-error text-text-on-primary'}
+      `}
+            style={{ zIndex: 'var(--z-sticky)' }}
         >
             {isFullyConnected ? (
-                <>
-                    <Wifi size={16} />
-                    <span>Đã kết nối lại</span>
-                </>
+                <><Wifi size={15} /><span>Đã kết nối lại</span></>
             ) : (
-                <>
-                    <WifiOff size={16} />
-                    <span>
-                        {!isOnline ? 'Không có kết nối Internet' : 'Đang kết nối lại...'}
-                    </span>
-                </>
+                <><WifiOff size={15} /><span>{!isOnline ? 'Không có kết nối Internet' : 'Đang kết nối lại...'}</span></>
             )}
         </div>
     );

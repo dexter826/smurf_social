@@ -1,129 +1,100 @@
 import React from 'react';
 import { Skeleton } from '../ui/Skeleton';
 
-export const ProfileSkeleton: React.FC = () => {
-  return (
-    <div className="h-full w-full overflow-y-auto bg-bg-secondary animate-in fade-in duration-500">
-      {/* Profile Header Skeleton */}
-      <div className="bg-bg-primary shadow-sm mb-4">
-        <div className="relative w-full h-[200px] md:h-[320px] bg-bg-secondary overflow-hidden">
-           <Skeleton height="100%" width="100%" />
-        </div>
-        
-        <div className="max-w-5xl mx-auto px-4 relative pb-1">
-          <div className="flex flex-col md:flex-row items-center md:items-end text-center md:text-left -mt-16 md:-mt-20 mb-6 gap-6">
-            {/* Avatar Skeleton */}
-            <div className="relative z-20 mx-auto md:mx-0">
-              <div className="p-1 bg-bg-primary rounded-full">
-                <div className="w-32 h-32 rounded-full border-4 border-bg-primary bg-bg-primary overflow-hidden shadow-lg">
-                  <Skeleton variant="circle" width="100%" height="100%" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Info Skeleton */}
-            <div className="flex-1 pb-1 space-y-3 w-full flex flex-col items-center md:items-start">
-              <Skeleton width={200} height={36} className="mb-2" />
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                 <Skeleton width={100} height={24} className="rounded-lg" />
-                 <Skeleton width={100} height={24} className="rounded-lg" />
-              </div>
-            </div>
-
-            {/* Actions Skeleton */}
-            <div className="flex justify-center md:justify-end gap-2 w-full md:w-auto mb-2">
-              <Skeleton width={120} height={40} className="rounded-xl" />
-              <Skeleton width={40} height={40} className="rounded-xl block md:hidden" />
-            </div>
-          </div>
-          
-          {/* Tabs Skeleton */}
-          <div className="flex gap-1 md:gap-4 border-t border-border-light pt-0 h-12 overflow-x-auto no-scrollbar">
-            <div className="flex items-center px-4 min-w-max gap-6">
-              <Skeleton width={100} height={24} />
-              <Skeleton width={100} height={24} />
-              <Skeleton width={80} height={24} />
-              <Skeleton width={80} height={24} />
-            </div>
-          </div>
-        </div>
+export const ProfileSkeleton: React.FC = () => (
+  <div className="h-full w-full overflow-y-auto bg-bg-secondary animate-fade-in">
+    <div className="bg-bg-primary shadow-sm mb-4">
+      {/* Cover */}
+      <div className="relative w-full h-[200px] md:h-[320px] md:rounded-b-2xl overflow-hidden">
+        <Skeleton height="100%" width="100%" />
       </div>
 
-      {/* Profile Content Skeleton */}
-      <div className="max-w-5xl mx-auto px-4 pt-2 pb-12">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Left Column (Info) */}
-          <div className="w-full md:w-[360px] flex-shrink-0 space-y-4">
-            <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4 space-y-4">
-              <Skeleton width={100} height={24} />
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <Skeleton variant="rect" width={32} height={32} className="rounded-lg" />
-                  <Skeleton width="70%" height={16} className="mt-2" />
-                </div>
-                <div className="flex gap-3">
-                  <Skeleton variant="rect" width={32} height={32} className="rounded-lg" />
-                  <Skeleton width="60%" height={16} className="mt-2" />
-                </div>
-                <div className="flex gap-3">
-                  <Skeleton variant="rect" width={32} height={32} className="rounded-lg" />
-                  <Skeleton width="50%" height={16} className="mt-2" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-4 space-y-4">
-              <div className="flex justify-between">
-                <Skeleton width={120} height={24} />
-                <Skeleton width={60} height={16} />
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Skeleton variant="rect" className="aspect-square rounded-lg" />
-                <Skeleton variant="rect" className="aspect-square rounded-lg" />
-                <Skeleton variant="rect" className="aspect-square rounded-lg" />
-                <Skeleton variant="rect" className="aspect-square rounded-lg" />
-                <Skeleton variant="rect" className="aspect-square rounded-lg" />
-                <Skeleton variant="rect" className="aspect-square rounded-lg" />
-              </div>
+      <div className="max-w-5xl mx-auto px-4 md:px-6">
+        <div className="flex flex-col md:flex-row items-center md:items-end text-center md:text-left -mt-14 md:-mt-16 mb-5 gap-4 md:gap-6">
+          {/* Avatar */}
+          <div className="relative z-20 mx-auto md:mx-0 flex-shrink-0">
+            <div className="p-1 bg-bg-primary rounded-full shadow-md">
+              <Skeleton variant="circle" width={128} height={128} />
             </div>
           </div>
 
-          {/* Right Column (Posts) */}
-          <div className="flex-1 min-w-0 space-y-4">
-            <div className="bg-bg-primary rounded-xl shadow-sm border border-border-light p-3 sm:p-4">
-               <Skeleton height={40} className="w-full rounded-full" />
-            </div>
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="bg-bg-primary rounded-xl shadow-sm border border-border-light mb-4 text-left">
-                <div className="p-3 sm:p-4 flex items-start justify-between">
-                  <div className="flex gap-3">
-                    <Skeleton variant="circle" width={40} height={40} />
-                    <div className="space-y-2">
-                       <Skeleton variant="line" width={128} height={16} />
-                       <Skeleton variant="line" width={80} height={12} className="opacity-50" />
-                    </div>
-                  </div>
-                </div>
-                <div className="px-3 sm:px-4 pb-3 space-y-2">
-                  <Skeleton variant="line" width="90%" height={16} className="opacity-70" />
-                  <Skeleton variant="line" width="60%" height={16} className="opacity-70" />
-                </div>
-                <div className="w-full h-64 bg-bg-secondary flex items-center justify-center">
-                   <Skeleton variant="rect" width={48} height={48} className="opacity-20" />
-                </div>
-                <div className="flex px-2 py-1 border-t border-border-light">
-                   <div className="flex-1 flex justify-center py-2">
-                      <Skeleton variant="line" width={64} height={20} className="opacity-50" />
-                   </div>
-                   <div className="flex-1 flex justify-center py-2">
-                       <Skeleton variant="line" width={64} height={20} className="opacity-50" />
-                   </div>
-                </div>
-              </div>
-            ))}
+          {/* Name */}
+          <div className="flex-1 space-y-2 flex flex-col items-center md:items-start pb-1">
+            <Skeleton width={200} height={32} />
           </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 md:mb-1">
+            <Skeleton width={120} height={40} className="rounded-xl" />
+            <Skeleton width={40} height={40} className="rounded-xl md:hidden" />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-border-light h-12">
+          <Skeleton width={80} height={20} className="self-center mx-2" />
+          <Skeleton width={80} height={20} className="self-center mx-2" />
         </div>
       </div>
     </div>
-  );
-};
+
+    {/* Content */}
+    <div className="max-w-5xl mx-auto px-4 pt-4 pb-12">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+        {/* Left sidebar */}
+        <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 space-y-4">
+          <div className="bg-bg-primary rounded-2xl border border-border-light p-4 space-y-4">
+            <Skeleton width={100} height={20} />
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex gap-3 items-center">
+                <Skeleton variant="rect" width={32} height={32} className="rounded-lg flex-shrink-0" />
+                <Skeleton width="65%" height={14} />
+              </div>
+            ))}
+          </div>
+          <div className="bg-bg-primary rounded-2xl border border-border-light p-4 space-y-4 hidden md:block">
+            <div className="flex justify-between items-center">
+              <Skeleton width={100} height={20} />
+              <Skeleton width={60} height={14} />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} variant="rect" className="aspect-square rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Posts */}
+        <div className="flex-1 min-w-0 space-y-4">
+          <div className="bg-bg-primary rounded-2xl border border-border-light p-4">
+            <Skeleton height={44} className="w-full rounded-full" />
+          </div>
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+              <div className="p-4 flex items-center gap-3">
+                <Skeleton variant="circle" width={40} height={40} />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton width={130} height={14} />
+                  <Skeleton width={80} height={11} />
+                </div>
+              </div>
+              <div className="px-4 pb-3 space-y-2">
+                <Skeleton width="88%" height={14} />
+                <Skeleton width="60%" height={14} />
+              </div>
+              <div className="w-full aspect-video bg-bg-secondary" />
+              <div className="flex px-2 py-1 border-t border-border-light">
+                {[...Array(2)].map((_, j) => (
+                  <div key={j} className="flex-1 flex justify-center py-2.5">
+                    <Skeleton width={64} height={16} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);

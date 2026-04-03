@@ -4,15 +4,15 @@ import { MessageSquare } from 'lucide-react';
 import { BlockOptionsModal } from '../components/ui';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
-import { useFriendIds } from '../hooks';
-import { useBlockedUsers } from '../hooks';
+import { useFriendIds, useBlockedUsers } from '../hooks';
 import { friendService } from '../services/friendService';
 import { useRtdbChatStore } from '../store';
 import { useConversationMemberSettings } from '../hooks/chat/useConversationMemberSettings';
+import { toast } from '../store/toastStore';
 import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
-  TransferAdminModal, ForwardModal, MessengerSkeleton
+  TransferAdminModal, ForwardModal, MessengerSkeleton,
 } from '../components/chat';
 import { useCallManager } from '../hooks/chat/useCallManager';
 import { scrollToMessage } from '../utils';
@@ -20,94 +20,39 @@ import { scrollToMessage } from '../utils';
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
   const {
-    currentUser,
-    conversations,
-    filteredConversations,
-    selectedConversationId,
-    selectedConversation,
-    currentMessages,
-    currentTypingUsers,
-    isLoading,
-    viewMode,
-    setViewMode,
-    isSearchFocused,
-    setSearchFocused,
-    searchResults,
-    searchHistory,
-    archivedCount,
-    usersMap,
-    isBlocked,
-    isBlockedByMe,
-    isCallBlockedByMe,
-    isCallBlockedByPartner,
-    partnerStatus,
-    blockedMessage,
-    forwardingMessage,
-    setForwardingMessage,
-    replyingTo,
-    setReplyingTo,
-    editingMessage,
-    setEditingMessage,
-
-    handleSelectConversation,
-    handleSendText,
-    handleEditMessage,
-    handleRecallMessage,
-    handleDeleteForMe,
-    handleForwardMessage,
-    handleSendImage,
-    handleSendFile,
-    handleSendVideo,
-    handleSendVoice,
-    handleTyping,
-    handleSearch,
-    handlePin,
-    handleMute,
-    handleArchive,
-    handleMarkUnread,
-    handleDelete,
-    handleMarkAllRead,
-    handleApplyBlock,
-    handleUnblock,
-    shouldShowBlockBanner,
-    myBlockOptions,
-    handleCreateGroup,
-    handleAddMembers,
-    handleRemoveMember,
-    handleLeaveGroup,
-    handleAssignAdminAndLeave,
-    handlePromoteToAdmin,
-    handleDemoteFromAdmin,
-    handleEditGroup,
-    handleDisbandGroup,
-    addToSearchHistory,
-    removeFromSearchHistory,
-    clearSearchHistory,
-    getOrCreateConversation,
-    setIsChatVisible,
-    isLoadingMore,
-    hasMoreMessages,
-    handleLoadMoreMessages,
-    friendRequestStatus,
-    canCall,
-    receivedRequests,
-    participants,
+    currentUser, conversations, filteredConversations,
+    selectedConversationId, selectedConversation,
+    currentMessages, currentTypingUsers, isLoading,
+    viewMode, setViewMode, isSearchFocused, setSearchFocused,
+    searchResults, searchHistory, archivedCount, usersMap,
+    isBlocked, isBlockedByMe, isCallBlockedByMe, isCallBlockedByPartner,
+    partnerStatus, blockedMessage, forwardingMessage, setForwardingMessage,
+    replyingTo, setReplyingTo, editingMessage, setEditingMessage,
+    handleSelectConversation, handleSendText, handleEditMessage,
+    handleRecallMessage, handleDeleteForMe, handleForwardMessage,
+    handleSendImage, handleSendFile, handleSendVideo, handleSendVoice,
+    handleTyping, handleSearch, handlePin, handleMute, handleArchive,
+    handleMarkUnread, handleDelete, handleMarkAllRead,
+    handleApplyBlock, handleUnblock, shouldShowBlockBanner, myBlockOptions,
+    handleCreateGroup, handleAddMembers, handleRemoveMember,
+    handleLeaveGroup, handleAssignAdminAndLeave, handlePromoteToAdmin,
+    handleDemoteFromAdmin, handleEditGroup, handleDisbandGroup,
+    addToSearchHistory, removeFromSearchHistory, clearSearchHistory,
+    getOrCreateConversation, setIsChatVisible,
+    isLoadingMore, hasMoreMessages, handleLoadMoreMessages,
+    friendRequestStatus, canCall, receivedRequests, participants,
   } = useChat();
+
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
   const friendIds = useFriendIds();
   const { blockedUserIds } = useBlockedUsers();
-
   const selectedMemberSettings = useConversationMemberSettings(
-    selectedConversationId || '',
-    currentUser?.id || ''
+    selectedConversationId || '', currentUser?.id || ''
   );
 
   useEffect(() => {
     setIsChatVisible(true);
-    return () => {
-      setIsChatVisible(false);
-      handleSelectConversation(null);
-    };
+    return () => { setIsChatVisible(false); handleSelectConversation(null); };
   }, [setIsChatVisible, handleSelectConversation]);
 
   const [searchParams] = useSearchParams();
@@ -117,8 +62,7 @@ const ChatPage: React.FC = () => {
     if (!convIdFromUrl) return;
     handleSelectConversation(convIdFromUrl);
     navigate('/', { replace: true });
-  }, [convIdFromUrl]);
-
+  }, [convIdFromUrl, handleSelectConversation, navigate]);
 
   const [showDetails, setShowDetails] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -129,88 +73,52 @@ const ChatPage: React.FC = () => {
 
   const openBlockModal = () => setIsBlockModalOpen(true);
   const closeBlockModal = () => setIsBlockModalOpen(false);
-
-  const confirmUnblock = async () => {
-    await handleUnblock();
-    closeBlockModal();
-  };
+  const confirmUnblock = async () => { await handleUnblock(); closeBlockModal(); };
 
   const { startCall, endCall, joinActiveCall } = useCallManager(currentUser?.id || '');
-
 
   const partner = selectedConversation?.data.isGroup
     ? null
     : participants.find(p => p.id !== currentUser?.id);
 
-
   const handleInitiateCall = async (type: 'voice' | 'video') => {
     if (!selectedConversationId || !currentUser) return;
-
     const isGroup = selectedConversation?.data.isGroup || false;
     const recipientIds = isGroup
       ? Object.keys(selectedConversation?.data.members || {}).filter(id => id !== currentUser.id)
       : (partner ? [partner.id] : []);
-
     if (recipientIds.length === 0) return;
-
     if (!isGroup) {
-      if (isCallBlockedByMe) {
-        import('../store/toastStore').then(({ toast }) => toast.error('Bạn đã chặn cuộc gọi với người dùng này.'));
-        return;
-      }
-      if (isCallBlockedByPartner) {
-        import('../store/toastStore').then(({ toast }) => toast.error('Không thể thực hiện cuộc gọi cho người dùng này.'));
-        return;
-      }
+      if (isCallBlockedByMe) { toast.error('Bạn đã chặn cuộc gọi với người dùng này.'); return; }
+      if (isCallBlockedByPartner) { toast.error('Không thể thực hiện cuộc gọi cho người dùng này.'); return; }
     }
-
     const result = await startCall(
-      recipientIds,
-      currentUser.fullName,
-      currentUser.avatar?.url ?? '',
-      type,
-      selectedConversationId,
-      isGroup,
+      recipientIds, currentUser.fullName, currentUser.avatar?.url ?? '',
+      type, selectedConversationId, isGroup,
       !isGroup ? partner?.fullName : (selectedConversation?.data.name || 'Cuộc gọi nhóm'),
-      !isGroup ? partner?.avatar?.url : (selectedConversation?.data.avatar?.url),
-      isCallBlockedByPartner,
-      isCallBlockedByMe
+      !isGroup ? partner?.avatar?.url : selectedConversation?.data.avatar?.url,
+      isCallBlockedByPartner, isCallBlockedByMe
     );
-
     if (result && !result.success) {
-      import('../store/toastStore').then(({ toast }) => {
-        switch (result.reason) {
-          case 'busy': return toast.error('Người dùng này hiện đang bận.');
-          case 'blocked': return toast.error('Không thể thực hiện cuộc gọi với người dùng này.');
-          case 'not_friend': return toast.error('Chỉ có thể gọi cho bạn bè.');
-          case 'already_in_call': return toast.error('Bạn đang trong một cuộc gọi khác.');
-          default: return toast.error('Không thể thực hiện cuộc gọi.');
-        }
-      });
+      const messages: Record<string, string> = {
+        busy: 'Người dùng này hiện đang bận.',
+        blocked: 'Không thể thực hiện cuộc gọi với người dùng này.',
+        not_friend: 'Chỉ có thể gọi cho bạn bè.',
+        already_in_call: 'Bạn đang trong một cuộc gọi khác.',
+      };
+      toast.error(messages[result.reason ?? ''] ?? 'Không thể thực hiện cuộc gọi.');
     }
   };
 
-  if (!currentUser) {
-    return <MessengerSkeleton />;
-  }
+  if (!currentUser) return <MessengerSkeleton />;
 
   const handleSendFriendRequest = async (userId: string) => {
-    try {
-      await friendService.sendFriendRequest(currentUser.id, userId);
-    } catch (error) {
-      console.error('Lỗi gửi lời mời kết bạn:', error);
-    }
+    await friendService.sendFriendRequest(currentUser.id, userId);
   };
 
   const handleAcceptFriendRequest = async (userId: string) => {
     const request = receivedRequests.find(r => r.senderId === userId);
-    if (request) {
-      try {
-        await friendService.acceptFriendRequest(request.id, request.senderId, currentUser.id);
-      } catch (error) {
-        console.error('Lỗi chấp nhận kết bạn:', error);
-      }
-    }
+    if (request) await friendService.acceptFriendRequest(request.id, request.senderId, currentUser.id);
   };
 
   const handleBackToList = () => {
@@ -219,8 +127,8 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full w-full">
-      {/* Sidebar danh sách hội thoại */}
+    <div className="flex h-full w-full overflow-hidden">
+      {/* ── Conversation list panel ── */}
       <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} md:w-[300px] lg:w-[360px] flex-shrink-0 w-full`}>
         <ConversationList
           conversations={filteredConversations}
@@ -245,10 +153,7 @@ const ChatPage: React.FC = () => {
             await getOrCreateConversation(currentUser.id, user.id);
             setSearchFocused(false);
           }}
-          onSelectConversation={(id) => {
-            handleSelectConversation(id);
-            setSearchFocused(false);
-          }}
+          onSelectConversation={(id) => { handleSelectConversation(id); setSearchFocused(false); }}
           onSearch={handleSearch}
           onPin={handlePin}
           onMute={handleMute}
@@ -260,7 +165,7 @@ const ChatPage: React.FC = () => {
         />
       </div>
 
-      {/* Nội dung khung chat */}
+      {/* ── Chat area ── */}
       <div className={`flex-1 flex flex-col min-w-0 ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
         {selectedConversation ? (
           <>
@@ -277,15 +182,9 @@ const ChatPage: React.FC = () => {
               onInfoClick={() => setShowDetails(true)}
               onRecall={handleRecallMessage}
               onDeleteForMe={handleDeleteForMe}
-              onForward={(msg) => handleForwardMessage(msg)}
-              onReply={(msg) => {
-                setReplyingTo(msg);
-                setEditingMessage(null);
-              }}
-              onEdit={(msg) => {
-                setEditingMessage(msg);
-                setReplyingTo(null);
-              }}
+              onForward={handleForwardMessage}
+              onReply={(msg) => { setReplyingTo(msg); setEditingMessage(null); }}
+              onEdit={(msg) => { setEditingMessage(msg); setReplyingTo(null); }}
               onAddFriend={handleSendFriendRequest}
               onAcceptFriend={handleAcceptFriendRequest}
               onBlock={openBlockModal}
@@ -324,29 +223,28 @@ const ChatPage: React.FC = () => {
               isGroup={selectedConversation.data.isGroup}
               isDisbanded={selectedConversation.data.isDisbanded}
               onDeleteConversation={() => handleDelete(selectedConversation.id)}
-              onCancelAction={() => {
-                setReplyingTo(null);
-                setEditingMessage(null);
-              }}
+              onCancelAction={() => { setReplyingTo(null); setEditingMessage(null); }}
               onEditMessage={editingMessage ? (text) => handleEditMessage(editingMessage.id, text) : undefined}
             />
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center bg-bg-secondary p-4 text-center">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-primary/10 rounded-full flex items-center justify-center animate-fade-in">
-              <MessageSquare className="w-12 h-12 md:w-16 md:h-16 text-primary" />
+          /* ── Empty state ── */
+          <div className="flex-1 flex flex-col items-center justify-center bg-bg-secondary p-6 text-center">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
+              <div className="relative w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
+                <MessageSquare size={40} className="text-primary" />
+              </div>
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-2">
-              Tin nhắn của bạn
-            </h2>
-            <p className="text-text-secondary text-center max-w-sm text-sm md:text-base leading-relaxed">
+            <h2 className="text-xl font-bold text-text-primary mb-2">Tin nhắn của bạn</h2>
+            <p className="text-sm text-text-secondary max-w-xs leading-relaxed">
               Chọn một cuộc trò chuyện để bắt đầu nhắn tin với bạn bè ngay bây giờ!
             </p>
           </div>
         )}
       </div>
 
-      {/* Thông tin chi tiết hội thoại */}
+      {/* ── Details panel ── */}
       {selectedConversation && (
         <ChatDetailsPanel
           conversation={selectedConversation}
@@ -386,7 +284,6 @@ const ChatPage: React.FC = () => {
         />
       )}
 
-      {/* Quản lý nhóm và chuyển tiếp tin nhắn */}
       <CreateGroupModal
         isOpen={showCreateGroup}
         currentUserId={currentUser.id}
@@ -404,7 +301,7 @@ const ChatPage: React.FC = () => {
         />
       )}
 
-      {selectedConversation && selectedConversation.data.isGroup && (
+      {selectedConversation?.data.isGroup && (
         <EditGroupModal
           isOpen={showEditGroup}
           conversation={selectedConversation}
@@ -414,7 +311,7 @@ const ChatPage: React.FC = () => {
         />
       )}
 
-      {selectedConversation && selectedConversation.data.isGroup && (
+      {selectedConversation?.data.isGroup && (
         <TransferAdminModal
           isOpen={showAssignAdmin}
           conversation={selectedConversation}
@@ -432,7 +329,6 @@ const ChatPage: React.FC = () => {
         conversations={conversations}
         usersMap={usersMap}
       />
-
 
       {partner && (
         <BlockOptionsModal

@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StickyNote } from 'lucide-react';
+import { StickyNote, Sparkles } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { PostItem, PostModal, CreatePost, FeedSkeleton, PostViewModal } from '../components/feed';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
-import { Visibility } from '../../shared/types';
+import { Visibility, MediaObject } from '../../shared/types';
 import { useFeed, usePostNavigation } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
 import { useUserCache } from '../store/userCacheStore';
@@ -17,40 +17,30 @@ const FeedPage: React.FC = () => {
   const params = useParams<{ '*': string }>();
   const friendIds = useFriendIds();
   const {
-    posts,
-    isLoading,
-    hasMore,
-    usersMap,
-    handleReact,
-    handleUpdate,
-    handleDelete,
-    observerRef,
+    posts, isLoading, hasMore, usersMap,
+    handleReact, handleUpdate, handleDelete, observerRef,
   } = useFeed();
   const isLoadingMore = useLoadingStore(state => state.loadingStates['feed.loadMore']);
-
   const { viewPost, closePost } = usePostNavigation();
   const { fetchPostById, selectedPost } = usePostStore();
   const { getUser, fetchUser } = useUserCache();
 
   const urlPostId = params['*']?.startsWith('post/') ? params['*'].replace('post/', '') : null;
-
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (!urlPostId || !currentUser) return;
     fetchPostById(urlPostId, currentUser.id, friendIds);
-  }, [urlPostId, currentUser?.id]);
+  }, [urlPostId, currentUser?.id, friendIds, fetchPostById]);
 
   useEffect(() => {
-    if (selectedPost?.authorId) {
-      fetchUser(selectedPost.authorId);
-    }
-  }, [selectedPost?.authorId]);
+    if (selectedPost?.authorId) fetchUser(selectedPost.authorId);
+  }, [selectedPost?.authorId, fetchUser]);
 
   const handleEditPost = useCallback(async (
     content: string,
-    media: any[],
+    media: MediaObject[],
     visibility: Visibility,
     pendingFiles?: File[],
     onProgress?: (progress: number) => void
@@ -59,7 +49,6 @@ const FeedPage: React.FC = () => {
     await handleUpdate(showEditModal, content, media, visibility, pendingFiles, onProgress);
     setShowEditModal(null);
   }, [showEditModal, handleUpdate]);
-
 
   const handleDeletePost = useCallback(async () => {
     if (!postToDelete) return;
@@ -70,9 +59,7 @@ const FeedPage: React.FC = () => {
 
   const handleUploadImages = useCallback(async (files: File[], onProgress?: (progress: number) => void) => {
     if (!currentUser) throw new Error('Not authenticated');
-    return await postService.uploadPostMedia(files, currentUser.id, (progress) => {
-      onProgress?.(progress);
-    });
+    return postService.uploadPostMedia(files, currentUser.id, onProgress);
   }, [currentUser]);
 
   if (!currentUser) {
@@ -83,63 +70,67 @@ const FeedPage: React.FC = () => {
     );
   }
 
+  if (isLoading && posts.length === 0) return <FeedSkeleton />;
+
   const editPost = posts.find(p => p.id === showEditModal);
 
-  if (isLoading && posts.length === 0) {
-    return <FeedSkeleton />;
-  }
-
   return (
-    <div className="flex justify-center h-full w-full overflow-y-auto transition-theme scroll-smooth" id="feed-container">
-      <div className="w-full max-w-[680px] py-4 md:py-6 space-y-3 md:space-y-4 px-3 sm:px-4 md:px-0 pb-6 md:pb-8">
+    <div
+      className="flex justify-center h-full w-full overflow-y-auto transition-theme scroll-smooth"
+      id="feed-container"
+    >
+      <div className="w-full max-w-[680px] py-4 md:py-6 px-3 sm:px-4 md:px-0 pb-6 md:pb-10">
         <CreatePost currentUser={currentUser} />
 
-
-
         {posts.length === 0 ? (
-          <div className="bg-bg-primary rounded-xl p-6 sm:p-8 md:p-12 shadow-sm border border-border-light text-center transition-theme">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-              <StickyNote size={28} className="text-text-tertiary opacity-40" />
+          /* ── Empty state ── */
+          <div className="bg-bg-primary rounded-2xl p-10 border border-border-light text-center animate-fade-in">
+            <div className="relative w-16 h-16 mx-auto mb-5">
+              <div className="absolute inset-0 rounded-full bg-primary/10 blur-md" />
+              <div className="relative w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center border border-border-light">
+                <StickyNote size={26} className="text-text-tertiary" />
+              </div>
             </div>
-            <p className="text-text-primary text-base sm:text-lg font-semibold">Chưa có bài viết nào</p>
-            <p className="text-text-secondary text-sm mt-2 max-w-[260px] mx-auto">
+            <p className="text-text-primary text-base font-semibold mb-1.5">Chưa có bài viết nào</p>
+            <p className="text-text-secondary text-sm max-w-[260px] mx-auto leading-relaxed">
               Hãy kết nối với bạn bè hoặc chia sẻ khoảnh khắc đầu tiên của bạn!
             </p>
           </div>
         ) : (
           <>
-            {posts.map((post) => {
-              const author = usersMap[post.authorId];
-              if (!author) return <PostItem.Skeleton key={post.id} />;
-
-              return (
-                <PostItem
-                  key={post.id}
-                  post={post}
-                  author={author}
-                  currentUser={currentUser}
-                  onReact={handleReact}
-                  onEdit={(postId) => setShowEditModal(postId)}
-                  onDelete={(postId) => setPostToDelete(postId)}
-                  onViewDetail={viewPost}
-                />
-              );
-            })}
+            <div className="space-y-3 md:space-y-4">
+              {posts.map((post) => {
+                const author = usersMap[post.authorId];
+                if (!author) return <PostItem.Skeleton key={post.id} />;
+                return (
+                  <PostItem
+                    key={post.id}
+                    post={post}
+                    author={author}
+                    currentUser={currentUser}
+                    onReact={handleReact}
+                    onEdit={setShowEditModal}
+                    onDelete={setPostToDelete}
+                    onViewDetail={viewPost}
+                  />
+                );
+              })}
+            </div>
 
             <div ref={observerRef} className="h-4 w-full" />
 
             {isLoadingMore && hasMore && (
-              <div className="space-y-4 mt-4 px-2 md:px-0">
-                {[...Array(2)].map((_, i) => (
-                  <PostItem.Skeleton key={`more-${i}`} />
-                ))}
+              <div className="space-y-4 mt-4">
+                {[...Array(2)].map((_, i) => <PostItem.Skeleton key={`more-${i}`} />)}
               </div>
             )}
 
             {!hasMore && posts.length > 0 && (
-              <p className="text-center text-text-tertiary text-sm py-8 font-medium">
-                Bạn đã xem hết bài viết.
-              </p>
+              <div className="flex items-center justify-center gap-2 py-8">
+                <Sparkles size={14} className="text-text-tertiary" />
+                <p className="text-text-tertiary text-sm font-medium">Bạn đã xem hết bài viết.</p>
+                <Sparkles size={14} className="text-text-tertiary" />
+              </div>
             )}
           </>
         )}

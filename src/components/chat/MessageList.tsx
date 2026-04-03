@@ -25,34 +25,20 @@ interface MessageListProps {
 }
 
 const MessageListInner: React.FC<MessageListProps> = ({
-  messages,
-  currentUserId,
-  usersMap,
-  conversation,
-  participants,
-  lastReadByMap,
-  onRecall,
-  onDeleteForMe,
-  onForward,
-  onReply,
-  onEdit,
-  onCall,
-  onJoinCall,
-  chatName,
-  avatarSrc,
-  partner,
-  isBlocked = false,
-  partnerStatus
+  messages, currentUserId, usersMap, conversation, participants,
+  lastReadByMap, onRecall, onDeleteForMe, onForward, onReply, onEdit,
+  onCall, onJoinCall, chatName, avatarSrc, partner,
+  isBlocked = false, partnerStatus,
 }) => {
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Array<{ id: string; data: RtdbMessage }> }[] = [];
     let currentDate = '';
 
-    const processedMessages = messages
-      .filter(msg => !msg.data.deletedBy || !msg.data.deletedBy[currentUserId])
-      .map(msg => msg);
+    const visible = messages.filter(
+      msg => !msg.data.deletedBy || !msg.data.deletedBy[currentUserId]
+    );
 
-    processedMessages.forEach((msg) => {
+    visible.forEach((msg) => {
       const msgDate = new Date(msg.data.createdAt).toLocaleDateString('vi-VN');
       if (msgDate !== currentDate) {
         currentDate = msgDate;
@@ -65,59 +51,70 @@ const MessageListInner: React.FC<MessageListProps> = ({
     return groups;
   }, [messages, currentUserId]);
 
-  const shouldShowAvatar = (msg: { id: string; data: RtdbMessage }, index: number, dayMessages: Array<{ id: string; data: RtdbMessage }>): boolean => {
+  const shouldShowAvatar = (
+    msg: { id: string; data: RtdbMessage },
+    index: number,
+    dayMessages: Array<{ id: string; data: RtdbMessage }>
+  ): boolean => {
     if (msg.data.senderId === currentUserId) return false;
     if (index === dayMessages.length - 1) return true;
-    const nextMsg = dayMessages[index + 1];
-    return nextMsg.data.senderId !== msg.data.senderId;
+    return dayMessages[index + 1].data.senderId !== msg.data.senderId;
   };
 
-  const shouldShowName = (msg: { id: string; data: RtdbMessage }, index: number, dayMessages: Array<{ id: string; data: RtdbMessage }>): boolean => {
+  const shouldShowName = (
+    msg: { id: string; data: RtdbMessage },
+    index: number,
+    dayMessages: Array<{ id: string; data: RtdbMessage }>
+  ): boolean => {
     if (!conversation.data.isGroup) return false;
     if (msg.data.senderId === currentUserId) return false;
     if (index === 0) return true;
-    const prevMsg = dayMessages[index - 1];
-    return prevMsg.data.senderId !== msg.data.senderId;
+    return dayMessages[index - 1].data.senderId !== msg.data.senderId;
   };
 
+  /* ── Empty state ── */
   if (groupedMessages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <div className="mb-4">
-          <UserAvatar
-            userId={conversation.data.isGroup ? '' : partner?.id ?? ''}
-            src={avatarSrc}
-            name={chatName}
-            size="xl"
-            isGroup={conversation.data.isGroup}
-            members={participants}
-            initialStatus={partner?.status}
-            showStatus={false}
-          />
-        </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">{chatName}</h3>
+      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+        <UserAvatar
+          userId={conversation.data.isGroup ? '' : partner?.id ?? ''}
+          src={avatarSrc}
+          name={chatName}
+          size="xl"
+          isGroup={conversation.data.isGroup}
+          members={participants}
+          initialStatus={partner?.status}
+          showStatus={false}
+        />
+        <h3 className="text-base font-semibold text-text-primary mt-4 mb-1">{chatName}</h3>
         <p className="text-sm text-text-secondary">Bắt đầu cuộc trò chuyện</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       {groupedMessages.map((group, groupIndex) => (
         <div key={groupIndex}>
+          {/* Date separator */}
           <div className="flex items-center justify-center my-4">
-            <div className="bg-secondary text-text-secondary text-xs px-3 py-1 rounded-full">
+            <span className="bg-bg-tertiary text-text-tertiary text-xs px-3 py-1 rounded-full font-medium">
               {group.date}
-            </div>
+            </span>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {group.messages.map((msg, index) => {
               const isMe = msg.data.senderId === currentUserId;
               const sender = usersMap[msg.data.senderId];
               const showAvatar = shouldShowAvatar(msg, index, group.messages);
               const showName = shouldShowName(msg, index, group.messages);
               const isLastMessage = msg.id === messages[messages.length - 1]?.id;
+
+              let isVideoCall = false;
+              if (onCall) {
+                try { isVideoCall = JSON.parse(msg.data.content)?.callType === 'video'; } catch { }
+              }
 
               return (
                 <MessageBubble
@@ -134,16 +131,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
                   onForward={onForward}
                   onReply={onReply}
                   onEdit={onEdit}
-                  onCall={() => {
-                    if (onCall) {
-                      let isVideo = false;
-                      try {
-                        const parsed = JSON.parse(msg.data.content);
-                        isVideo = parsed.callType === 'video';
-                      } catch { }
-                      onCall(isVideo);
-                    }
-                  }}
+                  onCall={onCall ? () => onCall(isVideoCall) : undefined}
                   onJoinCall={onJoinCall}
                   currentUserId={currentUserId}
                   usersMap={usersMap}
