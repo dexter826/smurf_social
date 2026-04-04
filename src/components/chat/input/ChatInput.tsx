@@ -389,7 +389,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   ? editingMessage.data.content
                   : replyingTo?.data.type === 'text'
                     ? replyingTo.data.content
-                    : `[${replyingTo?.data.type}]`
+                    : replyingTo?.data.type === 'image' ? '[Hình ảnh]'
+                      : replyingTo?.data.type === 'video' ? '[Video]'
+                        : replyingTo?.data.type === 'voice' ? '[Tin nhắn thoại]'
+                          : replyingTo?.data.type === 'file' ? `[File] ${replyingTo.data.media?.[0]?.fileName || ''}`
+                            : '[Tin nhắn]'
                 }
               </p>
             </div>

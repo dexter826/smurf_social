@@ -53,6 +53,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Chỉ hỗ trợ file ảnh'); e.target.value = ''; return; }
     const validation = validateFileSize(file, type === 'avatar' ? 'AVATAR' : 'COVER');
     if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
     const blobUrl = URL.createObjectURL(file);

@@ -42,6 +42,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) { toast.error('Chỉ hỗ trợ file ảnh'); e.target.value = ''; return; }
       const validation = validateFileSize(file, 'AVATAR');
       if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
       setCropImage(URL.createObjectURL(file));

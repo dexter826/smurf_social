@@ -46,6 +46,7 @@ export default {
         },
         border: {
           light: 'var(--border-light)',
+          subtle: 'var(--border-subtle)',
           medium: 'var(--border-medium)',
           dark: 'var(--border-dark)',
           sidebar: 'var(--sidebar-border)',

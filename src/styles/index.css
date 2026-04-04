@@ -72,6 +72,7 @@
 
   /* === Border === */
   --border-light: #e4e6eb;
+  --border-subtle: #eeeff2;
   --border-medium: #d1d5db;
   --border-dark: #9ca3af;
   --divider: #e9ebef;
@@ -155,6 +156,7 @@
 
   /* === Border === */
   --border-light: #1e2530;
+  --border-subtle: #181d25;
   --border-medium: #2d333b;
   --border-dark: #484f58;
   --divider: #1e2530;

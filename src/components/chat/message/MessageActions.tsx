@@ -28,8 +28,8 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   return (
     <div
       className={`
-        absolute top-0 opacity-0 group-hover/message:opacity-100 [@media(hover:none)]:opacity-100
-        transition-opacity duration-200 flex items-center gap-0.5
+        absolute top-0 transition-opacity duration-200 flex items-center gap-0.5
+        ${showMenu ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100 [@media(hover:none)]:opacity-100'}
         ${isMe ? 'right-full mr-1.5' : 'left-full ml-1.5'}
       `}
     >
