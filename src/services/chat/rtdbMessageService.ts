@@ -109,6 +109,7 @@ async function createAndSendMediaMessage(
         compress?: boolean;
         displayContent: string;
         mentions?: string[];
+        voiceDuration?: number;
     }
 ): Promise<string> {
     // Validate file based on type
@@ -143,7 +144,7 @@ async function createAndSendMediaMessage(
     const messageData: RtdbMessage = {
         senderId,
         type,
-        content: type === MessageType.FILE ? file.name : '',
+        content: type === MessageType.FILE ? file.name : (type === MessageType.VOICE && options.voiceDuration ? String(options.voiceDuration) : ''),
         media: [mediaPlaceholder],
         mentions: options.mentions || [],
         isForwarded: false,
@@ -259,7 +260,7 @@ async function createAndSendMediaAlbumMessage(
     const mediaUploads = files.map(async (file, index) => {
         const isImage = file.type.startsWith('image/');
         const uploadFile = isImage ? await compressImage(file, IMAGE_COMPRESSION.CHAT) : file;
-        
+
         const path = `chats/${convId}/${createdAt}_${index}_${file.name}`;
 
         const fileUrl = await withRetry(() =>
@@ -366,11 +367,11 @@ export const rtdbMessageService = {
     ): Promise<string> => {
         try {
             const files = Array.isArray(file) ? file : [file];
-            
+
             const videoCount = files.filter(f => f.type.startsWith('video/')).length;
             const imageCount = files.filter(f => f.type.startsWith('image/')).length;
-            const displayContent = videoCount > 0 && imageCount > 0 
-                ? '[Album Media]' 
+            const displayContent = videoCount > 0 && imageCount > 0
+                ? '[Album Media]'
                 : videoCount > 0 ? '[Video]' : '[Hình ảnh]';
 
             if (files.length <= 1) {
@@ -451,6 +452,7 @@ export const rtdbMessageService = {
         file: File,
         options?: {
             replyToId?: string;
+            duration?: number;
             onProgressWithId?: ProgressWithId;
             mentions?: string[];
         }
@@ -459,7 +461,8 @@ export const rtdbMessageService = {
             return await createAndSendMediaMessage(convId, senderId, file, MessageType.VOICE, {
                 ...options,
                 compress: false,
-                displayContent: '[Tin nhắn thoại]'
+                displayContent: '[Tin nhắn thoại]',
+                voiceDuration: options?.duration,
             });
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi sendVoiceMessage:', error);
@@ -809,10 +812,10 @@ export const rtdbMessageService = {
                 const media = srcMsg.media || [];
                 const videoCount = media.filter(m => m.mimeType?.startsWith('video/')).length;
                 const imageCount = media.filter(m => m.mimeType?.startsWith('image/')).length;
-                displayContent = videoCount > 0 && imageCount > 0 
-                    ? '[Album Media]' 
-                    : (videoCount > 0 ? (media.length > 1 ? '[Album Video]' : '[Video]') 
-                    : (media.length > 1 ? '[Album ảnh]' : '[Hình ảnh]'));
+                displayContent = videoCount > 0 && imageCount > 0
+                    ? '[Album Media]'
+                    : (videoCount > 0 ? (media.length > 1 ? '[Album Video]' : '[Video]')
+                        : (media.length > 1 ? '[Album ảnh]' : '[Hình ảnh]'));
             } else if (srcMsg.type === MessageType.VIDEO) {
                 displayContent = '[Video]';
             } else if (srcMsg.type === MessageType.FILE) {

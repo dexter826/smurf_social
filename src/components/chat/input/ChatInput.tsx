@@ -17,7 +17,7 @@ interface ChatInputProps {
   onSendImages: (files: File[], replyToId?: string) => Promise<void>;
   onSendFile: (file: File, replyToId?: string) => void;
   onSendVideo?: (file: File, replyToId?: string) => void;
-  onSendVoice?: (file: File, replyToId?: string) => void;
+  onSendVoice?: (file: File, replyToId?: string, duration?: number) => void;
   onTyping: (isTyping: boolean) => void;
   disabled?: boolean;
   blockedMessage?: string;
@@ -63,14 +63,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const { isRecording, recordingDuration, startRecording, stopRecording, cancelRecording } =
     useAudioRecorder({
-      onRecordingComplete: (blob) => {
+      onRecordingComplete: (blob, duration) => {
         const audioFile = new File([blob], `voice_message_${Date.now()}.webm`, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioFile);
         setSelectedFiles(prev => {
           prev.forEach(f => { if (f.type === 'voice' && f.preview) URL.revokeObjectURL(f.preview); });
           return [
             ...prev.filter(f => f.type !== 'voice'),
-            { id: `voice-${Date.now()}`, file: audioFile, preview: url, type: 'voice' },
+            { id: `voice-${Date.now()}`, file: audioFile, preview: url, type: 'voice', duration },
           ];
         });
       },
@@ -228,7 +228,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       if (albumFiles.length > 0) await onSendImages(albumFiles, replyingTo?.id);
 
       for (const item of otherFiles) {
-        if (item.type === 'voice') await onSendVoice?.(item.file, replyingTo?.id);
+        if (item.type === 'voice') await onSendVoice?.(item.file, replyingTo?.id, item.duration);
         else await onSendFile(item.file, replyingTo?.id);
       }
 

@@ -17,7 +17,7 @@ export interface RtdbMessageSlice {
     sendImageMessage: (conversationId: string, senderId: string, files: File[], replyToId?: string) => Promise<void>;
     sendFileMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendVideoMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
-    sendVoiceMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
+    sendVoiceMessage: (conversationId: string, senderId: string, file: File, replyToId?: string, duration?: number) => Promise<void>;
     sendCallMessage: (conversationId: string, senderId: string, payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }) => Promise<string>;
     updateCallMessage: (conversationId: string, messageId: string, payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }) => Promise<void>;
     markAsRead: (conversationId: string, userId: string) => Promise<void>;
@@ -217,11 +217,12 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
-    sendVoiceMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
+    sendVoiceMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string, duration?: number) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
             await rtdbMessageService.sendVoiceMessage(conversationId, senderId, file, {
                 replyToId,
+                duration,
                 onProgressWithId: (messageId, progress) => {
                     get().setUploadProgress(messageId, progress.progress);
                     if (progress.state === 'error' || progress.state === 'canceled') {

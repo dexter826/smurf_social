@@ -8,6 +8,7 @@ export interface FilePreviewItem {
   preview?: string;
   type: 'image' | 'video' | 'file' | 'voice';
   uploadProgress?: number;
+  duration?: number;
 }
 
 interface FilePreviewProps {

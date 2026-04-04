@@ -301,6 +301,12 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
   if (message.data.type === 'voice') {
     const voiceUrl = message.data.media?.[0]?.url || '';
+    const rawDuration = message.data.content ? parseInt(message.data.content) : 0;
+    const durationStr = rawDuration > 0
+      ? (rawDuration >= 60
+        ? `${Math.floor(rawDuration / 60)}:${String(rawDuration % 60).padStart(2, '0')}`
+        : `0:${String(rawDuration).padStart(2, '0')}`)
+      : null;
     const voiceClass = `flex items-center gap-3 p-3 rounded-2xl min-w-[200px] transition-all duration-base ${isMe ? 'bg-bg-message-sent text-text-on-primary shadow-md' : 'bg-bg-message-received text-text-primary'
       }`;
     const btnClass = `p-2.5 rounded-full shadow-sm transition-all duration-base ${isMe ? 'bg-bg-primary text-primary' : 'bg-primary text-white'}`;
@@ -328,7 +334,8 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         <div className="flex-1">
           <div className="text-sm font-bold mb-0.5">Tin nhắn thoại</div>
           <div className={`flex items-center gap-1.5 opacity-80 ${isMe ? 'text-text-on-primary' : 'text-text-tertiary'}`}>
-            <Mic size={12} /><span className="text-xs">Click để nghe</span>
+            <Mic size={12} />
+            <span className="text-xs">{durationStr ?? 'Click để nghe'}</span>
           </div>
         </div>
       </div>

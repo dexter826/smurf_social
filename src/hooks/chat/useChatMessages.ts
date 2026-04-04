@@ -48,9 +48,9 @@ export const useChatMessages = ({
     await sendVideoMessage(selectedConversationId, currentUserId, file, replyToId);
   }, [selectedConversationId, currentUserId, sendVideoMessage]);
 
-  const handleSendVoice = useCallback(async (file: File, replyToId?: string) => {
+  const handleSendVoice = useCallback(async (file: File, replyToId?: string, duration?: number) => {
     if (!selectedConversationId || !currentUserId) return;
-    await sendVoiceMessage(selectedConversationId, currentUserId, file, replyToId);
+    await sendVoiceMessage(selectedConversationId, currentUserId, file, replyToId, duration);
   }, [selectedConversationId, currentUserId, sendVoiceMessage]);
 
   const handleEditMessage = useCallback(async (messageId: string, text: string) => {
