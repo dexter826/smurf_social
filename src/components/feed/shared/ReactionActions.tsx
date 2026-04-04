@@ -90,7 +90,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             fullWidth
             className={`h-10 rounded-xl text-sm font-semibold transition-all duration-200
               ${myReaction
-                ? `${getReactionColorClass(myReaction)} ${getReactionBgClass(myReaction)}`
+                ? `${getReactionColorClass(myReaction)} hover:bg-bg-hover`
                 : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover'
               }`}
             onClick={() => onReact(myReaction ? 'REMOVE' : ReactionType.LIKE)}

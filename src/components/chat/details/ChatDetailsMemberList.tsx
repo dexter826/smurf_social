@@ -104,10 +104,10 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                     </span>
 
                     {role === 'creator' && (
-                      <Crown size={13} className="text-warning flex-shrink-0" title="Trưởng nhóm" />
+                      <Crown size={13} className="text-warning flex-shrink-0" aria-label="Trưởng nhóm" />
                     )}
                     {role === 'admin' && (
-                      <Shield size={13} className="text-info flex-shrink-0" title="Admin" />
+                      <Shield size={13} className="text-info flex-shrink-0" aria-label="Admin" />
                     )}
                     {isBanned && (
                       <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-error/10 text-error flex-shrink-0">
@@ -128,7 +128,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
               </div>
 
               {/* Context menu */}
-              {canManage && !isBanned && (
+              {canManage && (
                 <Dropdown
                   isOpen={menuOpenId === member.id}
                   onOpenChange={(open) => setMenuOpenId(open ? member.id : null)}
@@ -140,14 +140,14 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                     />
                   }
                 >
-                  {role === 'member' && onPromoteToAdmin && (
+                  {!isBanned && role === 'member' && onPromoteToAdmin && (
                     <DropdownItem
                       icon={<ShieldPlus size={14} />}
                       label="Thăng làm Admin"
                       onClick={() => { onPromoteToAdmin(member.id); setMenuOpenId(null); }}
                     />
                   )}
-                  {role === 'admin' && isCurrentUserCreator && onDemoteFromAdmin && (
+                  {!isBanned && role === 'admin' && isCurrentUserCreator && onDemoteFromAdmin && (
                     <DropdownItem
                       icon={<ShieldMinus size={14} />}
                       label="Hạ quyền Admin"
