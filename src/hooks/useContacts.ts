@@ -5,6 +5,7 @@ import { useContactStore } from '../store/contactStore';
 import { useUserCache } from '../store/userCacheStore';
 import { useRtdbChatStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
+import { friendService } from '../services/friendService';
 
 type TabType = 'all' | 'requests' | 'sent' | 'suggestions';
 
@@ -145,13 +146,16 @@ export const useContacts = (): UseContactsReturn => {
 
   const handleAddFriend = useCallback(async (receiverId: string) => {
     if (!currentUser) return;
-    await sendFriendRequest(currentUser.id, receiverId);
     dismissSuggestion(receiverId);
+    friendService.removeSuggestion(currentUser.id, receiverId);
+    await sendFriendRequest(currentUser.id, receiverId);
   }, [currentUser, sendFriendRequest, dismissSuggestion]);
 
   const handleDismissSuggestion = useCallback((userId: string) => {
+    if (!currentUser) return;
     dismissSuggestion(userId);
-  }, [dismissSuggestion]);
+    friendService.removeSuggestion(currentUser.id, userId);
+  }, [currentUser, dismissSuggestion]);
 
   const handleRefreshSuggestions = useCallback(async () => {
     await refreshSuggestions();

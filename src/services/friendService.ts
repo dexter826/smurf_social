@@ -301,6 +301,19 @@ export const friendService = {
     }
   },
 
+  removeSuggestion: async (currentUserId: string, targetUserId: string): Promise<void> => {
+    try {
+      const userRef = doc(db, 'users', currentUserId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) return;
+      const current: string[] = userSnap.data()?.suggestedFriends ?? [];
+      const updated = current.filter(id => id !== targetUserId);
+      await updateDoc(userRef, { suggestedFriends: updated });
+    } catch {
+      // silent — không critical
+    }
+  },
+
   generateFriendSuggestions: async (limit?: number): Promise<string[]> => {
     try {
       const fn = httpsCallable<{ limit?: number }, { suggestionIds: string[] }>(

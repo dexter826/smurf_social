@@ -91,7 +91,13 @@ export const useContactStore = create<ContactState>()(
         useLoadingStore.getState().setLoading('contacts.suggestions', true);
         try {
           const suggestions = await friendService.getCachedSuggestions(userId);
-          set({ suggestions });
+          const state = get();
+          const excludeIds = new Set([
+            ...state.friends.map(f => f.id),
+            ...state.sentRequests.map(r => r.receiverId),
+            ...state.receivedRequests.map(r => r.senderId),
+          ]);
+          set({ suggestions: suggestions.filter(u => !excludeIds.has(u.id)) });
         } finally {
           useLoadingStore.getState().setLoading('contacts.suggestions', false);
         }
@@ -106,7 +112,13 @@ export const useContactStore = create<ContactState>()(
             const userId = useAuthStore.getState().user?.id;
             if (userId) {
               const suggestions = await friendService.getCachedSuggestions(userId);
-              set({ suggestions });
+              const state = get();
+              const excludeIds = new Set([
+                ...state.friends.map(f => f.id),
+                ...state.sentRequests.map(r => r.receiverId),
+                ...state.receivedRequests.map(r => r.senderId),
+              ]);
+              set({ suggestions: suggestions.filter(u => !excludeIds.has(u.id)) });
             }
           } else {
             set({ suggestions: [] });
