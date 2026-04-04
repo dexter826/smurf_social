@@ -7,6 +7,30 @@ interface TruncatedTextProps {
   expandClassName?: string;
 }
 
+const URL_SPLIT_PATTERN = /((?:https?:\/\/|www\.)[^\s<>"{}|\\^`[\]]+)/gi;
+
+function renderWithLinks(text: string): React.ReactNode[] {
+  const parts = text.split(URL_SPLIT_PATTERN);
+  return parts.map((part, i) => {
+    if (/^(?:https?:\/\/|www\.)/i.test(part)) {
+      const href = part.startsWith('www.') ? `https://${part}` : part;
+      return (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline break-all hover:opacity-80 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 export const TruncatedText: React.FC<TruncatedTextProps> = ({
   content,
   threshold = 300,
@@ -21,7 +45,7 @@ export const TruncatedText: React.FC<TruncatedTextProps> = ({
 
   return (
     <span className={className}>
-      {displayContent}
+      {renderWithLinks(displayContent)}
       {shouldTruncate && (
         <span onClick={() => setIsExpanded(!isExpanded)} className={expandClassName}>
           {isExpanded ? 'Thu gọn' : 'Xem thêm'}

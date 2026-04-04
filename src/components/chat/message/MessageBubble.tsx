@@ -151,7 +151,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
           )}
 
           {/* Bubble + reaction zone */}
-          <div className={`relative group/message ${hasReactions ? 'mb-4' : ''}`}>
+          <div className={`relative group/message w-fit max-w-full ${hasReactions ? 'mb-4' : ''}`}>
             <ReactionDetailsModal
               isOpen={showReactionDetails}
               onClose={() => setShowReactionDetails(false)}

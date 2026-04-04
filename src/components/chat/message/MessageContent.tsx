@@ -3,6 +3,8 @@ import { FileText, Download, Image as ImageIcon, Play, Pause, Mic, PhoneIncoming
 import { RtdbMessage, MessageType } from '../../../../shared/types';
 import { LazyVideo, LazyImage } from '../../ui';
 import { downloadFile } from '../../../utils';
+import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
+import { extractFirstUrl } from '../../../services/linkPreviewService';
 
 interface MessageContentProps {
   message: { id: string; data: RtdbMessage };
@@ -385,13 +387,24 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-w-0 w-full">
       <div className="whitespace-pre-wrap break-all">
         {renderTextWithMentions(message.data.content, isMe)}
       </div>
       {message.data.isEdited && !message.data.isRecalled && (
         <span className="text-xs opacity-70 mt-0.5">(đã chỉnh sửa)</span>
       )}
+      {(() => {
+        const url = extractFirstUrl(message.data.content);
+        if (!url) return null;
+        return (
+          <LinkPreviewCard
+            url={url}
+            compact
+            className="mt-2"
+          />
+        );
+      })()}
     </div>
   );
 };

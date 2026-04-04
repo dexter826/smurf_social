@@ -8,6 +8,8 @@ import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store';
 import { useFriendIds, useFilteredReactions } from '../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from './shared';
+import { LinkPreviewCard } from '../shared/LinkPreviewCard';
+import { extractFirstUrl } from '../../services/linkPreviewService';
 
 interface PostItemProps {
   post: Post;
@@ -136,6 +138,17 @@ const PostItemInner: React.FC<PostItemProps> = ({
               <span className="text-xs text-error font-medium">{error}</span>
             </div>
           )}
+          {/* Link preview - only when no media attached */}
+          {!isUploading && (post.media?.length ?? 0) === 0 && (() => {
+            const url = extractFirstUrl(post.content);
+            if (!url) return null;
+            return (
+              <LinkPreviewCard
+                url={url}
+                className="mt-3"
+              />
+            );
+          })()}
         </div>
       )}
 

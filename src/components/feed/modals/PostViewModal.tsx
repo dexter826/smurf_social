@@ -11,6 +11,8 @@ import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
 import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from '../shared';
+import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
+import { extractFirstUrl } from '../../../services/linkPreviewService';
 
 interface PostViewModalProps {
   post: Post | null;
@@ -292,6 +294,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   <p className="text-text-primary whitespace-pre-line break-words text-sm leading-relaxed">
                     <TruncatedText content={post.content} threshold={300} />
                   </p>
+                  {(post.media?.length ?? 0) === 0 && (() => {
+                    const url = extractFirstUrl(post.content);
+                    if (!url) return null;
+                    return <LinkPreviewCard url={url} className="mt-3" />;
+                  })()}
                 </div>
               )}
 

@@ -7,11 +7,13 @@ import { RecordingUI } from './RecordingUI';
 import { ActionsMenu } from './ActionsMenu';
 import { useAudioRecorder } from '../../../hooks/chat/useAudioRecorder';
 import { useMentions } from '../../../hooks/chat/useMentions';
+import { useLinkPreview } from '../../../hooks/useLinkPreview';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES, FILE_LIMITS, TIME_LIMITS } from '../../../constants';
 import { insertTextAtCursor, validateFileSize } from '../../../utils';
 import { useRtdbChatStore } from '../../../store';
 import { RtdbMessage, User } from '../../../../shared/types';
+import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
 interface ChatInputProps {
   onSendText: (text: string, mentions?: string[], replyToId?: string) => void;
   onSendImages: (files: File[], replyToId?: string) => Promise<void>;
@@ -83,6 +85,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     handleSelectMention: handleSelectMentionInternal,
     handleKeyDown: handleMentionKeyDown,
   } = useMentions({ inputText, setInputText, participants, currentUserId, isGroup, inputRef });
+
+  // Link preview - only active when not editing
+  const linkPreview = useLinkPreview(editingMessage ? '' : inputText);
 
   const onSelectMention = useCallback((user: User) => {
     const userSelected = handleSelectMentionInternal(user);
@@ -364,6 +369,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         playingIndex={playingPreview}
         isSending={isSending}
       />
+
+      {/* Link preview */}
+      {!editingMessage && linkPreview.url && !linkPreview.isDismissed && (
+        <div className="px-3 pt-2">
+          <LinkPreviewCard
+            url={linkPreview.url}
+            previewData={linkPreview.isLoading ? undefined : linkPreview.previewData}
+            onDismiss={linkPreview.dismiss}
+            compact
+          />
+        </div>
+      )}
 
       {/* Reply / edit banner */}
       {(replyingTo || editingMessage) && (

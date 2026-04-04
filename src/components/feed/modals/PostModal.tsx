@@ -12,6 +12,8 @@ import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../../constants';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
 import { useAutoResizeTextarea } from '../../../hooks/utils';
 import { useAuthStore } from '../../../store/authStore';
+import { useLinkPreview } from '../../../hooks/useLinkPreview';
+import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -59,6 +61,9 @@ export const PostModal: React.FC<PostModalProps> = ({
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<{ url: string; type: 'image' | 'video' }[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Link preview - only for new posts, not edits
+  const linkPreview = useLinkPreview(isEdit ? '' : (formData.content || ''));
 
   useEffect(() => {
     if (isOpen && !initializedRef.current) {
@@ -357,6 +362,17 @@ export const PostModal: React.FC<PostModalProps> = ({
                   }`}
                 disabled={isSubmitting}
                 autoFocus
+              />
+            )}
+
+            {/* Link preview in composer */}
+            {!isSystemPost && !isEdit && linkPreview.url && !linkPreview.isDismissed && allPreviews.length === 0 && (
+              <LinkPreviewCard
+                url={linkPreview.url}
+                previewData={linkPreview.isLoading ? undefined : linkPreview.previewData}
+                onDismiss={linkPreview.dismiss}
+                compact
+                className="mb-3"
               />
             )}
 
