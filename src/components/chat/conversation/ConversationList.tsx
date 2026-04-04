@@ -128,7 +128,11 @@ export const ConversationList = React.memo<ConversationListProps>(({
       {/* Filter bar / archive label */}
       {!isSearchFocused && !searchTerm && (
         viewMode === 'normal' ? (
-          <ConversationFilters activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <ConversationFilters 
+            activeFilter={activeFilter} 
+            onFilterChange={setActiveFilter} 
+            onMarkAllRead={onMarkAllRead}
+          />
         ) : (
           <div className="flex-shrink-0 flex items-center px-4 h-10 bg-bg-secondary border-b border-border-light">
             <span className="text-xs font-semibold text-text-secondary flex items-center gap-2">
