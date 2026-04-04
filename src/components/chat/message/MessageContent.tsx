@@ -179,7 +179,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     return (
       <div className="rounded-lg overflow-hidden max-w-[280px] cursor-pointer group relative" onClick={() => onOpenImage(0)}>
         {isVid
-          ? <LazyVideo src={first.url} className="w-full h-auto max-h-[400px] object-contain" />
+          ? <LazyVideo src={first.url} thumbnail={first.thumbnailUrl} className="w-full h-auto max-h-[400px] object-contain" />
           : <LazyImage src={first.url} alt="sent" className="w-full h-auto" />
         }
         {isMe && up && <UploadBar progress={up.progress} error={up.error} light />}
@@ -280,7 +280,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     }
     return (
       <div className="rounded-lg overflow-hidden max-w-[300px] shadow-sm">
-        <LazyVideo src={videoUrl} className="w-full h-auto max-h-[400px] object-contain" />
+        <LazyVideo src={videoUrl} thumbnail={message.data.media?.[0]?.thumbnailUrl} className="w-full h-auto max-h-[400px] object-contain" />
       </div>
     );
   }

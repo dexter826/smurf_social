@@ -4,7 +4,7 @@ import { RtdbMessage, RtdbConversation, MessageType, MediaObject } from '../../.
 import { TIME_LIMITS, IMAGE_COMPRESSION } from '../../constants';
 import { compressImage } from '../../utils/imageUtils';
 import { withRetry } from '../../utils/retryUtils';
-import { uploadWithProgress, UploadProgress } from '../../utils/uploadUtils';
+import { uploadWithProgress, UploadProgress, generateVideoThumbnail } from '../../utils/uploadUtils';
 import {
     validateMessageContent,
     validateImageFile,
@@ -164,6 +164,18 @@ async function createAndSendMediaMessage(
 
     const path = `chats/${convId}/${createdAt}_${file.name}`;
     let fileUrl = '';
+    let thumbnailUrl: string | undefined = undefined;
+
+    if (type === MessageType.VIDEO) {
+        try {
+            const thumbFile = await generateVideoThumbnail(file);
+            const thumbPath = `thumbnails/${senderId}/${createdAt}_${thumbFile.name}`;
+            thumbnailUrl = await uploadWithProgress(thumbPath, thumbFile);
+        } catch (e) {
+            console.error('[rtdbMessageService] Lỗi tạo/up thumbnail video:', e);
+        }
+    }
+
     try {
         fileUrl = await withRetry(() =>
             uploadWithProgress(path, uploadFile, (progress) => {
@@ -183,7 +195,8 @@ async function createAndSendMediaMessage(
 
     const mediaObject: MediaObject = {
         ...mediaPlaceholder,
-        url: fileUrl
+        url: fileUrl,
+        ...(thumbnailUrl && { thumbnailUrl })
     };
 
     await update(newMsgRef, {
