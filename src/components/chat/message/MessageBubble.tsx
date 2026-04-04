@@ -170,7 +170,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   ? `px-3 py-2 rounded-2xl shadow-sm
                     ${isMe
                     ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm'
-                    : 'bg-bg-message-received text-text-primary border border-border-light/60 rounded-bl-sm'
+                    : 'bg-bg-message-received text-text-primary rounded-bl-sm'
                   }`
                   : ''
                 }

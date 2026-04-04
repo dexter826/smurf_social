@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Flag, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Flag, Clock, CheckCircle, XCircle, AlertTriangle, FileText, MessageSquare, User as UserIcon } from 'lucide-react';
 import { ReportStatus, ReportType } from '../../../shared/types';
 import { UserAvatar, Skeleton, Select } from '../ui';
 import { REPORT_CONFIG } from '../../constants';
@@ -25,18 +25,36 @@ const TYPE_OPTIONS = [
 
 const STATUS_BADGE: Record<ReportStatus, React.ReactNode> = {
   [ReportStatus.PENDING]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning border border-warning/20">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning text-white uppercase">
       <Clock size={9} /> Chờ xử lý
     </span>
   ),
   [ReportStatus.RESOLVED]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success text-white uppercase">
       <CheckCircle size={9} /> Đã xử lý
     </span>
   ),
   [ReportStatus.REJECTED]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-bg-tertiary text-text-secondary border border-border-light">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-bg-tertiary text-text-secondary uppercase">
       <XCircle size={9} /> Từ chối
+    </span>
+  ),
+};
+
+const TYPE_BADGE: Record<ReportType, React.ReactNode> = {
+  [ReportType.POST]: (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-info text-white uppercase">
+      <FileText size={9} /> Bài viết
+    </span>
+  ),
+  [ReportType.COMMENT]: (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning text-white uppercase">
+      <MessageSquare size={9} /> Bình luận
+    </span>
+  ),
+  [ReportType.USER]: (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-error text-white uppercase">
+      <UserIcon size={9} /> Người dùng
     </span>
   ),
 };
@@ -151,9 +169,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-2">
                       {STATUS_BADGE[report.status]}
-                      <span className="text-[10px] font-bold text-text-tertiary bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light uppercase tracking-wide">
-                        {report.targetType}
-                      </span>
+                      {TYPE_BADGE[report.targetType]}
                     </div>
                     <span className="text-[11px] text-text-tertiary">
                       {formatRelativeTime(report.createdAt)}

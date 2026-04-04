@@ -101,7 +101,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
     if (count > 1) {
       return (
-        <div className="relative rounded-xl overflow-hidden grid gap-0.5 grid-cols-2 border border-border-light shadow-sm bg-bg-secondary w-full max-w-[320px]">
+        <div className="relative rounded-xl overflow-hidden grid gap-0.5 grid-cols-2 shadow-sm bg-bg-secondary w-full max-w-[320px]">
           {mediaItems.slice(0, 4).map((item, idx) => {
             const isOverlay = idx === 3 && count > 4;
             const isVid = item.mimeType?.startsWith('video/');
@@ -237,7 +237,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
       );
     }
     return (
-      <div className="rounded-lg overflow-hidden max-w-[300px] border border-border-light shadow-sm">
+      <div className="rounded-lg overflow-hidden max-w-[300px] shadow-sm">
         <LazyVideo src={videoUrl} className="w-full h-auto max-h-[400px] object-contain" />
       </div>
     );
@@ -301,7 +301,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
   if (message.data.type === 'voice') {
     const voiceUrl = message.data.media?.[0]?.url || '';
-    const voiceClass = `flex items-center gap-3 p-3 rounded-2xl min-w-[200px] transition-all duration-base ${isMe ? 'bg-bg-message-sent text-text-on-primary shadow-md' : 'bg-bg-message-received text-text-primary border border-border-light'
+    const voiceClass = `flex items-center gap-3 p-3 rounded-2xl min-w-[200px] transition-all duration-base ${isMe ? 'bg-bg-message-sent text-text-on-primary shadow-md' : 'bg-bg-message-received text-text-primary'
       }`;
     const btnClass = `p-2.5 rounded-full shadow-sm transition-all duration-base ${isMe ? 'bg-bg-primary text-primary' : 'bg-primary text-white'}`;
 
