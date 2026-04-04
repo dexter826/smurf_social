@@ -102,7 +102,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   useEffect(() => {
     if (!isSending && !disabled) inputRef.current?.focus();
-    if (editingMessage) setInputText(editingMessage.data.content);
+    if (editingMessage) {
+      setInputText(editingMessage.data.content);
+    } else {
+      setInputText('');
+    }
   }, [editingMessage, isSending, disabled]);
 
   useEffect(() => {

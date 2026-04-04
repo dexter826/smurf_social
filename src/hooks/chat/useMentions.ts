@@ -37,8 +37,10 @@ export const useMentions = ({
       const lastAtPos = textBeforeCursor.lastIndexOf("@");
 
       if (lastAtPos !== -1) {
+        const charBefore = lastAtPos > 0 ? textBeforeCursor[lastAtPos - 1] : ' ';
         const query = textBeforeCursor.slice(lastAtPos + 1);
-        if (!query.includes("\n")) {
+        const isValidTrigger = charBefore === ' ' || charBefore === '\n';
+        if (isValidTrigger && !query.includes("\n") && !query.includes("@")) {
           setMentionStartPos(lastAtPos);
           setMentionQuery(query);
           setShowMentions(true);

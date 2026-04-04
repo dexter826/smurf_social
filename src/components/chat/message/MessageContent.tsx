@@ -30,7 +30,7 @@ const UploadBar: React.FC<{ progress: number; error?: boolean; light?: boolean }
 );
 
 const renderTextWithMentions = (text: string, isMe: boolean): React.ReactNode => {
-  const parts = text.split(/(@\[[^:]+:[^\]]+\]|(?:https?:\/\/|www\.)[^\s]+)/g);
+  const parts = text.split(/(@\[[^:]+:[^\]]+\]|@[^\s\u200B]+(?:\s[^\s\u200B]+)*\u200B|(?:https?:\/\/|www\.)[^\s]+)/g);
   return parts.map((part, index) => {
     if (part.startsWith('@[') && part.endsWith(']')) {
       const match = part.match(/@\[([^:]+):([^\]]+)\]/);
@@ -38,13 +38,22 @@ const renderTextWithMentions = (text: string, isMe: boolean): React.ReactNode =>
         const [, userId, name] = match;
         return (
           <a key={index} href={`/profile/${userId}`}
-            className={`font-bold hover:underline transition-all duration-base ${isMe ? 'text-white' : 'text-primary'}`}
+            className="font-bold hover:underline transition-all duration-base"
             onClick={(e) => e.stopPropagation()}
           >
             @{name}
           </a>
         );
       }
+    }
+    // plain text mention: @Name\u200B (zero-width space marker)
+    if (part.startsWith('@') && part.endsWith('\u200B')) {
+      const name = part.slice(1, -1);
+      return (
+        <span key={index} className="font-bold">
+          @{name}
+        </span>
+      );
     }
     if (/^(https?:\/\/|www\.)/.test(part)) {
       const href = part.startsWith('www.') ? `https://${part}` : part;
