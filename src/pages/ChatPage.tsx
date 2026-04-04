@@ -225,6 +225,7 @@ const ChatPage: React.FC = () => {
               onDeleteConversation={() => handleDelete(selectedConversation.id)}
               onCancelAction={() => { setReplyingTo(null); setEditingMessage(null); }}
               onEditMessage={editingMessage ? (text) => handleEditMessage(editingMessage.id, text) : undefined}
+              conversationId={selectedConversationId}
             />
           </>
         ) : (

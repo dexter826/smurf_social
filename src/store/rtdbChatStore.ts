@@ -12,6 +12,9 @@ import {
 } from './chat';
 
 export type RtdbChatState = RtdbMessageSlice & RtdbConversationSlice & RtdbGroupSlice & {
+    draftMessages: Record<string, string>;
+    saveDraft: (convId: string, text: string) => void;
+    clearDraft: (convId: string) => void;
     reset: () => void;
 };
 
@@ -21,6 +24,30 @@ export const useRtdbChatStore = create<RtdbChatState>()(
             ...createRtdbMessageSlice(...a),
             ...createRtdbConversationSlice(...a),
             ...createRtdbGroupSlice(...a),
+
+            draftMessages: {} as Record<string, string>,
+
+            saveDraft: (convId: string, text: string) => {
+                const [set] = a;
+                if (text.trim()) {
+                    set(state => ({ draftMessages: { ...state.draftMessages, [convId]: text } }));
+                } else {
+                    set(state => {
+                        const next = { ...state.draftMessages };
+                        delete next[convId];
+                        return { draftMessages: next };
+                    });
+                }
+            },
+
+            clearDraft: (convId: string) => {
+                const [set] = a;
+                set(state => {
+                    const next = { ...state.draftMessages };
+                    delete next[convId];
+                    return { draftMessages: next };
+                });
+            },
 
             reset: () => {
                 const [set] = a;
@@ -36,6 +63,7 @@ export const useRtdbChatStore = create<RtdbChatState>()(
                     isChatVisible: false,
                     isLoadingMore: {},
                     uploadProgress: {},
+                    draftMessages: {},
                 });
             },
         }),

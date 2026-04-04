@@ -10,8 +10,8 @@ import { useMentions } from '../../../hooks/chat/useMentions';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES, FILE_LIMITS, TIME_LIMITS } from '../../../constants';
 import { insertTextAtCursor, validateFileSize } from '../../../utils';
+import { useRtdbChatStore } from '../../../store';
 import { RtdbMessage, User } from '../../../../shared/types';
-
 interface ChatInputProps {
   onSendText: (text: string, mentions?: string[], replyToId?: string) => void;
   onSendImages: (files: File[], replyToId?: string) => Promise<void>;
@@ -33,6 +33,7 @@ interface ChatInputProps {
   onDeleteConversation?: () => void;
   onManageBlock?: () => void;
   isBlockedByMe?: boolean;
+  conversationId?: string;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -42,8 +43,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   currentUserId, usersMap, participants = [],
   isGroup = false, isDisbanded = false,
   onDeleteConversation, onManageBlock, isBlockedByMe = false,
+  conversationId,
 }) => {
-  const [inputText, setInputText] = useState('');
+  const { saveDraft, clearDraft, draftMessages } = useRtdbChatStore();
+  const [inputText, setInputText] = useState(() =>
+    conversationId ? (draftMessages[conversationId] ?? '') : ''
+  );
   const [activeMentions, setActiveMentions] = useState<{ id: string; name: string }[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<FilePreviewItem[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -98,6 +103,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (draftTimeoutRef.current) clearTimeout(draftTimeoutRef.current);
       selectedFiles.forEach(f => { if (f.preview) URL.revokeObjectURL(f.preview); });
     };
   }, []);
@@ -136,9 +142,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     </>
   ), []);
 
+  const draftTimeoutRef = useRef<NodeJS.Timeout>(undefined);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setInputText(text);
+
+    if (conversationId && !editingMessage) {
+      if (draftTimeoutRef.current) clearTimeout(draftTimeoutRef.current);
+      draftTimeoutRef.current = setTimeout(() => saveDraft(conversationId, text), 500);
+    }
 
     if (!isCurrentlyTypingRef.current) {
       isCurrentlyTypingRef.current = true;
@@ -248,6 +261,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         }
         setInputText('');
         setActiveMentions([]);
+        if (conversationId) clearDraft(conversationId);
       }
       onCancelAction();
     } catch {

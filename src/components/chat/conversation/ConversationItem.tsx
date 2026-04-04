@@ -69,6 +69,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const typingUsers = useRtdbChatStore(state => state.typingUsers[conversation.id] || []);
+  const draft = useRtdbChatStore(state => state.draftMessages[conversation.id] ?? '');
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
 
   const {
@@ -141,6 +142,11 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           <div className="flex-1 min-w-0 overflow-hidden">
             {typingText ? (
               <span className="text-xs text-primary italic truncate block">{typingText}</span>
+            ) : draft && !isActive ? (
+              <span className="text-xs truncate block">
+                <span className="text-warning font-semibold">Bản nháp: </span>
+                <span className="text-text-tertiary italic">{draft}</span>
+              </span>
             ) : (
               <span className={`text-xs truncate block ${isUnread ? 'font-semibold text-text-primary' : 'text-text-tertiary'}`}>
                 {isLastMessageMine && <span className="text-text-tertiary">Bạn: </span>}
