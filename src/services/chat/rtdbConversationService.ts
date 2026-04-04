@@ -1,4 +1,4 @@
-import { ref, set, get, update, onValue, push, query, orderByChild, equalTo, serverTimestamp, remove } from 'firebase/database';
+import { ref, set, get, update, onValue, onChildRemoved, push, query, orderByChild, equalTo, serverTimestamp, remove } from 'firebase/database';
 import { rtdb } from '../../firebase/config';
 import { RtdbConversation, RtdbUserChat } from '../../../shared/types';
 
@@ -209,8 +209,20 @@ export const rtdbConversationService = {
             }
         });
 
+        const removedUnsubscribe = onChildRemoved(userChatsRef, (snapshot) => {
+            const convId = snapshot.key;
+            if (!convId) return;
+            conversationListeners.get(convId)?.();
+            conversationListeners.delete(convId);
+            conversationsMap.delete(convId);
+            userChatCreatedAt.delete(convId);
+            delete latestUserChats[convId];
+            updateCallback();
+        });
+
         return () => {
             mainUnsubscribe();
+            removedUnsubscribe();
             conversationListeners.forEach(unsub => unsub());
         };
     },
