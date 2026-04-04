@@ -13,7 +13,8 @@ import {
   writeBatch,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase/config';
 import { FriendRequest, FriendRequestStatus, User } from '../../shared/types';
 import { convertDoc, convertDocs } from '../utils/firebaseUtils';
 import { batchGetUsers } from '../utils/batchUtils';
@@ -299,6 +300,40 @@ export const friendService = {
       );
     } catch (error) {
       console.error("Lỗi tìm kiếm bạn bè", error);
+      return [];
+    }
+  },
+
+  // Gọi Cloud Function để tạo gợi ý kết bạn
+  generateFriendSuggestions: async (limit?: number): Promise<string[]> => {
+    try {
+      const fn = httpsCallable<{ limit?: number }, { suggestionIds: string[] }>(
+        functions,
+        'generateFriendSuggestions'
+      );
+      const result = await fn({ limit });
+      return result.data.suggestionIds;
+    } catch (error) {
+      console.error("Lỗi tạo gợi ý kết bạn", error);
+      return [];
+    }
+  },
+
+  // Lấy danh sách gợi ý đã cache từ Firestore (không gọi lại Function)
+  getCachedSuggestions: async (userId: string): Promise<User[]> => {
+    try {
+      const userSnap = await getDoc(doc(db, 'users', userId));
+      if (!userSnap.exists()) return [];
+
+      const suggestedIds: string[] = userSnap.data()?.suggestedFriends ?? [];
+      if (suggestedIds.length === 0) return [];
+
+      const usersMap = await batchGetUsers(suggestedIds);
+      return suggestedIds
+        .map(id => usersMap[id])
+        .filter((u): u is User => Boolean(u) && u.status !== 'banned');
+    } catch (error) {
+      console.error("Lỗi lấy gợi ý kết bạn đã cache", error);
       return [];
     }
   },

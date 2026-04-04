@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Timestamp } from 'firebase/firestore';
-import { User, Gender } from '../../../shared/types';
+import { X } from 'lucide-react';
+import { User, Gender, MaritalStatus } from '../../../shared/types';
 import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
 import { toDate } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
@@ -16,11 +17,21 @@ interface EditProfileModalProps {
   onSave: (data: Partial<User>) => Promise<void>;
 }
 
+const MARITAL_STATUS_OPTIONS = [
+  { value: MaritalStatus.NONE, label: 'Không muốn nói' },
+  { value: MaritalStatus.SINGLE, label: 'Độc thân' },
+  { value: MaritalStatus.MARRIED, label: 'Đã kết hôn' },
+  { value: MaritalStatus.DIVORCED, label: 'Đã ly hôn' },
+  { value: MaritalStatus.WIDOWED, label: 'Góa' },
+  { value: MaritalStatus.OTHER, label: 'Khác' },
+];
+
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   user, isOpen, onClose, onSave,
 }) => {
   const [saving, setSaving] = useState(false);
   const [provinces, setProvinces] = useState<{ value: string; label: string }[]>([]);
+  const [interestInput, setInterestInput] = useState('');
 
   const {
     register, handleSubmit, setValue, watch, reset,
@@ -33,6 +44,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       location: user.location || '',
       gender: user.gender as Gender,
       dob: user.dob ? toDate(user.dob)?.getTime() : undefined,
+      school: user.school || '',
+      maritalStatus: user.maritalStatus,
+      interests: user.interests || [],
+      generation: user.generation || '',
     },
   });
 
@@ -46,7 +61,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       location: user.location || '',
       gender: user.gender as Gender,
       dob: user.dob ? toDate(user.dob)?.getTime() : undefined,
+      school: user.school || '',
+      maritalStatus: user.maritalStatus,
+      interests: user.interests || [],
+      generation: user.generation || '',
     });
+    setInterestInput('');
     fetch(API_ENDPOINTS.PROVINCES)
       .then(r => r.json())
       .then((data: { name: string }[]) =>
@@ -55,16 +75,45 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       .catch(() => { /* silent */ });
   }, [isOpen, user, reset]);
 
+  const handleAddInterest = useCallback(() => {
+    const tag = interestInput.trim();
+    if (!tag) return;
+    const current = formData.interests ?? [];
+    if (current.includes(tag) || current.length >= 10) return;
+    setValue('interests', [...current, tag], { shouldDirty: true });
+    setInterestInput('');
+  }, [interestInput, formData.interests, setValue]);
+
+  const handleRemoveInterest = useCallback((tag: string) => {
+    setValue(
+      'interests',
+      (formData.interests ?? []).filter(t => t !== tag),
+      { shouldDirty: true }
+    );
+  }, [formData.interests, setValue]);
+
+  const handleInterestKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddInterest();
+    }
+  }, [handleAddInterest]);
+
   const handleSave = async (data: ProfileFormValues) => {
     setSaving(true);
     try {
-      await onSave({
+      const payload: Partial<User> = {
         fullName: data.fullName,
         bio: data.bio,
         location: data.location,
-        gender: data.gender,
-        dob: data.dob ? Timestamp.fromDate(new Date(data.dob)) : undefined,
-      });
+        ...(data.gender !== undefined && { gender: data.gender }),
+        ...(data.dob !== undefined && { dob: Timestamp.fromDate(new Date(data.dob)) }),
+        ...(data.school ? { school: data.school } : { school: '' }),
+        ...(data.maritalStatus !== undefined && { maritalStatus: data.maritalStatus }),
+        interests: data.interests?.length ? data.interests : [],
+        ...(data.generation ? { generation: data.generation } : { generation: '' }),
+      };
+      await onSave(payload);
       toast.success(TOAST_MESSAGES.PROFILE.UPDATE_SUCCESS);
       onClose();
     } catch {
@@ -99,7 +148,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     >
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Full name — spans full width */}
+          {/* Full name */}
           <div className="col-span-1 sm:col-span-2">
             <Input
               label="Tên hiển thị *"
@@ -110,7 +159,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
 
-          {/* Bio — spans full width */}
+          {/* Bio */}
           <div className="col-span-1 sm:col-span-2">
             <TextArea
               label="Giới thiệu"
@@ -170,6 +219,76 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               placeholder="Chọn ngày sinh"
               size="lg"
             />
+          </div>
+
+          {/* School */}
+          <div>
+            <Input
+              label="Trường học / Nơi học"
+              {...register('school')}
+              error={errors.school?.message}
+              placeholder="Ví dụ: Đại học Bách Khoa"
+              size="lg"
+            />
+          </div>
+
+          {/* Marital status */}
+          <div>
+            <Select
+              label="Tình trạng hôn nhân"
+              value={formData.maritalStatus || ''}
+              onChange={(val) => setValue('maritalStatus', val as MaritalStatus, { shouldDirty: true })}
+              options={MARITAL_STATUS_OPTIONS}
+              placeholder="Chọn tình trạng"
+              size="lg"
+            />
+          </div>
+
+          {/* Interests */}
+          <div className="col-span-1 sm:col-span-2">
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Sở thích <span className="text-text-tertiary font-normal">(tối đa 10)</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={interestInput}
+                onChange={(e) => setInterestInput(e.target.value)}
+                onKeyDown={handleInterestKeyDown}
+                placeholder="Nhập sở thích rồi nhấn Enter..."
+                maxLength={30}
+                className="flex-1 px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-secondary text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                onClick={handleAddInterest}
+                disabled={(formData.interests?.length ?? 0) >= 10}
+              >
+                Thêm
+              </Button>
+            </div>
+            {(formData.interests?.length ?? 0) > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {formData.interests?.map(tag => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveInterest(tag)}
+                      className="hover:text-primary/60 transition-colors"
+                      aria-label={`Xóa ${tag}`}
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

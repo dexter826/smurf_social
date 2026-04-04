@@ -1,11 +1,20 @@
 import React from 'react';
-import { Mail, MapPin, Calendar, User as UserIcon } from 'lucide-react';
-import { User } from '../../../shared/types';
+import { Mail, MapPin, Calendar, User as UserIcon, GraduationCap, Heart, Tag } from 'lucide-react';
+import { User, MaritalStatus } from '../../../shared/types';
 import { formatDob } from '../../utils/dateUtils';
 
 interface AboutTabProps {
   user: User;
 }
+
+const MARITAL_STATUS_LABELS: Record<MaritalStatus, string> = {
+  [MaritalStatus.NONE]: 'Không muốn nói',
+  [MaritalStatus.SINGLE]: 'Độc thân',
+  [MaritalStatus.MARRIED]: 'Đã kết hôn',
+  [MaritalStatus.DIVORCED]: 'Đã ly hôn',
+  [MaritalStatus.WIDOWED]: 'Góa',
+  [MaritalStatus.OTHER]: 'Khác',
+};
 
 const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({
   icon, label, value,
@@ -44,6 +53,16 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => (
       {user.dob && (
         <InfoRow icon={<Calendar size={16} />} label="Ngày sinh" value={formatDob(user.dob)} />
       )}
+      {user.maritalStatus && user.maritalStatus !== MaritalStatus.NONE && (
+        <InfoRow
+          icon={<Heart size={16} />}
+          label="Tình trạng hôn nhân"
+          value={MARITAL_STATUS_LABELS[user.maritalStatus]}
+        />
+      )}
+      {user.school && (
+        <InfoRow icon={<GraduationCap size={16} />} label="Trường học" value={user.school} />
+      )}
     </div>
 
     {/* Bio */}
@@ -53,6 +72,26 @@ export const AboutTab: React.FC<AboutTabProps> = ({ user }) => (
         <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed italic">
           "{user.bio}"
         </p>
+      </div>
+    )}
+
+    {/* Interests */}
+    {user.interests && user.interests.length > 0 && (
+      <div className="bg-bg-primary rounded-2xl border border-border-light p-5 md:col-span-2">
+        <h3 className="font-semibold text-base text-text-primary mb-3 flex items-center gap-2">
+          <Tag size={15} className="text-text-tertiary" />
+          Sở thích
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {user.interests.map(tag => (
+            <span
+              key={tag}
+              className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
       </div>
     )}
   </div>

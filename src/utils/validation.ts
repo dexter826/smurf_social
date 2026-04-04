@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG, MEDIA_CONSTRAINTS } from '../constants/appConfig';
-import { ReportReason, Visibility, Gender } from '../../shared/types';
+import { ReportReason, Visibility, Gender, MaritalStatus } from '../../shared/types';
 
 // Schema cho Đăng nhập
 export const loginSchema = z.object({
@@ -48,6 +48,10 @@ export const profileSchema = z.object({
   location: z.string().optional(),
   gender: z.nativeEnum(Gender).optional(),
   dob: z.number().optional(),
+  school: z.string().max(100, 'Trường học không được quá 100 ký tự').optional(),
+  maritalStatus: z.nativeEnum(MaritalStatus).optional(),
+  interests: z.array(z.string()).optional(),
+  generation: z.string().optional(),
 });
 
 // Schema cho Đổi mật khẩu

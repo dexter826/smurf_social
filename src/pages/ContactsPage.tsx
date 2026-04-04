@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, Search, Bell, ArrowUpDown } from 'lucide-react';
+import { UserPlus, Users, Search, Bell, ArrowUpDown, Sparkles, RefreshCw } from 'lucide-react';
 import { useContacts } from '../hooks';
 import { Button, Input, ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
-import { FriendRequestItem, FriendItem, AddFriendModal } from '../components/contacts';
+import { FriendRequestItem, FriendItem, AddFriendModal, SuggestionItem } from '../components/contacts';
 
-type Tab = 'all' | 'requests' | 'sent';
+type Tab = 'all' | 'requests' | 'sent' | 'suggestions';
 
 const ContactsPage: React.FC = () => {
   const navigate = useNavigate();
   const {
-    friends, receivedRequests, sentRequests, groupedFriends,
-    userCache, isLoading, activeTab, setActiveTab,
+    friends, receivedRequests, sentRequests, suggestions,
+    groupedFriends, userCache, isLoading, isSuggestionsLoading,
+    activeTab, setActiveTab,
     searchTerm, setSearchTerm, sortOrder, toggleSortOrder,
     handleAcceptRequest, handleRejectRequest, handleCancelRequest,
-    handleUnfriend, handleMessage,
+    handleUnfriend, handleMessage, handleAddFriend,
+    handleDismissSuggestion, handleRefreshSuggestions,
   } = useContacts();
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -34,6 +36,7 @@ const ContactsPage: React.FC = () => {
 
   const tabConfig: { id: Tab; label: string; icon: React.ReactNode; count?: number; badge?: boolean }[] = [
     { id: 'all', label: 'Tất cả bạn bè', icon: <Users size={18} />, count: friends.length },
+    { id: 'suggestions', label: 'Gợi ý kết bạn', icon: <Sparkles size={18} />, count: suggestions.length },
     { id: 'requests', label: 'Lời mời kết bạn', icon: <Bell size={18} />, count: receivedRequests.length, badge: receivedRequests.length > 0 },
     { id: 'sent', label: 'Lời mời đã gửi', icon: <UserPlus size={18} />, count: sentRequests.length },
   ];
@@ -103,7 +106,7 @@ const ContactsPage: React.FC = () => {
                     : 'text-text-tertiary hover:text-text-secondary'
                   }`}
               >
-                {id === 'all' ? 'Bạn bè' : id === 'requests' ? 'Lời mời' : 'Đã gửi'}
+                {id === 'all' ? 'Bạn bè' : id === 'suggestions' ? 'Gợi ý' : id === 'requests' ? 'Lời mời' : 'Đã gửi'}
                 {badge && (
                   <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-error rounded-full" />
                 )}
@@ -115,6 +118,7 @@ const ContactsPage: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-text-primary">
               {activeTab === 'all' && `Bạn bè (${friends.length})`}
+              {activeTab === 'suggestions' && `Gợi ý kết bạn (${suggestions.length})`}
               {activeTab === 'requests' && `Lời mời (${receivedRequests.length})`}
               {activeTab === 'sent' && `Đã gửi (${sentRequests.length})`}
             </h2>
@@ -147,6 +151,21 @@ const ContactsPage: React.FC = () => {
                 className="flex-shrink-0"
               >
                 {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
+              </Button>
+            </div>
+          )}
+
+          {/* Refresh button (suggestions tab only) */}
+          {activeTab === 'suggestions' && (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<RefreshCw size={14} className={isSuggestionsLoading ? 'animate-spin' : ''} />}
+                onClick={handleRefreshSuggestions}
+                disabled={isSuggestionsLoading}
+              >
+                Làm mới
               </Button>
             </div>
           )}
@@ -247,6 +266,32 @@ const ContactsPage: React.FC = () => {
                   </div>
                 )
               )}
+
+              {/* Suggestions */}
+              {activeTab === 'suggestions' && (
+                isSuggestionsLoading ? (
+                  <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                    {[...Array(5)].map((_, i) => <SuggestionItem.Skeleton key={i} />)}
+                  </div>
+                ) : suggestions.length === 0 ? (
+                  <EmptyState
+                    icon={<Sparkles size={32} className="text-text-tertiary" />}
+                    title="Chưa có gợi ý kết bạn nào"
+                    subtitle="Nhấn Làm mới để tạo gợi ý mới"
+                  />
+                ) : (
+                  <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                    {suggestions.map(user => (
+                      <SuggestionItem
+                        key={user.id}
+                        user={user}
+                        onAddFriend={handleAddFriend}
+                        onDismiss={handleDismissSuggestion}
+                      />
+                    ))}
+                  </div>
+                )
+              )}
             </>
           )}
         </div>
@@ -270,12 +315,13 @@ const ContactsPage: React.FC = () => {
 };
 
 /* ── Reusable empty state ── */
-const EmptyState: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
+const EmptyState: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({ icon, title, subtitle }) => (
   <div className="flex flex-col items-center justify-center py-16 text-center">
     <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4 border border-border-light">
       {icon}
     </div>
     <p className="text-sm font-medium text-text-secondary">{title}</p>
+    {subtitle && <p className="text-xs text-text-tertiary mt-1">{subtitle}</p>}
   </div>
 );
 

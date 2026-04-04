@@ -6,7 +6,7 @@ import { useUserCache } from '../store/userCacheStore';
 import { useRtdbChatStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
 
-type TabType = 'all' | 'requests' | 'sent';
+type TabType = 'all' | 'requests' | 'sent' | 'suggestions';
 
 interface FriendGroup {
   letter: string;
@@ -18,10 +18,12 @@ interface UseContactsReturn {
   friends: User[];
   receivedRequests: FriendRequest[];
   sentRequests: FriendRequest[];
+  suggestions: User[];
   filteredFriends: User[];
   groupedFriends: FriendGroup[];
   userCache: Record<string, User>;
   isLoading: boolean;
+  isSuggestionsLoading: boolean;
 
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
@@ -35,6 +37,9 @@ interface UseContactsReturn {
   handleCancelRequest: (requestId: string) => Promise<void>;
   handleUnfriend: (friendId: string) => Promise<void>;
   handleMessage: (friendId: string) => Promise<string | null>;
+  handleAddFriend: (receiverId: string) => Promise<void>;
+  handleDismissSuggestion: (userId: string) => void;
+  handleRefreshSuggestions: () => Promise<void>;
 }
 
 /**
@@ -46,21 +51,33 @@ export const useContacts = (): UseContactsReturn => {
     friends,
     receivedRequests,
     sentRequests,
+    suggestions,
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
-    unfriend
+    unfriend,
+    sendFriendRequest,
+    loadSuggestions,
+    refreshSuggestions,
+    dismissSuggestion,
   } = useContactStore();
 
   const { users: userCache, fetchUsers } = useUserCache();
   const { getOrCreateConversation } = useRtdbChatStore();
   const contactsLoading = useLoadingStore(state => state.loadingStates['contacts.friends'] ?? false);
+  const suggestionsLoading = useLoadingStore(state => state.loadingStates['contacts.suggestions'] ?? false);
 
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-
+  // Load suggestions khi mount (dùng cache trước)
+  useEffect(() => {
+    if (!currentUser) return;
+    if (suggestions.length === 0) {
+      loadSuggestions(currentUser.id);
+    }
+  }, [currentUser?.id]);
 
   // Tải info user cho friend request
   useEffect(() => {
@@ -103,6 +120,7 @@ export const useContacts = (): UseContactsReturn => {
   const toggleSortOrder = useCallback(() => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   }, []);
+
   const handleAcceptRequest = useCallback(async (requestId: string, friendId: string) => {
     if (!currentUser) return;
     const request = receivedRequests.find(r => r.id === requestId);
@@ -129,15 +147,31 @@ export const useContacts = (): UseContactsReturn => {
     return conversationId;
   }, [currentUser, getOrCreateConversation]);
 
+  const handleAddFriend = useCallback(async (receiverId: string) => {
+    if (!currentUser) return;
+    await sendFriendRequest(currentUser.id, receiverId);
+    dismissSuggestion(receiverId);
+  }, [currentUser, sendFriendRequest, dismissSuggestion]);
+
+  const handleDismissSuggestion = useCallback((userId: string) => {
+    dismissSuggestion(userId);
+  }, [dismissSuggestion]);
+
+  const handleRefreshSuggestions = useCallback(async () => {
+    await refreshSuggestions();
+  }, [refreshSuggestions]);
+
   return {
     currentUser,
     friends,
     receivedRequests,
     sentRequests,
+    suggestions,
     filteredFriends,
     groupedFriends,
     userCache,
     isLoading: contactsLoading,
+    isSuggestionsLoading: suggestionsLoading,
     activeTab,
     setActiveTab,
     searchTerm,
@@ -149,5 +183,8 @@ export const useContacts = (): UseContactsReturn => {
     handleCancelRequest,
     handleUnfriend,
     handleMessage,
+    handleAddFriend,
+    handleDismissSuggestion,
+    handleRefreshSuggestions,
   };
 };

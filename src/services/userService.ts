@@ -106,6 +106,8 @@ export const userService = {
         cover: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
         status: UserStatus.ACTIVE,
         role: UserRole.USER,
+        school: '',
+        interests: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });

@@ -111,6 +111,15 @@ export enum UserRole {
     ADMIN = "admin",
 }
 
+export enum MaritalStatus {
+    NONE = "none",
+    SINGLE = "single",
+    MARRIED = "married",
+    DIVORCED = "divorced",
+    WIDOWED = "widowed",
+    OTHER = "other",
+}
+
 export enum FriendStatus {
     NOT_FRIEND = "not_friend",
     PENDING_SENT = "pending_sent",
@@ -181,6 +190,15 @@ export interface User extends BaseEntity {
     cover?: MediaObject;
     updatedAt: Timestamp;
     deletedAt?: Timestamp;
+    // Friend suggestion fields
+    userVector?: number[];
+    suggestedFriends?: string[];
+    suggestionsLastUpdated?: Timestamp;
+    // Extended profile fields (synced with Flutter)
+    school?: string;
+    maritalStatus?: MaritalStatus;
+    interests?: string[];
+    generation?: string;
 }
 
 export interface FriendRequest extends BaseEntity {

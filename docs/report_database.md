@@ -34,21 +34,28 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 
 _Mô tả: Lưu trữ thông tin định danh, tài khoản và hồ sơ cá nhân của người dùng trên toàn hệ thống._
 
-| Field       | Type        | Required/Optional | Description/Default                        |
-| :---------- | :---------- | :---------------- | :----------------------------------------- |
-| `uid`       | String      | **Required**      | Document ID (Firebase Auth UID)            |
-| `email`     | String      | **Required**      | Dùng để đăng nhập và tìm kiếm              |
-| `fullName`  | String      | **Required**      | Tên hiển thị (Max 50 ký tự), mặc định `""` |
-| `avatar`    | MediaObject | _Optional_        | Ảnh đại diện                               |
-| `cover`     | MediaObject | _Optional_        | Ảnh bìa                                    |
-| `status`    | String Enum | **Required**      | `"active"`, `"banned"`                     |
-| `role`      | String Enum | **Required**      | `"user"`, `"admin"`. Mặc định `"user"`     |
-| `gender`    | String Enum | _Optional_        | `"male"`, `"female"`, `""`                 |
-| `bio`       | String      | _Optional_        | Tiểu sử (Max 500 ký tự). Mặc định `""`     |
-| `location`  | String      | _Optional_        | Vị trí. Mặc định `""`                      |
-| `dob`       | Timestamp   | _Optional_        | Ngày sinh                                  |
-| `createdAt` | Timestamp   | **Required**      | Thời điểm tạo                              |
-| `updatedAt` | Timestamp   | **Required**      | Thời điểm cập nhật                         |
+| Field                      | Type          | Required/Optional | Description/Default                        |
+| :------------------------- | :------------ | :---------------- | :----------------------------------------- |
+| `uid`                      | String        | **Required**      | Document ID (Firebase Auth UID)            |
+| `email`                    | String        | **Required**      | Dùng để đăng nhập và tìm kiếm              |
+| `fullName`                 | String        | **Required**      | Tên hiển thị (Max 50 ký tự), mặc định `""` |
+| `avatar`                   | MediaObject   | _Optional_        | Ảnh đại diện                               |
+| `cover`                    | MediaObject   | _Optional_        | Ảnh bìa                                    |
+| `status`                   | String Enum   | **Required**      | `"active"`, `"banned"`                     |
+| `role`                     | String Enum   | **Required**      | `"user"`, `"admin"`. Mặc định `"user"`     |
+| `gender`                   | String Enum   | _Optional_        | `"male"`, `"female"`, `""`                 |
+| `bio`                      | String        | _Optional_        | Tiểu sử (Max 500 ký tự). Mặc định `""`     |
+| `location`                 | String        | _Optional_        | Vị trí. Mặc định `""`                      |
+| `dob`                      | Timestamp     | _Optional_        | Ngày sinh                                  |
+| `school`                   | String        | _Optional_        | Trường học / nơi học                       |
+| `maritalStatus`            | String Enum   | _Optional_        | `"none"`, `"single"`, `"married"`, `"divorced"`, `"widowed"`, `"other"` |
+| `interests`                | Array<String> | _Optional_        | Danh sách sở thích. Mặc định `[]`          |
+| `generation`               | String        | _Optional_        | Nhãn thế hệ tự do, ví dụ: `"gen_z"`, `"millennial"` |
+| `userVector`               | Array<Number> | _Optional_        | Vector hồ sơ dùng cho cosine similarity trong Cloud Function gợi ý bạn bè. Ghi bởi hệ thống, không do user nhập |
+| `suggestedFriends`         | Array<String> | _Optional_        | Cache danh sách userId được gợi ý. Ghi bởi `generateFriendSuggestions` |
+| `suggestionsLastUpdated`   | Timestamp     | _Optional_        | Thời điểm cập nhật gợi ý gần nhất          |
+| `createdAt`                | Timestamp     | **Required**      | Thời điểm tạo                              |
+| `updatedAt`                | Timestamp     | **Required**      | Thời điểm cập nhật                         |
 
 **1.1. Sub-collection `private/fcm` (Bên trong `users/{uid}`)**
 

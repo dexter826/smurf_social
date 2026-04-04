@@ -59,6 +59,21 @@ Trả về `{ users: User[] }`.
 
 ---
 
+### `generateFriendSuggestions`
+Tạo danh sách gợi ý kết bạn dựa trên cosine similarity của `userVector`. Kết quả được cache vào document của user. Nếu user chưa có `userVector`, trả về danh sách ngẫu nhiên từ các user active.
+
+| Param | Type | Mô tả |
+| :---- | :--- | :----- |
+| `limit` | Number | Số lượng gợi ý tối đa. Min `1`, max `50`. Mặc định `20` |
+
+Trả về `{ userId, count, suggestionIds: string[] }`.
+
+Lọc bỏ: chính mình, bạn bè hiện tại, người đã bị block bởi mình, người đã block mình.
+Sau khi tính toán: ghi `suggestedFriends` và `suggestionsLastUpdated` vào document user.
+Có REST fallback tự động khi Admin SDK không khả dụng (lỗi token/network).
+
+---
+
 ### `generateZegoToken`
 Tạo token xác thực ZegoCloud cho cuộc gọi. Chỉ được tạo token cho chính mình (`userId` phải khớp với `auth.uid`). Token có hiệu lực 3600 giây.
 
