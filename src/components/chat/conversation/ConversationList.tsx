@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Users, ChevronDown, MessageCircle, Archive } from 'lucide-react';
+import { Users, Archive } from 'lucide-react';
 import { RtdbConversation, RtdbUserChat, User } from '../../../../shared/types';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
@@ -56,7 +56,6 @@ export const ConversationList = React.memo<ConversationListProps>(({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const [requestsExpanded, setRequestsExpanded] = useState(true);
 
   const { friendConversations, requestConversations, displayConversations } = useConversationGroups({
     conversations, currentUserId, currentUserFriendIds, blockedUserIds,
@@ -128,10 +127,11 @@ export const ConversationList = React.memo<ConversationListProps>(({
       {/* Filter bar / archive label */}
       {!isSearchFocused && !searchTerm && (
         viewMode === 'normal' ? (
-          <ConversationFilters 
-            activeFilter={activeFilter} 
-            onFilterChange={setActiveFilter} 
+          <ConversationFilters
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
             onMarkAllRead={onMarkAllRead}
+            strangerCount={requestConversations.length}
           />
         ) : (
           <div className="flex-shrink-0 flex items-center px-4 h-10 bg-bg-secondary border-b border-border-light">
@@ -179,32 +179,21 @@ export const ConversationList = React.memo<ConversationListProps>(({
           </div>
         ) : (
           <div className="py-1">
-            {/* Message requests section */}
-            {viewMode === 'normal' && activeFilter === 'all' && requestConversations.length > 0 && (
-              <>
-                <button
-                  onClick={() => setRequestsExpanded(!requestsExpanded)}
-                  className="w-full flex items-center justify-between px-4 py-2 hover:bg-bg-hover active:bg-bg-active transition-colors duration-200"
-                >
-                  <span className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                    <MessageCircle size={14} className="text-primary" />
-                    Người lạ
-                    <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
-                      {requestConversations.length}
-                    </span>
-                  </span>
-                  <ChevronDown
-                    size={14}
-                    className={`text-text-tertiary transition-transform duration-200 ${requestsExpanded ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {requestsExpanded && (
-                  <div>{requestConversations.map(renderConversationItem)}</div>
-                )}
-              </>
+            {/* Stranger tab */}
+            {activeFilter === 'stranger' ? (
+              requestConversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-8">
+                  <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
+                    <Users size={22} className="text-text-tertiary" />
+                  </div>
+                  <p className="text-sm text-text-secondary">Không có tin nhắn từ người lạ</p>
+                </div>
+              ) : (
+                requestConversations.map(renderConversationItem)
+              )
+            ) : (
+              displayConversations.map(renderConversationItem)
             )}
-
-            {displayConversations.map(renderConversationItem)}
           </div>
         )}
       </div>

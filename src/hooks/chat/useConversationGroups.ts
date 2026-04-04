@@ -8,7 +8,7 @@ interface UseConversationGroupsProps {
   currentUserFriendIds: string[];
   blockedUserIds: string[];
   viewMode: 'normal' | 'archived';
-  activeFilter: 'all' | 'group';
+  activeFilter: 'all' | 'group' | 'stranger';
 }
 
 // Phân loại và sắp xếp hội thoại (RTDB version)
