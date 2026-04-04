@@ -58,6 +58,9 @@
   --color-primary-active: #0047b3;
   --color-primary-light: #e6f0ff;
   --color-primary-gradient: #4d8aff;
+  /* RGB channels for Tailwind opacity modifiers (bg-primary/10, text-primary/50, etc.) */
+  --color-primary-rgb: 0 104 255;
+  --color-primary-gradient-rgb: 77 138 255;
 
   /* === Gradient === */
   --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient));
@@ -148,6 +151,8 @@
   --color-primary-active: #1d4ed8;
   --color-primary-light: rgba(59, 130, 246, 0.25);
   --color-primary-gradient: #4d8aff;
+  --color-primary-rgb: 0 104 255;
+  --color-primary-gradient-rgb: 77 138 255;
 
   /* === Gradient === */
   --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient));

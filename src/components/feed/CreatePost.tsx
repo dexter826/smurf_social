@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Image as ImageIcon, Video, Smile } from 'lucide-react';
+import { Image as ImageIcon, Video } from 'lucide-react';
 import { PostModal } from './modals/PostModal';
 import { User, Visibility, MediaObject } from '../../../shared/types';
 import { Avatar, Skeleton } from '../ui';
@@ -84,11 +84,6 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
             icon={<Video size={19} className="text-info" />}
             label="Video"
             onClick={() => videoInputRef.current?.click()}
-          />
-          <ActionBtn
-            icon={<Smile size={19} className="text-warning" />}
-            label="Cảm xúc"
-            onClick={() => setShowCreateModal(true)}
           />
         </div>
 

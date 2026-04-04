@@ -235,7 +235,7 @@ export const AppLayout: React.FC = () => {
               to={to}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-                ${isActive ? 'text-primary' : 'text-text-tertiary active:text-text-primary'}`
+                ${isActive ? 'text-primary bg-primary/10 rounded-xl' : 'text-text-tertiary active:text-text-primary'}`
               }
             >
               <div className="relative">
@@ -255,7 +255,7 @@ export const AppLayout: React.FC = () => {
             to="/notifications"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-              ${isActive ? 'text-primary' : 'text-text-tertiary active:text-text-primary'}`
+              ${isActive ? 'text-primary bg-primary/10 rounded-xl' : 'text-text-tertiary active:text-text-primary'}`
             }
           >
             <div className="relative">
@@ -271,7 +271,7 @@ export const AppLayout: React.FC = () => {
             to="/menu"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-              ${isActive ? 'text-primary' : 'text-text-tertiary active:text-text-primary'}`
+              ${isActive ? 'text-primary bg-primary/10 rounded-xl' : 'text-text-tertiary active:text-text-primary'}`
             }
           >
             <Menu size={22} />

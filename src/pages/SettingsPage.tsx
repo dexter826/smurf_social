@@ -124,9 +124,9 @@ const SettingsPage: React.FC = () => {
             <button
               key={id}
               onClick={() => setActiveSection(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium text-left
+              className={`w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl transition-all duration-200 text-sm font-medium text-left
                 ${activeSection === id
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-primary/10 text-primary font-semibold'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`}
             >

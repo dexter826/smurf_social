@@ -15,7 +15,7 @@ export default {
       },
       colors: {
         primary: {
-          DEFAULT: 'var(--color-primary)',
+          DEFAULT: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
           hover: 'var(--color-primary-hover)',
           active: 'var(--color-primary-active)',
           light: 'var(--color-primary-light)',

@@ -47,7 +47,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const handleViewDetail = useCallback(() => onViewDetail?.(post), [onViewDetail, post]);
 
   return (
-    <article className="bg-bg-primary border border-border-light rounded-2xl overflow-hidden transition-theme animate-fade-in">
+    <article className="group bg-bg-primary border border-border-light rounded-2xl overflow-hidden transition-theme animate-fade-in">
 
       {/* ── Header ── */}
       <div className="flex items-center px-4 py-3 gap-3">
@@ -91,7 +91,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
               <IconButton
                 icon={<MoreHorizontal size={18} />}
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100"
               />
             }
           >
@@ -113,7 +112,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
               <IconButton
                 icon={<MoreHorizontal size={18} />}
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100"
               />
             }
           >
@@ -165,7 +163,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
         onReact={(type) => onReact(post.id, type)}
         onCommentClick={handleViewDetail}
         onViewReactions={() => setIsReactionsModalOpen(true)}
-        showEmptyDivider
       />
 
       <ReactionDetailsModal

@@ -23,7 +23,7 @@ export const AdminLayout: React.FC = () => {
 
       {/* ── Desktop Sidebar ── */}
       <aside
-        className="hidden md:flex flex-col w-[260px] bg-bg-primary border-r border-border-light"
+        className="hidden md:flex flex-col w-[280px] bg-bg-primary border-r border-border-light"
         style={{ zIndex: 'var(--z-header)' }}
       >
         {/* Sidebar header */}

@@ -257,7 +257,6 @@ export const PostModal: React.FC<PostModalProps> = ({
                     size="md"
                   />
                   <EmojiPicker
-                    buttonClassName="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-bg-hover transition-all duration-200"
                     onEmojiSelect={(emoji) =>
                       insertTextAtCursor(
                         textareaRef, formData.content || '', emoji,
@@ -266,7 +265,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                     }
                     disabled={isSubmitting}
                     size={19}
-                    buttonSize="lg"
+                    buttonSize="md"
                     iconClassName="text-warning"
                   />
                 </div>

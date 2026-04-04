@@ -53,17 +53,17 @@ const ContactsPage: React.FC = () => {
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-2">
-          <p className="px-3 pt-3 pb-1.5 text-xs font-semibold text-text-tertiary uppercase tracking-widest">
+        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+          <p className="px-3 pt-2 pb-1.5 text-xs font-semibold text-text-tertiary uppercase tracking-widest">
             Danh sách
           </p>
           {tabConfig.map(({ id, label, icon, count, badge }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium
+              className={`w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl transition-all duration-200 text-sm font-medium
                 ${activeTab === id
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-primary/10 text-primary font-semibold'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
                 }`}
             >
@@ -99,7 +99,7 @@ const ContactsPage: React.FC = () => {
                 onClick={() => setActiveTab(id)}
                 className={`flex-1 relative py-2 min-h-[40px] text-xs font-semibold rounded-lg transition-all duration-200
                   ${activeTab === id
-                    ? 'bg-bg-primary text-primary shadow-sm'
+                    ? 'bg-primary/10 text-primary shadow-sm'
                     : 'text-text-tertiary hover:text-text-secondary'
                   }`}
               >
