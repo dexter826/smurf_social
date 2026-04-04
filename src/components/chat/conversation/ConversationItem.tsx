@@ -37,7 +37,7 @@ interface ConversationItemProps {
   onPin?: (conversationId: string, pinned: boolean) => void;
   onMute?: (conversationId: string, muted: boolean) => void;
   onDelete?: () => void;
-  onBlock?: () => void;
+  onBlock?: (partnerId: string, partnerName: string) => void;
   onArchive?: (conversationId: string, archived: boolean) => void;
   onMarkUnread?: (conversationId: string, markedUnread: boolean) => void;
   onViewProfile?: () => void;
@@ -219,7 +219,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               icon={<Ban size={14} />}
               label="Quản lý chặn"
               variant="danger"
-              onClick={() => { onBlock(); setIsMenuOpen(false); }}
+              onClick={() => { onBlock(partner!.id, partner!.fullName); setIsMenuOpen(false); }}
             />
           )}
           {onDelete && (

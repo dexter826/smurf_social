@@ -7,7 +7,7 @@ import { ConfirmDialog, UserAvatar } from '../ui';
 import { useLogout } from '../../hooks/utils/useLogout';
 
 const navItems = [
-  { to: '/admin/reports', icon: Flag, label: 'Báo cáo vi phạm' },
+  { to: '/admin/reports', icon: Flag, label: 'Quản lý báo cáo' },
   { to: '/admin/users', icon: Users, label: 'Quản lý người dùng' },
 ];
 

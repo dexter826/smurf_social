@@ -6,15 +6,14 @@ import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
 import { useFriendIds, useBlockedUsers } from '../hooks';
 import { friendService } from '../services/friendService';
-import { useRtdbChatStore } from '../store';
 import { useConversationMemberSettings } from '../hooks/chat/useConversationMemberSettings';
+import { useCallManager } from '../hooks/chat/useCallManager';
 import { toast } from '../store/toastStore';
 import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
   TransferAdminModal, ForwardModal, MessengerSkeleton,
 } from '../components/chat';
-import { useCallManager } from '../hooks/chat/useCallManager';
 import { scrollToMessage } from '../utils';
 
 const ChatPage: React.FC = () => {
@@ -70,12 +69,18 @@ const ChatPage: React.FC = () => {
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const openBlockModal = () => setIsBlockModalOpen(true);
-  const closeBlockModal = () => setIsBlockModalOpen(false);
+  const openBlockModal = (partnerId?: string, partnerName?: string) => {
+    if (partnerId && partnerName) {
+      setBlockTarget({ id: partnerId, name: partnerName });
+    }
+    setIsBlockModalOpen(true);
+  };
+  const closeBlockModal = () => { setIsBlockModalOpen(false); setBlockTarget(null); };
   const confirmUnblock = async () => { await handleUnblock(); closeBlockModal(); };
 
-  const { startCall, endCall, joinActiveCall } = useCallManager(currentUser?.id || '');
+  const { startCall, joinActiveCall } = useCallManager(currentUser?.id || '');
 
   const partner = selectedConversation?.data.isGroup
     ? null
@@ -331,10 +336,10 @@ const ChatPage: React.FC = () => {
         usersMap={usersMap}
       />
 
-      {partner && (
+      {(partner || blockTarget) && (
         <BlockOptionsModal
           isOpen={isBlockModalOpen}
-          targetName={partner.fullName}
+          targetName={blockTarget?.name ?? partner?.fullName ?? ''}
           initialOptions={myBlockOptions}
           onApply={handleApplyBlock}
           onUnblock={confirmUnblock}

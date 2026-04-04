@@ -21,7 +21,7 @@ interface ConversationListProps {
   onPin: (id: string, pinned: boolean) => void;
   onMute: (id: string, muted: boolean) => void;
   onDelete: (id: string) => void;
-  onBlock?: (partnerId: string) => void;
+  onBlock?: (partnerId: string, partnerName: string) => void;
   onArchive?: (id: string, archived: boolean) => void;
   onMarkUnread?: (id: string, markedUnread: boolean) => void;
   onViewProfile?: (userId: string) => void;
@@ -96,7 +96,7 @@ export const ConversationList = React.memo<ConversationListProps>(({
         onPin={onPin}
         onMute={onMute}
         onDelete={() => onDelete(conversation.id)}
-        onBlock={partnerId && onBlock ? () => onBlock(partnerId) : undefined}
+        onBlock={partnerId && onBlock ? onBlock : undefined}
         onArchive={onArchive}
         onMarkUnread={onMarkUnread}
         onViewProfile={partnerId && onViewProfile ? () => onViewProfile(partnerId) : undefined}
