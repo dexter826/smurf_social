@@ -127,9 +127,7 @@ const FeedPage: React.FC = () => {
 
             {!hasMore && posts.length > 0 && (
               <div className="flex items-center justify-center gap-2 py-8">
-                <Sparkles size={14} className="text-text-tertiary" />
                 <p className="text-text-tertiary text-sm font-medium">Bạn đã xem hết bài viết.</p>
-                <Sparkles size={14} className="text-text-tertiary" />
               </div>
             )}
           </>

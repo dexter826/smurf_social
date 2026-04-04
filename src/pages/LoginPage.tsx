@@ -73,7 +73,6 @@ const LoginPage: React.FC = () => {
       setAuthError(null);
       setInfoMessage('Email chưa được xác thực. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác thực.');
       setShowResend(true);
-      toast.info('Email chưa được xác thực. Vui lòng xác thực email.');
       return;
     }
     if (err.code === 'auth/user-disabled') { navigate('/banned'); return; }
@@ -87,7 +86,6 @@ const LoginPage: React.FC = () => {
     };
     const message = (err.code && messages[err.code]) || err.message || 'Thao tác thất bại.';
     setAuthError(message);
-    toast.error(message);
   };
 
   const onLoginSubmit = async (data: LoginFormValues) => {

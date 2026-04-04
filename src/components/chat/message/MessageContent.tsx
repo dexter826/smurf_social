@@ -250,7 +250,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
     const { callType, status, duration } = parsed;
     const isVid = callType === 'video';
-    const isMissedOrRejected = !isGroup && ((status === 'missed' && !isMe) || (status === 'rejected' && isMe));
+    const isMissedOrRejected = !isGroup && (status === 'missed' || status === 'rejected');
     const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-primary');
 
     let title = '';
@@ -275,7 +275,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
     return (
       <div className={`flex flex-col gap-1 w-fit max-w-[260px] ${isMe ? 'items-end' : 'items-start'}`}>
-        <div className={`flex items-center gap-2 text-sm font-semibold ${isMe ? 'text-white' : (isMissedOrRejected ? 'text-red-500' : 'text-text-primary')}`}>
+        <div className={`flex items-center gap-2 text-sm font-semibold ${!isMe && isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-text-primary')}`}>
           {isMissedOrRejected ? <PhoneMissed size={16} className={iconColor} /> : (isVid ? <Video size={16} className={iconColor} /> : <PhoneIncoming size={16} className={iconColor} />)}
           <span>{title}</span>
         </div>
