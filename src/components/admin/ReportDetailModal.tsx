@@ -34,9 +34,9 @@ interface ViewerState {
 const VIEWER_CLOSED: ViewerState = { isOpen: false, media: [], index: 0 };
 
 const TYPE_CONFIG: Record<ReportType, { label: string; icon: React.ReactNode; color: string }> = {
-  [ReportType.POST]: { label: 'Bài viết', icon: <FileText size={13} />, color: 'bg-info text-white' },
-  [ReportType.COMMENT]: { label: 'Bình luận', icon: <MessageSquare size={13} />, color: 'bg-warning text-white' },
-  [ReportType.USER]: { label: 'Người dùng', icon: <UserIcon size={13} />, color: 'bg-error text-white' },
+  [ReportType.POST]: { label: 'Bài viết', icon: <FileText size={13} />, color: 'bg-info/10 text-info' },
+  [ReportType.COMMENT]: { label: 'Bình luận', icon: <MessageSquare size={13} />, color: 'bg-warning/10 text-warning' },
+  [ReportType.USER]: { label: 'Người dùng', icon: <UserIcon size={13} />, color: 'bg-error/10 text-error' },
 };
 
 const ACTION_CONFIRM: Record<ActionType, { title: string; message: string; variant: 'danger' | 'primary' }> = {
@@ -49,8 +49,8 @@ const ACTION_CONFIRM: Record<ActionType, { title: string; message: string; varia
 /* ── Status badge ── */
 const StatusBadge: React.FC<{ status: ReportStatus }> = ({ status }) => {
   const map: Record<ReportStatus, { icon: React.ReactNode; label: string; cls: string }> = {
-    [ReportStatus.PENDING]: { icon: <Clock size={11} />, label: 'Chờ xử lý', cls: 'bg-warning text-white' },
-    [ReportStatus.RESOLVED]: { icon: <CheckCircle size={11} />, label: 'Đã xử lý', cls: 'bg-success text-white' },
+    [ReportStatus.PENDING]: { icon: <Clock size={11} />, label: 'Chờ xử lý', cls: 'bg-warning/10 text-warning' },
+    [ReportStatus.RESOLVED]: { icon: <CheckCircle size={11} />, label: 'Đã xử lý', cls: 'bg-success/10 text-success' },
     [ReportStatus.REJECTED]: { icon: <XCircle size={11} />, label: 'Đã từ chối', cls: 'bg-bg-tertiary text-text-secondary' },
   };
   const { icon, label, cls } = map[status];
@@ -234,7 +234,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                         {typeConfig.icon} {typeConfig.label}
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-error text-white">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-error/10 text-error">
                       <AlertTriangle size={11} /> {reasonConfig?.label}
                     </span>
                   </div>
@@ -262,7 +262,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                       Nội dung bị báo cáo
                     </p>
                     {isDeleted && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-error text-white rounded-full text-[10px] font-bold uppercase">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-error/10 text-error rounded-full text-[10px] font-bold uppercase">
                         <Trash2 size={9} /> Đã xóa
                       </span>
                     )}

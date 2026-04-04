@@ -59,19 +59,19 @@ export default {
           overlay: 'var(--surface-overlay)',
         },
         success: {
-          DEFAULT: 'var(--color-success)',
+          DEFAULT: 'rgb(var(--color-success-rgb) / <alpha-value>)',
           light: 'var(--color-success-light)',
         },
         error: {
-          DEFAULT: 'var(--color-error)',
+          DEFAULT: 'rgb(var(--color-error-rgb) / <alpha-value>)',
           light: 'var(--color-error-light)',
         },
         warning: {
-          DEFAULT: 'var(--color-warning)',
+          DEFAULT: 'rgb(var(--color-warning-rgb) / <alpha-value>)',
           light: 'var(--color-warning-light)',
         },
         info: {
-          DEFAULT: 'var(--color-info)',
+          DEFAULT: 'rgb(var(--color-info-rgb) / <alpha-value>)',
           light: 'var(--color-info-light)',
         },
         status: {

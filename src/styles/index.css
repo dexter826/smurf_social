@@ -111,6 +111,10 @@
   --color-warning-light: #fef3c7;
   --color-info: #3b82f6;
   --color-info-light: #dbeafe;
+  --color-success-rgb: 16 185 129;
+  --color-error-rgb: 239 68 68;
+  --color-warning-rgb: 245 158 11;
+  --color-info-rgb: 59 130 246;
 
   --status-online: #10b981;
   --status-offline: #9ca3af;
@@ -203,6 +207,11 @@
   --color-warning-light: rgba(245, 158, 11, 0.1);
   --color-info: #3b82f6;
   --color-info-light: rgba(59, 130, 246, 0.1);
+  /* RGB channels for Tailwind opacity modifiers */
+  --color-success-rgb: 16 185 129;
+  --color-error-rgb: 239 68 68;
+  --color-warning-rgb: 245 158 11;
+  --color-info-rgb: 59 130 246;
 
   --status-online: #10b981;
   --status-offline: #484f58;

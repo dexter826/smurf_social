@@ -51,12 +51,14 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
   const avatarUrl = src || (userId === currentUser?.id ? currentUser?.avatar?.url : cachedUser?.avatar?.url);
 
   const statusToDisplay = useMemo((): 'active' | 'banned' | undefined => {
-    if (!showStatus || initialStatus === 'banned') return undefined;
+    if (!showStatus) return undefined;
+    // Ưu tiên status từ cache (realtime Firestore)
+    const effectiveStatus = cachedUser?.status ?? initialStatus;
+    if (effectiveStatus === 'banned') return undefined;
     if (userId === currentUser?.id) return presence && 'isOnline' in presence && presence.isOnline ? 'active' : undefined;
-
     const isBlocked = checkBlocked(userId);
     return (isFriend && !isBlocked && presence && 'isOnline' in presence && presence.isOnline) ? 'active' : undefined;
-  }, [presence, showStatus, userId, currentUser?.id, isFriend, checkBlocked, initialStatus]);
+  }, [presence, showStatus, userId, currentUser?.id, isFriend, checkBlocked, initialStatus, cachedUser?.status]);
 
   return (
     <Avatar

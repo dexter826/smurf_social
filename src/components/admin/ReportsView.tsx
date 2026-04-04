@@ -25,12 +25,12 @@ const TYPE_OPTIONS = [
 
 const STATUS_BADGE: Record<ReportStatus, React.ReactNode> = {
   [ReportStatus.PENDING]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning text-white uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning uppercase">
       <Clock size={9} /> Chờ xử lý
     </span>
   ),
   [ReportStatus.RESOLVED]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success text-white uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success uppercase">
       <CheckCircle size={9} /> Đã xử lý
     </span>
   ),
@@ -43,17 +43,17 @@ const STATUS_BADGE: Record<ReportStatus, React.ReactNode> = {
 
 const TYPE_BADGE: Record<ReportType, React.ReactNode> = {
   [ReportType.POST]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-info text-white uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-info/10 text-info uppercase">
       <FileText size={9} /> Bài viết
     </span>
   ),
   [ReportType.COMMENT]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning text-white uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning uppercase">
       <MessageSquare size={9} /> Bình luận
     </span>
   ),
   [ReportType.USER]: (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-error text-white uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-error/10 text-error uppercase">
       <UserIcon size={9} /> Người dùng
     </span>
   ),

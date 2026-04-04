@@ -179,12 +179,12 @@ export const UsersView: React.FC = () => {
                           {user.fullName}
                         </span>
                         {user.role === 'admin' && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase">
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
                             Admin
                           </span>
                         )}
                         {user.status === UserStatus.BANNED && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-error/10 text-error border border-error/20 uppercase">
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-error/10 text-error uppercase">
                             Bị khóa
                           </span>
                         )}
@@ -194,7 +194,7 @@ export const UsersView: React.FC = () => {
                   </div>
 
                   {/* Action buttons — visible on hover */}
-                  <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-3 flex-shrink-0">
+                  <div className="flex items-center gap-1 ml-3 flex-shrink-0">
                     <IconButton
                       icon={<Eye size={15} />}
                       onClick={() => navigate(`/profile/${user.id}`)}

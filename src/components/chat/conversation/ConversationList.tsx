@@ -185,7 +185,7 @@ export const ConversationList = React.memo<ConversationListProps>(({
                   <span className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
                     <MessageCircle size={14} className="text-primary" />
                     Người lạ
-                    <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
+                    <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
                       {requestConversations.length}
                     </span>
                   </span>
