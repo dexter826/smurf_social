@@ -120,14 +120,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await presenceService.setOffline(user.id);
       }
       resetAllStores();
+      useLoadingStore.getState().setLoading("auth", false);
       await authService.logout();
     } catch (error) {
       console.error("Lỗi logout:", error);
     } finally {
-      set({ 
-        user: null, 
-        isPendingVerification: false, 
-        isBanned: keepBanned ? get().isBanned : false 
+      set({
+        user: null,
+        isPendingVerification: false,
+        isBanned: keepBanned ? get().isBanned : false
       });
     }
   },
@@ -177,7 +178,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               isInitialized: true
             });
             useUserCache.getState().setUser(userData);
-            
+
             // Kích hoạt subscription sau khi xác thực thành công
             const setupSub = (get() as any)._setupUserSubscription;
             if (setupSub) setupSub(firebaseUser.uid);
@@ -237,7 +238,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (updatedUser.status === 'banned') {
             if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
             if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
-            
+
             // Xử lý kick-out hoàn toàn
             set({ user: updatedUser, isBanned: true });
             await get().logout(true);
@@ -298,7 +299,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
             useLoadingStore.getState().setLoading("auth", false);
             useUserCache.getState().setUser(userData);
-            
+
             setupSubscriptions(firebaseUser.uid);
           } else {
             set({ user: null, isInitialized: true });
