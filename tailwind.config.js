@@ -42,8 +42,6 @@ export default {
           primary: 'var(--text-primary)',
           secondary: 'var(--text-secondary)',
           tertiary: 'var(--text-tertiary)',
-          inverse: 'var(--text-inverse)',
-          link: 'var(--text-link)',
           'on-primary': 'var(--text-on-primary)',
         },
         border: {
@@ -53,11 +51,6 @@ export default {
           sidebar: 'var(--sidebar-border)',
         },
         divider: 'var(--divider)',
-        surface: {
-          base: 'var(--surface-base)',
-          elevated: 'var(--surface-elevated)',
-          overlay: 'var(--surface-overlay)',
-        },
         success: {
           DEFAULT: 'rgb(var(--color-success-rgb) / <alpha-value>)',
           light: 'var(--color-success-light)',
@@ -77,11 +70,6 @@ export default {
         status: {
           online: 'var(--status-online)',
           offline: 'var(--status-offline)',
-          away: 'var(--status-away)',
-        },
-        badge: {
-          bg: 'var(--badge-bg)',
-          text: 'var(--badge-text)',
         },
       },
       backgroundImage: {
