@@ -123,7 +123,7 @@ export const AppLayout: React.FC = () => {
 
       {/* ── Desktop Header ── */}
       <header
-        className="hidden md:flex h-16 w-full items-center bg-bg-primary px-4 lg:px-6 sticky top-0 border-b border-border-light transition-theme shadow-sm"
+        className="hidden md:flex h-16 w-full items-center bg-primary px-4 lg:px-6 sticky top-0 border-b border-white/10 transition-theme shadow-lg"
         style={{ zIndex: 'var(--z-header)' }}
       >
         {/* Logo */}
@@ -131,7 +131,7 @@ export const AppLayout: React.FC = () => {
           className="flex-1 flex items-center cursor-pointer"
           onClick={() => navigate('/feed')}
         >
-          <img src="/logo_text_blue.png" alt="Smurfy" className="h-9 object-contain" />
+          <img src="/logo_text_white.png" alt="Smurfy" className="h-9 object-contain" onError={(e) => { e.currentTarget.src = '/logo_text_blue.png'; e.currentTarget.style.filter = 'brightness(0) invert(1)'; }} />
         </div>
 
         {/* Center nav */}
@@ -144,8 +144,8 @@ export const AppLayout: React.FC = () => {
               className={({ isActive }) =>
                 `relative px-3 h-11 flex items-center justify-center rounded-xl transition-all duration-200 border border-transparent min-w-[44px] group
                 ${isActive
-                  ? 'bg-primary/10 text-primary font-bold'
-                  : 'text-text-secondary hover:bg-bg-hover hover:text-primary active:bg-bg-active'
+                  ? 'bg-white/20 text-white font-bold'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white active:bg-white/20'
                 }`
               }
             >
@@ -154,10 +154,10 @@ export const AppLayout: React.FC = () => {
                 <span className="text-sm font-semibold hidden lg:inline">{label}</span>
               </div>
               {to === '/' && totalUnread > 0 && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-primary" />
               )}
               {to === '/contacts' && hasNewRequests && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-primary" />
               )}
             </NavLink>
           ))}
@@ -171,16 +171,17 @@ export const AppLayout: React.FC = () => {
             icon={mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             title={mode === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
             variant="ghost"
+            className="text-white/70 hover:bg-white/10 hover:text-white"
           />
 
-          <div className="w-px h-6 bg-border-light mx-1" />
+          <div className="w-px h-6 bg-white/10 mx-1" />
 
           <NavLink
             to="/settings"
             title="Cài đặt"
             className={({ isActive }) =>
               `w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 border border-transparent
-              ${isActive ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:bg-bg-hover hover:text-primary active:bg-bg-active'}`
+              ${isActive ? 'bg-white/20 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white active:bg-white/20'}`
             }
           >
             <Settings size={20} />
@@ -192,8 +193,8 @@ export const AppLayout: React.FC = () => {
             className={({ isActive }) =>
               `w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 outline-none
               ${isActive
-                ? 'ring-2 ring-primary ring-offset-2 ring-offset-bg-primary'
-                : 'hover:ring-2 hover:ring-primary/40 hover:ring-offset-2 hover:ring-offset-bg-primary'
+                ? 'ring-2 ring-white ring-offset-2 ring-offset-primary'
+                : 'hover:ring-2 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-primary'
               }`
             }
           >
@@ -211,7 +212,7 @@ export const AppLayout: React.FC = () => {
             icon={<LogOut size={20} />}
             title="Đăng xuất"
             variant="ghost"
-            className="hover:bg-error/10 hover:text-error"
+            className="text-white/70 hover:bg-red-500/20 hover:text-red-400 transition-all duration-200"
           />
         </div>
       </header>
@@ -226,7 +227,7 @@ export const AppLayout: React.FC = () => {
       {/* ── Mobile Bottom Nav ── */}
       {!isChatRoom && (
         <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border-light flex justify-around items-stretch transition-theme"
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-white/10 flex justify-around items-stretch transition-theme"
           style={{ zIndex: 'var(--z-header)', paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           {navItems.filter(item => item.to !== '/admin').map(({ to, Icon, label }) => (
@@ -235,7 +236,7 @@ export const AppLayout: React.FC = () => {
               to={to}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-                ${isActive ? 'text-primary bg-primary/10 rounded-xl' : 'text-text-tertiary active:text-text-primary'}`
+                ${isActive ? 'text-white bg-white/20 rounded-xl' : 'text-white/60 active:text-white'}`
               }
             >
               <div className="relative">
@@ -255,13 +256,13 @@ export const AppLayout: React.FC = () => {
             to="/notifications"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-              ${isActive ? 'text-primary bg-primary/10 rounded-xl' : 'text-text-tertiary active:text-text-primary'}`
+              ${isActive ? 'text-white bg-white/20 rounded-xl' : 'text-white/60 active:text-white'}`
             }
           >
             <div className="relative">
               <Bell size={22} />
               {unreadNotifications > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-bg-primary" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-primary" />
               )}
             </div>
             <span className="text-xs font-medium leading-none whitespace-nowrap">Thông báo</span>
@@ -271,7 +272,7 @@ export const AppLayout: React.FC = () => {
             to="/menu"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-              ${isActive ? 'text-primary bg-primary/10 rounded-xl' : 'text-text-tertiary active:text-text-primary'}`
+              ${isActive ? 'text-white bg-white/20 rounded-xl' : 'text-white/60 active:text-white'}`
             }
           >
             <Menu size={22} />

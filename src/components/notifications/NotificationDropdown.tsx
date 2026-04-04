@@ -59,13 +59,13 @@ export const NotificationDropdown: React.FC = () => {
           <div className="relative">
             <Bell size={20} />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-error rounded-full ring-2 ring-bg-primary" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-error rounded-full ring-2 ring-primary" />
             )}
           </div>
         }
-        variant={isOpen ? 'secondary' : 'ghost'}
+        variant="ghost"
         title="Thông báo"
-        className={isOpen ? 'text-primary' : 'text-text-secondary hover:text-primary'}
+        className={`text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200 ${isOpen ? 'bg-white/20 text-white' : ''}`}
       />
 
       {isOpen && createPortal(
