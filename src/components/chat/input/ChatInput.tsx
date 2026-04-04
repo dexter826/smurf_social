@@ -232,8 +232,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         else await onSendFile(item.file, replyingTo?.id);
       }
 
-      clearAllFiles();
-
       if (inputText.trim()) {
         if (editingMessage) {
           await onEditMessage?.(inputText.trim());
@@ -263,6 +261,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         setActiveMentions([]);
         if (conversationId) clearDraft(conversationId);
       }
+
+      clearAllFiles();
       onCancelAction();
     } catch {
       toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);

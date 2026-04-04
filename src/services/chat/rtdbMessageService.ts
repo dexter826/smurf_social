@@ -1,9 +1,8 @@
-import { ref, set, get, update, push, query, orderByChild, limitToLast, endBefore, onChildAdded, onChildChanged, off, increment } from 'firebase/database';
+import { ref, set, get, update, push, remove, query, orderByChild, limitToLast, endBefore, onChildAdded, onChildChanged, onChildRemoved, off, increment } from 'firebase/database';
 import { rtdb } from '../../firebase/config';
 import { RtdbMessage, RtdbConversation, MessageType, MediaObject } from '../../../shared/types';
 import { TIME_LIMITS, IMAGE_COMPRESSION } from '../../constants';
 import { compressImage } from '../../utils/imageUtils';
-import { withRetry } from '../../utils/retryUtils';
 import { uploadWithProgress, UploadProgress, generateVideoThumbnail } from '../../utils/uploadUtils';
 import {
     validateMessageContent,
@@ -19,22 +18,46 @@ import { rtdbConversationService } from './rtdbConversationService';
 type ProgressWithId = (messageId: string, progress: UploadProgress) => void;
 
 async function markMessageUploadFailed(convId: string, msgId: string): Promise<void> {
-    const msgRef = ref(rtdb, `messages/${convId}/${msgId}`);
-    await update(msgRef, {
-        isRecalled: true,
-        updatedAt: Date.now()
-    });
+    await remove(ref(rtdb, `messages/${convId}/${msgId}`));
 
     const convRef = ref(rtdb, `conversations/${convId}`);
     const convSnap = await get(convRef);
-    if (convSnap.exists()) {
-        const conv = convSnap.val() as RtdbConversation;
-        if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
-            await update(convRef, {
-                'lastMessage/content': 'Tin nhắn đã thu hồi',
-                updatedAt: Date.now()
-            });
-        }
+    if (!convSnap.exists()) return;
+
+    const conv = convSnap.val() as RtdbConversation;
+    if (!conv.lastMessage || conv.lastMessage.messageId !== msgId) return;
+
+    const msgsSnap = await get(query(
+        ref(rtdb, `messages/${convId}`),
+        orderByChild('createdAt'),
+        limitToLast(2)
+    ));
+
+    let prevMsg: { id: string; data: RtdbMessage } | null = null;
+    if (msgsSnap.exists()) {
+        msgsSnap.forEach((child) => {
+            if (child.key !== msgId) {
+                prevMsg = { id: child.key!, data: child.val() as RtdbMessage };
+            }
+        });
+    }
+
+    if (prevMsg) {
+        const { id, data } = prevMsg as { id: string; data: RtdbMessage };
+        await update(convRef, {
+            lastMessage: {
+                senderId: data.senderId,
+                content: data.content,
+                type: data.type,
+                timestamp: data.createdAt,
+                messageId: id,
+                readBy: data.readBy || {},
+                deliveredTo: data.deliveredTo || {}
+            },
+            updatedAt: Date.now()
+        });
+    } else {
+        await update(convRef, { lastMessage: null, updatedAt: Date.now() });
     }
 }
 
@@ -177,11 +200,9 @@ async function createAndSendMediaMessage(
     }
 
     try {
-        fileUrl = await withRetry(() =>
-            uploadWithProgress(path, uploadFile, (progress) => {
-                options.onProgressWithId?.(msgId, progress);
-            })
-        );
+        fileUrl = await uploadWithProgress(path, uploadFile, (progress) => {
+            options.onProgressWithId?.(msgId, progress);
+        });
     } catch (error) {
         options.onProgressWithId?.(msgId, {
             progress: 0,
@@ -276,13 +297,11 @@ async function createAndSendMediaAlbumMessage(
 
         const path = `chats/${convId}/${createdAt}_${index}_${file.name}`;
 
-        const fileUrl = await withRetry(() =>
-            uploadWithProgress(path, uploadFile, (progress) => {
-                bytesByIndex[index] = progress.bytesTransferred;
-                totalBytesByIndex[index] = progress.totalBytes;
-                reportProgress(progress.state);
-            })
-        );
+        const fileUrl = await uploadWithProgress(path, uploadFile, (progress) => {
+            bytesByIndex[index] = progress.bytesTransferred;
+            totalBytesByIndex[index] = progress.totalBytes;
+            reportProgress(progress.state);
+        });
 
         return {
             url: fileUrl,
@@ -527,12 +546,23 @@ export const rtdbMessageService = {
             callback([...messages]);
         };
 
+        const childRemovedHandler = (snapshot: any) => {
+            const msgId = snapshot.key;
+            const idx = messages.findIndex(m => m.id === msgId);
+            if (idx !== -1) {
+                messages.splice(idx, 1);
+                callback([...messages]);
+            }
+        };
+
         onChildAdded(messagesQuery, childAddedHandler);
         onChildChanged(messagesQuery, childChangedHandler);
+        onChildRemoved(messagesQuery, childRemovedHandler);
 
         return () => {
             off(messagesQuery, 'child_added', childAddedHandler);
             off(messagesQuery, 'child_changed', childChangedHandler);
+            off(messagesQuery, 'child_removed', childRemovedHandler);
         };
     },
 

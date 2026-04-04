@@ -165,73 +165,97 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
 
     sendImageMessage: async (conversationId: string, senderId: string, files: File[], replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        let uploadedMsgId: string | undefined;
         try {
             await rtdbMessageService.sendImageMessage(conversationId, senderId, files, {
                 replyToId,
                 onProgressWithId: (messageId, progress) => {
+                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
-                    if (progress.state === 'error' || progress.state === 'canceled') {
-                        get().setUploadError(messageId, true);
-                    }
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendImageMessage:', error);
+            if (uploadedMsgId) {
+                set((state) => {
+                    const msgs = state.messages[conversationId] || [];
+                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
+                });
+                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
+            }
             throw error;
         }
     },
 
     sendFileMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        let uploadedMsgId: string | undefined;
         try {
             await rtdbMessageService.sendFileMessage(conversationId, senderId, file, {
                 replyToId,
                 onProgressWithId: (messageId, progress) => {
+                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
-                    if (progress.state === 'error' || progress.state === 'canceled') {
-                        get().setUploadError(messageId, true);
-                    }
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendFileMessage:', error);
+            if (uploadedMsgId) {
+                set((state) => {
+                    const msgs = state.messages[conversationId] || [];
+                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
+                });
+                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
+            }
             throw error;
         }
     },
 
     sendVideoMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        let uploadedMsgId: string | undefined;
         try {
             await rtdbMessageService.sendVideoMessage(conversationId, senderId, file, {
                 replyToId,
                 onProgressWithId: (messageId, progress) => {
+                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
-                    if (progress.state === 'error' || progress.state === 'canceled') {
-                        get().setUploadError(messageId, true);
-                    }
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendVideoMessage:', error);
+            if (uploadedMsgId) {
+                set((state) => {
+                    const msgs = state.messages[conversationId] || [];
+                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
+                });
+                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
+            }
             throw error;
         }
     },
 
     sendVoiceMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string, duration?: number) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        let uploadedMsgId: string | undefined;
         try {
             await rtdbMessageService.sendVoiceMessage(conversationId, senderId, file, {
                 replyToId,
                 duration,
                 onProgressWithId: (messageId, progress) => {
+                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
-                    if (progress.state === 'error' || progress.state === 'canceled') {
-                        get().setUploadError(messageId, true);
-                    }
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendVoiceMessage:', error);
+            if (uploadedMsgId) {
+                set((state) => {
+                    const msgs = state.messages[conversationId] || [];
+                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
+                });
+                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
+            }
             throw error;
         }
     },
