@@ -21,6 +21,7 @@ import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
 import { uploadWithProgress, ProgressCallback } from '../utils/uploadUtils';
 import { compressImage } from '../utils/imageUtils';
 import { convertDoc, convertDocs } from '../utils/firebaseUtils';
+import { validateImageFile, FileValidationError } from '../utils/fileValidation';
 
 export const reportService = {
   /** Upload ảnh bằng chứng cho báo cáo (tối đa 5 ảnh) */
@@ -35,6 +36,7 @@ export const reportService = {
       }
 
       const uploadPromises = files.map(async (file, index) => {
+        validateImageFile(file);
         const compressedFile = await compressImage(file, IMAGE_COMPRESSION.POST);
 
         const fileExt = file.name.split('.').pop();
@@ -161,7 +163,7 @@ export const reportService = {
     const q = query(collection(db, 'reports'), ...constraints);
 
     return onSnapshot(
-      q, 
+      q,
       (snapshot) => {
         callback(convertDocs<Report>(snapshot.docs));
       },

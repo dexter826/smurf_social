@@ -4,6 +4,7 @@ import { RtdbConversation, RtdbUserChat, MediaObject, MemberRole } from '../../.
 import { uploadWithProgress, UploadProgress, deleteStorageFile } from '../../utils/uploadUtils';
 import { compressImage } from '../../utils/imageUtils';
 import { IMAGE_COMPRESSION, GROUP_LIMITS } from '../../constants';
+import { validateAvatarFile } from '../../utils/fileValidation';
 import { systemMessages } from '../../constants/systemMessages';
 
 export const rtdbGroupService = {
@@ -353,6 +354,7 @@ export const rtdbGroupService = {
         onProgress?: (progress: UploadProgress) => void
     ): Promise<MediaObject> => {
         try {
+            validateAvatarFile(file);
             const compressedFile = await compressImage(file, IMAGE_COMPRESSION.AVATAR);
 
             const fileExt = file.name.split('.').pop();

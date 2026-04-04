@@ -31,7 +31,7 @@ service firebase.storage {
     match /avatars/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isOwner(userId)
-                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.size <= 5 * 1024 * 1024
                    && isValidImage();
       allow delete: if isOwner(userId);
     }
@@ -40,7 +40,7 @@ service firebase.storage {
     match /covers/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isOwner(userId)
-                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.size <= 10 * 1024 * 1024
                    && isValidImage();
       allow delete: if isOwner(userId);
     }
@@ -49,7 +49,7 @@ service firebase.storage {
     match /posts/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isOwner(userId)
-                   && request.resource.size < 50 * 1024 * 1024
+                   && request.resource.size <= 50 * 1024 * 1024
                    && (isValidImage() || isValidVideo());
       allow delete: if isOwner(userId);
     }
@@ -58,7 +58,7 @@ service firebase.storage {
     match /comments/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isOwner(userId)
-                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.size <= 5 * 1024 * 1024
                    && isValidImage();
       allow delete: if isOwner(userId);
     }
@@ -69,7 +69,7 @@ service firebase.storage {
     match /chats/{conversationId}/{allPaths=**} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated()
-                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.size <= 50 * 1024 * 1024
                    && isValidFile();
       // Delete chỉ cho phép người upload (uid trong path) hoặc thành viên conversation
       // Vì Storage không thể query RTDB, ownership được enforce ở application layer
@@ -80,7 +80,7 @@ service firebase.storage {
     match /group-avatars/{conversationId}/{allPaths=**} {
       allow read: if true;
       allow write: if isAuthenticated()
-                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.size <= 5 * 1024 * 1024
                    && isValidImage();
       // Delete chỉ cho phép người upload, enforce ở application layer
       allow delete: if isAuthenticated();
@@ -90,7 +90,7 @@ service firebase.storage {
     match /reports/{userId}/{allPaths=**} {
       allow read: if isAuthenticated();
       allow write: if isOwner(userId)
-                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.size <= 5 * 1024 * 1024
                    && isValidImage();
       allow delete: if isOwner(userId);
     }
@@ -99,7 +99,7 @@ service firebase.storage {
     match /thumbnails/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isOwner(userId)
-                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.size <= 2 * 1024 * 1024
                    && isValidImage();
       allow delete: if isOwner(userId);
     }
