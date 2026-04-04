@@ -83,10 +83,11 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
     if (isUploading) {
       if (count > 1) {
+        const cols = count === 2 ? 'grid-cols-2' : 'grid-cols-3';
         return (
-          <div className="relative rounded-xl overflow-hidden grid gap-0.5 grid-cols-2 border border-border-light shadow-sm bg-bg-secondary w-full max-w-full">
-            {Array.from({ length: Math.min(4, count) }).map((_, i) => (
-              <div key={i} className={`bg-bg-tertiary/60 ${count === 3 && i === 0 ? 'col-span-2 row-span-2 aspect-video' : 'aspect-square'}`} />
+          <div className={`relative rounded-xl overflow-hidden grid gap-0.5 ${cols} border border-border-light shadow-sm bg-bg-secondary w-full max-w-full`}>
+            {Array.from({ length: count }).map((_, i) => (
+              <div key={i} className="bg-bg-tertiary/60 aspect-square" />
             ))}
             <UploadBar progress={up.progress} error={up.error} light />
           </div>
@@ -100,33 +101,74 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     }
 
     if (count > 1) {
-      return (
-        <div className="relative rounded-xl overflow-hidden grid gap-0.5 grid-cols-2 shadow-sm bg-bg-secondary w-full max-w-[320px]">
-          {mediaItems.slice(0, 4).map((item, idx) => {
-            const isOverlay = idx === 3 && count > 4;
-            const isVid = item.mimeType?.startsWith('video/');
-            return (
-              <div
-                key={`${message.id}-media-${idx}`}
-                className={`relative overflow-hidden cursor-pointer ${count === 3 && idx === 0 ? 'col-span-2 row-span-2 aspect-video' : 'aspect-square'}`}
-                onClick={() => onOpenImage(idx)}
-              >
-                <LazyImage src={item.url} alt="sent" className="w-full h-full object-cover transition-all duration-base" />
-                {isVid && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                    <div className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
-                      <Play size={20} className="text-text-primary ml-0.5 fill-current" />
-                    </div>
-                  </div>
-                )}
-                {isOverlay && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold" style={{ zIndex: 10 }}>
-                    +{count - 3}
-                  </div>
-                )}
+      const renderItem = (item: typeof mediaItems[0], idx: number) => {
+        const isVid = item.mimeType?.startsWith('video/');
+        return (
+          <div
+            key={`${message.id}-media-${idx}`}
+            className="relative overflow-hidden cursor-pointer border border-border-light aspect-square"
+            onClick={() => onOpenImage(idx)}
+          >
+            {isVid ? (
+              item.thumbnailUrl
+                ? <img src={item.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                : <video src={item.url} className="w-full h-full object-cover" preload="metadata" playsInline muted />
+            ) : (
+              <LazyImage src={item.url} alt="sent" className="w-full h-full object-cover transition-all duration-base" />
+            )}
+            {isVid && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
+                  <Play size={14} className="text-text-primary ml-0.5 fill-current" />
+                </div>
               </div>
-            );
-          })}
+            )}
+          </div>
+        );
+      };
+
+      // row-based layouts for counts that don't fill a single grid evenly
+      const rowLayouts: Record<number, number[]> = {
+        5: [3, 2],
+        7: [4, 3],
+        10: [4, 3, 3],
+      };
+      // single-grid column counts for even layouts
+      const singleGrid: Record<number, string> = {
+        2: 'grid-cols-2',
+        3: 'grid-cols-3',
+        4: 'grid-cols-2',
+        6: 'grid-cols-3',
+        8: 'grid-cols-4',
+        9: 'grid-cols-3',
+      };
+
+      const wrapperClass = "relative rounded-xl overflow-hidden flex flex-col gap-0.5 w-full max-w-[320px] border border-border-light bg-bg-secondary shadow-sm";
+
+      if (rowLayouts[count]) {
+        const rows = rowLayouts[count];
+        let offset = 0;
+        const rowEls = rows.map((cols, rowIdx) => {
+          const start = offset;
+          offset += cols;
+          return (
+            <div key={rowIdx} className={`grid grid-cols-${cols} gap-0.5`}>
+              {mediaItems.slice(start, offset).map((item, i) => renderItem(item, start + i))}
+            </div>
+          );
+        });
+        return (
+          <div className={wrapperClass}>
+            {rowEls}
+            {isMe && up && <UploadBar progress={up.progress} error={up.error} light />}
+          </div>
+        );
+      }
+
+      const cols = singleGrid[count] ?? 'grid-cols-3';
+      return (
+        <div className={`relative rounded-xl overflow-hidden grid gap-0.5 ${cols} shadow-sm bg-bg-secondary w-full max-w-[320px] border border-border-light`}>
+          {mediaItems.map((item, idx) => renderItem(item, idx))}
           {isMe && up && <UploadBar progress={up.progress} error={up.error} light />}
         </div>
       );

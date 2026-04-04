@@ -210,9 +210,10 @@ export const PostModal: React.FC<PostModalProps> = ({
     ...formData.media.map(m => ({
       url: m.url,
       type: m.mimeType.startsWith('video/') ? 'video' as const : 'image' as const,
+      thumbnail: m.thumbnailUrl,
       isPending: false,
     })),
-    ...previews.map(p => ({ ...p, isPending: true })),
+    ...previews.map(p => ({ ...p, thumbnail: undefined, isPending: true })),
   ];
 
   const isLargeText =
@@ -379,6 +380,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                         <>
                           <video
                             src={item.url}
+                            poster={item.thumbnail}
                             className={`w-full h-full object-cover ${isSubmitting && item.isPending ? 'opacity-50' : ''}`}
                             playsInline muted preload="none"
                           />

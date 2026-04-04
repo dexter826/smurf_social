@@ -149,7 +149,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     e.stopPropagation();
                     setActiveMediaIndex(p => (p === 0 ? allMedia.length - 1 : p - 1));
                   }}
-                  className="w-11 h-11 flex items-center justify-center bg-black/25 hover:bg-black/40 backdrop-blur-md text-white rounded-full border border-white/15 shadow-xl transition-colors duration-200"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/25 hover:bg-black/40 active:scale-90 backdrop-blur-md text-white rounded-full border border-white/15 shadow-xl transition-all duration-150"
                   style={{ zIndex: 30 }}
                 >
                   <ChevronLeft size={28} strokeWidth={2} />
@@ -159,7 +159,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     e.stopPropagation();
                     setActiveMediaIndex(p => (p === allMedia.length - 1 ? 0 : p + 1));
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/25 hover:bg-black/40 backdrop-blur-md text-white rounded-full border border-white/15 shadow-xl transition-colors duration-200"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/25 hover:bg-black/40 active:scale-90 backdrop-blur-md text-white rounded-full border border-white/15 shadow-xl transition-all duration-150"
                   style={{ zIndex: 30 }}
                 >
                   <ChevronRight size={28} strokeWidth={2} />

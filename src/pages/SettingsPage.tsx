@@ -134,11 +134,7 @@ const SettingsPage: React.FC = () => {
                 {icon}
               </span>
               <span className="flex-1">{label}</span>
-              {id === 'blocked' && blockedList.length > 0 && (
-                <span className="text-[10px] text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full border border-border-light font-semibold">
-                  {blockedList.length}
-                </span>
-              )}
+
             </button>
           ))}
         </nav>

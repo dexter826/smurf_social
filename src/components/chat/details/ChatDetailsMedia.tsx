@@ -40,13 +40,12 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
 
     sortedMessages.forEach((msg) => {
       if (!msg.data.media || msg.data.media.length === 0) return;
-      if (msg.data.type === 'image') {
-        msg.data.media.forEach((media, i) => images.push({ key: `${msg.id}_${i}`, msgId: msg.id, media }));
-      } else if (msg.data.type === 'video') {
-        msg.data.media.forEach((media, i) => videos.push({ key: `${msg.id}_${i}`, msgId: msg.id, media }));
-      } else if (msg.data.type === 'file') {
-        msg.data.media.forEach((media, i) => files.push({ key: `${msg.id}_${i}`, msgId: msg.id, media }));
-      }
+      msg.data.media.forEach((media, i) => {
+        const entry = { key: `${msg.id}_${i}`, msgId: msg.id, media };
+        if (media.mimeType?.startsWith('video/')) videos.push(entry);
+        else if (media.mimeType?.startsWith('image/')) images.push(entry);
+        else files.push(entry);
+      });
     });
 
     return { images, videos, files };
