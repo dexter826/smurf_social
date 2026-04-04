@@ -33,6 +33,16 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         ${isMe ? 'right-full mr-1.5' : 'left-full ml-1.5'}
       `}
     >
+      {!isInteractionDisabled && message.data.type !== MessageType.CALL && (
+        <IconButton
+          icon={<Reply size={14} />}
+          size="sm"
+          title="Trả lời"
+          onClick={() => onReply?.(message)}
+          className="hover:text-primary transition-all duration-200"
+        />
+      )}
+
       <Dropdown
         isOpen={showMenu}
         onOpenChange={setShowMenu}
@@ -47,13 +57,6 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       >
         {message.data.type !== 'call' && (
           <>
-            {!isInteractionDisabled && (
-              <DropdownItem
-                icon={<Reply size={14} />}
-                label="Trả lời"
-                onClick={() => { onReply?.(message); setShowMenu(false); }}
-              />
-            )}
             <DropdownItem
               icon={<Forward size={14} />}
               label="Chuyển tiếp"
@@ -68,7 +71,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
             )}
             {!isInteractionDisabled && isMe && (
               <DropdownItem
-                icon={<RotateCcw size={14} />}
+                icon={<RotateCcw size={14} className="text-warning" />}
                 label="Thu hồi"
                 className="!text-warning hover:!text-warning"
                 onClick={() => { setShowRecallConfirm(true); setShowMenu(false); }}

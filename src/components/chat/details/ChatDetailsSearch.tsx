@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { RtdbMessage, User } from '../../../../shared/types';
+import { RtdbMessage, User, MessageType } from '../../../../shared/types';
 import { Search, X, MessageCircle } from 'lucide-react';
 import { formatTimeOnly } from '../../../utils/dateUtils';
 import { Input, IconButton } from '../../ui';
@@ -32,8 +32,16 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
     const term = searchTerm.toLowerCase();
     return messages
       .filter((msg) => {
+        if (
+          msg.data.type === MessageType.SYSTEM ||
+          msg.data.type === MessageType.CALL ||
+          msg.data.isRecalled
+        ) {
+          return false;
+        }
+
         const contentMatch = msg.data.content?.toLowerCase().includes(term);
-        const fileNameMatch = msg.data.type === 'file' &&
+        const fileNameMatch = msg.data.type === MessageType.FILE &&
           (msg.data.media || []).some(m => m.fileName?.toLowerCase().includes(term));
         return contentMatch || fileNameMatch;
       })
