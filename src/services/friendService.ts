@@ -242,7 +242,6 @@ export const friendService = {
     }
   },
 
-  // Lấy danh sách bạn bè (Move from userService)
   getAllFriends: async (currentUserId: string): Promise<User[]> => {
     try {
       const snap = await getDocs(collection(db, 'users', currentUserId, 'friends'));
@@ -256,7 +255,6 @@ export const friendService = {
     }
   },
 
-  // Theo dõi bạn bè realtime (Move from userService)
   subscribeToFriends: (userId: string, callback: (friends: User[]) => void): (() => void) => {
     const friendsRef = collection(db, 'users', userId, 'friends');
     let previousFriendIds: string[] = [];
@@ -283,7 +281,6 @@ export const friendService = {
     });
   },
 
-  // Tìm kiếm trong danh sách bạn bè (Move from userService)
   searchFriends: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
       const snap = await getDocs(collection(db, 'users', currentUserId, 'friends'));
@@ -304,14 +301,13 @@ export const friendService = {
     }
   },
 
-  // Gọi Cloud Function để tạo gợi ý kết bạn
   generateFriendSuggestions: async (limit?: number): Promise<string[]> => {
     try {
       const fn = httpsCallable<{ limit?: number }, { suggestionIds: string[] }>(
         functions,
         'generateFriendSuggestions'
       );
-      const result = await fn({ limit });
+      const result = await fn(limit !== undefined ? { limit } : {});
       return result.data.suggestionIds;
     } catch (error) {
       console.error("Lỗi tạo gợi ý kết bạn", error);
@@ -319,7 +315,6 @@ export const friendService = {
     }
   },
 
-  // Lấy danh sách gợi ý đã cache từ Firestore (không gọi lại Function)
   getCachedSuggestions: async (userId: string): Promise<User[]> => {
     try {
       const userSnap = await getDoc(doc(db, 'users', userId));

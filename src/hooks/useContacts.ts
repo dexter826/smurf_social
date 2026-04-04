@@ -71,15 +71,11 @@ export const useContacts = (): UseContactsReturn => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Load suggestions khi mount (dùng cache trước)
   useEffect(() => {
     if (!currentUser) return;
-    if (suggestions.length === 0) {
-      loadSuggestions(currentUser.id);
-    }
+    loadSuggestions(currentUser.id);
   }, [currentUser?.id]);
 
-  // Tải info user cho friend request
   useEffect(() => {
     const userIds = [
       ...receivedRequests.map(r => r.senderId),

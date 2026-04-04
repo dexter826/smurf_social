@@ -21,6 +21,7 @@ export type LoadingKey =
     | 'contacts.friends'
     | 'contacts.requests'
     | 'contacts.search'
+    | 'contacts.suggestions'
     | 'profile'
     | 'profile.data'
     | 'profile.upload'
@@ -60,6 +61,7 @@ const initialLoadingStates: Record<LoadingKey, boolean> = {
     'contacts.friends': false,
     'contacts.requests': false,
     'contacts.search': false,
+    'contacts.suggestions': false,
     'profile': false,
     'profile.data': false,
     'profile.upload': false,

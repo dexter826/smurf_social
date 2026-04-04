@@ -100,14 +100,16 @@ export const useContactStore = create<ContactState>()(
       refreshSuggestions: async (limit?: number) => {
         useLoadingStore.getState().setLoading('contacts.suggestions', true);
         try {
-          await friendService.generateFriendSuggestions(limit);
-          // Sau khi Function ghi cache, đọc lại từ Firestore
-          // userId lấy từ authStore để tránh circular dependency
-          const { useAuthStore } = await import('./authStore');
-          const userId = useAuthStore.getState().user?.id;
-          if (userId) {
-            const suggestions = await friendService.getCachedSuggestions(userId);
-            set({ suggestions });
+          const suggestionIds = await friendService.generateFriendSuggestions(limit);
+          if (suggestionIds.length > 0) {
+            const { useAuthStore } = await import('./authStore');
+            const userId = useAuthStore.getState().user?.id;
+            if (userId) {
+              const suggestions = await friendService.getCachedSuggestions(userId);
+              set({ suggestions });
+            }
+          } else {
+            set({ suggestions: [] });
           }
         } finally {
           useLoadingStore.getState().setLoading('contacts.suggestions', false);
@@ -198,7 +200,6 @@ export const useContactStore = create<ContactState>()(
         friends: state.friends,
         receivedRequests: state.receivedRequests,
         sentRequests: state.sentRequests,
-        suggestions: state.suggestions,
       }),
     }
   )

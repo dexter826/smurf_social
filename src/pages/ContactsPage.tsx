@@ -36,7 +36,7 @@ const ContactsPage: React.FC = () => {
 
   const tabConfig: { id: Tab; label: string; icon: React.ReactNode; count?: number; badge?: boolean }[] = [
     { id: 'all', label: 'Tất cả bạn bè', icon: <Users size={18} />, count: friends.length },
-    { id: 'suggestions', label: 'Gợi ý kết bạn', icon: <Sparkles size={18} />, count: suggestions.length },
+    { id: 'suggestions', label: 'Gợi ý kết bạn', icon: <Sparkles size={18} /> },
     { id: 'requests', label: 'Lời mời kết bạn', icon: <Bell size={18} />, count: receivedRequests.length, badge: receivedRequests.length > 0 },
     { id: 'sent', label: 'Lời mời đã gửi', icon: <UserPlus size={18} />, count: sentRequests.length },
   ];
