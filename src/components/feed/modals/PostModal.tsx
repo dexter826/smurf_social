@@ -47,12 +47,13 @@ export const PostModal: React.FC<PostModalProps> = ({
 
   const {
     register, handleSubmit, setValue, watch, reset,
-    formState: { isSubmitting, isValid },
+    formState: { isSubmitting, isValid, isDirty },
   } = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
     defaultValues: {
       content: '', media: [], hasPendingFiles: false,
       visibility: Visibility.FRIENDS,
+      type: PostType.REGULAR,
     },
   });
 
@@ -62,7 +63,6 @@ export const PostModal: React.FC<PostModalProps> = ({
   const [previews, setPreviews] = useState<{ url: string; type: 'image' | 'video' }[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Link preview - only for new posts, not edits
   const linkPreview = useLinkPreview(isEdit ? '' : (formData.content || ''));
 
   useEffect(() => {
@@ -73,6 +73,7 @@ export const PostModal: React.FC<PostModalProps> = ({
           media: initialPost.media || [],
           hasPendingFiles: false,
           visibility: initialPost.visibility,
+          type: initialPost.type,
         });
       } else {
         const defaultVisibility =
@@ -266,7 +267,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                     onEmojiSelect={(emoji) =>
                       insertTextAtCursor(
                         textareaRef, formData.content || '', emoji,
-                        (t) => setValue('content', t, { shouldDirty: true })
+                        (t) => setValue('content', t, { shouldDirty: true, shouldValidate: true })
                       )
                     }
                     disabled={isSubmitting}
@@ -294,7 +295,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               size="lg"
               fullWidth
               onClick={handleSubmit(onFormSubmit)}
-              disabled={isSubmitting || !isValid}
+              disabled={isSubmitting || (isEdit && !isDirty)}
               isLoading={isSubmitting && uploadProgress === 0}
             >
               {isSubmitting && uploadProgress > 0
@@ -335,7 +336,7 @@ export const PostModal: React.FC<PostModalProps> = ({
             </div>
             <Select
               value={formData.visibility}
-              onChange={(v) => setValue('visibility', v as Visibility, { shouldDirty: true })}
+              onChange={(v) => setValue('visibility', v as Visibility, { shouldDirty: true, shouldValidate: true })}
               options={[
                 { value: Visibility.FRIENDS, label: 'Bạn bè', icon: <Users size={13} /> },
                 { value: Visibility.PRIVATE, label: 'Chỉ mình tôi', icon: <Lock size={13} /> },

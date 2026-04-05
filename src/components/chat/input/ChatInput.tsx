@@ -246,7 +246,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       if (inputText.trim()) {
         if (editingMessage) {
-          await onEditMessage?.(inputText.trim());
+          if (inputText.trim() !== editingMessage.data.content) {
+            await onEditMessage?.(inputText.trim());
+          }
         } else {
           let finalContent = inputText.trim();
           const mentions: string[] = [];

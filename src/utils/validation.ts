@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG, MEDIA_CONSTRAINTS } from '../constants/appConfig';
-import { ReportReason, Visibility, Gender, MaritalStatus } from '../../shared/types';
+import { ReportReason, Visibility, Gender, MaritalStatus, PostType } from '../../shared/types';
 
 // Schema cho Đăng nhập
 export const loginSchema = z.object({
@@ -46,10 +46,10 @@ export const profileSchema = z.object({
     .max(VALIDATION.BIO_MAX_LENGTH, `Giới thiệu không được quá ${VALIDATION.BIO_MAX_LENGTH} ký tự`)
     .optional(),
   location: z.string().optional(),
-  gender: z.nativeEnum(Gender).optional(),
+  gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.NONE]).optional(),
   dob: z.number().optional(),
   school: z.string().max(100, 'Trường học không được quá 100 ký tự').optional(),
-  maritalStatus: z.nativeEnum(MaritalStatus).optional(),
+  maritalStatus: z.enum([MaritalStatus.NONE, MaritalStatus.SINGLE, MaritalStatus.MARRIED, MaritalStatus.DIVORCED, MaritalStatus.WIDOWED, MaritalStatus.OTHER]).optional(),
   interests: z.array(z.string()).optional(),
   generation: z.string().optional(),
 });
@@ -77,11 +77,14 @@ export const postSchema = z.object({
     .max(VALIDATION.POST_CONTENT_MAX_LENGTH, `Nội dung không được quá ${VALIDATION.POST_CONTENT_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
-  visibility: z.nativeEnum(Visibility),
+  visibility: z.enum([Visibility.FRIENDS, Visibility.PRIVATE]),
   media: z.array(z.any())
     .max(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST, `Chỉ được tải lên tối đa ${MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST} media`),
   hasPendingFiles: z.boolean().optional(),
+  type: z.enum([PostType.REGULAR, PostType.AVATAR_UPDATE, PostType.COVER_UPDATE]).optional(),
 }).refine(data => {
+  if (data.type && data.type !== PostType.REGULAR) return true;
+  
   const hasContent = data.content?.trim()?.length && data.content.trim().length > 0;
   const hasMedia = data.media && data.media.length > 0;
   const hasPending = !!data.hasPendingFiles;

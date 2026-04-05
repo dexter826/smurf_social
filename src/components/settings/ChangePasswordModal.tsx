@@ -23,7 +23,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
   const { logout } = useAuthStore();
   const navigate = useNavigate();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ChangePasswordFormValues>({
+  const { register, handleSubmit, formState: { errors, isDirty, isValid } } = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   });
@@ -87,7 +87,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
             type="submit"
             onClick={handleSubmit(onSubmit)}
             isLoading={isLoading}
-            disabled={success}
+            disabled={isLoading || success}
             className="flex-1"
           >
             Lưu thay đổi
@@ -100,16 +100,10 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
           Vui lòng nhập mật khẩu hiện tại và mật khẩu mới của bạn.
         </p>
 
-        {/* Error banner */}
-        {(error || hasErrors) && (
-          <div className="flex flex-col gap-1.5 p-3.5 bg-error/5 border border-error/20 rounded-xl text-error text-sm animate-fade-in">
-            <div className="flex items-center gap-2">
-              <AlertCircle size={16} className="flex-shrink-0" />
-              <span className="font-medium">{error ?? 'Vui lòng kiểm tra lại thông tin:'}</span>
-            </div>
-            {hasErrors && Object.values(errors).map((e, i) => (
-              <p key={i} className="pl-6 text-xs opacity-80">• {e?.message}</p>
-            ))}
+        {error && (
+          <div className="flex items-center gap-2 p-3.5 bg-error/5 border border-error/20 rounded-xl text-error text-sm animate-fade-in">
+            <AlertCircle size={16} className="flex-shrink-0" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
 

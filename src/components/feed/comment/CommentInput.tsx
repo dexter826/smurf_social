@@ -36,7 +36,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { register, handleSubmit, setValue, watch, reset } = useForm<CommentFormValues>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { isDirty } } = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
     defaultValues: {
       content: initialValue,
@@ -116,7 +116,10 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     setValue('hasPendingImage', false, { shouldDirty: true, shouldValidate: true });
   };
 
-  const canSubmit = (!!formData.content?.trim() || !!pendingImage || !!formData.image) && !isUploading;
+  const isEdit = !!initialValue || !!initialImage;
+  const canSubmit = (!!formData.content?.trim() || !!pendingImage || !!formData.image) && 
+                   !isUploading && 
+                   (!isEdit || isDirty);
 
   return (
     <div className="flex gap-2.5 items-end">
