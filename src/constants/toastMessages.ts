@@ -34,7 +34,7 @@ export const TOAST_MESSAGES = {
     DELETE_AVATAR_FAILED: 'Không thể xóa ảnh đại diện.',
     DELETE_COVER_FAILED: 'Không thể xóa ảnh bìa.',
     INVALID_FILE: 'Vui lòng chọn file ảnh.',
-    FILE_TOO_LARGE: (name: string, limit: number, label: string) => `${name}: ${label} quá lớn. Giới hạn ${limit}MB.`,
+    FILE_TOO_LARGE: (limit: number, label: string) => `${label} quá lớn. Giới hạn ${limit}MB.`,
   },
 
   FRIEND: {

@@ -6,6 +6,7 @@ import { Avatar, Skeleton } from '../ui';
 import { usePostStore } from '../../store';
 import { postService } from '../../services/postService';
 import { toast } from '../../store/toastStore';
+import { validateFileSize } from '../../utils/uploadUtils';
 import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../constants';
 
 interface CreatePostProps {
@@ -21,22 +22,37 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   const onMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
     const isVideo = e.target.accept.includes('video');
     const limit = isVideo ? MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST : MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST;
+    const typeLabel = isVideo ? 'VIDEO' : 'IMAGE';
 
+    let selectedFiles = files;
     if (files.length > limit) {
       toast.error(isVideo
         ? TOAST_MESSAGES.POST.VIDEO_LIMIT(limit)
         : TOAST_MESSAGES.POST.MEDIA_LIMIT(limit)
       );
-      files = files.slice(0, limit);
+      selectedFiles = files.slice(0, limit);
     }
 
-    setPendingFiles(files);
-    setShowCreateModal(true);
+    const validFiles: File[] = [];
+    selectedFiles.forEach(file => {
+      const validation = validateFileSize(file, typeLabel);
+      if (validation.isValid) {
+        validFiles.push(file);
+      } else if (validation.error) {
+        toast.error(validation.error);
+      }
+    });
+
+    if (validFiles.length > 0) {
+      setPendingFiles(validFiles);
+      setShowCreateModal(true);
+    }
+    
     e.target.value = '';
   };
 

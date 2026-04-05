@@ -12,7 +12,7 @@ export const validateFileSize = (file: File, type: FileLimitType): { isValid: bo
       
     return {
       isValid: false,
-      error: TOAST_MESSAGES.MEDIA.FILE_TOO_LARGE(file.name, mbLimit, typeLabel)
+      error: TOAST_MESSAGES.MEDIA.FILE_TOO_LARGE(mbLimit, typeLabel)
     };
   }
   return { isValid: true };
