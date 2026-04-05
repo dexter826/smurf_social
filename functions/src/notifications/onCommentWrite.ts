@@ -69,6 +69,21 @@ export const onCommentWrite = onDocumentWritten(
                     batch.update(db.collection('posts').doc(postId), { commentCount: FieldValue.increment(-1) });
                 } else {
                     batch.update(db.collection('posts').doc(postId), { commentCount: FieldValue.increment(-1) });
+                    
+                    const repliesSnapshot = await db.collection('comments')
+                        .where('parentId', '==', commentId)
+                        .get();
+                        
+                    repliesSnapshot.docs.forEach(doc => {
+                        if (doc.data().status === CommentStatus.ACTIVE) {
+                            batch.update(doc.ref, {
+                                status: CommentStatus.DELETED,
+                                deletedAt: FieldValue.serverTimestamp(),
+                                deletedBy: after.deletedBy,
+                                updatedAt: FieldValue.serverTimestamp()
+                            });
+                        }
+                    });
                 }
 
                 const notifsSnap = await db.collection('notifications')

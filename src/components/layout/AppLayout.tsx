@@ -8,10 +8,12 @@ import { useContactStore } from '../../store/contactStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { UserAvatar, ConfirmDialog, IconButton, ScreenLoader } from '../ui';
 import { ReactionType } from '../../../shared/types';
-import { PostViewModal } from '../feed';
+import { PostViewModal, PostModal } from '../feed';
 import { usePostStore } from '../../store';
 import { usePostNavigation } from '../../hooks/usePostNavigation';
 import { useUserCache } from '../../store/userCacheStore';
+import { postService } from '../../services/postService';
+import { MediaObject, Visibility } from '../../../shared/types';
 import { useNotificationStore } from '../../store/notificationStore';
 import { NotificationDropdown } from '../notifications/NotificationDropdown';
 import { useUnreadCount } from '../../hooks/utils/useUnreadCount';
@@ -31,7 +33,7 @@ export const AppLayout: React.FC = () => {
   const { receivedRequests, subscribeToRequests, subscribeToFriends } = useContactStore();
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
 
-  const { selectedPost, setSelectedPost, reactToPost, fetchPostById, posts } = usePostStore();
+  const { selectedPost, setSelectedPost, reactToPost, fetchPostById, posts, updatePost, deletePost } = usePostStore();
   const isModalLoading = useLoadingStore(state => state.loadingStates['post.detail']);
   const { users: usersMap, fetchUsers } = useUserCache();
   const { closePost } = usePostNavigation();
@@ -42,6 +44,28 @@ export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState<string | null>(null);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+
+  const handleEditPost = async (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
+    if (!showEditModal) return;
+    await updatePost(showEditModal, content, media, visibility, pendingFiles, onProgress);
+    setShowEditModal(null);
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete || !user) return;
+    await deletePost(postToDelete, user.id);
+    if (selectedPost?.id === postToDelete) {
+       closePost();
+    }
+    setPostToDelete(null);
+  };
+
+  const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
+    if (!user) throw new Error('Not authenticated');
+    return postService.uploadPostMedia(files, user.id, onProgress);
+  };
 
   const isAdmin = user?.role === 'admin';
   const isChatRoom = location.pathname === '/' && !!selectedConversationId;
@@ -299,8 +323,31 @@ export const AppLayout: React.FC = () => {
           currentUser={user}
           onReact={handlePostReact}
           isLoading={isModalLoading}
+          onEdit={(id) => setShowEditModal(id)}
+          onDelete={(id) => setPostToDelete(id)}
         />
       )}
+
+      {user && (
+        <PostModal
+          isOpen={!!showEditModal}
+          onClose={() => setShowEditModal(null)}
+          currentUser={user}
+          initialPost={posts.find(p => p.id === showEditModal) || selectedPost || undefined}
+          onSubmit={handleEditPost}
+          onUploadImages={handleUploadImages}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={!!postToDelete}
+        onClose={() => setPostToDelete(null)}
+        onConfirm={handleDeletePost}
+        title="Xóa bài viết"
+        message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa ngay"
+        variant="danger"
+      />
 
       {phase === 'incoming' && incomingSignal && (
         <IncomingCallDialog

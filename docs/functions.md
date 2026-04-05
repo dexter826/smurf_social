@@ -142,7 +142,7 @@ Trigger: `comments/{commentId}/reactions/{userId}` — onDocumentWritten
 Trigger: `comments/{commentId}` — onDocumentWritten
 
 - **Tạo mới**: Tăng `commentCount` trên post (và `replyCount` trên comment cha nếu là reply). Gửi notification + push cho `replyToUserId` (nếu là reply) hoặc tác giả bài viết.
-- **Soft-delete** (`status` chuyển sang `"deleted"`): Giảm counter tương ứng, xóa toàn bộ notifications liên quan đến comment đó.
+- **Soft-delete** (`status` chuyển sang `"deleted"`): Giảm counter tương ứng, xóa toàn bộ notifications liên quan đến comment đó. Nếu đây là bình luận gốc, tự động tiến hành **xóa dây chuyền (cascade soft-delete)** toàn bộ các bình luận phản hồi (replies) bên trong.
 
 ---
 

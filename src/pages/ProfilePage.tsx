@@ -4,7 +4,7 @@ import { Gender, UserStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
-import { PostViewModal } from '../components/feed';
+import { PostViewModal, PostModal } from '../components/feed';
 import { usePostStore } from '../store';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
@@ -17,7 +17,8 @@ import { useProfile, usePostNavigation } from '../hooks';
 import { useUserCache } from '../store/userCacheStore';
 import { useFriendIds } from '../hooks/utils';
 import { toDate } from '../utils/dateUtils';
-import { ReactionType } from '../../shared/types';
+import { ReactionType, Visibility, MediaObject } from '../../shared/types';
+import { postService } from '../services/postService';
 
 type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover';
 
@@ -26,7 +27,7 @@ const ProfilePage: React.FC = () => {
   const routerParams = useRouterParams<{ '*': string }>();
   const { user: currentUser } = useAuthStore();
   const friendIds = useFriendIds();
-  const { fetchPostById, selectedPost, reactToPost } = usePostStore();
+  const { fetchPostById, selectedPost, reactToPost, updatePost, deletePost, posts } = usePostStore();
   const { getUser, fetchUser } = useUserCache();
   const { viewPost, closePost } = usePostNavigation();
 
@@ -47,6 +48,28 @@ const ProfilePage: React.FC = () => {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [confirmType, setConfirmType] = useState<ConfirmType | null>(null);
+  const [showEditModal, setShowEditModal] = useState<string | null>(null);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+
+  const handleEditPost = async (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
+    if (!showEditModal) return;
+    await updatePost(showEditModal, content, media, visibility, pendingFiles, onProgress);
+    setShowEditModal(null);
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete || !currentUser) return;
+    await deletePost(postToDelete, currentUser.id);
+    if (selectedPost?.id === postToDelete) {
+       closePost();
+    }
+    setPostToDelete(null);
+  };
+
+  const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
+    if (!currentUser) throw new Error('Not authenticated');
+    return postService.uploadPostMedia(files, currentUser.id, onProgress);
+  };
 
   useEffect(() => {
     if (!urlPostId || !currentUser) return;
@@ -306,6 +329,29 @@ const ProfilePage: React.FC = () => {
         author={selectedPost ? (getUser(selectedPost.authorId) ?? null) : null}
         currentUser={currentUser}
         onReact={handlePostReact}
+        onEdit={(id) => setShowEditModal(id)}
+        onDelete={(id) => setPostToDelete(id)}
+      />
+
+      {currentUser && (
+        <PostModal
+          isOpen={!!showEditModal}
+          onClose={() => setShowEditModal(null)}
+          currentUser={currentUser}
+          initialPost={posts.find(p => p.id === showEditModal) || selectedPost || undefined}
+          onSubmit={handleEditPost}
+          onUploadImages={handleUploadImages}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={!!postToDelete}
+        onClose={() => setPostToDelete(null)}
+        onConfirm={handleDeletePost}
+        title="Xóa bài viết"
+        message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa ngay"
+        variant="danger"
       />
 
       {confirmType && (

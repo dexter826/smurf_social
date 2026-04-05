@@ -174,26 +174,6 @@ export const commentService = {
         updatedAt: serverTimestamp()
       });
 
-      if (!parentId) {
-        const repliesQuery = query(
-          collection(db, 'comments'),
-          where('parentId', '==', commentId),
-          where('status', '==', CommentStatus.ACTIVE)
-        );
-        const repliesSnapshot = await getDocs(repliesQuery);
-        
-        if (!repliesSnapshot.empty) {
-          const deletePromises = repliesSnapshot.docs.map(d =>
-            updateDoc(d.ref, {
-              status: CommentStatus.DELETED,
-              deletedAt: serverTimestamp(),
-              deletedBy: userId,
-              updatedAt: serverTimestamp()
-            }).catch(err => console.error(`Lỗi xóa reply ${d.id}:`, err))
-          );
-          await Promise.all(deletePromises);
-        }
-      }
     } catch (error) {
       console.error("Lỗi xóa comment:", error);
       throw error;
