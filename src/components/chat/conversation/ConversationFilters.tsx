@@ -28,7 +28,7 @@ export const ConversationFilters: React.FC<ConversationFiltersProps> = ({
             <button
               key={filter.id}
               onClick={() => onFilterChange(filter.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 outline-none
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 outline-none
               ${isActive
                   ? 'bg-primary/10 text-primary'
                   : 'text-text-tertiary hover:text-text-secondary hover:bg-bg-hover'
@@ -49,12 +49,9 @@ export const ConversationFilters: React.FC<ConversationFiltersProps> = ({
       {onMarkAllRead && (
         <button
           onClick={onMarkAllRead}
-          className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-text-tertiary hover:text-primary hover:bg-primary/5 transition-all duration-200 outline-none group"
+          className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-text-tertiary hover:text-primary hover:bg-primary/5 transition-all duration-200 outline-none"
           title="Đánh dấu tất cả đã đọc"
         >
-          <span className="text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden xs:inline">
-            Đánh dấu đã đọc
-          </span>
           <CheckCircle2 size={16} />
         </button>
       )}
