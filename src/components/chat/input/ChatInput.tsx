@@ -102,12 +102,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   useEffect(() => {
     if (!isSending && !disabled) inputRef.current?.focus();
+  }, [isSending, disabled]);
+
+  useEffect(() => {
     if (editingMessage) {
       setInputText(editingMessage.data.content);
     } else {
-      setInputText('');
+      setInputText(conversationId ? (useRtdbChatStore.getState().draftMessages[conversationId] ?? '') : '');
     }
-  }, [editingMessage, isSending, disabled]);
+  }, [editingMessage, conversationId]);
 
   useEffect(() => {
     return () => {
@@ -268,7 +271,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         }
         setInputText('');
         setActiveMentions([]);
-        if (conversationId) clearDraft(conversationId);
+        if (conversationId) {
+          if (draftTimeoutRef.current) clearTimeout(draftTimeoutRef.current);
+          clearDraft(conversationId);
+        }
       }
 
       clearAllFiles();

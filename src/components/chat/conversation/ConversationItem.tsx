@@ -142,13 +142,17 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           <div className="flex-1 min-w-0 overflow-hidden">
             {typingText ? (
               <span className="text-xs text-primary italic truncate block">{typingText}</span>
+            ) : isUnread ? (
+              <span className="text-xs font-semibold text-text-primary truncate block">
+                {renderMessagePreview(lastMessagePreview)}
+              </span>
             ) : draft && !isActive ? (
               <span className="text-xs truncate block">
                 <span className="text-warning font-semibold">Bản nháp: </span>
                 <span className="text-text-tertiary italic">{draft}</span>
               </span>
             ) : (
-              <span className={`text-xs truncate block ${isUnread ? 'font-semibold text-text-primary' : 'text-text-tertiary'}`}>
+              <span className="text-xs text-text-tertiary truncate block">
                 {isLastMessageMine && <span className="text-text-tertiary">Bạn: </span>}
                 {renderMessagePreview(lastMessagePreview)}
               </span>
