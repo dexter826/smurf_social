@@ -190,11 +190,9 @@ export interface User extends BaseEntity {
     cover?: MediaObject;
     updatedAt: Timestamp;
     deletedAt?: Timestamp;
-    // Friend suggestion fields
     userVector?: number[];
     suggestedFriends?: string[];
     suggestionsLastUpdated?: Timestamp;
-    // Extended profile fields (synced with Flutter)
     school?: string;
     maritalStatus?: MaritalStatus;
     interests?: string[];

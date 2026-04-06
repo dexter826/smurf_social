@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams as useRouterParams } from 'react-router-dom';
-import { Gender, UserStatus } from '../../shared/types';
+import { Gender, UserStatus, MaritalStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
@@ -12,7 +12,7 @@ import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { PostsTab } from '../components/profile/PostsTab';
 import { PhotosTab } from '../components/profile/PhotosTab';
 import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
-import { User as UserIcon, Lock, Cake, MapPin } from 'lucide-react';
+import { User as UserIcon, Lock, Cake, MapPin, GraduationCap, Heart, CalendarDays, Sparkles } from 'lucide-react';
 import { useProfile, usePostNavigation } from '../hooks';
 import { useUserCache } from '../store/userCacheStore';
 import { useFriendIds } from '../hooks/utils';
@@ -180,7 +180,7 @@ const ProfilePage: React.FC = () => {
                     </p>
                   )}
 
-                  {(profile.gender || profile.dob || profile.location) ? (
+                  {(profile.gender || profile.dob || profile.location || profile.school || profile.maritalStatus || profile.generation || profile.createdAt || (profile.interests && profile.interests.length > 0)) ? (
                     <div className="space-y-3">
                       {profile.gender && (
                         <div className="flex items-center gap-3 text-sm text-text-secondary">
@@ -219,6 +219,73 @@ const ProfilePage: React.FC = () => {
                               {profile.location}
                             </strong>
                           </span>
+                        </div>
+                      )}
+                      {profile.school && (
+                        <div className="flex flex-col gap-1 items-start text-sm text-text-secondary">
+                          <div className="flex gap-3">
+                            <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
+                              <GraduationCap size={15} />
+                            </div>
+                            <span className="mt-1">
+                              Từng học tại <strong className="text-text-primary font-medium">{profile.school}</strong>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {profile.maritalStatus && profile.maritalStatus !== MaritalStatus.NONE && (
+                        <div className="flex items-center gap-3 text-sm text-text-secondary">
+                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
+                            <Heart size={15} />
+                          </div>
+                          <span>
+                            Trạng thái:{' '}
+                            <strong className="text-text-primary font-medium">
+                              {profile.maritalStatus === MaritalStatus.SINGLE ? 'Độc thân vui vẻ' :
+                               profile.maritalStatus === MaritalStatus.MARRIED ? 'Đã kết hôn' :
+                               profile.maritalStatus === MaritalStatus.DIVORCED ? 'Đã ly hôn' :
+                               profile.maritalStatus === MaritalStatus.WIDOWED ? 'Chăn đơn gối chiếc' :
+                               'Mối quan hệ phức tạp'}
+                            </strong>
+                          </span>
+                        </div>
+                      )}
+                      {profile.generation && (
+                        <div className="flex items-center gap-3 text-sm text-text-secondary">
+                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
+                            <Sparkles size={15} />
+                          </div>
+                          <span>
+                            Thành viên hệ{' '}
+                            <strong className="text-text-primary font-medium">
+                              {profile.generation}
+                            </strong>
+                          </span>
+                        </div>
+                      )}
+                      {profile.createdAt && (
+                        <div className="flex items-center gap-3 text-sm text-text-secondary">
+                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
+                            <CalendarDays size={15} />
+                          </div>
+                          <span>
+                            Tham gia từ{' '}
+                            <strong className="text-text-primary font-medium">
+                              Tháng {toDate(profile.createdAt)?.toLocaleDateString('vi-VN', { month: 'numeric', year: 'numeric' })}
+                            </strong>
+                          </span>
+                        </div>
+                      )}
+                      {profile.interests && profile.interests.length > 0 && (
+                        <div className="pt-3 mt-3 border-t border-border-light/60">
+                          <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2.5 ml-1">Sở thích</h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {profile.interests.map(tag => (
+                              <span key={tag} className="px-2.5 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>

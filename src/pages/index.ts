@@ -8,5 +8,7 @@ export { default as FeedPage } from './FeedPage';
 export { default as LoginPage } from './LoginPage';
 export { MobileMenuPage } from './MobileMenuPage';
 export { default as NotificationsPage } from './NotificationsPage';
+export { default as OnboardingPage } from './OnboardingPage';
 export { default as ProfilePage } from './ProfilePage';
 export { default as SettingsPage } from './SettingsPage';
+

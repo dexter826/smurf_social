@@ -9,6 +9,7 @@ export * from './Skeleton';
 export * from './EmojiPicker';
 export * from './Loading';
 export * from './Select';
+export * from './SearchableSelect';
 export * from './Dropdown';
 export * from './DatePicker';
 export * from './ScreenLoader';

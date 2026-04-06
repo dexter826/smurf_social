@@ -6,14 +6,14 @@ interface AuthBrandingPanelProps {
 }
 
 export const AuthBrandingPanel: React.FC<AuthBrandingPanelProps> = ({ headline, subtext }) => (
-    <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden bg-[#0047b3]">
+    <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden bg-primary">
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0068ff] via-[#0052cc] to-[#0038a8]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 mix-blend-overlay" />
 
         {/* Ambient glows */}
         <div className="absolute top-[-15%] right-[-10%] w-[500px] h-[500px] bg-white/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] left-[-8%] w-[400px] h-[400px] bg-black/15 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#4d8aff]/20 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[150px] pointer-events-none" />
 
         {/* Dot texture */}
         <div

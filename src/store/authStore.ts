@@ -37,6 +37,7 @@ interface AuthState {
   updateAvatar: (avatar: any) => void;
   updateSettings: (settings: Partial<UserSettings>) => void;
   updateBlockEntry: (action: "add" | "remove", targetUserId: string, options?: BlockOptions) => void;
+  completeOnboarding: (data: Partial<User>) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -221,6 +222,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       delete updated[targetUserId];
       set({ blockedUsers: updated });
     }
+  },
+
+  completeOnboarding: async (data) => {
+    const { user } = get();
+    if (!user) return;
+    if (Object.keys(data).length > 0) {
+      await userService.updateProfile(user.id, data);
+    }
+    const updatedUser = { ...user, ...data };
+    set({ user: updatedUser });
+    useUserCache.getState().setUser(updatedUser);
   },
 
   initialize: () => {

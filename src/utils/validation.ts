@@ -37,6 +37,23 @@ export const forgotPasswordSchema = z.object({
     .email('Email không hợp lệ'),
 });
 
+const dobValidation = z.number()
+  .optional()
+  .refine((val) => {
+    if (val === undefined) return true;
+    return val <= Date.now();
+  }, 'Ngày sinh không được là ngày trong tương lai')
+  .refine((val) => {
+    if (val === undefined) return true;
+    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
+    return age >= 13;
+  }, 'Bạn phải từ 13 tuổi trở lên')
+  .refine((val) => {
+    if (val === undefined) return true;
+    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
+    return age <= 120;
+  }, 'Ngày sinh không hợp lệ');
+
 // Schema cho Chỉnh sửa hồ sơ
 export const profileSchema = z.object({
   fullName: z.string()
@@ -47,11 +64,20 @@ export const profileSchema = z.object({
     .optional(),
   location: z.string().optional(),
   gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.NONE]).optional(),
-  dob: z.number().optional(),
+  dob: dobValidation,
   school: z.string().max(100, 'Trường học không được quá 100 ký tự').optional(),
   maritalStatus: z.enum([MaritalStatus.NONE, MaritalStatus.SINGLE, MaritalStatus.MARRIED, MaritalStatus.DIVORCED, MaritalStatus.WIDOWED, MaritalStatus.OTHER]).optional(),
   interests: z.array(z.string()).optional(),
   generation: z.string().optional(),
+});
+
+// Schema cho Onboarding (tất cả optional, chỉ các field ảnh hưởng gợi ý bạn bè)
+export const onboardingSchema = z.object({
+  gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.NONE]).optional(),
+  dob: dobValidation,
+  location: z.string().optional(),
+  school: z.string().max(100, 'Trường học không được quá 100 ký tự').optional(),
+  interests: z.array(z.string()).optional(),
 });
 
 // Schema cho Đổi mật khẩu
@@ -139,8 +165,10 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 export type ProfileFormValues = z.infer<typeof profileSchema>;
+export type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 export type PostFormValues = z.infer<typeof postSchema>;
 export type ReportFormValues = z.infer<typeof reportSchema>;
 export type GroupFormValues = z.infer<typeof groupSchema>;
 export type CommentFormValues = z.infer<typeof commentSchema>;
+

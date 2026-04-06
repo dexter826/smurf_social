@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Timestamp } from 'firebase/firestore';
 import { X } from 'lucide-react';
 import { User, Gender, MaritalStatus } from '../../../shared/types';
-import { Button, Input, TextArea, Select, DatePicker, Modal } from '../ui';
+import { Button, Input, TextArea, Select, DatePicker, Modal, SearchableSelect } from '../ui';
+import type { SearchableOption } from '../ui/SearchableSelect';
 import { toDate } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
 import { API_ENDPOINTS, TOAST_MESSAGES } from '../../constants';
 import { profileSchema, ProfileFormValues } from '../../utils/validation';
+import schoolsData from '../../assets/data/schools.json';
 
 interface EditProfileModalProps {
   user: User;
@@ -26,11 +28,26 @@ const MARITAL_STATUS_OPTIONS = [
   { value: MaritalStatus.OTHER, label: 'Khác' },
 ];
 
+const GENERATION_OPTIONS = [
+  { value: '', label: 'Chưa xác định' },
+  { value: 'Gen Z', label: 'Gen Z (1997-2012)' },
+  { value: 'Millennials', label: 'Millennials (1981-1996)' },
+  { value: 'Gen X', label: 'Gen X (1965-1980)' },
+  { value: 'Baby Boomers', label: 'Boomer (Trước 1965)' },
+  { value: 'Gen Alpha', label: 'Gen Alpha (Từ 2013)' },
+];
+
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   user, isOpen, onClose, onSave,
 }) => {
   const [saving, setSaving] = useState(false);
-  const [provinces, setProvinces] = useState<{ value: string; label: string }[]>([]);
+  const [provinces, setProvinces] = useState<SearchableOption[]>([]);
+
+  // Chuyển schools.json thành options một lần duy nhất
+  const schoolOptions = useMemo<SearchableOption[]>(() =>
+    schoolsData.map(s => ({ value: s.name, label: s.name, code: s.code })),
+    []
+  );
   const [interestInput, setInterestInput] = useState('');
 
   const {
@@ -185,12 +202,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
           {/* Province */}
           <div>
-            <Select
+            <SearchableSelect
               label="Tỉnh/Thành phố"
               value={formData.location || ''}
               onChange={(val) => setValue('location', val, { shouldDirty: true })}
               options={provinces}
               placeholder="Chọn tỉnh/thành phố"
+              searchPlaceholder="Tìm tỉnh/thành phố..."
               size="lg"
             />
           </div>
@@ -223,11 +241,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
           {/* School */}
           <div>
-            <Input
+            <SearchableSelect
               label="Trường học / Nơi học"
-              {...register('school')}
+              value={formData.school || ''}
+              onChange={(val) => setValue('school', val, { shouldDirty: true })}
+              options={schoolOptions}
+              placeholder="Chọn hoặc tìm trường học"
+              searchPlaceholder="Tìm theo tên trường hoặc mã (VD: BKA)..."
               error={errors.school?.message}
-              placeholder="Ví dụ: Đại học Bách Khoa"
               size="lg"
             />
           </div>
@@ -240,6 +261,18 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               onChange={(val) => setValue('maritalStatus', val as MaritalStatus, { shouldDirty: true })}
               options={MARITAL_STATUS_OPTIONS}
               placeholder="Chọn tình trạng"
+              size="lg"
+            />
+          </div>
+
+          {/* Generation */}
+          <div>
+            <Select
+              label="Thế hệ"
+              value={formData.generation || ''}
+              onChange={(val) => setValue('generation', val, { shouldDirty: true })}
+              options={GENERATION_OPTIONS}
+              placeholder="Chọn thế hệ"
               size="lg"
             />
           </div>

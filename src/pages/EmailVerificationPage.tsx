@@ -37,7 +37,7 @@ const EmailVerificationPage: React.FC = () => {
       await checkVerificationStatus();
       if (!useAuthStore.getState().isPendingVerification) {
         toast.success(TOAST_MESSAGES.AUTH.VERIFY_EMAIL_SUCCESS);
-        navigate('/');
+        navigate('/onboarding');
       } else {
         toast.info(TOAST_MESSAGES.AUTH.VERIFY_EMAIL_PENDING);
       }

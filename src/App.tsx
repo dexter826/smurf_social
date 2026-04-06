@@ -21,6 +21,7 @@ const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerification
 const MobileMenuPage = React.lazy(() => import('./pages/MobileMenuPage'));
 const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
+const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 
 const BannedRoute: React.FC = () => {
   const { user, isBanned, isInitialized } = useAuthStore();
@@ -80,6 +81,7 @@ const App: React.FC = () => {
             </Route>
 
             <Route path="/verify-email" element={<EmailVerificationPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/banned" element={<BannedRoute />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

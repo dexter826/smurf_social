@@ -36,7 +36,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<'days' | 'months' | 'years'>('days');
-  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; openUp: boolean } | null>(null);
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width?: number; openUp: boolean } | null>(null);
   const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,10 +49,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     const spaceBelow = vh - rect.bottom - VIEWPORT_PADDING;
     const spaceAbove = rect.top - VIEWPORT_PADDING;
     const openUp = spaceBelow < CALENDAR_HEIGHT && spaceAbove > spaceBelow;
-    const left = Math.max(VIEWPORT_PADDING, Math.min(rect.left, vw - 288 - VIEWPORT_PADDING));
+    const width = Math.max(rect.width, 288);
+    const left = Math.max(VIEWPORT_PADDING, Math.min(rect.left, vw - width - VIEWPORT_PADDING));
     setPos(openUp
-      ? { bottom: vh - rect.top + MENU_GAP, left, openUp: true }
-      : { top: rect.bottom + MENU_GAP, left, openUp: false }
+      ? { bottom: vh - rect.top + MENU_GAP, left, width, openUp: true }
+      : { top: rect.bottom + MENU_GAP, left, width, openUp: false }
     );
   }, []);
 
@@ -232,13 +233,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <div
           ref={dropdownRef}
           onClick={(e) => e.stopPropagation()}
-          className="w-72 bg-bg-primary border border-border-light rounded-2xl shadow-xl overflow-hidden animate-fade-in"
+          className="bg-bg-primary border border-border-light rounded-2xl shadow-xl overflow-hidden animate-fade-in"
           style={{
             position: 'fixed',
             zIndex: 'var(--z-popover)',
             top: pos?.top !== undefined ? `${pos.top}px` : undefined,
             bottom: pos?.bottom !== undefined ? `${pos.bottom}px` : undefined,
             left: pos ? `${pos.left}px` : undefined,
+            width: pos ? `${pos.width}px` : undefined,
             transformOrigin: pos?.openUp ? 'bottom left' : 'top left',
             visibility: pos ? 'visible' : 'hidden',
           }}
