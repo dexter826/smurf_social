@@ -7,7 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { User, ReportType, UserStatus, FriendStatus } from '../../../shared/types';
 import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
 import { toast } from '../../store/toastStore';
+import { useAuthStore } from '../../store/authStore';
+import { getHybridReason } from '../../utils/userUtils';
 import { useReportStore } from '../../store/reportStore';
+import { BookUser } from 'lucide-react';
 import { validateFileSize } from '../../utils/uploadUtils';
 
 interface ProfileHeaderProps {
@@ -36,6 +39,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   uploadingType, uploadProgress,
 }) => {
   const navigate = useNavigate();
+  const currentUser = useAuthStore(state => state.user);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { openReportModal } = useReportStore();
@@ -184,6 +188,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate">
                 {user.fullName}
               </h1>
+              {!isOwnProfile && friendStatus !== FriendStatus.FRIEND && (
+                <div className="flex items-center justify-center md:justify-start gap-1.5 mt-1 text-text-tertiary text-xs md:text-sm font-medium animate-fade-in group">
+                  <BookUser size={14} className="text-primary/70 group-hover:text-primary transition-colors" />
+                  <span className="truncate">{getHybridReason(currentUser, user)}</span>
+                </div>
+              )}
             </div>
 
             {/* Action buttons */}

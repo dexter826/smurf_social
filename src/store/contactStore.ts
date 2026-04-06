@@ -212,6 +212,7 @@ export const useContactStore = create<ContactState>()(
         friends: state.friends,
         receivedRequests: state.receivedRequests,
         sentRequests: state.sentRequests,
+        suggestions: state.suggestions,
       }),
     }
   )

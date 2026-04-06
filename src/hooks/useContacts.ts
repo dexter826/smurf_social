@@ -20,6 +20,7 @@ interface UseContactsReturn {
   receivedRequests: FriendRequest[];
   sentRequests: FriendRequest[];
   suggestions: User[];
+  filteredSuggestions: User[];
   filteredFriends: User[];
   groupedFriends: FriendGroup[];
   userCache: Record<string, User>;
@@ -118,6 +119,15 @@ export const useContacts = (): UseContactsReturn => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   }, []);
 
+  const filteredSuggestions = useMemo(() => {
+    const excludeIds = new Set([
+      ...friends.map(f => f.id),
+      ...sentRequests.map(r => r.receiverId),
+      ...receivedRequests.map(r => r.senderId),
+    ]);
+    return suggestions.filter(u => !excludeIds.has(u.id));
+  }, [suggestions, friends, sentRequests, receivedRequests]);
+
   const handleAcceptRequest = useCallback(async (requestId: string, friendId: string) => {
     if (!currentUser) return;
     const request = receivedRequests.find(r => r.id === requestId);
@@ -167,6 +177,7 @@ export const useContacts = (): UseContactsReturn => {
     receivedRequests,
     sentRequests,
     suggestions,
+    filteredSuggestions,
     filteredFriends,
     groupedFriends,
     userCache,

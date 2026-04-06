@@ -1,4 +1,4 @@
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, FieldPath } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../app';
 import { User, UserStatus } from '../types';
@@ -46,25 +46,41 @@ export const generateFriendSuggestions = onCall(
         throw new HttpsError('permission-denied', 'Tài khoản đã bị khóa');
       }
 
-      const [friendIds, blockedByMeIds, activeUsersSnap] = await Promise.all([
+      const randomId = db.collection('users').doc().id;
+      let activeUsersSnap = await db.collection('users')
+        .where('status', '==', UserStatus.ACTIVE)
+        .where(FieldPath.documentId(), '>=', randomId)
+        .limit(ACTIVE_USER_QUERY_LIMIT)
+        .get();
+
+      if (activeUsersSnap.size < ACTIVE_USER_QUERY_LIMIT) {
+        const remainder = ACTIVE_USER_QUERY_LIMIT - activeUsersSnap.size;
+        const fallbackSnap = await db.collection('users')
+          .where('status', '==', UserStatus.ACTIVE)
+          .where(FieldPath.documentId(), '<', randomId)
+          .limit(remainder)
+          .get();
+        
+        const mergedDocs = [...activeUsersSnap.docs, ...fallbackSnap.docs];
+        activeUsersSnap = { docs: mergedDocs } as FirebaseFirestore.QuerySnapshot;
+      }
+
+      const [friendIds, blockedByMeIds, blockedByThemIds] = await Promise.all([
         getFriendIds(userId),
         getBlockedUserIds(userId),
-        db.collection('users')
-          .where('status', '==', UserStatus.ACTIVE)
-          .limit(ACTIVE_USER_QUERY_LIMIT)
-          .get(),
+        getBlockedByThemIds(userId)
       ]);
 
       const myVector = parseVector(userData.userVector);
+
       const candidates = activeUsersSnap.docs
         .map((doc) => ({ id: doc.id, user: doc.data() as UserDoc }))
         .filter(({ id }) =>
-          id !== userId && !friendIds.has(id) && !blockedByMeIds.has(id)
+          id !== userId && !friendIds.has(id) && !blockedByMeIds.has(id) && !blockedByThemIds.has(id)
         );
 
       const ranked = rankCandidates(candidates, myVector, limit * 3);
-      const filtered = await filterBlockedByThem(userId, ranked);
-      const suggestions = filtered.slice(0, limit);
+      const suggestions = ranked.slice(0, limit);
       const suggestionIds = suggestions.map(({ id }) => id);
 
       await userRef.set(
@@ -368,6 +384,14 @@ async function getBlockedUserIds(userId: string): Promise<Set<string>> {
   return new Set(snapshot.docs.map((doc) => doc.id));
 }
 
+async function getBlockedByThemIds(currentUserId: string): Promise<Set<string>> {
+  const blockedDocs = await db.collectionGroup('blockedUsers')
+    .where('blockedUid', '==', currentUserId)
+    .get();
+  
+  return new Set(blockedDocs.docs.map((doc) => doc.ref.parent.parent?.id || ''));
+}
+
 function parseVector(raw: unknown): number[] | null {
   if (!Array.isArray(raw)) return null;
 
@@ -395,26 +419,6 @@ function rankCandidates(
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
-}
-
-async function filterBlockedByThem(
-  currentUserId: string,
-  candidates: RankedCandidate[]
-): Promise<RankedCandidate[]> {
-  const filtered = await Promise.all(
-    candidates.map(async (candidate) => {
-      const blockedDoc = await db
-        .collection('users')
-        .doc(candidate.id)
-        .collection('blockedUsers')
-        .doc(currentUserId)
-        .get();
-
-      return blockedDoc.exists ? null : candidate;
-    })
-  );
-
-  return filtered.filter((candidate): candidate is RankedCandidate => candidate !== null);
 }
 
 function cosineSimilarity(a: number[], b: number[] | null): number {

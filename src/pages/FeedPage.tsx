@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { StickyNote, Sparkles } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { PostItem, PostModal, CreatePost, FeedSkeleton, PostViewModal } from '../components/feed';
+import { PostItem, PostModal, CreatePost, FeedSkeleton, PostViewModal, FriendSuggestionsWidget } from '../components/feed';
 import { postService } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
 import { usePostStore } from '../store';
@@ -81,6 +81,8 @@ const FeedPage: React.FC = () => {
     >
       <div className="w-full max-w-[680px] py-4 md:py-6 px-3 sm:px-4 md:px-0 pb-6 md:pb-10">
         <CreatePost currentUser={currentUser} />
+        
+        <FriendSuggestionsWidget />
 
         {posts.length === 0 ? (
           /* ── Empty state ── */

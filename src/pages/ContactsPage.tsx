@@ -11,7 +11,7 @@ type Tab = 'all' | 'requests' | 'sent' | 'suggestions';
 const ContactsPage: React.FC = () => {
   const navigate = useNavigate();
   const {
-    friends, receivedRequests, sentRequests, suggestions,
+    friends, receivedRequests, sentRequests, filteredSuggestions,
     groupedFriends, userCache, isLoading, isSuggestionsLoading,
     activeTab, setActiveTab,
     searchTerm, setSearchTerm, sortOrder, toggleSortOrder,
@@ -118,7 +118,7 @@ const ContactsPage: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-text-primary">
               {activeTab === 'all' && `Bạn bè (${friends.length})`}
-              {activeTab === 'suggestions' && `Gợi ý kết bạn (${suggestions.length})`}
+              {activeTab === 'suggestions' && `Gợi ý kết bạn (${filteredSuggestions.length})`}
               {activeTab === 'requests' && `Lời mời (${receivedRequests.length})`}
               {activeTab === 'sent' && `Đã gửi (${sentRequests.length})`}
             </h2>
@@ -273,7 +273,7 @@ const ContactsPage: React.FC = () => {
                   <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
                     {[...Array(5)].map((_, i) => <SuggestionItem.Skeleton key={i} />)}
                   </div>
-                ) : suggestions.length === 0 ? (
+                ) : filteredSuggestions.length === 0 ? (
                   <EmptyState
                     icon={<Sparkles size={32} className="text-text-tertiary" />}
                     title="Chưa có gợi ý kết bạn nào"
@@ -281,7 +281,7 @@ const ContactsPage: React.FC = () => {
                   />
                 ) : (
                   <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                    {suggestions.map(user => (
+                    {filteredSuggestions.map(user => (
                       <SuggestionItem
                         key={user.id}
                         user={user}

@@ -5,6 +5,7 @@ import { auth, db } from "../firebase/config";
 import { User, BlockOptions, UserSettings, Visibility } from "../../shared/types";
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
+import { friendService } from "../services/friendService";
 
 const DEFAULT_SETTINGS: UserSettings = {
   showOnlineStatus: true,
@@ -233,13 +234,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const updatedUser = { ...user, ...data };
     set({ user: updatedUser });
     useUserCache.getState().setUser(updatedUser);
+
+    friendService.generateFriendSuggestions(20).catch(() => {});
   },
 
   initialize: () => {
     let userUnsubscribe: (() => void) | null = null;
     let settingsUnsubscribe: (() => void) | null = null;
 
-    // Hàm helper để thiết lập các subscription
     const setupSubscriptions = (uid: string) => {
       if (userUnsubscribe) userUnsubscribe();
       if (settingsUnsubscribe) settingsUnsubscribe();
@@ -251,7 +253,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
             if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
 
-            // Xử lý kick-out hoàn toàn
             set({ user: updatedUser, isBanned: true });
             await get().logout(true);
             return;

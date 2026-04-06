@@ -28,6 +28,7 @@ export { searchUsers } from './search/searchUsers';
 export { systemCleanup } from './scheduled/cleanup';
 export { generateZegoToken } from './call/generateZegoToken';
 export { generateFriendSuggestions } from './friends/generateFriendSuggestions';
+export { onUserProfileUpdated } from './friends/onUserProfileUpdated';
 
 export { onMessageCreated } from './notifications/onMessageCreated';
 

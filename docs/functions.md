@@ -91,6 +91,16 @@ Trả về `{ token: string }`.
 
 Tự động kích hoạt khi dữ liệu Firestore thay đổi.
 
+### `onUserProfileUpdated`
+Trigger: `users/{userId}` — onDocumentWritten
+
+Khi thông tin hồ sơ (sở thích, địa điểm, trường học, thế hệ) của người dùng thay đổi hoặc chưa có vector:
+- Phân tích và tổng hợp thông tin thành mô tả văn bản.
+- Gọi API Google Generative AI (mô hình `gemini-embedding-2-preview`) để sinh vector nhúng (embedding).
+- Cập nhật trường `userVector` vào document người dùng để phục vụ hệ thống AI gợi ý kết bạn.
+
+---
+
 ### `onPostWrite`
 Trigger: `posts/{postId}` — onDocumentWritten
 
