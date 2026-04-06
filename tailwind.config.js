@@ -168,7 +168,7 @@ export default {
           '50%': { transform: 'rotate(225deg)' },
           '100%': { transform: 'rotate(405deg)' },
         },
-        pulse: {
+        pulseDot: {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
           '50%': { transform: 'scale(1.3)', opacity: '0.7' },
         },
@@ -188,7 +188,7 @@ export default {
         'highlight': 'highlightFade 2s ease-out forwards',
         'cube-pulse': 'cubePulse 1.6s ease-in-out infinite',
         'rotate-loader': 'rotateLoader 1.6s ease-in-out infinite',
-        'pulse-dot': 'pulse 2s ease-in-out infinite',
+        'pulse-dot': 'pulseDot 2s ease-in-out infinite',
         'float': 'float 4s ease-in-out infinite',
         'shimmer': 'shimmer 2s linear infinite',
       },
