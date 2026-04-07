@@ -58,7 +58,7 @@ Các đối tượng (Object Type) hỗ trợ báo cáo:
 - **Ảnh bìa (Cover)**: `10MB`
 - **Ảnh thông thường** (bài viết, bình luận): `5MB`
 - **Video**: `50MB`
-- **File đính kèm (Chat)**: `10MB`
+- **File đính kèm (Chat)**: Ảnh `5MB`, Video `50MB`, Audio/File khác `10MB`
 - **Ảnh báo cáo vi phạm**: `5MB`
 - **Avatar nhóm chat**: `5MB`
 - **Video thumbnail**: `2MB`

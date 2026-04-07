@@ -28,9 +28,18 @@ export function validateVideoFile(file: File): void {
 }
 
 export function validateChatFile(file: File): void {
-    if (file.size > FILE_LIMITS.FILE) {
-        const maxSizeMB = FILE_LIMITS.FILE / (1024 * 1024);
-        throw new FileValidationError(`File không được vượt quá ${maxSizeMB}MB`);
+    if (file.type.startsWith('image/')) {
+        if (file.size > FILE_LIMITS.IMAGE) {
+            throw new FileValidationError(`Ảnh không được vượt quá ${FILE_LIMITS.IMAGE / (1024 * 1024)}MB`);
+        }
+    } else if (file.type.startsWith('video/')) {
+        if (file.size > FILE_LIMITS.VIDEO) {
+            throw new FileValidationError(`Video không được vượt quá ${FILE_LIMITS.VIDEO / (1024 * 1024)}MB`);
+        }
+    } else {
+        if (file.size > FILE_LIMITS.FILE) {
+            throw new FileValidationError(`File không được vượt quá ${FILE_LIMITS.FILE / (1024 * 1024)}MB`);
+        }
     }
 }
 

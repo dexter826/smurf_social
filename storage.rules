@@ -19,13 +19,7 @@ service firebase.storage {
       return request.resource.contentType.matches('video/.*');
     }
 
-    function isValidFile() {
-      return request.resource.contentType.matches('image/.*') ||
-             request.resource.contentType.matches('video/.*') ||
-             request.resource.contentType.matches('audio/.*') ||
-             request.resource.contentType.matches('application/.*') ||
-             request.resource.contentType.matches('text/.*');
-    }
+
 
     // Avatar người dùng (max 5MB)
     match /avatars/{userId}/{allPaths=**} {
@@ -63,16 +57,15 @@ service firebase.storage {
       allow delete: if isOwner(userId);
     }
 
-    // File chat - chỉ thành viên conversation mới được upload/xóa
-    // convId pattern: direct_{uid1}_{uid2} hoặc group_{groupId}
-    // Ownership được validate bằng cách kiểm tra uid trong convId (direct) hoặc qua token (group)
+    // File chat - limit theo từng loại: ảnh 5MB, video 50MB, audio/file 10MB
     match /chats/{conversationId}/{allPaths=**} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated()
-                   && request.resource.size <= 50 * 1024 * 1024
-                   && isValidFile();
-      // Delete chỉ cho phép người upload (uid trong path) hoặc thành viên conversation
-      // Vì Storage không thể query RTDB, ownership được enforce ở application layer
+      allow write: if isAuthenticated() && (
+                     (isValidImage() && request.resource.size <= 5 * 1024 * 1024) ||
+                     (isValidVideo() && request.resource.size <= 50 * 1024 * 1024) ||
+                     (request.resource.contentType.matches('audio/.*') && request.resource.size <= 10 * 1024 * 1024) ||
+                     ((request.resource.contentType.matches('application/.*') || request.resource.contentType.matches('text/.*')) && request.resource.size <= 10 * 1024 * 1024)
+                   );
       allow delete: if isAuthenticated();
     }
 

@@ -43,7 +43,7 @@ Từ chối một báo cáo vi phạm (không phát hiện vi phạm). Chỉ Adm
 | :---- | :--- | :----- |
 | `reportId` | String | ID báo cáo |
 
-Cập nhật report `status = "rejected"`, `resolution = "Không phát hiện vi phạm"`, gửi thông báo + push cho người báo cáo.
+Cập nhật report `status = "rejected"`, `resolution = "Không phát hiện vi phạm"`, `resolvedBy = adminId`, gửi thông báo + push cho người báo cáo.
 
 ---
 
@@ -124,8 +124,9 @@ Trigger: `users/{userId}/friends/{friendId}` — onDocumentWritten
 ### `onBlockedUserWrite`
 Trigger: `users/{userId}/blockedUsers/{blockedUid}` — onDocumentWritten
 
-Đồng bộ feed khi thay đổi block options:
-- Khôi phục bài vào feed của họ nếu bỏ chặn (và vẫn là bạn bè).
+Đồng bộ feed hai chiều khi thay đổi block options:
+- **Khi block** (`isFullyBlocked` chuyển sang `true`): xóa bài viết của cả hai phía khỏi feed của nhau.
+- **Khi bỏ chặn** (`isFullyBlocked` chuyển sang `false`): khôi phục bài viết vào feed của cả hai phía (nếu vẫn là bạn bè).
 
 ---
 
@@ -158,7 +159,7 @@ Trigger: `friendRequests/{reqId}` — onDocumentWritten
 
 - **Tạo mới**: Gửi notification + push cho người nhận.
 - **Xóa** (hủy/từ chối): Dọn sạch notifications liên quan đến request đó.
-- **Cập nhật** (`pending` → `accepted`): Gửi notification + push cho người gửi lời mời (thông báo đã được chấp nhận).
+- **Cập nhật** (`pending` → `accepted`): Gửi notification type `system` + push cho người gửi lời mời (thông báo đã được chấp nhận).
 
 ---
 

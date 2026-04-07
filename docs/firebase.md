@@ -26,7 +26,7 @@ Bảo vệ dữ liệu gốc và quản lý quyền truy cập.
 - **`comments` (Bình luận)**:
   - Xem được nếu là tác giả bài viết, tác giả bình luận, bạn bè của tác giả bài, hoặc Admin.
   - Tạo: chưa bị ban, là tác giả, không bị block bởi chủ bài.
-  - Sửa: tác giả, Admin, chủ bài viết (soft-delete), chủ comment cha (soft-delete reply con), hoặc Cloud Functions cập nhật `replyCount`/`updatedAt`.
+  - Sửa: tác giả, Admin, chủ bài viết (soft-delete), chủ comment cha (soft-delete reply con), hoặc Cloud Functions cập nhật `replyCount`/`updatedAt`/`replyToUserId`/`replyToId`.
   - Xóa: tác giả, Admin, hoặc chủ bài viết.
   - `reactions`: Tương tự `posts/reactions`.
 
@@ -64,7 +64,7 @@ Tối ưu cho tốc độ và khả năng đồng bộ theo thời gian thực.
   - Ghi: chính chủ hoặc các thành viên trong cùng hội thoại (để fan-out `lastMsgTimestamp`, `unreadCount`).
 
 - **`call_signaling` (Tín hiệu cuộc gọi)**:
-  - Đọc: chỉ chính chủ (`auth.uid === $uid`).
+  - Đọc: bất kỳ ai đã đăng nhập.
   - Ghi: bất kỳ ai đã đăng nhập (để gửi tín hiệu gọi đến người khác).
 
 ---
@@ -77,7 +77,7 @@ Tối ưu cho tốc độ và khả năng đồng bộ theo thời gian thực.
 | `covers/{userId}/...` | Public | Chính chủ | Chính chủ | 10MB, chỉ ảnh |
 | `posts/{userId}/...` | Public | Chính chủ | Chính chủ | 50MB, ảnh hoặc video |
 | `comments/{userId}/...` | Public | Chính chủ | Chính chủ | 5MB, chỉ ảnh |
-| `chats/{convId}/...` | Đã đăng nhập | Đã đăng nhập | Đã đăng nhập | 10MB, ảnh/video/audio/file/text |
+| `chats/{convId}/...` | Đã đăng nhập | Đã đăng nhập | Đã đăng nhập | Ảnh 5MB, Video 50MB, Audio/File 10MB |
 | `group-avatars/{convId}/...` | Public | Đã đăng nhập | Đã đăng nhập | 5MB, chỉ ảnh |
 | `reports/{userId}/...` | Đã đăng nhập | Chính chủ | Chính chủ | 5MB, chỉ ảnh |
 | `thumbnails/{userId}/...` | Public | Chính chủ | Chính chủ | 2MB, chỉ ảnh |
