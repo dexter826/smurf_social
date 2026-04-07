@@ -100,6 +100,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <LazyImage
             src={user.cover?.url || '/cover-image.jpg'}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${uploadingType === 'cover' ? 'opacity-50' : 'opacity-100'} ${onCoverClick ? 'cursor-pointer' : ''}`}
+            wrapperClassName="absolute inset-0 w-full h-full"
             alt="Cover"
             onClick={onCoverClick}
           />

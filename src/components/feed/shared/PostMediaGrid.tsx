@@ -60,6 +60,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
             placeholder={item.thumbnailUrl}
             alt=""
             className={`w-full h-full object-cover transition-transform duration-500 ${isBlob ? 'blur-[2px] opacity-70' : ''}`}
+            wrapperClassName="w-full h-full"
           />
         )}
 

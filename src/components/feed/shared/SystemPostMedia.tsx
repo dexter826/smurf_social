@@ -45,6 +45,7 @@ export const SystemPostMedia: React.FC<SystemPostMediaProps> = ({
               src={mainMedia.url}
               alt="Avatar update"
               className="w-full h-full object-cover"
+              wrapperClassName="w-full h-full"
             />
           </div>
         ) : (
@@ -53,6 +54,7 @@ export const SystemPostMedia: React.FC<SystemPostMediaProps> = ({
               src={mainMedia.url}
               alt="Cover update"
               className="w-full h-full object-cover"
+              wrapperClassName="w-full h-full"
             />
           </div>
         )}

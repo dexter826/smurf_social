@@ -125,7 +125,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
                 ? <img src={item.thumbnailUrl} alt="" className="w-full h-full object-cover" />
                 : <video src={item.url} className="w-full h-full object-cover" preload="metadata" playsInline muted />
             ) : (
-              <LazyImage src={item.url} alt="sent" className="w-full h-full object-cover transition-all duration-base" />
+              <LazyImage src={item.url} alt="sent" className="w-full h-full object-cover transition-all duration-base" wrapperClassName="w-full h-full" />
             )}
             {isVid && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">

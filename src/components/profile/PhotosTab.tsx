@@ -131,6 +131,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
                   src={item.url}
                   alt={`Media ${index + 1}`}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  wrapperClassName="w-full h-full"
                 />
               )}
 

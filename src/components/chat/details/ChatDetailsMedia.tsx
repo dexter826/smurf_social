@@ -112,6 +112,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
                   src={item.media.url || ''}
                   alt=""
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  wrapperClassName="w-full h-full"
                 />
               </button>
             ))}
