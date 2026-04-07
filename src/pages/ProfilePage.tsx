@@ -17,8 +17,11 @@ import { useProfile, usePostNavigation } from '../hooks';
 import { useUserCache } from '../store/userCacheStore';
 import { useFriendIds } from '../hooks/utils';
 import { toDate } from '../utils/dateUtils';
-import { ReactionType, Visibility, MediaObject } from '../../shared/types';
+import { ReactionType, Visibility, MediaObject, PostType, PostStatus, Post } from '../../shared/types';
 import { postService } from '../services/postService';
+import { db } from '../firebase/config';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { convertDoc } from '../utils/firebaseUtils';
 
 type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover';
 
@@ -64,6 +67,26 @@ const ProfilePage: React.FC = () => {
        closePost();
     }
     setPostToDelete(null);
+  };
+
+  const handleMediaClick = async (type: PostType) => {
+    if (!profile) return;
+    try {
+      const q = query(
+        collection(db, 'posts'),
+        where('authorId', '==', profile.id),
+        where('type', '==', type),
+        where('status', '==', PostStatus.ACTIVE),
+        orderBy('createdAt', 'desc'),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        viewPost(convertDoc<Post>(snap.docs[0]));
+      }
+    } catch (error) {
+      console.error(`Lỗi lấy bài đăng ${type}`, error);
+    }
   };
 
   const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
@@ -158,6 +181,8 @@ const ProfilePage: React.FC = () => {
           isBlockedByMe={isBlockedByMe}
           uploadingType={uploadingType}
           uploadProgress={uploadProgress}
+          onAvatarClick={() => handleMediaClick(PostType.AVATAR_UPDATE)}
+          onCoverClick={() => handleMediaClick(PostType.COVER_UPDATE)}
         />
         {canViewContent && (
           <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />

@@ -9,10 +9,9 @@ interface ImageCropperProps {
   image: string;
   aspect?: number;
   title?: string;
-  onCropComplete: (croppedFile: File, shouldShare: boolean) => void;
+  onCropComplete: (croppedFile: File) => void;
   onImageChange?: (file: File) => void;
   onCancel: () => void;
-  showShareOption?: boolean;
 }
 
 export const ImageCropper: React.FC<ImageCropperProps> = ({
@@ -23,14 +22,12 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   onCropComplete,
   onImageChange,
   onCancel,
-  showShareOption = false
 }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [shouldShare, setShouldShare] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onCropChange = useCallback((location: { x: number; y: number }) => {
@@ -54,7 +51,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       const croppedFile = new File([croppedBlob], `cropped_${Date.now()}.jpg`, {
         type: 'image/jpeg'
       });
-      onCropComplete(croppedFile, shouldShare);
+      onCropComplete(croppedFile);
     } catch (error) {
       console.error('Lỗi crop ảnh:', error);
     } finally {
@@ -66,7 +63,6 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setRotation(0);
-    setShouldShare(true);
   };
 
   const handleBrowseClick = () => {
@@ -91,16 +87,6 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       padding="none"
       footer={
         <div className="flex flex-col w-full gap-4">
-          {showShareOption && (
-            <div className="flex items-center px-1">
-              <Checkbox
-                id="should-share-to-feed"
-                label="Chia sẻ lên bảng tin"
-                checked={shouldShare}
-                onChange={(e) => setShouldShare(e.target.checked)}
-              />
-            </div>
-          )}
           <div className="flex items-center justify-between w-full">
             <div className="flex gap-2">
               <Button

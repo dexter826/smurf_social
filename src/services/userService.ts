@@ -133,7 +133,6 @@ export const userService = {
     userId: string,
     file: File,
     type: 'avatar' | 'cover',
-    shareToFeed: boolean = false,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
     try {
@@ -171,8 +170,8 @@ export const userService = {
       // Cập nhật profile
       await userService.updateProfile(userId, { [type]: mediaObject });
 
-      // Tự động tạo bài viết nếu được yêu cầu
-      if (shareToFeed && currentUser) {
+      // Luôn tự động tạo bài viết
+      if (currentUser) {
         const settings = await userService.getUserSettings(userId);
         await postService.createPost({
           authorId: userId,
@@ -200,20 +199,18 @@ export const userService = {
   uploadAvatar: async (
     userId: string,
     file: File,
-    shareToFeed: boolean = false,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
-    return userService.uploadProfileMedia(userId, file, 'avatar', shareToFeed, onProgress);
+    return userService.uploadProfileMedia(userId, file, 'avatar', onProgress);
   },
 
   // Tải lên ảnh bìa
   uploadCoverImage: async (
     userId: string,
     file: File,
-    shareToFeed: boolean = false,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
-    return userService.uploadProfileMedia(userId, file, 'cover', shareToFeed, onProgress);
+    return userService.uploadProfileMedia(userId, file, 'cover', onProgress);
   },
 
 

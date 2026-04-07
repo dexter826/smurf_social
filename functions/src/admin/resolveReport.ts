@@ -10,6 +10,7 @@ import {
   REPORT_TYPE_LABELS,
   REPORT_REASON_LABELS,
   ReportReason,
+  PostType,
 } from '../types';
 import { createNotification } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
@@ -19,13 +20,30 @@ async function deletePostById(postId: string, adminId: string): Promise<void> {
   const postRef = db.collection('posts').doc(postId);
   const postSnap = await postRef.get();
   if (!postSnap.exists) return;
-  if (postSnap.data()?.status !== PostStatus.DELETED) {
-    await postRef.update({
+
+  const postData = postSnap.data()!;
+
+  if (postData.status !== PostStatus.DELETED) {
+    const batch = db.batch();
+
+    batch.update(postRef, {
       status: PostStatus.DELETED,
       deletedAt: FieldValue.serverTimestamp(),
       deletedBy: adminId,
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    if (postData.type === PostType.AVATAR_UPDATE || postData.type === PostType.COVER_UPDATE) {
+      const userRef = db.collection('users').doc(postData.authorId);
+      const field = postData.type === PostType.AVATAR_UPDATE ? 'avatar' : 'cover';
+
+      batch.update(userRef, {
+        [field]: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
   }
 }
 

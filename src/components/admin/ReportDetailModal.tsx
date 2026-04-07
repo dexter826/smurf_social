@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   Report, ReportStatus, ReportType, User, UserStatus,
-  Post, Comment, PostStatus, CommentStatus,
+  Post, Comment, PostStatus, CommentStatus, PostType,
 } from '../../../shared/types';
 import { reportService } from '../../services/reportService';
 import { userService } from '../../services/userService';
@@ -177,6 +177,19 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
   const isPending = report?.status === ReportStatus.PENDING;
   const isContentReport = report?.targetType !== ReportType.USER;
   const isDeleted = content && 'status' in content && content.status === 'deleted';
+  
+  const isProfileUpdate = report?.targetType === ReportType.POST && 
+    content && 
+    'type' in content && 
+    (content.type === PostType.AVATAR_UPDATE || content.type === PostType.COVER_UPDATE);
+
+  const getConfirmMessage = () => {
+    if (!pendingAction) return '';
+    if (pendingAction === 'resolve' && isProfileUpdate) {
+      return 'Xác nhận xóa nội dung vi phạm. Hành động này cũng sẽ gỡ bỏ ảnh hiện tại khỏi hồ sơ người dùng (về trạng thái chưa có ảnh).';
+    }
+    return ACTION_CONFIRM[pendingAction].message;
+  };
 
   return (
     <>
@@ -490,7 +503,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
           onClose={() => setPendingAction(null)}
           onConfirm={handleAction}
           title={ACTION_CONFIRM[pendingAction].title}
-          message={ACTION_CONFIRM[pendingAction].message}
+          message={getConfirmMessage()}
           variant={ACTION_CONFIRM[pendingAction].variant}
         />
       )}

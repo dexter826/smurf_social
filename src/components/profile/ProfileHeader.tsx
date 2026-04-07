@@ -20,8 +20,8 @@ interface ProfileHeaderProps {
   onEditClick?: () => void;
   onMessageClick?: () => void;
   onFriendClick?: () => void;
-  onAvatarChange?: (file: File, shareToFeed: boolean) => void;
-  onCoverChange?: (file: File, shareToFeed: boolean) => void;
+  onAvatarChange?: (file: File) => void;
+  onCoverChange?: (file: File) => void;
   onAvatarDelete?: () => void;
   onCoverDelete?: () => void;
   onBlockClick?: () => void;
@@ -29,6 +29,8 @@ interface ProfileHeaderProps {
   isBlockedByMe?: boolean;
   uploadingType?: 'avatar' | 'cover' | null;
   uploadProgress?: number;
+  onAvatarClick?: () => void;
+  onCoverClick?: () => void;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -37,6 +39,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onAvatarChange, onCoverChange, onAvatarDelete, onCoverDelete,
   onBlockClick, onUnblockClick, isBlockedByMe = false,
   uploadingType, uploadProgress,
+  onAvatarClick, onCoverClick,
 }) => {
   const navigate = useNavigate();
   const currentUser = useAuthStore(state => state.user);
@@ -64,9 +67,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     e.target.value = '';
   };
 
-  const handleCropComplete = (croppedFile: File, shouldShare: boolean) => {
-    if (cropState?.type === 'avatar') onAvatarChange?.(croppedFile, shouldShare);
-    else if (cropState?.type === 'cover') onCoverChange?.(croppedFile, shouldShare);
+  const handleCropComplete = (croppedFile: File) => {
+    if (cropState?.type === 'avatar') onAvatarChange?.(croppedFile);
+    else if (cropState?.type === 'cover') onCoverChange?.(croppedFile);
     if (cropState?.image) URL.revokeObjectURL(cropState.image);
     setCropState(null);
   };
@@ -95,8 +98,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           <LazyImage
             src={user.cover?.url || '/cover-image.jpg'}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${uploadingType === 'cover' ? 'opacity-50' : 'opacity-100'}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${uploadingType === 'cover' ? 'opacity-50' : 'opacity-100'} ${onCoverClick ? 'cursor-pointer' : ''}`}
             alt="Cover"
+            onClick={onCoverClick}
           />
 
           {/* Cover upload progress */}
@@ -123,7 +127,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               >
                 <DropdownItem icon={<ImageIcon size={15} />} label="Tải ảnh lên" onClick={() => openFilePicker('cover')} />
                 {user.cover?.url && (
-                  <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh bìa" variant="danger" onClick={onCoverDelete} />
+                  <>
+                    <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh bìa" onClick={onCoverClick} />
+                    <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh bìa" variant="danger" onClick={onCoverDelete} />
+                  </>
                 )}
               </Dropdown>
             </div>
@@ -144,9 +151,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   src={user.avatar?.url}
                   name={user.fullName}
                   size="2xl"
-                  className="border-4 border-bg-primary"
+                  className={`border-4 border-bg-primary ${onAvatarClick ? 'cursor-pointer' : ''}`}
                   initialStatus={user.status}
                   showStatus={false}
+                  onClick={onAvatarClick}
                 />
                 {uploadingType === 'avatar' && uploadProgress !== undefined && (
                   <div
@@ -174,7 +182,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   >
                     <DropdownItem icon={<ImageIcon size={15} />} label="Tải ảnh lên" onClick={() => openFilePicker('avatar')} />
                     {user.avatar?.url && (
-                      <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh đại diện" variant="danger" onClick={onAvatarDelete} />
+                      <>
+                        <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh đại diện" onClick={onAvatarClick} />
+                        <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh đại diện" variant="danger" onClick={onAvatarDelete} />
+                      </>
                     )}
                   </Dropdown>
                 </div>
@@ -270,6 +281,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
                     align="right"
                   >
+                    {user.avatar?.url && <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh đại diện" onClick={onAvatarClick} />}
+                    {user.cover?.url && <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh bìa" onClick={onCoverClick} />}
                     <DropdownItem icon={<Ban size={15} />} label="Chặn" variant="danger" onClick={onBlockClick} />
                     <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
                   </Dropdown>
@@ -289,7 +302,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           onCropComplete={handleCropComplete}
           onImageChange={handleImageChange}
           onCancel={handleCropCancel}
-          showShareOption
         />
       )}
     </>
