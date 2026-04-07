@@ -41,7 +41,9 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
         navigate('/contacts');
         break;
       case NotificationType.REPORT:
-        navigate(currentUser?.role === 'admin' ? '/admin/reports' : '/notifications');
+        if (currentUser?.role === 'admin') {
+          navigate('/admin/reports');
+        }
         break;
       case NotificationType.SYSTEM:
         navigate(notification.data.friendRequestId
@@ -106,11 +108,17 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className={`text-sm leading-relaxed break-words
+        <p className={`text-sm leading-relaxed break-words line-clamp-2
           ${!notification.isRead ? 'text-text-primary' : 'text-text-secondary'}`}
         >
           {!isSystem && (
-            <span className="font-semibold text-text-primary mr-1">
+            <span 
+              className="font-semibold text-text-primary mr-1 hover:underline cursor-pointer transition-colors duration-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/profile/${notification.actorId}`);
+              }}
+            >
               {sender?.fullName ?? (
                 <Skeleton width={56} height={12} className="inline-block align-middle" />
               )}

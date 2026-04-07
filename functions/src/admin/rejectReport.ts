@@ -44,7 +44,7 @@ export const rejectReport = onCall(
 
     await createNotification({
       receiverId: reportData.reporterId,
-      actorId: adminId,
+      actorId: 'system',
       type: NotificationType.REPORT,
       data: {
         reportId,
