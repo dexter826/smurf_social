@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag, Play, Pause } from 'lucide-react';
 import {
   UserAvatar, IconButton, Modal, Dropdown, DropdownItem,
   Skeleton, ReactionDetailsModal, MediaViewer, SensitiveMediaGuard,
@@ -36,6 +36,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     post?.id || '', 'post', post?.authorId || '', post?.reactionCount
@@ -46,8 +48,15 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   }, [author?.id, onClose, navigate]);
 
   useEffect(() => {
-    if (isOpen) setActiveMediaIndex(0);
+    if (isOpen) {
+      setActiveMediaIndex(0);
+      setIsVideoPlaying(false);
+    }
   }, [isOpen, post?.id]);
+
+  useEffect(() => {
+    setIsVideoPlaying(false);
+  }, [activeMediaIndex]);
 
   const allMedia = useMemo(() => {
     if (!post) return [];
@@ -117,8 +126,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     >
       {/* ── Cinema media panel (desktop only) ── */}
       {hasMedia && (
-        <div className="hidden lg:flex flex-[1.6] bg-[#0a0c10] items-center justify-center relative select-none overflow-hidden border-r border-white/5 shrink-0">
-          <div className="w-full h-full relative flex items-center justify-center" style={{ zIndex: 10 }}>
+        <div className="hidden lg:flex flex-[1.6] bg-[#0a0c10] items-center justify-center relative overflow-hidden border-r border-white/5 shrink-0">
+          <div className="w-full h-full relative flex items-center justify-center min-h-0 min-w-0" style={{ zIndex: 10 }}>
             {!allMedia[activeMediaIndex] ? (
               <p className="text-white/40 text-sm">Không tìm thấy nội dung</p>
             ) : isSystemPost ? (
@@ -129,22 +138,40 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 onClick={() => setIsMediaViewerOpen(true)}
               />
             ) : allMedia[activeMediaIndex].type === 'video' ? (
-              <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive}>
-                <video
-                  src={allMedia[activeMediaIndex].url}
-                  poster={allMedia[activeMediaIndex].thumbnail}
-                  controls playsInline preload="none"
-                  className="max-w-full max-h-full object-contain"
-                />
+              <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive} className="w-full h-full min-h-0 min-w-0">
+                <div className="w-full h-full flex items-center justify-center relative group/player">
+                  <video
+                    ref={videoRef}
+                    src={allMedia[activeMediaIndex].url}
+                    poster={allMedia[activeMediaIndex].thumbnail}
+                    controls playsInline preload="metadata"
+                    className="w-full h-full object-contain"
+                    onPlay={() => setIsVideoPlaying(true)}
+                    onPause={() => setIsVideoPlaying(false)}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (videoRef.current) {
+                        videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
+                      }
+                    }}
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white/20 hover:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-200 active:scale-95 z-20 ${isVideoPlaying ? 'opacity-0 group-hover/player:opacity-100' : 'opacity-100'}`}
+                  >
+                    {isVideoPlaying ? <Pause size={28} /> : <Play size={28} />}
+                  </button>
+                </div>
               </SensitiveMediaGuard>
             ) : (
-              <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive}>
-                <img
-                  src={allMedia[activeMediaIndex].url}
-                  alt=""
-                  className="max-w-full max-h-full object-contain cursor-pointer hover:opacity-95 transition-opacity duration-200 animate-fade-in"
-                  onClick={() => setIsMediaViewerOpen(true)}
-                />
+              <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive} className="w-full h-full min-h-0 min-w-0">
+                <div className="w-full h-full flex items-center justify-center">
+                  <img
+                    src={allMedia[activeMediaIndex].url}
+                    alt=""
+                    className="w-full h-full object-contain cursor-pointer hover:opacity-95 transition-opacity duration-200 animate-fade-in"
+                    onClick={() => setIsMediaViewerOpen(true)}
+                  />
+                </div>
               </SensitiveMediaGuard>
             )}
 

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  /* === Typography Scale === */
+  /* Typography */
   --font-size-xs: 0.6875rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -16,7 +16,7 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
 
-  /* === Border Radius Scale === */
+  /* Border radius */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
@@ -24,13 +24,13 @@
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* === Transitions === */
+  /* Transitions */
   --transition-fast: 150ms;
   --transition-base: 200ms;
   --transition-slow: 300ms;
   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* === Brand Colors === */
+  /* Colors */
   --color-primary: #0068ff;
   --color-primary-hover: #0056d6;
   --color-primary-active: #0047b3;
@@ -38,22 +38,22 @@
   --color-primary-gradient: #4d8aff;
   --color-primary-rgb: 0 104 255;
 
-  /* === Gradient === */
+  /* Gradients */
   --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient));
   --gradient-primary-r: linear-gradient(to right, var(--color-primary), var(--color-primary-gradient));
 
-  /* === Accent Shadow === */
+  /* Shadows */
   --shadow-accent: 0 4px 14px rgba(0, 104, 255, 0.25);
   --shadow-accent-lg: 0 8px 24px rgba(0, 104, 255, 0.35);
 
-  /* === Sidebar Colors === */
+  /* Sidebar */
   --sidebar-bg: #0068ff;
   --sidebar-item: rgba(255, 255, 255, 0.7);
   --sidebar-item-hover: rgba(0, 0, 0, 0.1);
   --sidebar-item-active: rgba(0, 0, 0, 0.15);
   --sidebar-border: rgba(0, 0, 0, 0.06);
 
-  /* === Background Colors === */
+  /* Backgrounds */
   --bg-primary: #ffffff;
   --bg-secondary: #f4f6f8;
   --bg-tertiary: #e9ebef;
@@ -64,20 +64,20 @@
   --bg-message-received: #ffffff;
   --bg-overlay: rgba(15, 23, 42, 0.45);
 
-  /* === Text Colors === */
+  /* Text */
   --text-primary: #081c36;
   --text-secondary: #7589a3;
   --text-tertiary: #a0aec0;
   --text-on-primary: #ffffff;
 
-  /* === Border === */
+  /* Borders */
   --border-light: #e4e6eb;
   --border-subtle: #eeeff2;
   --border-medium: #d1d5db;
   --border-dark: #9ca3af;
   --divider: #e9ebef;
 
-  /* === Status Colors === */
+  /* Status */
   --color-success: #10b981;
   --color-success-light: #d1fae5;
   --color-error: #ef4444;
@@ -94,7 +94,7 @@
   --status-online: #10b981;
   --status-offline: #9ca3af;
 
-  /* === Shadow System === */
+  /* Shadows */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.12);
@@ -102,7 +102,7 @@
   --shadow-xl: 0 8px 24px 0 rgba(0, 0, 0, 0.15);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
 
-  /* === Z-Index System === */
+  /* Z-index */
   --z-header: 100;
   --z-sticky: 110;
   --z-dropdown: 500;
@@ -114,7 +114,7 @@
 }
 
 .dark {
-  /* === Brand Colors === */
+  /* Colors */
   --color-primary: #0068ff;
   --color-primary-hover: #2563eb;
   --color-primary-active: #1d4ed8;
@@ -122,22 +122,22 @@
   --color-primary-gradient: #4d8aff;
   --color-primary-rgb: 0 104 255;
 
-  /* === Gradient === */
+  /* Gradients */
   --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient));
   --gradient-primary-r: linear-gradient(to right, var(--color-primary), var(--color-primary-gradient));
 
-  /* === Accent Shadow === */
+  /* Shadows */
   --shadow-accent: 0 4px 14px rgba(0, 104, 255, 0.3);
   --shadow-accent-lg: 0 8px 24px rgba(0, 104, 255, 0.4);
 
-  /* === Sidebar Colors === */
+  /* Sidebar */
   --sidebar-bg: #080a0f;
   --sidebar-item: rgba(248, 250, 252, 0.65);
   --sidebar-item-hover: rgba(248, 250, 252, 0.08);
   --sidebar-item-active: rgba(248, 250, 252, 0.12);
   --sidebar-border: rgba(255, 255, 255, 0.08);
 
-  /* === Background Colors === */
+  /* Backgrounds */
   --bg-primary: #12161f;
   --bg-secondary: #1a1f29;
   --bg-tertiary: #1e242d;
@@ -148,20 +148,20 @@
   --bg-message-received: #1e242d;
   --bg-overlay: rgba(15, 23, 42, 0.7);
 
-  /* === Text Colors === */
+  /* Text */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
   --text-on-primary: #ffffff;
 
-  /* === Border === */
+  /* Borders */
   --border-light: #1e2530;
   --border-subtle: #181d25;
   --border-medium: #2d333b;
   --border-dark: #484f58;
   --divider: #1e2530;
 
-  /* === Status Colors === */
+  /* Status */
   --color-success: #10b981;
   --color-success-light: rgba(16, 185, 129, 0.1);
   --color-error: #ef4444;
@@ -178,7 +178,7 @@
   --status-online: #10b981;
   --status-offline: #484f58;
 
-  /* === Shadow System === */
+  /* Shadows */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
   --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.6);
@@ -194,13 +194,13 @@ body {
   padding: 0;
 }
 
-/* Ẩn nút reveal mặc định của browser */
+/* Hide browser default reveal buttons */
 input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
 
-/* === Scrollbar === */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -238,7 +238,7 @@ input::-ms-clear {
   color: #ffffff;
 }
 
-/* === Utility Classes === */
+/* Utilities */
 .text-ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,7 +262,7 @@ input::-ms-clear {
   @apply flex items-center justify-center;
 }
 
-/* Safe area cho mobile */
+/* Mobile safe area */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -273,7 +273,7 @@ input::-ms-clear {
   }
 }
 
-/* === Gradient Utilities === */
+/* Gradients */
 .btn-gradient {
   background: var(--gradient-primary-r);
 }
@@ -287,7 +287,7 @@ input::-ms-clear {
   transform: scale(0.98);
 }
 
-/* === Screen Loader === */
+/* Screen loader */
 .screen-loader-cube {
   background: var(--gradient-primary);
   box-shadow: 0 0 12px var(--color-primary-light), inset 0 0 8px var(--color-primary-light), inset 3px 3px 8px var(--color-primary-active);
@@ -306,7 +306,7 @@ input::-ms-clear {
   animation-delay: 0.4s;
 }
 
-/* === Gradient Border Utility === */
+/* Gradient borders */
 .gradient-border {
   position: relative;
   background: var(--gradient-primary);
@@ -319,9 +319,22 @@ input::-ms-clear {
   border-radius: calc(inherit - 2px);
 }
 
-/* === Background Pattern === */
+/* Background pattern */
 .bg-app-pattern {
   background-image: radial-gradient(var(--border-medium) 0.8px, transparent 0.8px);
   background-size: 24px 24px;
   background-attachment: fixed;
+}
+
+/* Fullscreen video override */
+video:-webkit-full-screen {
+  object-fit: contain !important;
+}
+
+video:-moz-full-screen {
+  object-fit: contain !important;
+}
+
+video:fullscreen {
+  object-fit: contain !important;
 }
