@@ -42,7 +42,7 @@ export const searchUsers = onCall(
 
         const myHiddenUsers = new Set(
           blockedUsersSnap.docs
-            .filter(d => d.data().hideTheirActivity === true)
+            .filter(d => d.data().isFullyBlocked === true)
             .map(d => d.id)
         );
 
@@ -59,7 +59,7 @@ export const searchUsers = onCall(
               .doc(currentUserId)
               .get();
 
-            if (!targetBlockedSnap.exists || targetBlockedSnap.data()?.blockViewMyActivity !== true) {
+            if (!targetBlockedSnap.exists || targetBlockedSnap.data()?.isFullyBlocked !== true) {
               safeUsers.push(targetUser);
             }
           }

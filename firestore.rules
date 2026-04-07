@@ -35,13 +35,13 @@ service cloud.firestore {
     function theyBlockedMyView(theirId) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(theirId)/blockedUsers/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(theirId)/blockedUsers/$(request.auth.uid)).data.blockViewMyActivity == true;
+        get(/databases/$(database)/documents/users/$(theirId)/blockedUsers/$(request.auth.uid)).data.isFullyBlocked == true;
     }
 
     function iHideTheirActivity(theirId) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(theirId)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(theirId)).data.hideTheirActivity == true;
+        get(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(theirId)).data.isFullyBlocked == true;
     }
 
     function isContentBlocked(contentOwnerId) {
@@ -50,8 +50,8 @@ service cloud.firestore {
 
     function isBlockedEitherWay(otherUserId) {
       return isAuthenticated() && (
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(otherUserId)) ||
-        exists(/databases/$(database)/documents/users/$(otherUserId)/blockedUsers/$(request.auth.uid))
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(otherUserId)) && get(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(otherUserId)).data.isFullyBlocked == true) ||
+        (exists(/databases/$(database)/documents/users/$(otherUserId)/blockedUsers/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(otherUserId)/blockedUsers/$(request.auth.uid)).data.isFullyBlocked == true)
       );
     }
 

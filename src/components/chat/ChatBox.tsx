@@ -36,8 +36,7 @@ interface ChatBoxProps {
   isBlockedByMe?: boolean;
   partnerStatus?: UserStatus;
   myBlockOptions?: {
-    blockMessages: boolean; blockCalls: boolean;
-    blockViewMyActivity: boolean; hideTheirActivity: boolean;
+    isFullyBlocked: boolean; isMessageBlocked: boolean;
   };
   onUnblock?: () => void;
   onManageBlock?: () => void;

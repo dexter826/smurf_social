@@ -85,10 +85,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
       if (hasReported) {
         if (blockUser && targetOwnerId) {
           const defaultBlockOptions = {
-            blockMessages: true,
-            blockCalls: true,
-            blockViewMyActivity: true,
-            hideTheirActivity: true
+            isFullyBlocked: true,
+            isMessageBlocked: true
           };
           await userService.blockUser(reporterId, targetOwnerId, defaultBlockOptions);
           useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);
@@ -111,10 +109,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
 
       if (blockUser && targetOwnerId) {
         const defaultBlockOptions = {
-          blockMessages: true,
-          blockCalls: true,
-          blockViewMyActivity: true,
-          hideTheirActivity: true
+          isFullyBlocked: true,
+          isMessageBlocked: true
         };
         await userService.blockUser(reporterId, targetOwnerId, defaultBlockOptions);
         useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);

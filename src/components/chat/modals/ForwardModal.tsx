@@ -38,7 +38,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         if (!partnerId) return;
         try {
           const snap = await getDoc(doc(db, 'users', partnerId, 'blockedUsers', currentUserId));
-          if (snap.exists() && snap.data().blockMessages === true) blockedSet.add(partnerId);
+          if (snap.exists() && (snap.data().isMessageBlocked === true || snap.data().isFullyBlocked === true)) blockedSet.add(partnerId);
         } catch { /* silent */ }
       })
     ).then(() => setBlockedByPartners(new Set(blockedSet)));
@@ -125,7 +125,8 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                 hasSent={sentIds.has(conv.id)}
                 isSending={sendingTo === conv.id}
                 isBlocked={!conv.data.isGroup && (
-                  myBlockedUsers[Object.keys(conv.data.members).find(id => id !== currentUserId) || '']?.blockMessages === true ||
+                  myBlockedUsers[Object.keys(conv.data.members).find(id => id !== currentUserId) || '']?.isMessageBlocked === true ||
+                  myBlockedUsers[Object.keys(conv.data.members).find(id => id !== currentUserId) || '']?.isFullyBlocked === true ||
                   blockedByPartners.has(Object.keys(conv.data.members).find(id => id !== currentUserId) || '')
                 )}
                 onForward={() => handleForward(conv.id)}

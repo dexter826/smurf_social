@@ -15,17 +15,15 @@ export const onBlockedUserWrite = onDocumentWritten(
         const before = event.data?.before?.data();
         const after = event.data?.after?.data();
 
-        const prevHide = before?.hideTheirActivity ?? false;
-        const newHide = after?.hideTheirActivity ?? false;
-        const prevViewBlock = before?.blockViewMyActivity ?? false;
-        const newViewBlock = after?.blockViewMyActivity ?? false;
+        const prevHide = before?.isFullyBlocked ?? false;
+        const newHide = after?.isFullyBlocked ?? false;
 
         const tasks: Promise<void>[] = [];
 
         if (!prevHide && newHide) tasks.push(removePostsFromFeed(db, userId, blockedUid));
+        if (!prevHide && newHide) tasks.push(removePostsFromFeed(db, blockedUid, userId));
         if (prevHide && !newHide) tasks.push(restorePostsIfFriend(db, userId, blockedUid));
-        if (!prevViewBlock && newViewBlock) tasks.push(removePostsFromFeed(db, blockedUid, userId));
-        if (prevViewBlock && !newViewBlock) tasks.push(restorePostsIfFriend(db, blockedUid, userId));
+        if (prevHide && !newHide) tasks.push(restorePostsIfFriend(db, blockedUid, userId));
 
         if (tasks.length > 0) await Promise.all(tasks);
     }

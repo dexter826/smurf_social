@@ -106,7 +106,7 @@ export const useProfile = () => {
 
     // Block
     isBlockedByMe: block.isBlockedByMe,
-    isActivityBlockedByPartner: block.isActivityBlockedByPartner,
+    isFullyBlockedByPartner: block.isFullyBlockedByPartner,
     currentBlockOptions: block.currentBlockOptions,
     isBlockModalOpen: block.isBlockModalOpen,
     handleOpenBlockModal: block.handleOpenBlockModal,

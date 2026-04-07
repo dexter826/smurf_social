@@ -92,7 +92,7 @@ export const postService = {
 
       const blockedUsersMap = await userService.getBlockedUsers(userId);
       const hiddenAuthorIds = Object.keys(blockedUsersMap).filter(
-        id => blockedUsersMap[id].hideTheirActivity
+        id => blockedUsersMap[id].isFullyBlocked
       );
       const authorIds = [...new Set(posts.map(p => p.authorId))];
       const usersMap = await batchGetUsers(authorIds);
@@ -219,12 +219,12 @@ export const postService = {
 
       if (userId !== currentUserId) {
         const blockSnap = await getDoc(doc(db, 'users', userId, 'blockedUsers', currentUserId));
-        if (blockSnap.exists() && blockSnap.data().blockViewMyActivity === true) {
+        if (blockSnap.exists() && blockSnap.data().isFullyBlocked === true) {
           return { posts: [], lastDoc: null };
         }
 
         const myBlockSnap = await getDoc(doc(db, 'users', currentUserId, 'blockedUsers', userId));
-        if (myBlockSnap.exists() && myBlockSnap.data().hideTheirActivity === true) {
+        if (myBlockSnap.exists() && myBlockSnap.data().isFullyBlocked === true) {
           return { posts: [], lastDoc: null };
         }
       }
@@ -282,8 +282,8 @@ export const postService = {
         const blockedByTarget = await getDoc(doc(db, 'users', userId, 'blockedUsers', currentUserId));
         const blockedByMe = await getDoc(doc(db, 'users', currentUserId, 'blockedUsers', userId));
 
-        if ((blockedByTarget.exists() && blockedByTarget.data().blockViewMyActivity === true) ||
-          (blockedByMe.exists() && blockedByMe.data().hideTheirActivity === true)) {
+        if ((blockedByTarget.exists() && blockedByTarget.data().isFullyBlocked === true) ||
+          (blockedByMe.exists() && blockedByMe.data().isFullyBlocked === true)) {
           callback([]);
           return;
         }

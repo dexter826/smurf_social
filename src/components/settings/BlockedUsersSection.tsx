@@ -20,10 +20,8 @@ const BLOCK_TAG_MAP: {
   label: string;
   color: string;
 }[] = [
-    { key: 'blockMessages', icon: <MessageSquareOff size={10} />, label: 'Tin nhắn', color: 'text-error bg-error/10 border-error/20' },
-    { key: 'blockCalls', icon: <PhoneOff size={10} />, label: 'Cuộc gọi', color: 'text-warning bg-warning/10 border-warning/20' },
-    { key: 'blockViewMyActivity', icon: <EyeOff size={10} />, label: 'Xem mình', color: 'text-primary bg-primary/10 border-primary/20' },
-    { key: 'hideTheirActivity', icon: <EyeOff size={10} />, label: 'Ẩn họ', color: 'text-info bg-info/10 border-info/20' },
+    { key: 'isFullyBlocked', icon: <Ban size={10} />, label: 'Chặn hoàn toàn', color: 'text-error bg-error/10 border-error/20' },
+    { key: 'isMessageBlocked', icon: <MessageSquareOff size={10} />, label: 'Tin nhắn & Cuộc gọi', color: 'text-warning bg-warning/10 border-warning/20' },
   ];
 
 const BlockOptionTags: React.FC<{ options: BlockOptions }> = React.memo(({ options }) => {

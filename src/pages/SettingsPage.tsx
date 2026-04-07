@@ -81,7 +81,7 @@ const SettingsPage: React.FC = () => {
 
     await userService.blockUser(currentUser.id, targetId, options);
     useAuthStore.getState().updateBlockEntry('add', targetId, options);
-    if (options.hideTheirActivity) usePostStore.getState().filterPostsByAuthor(targetId);
+    if (options.isFullyBlocked) usePostStore.getState().filterPostsByAuthor(targetId);
 
     setBlockedList(prev =>
       prev.map(item =>

@@ -83,7 +83,7 @@ async function handleFanout(postId: string, postData: any) {
                 chunk.map(fid => db.collection('users').doc(fid).collection('blockedUsers').doc(authorId).get())
             );
             blockSnaps.forEach((snap, idx) => {
-                if (snap.exists && snap.data()?.hideTheirActivity === true) {
+                if (snap.exists && snap.data()?.isFullyBlocked === true) {
                     usersHidingAuthor.add(chunk[idx]);
                 }
             });

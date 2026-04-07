@@ -23,7 +23,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
   const rawFriendIds = useFriendIds();
   const friendIds = useMemo(() => rawFriendIds, [JSON.stringify(rawFriendIds)]);
   
-  const { isActivityBlocked, isBlocked } = useBlockedUsers();
+  const { isFullyBlocked } = useBlockedUsers();
   const lastIdRef = useRef<string | undefined>(undefined);
 
   const loadProfile = useCallback(async (isInitial = false) => {
@@ -36,7 +36,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
     
     lastIdRef.current = profileUserId;
     try {
-      const isBlockedWith = profileUserId ? isActivityBlocked(profileUserId) || isBlocked(profileUserId) : false;
+      const isBlockedWith = profileUserId ? isFullyBlocked(profileUserId) : false;
       const [userData, userPosts] = await Promise.all([
         userService.getUserById(profileUserId),
         isBlockedWith ? Promise.resolve({ posts: [], lastDoc: null }) : postService.getUserPosts(profileUserId, currentUser?.id || '', rawFriendIds, 20)
@@ -59,7 +59,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
         setLoading(false);
       }
     }
-  }, [profileUserId, currentUser?.id, rawFriendIds, isActivityBlocked, isBlocked]);
+  }, [profileUserId, currentUser?.id, rawFriendIds, isFullyBlocked]);
 
   useEffect(() => {
     loadProfile(true);

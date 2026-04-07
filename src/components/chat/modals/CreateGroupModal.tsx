@@ -310,7 +310,6 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           title="Cắt ảnh nhóm"
           onCropComplete={handleCropComplete}
           onCancel={handleCropCancel}
-          showShareOption={false}
         />
       )}
     </>

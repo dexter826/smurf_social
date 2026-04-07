@@ -44,7 +44,7 @@ const ProfilePage: React.FC = () => {
     handleMessage, handleFriendAction, confirmUnfriend,
     handleSaveProfile, handleAvatarChange, handleCoverChange,
     handleAvatarDelete, handleCoverDelete,
-    isBlockedByMe, isActivityBlockedByPartner, currentBlockOptions,
+    isBlockedByMe, isFullyBlockedByPartner, currentBlockOptions,
     isBlockModalOpen, handleOpenBlockModal, handleApplyBlock,
     handleUnblockUser, confirmUnblock, closeBlockModal,
   } = useProfile();
@@ -179,6 +179,7 @@ const ProfilePage: React.FC = () => {
           onBlockClick={handleOpenBlockModal}
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
+          isFullyBlockedByMe={currentBlockOptions?.isFullyBlocked ?? false}
           uploadingType={uploadingType}
           uploadProgress={uploadProgress}
           onAvatarClick={() => handleMediaClick(PostType.AVATAR_UPDATE)}
@@ -333,7 +334,7 @@ const ProfilePage: React.FC = () => {
                     </button>
                   </div>
 
-                  {latestMedia.length > 0 && !isActivityBlockedByPartner ? (
+                  {latestMedia.length > 0 && !isFullyBlockedByPartner ? (
                     <div className="grid grid-cols-3 gap-1.5">
                       {latestMedia.map((url, idx) => (
                         <div
@@ -366,7 +367,7 @@ const ProfilePage: React.FC = () => {
                   userId={profile.id}
                   currentUser={currentUser}
                   onViewPost={viewPost}
-                  isActivityBlockedByPartner={isActivityBlockedByPartner}
+                  isFullyBlockedByPartner={isFullyBlockedByPartner}
                 />
               </div>
             </div>
@@ -375,7 +376,7 @@ const ProfilePage: React.FC = () => {
               {activeTab === 'media' && (
                 <PhotosTab
                   userId={profile.id}
-                  isActivityBlockedByPartner={isActivityBlockedByPartner}
+                  isFullyBlockedByPartner={isFullyBlockedByPartner}
                 />
               )}
             </div>
@@ -392,7 +393,7 @@ const ProfilePage: React.FC = () => {
             <p className="text-sm text-text-secondary mb-7 leading-relaxed">
               {isBlockedByMe
                 ? 'Bạn đã chặn người dùng này. Bỏ chặn để xem nội dung của họ.'
-                : !isActivityBlockedByPartner
+                : !isFullyBlockedByPartner
                   ? 'Bạn không thể xem trang cá nhân này.'
                   : 'Người dùng này đã giới hạn quyền xem trang cá nhân.'}
             </p>

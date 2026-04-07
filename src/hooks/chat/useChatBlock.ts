@@ -28,8 +28,7 @@ export const useChatBlock = ({
   conversation,
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
-  const [isBlockedByPartner, setIsBlockedByPartner] = useState(false);
-  const [isCallBlockedByPartner, setIsCallBlockedByPartner] = useState(false);
+  const [isMessageBlockedByPartner, setIsMessageBlockedByPartner] = useState(false);
 
   const myBlockedUsers = useAuthStore(state => state.blockedUsers);
 
@@ -39,9 +38,12 @@ export const useChatBlock = ({
   );
 
   const isBlockedByMe = !!myBlockOptions;
-  const isMessageBlockedByMe = !!myBlockOptions?.blockMessages;
-  const isCallBlockedByMe = !!myBlockOptions?.blockCalls;
-  const isBlocked = isMessageBlockedByMe || isBlockedByPartner || partnerStatus === UserStatus.BANNED;
+  const isMessageBlockedByMe = !!myBlockOptions?.isMessageBlocked || !!myBlockOptions?.isFullyBlocked;
+
+  const isCallBlockedByMe = isMessageBlockedByMe;
+  const isCallBlockedByPartner = isMessageBlockedByPartner;
+
+  const isBlocked = isMessageBlockedByMe || isMessageBlockedByPartner || partnerStatus === UserStatus.BANNED;
   const shouldShowBlockBanner = isBlockedByMe;
 
   useEffect(() => {
@@ -57,10 +59,9 @@ export const useChatBlock = ({
     return () => unsub();
   }, [partnerId]);
 
-  // Subscribe realtime để biết bị partner chặn tin nhắn
   useEffect(() => {
     if (!partnerId || !currentUser || isGroup) {
-      setIsBlockedByPartner(false);
+      setIsMessageBlockedByPartner(false);
       return;
     }
 
@@ -68,11 +69,9 @@ export const useChatBlock = ({
     const unsub = onSnapshot(blockRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        setIsBlockedByPartner(data.blockMessages === true);
-        setIsCallBlockedByPartner(data.blockCalls === true);
+        setIsMessageBlockedByPartner(data.isMessageBlocked === true || data.isFullyBlocked === true);
       } else {
-        setIsBlockedByPartner(false);
-        setIsCallBlockedByPartner(false);
+        setIsMessageBlockedByPartner(false);
       }
     });
     return () => unsub();
@@ -82,11 +81,11 @@ export const useChatBlock = ({
     if (!isGroup && partnerId) {
       const currentStatus = partnerStatus || partner?.status || usersMap[partnerId]?.status;
       if (currentStatus === UserStatus.BANNED) return 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.';
-      if (isMessageBlockedByMe) return 'Bạn đã chặn tin nhắn từ người này. Bỏ chặn để gửi tin nhắn.';
-      if (isBlockedByPartner) return 'Không thể gửi tin nhắn cho người dùng này.';
+      if (isMessageBlockedByMe) return 'Bạn đã chặn liên lạc với người này. Bỏ chặn để gửi tin nhắn.';
+      if (isMessageBlockedByPartner) return 'Không thể gửi tin nhắn cho người dùng này.';
     }
     return undefined;
-  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isMessageBlockedByMe, isBlockedByPartner]);
+  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isMessageBlockedByMe, isMessageBlockedByPartner]);
 
   const blockedMessage = useMemo(() => getBlockedMessage(), [getBlockedMessage]);
 
@@ -107,10 +106,7 @@ export const useChatBlock = ({
   const handleApplyBlock = useCallback(async (options: BlockOptions) => {
     if (!partnerId || !currentUser) return;
     
-    const hasAnyOption = options.blockMessages || 
-                        options.blockCalls || 
-                        options.blockViewMyActivity || 
-                        options.hideTheirActivity;
+    const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
     
     if (!hasAnyOption) {
       return handleUnblock();
@@ -120,7 +116,7 @@ export const useChatBlock = ({
       await userService.blockUser(currentUser.id, partnerId, options);
       useAuthStore.getState().updateBlockEntry('add', partnerId, options);
       
-      if (options.hideTheirActivity) {
+      if (options.isFullyBlocked) {
         usePostStore.getState().filterPostsByAuthor(partnerId);
       }
       
@@ -135,7 +131,7 @@ export const useChatBlock = ({
     isBlockedByMe,
     isMessageBlockedByMe,
     isCallBlockedByMe,
-    isBlockedByPartner,
+    isBlockedByPartner: isMessageBlockedByPartner,
     isCallBlockedByPartner,
     myBlockOptions,
     partnerStatus,

@@ -31,13 +31,14 @@ interface ProfileHeaderProps {
   uploadProgress?: number;
   onAvatarClick?: () => void;
   onCoverClick?: () => void;
+  isFullyBlockedByMe?: boolean;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user, isOwnProfile, friendStatus = FriendStatus.NOT_FRIEND,
   onEditClick, onMessageClick, onFriendClick,
   onAvatarChange, onCoverChange, onAvatarDelete, onCoverDelete,
-  onBlockClick, onUnblockClick, isBlockedByMe = false,
+  onBlockClick, onUnblockClick, isBlockedByMe = false, isFullyBlockedByMe = false,
   uploadingType, uploadProgress,
   onAvatarClick, onCoverClick,
 }) => {
@@ -230,7 +231,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <span className="px-3 py-2 rounded-xl bg-error/10 text-error text-sm font-medium border border-error/20">
                   Tài khoản đã bị khóa
                 </span>
-              ) : isBlockedByMe ? (
+              ) : isFullyBlockedByMe ? (
                 <Dropdown
                   trigger={
                     <Button variant="secondary" icon={<MoreHorizontal size={17} />} />
@@ -283,7 +284,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   >
                     {user.avatar?.url && <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh đại diện" onClick={onAvatarClick} />}
                     {user.cover?.url && <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh bìa" onClick={onCoverClick} />}
-                    <DropdownItem icon={<Ban size={15} />} label="Chặn" variant="danger" onClick={onBlockClick} />
+                    <DropdownItem icon={isBlockedByMe ? <UserCheck size={15} /> : <Ban size={15} />} label={isBlockedByMe ? "Quản lý chặn" : "Chặn"} variant={isBlockedByMe ? "default" : "danger"} onClick={isBlockedByMe ? onUnblockClick : onBlockClick} />
                     <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
                   </Dropdown>
                 </>

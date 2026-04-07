@@ -260,7 +260,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "hideTheirActivity",
+          "fieldPath": "isFullyBlocked",
           "order": "ASCENDING"
         },
         {

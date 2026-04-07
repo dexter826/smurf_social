@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { User } from '../../../shared/types';
+import { User, BlockOptions } from '../../../shared/types';
 import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { toast } from '../../store/toastStore';
-import { BlockOptions } from '../../../shared/types';
 import { TOAST_MESSAGES } from '../../constants';
 import { usePostStore } from '../../store';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -16,9 +15,6 @@ interface UseProfileBlockProps {
   isOwnProfile: boolean;
 }
 
-/**
- * Xử lý block/unblock và mở modal options
- */
 export const useProfileBlock = ({
   currentUser,
   profile,
@@ -27,7 +23,7 @@ export const useProfileBlock = ({
 }: UseProfileBlockProps) => {
   const blockedUsers = useAuthStore(state => state.blockedUsers);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
-  const [isActivityBlockedByPartner, setIsActivityBlockedByPartner] = useState(false);
+  const [isFullyBlockedByPartner, setIsFullyBlockedByPartner] = useState(false);
 
   const isBlockedByMe = useMemo(() =>
     !!blockedUsers[profileUserId || ''],
@@ -46,15 +42,15 @@ export const useProfileBlock = ({
 
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) {
-      setIsActivityBlockedByPartner(false);
+      setIsFullyBlockedByPartner(false);
       return;
     }
     const blockRef = doc(db, 'users', profileUserId, 'blockedUsers', currentUser.id);
     const unsub = onSnapshot(blockRef, (snap) => {
       if (snap.exists()) {
-        setIsActivityBlockedByPartner(snap.data()?.blockViewMyActivity === true);
+        setIsFullyBlockedByPartner(snap.data()?.isFullyBlocked === true);
       } else {
-        setIsActivityBlockedByPartner(false);
+        setIsFullyBlockedByPartner(false);
       }
     });
     return () => unsub();
@@ -82,10 +78,7 @@ export const useProfileBlock = ({
   const handleApplyBlock = useCallback(async (options: BlockOptions) => {
     if (!currentUser || !profile || isOwnProfile) return;
 
-    const hasAnyOption = options.blockMessages || 
-                        options.blockCalls || 
-                        options.blockViewMyActivity || 
-                        options.hideTheirActivity;
+    const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
     
     if (!hasAnyOption) {
       return handleUnblockUser();
@@ -95,7 +88,7 @@ export const useProfileBlock = ({
       await userService.blockUser(currentUser.id, profile.id, options);
       useAuthStore.getState().updateBlockEntry('add', profile.id, options);
       
-      if (options.hideTheirActivity) {
+      if (options.isFullyBlocked) {
         usePostStore.getState().filterPostsByAuthor(profile.id);
       }
       
@@ -108,7 +101,7 @@ export const useProfileBlock = ({
 
   return {
     isBlockedByMe,
-    isActivityBlockedByPartner,
+    isFullyBlockedByPartner,
     currentBlockOptions,
     isBlockModalOpen,
     handleOpenBlockModal,

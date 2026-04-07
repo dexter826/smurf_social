@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Ban, MessageCircle, Phone, Eye, EyeOff, ChevronDown, ChevronRight, X } from 'lucide-react';
+import { Ban, MessageCircle, X, ShieldCheck } from 'lucide-react';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { BlockOptions } from '../../../shared/types';
@@ -16,47 +16,10 @@ interface BlockOptionsModalProps {
 }
 
 const DEFAULT_OPTIONS: BlockOptions = {
-  blockMessages: false,
-  blockCalls: false,
-  blockViewMyActivity: false,
-  hideTheirActivity: false,
+  isFullyBlocked: false,
+  isMessageBlocked: false,
 };
 
-const OptionRow: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: (val: boolean) => void;
-  indent?: boolean;
-}> = ({ icon, label, description, checked, onChange, indent }) => (
-  <label
-    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer hover:bg-bg-hover transition-colors duration-200 ${indent ? 'ml-6' : ''}`}
-  >
-    <div className="pt-0.5 flex-shrink-0">
-      <div
-        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${checked ? 'btn-gradient border-primary' : 'border-border-medium bg-bg-primary'
-          }`}
-        onClick={() => onChange(!checked)}
-      >
-        {checked && (
-          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        )}
-      </div>
-    </div>
-    <div className="flex-1 min-w-0" onClick={() => onChange(!checked)}>
-      <div className="flex items-center gap-2">
-        <span className="text-text-secondary">{icon}</span>
-        <span className="font-medium text-text-primary text-sm">{label}</span>
-      </div>
-      <p className="text-xs text-text-tertiary mt-0.5 leading-relaxed">{description}</p>
-    </div>
-  </label>
-);
-
-// Modal chọn options block user
 export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
   isOpen,
   targetName,
@@ -66,20 +29,14 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
   onClose,
 }) => {
   const [options, setOptions] = useState<BlockOptions>(DEFAULT_OPTIONS);
-  const [activityExpanded, setActivityExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      const mergedOptions = {
-        ...DEFAULT_OPTIONS,
-        blockMessages: initialOptions?.blockMessages ?? DEFAULT_OPTIONS.blockMessages,
-        blockCalls: initialOptions?.blockCalls ?? DEFAULT_OPTIONS.blockCalls,
-        blockViewMyActivity: initialOptions?.blockViewMyActivity ?? DEFAULT_OPTIONS.blockViewMyActivity,
-        hideTheirActivity: initialOptions?.hideTheirActivity ?? DEFAULT_OPTIONS.hideTheirActivity,
-      };
-      setOptions(mergedOptions);
-      setActivityExpanded(!!(mergedOptions.blockViewMyActivity || mergedOptions.hideTheirActivity));
+      setOptions({
+        isFullyBlocked: initialOptions?.isFullyBlocked ?? false,
+        isMessageBlocked: initialOptions?.isMessageBlocked ?? false,
+      });
     }
   }, [isOpen, initialOptions]);
 
@@ -87,26 +44,10 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const set = (key: keyof BlockOptions, val: boolean) =>
-    setOptions(prev => ({ ...prev, [key]: val }));
-
-  const activityActive = options.blockViewMyActivity || options.hideTheirActivity;
-
-  const handleToggleActivity = () => {
-    const next = !activityExpanded;
-    setActivityExpanded(next);
-    if (!next) {
-      setOptions(prev => ({ ...prev, blockViewMyActivity: false, hideTheirActivity: false }));
-    }
-  };
-
   const handleApply = async () => {
     setIsLoading(true);
     try {
-      const hasAnyOption = options.blockMessages ||
-        options.blockCalls ||
-        options.blockViewMyActivity ||
-        options.hideTheirActivity;
+      const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
 
       if (!hasAnyOption && onUnblock) {
         await onUnblock();
@@ -118,6 +59,9 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
       setIsLoading(false);
     }
   };
+
+  const isNoneSelected = !options.isFullyBlocked && !options.isMessageBlocked;
+  const isPreviouslyBlocked = initialOptions?.isFullyBlocked || initialOptions?.isMessageBlocked;
 
   const content = (
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-4"
@@ -136,80 +80,70 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-text-primary text-base">Quản lý chặn {targetName}</h3>
-              <p className="text-xs text-text-tertiary">Chọn những gì bạn muốn chặn</p>
+              <p className="text-xs text-text-tertiary">Chọn mức độ hạn chế tương tác</p>
             </div>
           </div>
           <IconButton icon={<X size={20} />} onClick={onClose} size="lg" />
         </div>
 
         {/* Options */}
-        <div className="px-3 py-3 space-y-1">
-          <OptionRow
-            icon={<MessageCircle size={16} />}
-            label="Chặn tin nhắn"
-            description="Người này không thể gửi tin nhắn cho bạn"
-            checked={options.blockMessages}
-            onChange={(val) => set('blockMessages', val)}
-          />
-
-          <OptionRow
-            icon={<Phone size={16} />}
-            label="Chặn gọi điện"
-            description="Người này không thể gọi điện cho bạn"
-            checked={options.blockCalls}
-            onChange={(val) => set('blockCalls', val)}
-          />
-
-          {/* Nhóm Ẩn nhật ký */}
-          <div className="rounded-xl border border-border-light overflow-hidden">
-            <button
-              className="w-full flex items-center gap-3 p-3 hover:bg-bg-hover transition-colors duration-200 text-left"
-              onClick={handleToggleActivity}
-            >
-              <div
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 ${activityActive ? 'btn-gradient border-primary' : 'border-border-medium bg-bg-primary'
-                  }`}
-              >
-                {activityActive && (
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
+        <div className="px-5 py-4 space-y-3">
+          {/* Fully Blocked Option */}
+          <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors duration-200 border ${options.isFullyBlocked ? 'bg-error/5 border-error/30' : 'border-border-light hover:bg-bg-hover'}`}>
+            <div className="pt-0.5 flex-shrink-0">
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${options.isFullyBlocked ? 'border-error bg-error' : 'border-border-medium bg-bg-primary'}`}>
+                {options.isFullyBlocked && <div className="w-2h-2 rounded-full bg-white" style={{ width: '8px', height: '8px' }} />}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <EyeOff size={16} className="text-text-secondary flex-shrink-0" />
-                  <span className="font-medium text-text-primary text-sm">Chặn và ẩn khỏi nhật ký</span>
+            </div>
+            <div className="flex-1 min-w-0" onClick={() => setOptions({ isFullyBlocked: true, isMessageBlocked: false })}>
+              <div className="flex items-center gap-2">
+                <Ban size={16} className={options.isFullyBlocked ? 'text-error' : 'text-text-secondary'} />
+                <span className={`font-medium text-sm ${options.isFullyBlocked ? 'text-error' : 'text-text-primary'}`}>Chặn hoàn toàn</span>
+              </div>
+              <p className="text-xs text-text-tertiary mt-1 leading-relaxed">
+                Tự động huỷ kết bạn và cấm mọi liên hệ. Cả hai sẽ không thể tìm thấy nhau hay xem tường của nhau.
+              </p>
+            </div>
+          </label>
+
+          {/* Message Block Option */}
+          <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors duration-200 border ${options.isMessageBlocked && !options.isFullyBlocked ? 'bg-warning/5 border-warning/30' : 'border-border-light hover:bg-bg-hover'}`}>
+            <div className="pt-0.5 flex-shrink-0">
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${options.isMessageBlocked && !options.isFullyBlocked ? 'border-warning bg-warning' : 'border-border-medium bg-bg-primary'}`}>
+                {options.isMessageBlocked && !options.isFullyBlocked && <div className="w-2 h-2 rounded-full bg-white" style={{ width: '8px', height: '8px' }} />}
+              </div>
+            </div>
+            <div className="flex-1 min-w-0" onClick={() => setOptions({ isFullyBlocked: false, isMessageBlocked: true })}>
+              <div className="flex items-center gap-2">
+                <MessageCircle size={16} className={options.isMessageBlocked && !options.isFullyBlocked ? 'text-warning' : 'text-text-secondary'} />
+                <span className={`font-medium text-sm ${options.isMessageBlocked && !options.isFullyBlocked ? 'text-warning' : 'text-text-primary'}`}>Chỉ chặn liên lạc</span>
+              </div>
+              <p className="text-xs text-text-tertiary mt-1 leading-relaxed">
+                Vẫn xem được hồ sơ trên tường của nhau. Chỉ chặn việc gửi tin nhắn và gọi điện trên hệ thống.
+              </p>
+            </div>
+          </label>
+
+          {/* Unblock Option (Only show if previously blocked) */}
+          {isPreviouslyBlocked && (
+            <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors duration-200 border ${isNoneSelected ? 'bg-success/5 border-success/30' : 'border-border-light hover:bg-bg-hover'}`}>
+              <div className="pt-0.5 flex-shrink-0">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${isNoneSelected ? 'border-success bg-success' : 'border-border-medium bg-bg-primary'}`}>
+                  {isNoneSelected && <div className="w-2 h-2 rounded-full bg-white" style={{ width: '8px', height: '8px' }} />}
                 </div>
-                <p className="text-xs text-text-tertiary mt-0.5">Quản lý khả năng hiển thị hoạt động</p>
               </div>
-              {activityExpanded
-                ? <ChevronDown size={16} className="text-text-secondary flex-shrink-0" />
-                : <ChevronRight size={16} className="text-text-secondary flex-shrink-0" />
-              }
-            </button>
+              <div className="flex-1 min-w-0" onClick={() => setOptions({ isFullyBlocked: false, isMessageBlocked: false })}>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={16} className={isNoneSelected ? 'text-success' : 'text-text-secondary'} />
+                  <span className={`font-medium text-sm ${isNoneSelected ? 'text-success' : 'text-text-primary'}`}>Bỏ chặn (Khôi phục bình thường)</span>
+                </div>
+                <p className="text-xs text-text-tertiary mt-1 leading-relaxed">
+                  Huỷ mọi hạn chế đối với người này. Hai bạn có thể tương tác bình thường trở lại.
+                </p>
+              </div>
+            </label>
+          )}
 
-            {activityExpanded && (
-              <div className="border-t border-border-light bg-bg-secondary/30 space-y-0.5 py-2">
-                <OptionRow
-                  icon={<Eye size={15} />}
-                  label="Chặn xem hoạt động của tôi"
-                  description="Người bị chặn không thể xem bài đăng của bạn"
-                  checked={options.blockViewMyActivity}
-                  onChange={(val) => set('blockViewMyActivity', val)}
-                  indent
-                />
-                <OptionRow
-                  icon={<EyeOff size={15} />}
-                  label="Ẩn hoạt động của người này"
-                  description="Bạn sẽ không thấy bài đăng của họ trong nhật ký"
-                  checked={options.hideTheirActivity}
-                  onChange={(val) => set('hideTheirActivity', val)}
-                  indent
-                />
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Footer */}
@@ -218,12 +152,12 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
             Hủy
           </Button>
           <Button
-            variant="danger"
+            variant={isNoneSelected && isPreviouslyBlocked ? 'primary' : 'danger'}
             onClick={handleApply}
             isLoading={isLoading}
             className="flex-1 font-semibold"
           >
-            Áp dụng
+            {isNoneSelected && isPreviouslyBlocked ? 'Xác nhận Bỏ chặn' : 'Áp dụng chặn'}
           </Button>
         </div>
       </div>

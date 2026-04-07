@@ -11,11 +11,11 @@ interface PostsTabProps {
   userId: string;
   currentUser: User;
   onViewPost?: (post: Post) => void;
-  isActivityBlockedByPartner?: boolean;
+  isFullyBlockedByPartner?: boolean;
 }
 
 export const PostsTab: React.FC<PostsTabProps> = ({
-  userId, currentUser, onViewPost, isActivityBlockedByPartner = false,
+  userId, currentUser, onViewPost, isFullyBlockedByPartner = false,
 }) => {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({
     setPostToDelete(null);
   };
 
-  if (loading && !isActivityBlockedByPartner) {
+  if (loading && !isFullyBlockedByPartner) {
     return (
       <div className="space-y-3 md:space-y-4">
         {[...Array(3)].map((_, i) => <PostItem.Skeleton key={i} />)}
@@ -60,7 +60,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({
     <div className="space-y-3 md:space-y-4">
       {userId === currentUser.id && <CreatePost currentUser={currentUser} />}
 
-      {isActivityBlockedByPartner || posts.length === 0 ? (
+      {isFullyBlockedByPartner || posts.length === 0 ? (
         <div className="bg-bg-primary rounded-2xl border border-border-light p-10 text-center">
           <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-3 border border-border-light">
             <FileText size={22} className="text-text-tertiary" />

@@ -125,10 +125,7 @@ Trigger: `users/{userId}/friends/{friendId}` — onDocumentWritten
 Trigger: `users/{userId}/blockedUsers/{blockedUid}` — onDocumentWritten
 
 Đồng bộ feed khi thay đổi block options:
-- `hideTheirActivity` bật: Xóa bài của người bị ẩn khỏi feed của mình.
-- `hideTheirActivity` tắt: Khôi phục bài vào feed (nếu hai bên vẫn là bạn bè).
-- `blockViewMyActivity` bật: Xóa bài của mình khỏi feed của người bị chặn xem.
-- `blockViewMyActivity` tắt: Khôi phục bài vào feed của họ (nếu vẫn là bạn bè).
+- Khôi phục bài vào feed của họ nếu bỏ chặn (và vẫn là bạn bè).
 
 ---
 

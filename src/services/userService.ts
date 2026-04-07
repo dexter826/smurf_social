@@ -224,10 +224,8 @@ export const userService = {
         const data = d.data();
         result[d.id] = {
           blockedUid: data.blockedUid,
-          blockMessages: data.blockMessages ?? false,
-          blockCalls: data.blockCalls ?? false,
-          blockViewMyActivity: data.blockViewMyActivity ?? false,
-          hideTheirActivity: data.hideTheirActivity ?? false,
+          isFullyBlocked: data.isFullyBlocked ?? false,
+          isMessageBlocked: data.isMessageBlocked ?? false,
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
         };
@@ -251,6 +249,14 @@ export const userService = {
         },
         { merge: true }
       );
+      if (options.isFullyBlocked) {
+        try {
+          const { friendService } = await import('./friendService');
+          await friendService.unfriend(userId, blockedUserId);
+        } catch (e) {
+          console.error('Không thể huỷ kết bạn tự động khi chặn', e);
+        }
+      }
     } catch (error) {
       console.error('Lỗi chặn người dùng', error);
       throw error;
