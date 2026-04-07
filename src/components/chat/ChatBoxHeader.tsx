@@ -21,7 +21,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
   conversation, participants, chatName, avatarSrc, partner,
   usersMap, onBack, onInfoClick, onCall, onVideoCall, canCall = true,
 }) => (
-  <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-4 h-16 border-b border-border-light bg-bg-primary transition-theme">
+  <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-4 h-16 border-b border-border-light bg-bg-primary transition-theme z-[var(--z-sticky)]">
     {/* Left: back + avatar + name */}
     <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
       {onBack && (

@@ -100,7 +100,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   });
 
   return (
-    <div className="relative flex-1 flex flex-col min-h-0 bg-bg-chat transition-theme">
+    <div className="relative flex-1 flex flex-col min-h-0 bg-bg-chat bg-app-pattern transition-theme">
       <ChatBoxHeader
         conversation={conversation}
         participants={participants}
@@ -128,7 +128,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden bg-bg-chat scroll-hide"
+        className="flex-1 overflow-y-auto overflow-x-hidden bg-transparent scroll-hide"
       >
         {isLoading ? (
           <ChatBoxSkeleton />

@@ -59,9 +59,9 @@
   --bg-tertiary: #e9ebef;
   --bg-hover: #f0f2f5;
   --bg-active: #e4e6eb;
-  --bg-chat: #ffffff;
-  --bg-message-sent: #0068ff;
-  --bg-message-received: #e9ebef;
+  --bg-chat: #f5f7f9;
+  --bg-message-sent: #ecf3ff;
+  --bg-message-received: #ffffff;
   --bg-overlay: rgba(15, 23, 42, 0.45);
 
   /* === Text Colors === */
@@ -143,8 +143,8 @@
   --bg-tertiary: #1e242d;
   --bg-hover: #1e2530;
   --bg-active: #28303d;
-  --bg-chat: #0b0e14;
-  --bg-message-sent: #0068ff;
+  --bg-chat: #090c10;
+  --bg-message-sent: #1a2b4b;
   --bg-message-received: #1e242d;
   --bg-overlay: rgba(15, 23, 42, 0.7);
 

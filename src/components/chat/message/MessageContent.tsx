@@ -19,8 +19,8 @@ interface MessageContentProps {
 }
 
 const UploadBar: React.FC<{ progress: number; error?: boolean; light?: boolean }> = ({ progress, error, light }) => (
-  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
-    <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-2">
+  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4">
+    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-2">
       <div className="bg-primary h-full transition-all duration-slow" style={{ width: `${progress}%` }} />
     </div>
     <span className={`text-xs font-medium ${light ? 'text-white' : 'text-text-secondary'}`}>
@@ -215,7 +215,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
 
     if (isFileUploading) {
       return (
-        <div className={`relative flex items-center gap-3 p-3 rounded-xl border w-full max-w-xs ${isMe ? 'bg-primary/10 border-primary/20' : 'bg-bg-primary border-border-light'}`}>
+        <div className={`relative flex items-center gap-3 p-3 rounded-xl border w-full max-w-xs ${isMe ? 'bg-bg-message-sent border-primary/20' : 'bg-bg-message-received border-border-light/50'}`}>
           <div className={`p-2 rounded-lg ${isMe ? 'bg-primary/10' : 'bg-bg-secondary'}`}>
             <FileText size={24} className={isMe ? 'text-primary' : 'text-text-secondary'} />
           </div>
@@ -236,7 +236,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     }
 
     return (
-      <div className={`flex flex-col gap-2 p-2 rounded-xl border max-w-[300px] ${isMe ? 'bg-primary/5 border-primary/20' : 'bg-bg-secondary border-border-light'}`}>
+      <div className={`flex flex-col gap-2 p-2 rounded-xl border max-w-[300px] ${isMe ? 'bg-bg-message-sent border-primary/20' : 'bg-bg-message-received border-border-light/50'}`}>
         {(isImageFile || isVideoFile) && fileUrl && (
           <div className="rounded-lg overflow-hidden cursor-pointer bg-black/5 aspect-video flex items-center justify-center" onClick={() => isImageFile ? onOpenImage(0) : undefined}>
             {isImageFile
@@ -304,7 +304,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     const { callType, status, duration } = parsed;
     const isVid = callType === 'video';
     const isMissedOrRejected = !isGroup && (status === 'missed' || status === 'rejected');
-    const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-primary');
+    const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-primary dark:text-white' : 'text-primary');
 
     let title = '';
     if (isGroup) {
@@ -324,12 +324,12 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     }
 
     const btnClass = `mt-2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all outline-none shadow-sm ${
-      isMe ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
+      isMe ? 'bg-primary/20 text-primary dark:text-white hover:bg-primary/30 border border-primary/20 dark:border-white/20' : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
     }`;
 
     return (
       <div className={`flex flex-col gap-1 w-fit max-w-[260px] ${isMe ? 'items-end' : 'items-start'}`}>
-        <div className={`flex items-center gap-2 text-sm font-semibold ${!isMe && isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-white' : 'text-text-primary')}`}>
+        <div className={`flex items-center gap-2 text-sm font-semibold ${!isMe && isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-primary dark:text-white' : 'text-text-primary')}`}>
           {isMissedOrRejected ? <PhoneMissed size={16} className={iconColor} /> : (isVid ? <Video size={16} className={iconColor} /> : <PhoneIncoming size={16} className={iconColor} />)}
           <span>{title}</span>
         </div>
@@ -361,9 +361,9 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         ? `${Math.floor(rawDuration / 60)}:${String(rawDuration % 60).padStart(2, '0')}`
         : `0:${String(rawDuration).padStart(2, '0')}`)
       : null;
-    const voiceClass = `flex items-center gap-3 p-3 rounded-2xl min-w-[200px] transition-all duration-base ${isMe ? 'bg-bg-message-sent text-text-on-primary shadow-md' : 'bg-bg-message-received text-text-primary'
+    const voiceClass = `flex items-center gap-3 p-3 rounded-2xl min-w-[200px] transition-all duration-base ${isMe ? 'bg-bg-message-sent text-primary dark:text-white border border-primary/20' : 'bg-bg-message-received text-text-primary border border-border-light/50'
       }`;
-    const btnClass = `p-2.5 rounded-full shadow-sm transition-all duration-base ${isMe ? 'bg-bg-primary text-primary' : 'bg-primary text-white'}`;
+    const btnClass = `p-2.5 rounded-full shadow-sm transition-all duration-base ${isMe ? 'bg-primary text-white' : 'bg-primary text-white'}`;
 
     if (isMe && up && !voiceUrl) {
       return (
@@ -388,7 +388,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         <div className="flex-1">
           <div className="text-sm font-bold mb-0.5">Tin nhắn thoại</div>
           <div className={`flex items-center gap-1.5 opacity-80 ${isMe ? 'text-text-on-primary' : 'text-text-tertiary'}`}>
-            <Mic size={12} />
+            <Mic size={12} className={isMe ? 'text-primary/70' : 'text-text-tertiary'} />
             <span className="text-xs">{durationStr ?? 'Click để nghe'}</span>
           </div>
         </div>

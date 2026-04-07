@@ -82,7 +82,7 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
   };
 
   return (
-    <div className="flex-shrink-0 bg-bg-primary border-b border-border-light px-4 py-2.5 transition-theme animate-fade-in">
+    <div className="flex-shrink-0 bg-bg-primary border-b border-border-light/50 px-4 py-2.5 transition-theme animate-fade-in">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
           <MessageCircle size={16} className="text-primary" />

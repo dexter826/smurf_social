@@ -167,10 +167,10 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               className={`
                 relative text-sm
                 ${isTextLike
-                  ? `px-3 py-2 rounded-2xl shadow-sm
+                  ? `px-3 py-2 rounded-2xl
                     ${isMe
-                    ? 'bg-bg-message-sent text-text-on-primary rounded-br-sm'
-                    : 'bg-bg-message-received text-text-primary rounded-bl-sm'
+                    ? 'bg-bg-message-sent border border-primary/20 dark:border-primary/40 text-primary dark:text-white rounded-br-sm'
+                    : 'bg-bg-message-received border border-black/5 dark:border-white/10 text-text-primary rounded-bl-sm'
                   }`
                   : ''
                 }
@@ -188,12 +188,12 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   <div
                     className={`mb-2 px-2.5 py-1.5 rounded-xl border-l-[3px] text-xs cursor-pointer
                       ${isMe
-                        ? 'bg-white/15 border-white/60 text-white/90'
-                        : 'bg-bg-secondary border-primary/60 text-text-secondary'
+                        ? 'bg-white/20 border-white/60 text-white/90'
+                        : 'bg-zinc-200/50 dark:bg-white/10 border-primary/60 text-text-secondary'
                       }`}
                     onClick={() => replyToMsg && scrollToMessage(message.data.replyToId!)}
                   >
-                    <div className={`font-semibold mb-0.5 ${isMe ? 'text-white' : 'text-primary'}`}>
+                    <div className={`font-semibold mb-0.5 ${isMe ? 'text-primary dark:text-white' : 'text-primary'}`}>
                       {replyAuthorName}
                     </div>
                     <div className="truncate opacity-80">
@@ -226,7 +226,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
               {/* Timestamp (text/call/recalled only) */}
               {isTextLike && (
-                <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMe ? 'text-white/70' : 'text-text-tertiary'}`}>
+                <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMe ? 'text-primary/70 dark:text-white/70' : 'text-text-tertiary'}`}>
                   {formatTimeOnly(message.data.createdAt)}
                 </div>
               )}
