@@ -49,8 +49,6 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
   const filteredConversations = conversations.filter(conv => {
     const partnerId = Object.keys(conv.data.members).find(id => id !== currentUserId);
     if (!conv.data.isGroup && partnerId) {
-      if (myBlockedUsers[partnerId]) return false;
-      if (blockedByPartners.has(partnerId)) return false;
       if (usersMap[partnerId]?.status === UserStatus.BANNED) return false;
     }
     const name = conv.data.isGroup
@@ -58,6 +56,18 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
       : usersMap[partnerId || '']?.fullName || '';
     return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
+
+  const getMessageTypeLabel = (type: string) => {
+    switch (type) {
+      case 'image': return 'Hình ảnh';
+      case 'video': return 'Video';
+      case 'file': return 'Tệp tin';
+      case 'voice': return 'Tin nhắn thoại';
+      case 'call': return 'Cuộc gọi';
+      case 'system': return 'Hệ thống';
+      default: return type;
+    }
+  };
 
   const handleForward = async (conversationId: string) => {
     try {
@@ -99,7 +109,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
         <div className="p-3 bg-bg-secondary rounded-xl border border-border-light">
           <p className="text-xs text-text-tertiary mb-1 font-medium">Nội dung chuyển tiếp:</p>
           <p className="text-sm text-text-primary line-clamp-2 italic">
-            {message.data.type === 'text' ? message.data.content : `[${message.data.type}]`}
+            {message.data.type === 'text' ? message.data.content : `[${getMessageTypeLabel(message.data.type)}]`}
           </p>
         </div>
 
@@ -114,6 +124,10 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                 usersMap={usersMap}
                 hasSent={sentIds.has(conv.id)}
                 isSending={sendingTo === conv.id}
+                isBlocked={!conv.data.isGroup && (
+                  myBlockedUsers[Object.keys(conv.data.members).find(id => id !== currentUserId) || '']?.blockMessages === true ||
+                  blockedByPartners.has(Object.keys(conv.data.members).find(id => id !== currentUserId) || '')
+                )}
                 onForward={() => handleForward(conv.id)}
               />
             ))
@@ -134,11 +148,12 @@ interface ConversationForwardItemProps {
   usersMap: Record<string, User>;
   hasSent: boolean;
   isSending: boolean;
+  isBlocked?: boolean;
   onForward: () => void;
 }
 
 const ConversationForwardItem: React.FC<ConversationForwardItemProps> = ({
-  conversation, currentUserId, usersMap, hasSent, isSending, onForward,
+  conversation, currentUserId, usersMap, hasSent, isSending, isBlocked, onForward,
 }) => {
   const participants = useConversationParticipants(Object.keys(conversation.data.members));
   const partner = participants.find(p => p.id !== currentUserId);
@@ -168,11 +183,13 @@ const ConversationForwardItem: React.FC<ConversationForwardItemProps> = ({
 
       <button
         onClick={onForward}
-        disabled={hasSent || isSending}
+        disabled={hasSent || isSending || isBlocked}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex-shrink-0
           ${hasSent
             ? 'bg-success/10 text-success cursor-default'
-            : 'bg-primary/10 text-primary hover:bg-primary/20 active:brightness-95 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100'
+            : isBlocked
+              ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed opacity-100'
+              : 'bg-primary/10 text-primary hover:bg-primary/20 active:brightness-95 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100'
           }`}
       >
         {isSending ? (
@@ -182,7 +199,7 @@ const ConversationForwardItem: React.FC<ConversationForwardItemProps> = ({
         ) : (
           <Send size={12} />
         )}
-        {hasSent ? 'Đã gửi' : 'Gửi'}
+        {hasSent ? 'Đã gửi' : isBlocked ? 'Bị chặn' : 'Gửi'}
       </button>
     </div>
   );
