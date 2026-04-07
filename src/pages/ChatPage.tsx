@@ -4,6 +4,7 @@ import { MessageSquare } from 'lucide-react';
 import { BlockOptionsModal } from '../components/ui';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
+import { useAuthStore } from '../store/authStore';
 import { useFriendIds, useBlockedUsers } from '../hooks';
 import { friendService } from '../services/friendService';
 import { useConversationMemberSettings } from '../hooks/chat/useConversationMemberSettings';
@@ -78,7 +79,7 @@ const ChatPage: React.FC = () => {
     setIsBlockModalOpen(true);
   };
   const closeBlockModal = () => { setIsBlockModalOpen(false); setBlockTarget(null); };
-  const confirmUnblock = async () => { await handleUnblock(); closeBlockModal(); };
+  const confirmUnblock = async () => { await handleUnblock(blockTarget?.id); closeBlockModal(); };
 
   const { startCall, joinActiveCall } = useCallManager(currentUser?.id || '');
 
@@ -340,8 +341,8 @@ const ChatPage: React.FC = () => {
         <BlockOptionsModal
           isOpen={isBlockModalOpen}
           targetName={blockTarget?.name ?? partner?.fullName ?? ''}
-          initialOptions={myBlockOptions}
-          onApply={handleApplyBlock}
+          initialOptions={blockTarget ? useAuthStore.getState().blockedUsers[blockTarget.id] : myBlockOptions}
+          onApply={async (opts) => { await handleApplyBlock(opts, blockTarget?.id); closeBlockModal(); }}
           onUnblock={confirmUnblock}
           onClose={closeBlockModal}
         />

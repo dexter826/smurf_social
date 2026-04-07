@@ -89,11 +89,12 @@ export const useChatBlock = ({
 
   const blockedMessage = useMemo(() => getBlockedMessage(), [getBlockedMessage]);
 
-  const handleUnblock = useCallback(async () => {
-    if (!partnerId || !currentUser) return;
+  const handleUnblock = useCallback(async (targetIdOverride?: string) => {
+    const finalTargetId = targetIdOverride || partnerId;
+    if (!finalTargetId || !currentUser) return;
     try {
-      await userService.unblockUser(currentUser.id, partnerId);
-      useAuthStore.getState().updateBlockEntry('remove', partnerId);
+      await userService.unblockUser(currentUser.id, finalTargetId);
+      useAuthStore.getState().updateBlockEntry('remove', finalTargetId);
       
       usePostStore.getState().refreshFeed(currentUser.id);
       
@@ -103,21 +104,22 @@ export const useChatBlock = ({
     }
   }, [partnerId, currentUser]);
 
-  const handleApplyBlock = useCallback(async (options: BlockOptions) => {
-    if (!partnerId || !currentUser) return;
+  const handleApplyBlock = useCallback(async (options: BlockOptions, targetIdOverride?: string) => {
+    const finalTargetId = targetIdOverride || partnerId;
+    if (!finalTargetId || !currentUser) return;
     
     const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
     
     if (!hasAnyOption) {
-      return handleUnblock();
+      return handleUnblock(finalTargetId);
     }
 
     try {
-      await userService.blockUser(currentUser.id, partnerId, options);
-      useAuthStore.getState().updateBlockEntry('add', partnerId, options);
+      await userService.blockUser(currentUser.id, finalTargetId, options);
+      useAuthStore.getState().updateBlockEntry('add', finalTargetId, options);
       
       if (options.isFullyBlocked) {
-        usePostStore.getState().filterPostsByAuthor(partnerId);
+        usePostStore.getState().filterPostsByAuthor(finalTargetId);
       }
       
       toast.success(TOAST_MESSAGES.BLOCK.BLOCK_SUCCESS);
