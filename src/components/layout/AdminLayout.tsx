@@ -19,7 +19,7 @@ export const AdminLayout: React.FC = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
-    <div className="flex h-[100dvh] w-full bg-bg-secondary overflow-hidden transition-theme">
+    <div className="flex h-[100dvh] w-full bg-bg-secondary bg-app-pattern overflow-hidden transition-theme">
 
       {/* ── Desktop Sidebar ── */}
       <aside

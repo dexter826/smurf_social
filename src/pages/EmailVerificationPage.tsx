@@ -58,7 +58,7 @@ const EmailVerificationPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] bg-bg-primary transition-theme">
+    <div className="flex min-h-[100dvh] bg-bg-primary bg-app-pattern transition-theme">
       <AuthBrandingPanel
         headline={<>Chỉ một bước <br /> Nữa thôi.</>}
         subtext="Để đảm bảo an toàn, vui lòng xác thực email của bạn trước khi bắt đầu khám phá Smurfy."

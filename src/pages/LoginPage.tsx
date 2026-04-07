@@ -136,7 +136,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] bg-bg-primary transition-theme">
+    <div className="flex min-h-[100dvh] bg-bg-primary bg-app-pattern transition-theme">
       <AuthBrandingPanel
         headline={<>Kết nối <br /> Mọi nơi.</>}
         subtext="Trải nghiệm mạng xã hội thế hệ mới với Smurfy. An toàn và riêng tư."

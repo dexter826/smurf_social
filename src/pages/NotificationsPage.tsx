@@ -13,7 +13,7 @@ const NotificationsPage: React.FC = () => {
     useNotificationStore();
 
   return (
-    <div className="flex flex-col h-full bg-bg-secondary overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
 
       {/* ── Header ── */}
       <header className="flex-shrink-0 flex items-center justify-between px-4 h-16 border-b border-border-light bg-bg-primary">

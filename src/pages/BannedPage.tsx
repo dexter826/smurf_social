@@ -36,7 +36,7 @@ const BannedPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-bg-secondary flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-bg-secondary bg-app-pattern flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
 
         {/* Card */}

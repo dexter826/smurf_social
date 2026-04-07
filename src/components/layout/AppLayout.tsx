@@ -143,7 +143,7 @@ export const AppLayout: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full bg-bg-secondary overflow-hidden transition-theme">
+    <div className="flex flex-col h-[100dvh] w-full bg-bg-secondary bg-app-pattern overflow-hidden transition-theme">
 
       {/* ── Desktop Header ── */}
       <header

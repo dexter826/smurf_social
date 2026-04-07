@@ -318,3 +318,10 @@ input::-ms-clear {
   background: var(--bg-primary);
   border-radius: calc(inherit - 2px);
 }
+
+/* === Background Pattern === */
+.bg-app-pattern {
+  background-image: radial-gradient(var(--border-medium) 0.8px, transparent 0.8px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
+}

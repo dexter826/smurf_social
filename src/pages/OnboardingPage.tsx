@@ -164,7 +164,7 @@ const OnboardingPage: React.FC = () => {
   const StepIcon = currentStep.icon;
 
   return (
-    <div className="flex min-h-[100dvh] bg-bg-primary transition-theme">
+    <div className="flex min-h-[100dvh] bg-bg-primary bg-app-pattern transition-theme">
       <AuthBrandingPanel
         headline={<>Chào mừng,<br />bạn mới!</>}
         subtext="Hãy thiết lập hồ sơ của bạn để kết nối với những người bạn thú vị trên Smurfy."

@@ -106,7 +106,7 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full w-full bg-bg-secondary overflow-hidden">
+    <div className="flex h-full w-full overflow-hidden">
 
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex flex-col w-[280px] lg:w-[320px] border-r border-border-light bg-bg-primary flex-shrink-0">
@@ -141,7 +141,7 @@ const SettingsPage: React.FC = () => {
       </aside>
 
       {/* ── Main content ── */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-bg-primary md:bg-bg-secondary">
+      <div className="flex-1 flex-col h-full min-w-0 flex">
 
         {/* Header */}
         <div

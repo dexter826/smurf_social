@@ -236,7 +236,7 @@ const ChatPage: React.FC = () => {
           </>
         ) : (
           /* ── Empty state ── */
-          <div className="flex-1 flex flex-col items-center justify-center bg-bg-secondary p-6 text-center">
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
             <div className="relative mb-6">
               <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
               <div className="relative w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">

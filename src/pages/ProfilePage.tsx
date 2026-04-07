@@ -143,7 +143,7 @@ const ProfilePage: React.FC = () => {
   /* ── Banned profile (other user) ── */
   if (isBannedProfile && !isOwnProfile) {
     return (
-      <div className="h-full flex items-center justify-center p-4 bg-bg-secondary">
+      <div className="h-full flex items-center justify-center p-4">
         <div className="bg-bg-primary rounded-2xl border border-border-light p-10 w-full max-w-md text-center animate-fade-in">
           <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-5 border border-border-light">
             <Lock size={28} className="text-text-tertiary" />
@@ -162,7 +162,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto bg-bg-secondary">
+    <div className="h-full w-full overflow-y-auto">
       {/* Header card */}
       <div className="bg-bg-primary shadow-sm mb-4">
         <ProfileHeader
