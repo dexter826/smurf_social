@@ -1,4 +1,4 @@
-import { User } from '../../shared/types';
+import { User, Generation } from '../../shared/types';
 
 export const getHybridReason = (currentUser: User | null, otherUser: User): string => {
   if (!currentUser) return "Có thể bạn quen";
@@ -51,4 +51,19 @@ export const getHybridReason = (currentUser: User | null, otherUser: User): stri
   }
 
   return `Cùng ${matches[0].shortLabel} & ${matches.length - 1} điểm chung khác`;
+};
+
+/**
+ * Tự động tính thế hệ dựa trên ngày sinh
+ */
+export const calculateGeneration = (dob: number | Date | null | undefined): Generation => {
+  if (!dob) return Generation.UNKNOWN;
+  const date = typeof dob === 'number' ? new Date(dob) : dob;
+  const year = date.getFullYear();
+
+  if (year >= 2013) return Generation.ALPHA;
+  if (year >= 1997) return Generation.Z;
+  if (year >= 1981) return Generation.MILLENNIALS;
+  if (year >= 1965) return Generation.X;
+  return Generation.BOOMERS;
 };

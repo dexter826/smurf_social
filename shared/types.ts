@@ -120,6 +120,15 @@ export enum MaritalStatus {
     OTHER = "other",
 }
 
+export enum Generation {
+    UNKNOWN = "",
+    ALPHA = "Gen Alpha",
+    Z = "Gen Z",
+    MILLENNIALS = "Millennials",
+    X = "Gen X",
+    BOOMERS = "Baby Boomers",
+}
+
 export enum FriendStatus {
     NOT_FRIEND = "not_friend",
     PENDING_SENT = "pending_sent",
@@ -196,7 +205,7 @@ export interface User extends BaseEntity {
     school?: string;
     maritalStatus?: MaritalStatus;
     interests?: string[];
-    generation?: string;
+    generation?: Generation;
 }
 
 export interface FriendRequest extends BaseEntity {

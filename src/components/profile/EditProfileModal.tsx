@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Timestamp } from 'firebase/firestore';
 import { X } from 'lucide-react';
-import { User, Gender, MaritalStatus } from '../../../shared/types';
+import { User, Gender, MaritalStatus, Generation } from '../../../shared/types';
 import { Button, Input, TextArea, Select, DatePicker, Modal, SearchableSelect } from '../ui';
 import type { SearchableOption } from '../ui/SearchableSelect';
 import { toDate } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
 import { API_ENDPOINTS, TOAST_MESSAGES } from '../../constants';
 import { profileSchema, ProfileFormValues } from '../../utils/validation';
+import { calculateGeneration } from '../../utils/userUtils';
 import schoolsData from '../../assets/data/schools.json';
 
 interface EditProfileModalProps {
@@ -29,12 +30,12 @@ const MARITAL_STATUS_OPTIONS = [
 ];
 
 const GENERATION_OPTIONS = [
-  { value: '', label: 'Chưa xác định' },
-  { value: 'Gen Z', label: 'Gen Z (1997-2012)' },
-  { value: 'Millennials', label: 'Millennials (1981-1996)' },
-  { value: 'Gen X', label: 'Gen X (1965-1980)' },
-  { value: 'Baby Boomers', label: 'Boomer (Trước 1965)' },
-  { value: 'Gen Alpha', label: 'Gen Alpha (Từ 2013)' },
+  { value: Generation.UNKNOWN, label: 'Chưa xác định' },
+  { value: Generation.Z, label: 'Gen Z (1997-2012)' },
+  { value: Generation.MILLENNIALS, label: 'Millennials (1981-1996)' },
+  { value: Generation.X, label: 'Gen X (1965-1980)' },
+  { value: Generation.BOOMERS, label: 'Boomer (Trước 1965)' },
+  { value: Generation.ALPHA, label: 'Gen Alpha (Từ 2013)' },
 ];
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
@@ -64,7 +65,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       school: user.school || '',
       maritalStatus: user.maritalStatus,
       interests: user.interests || [],
-      generation: user.generation || '',
+      generation: user.generation || Generation.UNKNOWN,
     },
   });
 
@@ -81,7 +82,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       school: user.school || '',
       maritalStatus: user.maritalStatus,
       interests: user.interests || [],
-      generation: user.generation || '',
+      generation: user.generation || Generation.UNKNOWN,
     });
     setInterestInput('');
     fetch(API_ENDPOINTS.PROVINCES)
@@ -128,7 +129,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         ...(data.school ? { school: data.school } : { school: '' }),
         ...(data.maritalStatus !== undefined && { maritalStatus: data.maritalStatus }),
         interests: data.interests?.length ? data.interests : [],
-        ...(data.generation ? { generation: data.generation } : { generation: '' }),
+        ...(data.generation ? { generation: data.generation } : { generation: Generation.UNKNOWN }),
       };
       await onSave(payload);
       toast.success(TOAST_MESSAGES.PROFILE.UPDATE_SUCCESS);
@@ -233,7 +234,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <DatePicker
               label="Ngày sinh"
               value={formData.dob}
-              onChange={(ts) => setValue('dob', ts, { shouldDirty: true })}
+              onChange={(ts) => {
+                setValue('dob', ts, { shouldDirty: true });
+                if (ts) {
+                  const gen = calculateGeneration(ts);
+                  setValue('generation', gen, { shouldDirty: true });
+                }
+              }}
               placeholder="Chọn ngày sinh"
               size="lg"
             />
@@ -269,8 +276,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <div>
             <Select
               label="Thế hệ"
-              value={formData.generation || ''}
-              onChange={(val) => setValue('generation', val, { shouldDirty: true })}
+              value={formData.generation || Generation.UNKNOWN}
+              onChange={(val) => setValue('generation', val as Generation, { shouldDirty: true })}
               options={GENERATION_OPTIONS}
               placeholder="Chọn thế hệ"
               size="lg"

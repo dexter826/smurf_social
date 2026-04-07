@@ -12,8 +12,10 @@ import { Button, DatePicker, SearchableSelect } from '../components/ui';
 import type { SearchableOption } from '../components/ui/SearchableSelect';
 import { AuthBrandingPanel } from '../components/layout/AuthBrandingPanel';
 import { onboardingSchema, OnboardingFormValues } from '../utils/validation';
+import { calculateGeneration } from '../utils/userUtils';
 import { toast } from '../store/toastStore';
 import { API_ENDPOINTS } from '../constants';
+import { Generation } from '../../shared/types';
 import schoolsData from '../assets/data/schools.json';
 
 const STEPS = [
@@ -74,6 +76,7 @@ const OnboardingPage: React.FC = () => {
       location: user?.location || '',
       school: user?.school || '',
       interests: user?.interests || [],
+      generation: user?.generation || Generation.UNKNOWN,
     },
   });
 
@@ -145,6 +148,7 @@ const OnboardingPage: React.FC = () => {
       if (data.location) payload.location = data.location;
       if (data.school) payload.school = data.school;
       if (data.interests?.length) payload.interests = data.interests;
+      if (data.generation) payload.generation = data.generation;
 
       await completeOnboarding(payload);
       toast.success('Hồ sơ của bạn đã được thiết lập!');
@@ -228,7 +232,13 @@ const OnboardingPage: React.FC = () => {
                   <DatePicker
                     label="Ngày sinh"
                     value={formData.dob}
-                    onChange={(ts) => setValue('dob', ts)}
+                    onChange={(ts) => {
+                      setValue('dob', ts);
+                      if (ts) {
+                        const gen = calculateGeneration(ts);
+                        setValue('generation', gen);
+                      }
+                    }}
                     placeholder="Chọn ngày sinh"
                     size="lg"
                     error={errors.dob?.message}
