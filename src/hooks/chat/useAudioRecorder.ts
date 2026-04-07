@@ -48,7 +48,19 @@ export const useAudioRecorder = ({ onRecordingComplete, onError }: UseAudioRecor
       }, 1000);
     } catch (err) {
       console.error('Lỗi khi bắt đầu ghi âm:', err);
-      onError?.(err instanceof Error ? err : new Error('Không thể truy cập microphone'));
+      let errorMsg = 'Không thể truy cập microphone. Vui lòng kiểm tra màn hình và quyền hệ thống.';
+      
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError' || err.message.includes('Permission requested')) {
+          errorMsg = 'Bạn chưa cấp quyền sử dụng Microphone cho trình duyệt.';
+        } else if (err.name === 'NotFoundError' || err.message.includes('Requested device')) {
+          errorMsg = 'Không tìm thấy thiết bị Microphone nào trên máy của bạn.';
+        } else if (err.name === 'NotReadableError' || err.message.includes('in use') || err.message.includes('User request')) {
+          errorMsg = 'Microphone đang được sử dụng bởi một ứng dụng/tab khác. Vui lòng tắt và thử lại.';
+        }
+      }
+      
+      onError?.(new Error(errorMsg));
     }
   }, [onRecordingComplete, onError]);
 
