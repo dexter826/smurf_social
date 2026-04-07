@@ -100,11 +100,10 @@ export const reportService = {
         collection(db, 'reports'),
         where('reporterId', '==', reporterId),
         where('targetType', '==', targetType),
-        where('targetId', '==', targetId),
-        limit(1)
+        where('targetId', '==', targetId)
       );
       const snapshot = await getDocs(q);
-      return !snapshot.empty;
+      return snapshot.docs.some(doc => doc.data().status === ReportStatus.PENDING);
     } catch (error) {
       console.error("Lỗi kiểm tra báo cáo:", error);
       return false;
