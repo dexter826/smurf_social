@@ -167,7 +167,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               className={`
                 relative text-sm
                 ${isTextLike
-                  ? `px-3 py-2 rounded-2xl
+                  ? `px-3 py-2 rounded-2xl min-w-[72px]
                     ${isMe
                     ? 'bg-bg-message-sent border border-primary/20 dark:border-primary/40 text-black dark:text-white rounded-br-sm'
                     : 'bg-bg-message-received border border-black/15 dark:border-white/10 text-text-primary rounded-bl-sm'
