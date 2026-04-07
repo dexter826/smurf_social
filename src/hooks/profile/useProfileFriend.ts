@@ -3,6 +3,7 @@ import { User, UserStatus, FriendRequest, FriendStatus } from '../../../shared/t
 import { friendService } from '../../services/friendService';
 import { toast } from '../../store/toastStore';
 import { useFriendIds } from '../utils';
+import { usePostStore } from '../../store';
 import { TOAST_MESSAGES } from '../../constants';
 
 interface UseProfileFriendProps {
@@ -118,6 +119,7 @@ export const useProfileFriend = ({
     if (!currentUser || !profile) return;
     try {
       await friendService.unfriend(currentUser.id, profile.id);
+      usePostStore.getState().filterPostsByAuthor(profile.id);
       toast.success(TOAST_MESSAGES.FRIEND.UNFRIEND_SUCCESS);
       await loadProfile();
     } catch (error) {

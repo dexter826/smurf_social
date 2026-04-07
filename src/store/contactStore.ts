@@ -196,6 +196,8 @@ export const useContactStore = create<ContactState>()(
 
         try {
           await friendService.unfriend(userId, friendId);
+          const { usePostStore } = await import('./index');
+          usePostStore.getState().filterPostsByAuthor(friendId);
         } catch (error) {
           set({ friends: previousFriends });
           console.error("Lỗi hủy kết bạn:", error);
