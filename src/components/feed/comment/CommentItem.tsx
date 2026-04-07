@@ -114,7 +114,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     </span>
                   )}
 
-                  {isReply && comment.replyToUserId && users[comment.replyToUserId] && (
+                  {isReply && comment.replyToUserId && users[comment.replyToUserId] && comment.replyToId !== comment.parentId && (
                     <>
                       <ChevronRight size={11} className="text-text-tertiary flex-shrink-0" />
                       <button
@@ -285,7 +285,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     className="flex items-center gap-1.5 text-text-secondary hover:text-primary text-xs font-semibold py-1 px-2 transition-colors duration-200"
                   >
                     <ChevronDown size={13} strokeWidth={2.5} />
-                    Xem {comment.replyCount} trả lời
+                    Xem {comment.replyCount} câu trả lời
                   </button>
                 )
               ) : (
@@ -333,7 +333,9 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                       disabled={isLoadingR}
                       className="text-primary hover:underline text-xs font-semibold ml-8 mt-1.5 transition-colors duration-200 disabled:opacity-50"
                     >
-                      {isLoadingR ? 'Đang tải...' : 'Xem thêm trả lời...'}
+                      {isLoadingR
+                        ? 'Đang tải...'
+                        : `Xem thêm ${Math.max(0, (comment.replyCount || 0) - filteredReplies.length)} câu trả lời...`}
                     </button>
                   )}
                 </>

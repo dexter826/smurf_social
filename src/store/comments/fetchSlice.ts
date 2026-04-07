@@ -80,7 +80,16 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
           return { rootComments: { ...state.rootComments, [postId]: merged } };
         }
         if (action === 'update') {
-          return { rootComments: { ...state.rootComments, [postId]: (state.rootComments[postId] || []).map(c => comments.find(uc => uc.id === c.id) || c) } };
+          return {
+            rootComments: {
+              ...state.rootComments,
+              [postId]: (state.rootComments[postId] || []).map(c => {
+                const serverVersion = comments.find(uc => uc.id === c.id);
+                if (!serverVersion) return c;
+                return { ...serverVersion, replyCount: Math.max(serverVersion.replyCount || 0, c.replyCount || 0) };
+              })
+            }
+          };
         }
         if (action === 'remove') {
           const removedIds = new Set(comments.map(c => c.id));

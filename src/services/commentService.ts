@@ -275,9 +275,7 @@ export const commentService = {
 
     let isInitialLoad = true;
 
-    return onSnapshot(rootQuery, { includeMetadataChanges: true }, async (snapshot) => {
-      if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
-
+    return onSnapshot(rootQuery, async (snapshot) => {
       const wasInitialLoad = isInitialLoad;
       isInitialLoad = false;
 
@@ -335,9 +333,7 @@ export const commentService = {
 
     let isInitialLoad = true;
 
-    return onSnapshot(q, { includeMetadataChanges: true }, async (snapshot) => {
-      if (snapshot.metadata.hasPendingWrites && isInitialLoad) return;
-
+    return onSnapshot(q, async (snapshot) => {
       const wasInitialLoad = isInitialLoad;
       isInitialLoad = false;
 

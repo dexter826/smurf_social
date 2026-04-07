@@ -40,7 +40,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const { users, fetchUsers } = useUserCache();
   const { openReportModal } = useReportStore();
   const friendIds = useFriendIds();
-  const { blockedUserIds } = useBlockedUsers();
+  const { blockedUserIds: rawBlockedUserIds } = useBlockedUsers();
+  const blockedUserIds = useMemo(() => rawBlockedUserIds, [rawBlockedUserIds.join(',')]);
+  const friendIdsKey = useMemo(() => friendIds, [friendIds.join(',')]);
 
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -58,8 +60,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const isLoading = isLoadingPost(postId);
 
   const { visibleComments: filteredRootComments, hiddenCount: rootHiddenCount } = useMemo(() =>
-    getFilteredRootComments(postId, postOwnerId || '', currentUser.id, friendIds),
-    [getFilteredRootComments, postId, postOwnerId, currentUser.id, friendIds, currentRootComments]
+    getFilteredRootComments(postId, postOwnerId || '', currentUser.id, friendIdsKey),
+    [getFilteredRootComments, postId, postOwnerId, currentUser.id, friendIdsKey, currentRootComments]
   );
 
   useEffect(() => {
@@ -169,11 +171,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     if (rootHiddenCount > 0) return true;
     return filteredRootComments.some(root => {
       const { hiddenCount } = getFilteredReplies(
-        postId, root.id, postOwnerId || '', currentUser.id, friendIds
+        postId, root.id, postOwnerId || '', currentUser.id, friendIdsKey
       );
       return hiddenCount > 0;
     });
-  }, [rootHiddenCount, filteredRootComments, getFilteredReplies, postId, postOwnerId, currentUser.id, friendIds]);
+  }, [rootHiddenCount, filteredRootComments, getFilteredReplies, postId, postOwnerId, currentUser.id, friendIdsKey]);
 
   return (
     <div className={`flex flex-col min-h-0 transition-all duration-200 ${className} ${!header ? 'border-t border-border-light' : 'h-full bg-bg-primary'}`}>
