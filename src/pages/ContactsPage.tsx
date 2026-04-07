@@ -173,127 +173,133 @@ const ContactsPage: React.FC = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-3 md:p-4">
-          {isLoading ? (
-            <div className="space-y-5">
-              {[...Array(2)].map((_, i) => (
-                <div key={i}>
-                  <div className="w-8 h-3 bg-bg-tertiary rounded mb-2 mx-1 animate-pulse" />
-                  <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                    {[...Array(3)].map((_, j) => <FriendItem.Skeleton key={j} />)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-              {/* All friends */}
-              {activeTab === 'all' && (
-                groupedFriends.length === 0 ? (
-                  <EmptyState
-                    icon={<Users size={32} className="text-text-tertiary" />}
-                    title="Không tìm thấy bạn bè nào"
-                  />
-                ) : (
-                  <div className="space-y-5">
-                    {groupedFriends.map(group => (
-                      <div key={group.letter}>
-                        <p className="text-xs font-bold text-primary mb-2 px-1 uppercase tracking-widest">
-                          {group.letter}
-                        </p>
-                        <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                          {group.friends.map(friend => (
-                            <FriendItem
-                              key={friend.id}
-                              friend={friend}
-                              onUnfriend={(id) => setUnfriendId(id)}
-                              onMessage={onMessageClick}
-                            />
-                          ))}
-                        </div>
+          <>
+            {/* All friends */}
+            {activeTab === 'all' && (
+              isLoading ? (
+                <div className="space-y-5">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i}>
+                      <div className="w-8 h-3 bg-bg-tertiary rounded mb-2 mx-1 animate-pulse" />
+                      <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                        {[...Array(3)].map((_, j) => <FriendItem.Skeleton key={j} />)}
                       </div>
-                    ))}
-                  </div>
-                )
-              )}
+                    </div>
+                  ))}
+                </div>
+              ) : groupedFriends.length === 0 ? (
+                <EmptyState
+                  icon={<Users size={32} className="text-text-tertiary" />}
+                  title="Không tìm thấy bạn bè nào"
+                />
+              ) : (
+                <div className="space-y-5">
+                  {groupedFriends.map(group => (
+                    <div key={group.letter}>
+                      <p className="text-xs font-bold text-primary mb-2 px-1 uppercase tracking-widest">
+                        {group.letter}
+                      </p>
+                      <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                        {group.friends.map(friend => (
+                          <FriendItem
+                            key={friend.id}
+                            friend={friend}
+                            onUnfriend={(id) => setUnfriendId(id)}
+                            onMessage={onMessageClick}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
 
-              {/* Received requests */}
-              {activeTab === 'requests' && (
-                receivedRequests.length === 0 ? (
-                  <EmptyState
-                    icon={<Bell size={32} className="text-text-tertiary" />}
-                    title="Không có lời mời kết bạn nào"
-                  />
-                ) : (
-                  <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                    {receivedRequests.map(request => {
-                      const sender = userCache[request.senderId];
-                      return sender ? (
-                        <FriendRequestItem
-                          key={request.id}
-                          request={request}
-                          user={sender}
-                          type="received"
-                          onAccept={handleAcceptRequest}
-                          onReject={handleRejectRequest}
-                        />
-                      ) : null;
-                    })}
-                  </div>
-                )
-              )}
-
-              {/* Sent requests */}
-              {activeTab === 'sent' && (
-                sentRequests.length === 0 ? (
-                  <EmptyState
-                    icon={<UserPlus size={32} className="text-text-tertiary" />}
-                    title="Chưa gửi lời mời kết bạn nào"
-                  />
-                ) : (
-                  <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                    {sentRequests.map(request => {
-                      const receiver = userCache[request.receiverId];
-                      return receiver ? (
-                        <FriendRequestItem
-                          key={request.id}
-                          request={request}
-                          user={receiver}
-                          type="sent"
-                          onCancel={handleCancelRequest}
-                        />
-                      ) : null;
-                    })}
-                  </div>
-                )
-              )}
-
-              {/* Suggestions */}
-              {activeTab === 'suggestions' && (
-                isSuggestionsLoading ? (
-                  <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                    {[...Array(5)].map((_, i) => <SuggestionItem.Skeleton key={i} />)}
-                  </div>
-                ) : filteredSuggestions.length === 0 ? (
-                  <EmptyState
-                    icon={<Sparkles size={32} className="text-text-tertiary" />}
-                    title="Chưa có gợi ý kết bạn nào"
-                    subtitle="Nhấn Làm mới để tạo gợi ý mới"
-                  />
-                ) : (
-                  <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                    {filteredSuggestions.map(user => (
-                      <SuggestionItem
-                        key={user.id}
-                        user={user}
-                        onAddFriend={handleAddFriend}
-                        onDismiss={handleDismissSuggestion}
+            {/* Received requests */}
+            {activeTab === 'requests' && (
+              isLoading ? (
+                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                  {[...Array(3)].map((_, i) => <FriendRequestItem.Skeleton key={i} />)}
+                </div>
+              ) : receivedRequests.length === 0 ? (
+                <EmptyState
+                  icon={<Bell size={32} className="text-text-tertiary" />}
+                  title="Không có lời mời kết bạn nào"
+                />
+              ) : (
+                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                  {receivedRequests.map(request => {
+                    const sender = userCache[request.senderId];
+                    return sender ? (
+                      <FriendRequestItem
+                        key={request.id}
+                        request={request}
+                        user={sender}
+                        type="received"
+                        onAccept={handleAcceptRequest}
+                        onReject={handleRejectRequest}
                       />
-                    ))}
-                  </div>
-                )
-              )}
-            </>
-          )}
+                    ) : null;
+                  })}
+                </div>
+              )
+            )}
+
+            {/* Sent requests */}
+            {activeTab === 'sent' && (
+              isLoading ? (
+                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                  {[...Array(3)].map((_, i) => <FriendRequestItem.Skeleton key={i} />)}
+                </div>
+              ) : sentRequests.length === 0 ? (
+                <EmptyState
+                  icon={<UserPlus size={32} className="text-text-tertiary" />}
+                  title="Chưa gửi lời mời kết bạn nào"
+                />
+              ) : (
+                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                  {sentRequests.map(request => {
+                    const receiver = userCache[request.receiverId];
+                    return receiver ? (
+                      <FriendRequestItem
+                        key={request.id}
+                        request={request}
+                        user={receiver}
+                        type="sent"
+                        onCancel={handleCancelRequest}
+                      />
+                    ) : null;
+                  })}
+                </div>
+              )
+            )}
+
+            {/* Suggestions */}
+            {activeTab === 'suggestions' && (
+              isSuggestionsLoading ? (
+                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                  {[...Array(5)].map((_, i) => <SuggestionItem.Skeleton key={i} />)}
+                </div>
+              ) : filteredSuggestions.length === 0 ? (
+                <EmptyState
+                  icon={<Sparkles size={32} className="text-text-tertiary" />}
+                  title="Chưa có gợi ý kết bạn nào"
+                  subtitle="Nhấn Làm mới để tạo gợi ý mới"
+                />
+              ) : (
+                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                  {filteredSuggestions.map(user => (
+                    <SuggestionItem
+                      key={user.id}
+                      user={user}
+                      onAddFriend={handleAddFriend}
+                      onDismiss={handleDismissSuggestion}
+                    />
+                  ))}
+                </div>
+              )
+            )}
+          </>
         </div>
       </div>
 

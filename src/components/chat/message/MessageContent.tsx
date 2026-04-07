@@ -323,8 +323,9 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
       durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`;
     }
 
-    const btnClass = `mt-2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all outline-none shadow-sm ${isMe ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-bg-primary text-primary hover:bg-bg-secondary border border-border-light/50'
-      }`;
+    const btnClass = `mt-2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all outline-none shadow-sm ${
+      isMe ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
+    }`;
 
     return (
       <div className={`flex flex-col gap-1 w-fit max-w-[260px] ${isMe ? 'items-end' : 'items-start'}`}>
