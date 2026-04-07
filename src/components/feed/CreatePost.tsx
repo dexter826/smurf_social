@@ -6,7 +6,7 @@ import { Avatar, Skeleton } from '../ui';
 import { usePostStore } from '../../store';
 import { postService } from '../../services/postService';
 import { toast } from '../../store/toastStore';
-import { validateFileSize } from '../../utils/uploadUtils';
+import { validateFile } from '../../utils/uploadUtils';
 import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../constants';
 
 interface CreatePostProps {
@@ -40,7 +40,7 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
 
     const validFiles: File[] = [];
     selectedFiles.forEach(file => {
-      const validation = validateFileSize(file, typeLabel);
+      const validation = validateFile(file, typeLabel as any);
       if (validation.isValid) {
         validFiles.push(file);
       } else if (validation.error) {

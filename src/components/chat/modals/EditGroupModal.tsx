@@ -4,7 +4,7 @@ import { RtdbConversation, RtdbUserChat, MediaObject } from '../../../../shared/
 import { Modal, Input, Button, ImageCropper } from '../../ui';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES } from '../../../constants';
-import { validateFileSize } from '../../../utils';
+import { validateFile } from '../../../utils';
 import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 import { rtdbGroupService } from '../../../services/chat/rtdbGroupService';
 
@@ -42,8 +42,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) { toast.error('Chỉ hỗ trợ file ảnh'); e.target.value = ''; return; }
-      const validation = validateFileSize(file, 'AVATAR');
+      const validation = validateFile(file, 'AVATAR');
       if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
       setCropImage(URL.createObjectURL(file));
       setShowCropper(true);

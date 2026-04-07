@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, IconButton, Button, EmojiPicker } from '../../ui';
 import { CircularProgressOverlay } from '../../ui/CircularProgress';
-import { validateFileSize } from '../../../utils';
+import { validateFile } from '../../../utils';
 import { toast } from '../../../store/toastStore';
 import { commentSchema, CommentFormValues } from '../../../utils/validation';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
@@ -70,7 +70,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
       return;
     }
 
-    const validation = validateFileSize(file, 'IMAGE');
+    const validation = validateFile(file, 'IMAGE');
     if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
 
     if (previewUrl) URL.revokeObjectURL(previewUrl);

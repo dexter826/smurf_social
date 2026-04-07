@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, ConfirmDialog } from '../../ui';
 import { CircularProgressOverlay } from '../../ui/CircularProgress';
 import { toast } from '../../../store/toastStore';
-import { validateFileSize } from '../../../utils';
+import { validateFile } from '../../../utils';
 import { User, Post, Visibility, MediaObject, PostType } from '../../../../shared/types';
 import { postSchema, PostFormValues } from '../../../utils/validation';
 import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../../constants';
@@ -109,7 +109,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         toast.error(`Không hỗ trợ định dạng file của "${file.name}"`);
         return;
       }
-      const validation = validateFileSize(file, isImage ? 'IMAGE' : 'VIDEO');
+      const validation = validateFile(file, isImage ? 'IMAGE' : 'VIDEO');
       if (validation.isValid) {
         validFiles.push(file);
         newPreviews.push({ url: URL.createObjectURL(file), type: isImage ? 'image' : 'video' });

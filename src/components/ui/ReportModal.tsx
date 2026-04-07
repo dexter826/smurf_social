@@ -12,7 +12,7 @@ import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
 import { REPORT_CONFIG, TOAST_MESSAGES } from '../../constants';
 import { reportSchema, ReportFormValues } from '../../utils/validation';
-import { validateFileSize } from '../../utils/uploadUtils';
+import { validateFile } from '../../utils/uploadUtils';
 import { reportService } from '../../services/reportService';
 
 export const ReportModal: React.FC = () => {
@@ -70,7 +70,7 @@ export const ReportModal: React.FC = () => {
 
       // Kiểm tra dung lượng từng file
       const validFiles = files.filter(file => {
-        const validation = validateFileSize(file, 'IMAGE');
+        const validation = validateFile(file, 'IMAGE');
         if (!validation.isValid) {
           if (validation.error) toast.error(validation.error);
           return false;

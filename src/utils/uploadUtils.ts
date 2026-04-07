@@ -2,9 +2,31 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase/config';
 import { FILE_LIMITS, FileLimitType, TOAST_MESSAGES } from '../constants';
 
-// Trả về kết quả kiểm tra dung lượng file
-export const validateFileSize = (file: File, type: FileLimitType): { isValid: boolean; error?: string } => {
+// Kiểm tra dung lượng và loại file hợp lệ
+export const validateFile = (file: File, type: FileLimitType): { isValid: boolean; error?: string } => {
   const limit = FILE_LIMITS[type];
+  
+  // 1. Kiểm tra loại file (MIME type)
+  const isImage = file.type.startsWith('image/');
+  const isVideo = file.type.startsWith('video/');
+  
+  if (type === 'IMAGE' || type === 'AVATAR' || type === 'COVER') {
+    if (!isImage) {
+      return {
+        isValid: false,
+        error: TOAST_MESSAGES.MEDIA.INVALID_FILE
+      };
+    }
+  } else if (type === 'VIDEO') {
+    if (!isVideo) {
+      return {
+        isValid: false,
+        error: 'Chỉ hỗ trợ định dạng file video'
+      };
+    }
+  }
+
+  // 2. Kiểm tra dung lượng
   if (file.size > limit) {
     const mbLimit = limit / (1024 * 1024);
     const labels: Record<string, string> = { IMAGE: 'Ảnh', AVATAR: 'Ảnh đại diện', COVER: 'Ảnh bìa', FILE: 'File', VIDEO: 'Video' };
@@ -17,6 +39,10 @@ export const validateFileSize = (file: File, type: FileLimitType): { isValid: bo
   }
   return { isValid: true };
 };
+
+// Duy trì alias cho tương thích ngược
+export const validateFileSize = validateFile;
+
 
 export interface UploadProgress {
   progress: number;

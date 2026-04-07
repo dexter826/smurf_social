@@ -11,7 +11,7 @@ import { useAuthStore } from '../../store/authStore';
 import { getHybridReason } from '../../utils/userUtils';
 import { useReportStore } from '../../store/reportStore';
 import { BookUser } from 'lucide-react';
-import { validateFileSize } from '../../utils/uploadUtils';
+import { validateFile } from '../../utils/uploadUtils';
 
 interface ProfileHeaderProps {
   user: User;
@@ -57,8 +57,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { toast.error('Chỉ hỗ trợ file ảnh'); e.target.value = ''; return; }
-    const validation = validateFileSize(file, type === 'avatar' ? 'AVATAR' : 'COVER');
+    const validation = validateFile(file, type === 'avatar' ? 'AVATAR' : 'COVER');
     if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
     const blobUrl = URL.createObjectURL(file);
     setCropState({ isOpen: true, type, image: blobUrl });
@@ -79,7 +78,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
   const handleImageChange = (file: File) => {
     if (!cropState) return;
-    const validation = validateFileSize(file, cropState.type === 'avatar' ? 'AVATAR' : 'COVER');
+    const validation = validateFile(file, cropState.type === 'avatar' ? 'AVATAR' : 'COVER');
     if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
     if (cropState.image) URL.revokeObjectURL(cropState.image);
     setCropState({ ...cropState, image: URL.createObjectURL(file) });

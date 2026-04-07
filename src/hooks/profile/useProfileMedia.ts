@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { useUserCache } from '../../store/userCacheStore';
 import { toast } from '../../store/toastStore';
-import { validateFileSize } from '../../utils';
+import { validateFile } from '../../utils';
 import { TOAST_MESSAGES } from '../../constants';
 
 interface UseProfileMediaProps {
@@ -28,11 +28,7 @@ export const useProfileMedia = ({
 
   const handleAvatarChange = useCallback(async (file: File, shouldShare: boolean = false) => {
     if (!profile || !isOwnProfile) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
-      return;
-    }
-    const validation = validateFileSize(file, 'AVATAR');
+    const validation = validateFile(file, 'AVATAR');
     if (!validation.isValid) {
       if (validation.error) toast.error(validation.error);
       return;
@@ -64,11 +60,7 @@ export const useProfileMedia = ({
 
   const handleCoverChange = useCallback(async (file: File, shouldShare: boolean = false) => {
     if (!profile || !isOwnProfile) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error(TOAST_MESSAGES.MEDIA.INVALID_FILE);
-      return;
-    }
-    const validation = validateFileSize(file, 'COVER');
+    const validation = validateFile(file, 'COVER');
     if (!validation.isValid) {
       if (validation.error) toast.error(validation.error);
       return;

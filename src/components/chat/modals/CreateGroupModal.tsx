@@ -7,7 +7,7 @@ import { friendService } from '../../../services/friendService';
 import { useAuthStore } from '../../../store/authStore';
 import { Modal, Input, Button, Avatar, UserAvatar, IconButton, ImageCropper } from '../../ui';
 import { groupSchema, GroupFormValues } from '../../../utils/validation';
-import { validateFileSize } from '../../../utils';
+import { validateFile } from '../../../utils';
 import { toast } from '../../../store/toastStore';
 import { GROUP_LIMITS } from '../../../constants';
 
@@ -58,8 +58,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) { toast.error('Chỉ hỗ trợ file ảnh'); e.target.value = ''; return; }
-      const validation = validateFileSize(file, 'AVATAR');
+      const validation = validateFile(file, 'AVATAR');
       if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
       setCropImage(URL.createObjectURL(file));
       setShowCropper(true);

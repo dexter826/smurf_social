@@ -10,7 +10,7 @@ import { useMentions } from '../../../hooks/chat/useMentions';
 import { useLinkPreview } from '../../../hooks/useLinkPreview';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES, FILE_LIMITS, TIME_LIMITS } from '../../../constants';
-import { insertTextAtCursor, validateFileSize } from '../../../utils';
+import { insertTextAtCursor, validateFile } from '../../../utils';
 import { useRtdbChatStore } from '../../../store';
 import { RtdbMessage, User } from '../../../../shared/types';
 import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
@@ -194,7 +194,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       else if (file.type.startsWith('video/')) fileType = 'video';
 
       const limitType = fileType === 'image' ? 'IMAGE' : fileType === 'video' ? 'VIDEO' : 'FILE';
-      const validation = validateFileSize(file, limitType);
+      const validation = validateFile(file, limitType);
       if (!validation.isValid) { if (validation.error) toast.error(validation.error); return; }
 
       const preview = (fileType === 'image' || fileType === 'video')
