@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Ellipsis, Flag, PenTool, Pencil, Trash2 } fr
 import {
   UserAvatar, LazyImage, Skeleton, ReactionSelector,
   ReactionDisplay, ReactionDetailsModal, Dropdown, DropdownItem,
+  SensitiveMediaGuard,
 } from '../../ui';
 import { CommentInput } from './CommentInput';
 import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../../shared/types';
@@ -155,11 +156,13 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     </p>
                     {comment.image && (
                       <div className="mt-2 rounded-xl overflow-hidden border border-border-light">
-                        <LazyImage
-                          src={comment.image.url}
-                          className={`max-h-52 w-full object-contain ${comment.image.isSensitive ? 'blur-md' : ''}`}
-                          alt="attach"
-                        />
+                        <SensitiveMediaGuard isSensitive={comment.image.isSensitive}>
+                          <LazyImage
+                            src={comment.image.url}
+                            className="max-h-52 w-full object-contain"
+                            alt="attach"
+                          />
+                        </SensitiveMediaGuard>
                       </div>
                     )}
                   </>

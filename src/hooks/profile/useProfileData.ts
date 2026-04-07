@@ -38,14 +38,16 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
 
     const combinedPosts = [...storeMediaPosts, ...dbPosts];
 
-    const urls = new Set<string>();
+    const mediaMap = new Map<string, { url: string; isSensitive: boolean }>();
     combinedPosts.forEach(post => {
       post.media?.forEach(m => {
-        if (m.url) urls.add(m.url);
+        if (m.url && !mediaMap.has(m.url)) {
+          mediaMap.set(m.url, { url: m.url, isSensitive: !!m.isSensitive });
+        }
       });
     });
 
-    return Array.from(urls).slice(0, 6);
+    return Array.from(mediaMap.values()).slice(0, 6);
   }, [allStorePosts, dbPosts, profileUserId]);
 
   const loadProfile = useCallback(async (isInitial = false) => {

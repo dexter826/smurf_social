@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams as useRouterParams } from 'react-router-dom';
 import { Gender, UserStatus, MaritalStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
-import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
+import { Button, ConfirmDialog, BlockOptionsModal, SensitiveMediaGuard } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import { PostViewModal, PostModal } from '../components/feed';
 import { usePostStore } from '../store';
@@ -336,20 +336,22 @@ const ProfilePage: React.FC = () => {
 
                   {latestMedia.length > 0 && !isFullyBlockedByPartner ? (
                     <div className="grid grid-cols-3 gap-1.5">
-                      {latestMedia.map((url, idx) => (
+                      {latestMedia.map((item, idx) => (
                         <div
                           key={idx}
                           className="aspect-square rounded-xl overflow-hidden bg-bg-secondary cursor-pointer group"
                           onClick={() => setActiveTab('media')}
                         >
-                          {url.includes('.mp4') || url.includes('video') ? (
-                            <video src={url} className="w-full h-full object-cover" />
-                          ) : (
-                            <img
-                              src={url} alt=""
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                          )}
+                          <SensitiveMediaGuard isSensitive={item.isSensitive} size="xs" className="w-full h-full">
+                            {item.url.includes('.mp4') || item.url.includes('video') ? (
+                              <video src={item.url} className="w-full h-full object-cover" />
+                            ) : (
+                              <img
+                                src={item.url} alt=""
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                            )}
+                          </SensitiveMediaGuard>
                         </div>
                       ))}
                     </div>

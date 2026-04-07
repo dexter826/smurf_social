@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import {
   UserAvatar, IconButton, Modal, Dropdown, DropdownItem,
-  Skeleton, ReactionDetailsModal, MediaViewer,
+  Skeleton, ReactionDetailsModal, MediaViewer, SensitiveMediaGuard,
 } from '../../ui';
 import { Post, User, ReportType, ReactionType, PostType } from '../../../../shared/types';
 import { CommentSection } from '../comment/CommentSection';
@@ -55,6 +55,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       url: m.url,
       type: m.mimeType.startsWith('video/') ? 'video' as const : 'image' as const,
       thumbnail: m.thumbnailUrl,
+      isSensitive: m.isSensitive,
     }));
   }, [post?.media]);
 
@@ -128,19 +129,23 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 onClick={() => setIsMediaViewerOpen(true)}
               />
             ) : allMedia[activeMediaIndex].type === 'video' ? (
-              <video
-                src={allMedia[activeMediaIndex].url}
-                poster={allMedia[activeMediaIndex].thumbnail}
-                controls playsInline preload="none"
-                className="max-w-full max-h-full object-contain"
-              />
+              <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive}>
+                <video
+                  src={allMedia[activeMediaIndex].url}
+                  poster={allMedia[activeMediaIndex].thumbnail}
+                  controls playsInline preload="none"
+                  className="max-w-full max-h-full object-contain"
+                />
+              </SensitiveMediaGuard>
             ) : (
-              <img
-                src={allMedia[activeMediaIndex].url}
-                alt=""
-                className="max-w-full max-h-full object-contain cursor-pointer hover:opacity-95 transition-opacity duration-200 animate-fade-in"
-                onClick={() => setIsMediaViewerOpen(true)}
-              />
+              <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive}>
+                <img
+                  src={allMedia[activeMediaIndex].url}
+                  alt=""
+                  className="max-w-full max-h-full object-contain cursor-pointer hover:opacity-95 transition-opacity duration-200 animate-fade-in"
+                  onClick={() => setIsMediaViewerOpen(true)}
+                />
+              </SensitiveMediaGuard>
             )}
 
             {/* Navigation arrows */}

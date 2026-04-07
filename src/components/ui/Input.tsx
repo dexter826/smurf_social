@@ -53,6 +53,7 @@ export const Input: React.FC<InputProps> = ({
               ? 'border-error focus:ring-2 focus:ring-error/20 focus:border-error'
               : 'border-border-light focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-border-medium'
             }
+            disabled:bg-bg-secondary disabled:text-text-tertiary disabled:cursor-not-allowed disabled:border-border-light
             ${sizeClasses[size]}
             ${icon ? 'pl-10' : ''}
             ${rightElement ? 'pr-10' : ''}

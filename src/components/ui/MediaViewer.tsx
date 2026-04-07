@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X, Play, Pause } from 'lucide-react';
 import { useScrollLock } from '../../hooks/utils/useScrollLock';
+import { SensitiveMediaGuard } from './SensitiveMediaGuard';
 
 interface MediaItem {
     type: 'image' | 'video';
     url: string;
     thumbnail?: string;
+    isSensitive?: boolean;
 }
 
 interface MediaViewerProps {
@@ -130,23 +132,27 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 )}
 
                 {current?.type === 'video' ? (
-                    <video
-                        ref={videoRef}
-                        src={current.url}
-                        poster={current.thumbnail}
-                        className="max-w-full max-h-full object-contain shadow-xl rounded-sm"
-                        onClick={(e) => e.stopPropagation()}
-                        controls playsInline
-                        onPlay={() => setIsVideoPlaying(true)}
-                        onPause={() => setIsVideoPlaying(false)}
-                    />
+                    <SensitiveMediaGuard isSensitive={current.isSensitive} className="max-w-full max-h-full">
+                        <video
+                            ref={videoRef}
+                            src={current.url}
+                            poster={current.thumbnail}
+                            className="max-w-full max-h-full object-contain shadow-xl rounded-sm"
+                            onClick={(e) => e.stopPropagation()}
+                            controls playsInline
+                            onPlay={() => setIsVideoPlaying(true)}
+                            onPause={() => setIsVideoPlaying(false)}
+                        />
+                    </SensitiveMediaGuard>
                 ) : (
-                    <img
-                        src={current?.url}
-                        alt={`Ảnh ${currentIndex + 1}`}
-                        className="max-w-full max-h-full object-contain shadow-xl rounded-sm"
-                        onClick={(e) => e.stopPropagation()}
-                    />
+                    <SensitiveMediaGuard isSensitive={current?.isSensitive} className="max-w-full max-h-full">
+                        <img
+                            src={current?.url}
+                            alt={`Ảnh ${currentIndex + 1}`}
+                            className="max-w-full max-h-full object-contain shadow-xl rounded-sm"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </SensitiveMediaGuard>
                 )}
             </div>
         </div>,

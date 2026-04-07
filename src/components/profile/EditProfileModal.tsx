@@ -246,16 +246,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
 
-          {/* School */}
+          {/* Generation */}
           <div>
-            <SearchableSelect
-              label="Trường học / Nơi học"
-              value={formData.school || ''}
-              onChange={(val) => setValue('school', val, { shouldDirty: true })}
-              options={schoolOptions}
-              placeholder="Chọn hoặc tìm trường học"
-              searchPlaceholder="Tìm theo tên trường hoặc mã (VD: BKA)..."
-              error={errors.school?.message}
+            <Select
+              label="Thế hệ"
+              value={formData.generation || Generation.UNKNOWN}
+              onChange={(val) => setValue('generation', val as Generation, { shouldDirty: true })}
+              options={GENERATION_OPTIONS}
+              placeholder="Chọn thế hệ"
               size="lg"
             />
           </div>
@@ -272,14 +270,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
 
-          {/* Generation */}
-          <div>
-            <Select
-              label="Thế hệ"
-              value={formData.generation || Generation.UNKNOWN}
-              onChange={(val) => setValue('generation', val as Generation, { shouldDirty: true })}
-              options={GENERATION_OPTIONS}
-              placeholder="Chọn thế hệ"
+          {/* School */}
+          <div className="col-span-1 sm:col-span-2">
+            <SearchableSelect
+              label="Trường học / Nơi học"
+              value={formData.school || ''}
+              onChange={(val) => setValue('school', val, { shouldDirty: true })}
+              options={schoolOptions}
+              placeholder="Chọn hoặc tìm trường học"
+              searchPlaceholder="Tìm theo tên trường hoặc mã (VD: BKA)..."
+              error={errors.school?.message}
               size="lg"
             />
           </div>

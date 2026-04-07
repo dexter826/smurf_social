@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { MessageType, MediaObject } from '../../../shared/types';
 import { postService } from '../../services/postService';
-import { Skeleton, MediaViewer, LazyImage } from '../ui';
+import { Skeleton, MediaViewer, LazyImage, SensitiveMediaGuard } from '../ui';
 import { Image as ImageIcon, Loader2, Play } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useFriendIds } from '../../hooks';
@@ -18,6 +18,7 @@ type MediaItem = {
   url: string;
   type: MessageType.IMAGE | MessageType.VIDEO;
   thumbnailUrl?: string;
+  isSensitive?: boolean;
 };
 
 const PhotosTabInner: React.FC<PhotosTabProps> = ({
@@ -39,6 +40,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
         url: m.url,
         type: m.mimeType?.startsWith('video/') ? MessageType.VIDEO : MessageType.IMAGE,
         thumbnailUrl: m.thumbnailUrl,
+        isSensitive: m.isSensitive,
       }))
     ), []);
 
@@ -86,6 +88,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
     media.map(m => ({
       type: m.type === MessageType.VIDEO ? 'video' as const : 'image' as const,
       url: m.url,
+      isSensitive: m.isSensitive,
     })), [media]);
 
   if (loading && !isFullyBlockedByPartner) return <PhotosTabSkeleton />;
@@ -120,32 +123,34 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
               className="aspect-square bg-bg-secondary rounded-xl overflow-hidden cursor-pointer group relative"
               onClick={() => setSelectedIndex(index)}
             >
-              {item.type === MessageType.VIDEO ? (
-                <video
-                  src={item.url}
-                  poster={item.thumbnailUrl}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <LazyImage
-                  src={item.url}
-                  alt={`Media ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  wrapperClassName="w-full h-full"
-                />
-              )}
+              <SensitiveMediaGuard isSensitive={item.isSensitive} size="sm" className="w-full h-full">
+                {item.type === MessageType.VIDEO ? (
+                  <video
+                    src={item.url}
+                    poster={item.thumbnailUrl}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <LazyImage
+                    src={item.url}
+                    alt={`Media ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    wrapperClassName="w-full h-full"
+                  />
+                )}
 
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200" />
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200" />
 
-              {/* Video play icon */}
-              {item.type === MessageType.VIDEO && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/20 group-hover:bg-black/60 transition-all duration-200">
-                    <Play size={16} className="text-white fill-white ml-0.5" />
+                {/* Video play icon */}
+                {item.type === MessageType.VIDEO && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/20 group-hover:bg-black/60 transition-all duration-200">
+                      <Play size={16} className="text-white fill-white ml-0.5" />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </SensitiveMediaGuard>
             </div>
           ))}
         </div>
