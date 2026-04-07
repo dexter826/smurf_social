@@ -65,7 +65,7 @@ export const useChatScroll = ({
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
     setShouldAutoScroll(isAtBottom);
 
-    if (scrollTop < 50 && hasMoreMessages && !isLoadingMore && onLoadMore) {
+    if (scrollTop < 150 && hasMoreMessages && !isLoadingMore && onLoadMore) {
       if (loadMoreTimeoutRef.current) {
         clearTimeout(loadMoreTimeoutRef.current);
       }

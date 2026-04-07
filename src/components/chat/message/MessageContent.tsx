@@ -59,7 +59,7 @@ const renderTextWithMentions = (text: string, isMe: boolean): React.ReactNode =>
       const href = part.startsWith('www.') ? `https://${part}` : part;
       return (
         <a key={index} href={href} target="_blank" rel="noopener noreferrer"
-          className={`underline break-all transition-all duration-base hover:opacity-80 ${isMe ? 'text-white/90' : 'text-primary'}`}
+          className={`underline break-all transition-all duration-base hover:opacity-80 ${isMe ? 'text-black/80 dark:text-white/90' : 'text-primary'}`}
           onClick={(e) => e.stopPropagation()}
         >
           {part}
@@ -75,7 +75,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
   isPlaying, onToggleVoice, onOpenImage, onCall, onJoinCall,
 }) => {
   if (message.data.isRecalled) {
-    return <div className={`italic text-sm ${isMe ? 'text-white/80' : 'text-text-tertiary'}`}>Tin nhắn đã thu hồi</div>;
+    return <div className={`italic text-sm ${isMe ? 'text-black/60 dark:text-white/80' : 'text-text-tertiary'}`}>Tin nhắn đã thu hồi</div>;
   }
 
   const up = uploadProgress[message.id];
@@ -304,7 +304,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     const { callType, status, duration } = parsed;
     const isVid = callType === 'video';
     const isMissedOrRejected = !isGroup && (status === 'missed' || status === 'rejected');
-    const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-primary dark:text-white' : 'text-primary');
+    const iconColor = isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-black dark:text-white' : 'text-primary');
 
     let title = '';
     if (isGroup) {
@@ -324,17 +324,17 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     }
 
     const btnClass = `mt-2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all outline-none shadow-sm ${
-      isMe ? 'bg-primary/20 text-primary dark:text-white hover:bg-primary/30 border border-primary/20 dark:border-white/20' : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
+      isMe ? 'bg-primary/20 text-black dark:text-white hover:bg-primary/30 border border-primary/20 dark:border-white/20' : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
     }`;
 
     return (
       <div className={`flex flex-col gap-1 w-fit max-w-[260px] ${isMe ? 'items-end' : 'items-start'}`}>
-        <div className={`flex items-center gap-2 text-sm font-semibold ${!isMe && isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-primary dark:text-white' : 'text-text-primary')}`}>
+        <div className={`flex items-center gap-2 text-sm font-semibold ${isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-black dark:text-white' : 'text-text-primary')}`}>
           {isMissedOrRejected ? <PhoneMissed size={16} className={iconColor} /> : (isVid ? <Video size={16} className={iconColor} /> : <PhoneIncoming size={16} className={iconColor} />)}
           <span>{title}</span>
         </div>
         {durationStr && (
-          <div className={`flex items-center gap-1.5 text-xs ${isMe ? 'text-white/70' : 'text-text-tertiary'}`}>
+          <div className={`flex items-center gap-1.5 text-xs ${isMe ? 'text-black/60 dark:text-white/70' : 'text-text-tertiary'}`}>
             <Phone size={12} /><span>{durationStr}</span>
           </div>
         )}
@@ -361,7 +361,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         ? `${Math.floor(rawDuration / 60)}:${String(rawDuration % 60).padStart(2, '0')}`
         : `0:${String(rawDuration).padStart(2, '0')}`)
       : null;
-    const voiceClass = `flex items-center gap-3 p-3 rounded-2xl min-w-[200px] transition-all duration-base ${isMe ? 'bg-bg-message-sent text-primary dark:text-white border border-primary/20' : 'bg-bg-message-received text-text-primary border border-border-light/50'
+    const voiceClass = `flex items-center gap-3 p-3 rounded-2xl min-w-[200px] transition-all duration-base ${isMe ? 'bg-bg-message-sent text-black dark:text-white border border-primary/20' : 'bg-bg-message-received text-text-primary border border-border-light/50'
       }`;
     const btnClass = `p-2.5 rounded-full shadow-sm transition-all duration-base ${isMe ? 'bg-primary text-white' : 'bg-primary text-white'}`;
 
@@ -388,7 +388,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
         <div className="flex-1">
           <div className="text-sm font-bold mb-0.5">Tin nhắn thoại</div>
           <div className={`flex items-center gap-1.5 opacity-80 ${isMe ? 'text-text-on-primary' : 'text-text-tertiary'}`}>
-            <Mic size={12} className={isMe ? 'text-primary/70' : 'text-text-tertiary'} />
+            <Mic size={12} className={isMe ? 'text-black/50 dark:text-primary/70' : 'text-text-tertiary'} />
             <span className="text-xs">{durationStr ?? 'Click để nghe'}</span>
           </div>
         </div>
