@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Ban, MessageCircle, X, ShieldCheck } from 'lucide-react';
+import { Ban, MessageCircle, X } from 'lucide-react';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
+import { Checkbox } from './Checkbox';
 import { BlockOptions } from '../../../shared/types';
 import { useScrollLock } from '../../hooks/utils/useScrollLock';
 
@@ -43,6 +44,20 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
   useScrollLock(isOpen);
 
   if (!isOpen) return null;
+
+  const toggleFullyBlocked = (val: boolean) => {
+    setOptions(prev => ({
+      isFullyBlocked: val,
+      isMessageBlocked: val ? true : prev.isMessageBlocked
+    }));
+  };
+
+  const toggleMessageBlocked = (val: boolean) => {
+    setOptions(prev => ({
+      isMessageBlocked: val,
+      isFullyBlocked: !val ? false : prev.isFullyBlocked
+    }));
+  };
 
   const handleApply = async () => {
     setIsLoading(true);
@@ -87,77 +102,66 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
         </div>
 
         {/* Options */}
-        <div className="px-5 py-4 space-y-3">
+        <div className="px-5 py-5 space-y-4">
           {/* Fully Blocked Option */}
-          <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors duration-200 border ${options.isFullyBlocked ? 'bg-error/5 border-error/30' : 'border-border-light hover:bg-bg-hover'}`}>
-            <div className="pt-0.5 flex-shrink-0">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${options.isFullyBlocked ? 'border-error bg-error' : 'border-border-medium bg-bg-primary'}`}>
-                {options.isFullyBlocked && <div className="w-2h-2 rounded-full bg-white" style={{ width: '8px', height: '8px' }} />}
-              </div>
+          <div 
+            className={`flex items-start gap-3.5 p-4 rounded-2xl cursor-pointer transition-all duration-200 border-2 ${options.isFullyBlocked ? 'bg-error/5 border-error/20 ring-1 ring-error/10' : 'border-bg-secondary hover:border-border-light hover:bg-bg-hover'}`}
+            onClick={() => toggleFullyBlocked(!options.isFullyBlocked)}
+          >
+            <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
+              <Checkbox 
+                className="checked:bg-error checked:border-error"
+                checked={options.isFullyBlocked} 
+                onChange={(e) => toggleFullyBlocked(e.target.checked)}
+              />
             </div>
-            <div className="flex-1 min-w-0" onClick={() => setOptions({ isFullyBlocked: true, isMessageBlocked: false })}>
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <Ban size={16} className={options.isFullyBlocked ? 'text-error' : 'text-text-secondary'} />
-                <span className={`font-medium text-sm ${options.isFullyBlocked ? 'text-error' : 'text-text-primary'}`}>Chặn hoàn toàn</span>
+                <span className={`font-bold text-sm ${options.isFullyBlocked ? 'text-error' : 'text-text-primary'}`}>Chặn hoàn toàn</span>
               </div>
-              <p className="text-xs text-text-tertiary mt-1 leading-relaxed">
+              <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">
                 Tự động huỷ kết bạn và cấm mọi liên hệ. Cả hai sẽ không thể tìm thấy nhau hay xem tường của nhau.
               </p>
             </div>
-          </label>
+          </div>
 
           {/* Message Block Option */}
-          <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors duration-200 border ${options.isMessageBlocked && !options.isFullyBlocked ? 'bg-warning/5 border-warning/30' : 'border-border-light hover:bg-bg-hover'}`}>
-            <div className="pt-0.5 flex-shrink-0">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${options.isMessageBlocked && !options.isFullyBlocked ? 'border-warning bg-warning' : 'border-border-medium bg-bg-primary'}`}>
-                {options.isMessageBlocked && !options.isFullyBlocked && <div className="w-2 h-2 rounded-full bg-white" style={{ width: '8px', height: '8px' }} />}
-              </div>
+          <div 
+            className={`flex items-start gap-3.5 p-4 rounded-2xl cursor-pointer transition-all duration-200 border-2 ${options.isMessageBlocked ? 'bg-error/5 border-error/20 ring-1 ring-error/10' : 'border-bg-secondary hover:border-border-light hover:bg-bg-hover'}`}
+            onClick={() => toggleMessageBlocked(!options.isMessageBlocked)}
+          >
+            <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
+              <Checkbox 
+                className="checked:bg-error checked:border-error"
+                checked={options.isMessageBlocked} 
+                onChange={(e) => toggleMessageBlocked(e.target.checked)}
+              />
             </div>
-            <div className="flex-1 min-w-0" onClick={() => setOptions({ isFullyBlocked: false, isMessageBlocked: true })}>
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <MessageCircle size={16} className={options.isMessageBlocked && !options.isFullyBlocked ? 'text-warning' : 'text-text-secondary'} />
-                <span className={`font-medium text-sm ${options.isMessageBlocked && !options.isFullyBlocked ? 'text-warning' : 'text-text-primary'}`}>Chỉ chặn liên lạc</span>
+                <MessageCircle size={16} className={options.isMessageBlocked ? 'text-error' : 'text-text-secondary'} />
+                <span className={`font-bold text-sm ${options.isMessageBlocked ? 'text-error' : 'text-text-primary'}`}>Chặn tin nhắn & cuộc gọi</span>
               </div>
-              <p className="text-xs text-text-tertiary mt-1 leading-relaxed">
+              <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">
                 Vẫn xem được hồ sơ trên tường của nhau. Chỉ chặn việc gửi tin nhắn và gọi điện trên hệ thống.
               </p>
             </div>
-          </label>
-
-          {/* Unblock Option (Only show if previously blocked) */}
-          {isPreviouslyBlocked && (
-            <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors duration-200 border ${isNoneSelected ? 'bg-success/5 border-success/30' : 'border-border-light hover:bg-bg-hover'}`}>
-              <div className="pt-0.5 flex-shrink-0">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${isNoneSelected ? 'border-success bg-success' : 'border-border-medium bg-bg-primary'}`}>
-                  {isNoneSelected && <div className="w-2 h-2 rounded-full bg-white" style={{ width: '8px', height: '8px' }} />}
-                </div>
-              </div>
-              <div className="flex-1 min-w-0" onClick={() => setOptions({ isFullyBlocked: false, isMessageBlocked: false })}>
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={16} className={isNoneSelected ? 'text-success' : 'text-text-secondary'} />
-                  <span className={`font-medium text-sm ${isNoneSelected ? 'text-success' : 'text-text-primary'}`}>Bỏ chặn (Khôi phục bình thường)</span>
-                </div>
-                <p className="text-xs text-text-tertiary mt-1 leading-relaxed">
-                  Huỷ mọi hạn chế đối với người này. Hai bạn có thể tương tác bình thường trở lại.
-                </p>
-              </div>
-            </label>
-          )}
-
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-border-light flex gap-3 pb-[calc(16px+env(safe-area-inset-bottom))] sm:pb-4">
-          <Button variant="secondary" onClick={onClose} className="flex-1">
+        <div className="px-6 py-5 border-t border-divider flex gap-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:pb-6">
+          <Button variant="secondary" onClick={onClose} className="flex-1 font-semibold h-11">
             Hủy
           </Button>
           <Button
             variant={isNoneSelected && isPreviouslyBlocked ? 'primary' : 'danger'}
             onClick={handleApply}
             isLoading={isLoading}
-            className="flex-1 font-semibold"
+            className="flex-1 font-bold h-11 shadow-sm"
           >
-            {isNoneSelected && isPreviouslyBlocked ? 'Xác nhận Bỏ chặn' : 'Áp dụng chặn'}
+            {isNoneSelected && isPreviouslyBlocked ? 'Xác nhận Bỏ chặn' : 'Áp dụng ngay'}
           </Button>
         </div>
       </div>

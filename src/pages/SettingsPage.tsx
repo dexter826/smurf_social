@@ -73,9 +73,13 @@ const SettingsPage: React.FC = () => {
     if (!manageBlockTarget || !currentUser) return;
     const targetId = manageBlockTarget.user.id;
 
-    if (!Object.values(options).some(Boolean)) {
-      setUnblockUserId(targetId);
+    const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
+    if (!hasAnyOption) {
       setManageBlockTarget(null);
+      await userService.unblockUser(currentUser.id, targetId);
+      useAuthStore.getState().updateBlockEntry('remove', targetId);
+      setBlockedList(prev => prev.filter(item => item.user.id !== targetId));
+      usePostStore.getState().refreshFeed(currentUser.id);
       return;
     }
 
@@ -212,6 +216,7 @@ const SettingsPage: React.FC = () => {
           targetName={manageBlockTarget.user.fullName}
           initialOptions={manageBlockTarget.options}
           onApply={handleUpdateBlockOptions}
+          onUnblock={() => handleUpdateBlockOptions({ isFullyBlocked: false, isMessageBlocked: false })}
           onClose={() => setManageBlockTarget(null)}
         />
       )}
