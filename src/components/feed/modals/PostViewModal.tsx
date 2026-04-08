@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag, Play, Pause } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag, Play, Pause, Maximize2 } from 'lucide-react';
 import {
   UserAvatar, IconButton, Modal, Dropdown, DropdownItem,
   Skeleton, ReactionDetailsModal, MediaViewer, SensitiveMediaGuard,
@@ -128,6 +128,16 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
       {hasMedia && (
         <div className="hidden lg:flex flex-[1.6] bg-[#0a0c10] items-center justify-center relative overflow-hidden border-r border-white/5 shrink-0">
           <div className="w-full h-full relative flex items-center justify-center min-h-0 min-w-0" style={{ zIndex: 10 }}>
+            <div className="absolute top-4 right-4" style={{ zIndex: 40 }}>
+              <button
+                onClick={() => setIsMediaViewerOpen(true)}
+                className="w-11 h-11 flex items-center justify-center bg-black/20 hover:bg-black/30 active:scale-95 backdrop-blur-md text-white rounded-full border border-white/10 shadow-xl transition-all duration-150"
+                title="Xem toàn màn hình"
+              >
+                <Maximize2 size={22} strokeWidth={2} />
+              </button>
+            </div>
+
             {!allMedia[activeMediaIndex] ? (
               <p className="text-white/40 text-sm">Không tìm thấy nội dung</p>
             ) : isSystemPost ? (
@@ -135,7 +145,6 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                 type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
                 media={post.media || []}
                 variant="cinema"
-                onClick={() => setIsMediaViewerOpen(true)}
               />
             ) : allMedia[activeMediaIndex].type === 'video' ? (
               <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive} className="w-full h-full min-h-0 min-w-0">
@@ -156,7 +165,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                         videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
                       }
                     }}
-                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white/20 hover:bg-white/30 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-200 active:scale-95 z-20 ${isVideoPlaying ? 'opacity-0 group-hover/player:opacity-100' : 'opacity-100'}`}
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-bg-secondary hover:bg-bg-active text-text-primary rounded-full border border-border-light transition-all duration-200 active:scale-95 z-20 ${isVideoPlaying ? 'opacity-0 group-hover/player:opacity-100' : 'opacity-100'}`}
                   >
                     {isVideoPlaying ? <Pause size={28} /> : <Play size={28} />}
                   </button>
@@ -165,12 +174,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
             ) : (
               <SensitiveMediaGuard isSensitive={allMedia[activeMediaIndex].isSensitive} className="w-full h-full min-h-0 min-w-0">
                 <div className="w-full h-full flex items-center justify-center">
-                  <img
-                    src={allMedia[activeMediaIndex].url}
-                    alt=""
-                    className="w-full h-full object-contain cursor-pointer hover:opacity-95 transition-opacity duration-200 animate-fade-in"
-                    onClick={() => setIsMediaViewerOpen(true)}
-                  />
+                    <img
+                      src={allMedia[activeMediaIndex].url}
+                      alt=""
+                      className="w-full h-full object-contain hover:opacity-95 transition-opacity duration-200 animate-fade-in"
+                    />
                 </div>
               </SensitiveMediaGuard>
             )}
@@ -183,7 +191,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     e.stopPropagation();
                     setActiveMediaIndex(p => (p === 0 ? allMedia.length - 1 : p - 1));
                   }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/25 hover:bg-black/40 active:scale-90 backdrop-blur-md text-white rounded-full border border-white/15 shadow-xl transition-all duration-150"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/20 hover:bg-black/30 active:scale-90 backdrop-blur-md text-white rounded-full border border-white/10 shadow-xl transition-all duration-150"
                   style={{ zIndex: 30 }}
                 >
                   <ChevronLeft size={28} strokeWidth={2} />
@@ -193,14 +201,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     e.stopPropagation();
                     setActiveMediaIndex(p => (p === allMedia.length - 1 ? 0 : p + 1));
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/25 hover:bg-black/40 active:scale-90 backdrop-blur-md text-white rounded-full border border-white/15 shadow-xl transition-all duration-150"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/20 hover:bg-black/30 active:scale-90 backdrop-blur-md text-white rounded-full border border-white/10 shadow-xl transition-all duration-150"
                   style={{ zIndex: 30 }}
                 >
                   <ChevronRight size={28} strokeWidth={2} />
                 </button>
                 {/* Counter pill */}
                 <div
-                  className="absolute top-5 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/35 backdrop-blur-md rounded-full border border-white/10 text-white/85 text-xs font-medium pointer-events-none"
+                  className="absolute top-5 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10 text-white/90 text-xs font-medium pointer-events-none"
                   style={{ zIndex: 30 }}
                 >
                   {activeMediaIndex + 1} / {allMedia.length}
@@ -298,29 +306,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           totalCommentCount={post.commentCount}
           header={
             <div className="flex flex-col">
-              {/* Mobile media grid */}
-              {hasMedia && (
-                <div className="lg:hidden w-full">
-                  {!isSystemPost ? (
-                    <PostMediaGrid
-                      media={post.media || []}
-                      onItemClick={(index) => {
-                        setActiveMediaIndex(index);
-                        setIsMediaViewerOpen(true);
-                      }}
-                    />
-                  ) : (
-                    <SystemPostMedia
-                      type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
-                      media={post.media || []}
-                      variant="cinema"
-                      onClick={() => setIsMediaViewerOpen(true)}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Post text */}
+              {/* Post text (Displayed first on mobile) */}
               {!isSystemPost && post.content && (
                 <div className="px-4 md:px-5 py-3 w-full">
                   <p className="text-text-primary whitespace-pre-line break-words text-sm leading-relaxed">
@@ -331,6 +317,69 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                     if (!url) return null;
                     return <LinkPreviewCard url={url} className="mt-3" />;
                   })()}
+                </div>
+              )}
+
+              {/* Mobile media grid - Displayed after text with "Full" style */}
+              {hasMedia && (
+                <div className="lg:hidden w-full relative bg-bg-secondary/20">
+                  {/* Mobile Fullscreen button - Glassmorphism style preserved */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <button
+                      onClick={() => setIsMediaViewerOpen(true)}
+                      className="w-9 h-9 flex items-center justify-center bg-black/20 hover:bg-black/30 active:scale-95 backdrop-blur-md text-white rounded-full border border-white/10 shadow-lg transition-all duration-150"
+                      title="Xem toàn màn hình"
+                    >
+                      <Maximize2 size={18} strokeWidth={2} />
+                    </button>
+                  </div>
+
+                  {!isSystemPost ? (
+                    <div className={`grid gap-1 w-full bg-bg-secondary/10 ${allMedia.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {allMedia.map((media, idx) => (
+                        <div
+                          key={idx}
+                          className={`relative cursor-pointer group overflow-hidden bg-bg-primary border border-border-light/30
+                            ${allMedia.length > 2 && idx === 0 && allMedia.length % 2 !== 0 ? 'col-span-2 aspect-video' : 'aspect-square'}`}
+                          onClick={() => {
+                            setActiveMediaIndex(idx);
+                            setIsMediaViewerOpen(true);
+                          }}
+                        >
+                          <SensitiveMediaGuard isSensitive={media.isSensitive} className="w-full h-full">
+                            {media.type === 'video' ? (
+                              <div className="w-full h-full flex items-center justify-center bg-black">
+                                <video
+                                  src={media.url}
+                                  className="w-full h-full object-cover"
+                                  playsInline
+                                  preload="metadata"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="p-2 bg-black/20 backdrop-blur-sm rounded-full text-white">
+                                    <Play size={20} fill="white" />
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <img
+                                src={media.url}
+                                alt=""
+                                className="w-full h-full object-cover animate-fade-in"
+                                loading="lazy"
+                              />
+                            )}
+                          </SensitiveMediaGuard>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <SystemPostMedia
+                      type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
+                      media={post.media || []}
+                      variant="cinema"
+                    />
+                  )}
                 </div>
               )}
 
