@@ -15,6 +15,7 @@ export interface RtdbConversationSlice {
     searchHistory: Record<string, User[]>;
     isChatVisible: boolean;
     typingUsers: Record<string, string[]>;
+    userChats: Record<string, RtdbUserChat>;
 
     subscribeToConversations: (userId: string) => () => void;
     selectConversation: (conversationId: string | null) => void;
@@ -45,27 +46,36 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
     searchHistory: {},
     isChatVisible: false,
     typingUsers: {},
+    userChats: {},
 
     subscribeToConversations: (userId: string) => {
         const hasCache = get().conversations.length > 0;
         useLoadingStore.getState().setLoading('chat', !hasCache);
 
-        const unsubscribe = rtdbConversationService.subscribeToUserConversations(userId, (conversations) => {
-            const prevConvIds = get().conversations.map(c => c.id);
+        const unsubscribe = rtdbConversationService.subscribeToUserConversations(userId, (conversations, allUserChats) => {
+            const currentSelectedId = get().selectedConversationId;
+            const prevConversations = get().conversations;
+            const prevIds = new Set(prevConversations.map(c => c.id));
             const newIds = new Set(conversations.map(c => c.id));
 
-            for (const id of prevConvIds) {
+            for (const id of prevIds) {
                 if (!newIds.has(id) && get().clearMessages) {
                     get().clearMessages(id);
                 }
             }
 
             set(state => {
-                const nextSelectedId = state.selectedConversationId && !newIds.has(state.selectedConversationId)
-                    ? null
-                    : state.selectedConversationId;
+                const shouldReset = state.selectedConversationId &&
+                    prevIds.has(state.selectedConversationId) &&
+                    !newIds.has(state.selectedConversationId);
 
-                return { conversations, selectedConversationId: nextSelectedId };
+                const nextSelectedId = shouldReset ? null : state.selectedConversationId;
+
+                return {
+                    conversations,
+                    selectedConversationId: nextSelectedId,
+                    userChats: allUserChats
+                };
             });
             useLoadingStore.getState().setLoading('chat', false);
         });

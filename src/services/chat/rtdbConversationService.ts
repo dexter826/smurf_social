@@ -121,7 +121,10 @@ export const rtdbConversationService = {
      */
     subscribeToUserConversations: (
         userId: string,
-        callback: (conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>) => void
+        callback: (
+            conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>,
+            allUserChats: Record<string, RtdbUserChat>
+        ) => void
     ) => {
         const userChatsRef = ref(rtdb, `user_chats/${userId}`);
         const conversationListeners = new Map<string, () => void>();
@@ -138,7 +141,7 @@ export const rtdbConversationService = {
                 });
 
             conversations.sort((a, b) => (b.userChat.lastMsgTimestamp || 0) - (a.userChat.lastMsgTimestamp || 0));
-            callback(conversations);
+            callback(conversations, latestUserChats);
         };
 
         const subscribeToConversation = (convId: string) => {
@@ -171,7 +174,7 @@ export const rtdbConversationService = {
                 conversationsMap.clear();
                 conversationListeners.forEach(unsub => unsub());
                 conversationListeners.clear();
-                callback([]);
+                callback([], latestUserChats);
                 return;
             }
 

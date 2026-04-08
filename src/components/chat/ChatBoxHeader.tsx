@@ -63,7 +63,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
         {!conversation.data.isGroup && partner && (
           <UserStatusText
             userId={partner.id}
-            className="text-xs text-text-tertiary truncate leading-tight"
+            className="text-xs truncate leading-tight"
             initialStatus={partner.status}
           />
         )}

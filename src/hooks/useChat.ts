@@ -40,6 +40,7 @@ export const useChat = () => {
     typingUsers,
     setTyping,
     subscribeToTyping,
+    userChats,
   } = useRtdbChatStore();
 
   const { users: usersMap, fetchUsers } = useUserCache();
@@ -81,7 +82,7 @@ export const useChat = () => {
         unreadCount: 0,
         lastReadMsgId: null,
         lastMsgTimestamp: 0,
-        clearedAt: 0,
+        clearedAt: userChats[selectedConversationId]?.clearedAt || 0,
         createdAt: now,
         updatedAt: now,
       } as RtdbUserChat,

@@ -47,7 +47,7 @@ const FriendItemInner: React.FC<FriendItemProps> = ({ friend, onUnfriend, onMess
           {!isBanned && (
             <UserStatusText
               userId={friend.id}
-              className="text-xs text-text-tertiary"
+              className="text-xs"
               initialStatus={friend.status}
             />
           )}

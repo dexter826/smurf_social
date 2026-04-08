@@ -64,6 +64,7 @@ export const useRtdbChatStore = create<RtdbChatState>()(
                     isLoadingMore: {},
                     uploadProgress: {},
                     draftMessages: {},
+                    userChats: {},
                 });
             },
         }),

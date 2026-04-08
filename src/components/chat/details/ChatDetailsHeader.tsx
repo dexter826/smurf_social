@@ -50,7 +50,7 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
         <UserStatusText
           userId={partner.id}
           initialStatus={partner.status}
-          className="text-xs text-text-secondary mt-1"
+          className="text-xs mt-1"
         />
       )}
 

@@ -48,8 +48,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
             }
         }));
 
-        const conversation = get().conversations.find(c => c.id === conversationId);
-        const clearedAt = conversation?.userChat?.clearedAt || 0;
+        const userChat = get().userChats[conversationId];
+        const clearedAt = userChat?.clearedAt || 0;
 
         const unsubscribe = rtdbMessageService.subscribeToMessages(conversationId, LIMIT_PER_PAGE, (newIncomingMessages) => {
             set((state) => {
@@ -88,8 +88,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
             const oldestMessage = currentMessages[0];
             const beforeTimestamp = oldestMessage.data.createdAt;
 
-            const conversation = get().conversations.find(c => c.id === conversationId);
-            const clearedAt = conversation?.userChat?.clearedAt || 0;
+            const userChat = get().userChats[conversationId];
+            const clearedAt = userChat?.clearedAt || 0;
 
             const olderMessages = await rtdbMessageService.loadMoreMessages(
                 conversationId,

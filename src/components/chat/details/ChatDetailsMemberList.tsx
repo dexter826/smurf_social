@@ -121,7 +121,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                     <UserStatusText
                       userId={member.id}
                       initialStatus={member.status}
-                      className="text-xs text-text-tertiary"
+                      className="text-xs"
                     />
                   )}
                 </div>
