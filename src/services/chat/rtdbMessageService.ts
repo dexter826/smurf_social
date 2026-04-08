@@ -503,6 +503,51 @@ export const rtdbMessageService = {
     },
 
     /**
+     * Gửi tin nhắn GIF (Giphy)
+     */
+    sendGifMessage: async (
+        convId: string,
+        senderId: string,
+        gifUrl: string,
+        options?: {
+            replyToId?: string;
+            mentions?: string[];
+        }
+    ): Promise<string> => {
+        try {
+            const newMsgRef = push(ref(rtdb, `messages/${convId}`));
+            const msgId = newMsgRef.key!;
+
+            const messageData: RtdbMessage = {
+                senderId,
+                type: MessageType.GIF,
+                content: gifUrl,
+                media: [],
+                mentions: options?.mentions || [],
+                isForwarded: false,
+                replyToId: options?.replyToId || null,
+                isEdited: false,
+                isRecalled: false,
+                deletedBy: {},
+                readBy: {},
+                deliveredTo: {},
+                reactions: {},
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            };
+
+            await updateConversationAfterMessage(convId, senderId, messageData, '[GIF]', msgId);
+            await set(newMsgRef, messageData);
+
+            return msgId;
+        } catch (error) {
+            console.error('[rtdbMessageService] Lỗi sendGifMessage:', error);
+            throw error;
+        }
+    },
+
+
+    /**
      * Lắng nghe tin nhắn realtime
      */
     subscribeToMessages: (

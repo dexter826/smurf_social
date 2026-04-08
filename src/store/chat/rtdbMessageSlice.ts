@@ -18,6 +18,7 @@ export interface RtdbMessageSlice {
     sendFileMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendVideoMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendVoiceMessage: (conversationId: string, senderId: string, file: File, replyToId?: string, duration?: number) => Promise<void>;
+    sendGifMessage: (conversationId: string, senderId: string, gifUrl: string, replyToId?: string) => Promise<void>;
     sendCallMessage: (conversationId: string, senderId: string, payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }) => Promise<string>;
     updateCallMessage: (conversationId: string, messageId: string, payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }) => Promise<void>;
     markAsRead: (conversationId: string, userId: string) => Promise<void>;
@@ -256,6 +257,16 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 });
                 set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
             }
+            throw error;
+        }
+    },
+
+    sendGifMessage: async (conversationId: string, senderId: string, gifUrl: string, replyToId?: string) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        try {
+            await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId });
+        } catch (error) {
+            console.error('[rtdbMessageSlice] Lỗi sendGifMessage:', error);
             throw error;
         }
     },

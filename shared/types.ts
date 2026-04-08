@@ -42,6 +42,7 @@ export enum MessageType {
     VOICE = "voice",
     SYSTEM = "system",
     CALL = "call",
+    GIF = "gif",
 }
 
 export enum NotificationType {

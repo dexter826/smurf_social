@@ -14,12 +14,14 @@ import { insertTextAtCursor, validateFile } from '../../../utils';
 import { useRtdbChatStore } from '../../../store';
 import { RtdbMessage, User } from '../../../../shared/types';
 import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
+import { GiphyPicker } from './GiphyPicker';
 interface ChatInputProps {
   onSendText: (text: string, mentions?: string[], replyToId?: string) => void;
   onSendImages: (files: File[], replyToId?: string) => Promise<void>;
   onSendFile: (file: File, replyToId?: string) => void;
   onSendVideo?: (file: File, replyToId?: string) => void;
   onSendVoice?: (file: File, replyToId?: string, duration?: number) => void;
+  onSendGif?: (url: string, replyToId?: string) => void;
   onTyping: (isTyping: boolean) => void;
   disabled?: boolean;
   blockedMessage?: string;
@@ -39,7 +41,7 @@ interface ChatInputProps {
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
-  onSendText, onSendImages, onSendFile, onSendVideo, onSendVoice,
+  onSendText, onSendImages, onSendFile, onSendVideo, onSendVoice, onSendGif,
   onTyping, disabled = false, blockedMessage,
   replyingTo, editingMessage, onCancelAction, onEditMessage,
   currentUserId, usersMap, participants = [],
@@ -55,6 +57,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<FilePreviewItem[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showGiphy, setShowGiphy] = useState(false);
   const [playingPreview, setPlayingPreview] = useState<number | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -373,6 +376,23 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       className="flex-shrink-0 border-t border-border-light bg-bg-primary transition-theme pb-safe relative"
       style={{ zIndex: 'var(--z-sticky)' }}
     >
+      {/* Giphy Picker Popover */}
+      {showGiphy && (
+        <div className="absolute bottom-full left-0 mb-2 ml-3 z-[var(--z-popover)]">
+          <div className="fixed inset-0" onClick={() => setShowGiphy(false)} />
+          <div className="relative">
+            <GiphyPicker
+              onSelect={(url) => {
+                onSendGif?.(url, replyingTo?.id);
+                setShowGiphy(false);
+                onCancelAction();
+              }}
+              onClose={() => setShowGiphy(false)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* File previews */}
       <FilePreview
         files={selectedFiles}
@@ -455,6 +475,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             setShowActions(false);
             if (type === 'media') fileInputRef.current?.click();
             else if (type === 'voice') startRecording();
+            else if (type === 'gif') setShowGiphy(true);
           }}
           disabled={disabled || isSending || isRecording}
         />

@@ -30,7 +30,7 @@ const ChatPage: React.FC = () => {
     replyingTo, setReplyingTo, editingMessage, setEditingMessage,
     handleSelectConversation, handleSendText, handleEditMessage,
     handleRecallMessage, handleDeleteForMe, handleForwardMessage,
-    handleSendImage, handleSendFile, handleSendVideo, handleSendVoice,
+    handleSendImage, handleSendFile, handleSendVideo, handleSendVoice, handleSendGif,
     handleTyping, handleSearch, handlePin, handleMute, handleArchive,
     handleMarkUnread, handleDelete, handleMarkAllRead,
     handleApplyBlock, handleUnblock, shouldShowBlockBanner, myBlockOptions,
@@ -217,6 +217,7 @@ const ChatPage: React.FC = () => {
               onSendFile={handleSendFile}
               onSendVideo={handleSendVideo}
               onSendVoice={handleSendVoice}
+              onSendGif={handleSendGif}
               onTyping={handleTyping}
               blockedMessage={blockedMessage}
               onManageBlock={openBlockModal}

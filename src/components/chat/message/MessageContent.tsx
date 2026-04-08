@@ -353,6 +353,20 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
     );
   }
 
+  if (message.data.type === MessageType.GIF) {
+    const gifUrl = message.data.content;
+    return (
+      <div className="rounded-xl overflow-hidden max-w-[280px] shadow-sm bg-bg-secondary border border-border-light">
+        <LazyImage 
+          src={gifUrl} 
+          alt="GIF" 
+          className="w-full h-auto object-contain"
+          wrapperClassName="w-full h-full"
+        />
+      </div>
+    );
+  }
+
   if (message.data.type === 'voice') {
     const voiceUrl = message.data.media?.[0]?.url || '';
     const rawDuration = message.data.content ? parseInt(message.data.content) : 0;

@@ -17,6 +17,7 @@ export const useChatMessages = ({
     sendFileMessage,
     sendVideoMessage,
     sendVoiceMessage,
+    sendGifMessage,
     sendCallMessage,
     recallMessage,
     deleteMessageForMe,
@@ -52,6 +53,11 @@ export const useChatMessages = ({
     if (!selectedConversationId || !currentUserId) return;
     await sendVoiceMessage(selectedConversationId, currentUserId, file, replyToId, duration);
   }, [selectedConversationId, currentUserId, sendVoiceMessage]);
+
+  const handleSendGif = useCallback(async (url: string, replyToId?: string) => {
+    if (!selectedConversationId || !currentUserId) return;
+    await sendGifMessage(selectedConversationId, currentUserId, url, replyToId);
+  }, [selectedConversationId, currentUserId, sendGifMessage]);
 
   const handleEditMessage = useCallback(async (messageId: string, text: string) => {
     if (!selectedConversationId || !currentUserId) return;
@@ -93,6 +99,7 @@ export const useChatMessages = ({
     handleSendFile,
     handleSendVideo,
     handleSendVoice,
+    handleSendGif,
     handleSendCall,
     handleEditMessage,
     handleRecallMessage,
