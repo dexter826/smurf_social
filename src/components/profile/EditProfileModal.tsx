@@ -243,6 +243,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               }}
               placeholder="Chọn ngày sinh"
               size="lg"
+              error={errors.dob?.message}
             />
           </div>
 
