@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { ScreenLoader, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
@@ -32,6 +32,16 @@ const BannedRoute: React.FC = () => {
   return <BannedPage />;
 };
 
+const GlobalPresenceManager: React.FC = () => {
+  const { user } = useAuthStore();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
+  useSelfPresence(user, isAdminRoute);
+  
+  return null;
+};
+
 const App: React.FC = () => {
   const { user } = useAuthStore();
   const initializeAuth = useAuthStore(state => state.initialize);
@@ -42,14 +52,13 @@ const App: React.FC = () => {
     return () => unsubscribeAuth();
   }, [initializeAuth]);
 
-  // Quản lý trạng thái Online/Offline của bản thân
-  useSelfPresence(user);
   // Quản lý thông báo tập trung
   useNotifications();
 
   return (
     <ErrorBoundary>
       <HashRouter>
+        <GlobalPresenceManager />
         <React.Suspense fallback={<ScreenLoader />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
