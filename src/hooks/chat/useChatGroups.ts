@@ -157,9 +157,10 @@ export const useChatGroups = ({
     }
   }, [selectedConversationId, updateGroupInfo, currentUserId, conversations, sendGroupSystemMessage, getActorName]);
 
-  const handleDisbandGroup = useCallback(async () => {
-    if (!selectedConversationId) return;
-    await disbandGroup(selectedConversationId);
+  const handleDisbandGroup = useCallback(async (conversationId?: string) => {
+    const id = conversationId || selectedConversationId;
+    if (!id) return;
+    await disbandGroup(id);
   }, [selectedConversationId, disbandGroup]);
 
   return {

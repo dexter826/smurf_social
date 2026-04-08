@@ -238,7 +238,7 @@ export const rtdbGroupService = {
                     updates[`user_chats/${uid}/${convId}`] = null;
                 } else {
                     updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = now;
-                    updates[`user_chats/${uid}/${convId}/isArchived`] = true;
+                    updates[`user_chats/${uid}/${convId}/isArchived`] = false;
                     updates[`user_chats/${uid}/${convId}/updatedAt`] = now;
                 }
             });

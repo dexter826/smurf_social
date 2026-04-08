@@ -299,12 +299,20 @@ export const rtdbConversationService = {
      */
     deleteConversation: async (uid: string, convId: string): Promise<void> => {
         try {
+            const isDisbandedSnap = await get(ref(rtdb, `conversations/${convId}/isDisbanded`));
+            const isDisbanded = isDisbandedSnap.exists() && isDisbandedSnap.val() === true;
+            
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
-            await update(userChatRef, {
-                clearedAt: Date.now(),
-                unreadCount: 0,
-                updatedAt: Date.now()
-            });
+            
+            if (isDisbanded) {
+                await remove(userChatRef);
+            } else {
+                await update(userChatRef, {
+                    clearedAt: Date.now(),
+                    unreadCount: 0,
+                    updatedAt: Date.now()
+                });
+            }
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi deleteConversation:', error);
             throw error;

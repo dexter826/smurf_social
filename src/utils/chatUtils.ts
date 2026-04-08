@@ -22,6 +22,8 @@ export const getMessageDisplayContent = (message: RtdbMessage): string => {
             return '[Tin nhắn thoại]';
         case MessageType.CALL:
             return '[Cuộc gọi]';
+        case MessageType.SYSTEM:
+            return message.content;
         default:
             return '[Tin nhắn]';
     }
