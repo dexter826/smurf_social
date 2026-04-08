@@ -21,6 +21,7 @@ const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerification
 const MobileMenuPage = React.lazy(() => import('./pages/MobileMenuPage'));
 const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
+const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage'));
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 
 const BannedRoute: React.FC = () => {
@@ -84,7 +85,7 @@ const App: React.FC = () => {
                 <AdminLayout />
               </ProtectedRoute>
             }>
-              <Route index element={<Navigate to="/admin/reports" replace />} />
+              <Route index element={<AdminDashboardPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="users" element={<AdminUsersPage />} />
             </Route>

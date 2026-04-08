@@ -188,6 +188,27 @@ export const reportService = {
     await fn({ reportId });
   },
 
+  // Thống kê report (Cho Admin Dashboard)
+  getAdminStats: async (): Promise<{ pending: number, resolved: number, rejected: number }> => {
+    try {
+      const reportsRef = collection(db, 'reports');
+      const [pendingSnap, resolvedSnap, rejectedSnap] = await Promise.all([
+        getCountFromServer(query(reportsRef, where('status', '==', ReportStatus.PENDING))),
+        getCountFromServer(query(reportsRef, where('status', '==', ReportStatus.RESOLVED))),
+        getCountFromServer(query(reportsRef, where('status', '==', ReportStatus.REJECTED)))
+      ]);
+
+      return {
+        pending: pendingSnap.data().count,
+        resolved: resolvedSnap.data().count,
+        rejected: rejectedSnap.data().count
+      };
+    } catch (error) {
+      console.error("Lỗi lấy thống kê báo cáo admin:", error);
+      return { pending: 0, resolved: 0, rejected: 0 };
+    }
+  },
+
   // Đếm số báo cáo pending (cho badge)
   getPendingCount: async (): Promise<number> => {
     try {

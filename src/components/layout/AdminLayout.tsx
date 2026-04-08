@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Shield, Users, Flag, LogOut, Moon, Sun, ChevronLeft } from 'lucide-react';
+import { Shield, Users, Flag, LogOut, Moon, Sun, ChevronLeft, LayoutDashboard } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { ConfirmDialog, UserAvatar } from '../ui';
 import { useLogout } from '../../hooks/utils/useLogout';
 
 const navItems = [
+  { to: '/admin', icon: LayoutDashboard, label: 'Tổng quan' },
   { to: '/admin/reports', icon: Flag, label: 'Quản lý báo cáo' },
   { to: '/admin/users', icon: Users, label: 'Quản lý người dùng' },
 ];
@@ -52,6 +53,7 @@ export const AdminLayout: React.FC = () => {
             <NavLink
               key={to}
               to={to}
+              end={to === '/admin'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl transition-all duration-200 text-sm font-medium
                 ${isActive
@@ -135,6 +137,7 @@ export const AdminLayout: React.FC = () => {
             <NavLink
               key={to}
               to={to}
+              end={to === '/admin'}
               className={({ isActive }) =>
                 `flex-shrink-0 flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200
                 ${isActive

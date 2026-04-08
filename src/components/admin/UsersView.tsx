@@ -158,73 +158,155 @@ export const UsersView: React.FC = () => {
               <p className="text-xs text-text-tertiary">Thử thay đổi từ khóa hoặc bộ lọc</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {filteredUsers.map(user => (
-                <div
-                  key={user.id}
-                  className="bg-bg-primary px-4 py-3.5 rounded-2xl border border-border-light hover:border-primary/25 hover:shadow-md transition-all duration-200 group flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <UserAvatar
-                      userId={user.id}
-                      src={user.avatar?.url}
-                      name={user.fullName}
-                      size="md"
-                      className="flex-shrink-0 cursor-pointer"
-                      onClick={() => navigate(`/profile/${user.id}`)}
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-sm font-semibold text-text-primary truncate">
-                          {user.fullName}
-                        </span>
-                        {user.role === 'admin' && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
-                            Admin
+            <>
+              {/* Mobile Card View */}
+              <div className="grid grid-cols-1 gap-3 md:hidden">
+                {filteredUsers.map(user => (
+                  <div
+                    key={user.id}
+                    className="bg-bg-primary px-4 py-3.5 rounded-2xl border border-border-light hover:border-primary/25 hover:shadow-md transition-all duration-200 group flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <UserAvatar
+                        userId={user.id}
+                        src={user.avatar?.url}
+                        name={user.fullName}
+                        size="md"
+                        className="flex-shrink-0 cursor-pointer"
+                        onClick={() => navigate(`/profile/${user.id}`)}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-sm font-semibold text-text-primary truncate">
+                            {user.fullName}
                           </span>
-                        )}
-                        {user.status === UserStatus.BANNED && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-error/10 text-error uppercase">
-                            Bị khóa
-                          </span>
-                        )}
+                          {user.role === 'admin' && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
+                              Admin
+                            </span>
+                          )}
+                          {user.status === UserStatus.BANNED && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-error/10 text-error uppercase">
+                              Bị khóa
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-text-tertiary truncate block">{user.email}</span>
                       </div>
-                      <span className="text-xs text-text-tertiary truncate block">{user.email}</span>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1 ml-3 flex-shrink-0">
+                      <IconButton
+                        icon={<Eye size={15} />}
+                        onClick={() => navigate(`/profile/${user.id}`)}
+                        variant="ghost"
+                        size="sm"
+                        title="Xem chi tiết"
+                      />
+                      {user.status === UserStatus.BANNED ? (
+                        <IconButton
+                          icon={<Unlock size={15} />}
+                          onClick={() => setConfirm({ isOpen: true, type: 'unban', userId: user.id, userName: user.fullName })}
+                          variant="ghost"
+                          size="sm"
+                          className="text-success hover:bg-success/10"
+                        />
+                      ) : (
+                        <IconButton
+                          icon={<Lock size={15} />}
+                          onClick={() => setConfirm({ isOpen: true, type: 'ban', userId: user.id, userName: user.fullName })}
+                          variant="ghost"
+                          size="sm"
+                          className="hover:text-error hover:bg-error/10"
+                        />
+                      )}
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  {/* Action buttons — visible on hover */}
-                  <div className="flex items-center gap-1 ml-3 flex-shrink-0">
-                    <IconButton
-                      icon={<Eye size={15} />}
-                      onClick={() => navigate(`/profile/${user.id}`)}
-                      variant="ghost"
-                      size="sm"
-                      title="Xem trang cá nhân"
-                    />
-                    {user.status === UserStatus.BANNED ? (
-                      <IconButton
-                        icon={<Unlock size={15} />}
-                        onClick={() => setConfirm({ isOpen: true, type: 'unban', userId: user.id, userName: user.fullName })}
-                        variant="ghost"
-                        size="sm"
-                        className="text-success hover:bg-success/10"
-                        title="Mở khóa"
-                      />
-                    ) : (
-                      <IconButton
-                        icon={<Lock size={15} />}
-                        onClick={() => setConfirm({ isOpen: true, type: 'ban', userId: user.id, userName: user.fullName })}
-                        variant="ghost"
-                        size="sm"
-                        className="hover:text-error hover:bg-error/10"
-                        title="Khóa tài khoản"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+              {/* Desktop Table View */}
+              <div className="hidden md:block bg-bg-primary rounded-2xl border border-border-light overflow-hidden shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-bg-secondary border-b border-border-light/60">
+                      <th className="px-5 py-3.5 text-xs font-semibold text-text-secondary uppercase tracking-wider">Tài khoản</th>
+                      <th className="px-5 py-3.5 text-xs font-semibold text-text-secondary uppercase tracking-wider">Email</th>
+                      <th className="px-5 py-3.5 text-xs font-semibold text-text-secondary uppercase tracking-wider">Phân quyền / Trạng thái</th>
+                      <th className="px-5 py-3.5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-light/60">
+                    {filteredUsers.map(user => (
+                      <tr key={`table-${user.id}`} className="hover:bg-bg-secondary/40 transition-colors duration-150">
+                        <td className="px-5 py-3.5 align-middle">
+                          <div className="flex items-center gap-3">
+                            <UserAvatar
+                              userId={user.id}
+                              src={user.avatar?.url}
+                              name={user.fullName}
+                              size="sm"
+                              className="cursor-pointer flex-shrink-0"
+                              onClick={() => navigate(`/profile/${user.id}`)}
+                            />
+                            <span className="text-sm font-semibold text-text-primary">{user.fullName}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 align-middle">
+                          <span className="text-sm text-text-tertiary">{user.email || '—'}</span>
+                        </td>
+                        <td className="px-5 py-3.5 align-middle">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {user.role === 'admin' ? (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/10 text-primary uppercase border border-primary/20">Admin</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-bg-secondary text-text-tertiary uppercase border border-border-light">User</span>
+                            )}
+
+                            {user.status === UserStatus.BANNED ? (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-error/10 text-error uppercase border border-error/20">Bị Khóa</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-success/10 text-success uppercase border border-success/20">Hoạt động</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 align-middle">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <IconButton
+                              icon={<Eye size={16} />}
+                              onClick={() => navigate(`/profile/${user.id}`)}
+                              variant="ghost"
+                              size="sm"
+                              title="Xem trang cá nhân"
+                            />
+                            {user.status === UserStatus.BANNED ? (
+                              <IconButton
+                                icon={<Unlock size={16} />}
+                                onClick={() => setConfirm({ isOpen: true, type: 'unban', userId: user.id, userName: user.fullName })}
+                                variant="ghost"
+                                size="sm"
+                                className="text-success hover:bg-success/10"
+                                title="Mở khóa"
+                              />
+                            ) : (
+                              <IconButton
+                                icon={<Lock size={16} />}
+                                onClick={() => setConfirm({ isOpen: true, type: 'ban', userId: user.id, userName: user.fullName })}
+                                variant="ghost"
+                                size="sm"
+                                className="hover:text-error hover:bg-error/10"
+                                title="Khóa tài khoản"
+                              />
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
