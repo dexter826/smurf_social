@@ -7,6 +7,7 @@ import {
   Modal, UserStatusText, ConfirmDialog, MediaViewer, ReactionDetailsModal,
 } from '../../ui';
 import { useRtdbChatStore } from '../../../store';
+import { getMessageDisplayContent } from '../../../utils/chatUtils';
 import { TIME_LIMITS } from '../../../constants/appConfig';
 import { formatTimeOnly } from '../../../utils/dateUtils';
 import { scrollToMessage } from '../../../utils';
@@ -105,7 +106,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   };
 
   /* ── System message ── */
-  if (message.data.type === 'system') {
+  if (message.data.type === MessageType.SYSTEM) {
     return (
       <div className="flex justify-center my-2">
         <span className="bg-bg-tertiary/70 text-text-tertiary text-xs px-3 py-1 rounded-full italic text-center max-w-[85%]">
@@ -115,22 +116,25 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     );
   }
 
-  const isTextLike = message.data.type === 'text' || message.data.isRecalled ||
-    message.data.replyToId || message.data.type === 'call';
+  const isTextLike = 
+    message.data.type === MessageType.TEXT || 
+    message.data.isRecalled ||
+    message.data.replyToId || 
+    message.data.type === MessageType.CALL;
 
   return (
     <>
       <div
         id={`msg-${message.id}`}
-        className={`flex w-full mb-1 group ${isMe ? 'justify-end' : 'justify-start gap-2'}`}
+        className={`flex w-full group ${isMe ? 'justify-end' : 'justify-start gap-2'}`}
       >
         {/* Avatar (received only) */}
         {!isMe && (
-          <div className="w-7 flex-shrink-0 flex items-end pb-0.5">
+          <div className="w-8 flex-shrink-0 flex items-end pb-1">
             {showAvatar && (
               <UserAvatar
                 userId={sender?.id ?? ''}
-                size="xs"
+                size="sm"
                 initialStatus={sender?.status}
                 showStatus={false}
                 onClick={handleProfileClick}
@@ -165,16 +169,16 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             {/* Bubble */}
             <div
               className={`
-                relative text-sm
+                relative text-sm transition-all duration-200
                 ${isTextLike
-                  ? `px-3 py-2 rounded-2xl min-w-[72px]
+                  ? `px-3 py-1.5 rounded-2xl min-w-[72px] shadow-sm
                     ${isMe
-                    ? 'bg-bg-message-sent border border-primary/20 dark:border-primary/40 text-black dark:text-white rounded-br-sm'
-                    : 'bg-bg-message-received border border-black/15 dark:border-white/10 text-text-primary rounded-bl-sm'
+                    ? 'bg-bg-message-sent border border-primary/10 text-text-primary'
+                    : 'bg-bg-message-received border border-border-light text-text-primary'
                   }`
-                  : ''
+                  : 'rounded-2xl'
                 }
-                ${hasReactions ? 'pb-3' : ''}
+                ${(isTextLike && hasReactions) ? 'pb-3' : ''}
               `}
             >
               {/* Reply preview */}
@@ -186,26 +190,20 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
                 return (
                   <div
-                    className={`mb-2 px-2.5 py-1.5 rounded-xl border-l-[3px] text-xs cursor-pointer
+                    className={`mb-2 px-3 py-1.5 rounded-xl border-l-4 text-xs cursor-pointer transition-colors
                       ${isMe
-                        ? 'bg-black/10 dark:bg-white/20 border-black/30 dark:border-white/60 text-black/80 dark:text-white/90'
-                        : 'bg-zinc-200/50 dark:bg-white/10 border-primary/60 text-text-secondary'
+                        ? 'bg-black/5 dark:bg-white/5 border-primary/40 text-text-primary/80'
+                        : 'bg-bg-tertiary/50 border-primary/40 text-text-secondary'
                       }`}
                     onClick={() => replyToMsg && scrollToMessage(message.data.replyToId!)}
                   >
-                    <div className={`font-semibold mb-0.5 ${isMe ? 'text-black dark:text-white' : 'text-primary'}`}>
+                    <div className="font-bold mb-0.5 text-primary">
                       {replyAuthorName}
                     </div>
-                    <div className="truncate opacity-80">
+                    <div className="truncate opacity-70">
                       {replyToMsg?.data.isRecalled
                         ? 'Tin nhắn đã thu hồi'
-                        : replyToMsg?.data.type === 'text'
-                          ? replyToMsg.data.content.replace(/@\[([^\]]+)\]/g, '@$1')
-                          : replyToMsg?.data.type === MessageType.IMAGE ? '[Hình ảnh]'
-                            : replyToMsg?.data.type === MessageType.VIDEO ? '[Video]'
-                              : replyToMsg?.data.type === 'file' ? `[File] ${replyToMsg.data.media?.[0]?.fileName || ''}`
-                                : replyToMsg?.data.type === 'voice' ? '[Tin nhắn thoại]'
-                                  : '[Tin nhắn]'
+                        : getMessageDisplayContent(replyToMsg!.data)
                       }
                     </div>
                   </div>
@@ -224,60 +222,68 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 onJoinCall={onJoinCall}
               />
 
-              {/* Timestamp (text/call/recalled only) */}
-              {isTextLike && (
-                <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMe ? 'text-black/50 dark:text-white/70' : 'text-text-tertiary'}`}>
+              {/* Timestamp for all message types */}
+              {!message.data.isRecalled && (
+                <div className={`
+                  text-[10px] flex items-center justify-end gap-1 px-1
+                  ${isTextLike 
+                    ? `mt-1 ${isMe ? 'text-text-primary opacity-50' : 'text-text-tertiary'}`
+                    : (message.data.type === MessageType.IMAGE || message.data.type === MessageType.VIDEO || message.data.type === MessageType.GIF)
+                      ? 'absolute bottom-2 right-2 px-1.5 py-0.5 rounded-full bg-black/40 text-white backdrop-blur-sm z-20'
+                      : 'hidden' // File/Voice handles their own timestamp inside
+                  }
+                `}>
                   {formatTimeOnly(message.data.createdAt)}
                 </div>
               )}
-
-              {/* Reaction badge + emoji button */}
-              {!message.data.isRecalled && message.data.type !== MessageType.CALL && (
-                <div
-                  className={`absolute -bottom-3.5 flex items-center gap-1 ${isMe ? 'left-1' : 'right-1'}`}
-                  style={{ zIndex: 10 }}
-                >
-                  {hasReactions && (
-                    <ReactionDisplay
-                      reactionSummary={reactionSummary}
-                      reactionCount={reactionCount}
-                      variant="xs"
-                      onClick={() => setShowReactionDetails(true)}
-                    />
-                  )}
-
-                  {!isInteractionDisabled && (
-                    <div className={`relative ${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-opacity duration-200`}>
-                      <button
-                        className="w-7 h-6 flex items-center justify-center bg-bg-primary rounded-full border border-border-light shadow-sm text-text-tertiary hover:text-primary hover:border-primary/30 transition-all duration-200"
-                        onClick={(e) => { e.stopPropagation(); setShowReactionSelector(!showReactionSelector); }}
-                      >
-                        <Smile size={11} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  )}
-
-                  {showReactionSelector && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-[var(--z-dropdown)]"
-                        onClick={(e) => { e.stopPropagation(); setShowReactionSelector(false); }}
-                      />
-                      <div className={`absolute bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'} z-[var(--z-popover)]`}>
-                        <ReactionSelector
-                          onSelect={(emoji) => toggleReaction(conversationId, message.id, currentUserId, emoji)}
-                          onClose={() => setShowReactionSelector(false)}
-                          autoClose={false}
-                          className="relative shadow-xl animate-fade-in"
-                          currentReaction={myReaction}
-                          size="xs"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
             </div>
+
+            {/* Reaction badge + emoji button */}
+            {!message.data.isRecalled && message.data.type !== MessageType.CALL && (
+              <div
+                className={`absolute -bottom-2 flex items-center gap-1 ${isMe ? 'left-1' : 'right-1'}`}
+                style={{ zIndex: 10 }}
+              >
+                {hasReactions && (
+                  <ReactionDisplay
+                    reactionSummary={reactionSummary}
+                    reactionCount={reactionCount}
+                    variant="xs"
+                    onClick={() => setShowReactionDetails(true)}
+                  />
+                )}
+
+                {!isInteractionDisabled && (
+                  <div className={`relative ${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-opacity duration-200`}>
+                    <button
+                      className="w-7 h-6 flex items-center justify-center bg-bg-primary rounded-full border border-border-light shadow-sm text-text-tertiary hover:text-primary hover:border-primary/30 transition-all duration-200"
+                      onClick={(e) => { e.stopPropagation(); setShowReactionSelector(!showReactionSelector); }}
+                    >
+                      <Smile size={11} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                )}
+
+                {showReactionSelector && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-[var(--z-dropdown)]"
+                      onClick={(e) => { e.stopPropagation(); setShowReactionSelector(false); }}
+                    />
+                    <div className={`absolute bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'} z-[var(--z-popover)]`}>
+                      <ReactionSelector
+                        onSelect={(emoji) => toggleReaction(conversationId, message.id, currentUserId, emoji)}
+                        onClose={() => setShowReactionSelector(false)}
+                        autoClose={false}
+                        className="relative shadow-xl animate-fade-in"
+                        currentReaction={myReaction}
+                        size="xs"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Message actions (hover) */}
             {!message.data.isRecalled && (
@@ -298,12 +304,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             )}
           </div>
 
-          {/* Timestamp for media messages */}
-          {!isTextLike && !message.data.isRecalled && (
-            <span className="text-[10px] text-text-tertiary mt-1">
-              {formatTimeOnly(message.data.createdAt)}
-            </span>
-          )}
+          {/* Timestamp for media messages (REMOVED: consolidated inside bubble above) */}
 
           {/* Read status */}
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (

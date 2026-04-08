@@ -12,8 +12,9 @@ import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES, FILE_LIMITS, TIME_LIMITS } from '../../../constants';
 import { insertTextAtCursor, validateFile } from '../../../utils';
 import { useRtdbChatStore } from '../../../store';
-import { RtdbMessage, User } from '../../../../shared/types';
+import { RtdbMessage, User, MessageType } from '../../../../shared/types';
 import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
+import { getMessageDisplayContent } from '../../../utils/chatUtils';
 import { GiphyPicker } from './GiphyPicker';
 interface ChatInputProps {
   onSendText: (text: string, mentions?: string[], replyToId?: string) => void;
@@ -416,16 +417,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       {/* Reply / edit banner */}
       {(replyingTo || editingMessage) && (
-        <div className="px-4 py-2 border-b border-border-light bg-bg-secondary/50 flex items-center justify-between gap-3 animate-fade-in">
+        <div className="px-4 py-1.5 border-b border-border-light bg-bg-secondary/80 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
               {editingMessage
-                ? <Edit2 size={14} className="text-primary" />
-                : <Reply size={14} className="text-primary" />
+                ? <Edit2 size={13} className="text-primary" />
+                : <Reply size={13} className="text-primary" />
               }
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-primary leading-none mb-0.5">
+              <p className="text-[11px] font-bold text-primary leading-none mb-0.5">
                 {editingMessage
                   ? 'Đang chỉnh sửa'
                   : replyingTo?.data.senderId === currentUserId
@@ -433,23 +434,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     : `Trả lời ${usersMap[replyingTo?.data.senderId || '']?.fullName || ''}`
                 }
               </p>
-              <p className="text-xs text-text-secondary truncate">
+              <p className="text-[11px] text-text-secondary truncate opacity-80">
                 {editingMessage
                   ? editingMessage.data.content
-                  : replyingTo?.data.type === 'text'
-                    ? replyingTo.data.content
-                    : replyingTo?.data.type === 'image' ? '[Hình ảnh]'
-                      : replyingTo?.data.type === 'video' ? '[Video]'
-                        : replyingTo?.data.type === 'voice' ? '[Tin nhắn thoại]'
-                          : replyingTo?.data.type === 'file' ? `[File] ${replyingTo.data.media?.[0]?.fileName || ''}`
-                            : '[Tin nhắn]'
+                  : getMessageDisplayContent(replyingTo!.data)
                 }
               </p>
             </div>
           </div>
           <IconButton
             onClick={onCancelAction}
-            icon={<X size={14} />}
+            icon={<X size={13} />}
             size="sm"
             variant="ghost"
             className="flex-shrink-0"

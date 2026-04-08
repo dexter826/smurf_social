@@ -103,7 +103,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
             </span>
           </div>
 
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             {group.messages.map((msg, index) => {
               const isMe = msg.data.senderId === currentUserId;
               const sender = usersMap[msg.data.senderId];

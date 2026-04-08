@@ -1,11 +1,12 @@
 import { useMemo, useEffect } from 'react';
-import { RtdbConversation, RtdbUserChat, UserStatus } from '../../../shared/types';
+import { RtdbConversation, RtdbUserChat, UserStatus, MessageType } from '../../../shared/types';
 import { formatChatTime } from '../../utils/dateUtils';
 import { useUserCache } from '../../store/userCacheStore';
 import { useRtdbChatStore } from '../../store';
 import { useConversationParticipants } from './useConversationParticipants';
 import { useMessageStatus } from './useMessageStatus';
 import { userService } from '../../services/userService';
+import { getMessageDisplayContent } from '../../utils/chatUtils';
 
 interface UseConversationItemProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
@@ -72,11 +73,7 @@ export const useConversationItem = ({
 
     const content = lastMessage.content;
 
-    if (lastMessage.type === 'text') {
-      return content.replace(/@\[([^\]]+)\]/g, '@$1');
-    }
-
-    if (lastMessage.type === 'call') {
+    if (lastMessage.type === MessageType.CALL) {
       const isMine = lastMessage.senderId === currentUserId;
       const isGroup = conversation.data.isGroup;
       try {
@@ -114,8 +111,13 @@ export const useConversationItem = ({
       }
     }
 
-    return content;
-  }, [lastMessage, currentUserId]);
+    return getMessageDisplayContent({ 
+        type: lastMessage.type, 
+        content: lastMessage.content,
+        media: [], // lastMessage snippet in DB doesn't usually have full media array
+        isRecalled: false
+    } as any);
+  }, [lastMessage, currentUserId, conversation.userChat?.clearedAt, conversation.data.isGroup]);
 
   const messagesForStatus = useMemo(() => {
     if (isMessageRequest) return [];
