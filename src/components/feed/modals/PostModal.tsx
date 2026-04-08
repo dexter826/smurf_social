@@ -169,7 +169,7 @@ export const PostModal: React.FC<PostModalProps> = ({
     const allFiles = [...pendingFiles, ...filesToAdd];
     setPendingFiles(allFiles);
     setPreviews(prev => [...prev, ...processedPreviews]);
-    setValue('hasPendingFiles', allFiles.length > 0, { shouldValidate: true });
+    setValue('hasPendingFiles', allFiles.length > 0, { shouldDirty: true, shouldValidate: true });
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (videoInputRef.current) videoInputRef.current.value = '';
   };
@@ -183,7 +183,7 @@ export const PostModal: React.FC<PostModalProps> = ({
     const newFiles = pendingFiles.filter((_, i) => i !== index);
     setPendingFiles(newFiles);
     setPreviews(prev => prev.filter((_, i) => i !== index));
-    setValue('hasPendingFiles', newFiles.length > 0, { shouldValidate: true });
+    setValue('hasPendingFiles', newFiles.length > 0, { shouldDirty: true, shouldValidate: true });
   };
 
   const onFormSubmit = async (data: PostFormValues) => {
@@ -295,7 +295,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               size="lg"
               fullWidth
               onClick={handleSubmit(onFormSubmit)}
-              disabled={isSubmitting || (isEdit && !isDirty)}
+              disabled={isSubmitting || (isEdit && !isDirty && pendingFiles.length === 0)}
               isLoading={isSubmitting && uploadProgress === 0}
             >
               {isSubmitting && uploadProgress > 0

@@ -229,8 +229,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   ${isTextLike 
                     ? `mt-1 ${isMe ? 'text-text-primary opacity-50' : 'text-text-tertiary'}`
                     : (message.data.type === MessageType.IMAGE || message.data.type === MessageType.VIDEO || message.data.type === MessageType.GIF)
-                      ? 'absolute bottom-2 right-2 px-1.5 py-0.5 rounded-full bg-black/40 text-white backdrop-blur-sm z-20'
-                      : 'hidden' // File/Voice handles their own timestamp inside
+                      ? `absolute bottom-2 ${isMe ? 'right-2' : 'left-2'} px-1.5 py-0.5 rounded-full bg-black/40 text-white backdrop-blur-sm z-20`
+                      : 'hidden'
                   }
                 `}>
                   {formatTimeOnly(message.data.createdAt)}
