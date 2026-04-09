@@ -105,10 +105,21 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
       userId,
       currentUser.id,
       friendIds,
-      (newPosts) => {
+      (action, changedPosts) => {
+        if (action === 'remove') {
+          if (changedPosts.length === 0) {
+            setDbPosts([]);
+            return;
+          }
+
+          const removedIds = new Set(changedPosts.map(post => post.id));
+          setDbPosts(prev => prev.filter(post => !removedIds.has(post.id)));
+          return;
+        }
+
         setDbPosts(prev => {
           const updatedPosts = [...prev];
-          newPosts.forEach(npm => {
+          changedPosts.forEach(npm => {
             const index = updatedPosts.findIndex(p => p.id === npm.id);
             if (index !== -1) {
               updatedPosts[index] = npm;
@@ -124,7 +135,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
           return updatedPosts;
         });
 
-        fetchUsers(newPosts.map(p => p.authorId));
+        fetchUsers(changedPosts.map(post => post.authorId));
       }
     );
 

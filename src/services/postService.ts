@@ -242,9 +242,15 @@ export const postService = {
   },
 
   /** Theo dõi bài viết của người dùng thời gian thực */
-  subscribeToUserPosts: (userId: string, currentUserId: string, friendIds: string[], callback: (posts: Post[]) => void, limitCount: number = PAGINATION.USER_POSTS) => {
+  subscribeToUserPosts: (
+    userId: string,
+    currentUserId: string,
+    friendIds: string[],
+    callback: (action: 'add' | 'update' | 'remove', posts: Post[]) => void,
+    limitCount: number = PAGINATION.USER_POSTS
+  ) => {
     if (!currentUserId) {
-      callback([]);
+      callback('remove', []);
       return () => { };
     }
 
@@ -252,7 +258,7 @@ export const postService = {
     const isFriend = friendIds?.includes(userId) || false;
     const visibilityFilter = getVisibilityFilter(isOwner, isFriend);
     if (visibilityFilter.length === 0) {
-      callback([]);
+      callback('remove', []);
       return () => { };
     }
 
@@ -274,7 +280,7 @@ export const postService = {
       if (isCancelled) return;
 
       if (user?.status === 'banned' || currentUser?.status === 'banned') {
-        callback([]);
+        callback('remove', []);
         return;
       }
 
@@ -284,17 +290,35 @@ export const postService = {
 
         if ((blockedByTarget.exists() && blockedByTarget.data().isFullyBlocked === true) ||
           (blockedByMe.exists() && blockedByMe.data().isFullyBlocked === true)) {
-          callback([]);
+          callback('remove', []);
           return;
         }
       }
 
       unsubscribe = onSnapshot(q, (snapshot) => {
-        const posts = convertDocs<Post>(snapshot.docs);
-        callback(posts);
+        const addedPosts = snapshot.docChanges()
+          .filter(change => change.type === 'added')
+          .map(change => convertDoc<Post>(change.doc));
+        if (addedPosts.length > 0) {
+          callback('add', addedPosts);
+        }
+
+        const updatedPosts = snapshot.docChanges()
+          .filter(change => change.type === 'modified')
+          .map(change => convertDoc<Post>(change.doc));
+        if (updatedPosts.length > 0) {
+          callback('update', updatedPosts);
+        }
+
+        const removedPosts = snapshot.docChanges()
+          .filter(change => change.type === 'removed')
+          .map(change => ({ id: change.doc.id } as Post));
+        if (removedPosts.length > 0) {
+          callback('remove', removedPosts);
+        }
       }, (error) => {
         if (error?.code === 'permission-denied') {
-          callback([]);
+          callback('remove', []);
           return;
         }
         console.error("Lỗi subscribe bài viết của user", error);
