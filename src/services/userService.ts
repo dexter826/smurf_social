@@ -21,7 +21,8 @@ import {
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import { User, MediaObject, UserRole, UserStatus, BlockOptions, BlockedUserEntry, UserSettings, Visibility, PostType } from '../../shared/types';
-import { postService } from './postService';
+import { friendService } from './friendService';
+import { systemPostService } from './systemPostService';
 import { SOCIAL_MESSAGES } from '../constants/socialMessages';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
@@ -177,13 +178,11 @@ export const userService = {
 
       if (currentUser) {
         const settings = await userService.getUserSettings(userId);
-          await postService.createPost({
-            authorId: userId,
+          await systemPostService.createProfileUpdatePost({
+            userId: userId,
             type: type === 'avatar' ? PostType.AVATAR_UPDATE : PostType.COVER_UPDATE,
-            content: '',
             media: [mediaObject],
-            visibility: shareToFeed ? settings.defaultPostVisibility : Visibility.PRIVATE,
-            updatedAt: serverTimestamp() as any
+            visibility: shareToFeed ? settings.defaultPostVisibility : Visibility.PRIVATE
           });
       }
 
@@ -257,7 +256,6 @@ export const userService = {
       );
       if (options.isFullyBlocked) {
         try {
-          const { friendService } = await import('./friendService');
           await friendService.unfriend(userId, blockedUserId);
         } catch (e) {
           console.error('Không thể huỷ kết bạn tự động khi chặn', e);

@@ -1,0 +1,40 @@
+import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { Post, PostStatus, Visibility, PostType, MediaObject } from '../../shared/types';
+
+/**
+ * Service chuyên biệt để tạo các bài viết hệ thống (Avatar update, Cover update)
+ */
+export const systemPostService = {
+  /**
+   * Tạo bài viết cập nhật profile (Avatar hoặc Cover)
+   */
+  createProfileUpdatePost: async (params: {
+    userId: string;
+    type: PostType.AVATAR_UPDATE | PostType.COVER_UPDATE;
+    media: MediaObject[];
+    visibility: Visibility;
+  }): Promise<string> => {
+    try {
+      const postRef = doc(collection(db, 'posts'));
+      
+      const dataToSave: Partial<Post> = {
+        authorId: params.userId,
+        type: params.type,
+        content: '', 
+        status: PostStatus.ACTIVE,
+        visibility: params.visibility,
+        media: params.media,
+        commentCount: 0,
+        createdAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any
+      };
+
+      await setDoc(postRef, dataToSave);
+      return postRef.id;
+    } catch (error) {
+      console.error("[systemPostService] Lỗi tạo bài viết hệ thống:", error);
+      throw error;
+    }
+  }
+};

@@ -4,6 +4,8 @@ import { User, FriendRequest } from '../../shared/types';
 import { userService } from '../services/userService';
 import { friendService } from '../services/friendService';
 import { useLoadingStore } from './loadingStore';
+import { useAuthStore } from './authStore';
+import { usePostStore } from './posts';
 
 interface ContactState {
   friends: User[];
@@ -108,7 +110,6 @@ export const useContactStore = create<ContactState>()(
         try {
           const suggestionIds = await friendService.generateFriendSuggestions(limit);
           if (suggestionIds.length > 0) {
-            const { useAuthStore } = await import('./authStore');
             const userId = useAuthStore.getState().user?.id;
             if (userId) {
               const suggestions = await friendService.getCachedSuggestions(userId);
@@ -196,7 +197,6 @@ export const useContactStore = create<ContactState>()(
 
         try {
           await friendService.unfriend(userId, friendId);
-          const { usePostStore } = await import('./index');
           usePostStore.getState().filterPostsByAuthor(friendId);
         } catch (error) {
           set({ friends: previousFriends });

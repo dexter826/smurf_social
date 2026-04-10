@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
-        chunkSizeWarningLimit: 500,
+        chunkSizeWarningLimit: 1000,
         target: 'es2020',
         minify: 'esbuild',
         cssMinify: true,
