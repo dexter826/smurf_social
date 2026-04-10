@@ -12,6 +12,7 @@ import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 import { getReactionIcon } from '../reactions/ReactionIcons';
 import { useRtdbChatStore } from '../../../store';
 import { getLastName } from '../../../utils/uiUtils';
+import { TIME_LIMITS } from '../../../constants';
 
 /* ── Skeleton ── */
 const ConversationItemSkeleton: React.FC = () => (
@@ -68,7 +69,13 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const typingUsers = useRtdbChatStore(state => state.typingUsers[conversation.id] || []);
+  const typingUsers = useMemo(() => {
+    const typing = conversation.data.typing || {};
+    const now = Date.now();
+    return Object.entries(typing)
+      .filter(([uid, timestamp]) => uid !== currentUserId && (now - (timestamp as number)) < TIME_LIMITS.TYPING_TIMEOUT)
+      .map(([uid]) => uid);
+  }, [conversation.data.typing, currentUserId]);
   const draft = useRtdbChatStore(state => state.draftMessages[conversation.id] ?? '');
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
 
@@ -275,7 +282,8 @@ export const ConversationItem = Object.assign(
       prev.onPin === next.onPin &&
       prev.onMute === next.onMute &&
       prevMemberKeys === nextMemberKeys &&
-      lastMessageEqual
+      lastMessageEqual &&
+      JSON.stringify(prev.conversation.data.typing) === JSON.stringify(next.conversation.data.typing)
     );
   }),
   { Skeleton: ConversationItemSkeleton }

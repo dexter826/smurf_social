@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 import { RtdbMessage, MessageType, SharedPostMessagePayload } from '../../../shared/types';
-import { rtdbMessageService } from '../../services/chat/rtdbMessageService';
+import { rtdbMessageService } from '../../services/chat/messages';
 import { useAuthStore } from '../authStore';
 import type { RtdbChatState } from '../rtdbChatStore';
 import { PAGINATION } from '../../constants';

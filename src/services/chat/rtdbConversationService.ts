@@ -1,6 +1,7 @@
 import { ref, set, get, update, onValue, onChildRemoved, push, query, orderByChild, equalTo, serverTimestamp, remove } from 'firebase/database';
 import { rtdb } from '../../firebase/config';
 import { RtdbConversation, RtdbUserChat } from '../../../shared/types';
+import { TIME_LIMITS } from '../../constants';
 
 export const rtdbConversationService = {
     /**
@@ -416,7 +417,7 @@ export const rtdbConversationService = {
                 const typingData = snapshot.val();
                 const now = Date.now();
                 const activeTypingUsers = Object.entries(typingData)
-                    .filter(([_, timestamp]) => (now - (timestamp as number)) < 5000)
+                    .filter(([_, timestamp]) => (now - (timestamp as number)) < TIME_LIMITS.TYPING_TIMEOUT)
                     .map(([uid]) => uid);
                 callback(activeTypingUsers);
             } else {
