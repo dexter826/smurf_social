@@ -1,4 +1,3 @@
-import { RefObject } from 'react';
 import {
   collection,
   getDocs,
@@ -16,14 +15,12 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken } from 'firebase/messaging';
 import { db } from '../firebase/config';
 import type { Notification } from '../../shared/types';
 import { NotificationType } from '../../shared/types';
 import { getValidatedEnvConfig } from '../utils/validateEnv';
 import { convertDocs } from '../utils/firebaseUtils';
-import { useRtdbChatStore } from '../store/rtdbChatStore';
-import { soundManager } from './soundManager';
 
 export const notificationService = {
   // Theo dõi thông báo mới nhất
@@ -191,44 +188,4 @@ export const notificationService = {
     }
   },
 
-  // Lắng nghe tin nhắn khi đang mở app
-  initForegroundMessageHandler: (userId: string, selectedConversationRef?: RefObject<string | null>) => {
-    try {
-      const messaging = getMessaging();
-
-      const handlePayload = (payload: any) => {
-        const data = payload.data;
-        if (!data) return;
-
-        if (data.senderId && data.senderId === userId) return;
-
-        const isMention = data.type === NotificationType.MENTION;
-        const isChat = data.type === NotificationType.CHAT;
-
-        if (isChat || isMention) {
-          const chatStore = useRtdbChatStore.getState();
-          const convId = data.convId;
-          const convMetadata = chatStore.conversations.find(c => c.id === convId);
-          const isMuted = convMetadata?.userChat?.isMuted === true;
-          if (isMuted && !isMention) return;
-
-          const currentSelectedId = selectedConversationRef?.current;
-          const isTabFocused = document.visibilityState === 'visible';
-
-          if (currentSelectedId !== convId || !isTabFocused) {
-            soundManager.play('message');
-          }
-        }
-      };
-
-      const unsubscribeFCM = onMessage(messaging, handlePayload);
-
-      return () => {
-        unsubscribeFCM();
-      };
-    } catch (err) {
-      console.error('Lỗi khởi tạo Handler thông báo:', err);
-      return () => { };
-    }
-  }
 };

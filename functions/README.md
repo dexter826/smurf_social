@@ -4,14 +4,14 @@ Tài liệu này giải thích ý nghĩa và cách sử dụng các Cloud Functi
 
 ## Notifications (Thông báo)
 
-Các function này tự động chạy ngầm (trigged) khi có sự thay đổi dữ liệu trên Firestore để tạo thông báo tương ứng cho người dùng. Đội mobile không cần gọi trực tiếp các function này.
+Các function này tự động chạy ngầm (triggered) khi có thay đổi dữ liệu trên Firestore để tạo thông báo tương ứng cho người dùng. Không cần gọi trực tiếp từ client.
 
 - **`onPostReactionWrite`**: Chạy khi có người thả cảm xúc vào bài viết. Tạo/xóa thông báo tương ứng.
 - **`onCommentReactionWrite`**: Chạy khi có người thả cảm xúc vào bình luận bài viết. Tạo/xóa thông báo tương ứng.
 - **`onCommentWrite`**: Chạy khi có bình luận mới hoặc bình luận bị xóa. Tạo thông báo cho chủ bài viết hoặc người được phản hồi.
 - **`onFriendRequestWrite`**: Chạy khi trạng thái lời mời kết bạn thay đổi (gửi mới, chấp nhận). Tạo cập nhật thông báo kết bạn.
 - **`onReportCreated`**: Chạy khi có báo cáo vi phạm mới được tạo. Gửi thông báo cho hệ thống admin.
-- **`onMessageCreated`**: Chạy khi có tin nhắn mới trong nhóm chat/cá nhân. Tạo thông báo tin nhắn cho người nhận.
+- **`onMessageCreated`**: Chạy khi có tin nhắn mới trong nhóm chat/cá nhân. Chỉ gửi push (chat/mention), không lưu notification vào Firestore.
 
 ## Posts (Bài viết & Tương tác)
 
@@ -44,7 +44,7 @@ Các function dành riêng cho quyền quản trị viên.
 
 ## Search & System
 
-- **`searchUsers`**: Gọi trực tiếp (Callable Function) từ client khi người dùng tìm kiếm bạn bè. Sử dụng logic tìm kiếm nâng cao (như text search).
+- **`searchUsers`**: Gọi trực tiếp (Callable Function) từ client khi người dùng tìm kiếm bạn bè theo email exact match, có lọc block hai chiều.
   - **Request Payload**:
     ```json
     {
@@ -52,7 +52,7 @@ Các function dành riêng cho quyền quản trị viên.
       "currentUserId": "string (tùy chọn, để lọc user bị chặn)"
     }
     ```
-  - **Response**: 
+  - **Response**:
     ```json
     {
       "users": [
@@ -66,18 +66,4 @@ Các function dành riêng cho quyền quản trị viên.
       ]
     }
     ```
-- **`systemCleanup`**: Tự động chạy theo chu kỳ (Cron Job) để dọn dẹp dữ liệu rác, các lời mời kết bạn hết hạn, file tạm. Đội mobile không cần can thiệp.
-
-## Cách gọi (Với các function là Callable)
-
-Sử dụng Firebase SDK trên Mobile:
-
-```dart
-// Ví dụ gọi generateZegoToken trong Flutter (Dart)
-final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('generateZegoToken');
-final result = await callable.call(<String, dynamic>{
-    'roomID': '12345',
-    'userID': 'user_abc123'
-});
-final token = result.data['token'];
-```
+- **`systemCleanup`**: Tự động chạy theo lịch để dọn dẹp dữ liệu cũ và các bản ghi hết hạn.

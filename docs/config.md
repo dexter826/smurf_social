@@ -19,7 +19,6 @@ Tài liệu này chứa các cấu hình hệ thống quan trọng, bao gồm gi
 
 ## 3. Thời gian và Timeout (Time Limits)
 
-- **Thời gian cho phép thu hồi tin nhắn**: `300.000` ms (5 phút).
 - **Thời gian cho phép chỉnh sửa tin nhắn**: `300.000` ms (5 phút) (`MESSAGE_EDIT_WINDOW`).
 - **Thời gian chờ hiển thị "Đang gõ..." (`TYPING_TIMEOUT`)**: `3000` ms.
 - **Thời gian hiển thị thông báo Toast (`TOAST_DURATION`)**: `3000` ms.

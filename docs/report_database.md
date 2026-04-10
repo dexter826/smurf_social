@@ -20,9 +20,9 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 | Field          | Type    | Required/Optional | Description/Default                                           |
 | :------------- | :------ | :---------------- | :------------------------------------------------------------ |
 | `url`          | String  | **Required**      | Link Firebase Storage                                         |
-| `fileName`     | String  | _Optional_        | Tên file gốc                                                  |
-| `mimeType`     | String  | _Optional_        | Định dạng file                                                |
-| `size`         | Number  | _Optional_        | Kích thước (Byte). Chặn: Ảnh > 5MB, Video > 50MB, File > 10MB |
+| `fileName`     | String  | **Required**      | Tên file gốc                                                  |
+| `mimeType`     | String  | **Required**      | Định dạng file                                                |
+| `size`         | Number  | **Required**      | Kích thước (Byte). Chặn: Ảnh > 5MB, Video > 50MB, File > 10MB |
 | `thumbnailUrl` | String  | _Optional_        | Ảnh thu nhỏ (Chỉ dành cho Video)                              |
 | `isSensitive`  | Boolean | **Required**      | Đánh dấu nội dung nhạy cảm. Mặc định `false`                  |
 
@@ -34,9 +34,11 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 
 _Mô tả: Lưu trữ thông tin định danh, tài khoản và hồ sơ cá nhân của người dùng trên toàn hệ thống._
 
+_Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field riêng trong document._
+
 | Field                    | Type          | Required/Optional | Description/Default                                                                                             |
 | :----------------------- | :------------ | :---------------- | :-------------------------------------------------------------------------------------------------------------- |
-| `uid`                    | String        | **Required**      | Document ID (Firebase Auth UID)                                                                                 |
+| `id`                     | String        | **Required**      | Document ID (Firebase Auth UID)                                                                                 |
 | `email`                  | String        | **Required**      | Dùng để đăng nhập và tìm kiếm                                                                                   |
 | `fullName`               | String        | **Required**      | Tên hiển thị (Max 50 ký tự), mặc định `""`                                                                      |
 | `avatar`                 | MediaObject   | _Optional_        | Ảnh đại diện                                                                                                    |
@@ -137,9 +139,10 @@ _Mô tả: Bảng trung tâm lưu diễn đàn bài viết/trạng thái (Status
 
 **3.1. Sub-collection `reactions` (Bên trong `posts/{postId}`)**
 
+_Ghi chú: Document ID của reaction chính là `userId`._
+
 | Field       | Type        | Required/Optional | Description/Default                                       |
 | :---------- | :---------- | :---------------- | :-------------------------------------------------------- |
-| `userId`    | String      | **Required**      | Document ID của người tương tác                           |
 | `type`      | String Enum | **Required**      | `"like"`, `"love"`, `"haha"`, `"wow"`, `"sad"`, `"angry"` |
 | `createdAt` | Timestamp   | **Required**      | Thời điểm tạo                                             |
 | `updatedAt` | Timestamp   | **Required**      | Thời điểm cập nhật                                        |
@@ -168,9 +171,10 @@ _Mô tả: Chứa mọi bình luận của bài viết. Áp dụng cấu trúc p
 
 **4.1. Sub-collection `reactions` (Bên trong `comments/{commentId}`)**
 
+_Ghi chú: Document ID của reaction chính là `userId`._
+
 | Field       | Type        | Required/Optional | Description/Default                                       |
 | :---------- | :---------- | :---------------- | :-------------------------------------------------------- |
-| `userId`    | String      | **Required**      | Document ID của người tương tác                           |
 | `type`      | String Enum | **Required**      | `"like"`, `"love"`, `"haha"`, `"wow"`, `"sad"`, `"angry"` |
 | `createdAt` | Timestamp   | **Required**      | Thời điểm tạo                                             |
 | `updatedAt` | Timestamp   | **Required**      | Thời điểm cập nhật                                        |
@@ -222,8 +226,8 @@ _Mô tả: Lưu trạng thái Online/Offline và lần truy cập cuối cùng c
 | Field       | Type    | Required/Optional | Description/Default         |
 | :---------- | :------ | :---------------- | :-------------------------- |
 | `isOnline`  | Boolean | **Required**      | Trạng thái trực tuyến       |
-| `lastSeen`  | Number  | **Required**      | Timestamp lần cuối truy cập |
-| `createdAt` | Number  | **Required**      | Timestamp tạo               |
+| `lastSeen`  | Number  | _Optional_        | Timestamp lần cuối truy cập |
+| `createdAt` | Number  | _Optional_        | Timestamp tạo               |
 | `updatedAt` | Number  | **Required**      | Timestamp cập nhật          |
 
 ### 2. Node `conversations`

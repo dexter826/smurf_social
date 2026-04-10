@@ -1,226 +1,193 @@
 # Cloud Functions
 
-Tài liệu mô tả toàn bộ Cloud Functions đang triển khai. Tất cả functions chạy tại region `us-central1`, memory `512MiB`, CPU `0.5`, concurrency `1`.
+Tài liệu mô tả đầy đủ Cloud Functions đang export tại `functions/src/index.ts`.
 
-Functions chia thành 4 nhóm: **Callable** (client gọi trực tiếp), **Firestore Triggers**, **RTDB Triggers**, và **Scheduled**.
+## Cấu hình chung
+
+- Runtime options toàn cục: `region = us-central1`, `memory = 512MiB`, `cpu = 0.5`, `concurrency = 1`.
+- Nhóm function: Callable, Firestore Trigger, RTDB Trigger, Scheduled.
 
 ---
 
 ## 1. Callable Functions
 
-Client gọi qua `httpsCallable(functions, '<tên>')`. Tất cả đều yêu cầu đã đăng nhập.
+Client gọi qua `httpsCallable(functions, '<name>')`. Tất cả callable hiện tại đều yêu cầu đã đăng nhập.
 
 ### `banUser`
 
-Khóa hoặc mở khóa tài khoản người dùng. Chỉ Admin mới được gọi. Không thể tự ban chính mình.
+Mục đích: Khóa hoặc mở khóa tài khoản. Chỉ Admin, không cho tự ban chính mình.
 
 | Param    | Type                 | Mô tả                       |
 | :------- | :------------------- | :-------------------------- |
 | `userId` | String               | ID người dùng cần xử lý     |
-| `action` | `"ban"` \| `"unban"` | Hành động. Mặc định `"ban"` |
+| `action` | `"ban"` \| `"unban"` | Hành động, mặc định `"ban"` |
 
-Khi `ban`: cập nhật `status = "banned"`, thu hồi refresh token, xóa FCM token, xóa toàn bộ friend requests pending, set offline trên RTDB.
-Khi `unban`: chỉ cập nhật `status = "active"`.
+Hành vi:
 
----
+- `ban`: cập nhật `users/{userId}.status = "banned"`, revoke refresh token, xóa `users/{userId}/private/fcm`, xóa friend request `pending`, cập nhật `presence` offline trên RTDB.
+- `unban`: cập nhật `status = "active"`.
 
 ### `resolveReport`
 
-Xử lý (chấp nhận) một báo cáo vi phạm. Chỉ Admin. Báo cáo phải đang ở trạng thái `pending`.
+Mục đích: Xử lý báo cáo ở trạng thái `pending`. Chỉ Admin.
 
-| Param        | Type                                                | Mô tả                                         |
-| :----------- | :-------------------------------------------------- | :-------------------------------------------- |
-| `reportId`   | String                                              | ID báo cáo                                    |
-| `resolution` | String                                              | Nội dung kết quả xử lý. Mặc định `"Đã xử lý"` |
-| `action`     | `"delete_content"` \| `"warn_user"` \| `"ban_user"` | Hành động xử lý. Mặc định `"delete_content"`  |
+| Param        | Type                                                | Mô tả                                  |
+| :----------- | :-------------------------------------------------- | :------------------------------------- |
+| `reportId`   | String                                              | ID báo cáo                             |
+| `resolution` | String                                              | Nội dung xử lý, mặc định `"Đã xử lý"`  |
+| `action`     | `"delete_content"` \| `"warn_user"` \| `"ban_user"` | Hành động, mặc định `"delete_content"` |
 
-Sau khi xử lý: cập nhật report `status = "resolved"`, thực hiện hành động tương ứng, gửi thông báo + push cho cả người báo cáo lẫn người bị xử lý.
+Hành vi:
 
----
+- Cập nhật report sang `resolved`.
+- `delete_content`: soft-delete post/comment mục tiêu.
+- `warn_user`: gửi cảnh báo cho user mục tiêu.
+- `ban_user`: ban user mục tiêu.
+- Gửi notification + push cho người báo cáo và người bị tác động.
 
 ### `rejectReport`
 
-Từ chối một báo cáo vi phạm (không phát hiện vi phạm). Chỉ Admin.
+Mục đích: Từ chối báo cáo. Chỉ Admin.
 
 | Param      | Type   | Mô tả      |
 | :--------- | :----- | :--------- |
 | `reportId` | String | ID báo cáo |
 
-Cập nhật report `status = "rejected"`, `resolution = "Không phát hiện vi phạm"`, `resolvedBy = adminId`, gửi thông báo + push cho người báo cáo.
-
----
+Hành vi: cập nhật report sang `rejected`, gán `resolution = "Không phát hiện vi phạm"`, gửi notification + push cho người báo cáo.
 
 ### `searchUsers`
 
-Tìm kiếm người dùng theo email chính xác (exact match). Lọc bỏ tài khoản bị ban, người dùng bị block hai chiều.
+Mục đích: Tìm user theo email exact match, lọc hai chiều block và lọc user bị ban.
 
-| Param           | Type   | Mô tả                             |
-| :-------------- | :----- | :-------------------------------- |
-| `searchTerm`    | String | Email cần tìm (tối thiểu 1 ký tự) |
-| `currentUserId` | String | ID người đang tìm (để lọc block)  |
+| Param           | Type   | Mô tả                            |
+| :-------------- | :----- | :------------------------------- |
+| `searchTerm`    | String | Email cần tìm (>= 1 ký tự)       |
+| `currentUserId` | String | ID người đang tìm (để lọc block) |
 
-Trả về `{ users: User[] }`.
-
----
+Response: `{ users: User[] }`.
 
 ### `generateFriendSuggestions`
 
-Tạo danh sách gợi ý kết bạn dựa trên cosine similarity của `userVector`. Kết quả được cache vào document của user. Nếu user chưa có `userVector`, trả về danh sách ngẫu nhiên từ các user active.
+Mục đích: Sinh gợi ý bạn bè dựa trên cosine similarity của `userVector`.
 
-| Param   | Type   | Mô tả                                                   |
-| :------ | :----- | :------------------------------------------------------ |
-| `limit` | Number | Số lượng gợi ý tối đa. Min `1`, max `50`. Mặc định `20` |
+| Param   | Type   | Mô tả                       |
+| :------ | :----- | :-------------------------- |
+| `limit` | Number | Giới hạn 1..50, mặc định 20 |
 
-Trả về `{ userId, count, suggestionIds: string[] }`.
+Response: `{ userId, count, suggestionIds: string[] }`.
 
-Lọc bỏ: chính mình, bạn bè hiện tại, người đã bị block bởi mình, người đã block mình.
-Sau khi tính toán: ghi `suggestedFriends` và `suggestionsLastUpdated` vào document user.
-Có REST fallback tự động khi Admin SDK không khả dụng (lỗi token/network).
+Hành vi:
 
----
+- Lọc: chính mình, bạn bè, block hai chiều.
+- Ghi cache: `suggestedFriends`, `suggestionsLastUpdated`.
+- Có REST fallback khi lỗi token/network của Admin SDK.
 
 ### `generateZegoToken`
 
-Tạo token xác thực ZegoCloud cho cuộc gọi. Chỉ được tạo token cho chính mình (`userId` phải khớp với `auth.uid`). Token có hiệu lực 3600 giây.
+Mục đích: Cấp token gọi Zego cho đúng người dùng đăng nhập.
 
-| Param      | Type   | Mô tả                       |
-| :--------- | :----- | :-------------------------- |
-| `roomId`   | String | ID phòng gọi                |
-| `userId`   | String | ID người dùng               |
-| `userName` | String | Tên hiển thị trong cuộc gọi |
+| Param      | Type   | Mô tả         |
+| :--------- | :----- | :------------ |
+| `roomId`   | String | ID phòng gọi  |
+| `userId`   | String | UID người gọi |
+| `userName` | String | Tên hiển thị  |
 
-Trả về `{ token: string }`.
+Ràng buộc: `userId` phải trùng `auth.uid`.
+
+Response: `{ token: string }` (TTL 3600 giây).
 
 ---
 
 ## 2. Firestore Triggers
 
-Tự động kích hoạt khi dữ liệu Firestore thay đổi.
-
 ### `onUserProfileUpdated`
 
-Trigger: `users/{userId}` — onDocumentWritten
-
-Khi thông tin hồ sơ (sở thích, địa điểm, trường học, thế hệ) của người dùng thay đổi hoặc chưa có vector:
-
-- Phân tích và tổng hợp thông tin thành mô tả văn bản.
-- Gọi API Google Generative AI (mô hình `gemini-embedding-2-preview`) để sinh vector nhúng (embedding).
-- Cập nhật trường `userVector` vào document người dùng để phục vụ hệ thống AI gợi ý kết bạn.
-
----
+- Trigger: `users/{userId}` (`onDocumentWritten`).
+- Khi các trường hồ sơ thay đổi (interests/location/school/generation) hoặc chưa có vector:
+- Tạo profile text.
+- Gọi Gemini embedding (`gemini-embedding-2-preview`).
+- Cập nhật `userVector` vào user document.
 
 ### `onPostWrite`
 
-Trigger: `posts/{postId}` — onDocumentWritten
-
-Xử lý các trường hợp:
-
-- **Tạo mới**: Luôn ghi vào feed của tác giả; fan-out thêm cho bạn bè khi visibility là `friends` hoặc `public` (bỏ qua bạn bè đang ẩn hoạt động của tác giả).
-- **Soft-delete** (`status` chuyển sang `"deleted"`): Xóa bài khỏi tất cả feeds (bao gồm cả feed của tác giả).
-- **Đổi visibility `friends` → `private`**: Xóa khỏi feeds của bạn bè, **giữ lại feed của tác giả** (để tác giả vẫn thấy bài viết PRIVATE của mình).
-- **Đổi visibility từ `private` → `friends/public`**: Fan-out lại cho bạn bè.
-- **Cập nhật nội dung/media** (không đổi visibility): Cập nhật `updatedAt` trong feeds để kích hoạt listener phía client.
-
----
+- Trigger: `posts/{postId}` (`onDocumentWritten`).
+- Tạo post: fan-out vào feed tác giả và bạn bè (friends/public), có lọc user ẩn hoạt động tác giả.
+- Soft-delete: xóa feed entry của tác giả và bạn bè.
+- Đổi `friends -> private`: xóa khỏi feed bạn bè, giữ feed tác giả.
+- Đổi `private -> friends/public`: fan-out lại cho bạn bè.
+- Đổi nội dung/media: cập nhật `updatedAt` feed để kích hoạt listener client.
 
 ### `onFriendWrite`
 
-Trigger: `users/{userId}/friends/{friendId}` — onDocumentWritten
-
-- **Thêm bạn**: Fan-out tối đa 100 bài viết `active + (friends/public)` gần nhất của bạn mới vào feed của user.
-- **Xóa bạn**: Xóa toàn bộ bài viết của bạn cũ khỏi feed của user.
-
----
+- Trigger: `users/{userId}/friends/{friendId}` (`onDocumentWritten`).
+- Add: fan-out tối đa 100 post `active` có visibility `friends/public` của friend vào feed user.
+- Remove: xóa post của friend khỏi feed user.
 
 ### `onBlockedUserWrite`
 
-Trigger: `users/{userId}/blockedUsers/{blockedUid}` — onDocumentWritten
-
-Đồng bộ feed hai chiều khi thay đổi block options:
-
-- **Khi block** (`isFullyBlocked` chuyển sang `true`): xóa bài viết của cả hai phía khỏi feed của nhau.
-- **Khi bỏ chặn** (`isFullyBlocked` chuyển sang `false`): khôi phục bài viết `friends/public` vào feed của cả hai phía (nếu vẫn là bạn bè).
-
----
+- Trigger: `users/{userId}/blockedUsers/{blockedUid}` (`onDocumentWritten`).
+- `isFullyBlocked: false -> true`: xóa bài viết hai chiều khỏi feed của nhau.
+- `isFullyBlocked: true -> false`: khôi phục bài viết hai chiều nếu vẫn là bạn bè.
 
 ### `onPostReactionWrite`
 
-Trigger: `posts/{postId}/reactions/{userId}` — onDocumentWritten
-
+- Trigger: `posts/{postId}/reactions/{userId}` (`onDocumentWritten`).
 - Tăng/giảm `reactionCount` trên post.
-- Khi thêm reaction mới (không phải tự react bài của mình): tạo notification + push cho tác giả bài viết.
-
----
+- Khi tạo reaction mới và không phải self-react: tạo notification + push cho tác giả post.
 
 ### `onCommentReactionWrite`
 
-Trigger: `comments/{commentId}/reactions/{userId}` — onDocumentWritten
-
+- Trigger: `comments/{commentId}/reactions/{userId}` (`onDocumentWritten`).
 - Tăng/giảm `reactionCount` trên comment.
-- Khi thêm reaction mới (không phải tự react comment của mình): tạo notification + push cho tác giả bình luận.
-
----
+- Khi tạo reaction mới và không phải self-react: tạo notification + push cho tác giả comment.
 
 ### `onCommentWrite`
 
-Trigger: `comments/{commentId}` — onDocumentWritten
-
-- **Tạo mới**: Tăng `commentCount` trên post (và `replyCount` trên comment cha nếu là reply). Gửi notification + push cho `replyToUserId` (nếu là reply) hoặc tác giả bài viết.
-- **Soft-delete** (`status` chuyển sang `"deleted"`): Giảm counter tương ứng, xóa toàn bộ notifications liên quan đến comment đó. Nếu đây là bình luận gốc, tự động tiến hành **xóa dây chuyền (cascade soft-delete)** toàn bộ các bình luận phản hồi (replies) bên trong.
-
----
+- Trigger: `comments/{commentId}` (`onDocumentWritten`).
+- Tạo comment: tăng `commentCount` post, tăng `replyCount` nếu là reply, gửi notification + push.
+- Soft-delete comment:
+- Giảm counter tương ứng.
+- Xóa notification liên quan comment.
+- Nếu là comment gốc thì soft-delete cascade replies con.
 
 ### `onFriendRequestWrite`
 
-Trigger: `friendRequests/{reqId}` — onDocumentWritten
-
-- **Tạo mới**: Gửi notification + push cho người nhận.
-- **Xóa** (hủy/từ chối): Dọn sạch notifications liên quan đến request đó.
-- **Cập nhật** (`pending` → `accepted`): Gửi notification type `system` + push cho người gửi lời mời (thông báo đã được chấp nhận).
-
----
+- Trigger: `friendRequests/{reqId}` (`onDocumentWritten`).
+- Create: gửi notification + push cho người nhận.
+- Delete: xóa notification liên quan request.
+- Update `pending -> accepted`: gửi notification type `system` + push cho người gửi.
 
 ### `onReportCreated`
 
-Trigger: `reports/{reportId}` — onDocumentCreated
-
-Khi có báo cáo mới: gửi notification + push đến tất cả tài khoản có `role = "admin"`.
+- Trigger: `reports/{reportId}` (`onDocumentCreated`).
+- Khi tạo report mới: gửi notification + push cho toàn bộ user có role `admin`.
 
 ---
 
-## 3. RTDB Triggers
+## 3. RTDB Trigger
 
 ### `onMessageCreated`
 
-Trigger: `/messages/{convId}/{msgId}` — onValueCreated
-
-Khi có tin nhắn mới (không phải `system`, không phải đã thu hồi):
-
-- Mapping `type` sang `contentSnippet`:
-  - `image` → `đã gửi một hình ảnh`.
-  - `video` → `đã gửi một video`.
-  - `gif` → `đã gửi một GIF`.
-  - `file` → `đã gửi một tệp tin`.
-  - `voice` → `đã gửi một tin nhắn thoại`.
-  - `share_post` → parse JSON `content`, ưu tiên `snippet` (tối đa 80 ký tự), fallback `đã chia sẻ một bài viết`.
-  - `call` → parse JSON `content`; chỉ khi `status = "started"` mới gửi push, các trạng thái khác hoặc parse lỗi sẽ bỏ qua.
-  - `text` và các type chưa map riêng → fallback: normalize mention `@[id:name]` rồi cắt tối đa 100 ký tự.
-- Kiểm tra `isMuted` của từng thành viên trong `user_chats`.
-- Nếu có `@mention` trong nhóm: gửi push loại `mention` cho người được nhắc (bỏ qua mute).
-- Các thành viên còn lại (không bị mute): gửi push loại `chat`.
-- Không lưu notification vào Firestore (chỉ push).
+- Trigger: `/messages/{convId}/{msgId}` (`onValueCreated`).
+- Bỏ qua nếu `type = system` hoặc message đã recall.
+- Mapping `type -> contentSnippet` cho push body.
+- `share_post`: parse JSON, ưu tiên `snippet` <= 80 ký tự.
+- `call`: chỉ push khi `status = started`.
+- `text`/fallback: normalize mention `@[id:name]`, cắt 100 ký tự.
+- Với mỗi thành viên (trừ sender):
+- Nếu bị mute và không mention thì bỏ qua.
+- Mention trong group gửi type `mention`.
+- Còn lại gửi type `chat`.
+- Không ghi notification Firestore cho luồng chat/mention.
 
 ---
 
-## 4. Scheduled Functions
+## 4. Scheduled Function
 
 ### `systemCleanup`
 
-Lịch: **Mỗi Chủ nhật lúc 03:00 (Asia/Ho_Chi_Minh)**
-
-Dọn dẹp định kỳ theo 4 bước:
-
-1. Xóa notifications đã đọc (`isRead = true`) cũ hơn **90 ngày**.
-2. Xóa friend requests `pending` cũ hơn **30 ngày**.
-3. Hard-delete posts đã soft-delete (`status = "deleted"`) cũ hơn **90 ngày** — bao gồm xóa file media trên Storage và toàn bộ sub-collection `reactions`.
-4. Hard-delete comments đã soft-delete cũ hơn **90 ngày** — bao gồm xóa ảnh đính kèm trên Storage và sub-collection `reactions`.
+- Lịch chạy: Chủ nhật 03:00 (`Asia/Ho_Chi_Minh`).
+- Bước 1: xóa notification đã đọc cũ hơn 90 ngày.
+- Bước 2: xóa friend request `pending` cũ hơn 30 ngày.
+- Bước 3: hard-delete post soft-delete cũ hơn 90 ngày, xóa media Storage và sub-collection `reactions`.
+- Bước 4: hard-delete comment soft-delete cũ hơn 90 ngày, xóa ảnh Storage và sub-collection `reactions`.

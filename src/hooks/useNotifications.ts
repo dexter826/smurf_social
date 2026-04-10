@@ -7,27 +7,13 @@ import { soundManager } from '../services/soundManager';
 export const useNotifications = () => {
     const { user } = useAuthStore();
     const { selectedConversationId, conversations } = useRtdbChatStore();
-    
-    const selectedConvRef = useRef(selectedConversationId);
-    const prevConversationsRef = useRef(conversations);
 
-    useEffect(() => {
-        selectedConvRef.current = selectedConversationId;
-    }, [selectedConversationId]);
+    const prevConversationsRef = useRef(conversations);
 
     useEffect(() => {
         if (!user?.id) return;
 
         notificationService.requestPushPermission(user.id);
-
-        const unsubscribeFCM = notificationService.initForegroundMessageHandler(
-            user.id,
-            selectedConvRef
-        );
-
-        return () => {
-            if (unsubscribeFCM) unsubscribeFCM();
-        };
     }, [user?.id]);
 
     useEffect(() => {

@@ -17,6 +17,12 @@ import { rtdbConversationService } from './rtdbConversationService';
 
 type ProgressWithId = (messageId: string, progress: UploadProgress) => void;
 
+function assignReplyToIdIfPresent(messageData: RtdbMessage, replyToId?: string): void {
+    if (replyToId) {
+        messageData.replyToId = replyToId;
+    }
+}
+
 async function markMessageUploadFailed(convId: string, msgId: string): Promise<void> {
     await remove(ref(rtdb, `messages/${convId}/${msgId}`));
 
@@ -171,7 +177,6 @@ async function createAndSendMediaMessage(
         media: [mediaPlaceholder],
         mentions: options.mentions || [],
         isForwarded: false,
-        replyToId: options.replyToId,
         isEdited: false,
         isRecalled: false,
         deletedBy: {},
@@ -181,6 +186,8 @@ async function createAndSendMediaMessage(
         createdAt,
         updatedAt: createdAt
     };
+
+    assignReplyToIdIfPresent(messageData, options.replyToId);
 
     await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent, msgId);
     await set(newMsgRef, messageData);
@@ -261,7 +268,6 @@ async function createAndSendMediaAlbumMessage(
         media: mediaPlaceholders,
         mentions: options.mentions || [],
         isForwarded: false,
-        replyToId: options.replyToId,
         isEdited: false,
         isRecalled: false,
         deletedBy: {},
@@ -271,6 +277,8 @@ async function createAndSendMediaAlbumMessage(
         createdAt,
         updatedAt: createdAt
     };
+
+    assignReplyToIdIfPresent(messageData, options.replyToId);
 
     await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent, msgId);
     await set(newMsgRef, messageData);
@@ -360,7 +368,6 @@ export const rtdbMessageService = {
                 media: [],
                 mentions: options?.mentions || [],
                 isForwarded: options?.isForwarded || false,
-                replyToId: options?.replyToId,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -370,6 +377,8 @@ export const rtdbMessageService = {
                 createdAt: Date.now(),
                 updatedAt: Date.now()
             };
+
+            assignReplyToIdIfPresent(messageData, options?.replyToId);
 
             await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
             await set(newMsgRef, messageData);
@@ -574,7 +583,6 @@ export const rtdbMessageService = {
                 media: [],
                 mentions: options?.mentions || [],
                 isForwarded: false,
-                replyToId: options?.replyToId,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -584,6 +592,8 @@ export const rtdbMessageService = {
                 createdAt: Date.now(),
                 updatedAt: Date.now()
             };
+
+            assignReplyToIdIfPresent(messageData, options?.replyToId);
 
             await updateConversationAfterMessage(convId, senderId, messageData, '[GIF]', msgId);
             await set(newMsgRef, messageData);

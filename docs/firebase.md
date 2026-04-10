@@ -56,7 +56,7 @@ Tối ưu cho tốc độ và khả năng đồng bộ theo thời gian thực.
 - **`messages` (Tin nhắn)**:
   - Đọc: phải là thành viên hội thoại.
   - Ghi tin nhắn mới: phải là thành viên.
-  - Thu hồi: chỉ người gửi, trong vòng 5 phút (300.000ms).
+- Thu hồi: chỉ người gửi (không giới hạn thời gian).
   - `readBy`, `deliveredTo`, `reactions`, `deletedBy`: chỉ được ghi vào slot của chính mình.
 
 - **`user_chats` (Danh sách chat)**:
