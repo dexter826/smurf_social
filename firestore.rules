@@ -113,10 +113,12 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if isNotBanned() && (
         isAdmin() || (
-          !isContentBlocked(resource.data.authorId) &&
-          resource.data.status != 'deleted' && (
-            resource.data.authorId == request.auth.uid ||
-            (resource.data.visibility == 'friends' && isFriend(resource.data.authorId))
+          !isContentBlocked(resource.data.authorId) && (
+            (resource.data.status != 'deleted' && (
+              resource.data.authorId == request.auth.uid ||
+              (resource.data.visibility == 'friends' && isFriend(resource.data.authorId))
+            )) ||
+            (resource.data.type in ['avatar_update', 'cover_update'])
           )
         )
       );

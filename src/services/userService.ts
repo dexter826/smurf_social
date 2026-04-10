@@ -128,15 +128,14 @@ export const userService = {
     }
   },
 
-  // Helper nội bộ để upload media cho profile (Avatar/Cover)
   uploadProfileMedia: async (
     userId: string,
     file: File,
     type: 'avatar' | 'cover',
+    shareToFeed: boolean = true,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
     try {
-      // Validate file
       if (type === 'avatar') {
         validateAvatarFile(file);
       } else {
@@ -167,20 +166,18 @@ export const userService = {
         isSensitive: false,
       };
 
-      // Cập nhật profile
       await userService.updateProfile(userId, { [type]: mediaObject });
 
-      // Luôn tự động tạo bài viết
       if (currentUser) {
         const settings = await userService.getUserSettings(userId);
-        await postService.createPost({
-          authorId: userId,
-          type: type === 'avatar' ? PostType.AVATAR_UPDATE : PostType.COVER_UPDATE,
-          content: '',
-          media: [mediaObject],
-          visibility: settings.defaultPostVisibility,
-          updatedAt: serverTimestamp() as any
-        });
+          await postService.createPost({
+            authorId: userId,
+            type: type === 'avatar' ? PostType.AVATAR_UPDATE : PostType.COVER_UPDATE,
+            content: '',
+            media: [mediaObject],
+            visibility: shareToFeed ? settings.defaultPostVisibility : Visibility.PRIVATE,
+            updatedAt: serverTimestamp() as any
+          });
       }
 
       if (oldUrl) await deleteStorageFile(oldUrl);
@@ -199,18 +196,20 @@ export const userService = {
   uploadAvatar: async (
     userId: string,
     file: File,
+    shareToFeed: boolean = true,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
-    return userService.uploadProfileMedia(userId, file, 'avatar', onProgress);
+    return userService.uploadProfileMedia(userId, file, 'avatar', shareToFeed, onProgress);
   },
 
   // Tải lên ảnh bìa
   uploadCoverImage: async (
     userId: string,
     file: File,
+    shareToFeed: boolean = true,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
-    return userService.uploadProfileMedia(userId, file, 'cover', onProgress);
+    return userService.uploadProfileMedia(userId, file, 'cover', shareToFeed, onProgress);
   },
 
 

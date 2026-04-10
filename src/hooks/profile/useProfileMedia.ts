@@ -26,7 +26,7 @@ export const useProfileMedia = ({
   const [uploadingType, setUploadingType] = useState<'avatar' | 'cover' | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleAvatarChange = useCallback(async (file: File) => {
+  const handleAvatarChange = useCallback(async (file: File, shareToFeed: boolean) => {
     if (!profile || !isOwnProfile) return;
     const validation = validateFile(file, 'AVATAR');
     if (!validation.isValid) {
@@ -37,7 +37,7 @@ export const useProfileMedia = ({
     setUploadingType('avatar');
     setUploadProgress(0);
     try {
-      const newAvatarMedia = await userService.uploadAvatar(profile.id, file, (p) => {
+      const newAvatarMedia = await userService.uploadAvatar(profile.id, file, shareToFeed, (p) => {
         setUploadProgress(p.progress);
       });
       const updatedProfile = { ...profile, avatar: newAvatarMedia };
@@ -58,7 +58,7 @@ export const useProfileMedia = ({
     }
   }, [profile, isOwnProfile, currentUser, setProfile]);
 
-  const handleCoverChange = useCallback(async (file: File) => {
+  const handleCoverChange = useCallback(async (file: File, shareToFeed: boolean) => {
     if (!profile || !isOwnProfile) return;
     const validation = validateFile(file, 'COVER');
     if (!validation.isValid) {
@@ -69,7 +69,7 @@ export const useProfileMedia = ({
     setUploadingType('cover');
     setUploadProgress(0);
     try {
-      const newCoverMedia = await userService.uploadCoverImage(profile.id, file, (p) => {
+      const newCoverMedia = await userService.uploadCoverImage(profile.id, file, shareToFeed, (p) => {
         setUploadProgress(p.progress);
       });
       const updatedProfile = { ...profile, cover: newCoverMedia };

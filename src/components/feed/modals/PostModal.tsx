@@ -43,7 +43,7 @@ export const PostModal: React.FC<PostModalProps> = ({
   const initializedRef = useRef(false);
 
   const isEdit = !!initialPost;
-  const isSystemPost = isEdit && initialPost?.type !== PostType.REGULAR;
+  const isSystemPost = initialPost?.type === PostType.AVATAR_UPDATE || initialPost?.type === PostType.COVER_UPDATE;
 
   const {
     register, handleSubmit, setValue, watch, reset,
@@ -206,7 +206,7 @@ export const PostModal: React.FC<PostModalProps> = ({
   const handleCloseAttempt = () => {
     const hasContent = !!formData.content?.trim();
     const hasMedia = formData.media.length > 0 || pendingFiles.length > 0;
-    if (!isSystemPost && (hasContent || hasMedia)) setShowDiscardConfirm(true);
+    if (hasContent || hasMedia) setShowDiscardConfirm(true);
     else onClose();
   };
 
@@ -232,11 +232,7 @@ export const PostModal: React.FC<PostModalProps> = ({
       <Modal
         isOpen={isOpen}
         onClose={handleCloseAttempt}
-        title={
-          isSystemPost
-            ? 'Chỉnh sửa quyền riêng tư'
-            : isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'
-        }
+        title={isSystemPost ? 'Chỉnh sửa quyền riêng tư' : isEdit ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
         maxWidth="2xl"
         padding="none"
         fullScreen="mobile"
@@ -367,7 +363,7 @@ export const PostModal: React.FC<PostModalProps> = ({
             )}
 
             {/* Link preview in composer */}
-            {!isSystemPost && !isEdit && linkPreview.url && !linkPreview.isDismissed && allPreviews.length === 0 && (
+            {!isEdit && linkPreview.url && !linkPreview.isDismissed && allPreviews.length === 0 && (
               <LinkPreviewCard
                 url={linkPreview.url}
                 previewData={linkPreview.isLoading ? undefined : linkPreview.previewData}
@@ -416,7 +412,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                         />
                       )}
 
-                      {!isSystemPost && (
+                      {!isSubmitting && !isSystemPost && (
                         <button
                           type="button"
                           onClick={() => {

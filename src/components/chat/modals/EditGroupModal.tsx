@@ -50,7 +50,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
     e.target.value = '';
   };
 
-  const handleCropComplete = (croppedFile: File) => {
+  const handleCropComplete = (croppedFile: File, _shareToFeed: boolean) => {
     if (cropImage) URL.revokeObjectURL(cropImage);
     setPreviewUrl(URL.createObjectURL(croppedFile));
     setPendingFile(croppedFile);

@@ -76,7 +76,6 @@ const ProfilePage: React.FC = () => {
         collection(db, 'posts'),
         where('authorId', '==', profile.id),
         where('type', '==', type),
-        where('status', '==', PostStatus.ACTIVE),
         orderBy('createdAt', 'desc'),
         limit(1)
       );

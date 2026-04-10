@@ -9,7 +9,8 @@ interface ImageCropperProps {
   image: string;
   aspect?: number;
   title?: string;
-  onCropComplete: (croppedFile: File) => void;
+  showShareOption?: boolean;
+  onCropComplete: (croppedFile: File, shareToFeed: boolean) => void;
   onImageChange?: (file: File) => void;
   onCancel: () => void;
 }
@@ -19,6 +20,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   image,
   aspect = 1,
   title = 'Cắt ảnh',
+  showShareOption = false,
   onCropComplete,
   onImageChange,
   onCancel,
@@ -27,6 +29,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [shareToFeed, setShareToFeed] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,7 +54,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       const croppedFile = new File([croppedBlob], `cropped_${Date.now()}.jpg`, {
         type: 'image/jpeg'
       });
-      onCropComplete(croppedFile);
+      onCropComplete(croppedFile, shareToFeed);
     } catch (error) {
       console.error('Lỗi crop ảnh:', error);
     } finally {
@@ -87,6 +90,17 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       padding="none"
       footer={
         <div className="flex flex-col w-full gap-4">
+          {showShareOption && (
+            <div className="flex items-center gap-2 px-1">
+              <Checkbox
+                id="share-to-feed-checkbox"
+                label="Chia sẻ lên bảng tin"
+                checked={shareToFeed}
+                onChange={(e) => setShareToFeed((e.target as HTMLInputElement).checked)}
+              />
+            </div>
+          )}
+
           <div className="flex items-center justify-between w-full">
             <div className="flex gap-2">
               <Button

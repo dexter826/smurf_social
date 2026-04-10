@@ -23,12 +23,15 @@ interface CommentSectionProps {
   onProfileClick?: () => void;
   postOwnerId?: string;
   totalCommentCount?: number;
+  readonly?: boolean;
+  readonlyMessage?: string;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
   postId, currentUser, header, className = '',
   variant = 'default', autoFocus = false,
   onProfileClick, postOwnerId, totalCommentCount = 0,
+  readonly = false, readonlyMessage,
 }) => {
   const {
     rootComments, replies, hasMoreRoot, hasMoreReply, isLoadingPost,
@@ -191,25 +194,37 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             </div>
           ) : filteredRootComments.length === 0 ? (
             /* Empty state */
-            <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-              <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center mb-3 border border-border-light">
-                <MessageCircle size={18} className="text-text-tertiary" />
+            !readonly ? (
+              <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
+                <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center mb-3 border border-border-light">
+                  <MessageCircle size={18} className="text-text-tertiary" />
+                </div>
+                <p className="text-sm text-text-secondary font-medium">
+                  {hasAnyHidden
+                    ? `Có ${totalCommentCount} bình luận. Bạn chỉ có thể xem bình luận của bạn bè.`
+                    : 'Hãy là người đầu tiên bình luận!'}
+                </p>
+                {!hasAnyHidden && (
+                  <p className="text-xs text-text-tertiary mt-1">Gửi gắm suy nghĩ của bạn vào đây nào!</p>
+                )}
               </div>
-              <p className="text-sm text-text-secondary font-medium">
-                {hasAnyHidden
-                  ? `Có ${totalCommentCount} bình luận. Bạn chỉ có thể xem bình luận của bạn bè.`
-                  : 'Hãy là người đầu tiên bình luận!'}
-              </p>
-              {!hasAnyHidden && (
-                <p className="text-xs text-text-tertiary mt-1">Gửi gắm suy nghĩ của bạn vào đây nào!</p>
-              )}
-            </div>
+            ) : (
+              readonlyMessage !== "" && (
+                <div className="flex flex-col items-center justify-center py-10 px-6 text-center opacity-60">
+                  <p className="text-xs text-text-tertiary italic">
+                    {readonlyMessage || `Chỉ bạn bè của ${users[postOwnerId || '']?.fullName || 'người dùng'} mới có thể tương tác với bài viết này.`}
+                  </p>
+                </div>
+              )
+            )
           ) : (
             <div className="flex flex-col">
               {rootHiddenCount > 0 && (
                 <div className="mx-4 my-2 py-2 border-b border-border-light/30 text-center">
                   <p className="text-xs text-text-tertiary italic">
-                    Có {totalCommentCount} bình luận. Bạn chỉ có thể xem bình luận của bạn bè.
+                    Có {totalCommentCount} bình luận. {readonly 
+                      ? (readonlyMessage === "" ? "" : (readonlyMessage || 'Chỉ bạn bè mới có thể bình luận.')) 
+                      : 'Bạn chỉ có thể xem bình luận của bạn bè.'}
                   </p>
                 </div>
               )}
@@ -261,49 +276,51 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       </div>
 
       {/* Sticky input area */}
-      <div
-        className={`flex-shrink-0 sticky bottom-0 bg-bg-primary border-t border-border-light
-          ${variant === 'cinema'
-            ? 'p-4 md:p-5 bg-bg-primary/95 backdrop-blur-md shadow-md'
-            : 'p-3 md:p-4'
-          }
-          pb-[calc(12px+env(safe-area-inset-bottom))] md:pb-4`}
-        style={{ zIndex: 'var(--z-sticky)' }}
-      >
-        {/* Replying-to banner */}
-        {replyingTo && (
-          <div className="flex items-center justify-between mb-2.5 px-3 py-1.5 bg-primary/5 border border-primary/15 rounded-xl">
-            <span className="text-xs text-primary font-medium flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot flex-shrink-0" />
-              Đang trả lời <strong>{users[replyingTo.authorId || '']?.fullName}</strong>
-            </span>
-            <button
-              onClick={resetInput}
-              className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-primary/10 text-primary transition-colors duration-200"
-            >
-              <X size={11} />
-            </button>
-          </div>
-        )}
+      {!readonly && (
+        <div
+          className={`flex-shrink-0 sticky bottom-0 bg-bg-primary border-t border-border-light
+            ${variant === 'cinema'
+              ? 'p-4 md:p-5 bg-bg-primary/95 backdrop-blur-md shadow-md'
+              : 'p-3 md:p-4'
+            }
+            pb-[calc(12px+env(safe-area-inset-bottom))] md:pb-4`}
+          style={{ zIndex: 'var(--z-sticky)' }}
+        >
+          {/* Replying-to banner */}
+          {replyingTo && (
+            <div className="flex items-center justify-between mb-2.5 px-3 py-1.5 bg-primary/5 border border-primary/15 rounded-xl">
+              <span className="text-xs text-primary font-medium flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot flex-shrink-0" />
+                Đang trả lời <strong>{users[replyingTo.authorId || '']?.fullName}</strong>
+              </span>
+              <button
+                onClick={resetInput}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-primary/10 text-primary transition-colors duration-200"
+              >
+                <X size={11} />
+              </button>
+            </div>
+          )}
 
-        {/* Upload progress */}
-        {uploadProgress !== null && (
-          <div className="mb-2.5">
-            <UploadProgress progress={uploadProgress} fileName="Đang tải lên ảnh..." />
-          </div>
-        )}
+          {/* Upload progress */}
+          {uploadProgress !== null && (
+            <div className="mb-2.5">
+              <UploadProgress progress={uploadProgress} fileName="Đang tải lên ảnh..." />
+            </div>
+          )}
 
-        {/* Root comment input */}
-        {activeInputId === 'root' && (
-          <CommentInput
-            user={{ id: currentUser.id, fullName: currentUser.fullName, avatar: currentUser.avatar }}
-            onSubmit={handleCommentSubmit}
-            onUploadMedia={handleUploadMedia}
-            autoFocus={autoFocus}
-            placeholder="Nhập bình luận..."
-          />
-        )}
-      </div>
+          {/* Root comment input */}
+          {activeInputId === 'root' && (
+            <CommentInput
+              user={{ id: currentUser.id, fullName: currentUser.fullName, avatar: currentUser.avatar }}
+              onSubmit={handleCommentSubmit}
+              onUploadMedia={handleUploadMedia}
+              autoFocus={autoFocus}
+              placeholder="Nhập bình luận..."
+            />
+          )}
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={!!commentToDelete}

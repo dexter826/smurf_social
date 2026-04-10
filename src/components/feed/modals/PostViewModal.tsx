@@ -5,7 +5,7 @@ import {
   UserAvatar, IconButton, Modal, Dropdown, DropdownItem,
   Skeleton, ReactionDetailsModal, MediaViewer, SensitiveMediaGuard,
 } from '../../ui';
-import { Post, User, ReportType, ReactionType, PostType } from '../../../../shared/types';
+import { Post, User, ReportType, ReactionType, PostType, Visibility, PostStatus } from '../../../../shared/types';
 import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
@@ -68,6 +68,25 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     }));
   }, [post?.media]);
 
+  const isOwner = post?.authorId === currentUser.id;
+  const isSystemPost = post?.type === PostType.AVATAR_UPDATE || post?.type === PostType.COVER_UPDATE;
+  const isFriend = (post && friendIds?.includes(post.authorId)) || false;
+  const isDeleted = post?.status === PostStatus.DELETED;
+  const isPrivate = post?.visibility === Visibility.PRIVATE;
+  const canShowInteractions = !post || !isSystemPost || (!isDeleted && (isOwner || (isFriend && !isPrivate)));
+
+  const readonlyMessage = useMemo(() => {
+    if (!post) return undefined;
+
+    if (isSystemPost) {
+      if (!isOwner && !isFriend) return undefined;
+      if (isDeleted) return "";
+      if (isPrivate && isFriend) return "";
+    }
+
+    return undefined;
+  }, [post, isSystemPost, isOwner, isFriend, isDeleted, isPrivate]);
+
   if (!isOpen) return null;
 
   const shouldShowSkeleton = !post || isLoading;
@@ -110,9 +129,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     );
   }
 
-  const isOwner = post.authorId === currentUser.id;
   const hasMedia = allMedia.length > 0;
-  const isSystemPost = post.type === PostType.AVATAR_UPDATE || post.type === PostType.COVER_UPDATE;
 
   return (
     <Modal
@@ -267,24 +284,26 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
           <div className="flex items-center gap-0.5 shrink-0 ml-auto">
             {isOwner ? (
-              <Dropdown trigger={<IconButton icon={<MoreHorizontal size={18} />} size="sm" variant="ghost" />}>
-                <DropdownItem
-                  icon={<Edit size={15} />}
-                  label={isSystemPost ? 'Chỉnh sửa quyền riêng tư' : 'Chỉnh sửa bài viết'}
-                  onClick={() => onEdit?.(post.id)}
-                />
-                <DropdownItem
-                  icon={<Trash2 size={15} />}
-                  label="Xóa bài viết"
-                  variant="danger"
-                  onClick={() => onDelete?.(post.id)}
-                />
-              </Dropdown>
+              !isDeleted && (
+                <Dropdown trigger={<IconButton icon={<MoreHorizontal size={18} />} size="sm" variant="ghost" />}>
+                  <DropdownItem
+                    icon={<Edit size={15} />}
+                    label={isSystemPost ? "Chỉnh sửa quyền riêng tư" : "Chỉnh sửa bài viết"}
+                    onClick={() => onEdit?.(post.id)}
+                  />
+                  <DropdownItem
+                    icon={<Trash2 size={15} />}
+                    label="Xóa bài viết"
+                    variant="danger"
+                    onClick={() => onDelete?.(post.id)}
+                  />
+                </Dropdown>
+              )
             ) : (
               <Dropdown trigger={<IconButton icon={<MoreHorizontal size={18} />} size="sm" variant="ghost" />}>
                 <DropdownItem
                   icon={<Flag size={15} />}
-                  label="Báo cáo bài viết"
+                  label="Báo cáo"
                   variant="danger"
                   onClick={() => openReportModal(ReportType.POST, post.id, post.authorId)}
                 />
@@ -299,11 +318,13 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           postId={post.id}
           currentUser={currentUser}
           variant="cinema"
-          autoFocus
+          autoFocus={canShowInteractions}
           className="flex-1 min-h-0"
           onProfileClick={onClose}
           postOwnerId={post.authorId}
           totalCommentCount={post.commentCount}
+          readonly={!canShowInteractions}
+          readonlyMessage={readonlyMessage}
           header={
             <div className="flex flex-col">
               {/* Post text (Displayed first on mobile) */}
@@ -384,17 +405,19 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               )}
 
               {/* Reaction actions */}
-              <ReactionActions
-                reactionSummary={filteredSummary}
-                reactionCount={filteredCount}
-                myReaction={currentUserReaction}
-                commentCount={post.commentCount}
-                onReact={(type) => onReact(post.id, type)}
-                onViewReactions={() => setIsReactionsModalOpen(true)}
-                statsClassName="px-4 md:px-5 py-2.5 flex justify-between items-center border-b border-border-light/50"
-                actionClassName="flex px-1 py-1 gap-0.5 border-b border-border-light"
-                selectorPosition="bottom"
-              />
+              {canShowInteractions && (
+                <ReactionActions
+                  reactionSummary={filteredSummary}
+                  reactionCount={filteredCount}
+                  myReaction={currentUserReaction}
+                  commentCount={post.commentCount}
+                  onReact={(type) => onReact(post.id, type)}
+                  onViewReactions={() => setIsReactionsModalOpen(true)}
+                  statsClassName="px-4 md:px-5 py-2.5 flex justify-between items-center border-b border-border-light/50"
+                  actionClassName="flex px-1 py-1 gap-0.5 border-b border-border-light"
+                  selectorPosition="bottom"
+                />
+              )}
             </div>
           }
         />

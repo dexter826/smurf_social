@@ -64,8 +64,12 @@ async function handleFanout(postId: string, postData: any) {
             updatedAt: FieldValue.serverTimestamp(),
         };
 
-        // Thêm vào feed của chính tác giả
         batch.set(db.collection('users').doc(authorId).collection('feeds').doc(postId), feedEntry);
+
+        if (postData.visibility === 'private') {
+            await batch.commit();
+            return;
+        }
 
         const friendsSnap = await db.collection('users').doc(authorId).collection('friends').get();
         if (friendsSnap.empty) {

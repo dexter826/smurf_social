@@ -37,6 +37,10 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const error = uploadState?.error;
   const isOwner = post.authorId === currentUser.id;
   const isSystemPost = post.type === PostType.AVATAR_UPDATE || post.type === PostType.COVER_UPDATE;
+  const isFriend = friendIds?.includes(post.authorId) || false;
+  const isDeleted = post.status === PostStatus.DELETED;
+  const isPrivate = post.visibility === Visibility.PRIVATE;
+  const canShowInteractions = !isSystemPost || (!isDeleted && (isOwner || (isFriend && !isPrivate)));
 
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     post.id, 'post', post.authorId, post.reactionCount
@@ -88,26 +92,28 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
         {/* Menu */}
         {isOwner ? (
-          <Dropdown
-            trigger={
-              <IconButton
-                icon={<MoreHorizontal size={18} />}
-                size="sm"
+          !isDeleted && (
+            <Dropdown
+              trigger={
+                <IconButton
+                  icon={<MoreHorizontal size={18} />}
+                  size="sm"
+                />
+              }
+            >
+              <DropdownItem
+                icon={<Edit size={15} />}
+                label={isSystemPost ? "Chỉnh sửa quyền riêng tư" : "Chỉnh sửa bài viết"}
+                onClick={() => onEdit?.(post.id)}
               />
-            }
-          >
-            <DropdownItem
-              icon={<Edit size={15} />}
-              label={isSystemPost ? 'Chỉnh sửa quyền riêng tư' : 'Chỉnh sửa'}
-              onClick={() => onEdit?.(post.id)}
-            />
-            <DropdownItem
-              icon={<Trash2 size={15} />}
-              label="Xóa bài viết"
-              variant="danger"
-              onClick={() => onDelete?.(post.id)}
-            />
-          </Dropdown>
+              <DropdownItem
+                icon={<Trash2 size={15} />}
+                label="Xóa bài viết"
+                variant="danger"
+                onClick={() => onDelete?.(post.id)}
+              />
+            </Dropdown>
+          )
         ) : (
           <Dropdown
             trigger={
@@ -168,15 +174,17 @@ const PostItemInner: React.FC<PostItemProps> = ({
       )}
 
       {/* ── Reactions & comments ── */}
-      <ReactionActions
-        reactionSummary={filteredSummary}
-        reactionCount={filteredCount}
-        myReaction={currentUserReaction}
-        commentCount={post.commentCount}
-        onReact={(type) => onReact(post.id, type)}
-        onCommentClick={handleViewDetail}
-        onViewReactions={() => setIsReactionsModalOpen(true)}
-      />
+      {canShowInteractions && (
+        <ReactionActions
+          reactionSummary={filteredSummary}
+          reactionCount={filteredCount}
+          myReaction={currentUserReaction}
+          commentCount={post.commentCount}
+          onReact={(type) => onReact(post.id, type)}
+          onCommentClick={handleViewDetail}
+          onViewReactions={() => setIsReactionsModalOpen(true)}
+        />
+      )}
 
       <ReactionDetailsModal
         isOpen={isReactionsModalOpen}

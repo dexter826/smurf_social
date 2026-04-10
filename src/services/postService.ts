@@ -464,7 +464,9 @@ export const postService = {
 
       const data = postSnap.data();
 
-      if (isAdmin) {
+      const isSystemPost = data.type === PostType.AVATAR_UPDATE || data.type === PostType.COVER_UPDATE;
+
+      if (isAdmin || isSystemPost) {
         return convertDoc<Post>(postSnap);
       }
 

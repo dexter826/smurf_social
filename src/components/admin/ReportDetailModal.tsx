@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   X, AlertTriangle, CheckCircle, XCircle, Trash2,
   User as UserIcon, MessageSquare, FileText, Clock, ShieldAlert,
+  UserCircle, Image as ImageIcon,
 } from 'lucide-react';
 import {
   Report, ReportStatus, ReportType, User, UserStatus,
@@ -141,20 +142,37 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
     if (!report || !pendingAction || !currentUser) return;
     setIsProcessing(true);
     try {
-      if (pendingAction === 'resolve') {
-        await reportService.resolveReport(report.id, 'Đã xử lý xóa nội dung', 'delete_content');
-        toast.success(TOAST_MESSAGES.REPORT.RESOLVE_SUCCESS);
-      } else if (pendingAction === 'warn') {
-        await reportService.resolveReport(report.id, 'Đã gửi cảnh báo', 'warn_user');
-        toast.success(TOAST_MESSAGES.REPORT.WARN_SUCCESS);
-      } else if (pendingAction === 'ban') {
-        await reportService.resolveReport(report.id, 'Đã khóa tài khoản', 'ban_user');
-        toast.success(TOAST_MESSAGES.REPORT.BAN_SUCCESS);
-      } else if (pendingAction === 'reject') {
-        await reportService.rejectReport(report.id);
-        toast.success(TOAST_MESSAGES.REPORT.REJECT_SUCCESS);
-      }
-      onClose();
+        if (pendingAction === 'resolve') {
+          await reportService.resolveReport(report.id, 'Đã xử lý xóa nội dung', 'delete_content');
+          toast.success(TOAST_MESSAGES.REPORT.RESOLVE_SUCCESS);
+          
+          if (isProfileUpdate && targetOwner) {
+            const field = (content as Post).type === PostType.AVATAR_UPDATE ? 'avatar' : 'cover';
+            setTargetOwner({
+              ...targetOwner,
+              [field]: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false }
+            });
+          }
+          if (content) {
+            setContent({ ...content, status: 'deleted' } as any);
+          }
+        } else if (pendingAction === 'warn') {
+          await reportService.resolveReport(report.id, 'Đã gửi cảnh báo', 'warn_user');
+          toast.success(TOAST_MESSAGES.REPORT.WARN_SUCCESS);
+        } else if (pendingAction === 'ban') {
+          await reportService.resolveReport(report.id, 'Đã khóa tài khoản', 'ban_user');
+          toast.success(TOAST_MESSAGES.REPORT.BAN_SUCCESS);
+          if (targetOwner) {
+            setTargetOwner({ ...targetOwner, status: UserStatus.BANNED });
+          }
+        } else if (pendingAction === 'reject') {
+          await reportService.rejectReport(report.id);
+          toast.success(TOAST_MESSAGES.REPORT.REJECT_SUCCESS);
+        }
+        
+        // Refresh báo cáo để cập nhật status badge
+        const updatedReport = await reportService.getReportById(report.id);
+        if (updatedReport) setReport(updatedReport);
     } catch {
       toast.error(TOAST_MESSAGES.REPORT.PROCESS_FAILED);
     } finally {
@@ -244,7 +262,11 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                   <div className="flex items-center gap-2 flex-wrap">
                     {typeConfig && (
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${typeConfig.color}`}>
-                        {typeConfig.icon} {typeConfig.label}
+                        {typeConfig.icon} {
+                          isProfileUpdate 
+                            ? ((content as Post).type === PostType.AVATAR_UPDATE ? 'Ảnh đại diện' : 'Ảnh bìa')
+                            : typeConfig.label
+                        }
                       </span>
                     )}
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-error/10 text-error">
@@ -283,31 +305,39 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
 
                   {content ? (
                     <div className={`bg-bg-secondary/50 p-4 rounded-xl border ${isDeleted ? 'border-error/20' : 'border-border-light'}`}>
-                      {isDeleted && deleter && (
-                        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border-light/50 text-xs text-text-tertiary">
-                          <span className="font-semibold uppercase tracking-wide">Xóa bởi:</span>
-                          <UserAvatar userId={deleter.id} src={deleter.avatar?.url} name={deleter.fullName} size="xs" />
-                          <span className="font-semibold text-text-secondary">{deleter.fullName}</span>
-                          {content.deletedAt && (
-                            <span className="ml-auto">{formatRelativeTime(content.deletedAt)}</span>
-                          )}
-                        </div>
-                      )}
+
                       {content.content
                         ? <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{content.content}</p>
                         : <p className="text-sm text-text-tertiary italic">(Không có nội dung văn bản)</p>
                       }
                       {report?.targetType === ReportType.POST && (
                         <div className="mt-4">
-                          <PostMediaGrid
-                            media={(content as Post).media ?? []}
-                            onClick={() => openViewer(
-                              ((content as Post).media ?? []).map(m => ({
-                                type: m.mimeType.startsWith('video') ? 'video' as const : 'image' as const,
-                                url: m.url,
-                              }))
-                            )}
-                          />
+                          {isProfileUpdate && (content as Post).media?.[0] ? (
+                            <button
+                              type="button"
+                              className="w-full aspect-video rounded-xl bg-black overflow-hidden cursor-pointer group relative outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                              onClick={() => openViewer([{ type: 'image', url: (content as Post).media![0].url }])}
+                            >
+                              <img
+                                src={(content as Post).media![0].url}
+                                className="w-full h-full object-contain"
+                                alt="Ảnh hồ sơ bị báo cáo"
+                              />
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white text-xs font-semibold uppercase tracking-wider">
+                                Xem cỡ lớn
+                              </div>
+                            </button>
+                          ) : (
+                            <PostMediaGrid
+                              media={(content as Post).media ?? []}
+                              onClick={() => openViewer(
+                                ((content as Post).media ?? []).map(m => ({
+                                  type: m.mimeType.startsWith('video') ? 'video' as const : 'image' as const,
+                                  url: m.url,
+                                }))
+                              )}
+                            />
+                          )}
                         </div>
                       )}
                       {report?.targetType === ReportType.COMMENT && (content as Comment).image && (
@@ -475,12 +505,12 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                           )
                         ) : (
                           <Button
-                            variant={isDeleted ? 'secondary' : 'danger'}
+                            variant="danger"
                             fullWidth
                             isLoading={isProcessing}
                             onClick={() => setPendingAction('resolve')}
                           >
-                            {isDeleted ? 'Xác nhận & Đóng' : 'Xóa nội dung vi phạm'}
+                            Xóa nội dung vi phạm
                           </Button>
                         )}
                       </div>

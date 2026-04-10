@@ -20,8 +20,8 @@ interface ProfileHeaderProps {
   onEditClick?: () => void;
   onMessageClick?: () => void;
   onFriendClick?: () => void;
-  onAvatarChange?: (file: File) => void;
-  onCoverChange?: (file: File) => void;
+  onAvatarChange?: (file: File, shareToFeed: boolean) => void;
+  onCoverChange?: (file: File, shareToFeed: boolean) => void;
   onAvatarDelete?: () => void;
   onCoverDelete?: () => void;
   onBlockClick?: () => void;
@@ -68,9 +68,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     e.target.value = '';
   };
 
-  const handleCropComplete = (croppedFile: File) => {
-    if (cropState?.type === 'avatar') onAvatarChange?.(croppedFile);
-    else if (cropState?.type === 'cover') onCoverChange?.(croppedFile);
+  const handleCropComplete = (croppedFile: File, shareToFeed: boolean) => {
+    if (cropState?.type === 'avatar') onAvatarChange?.(croppedFile, shareToFeed);
+    else if (cropState?.type === 'cover') onCoverChange?.(croppedFile, shareToFeed);
     if (cropState?.image) URL.revokeObjectURL(cropState.image);
     setCropState(null);
   };
@@ -129,10 +129,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               >
                 <DropdownItem icon={<ImageIcon size={15} />} label="Tải ảnh lên" onClick={() => openFilePicker('cover')} />
                 {user.cover?.url && (
-                  <>
-                    <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh bìa" onClick={onCoverClick} />
-                    <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh bìa" variant="danger" onClick={onCoverDelete} />
-                  </>
+                  <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh bìa" variant="danger" onClick={onCoverDelete} />
                 )}
               </Dropdown>
             </div>
@@ -184,10 +181,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   >
                     <DropdownItem icon={<ImageIcon size={15} />} label="Tải ảnh lên" onClick={() => openFilePicker('avatar')} />
                     {user.avatar?.url && (
-                      <>
-                        <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh đại diện" onClick={onAvatarClick} />
-                        <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh đại diện" variant="danger" onClick={onAvatarDelete} />
-                      </>
+                      <DropdownItem icon={<Trash2 size={15} />} label="Xóa ảnh đại diện" variant="danger" onClick={onAvatarDelete} />
                     )}
                   </Dropdown>
                 </div>
@@ -283,8 +277,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
                     align="right"
                   >
-                    {user.avatar?.url && <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh đại diện" onClick={onAvatarClick} />}
-                    {user.cover?.url && <DropdownItem icon={<ImageIcon size={15} />} label="Xem ảnh bìa" onClick={onCoverClick} />}
                     <DropdownItem icon={isBlockedByMe ? <UserCheck size={15} /> : <Ban size={15} />} label={isBlockedByMe ? "Quản lý chặn" : "Chặn"} variant={isBlockedByMe ? "default" : "danger"} onClick={isBlockedByMe ? onUnblockClick : onBlockClick} />
                     <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
                   </Dropdown>
@@ -301,6 +293,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           image={cropState.image}
           aspect={cropState.type === 'avatar' ? 1 : 16 / 9}
           title={cropState.type === 'avatar' ? 'Cắt ảnh đại diện' : 'Cắt ảnh bìa'}
+          showShareOption={true}
           onCropComplete={handleCropComplete}
           onImageChange={handleImageChange}
           onCancel={handleCropCancel}
