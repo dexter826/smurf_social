@@ -212,7 +212,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               readonlyMessage !== "" && (
                 <div className="flex flex-col items-center justify-center py-10 px-6 text-center opacity-60">
                   <p className="text-xs text-text-tertiary italic">
-                    {readonlyMessage || `Chỉ bạn bè của ${users[postOwnerId || '']?.fullName || 'người dùng'} mới có thể tương tác với bài viết này.`}
+                    {readonlyMessage || 'Bạn không thể tương tác với bài viết này.'}
                   </p>
                 </div>
               )

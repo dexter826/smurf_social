@@ -141,7 +141,8 @@ service cloud.firestore {
 
       // Cảm xúc bài viết
       match /reactions/{reactorId} {
-        allow read: if isNotBanned() && canReadPostById(postId);
+        allow read: if isNotBanned() &&
+          canReadPostById(postId);
         allow write: if isNotBanned() &&
           reactorId == request.auth.uid &&
           canReadPostById(postId);
@@ -160,7 +161,10 @@ service cloud.firestore {
 
       allow create: if isNotBanned() &&
         request.resource.data.authorId == request.auth.uid &&
-        canReadPostById(request.resource.data.postId);
+        canReadPostById(request.resource.data.postId) &&
+        (!('replyToUserId' in request.resource.data) ||
+          request.resource.data.replyToUserId == null ||
+          !isContentBlocked(request.resource.data.replyToUserId));
 
       allow update: if isNotBanned() && (
         isAdmin() ||
@@ -181,7 +185,8 @@ service cloud.firestore {
           canReadPostById(get(/databases/$(database)/documents/comments/$(commentId)).data.postId);
         allow write: if isNotBanned() &&
           reactorId == request.auth.uid &&
-          canReadPostById(get(/databases/$(database)/documents/comments/$(commentId)).data.postId);
+          canReadPostById(get(/databases/$(database)/documents/comments/$(commentId)).data.postId) &&
+          !isContentBlocked(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId);
       }
     }
 

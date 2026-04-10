@@ -17,18 +17,18 @@ Bảo vệ dữ liệu gốc và quản lý quyền truy cập.
   - Khi tạo: bắt buộc `senderId` phải là chính mình, không được tự gửi cho bản thân, và không thể gửi nếu hai bên đang block nhau.
 
 - **`posts` (Bài viết)**:
-  - Xem được nếu: tài khoản chưa bị ban, không bị block hai chiều, bài chưa bị xóa, VÀ là tác giả / bạn bè của tác giả (với bài `friends`) / Admin. Bài `private` chỉ tác giả xem được.
+  - Xem được nếu: tài khoản chưa bị ban, không bị block hai chiều, bài chưa bị xóa, VÀ là tác giả / bài `public` / bạn bè của tác giả (với bài `friends`) / Admin. Bài `private` chỉ tác giả xem được.
   - Tạo: chính chủ, chưa bị ban.
   - Sửa: tác giả, Admin, hoặc Cloud Functions cập nhật `commentCount`/`updatedAt`.
   - Xóa: tác giả hoặc Admin.
-  - `reactions`: Đọc được nếu là tác giả bài, chính người react, hoặc bạn bè của tác giả. Ghi yêu cầu chính chủ thả cảm xúc và không bị block.
+  - `reactions`: Đọc/ghi dựa trên quyền đọc bài viết (`canReadPostById`). Ghi yêu cầu chính chủ thả cảm xúc.
 
 - **`comments` (Bình luận)**:
-  - Xem được nếu là tác giả bài viết, tác giả bình luận, bạn bè của tác giả bài, hoặc Admin.
-  - Tạo: chưa bị ban, là tác giả, không bị block bởi chủ bài.
+  - Xem được nếu đọc được bài viết chứa comment (`canReadPostById`) hoặc là Admin.
+  - Tạo: chưa bị ban, là tác giả, đọc được bài viết chứa comment; reply có chặn block theo `replyToUserId`.
   - Sửa: tác giả, Admin, chủ bài viết (soft-delete), chủ comment cha (soft-delete reply con), hoặc Cloud Functions cập nhật `replyCount`/`updatedAt`/`replyToUserId`/`replyToId`.
   - Xóa: tác giả, Admin, hoặc chủ bài viết.
-  - `reactions`: Tương tự `posts/reactions`.
+  - `reactions`: Đọc/ghi theo quyền đọc bài viết chứa comment; ghi vẫn kiểm tra block với tác giả comment.
 
 - **`notifications` (Thông báo)**:
   - Chỉ người nhận (`receiverId`) được đọc.
@@ -71,13 +71,13 @@ Tối ưu cho tốc độ và khả năng đồng bộ theo thời gian thực.
 
 ## 3. Storage Rules (`storage.rules`)
 
-| Path | Read | Write | Delete | Giới hạn |
-| :--- | :--- | :---- | :----- | :------- |
-| `avatars/{userId}/...` | Public | Chính chủ | Chính chủ | 5MB, chỉ ảnh |
-| `covers/{userId}/...` | Public | Chính chủ | Chính chủ | 10MB, chỉ ảnh |
-| `posts/{userId}/...` | Public | Chính chủ | Chính chủ | 50MB, ảnh hoặc video |
-| `comments/{userId}/...` | Public | Chính chủ | Chính chủ | 5MB, chỉ ảnh |
-| `chats/{convId}/...` | Đã đăng nhập | Đã đăng nhập | Đã đăng nhập | Ảnh 5MB, Video 50MB, Audio/File 10MB |
-| `group-avatars/{convId}/...` | Public | Đã đăng nhập | Đã đăng nhập | 5MB, chỉ ảnh |
-| `reports/{userId}/...` | Đã đăng nhập | Chính chủ | Chính chủ | 5MB, chỉ ảnh |
-| `thumbnails/{userId}/...` | Public | Chính chủ | Chính chủ | 2MB, chỉ ảnh |
+| Path                         | Read         | Write        | Delete       | Giới hạn                             |
+| :--------------------------- | :----------- | :----------- | :----------- | :----------------------------------- |
+| `avatars/{userId}/...`       | Public       | Chính chủ    | Chính chủ    | 5MB, chỉ ảnh                         |
+| `covers/{userId}/...`        | Public       | Chính chủ    | Chính chủ    | 10MB, chỉ ảnh                        |
+| `posts/{userId}/...`         | Đã đăng nhập | Chính chủ    | Chính chủ    | 50MB, ảnh hoặc video                 |
+| `comments/{userId}/...`      | Đã đăng nhập | Chính chủ    | Chính chủ    | 5MB, chỉ ảnh                         |
+| `chats/{convId}/...`         | Đã đăng nhập | Đã đăng nhập | Đã đăng nhập | Ảnh 5MB, Video 50MB, Audio/File 10MB |
+| `group-avatars/{convId}/...` | Public       | Đã đăng nhập | Đã đăng nhập | 5MB, chỉ ảnh                         |
+| `reports/{userId}/...`       | Đã đăng nhập | Chính chủ    | Chính chủ    | 5MB, chỉ ảnh                         |
+| `thumbnails/{userId}/...`    | Đã đăng nhập | Chính chủ    | Chính chủ    | 2MB, chỉ ảnh                         |
