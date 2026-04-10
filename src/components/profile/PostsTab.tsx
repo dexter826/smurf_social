@@ -12,10 +12,11 @@ interface PostsTabProps {
   currentUser: User;
   onViewPost?: (post: Post) => void;
   isFullyBlockedByPartner?: boolean;
+  onSharePost?: (post: Post, authorName: string) => void;
 }
 
 export const PostsTab: React.FC<PostsTabProps> = ({
-  userId, currentUser, onViewPost, isFullyBlockedByPartner = false,
+  userId, currentUser, onViewPost, isFullyBlockedByPartner = false, onSharePost,
 }) => {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
@@ -79,6 +80,7 @@ export const PostsTab: React.FC<PostsTabProps> = ({
               onEdit={setShowEditModal}
               onDelete={setPostToDelete}
               onViewDetail={onViewPost}
+              onShare={onSharePost}
             />
           ))}
           <div ref={observerRef} className="h-4 w-full" />

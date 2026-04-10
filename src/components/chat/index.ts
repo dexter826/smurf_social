@@ -20,6 +20,7 @@ export { AddMemberModal } from './modals/AddMemberModal';
 export { EditGroupModal } from './modals/EditGroupModal';
 export { TransferAdminModal } from './modals/TransferAdminModal';
 export { ForwardModal } from './modals/ForwardModal';
+export { SharePostModal } from './modals/SharePostModal';
 
 export * from './MessengerSkeleton';
 export * from './ChatBoxSkeleton';

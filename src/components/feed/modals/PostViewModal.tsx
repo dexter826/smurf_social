@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag, Play, Pause, Maximize2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MoreHorizontal, Edit, Trash2, Flag, Play, Pause, Maximize2, AlertCircle } from 'lucide-react';
 import {
   UserAvatar, IconButton, Modal, Dropdown, DropdownItem,
   Skeleton, ReactionDetailsModal, MediaViewer, SensitiveMediaGuard,
@@ -23,12 +23,13 @@ interface PostViewModalProps {
   onReact: (postId: string, reaction: ReactionType | 'REMOVE') => void;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
+  onShare?: (post: Post, authorName: string) => void;
   isLoading?: boolean;
 }
 
 export const PostViewModal: React.FC<PostViewModalProps> = ({
   post, author, currentUser, isOpen, onClose,
-  onReact, onEdit, onDelete, isLoading,
+  onReact, onEdit, onDelete, onShare, isLoading,
 }) => {
   const navigate = useNavigate();
   const { openReportModal } = useReportStore();
@@ -76,7 +77,13 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     || isOwner
     || post.visibility === Visibility.PUBLIC
     || (post.visibility === Visibility.FRIENDS && isFriend);
+  const canShare = !!post && !isDeleted && post.visibility !== Visibility.PRIVATE && canAccessByVisibility;
   const canShowInteractions = !post || !isSystemPost || (!isDeleted && canAccessByVisibility);
+
+  const handleSharePost = useCallback(() => {
+    if (!post) return;
+    onShare?.(post, author?.fullName || 'Người dùng');
+  }, [post, author?.fullName, onShare]);
 
   const readonlyMessage = useMemo(() => {
     if (!post) return undefined;
@@ -92,8 +99,39 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
   if (!isOpen) return null;
 
-  const shouldShowSkeleton = !post || isLoading;
+  const shouldShowSkeleton = !!isLoading;
   const isCinema = post ? (post.media?.length ?? 0) > 0 : false;
+
+  if (!post && !shouldShowSkeleton) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        showHeader={false}
+        maxWidth="md"
+        padding="none"
+      >
+        <div className="p-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-bg-secondary border border-border-light flex items-center justify-center mx-auto mb-4">
+            <AlertCircle size={24} className="text-text-tertiary" />
+          </div>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">Không thể truy cập bài viết</h3>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Bài viết đã bị xóa hoặc bạn không còn quyền xem nội dung này.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-5 px-4 py-2 rounded-lg border border-border-light text-sm font-semibold text-text-primary hover:bg-bg-hover transition-colors"
+          >
+            Đóng
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (!post) return null;
 
   /* ── Loading skeleton ── */
   if (shouldShowSkeleton) {
@@ -415,6 +453,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
                   myReaction={currentUserReaction}
                   commentCount={post.commentCount}
                   onReact={(type) => onReact(post.id, type)}
+                  onShareClick={canShare ? handleSharePost : undefined}
                   onViewReactions={() => setIsReactionsModalOpen(true)}
                   statsClassName="px-4 md:px-5 py-2.5 flex justify-between items-center border-b border-border-light/50"
                   actionClassName="flex px-1 py-1 gap-0.5 border-b border-border-light"

@@ -10,6 +10,8 @@ export const getMessageDisplayContent = (message: RtdbMessage): string => {
     switch (message.type) {
         case MessageType.TEXT:
             return message.content.replace(/@\[([^\]]+)\]/g, '@$1');
+        case MessageType.SHARE_POST:
+            return '[Chia sẻ bài viết]';
         case MessageType.IMAGE:
             return '[Hình ảnh]';
         case MessageType.VIDEO:
@@ -35,4 +37,12 @@ export const getMessageDisplayContent = (message: RtdbMessage): string => {
  */
 export const parseTextWithMentions = (text: string) => {
     return text.split(/(@\[[^:]+:[^\]]+\]|@[^\s\u200B]+(?:\s[^\s\u200B]+)*\u200B|(?:https?:\/\/|www\.)[^\s]+)/g);
+};
+
+/**
+ * Dự đoán Conversation ID cho hội thoại 1-1 giữa 2 người dùng
+ */
+export const getDirectConversationId = (userId1: string, userId2: string): string => {
+    const sortedIds = [userId1, userId2].sort();
+    return `direct_${sortedIds[0]}_${sortedIds[1]}`;
 };

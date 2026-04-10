@@ -1,8 +1,10 @@
 import React from 'react';
-import { RtdbMessage } from '../../../../../shared/types';
+import { MessageType, RtdbMessage } from '../../../../../shared/types';
 import { LinkPreviewCard } from '../../../shared/LinkPreviewCard';
 import { extractFirstUrl } from '../../../../services/linkPreviewService';
 import { parseTextWithMentions } from '../../../../utils/chatUtils';
+import { parseSharedPostMessage } from '../../../../utils/postShareMessage';
+import { SharedPostMessage } from './SharedPostMessage';
 
 interface TextMessageProps {
   message: { id: string; data: RtdbMessage };
@@ -14,6 +16,30 @@ interface TextMessageProps {
  */
 export const TextMessage: React.FC<TextMessageProps> = ({ message, isMe }) => {
   const { content, isEdited } = message.data;
+  const isSharedPost = message.data.type === MessageType.SHARE_POST;
+  const sharedPostPayload = isSharedPost ? parseSharedPostMessage(content) : null;
+
+  if (sharedPostPayload) {
+    const hasReactions = !!(message.data.reactions && Object.keys(message.data.reactions).length > 0);
+    return (
+      <SharedPostMessage
+        payload={sharedPostPayload}
+        isMe={isMe}
+        isEdited={!!isEdited}
+        timestamp={message.data.createdAt}
+        hasReactions={hasReactions}
+      />
+    );
+  }
+
+  if (isSharedPost) {
+    return (
+      <div className="text-xs italic opacity-70">
+        Nội dung chia sẻ bài viết không hợp lệ
+      </div>
+    );
+  }
+
   const parts = parseTextWithMentions(content);
 
   const renderContent = () => {
@@ -61,7 +87,7 @@ export const TextMessage: React.FC<TextMessageProps> = ({ message, isMe }) => {
     });
   };
 
-  const firstUrl = extractFirstUrl(content);
+  const firstUrl = isSharedPost ? null : extractFirstUrl(content);
 
   return (
     <div className="flex flex-col min-w-0 w-full">

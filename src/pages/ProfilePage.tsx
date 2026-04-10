@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams as useRouterParams } from 'react-router-dom';
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Gender, UserStatus, MaritalStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { Button, ConfirmDialog, BlockOptionsModal, SensitiveMediaGuard } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
-import { PostViewModal, PostModal } from '../components/feed';
-import { usePostStore } from '../store';
+import { PostModal } from '../components/feed';
+import { usePostStore, useSharePostStore } from '../store';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileTabs } from '../components/profile/ProfileTabs';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
@@ -14,8 +14,6 @@ import { PhotosTab } from '../components/profile/PhotosTab';
 import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
 import { User as UserIcon, Lock, Cake, MapPin, GraduationCap, Heart, CalendarDays, Sparkles } from 'lucide-react';
 import { useProfile, usePostNavigation } from '../hooks';
-import { useUserCache } from '../store/userCacheStore';
-import { useFriendIds } from '../hooks/utils';
 import { toDate } from '../utils/dateUtils';
 import { ReactionType, Visibility, MediaObject, PostType, PostStatus, Post } from '../../shared/types';
 import { postService } from '../services/postService';
@@ -27,16 +25,10 @@ type ConfirmType = 'unfriend' | 'deleteAvatar' | 'deleteCover';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const routerParams = useRouterParams<{ '*': string }>();
   const { user: currentUser } = useAuthStore();
-  const friendIds = useFriendIds();
-  const { fetchPostById, selectedPost, reactToPost, updatePost, deletePost, posts } = usePostStore();
-  const { getUser, fetchUser } = useUserCache();
-  const { viewPost, closePost } = usePostNavigation();
-
-  const urlPostId = routerParams['*']?.startsWith('post/')
-    ? routerParams['*'].replace('post/', '')
-    : null;
+  const { reactToPost, updatePost, deletePost, posts } = usePostStore();
+  const { viewPost } = usePostNavigation();
+  const openSharePost = useSharePostStore(state => state.openSharePost);
 
   const {
     profile, latestMedia, loading, uploadingType, uploadProgress,
@@ -63,9 +55,6 @@ const ProfilePage: React.FC = () => {
   const handleDeletePost = async () => {
     if (!postToDelete || !currentUser) return;
     await deletePost(postToDelete, currentUser.id);
-    if (selectedPost?.id === postToDelete) {
-       closePost();
-    }
     setPostToDelete(null);
   };
 
@@ -93,14 +82,9 @@ const ProfilePage: React.FC = () => {
     return postService.uploadPostMedia(files, currentUser.id, onProgress);
   };
 
-  useEffect(() => {
-    if (!urlPostId || !currentUser) return;
-    fetchPostById(urlPostId, currentUser.id, friendIds);
-  }, [urlPostId, currentUser?.id, friendIds, fetchPostById]);
-
-  useEffect(() => {
-    if (selectedPost?.authorId) fetchUser(selectedPost.authorId);
-  }, [selectedPost?.authorId, fetchUser]);
+  const handleOpenShareModal = useCallback((post: Post, authorName: string) => {
+    openSharePost(post, authorName);
+  }, [openSharePost]);
 
   const onFriendActionClick = async () => {
     const { needConfirm } = await handleFriendAction();
@@ -369,6 +353,7 @@ const ProfilePage: React.FC = () => {
                   currentUser={currentUser}
                   onViewPost={viewPost}
                   isFullyBlockedByPartner={isFullyBlockedByPartner}
+                  onSharePost={handleOpenShareModal}
                 />
               </div>
             </div>
@@ -416,23 +401,12 @@ const ProfilePage: React.FC = () => {
         onSave={handleSaveProfile}
       />
 
-      <PostViewModal
-        isOpen={!!urlPostId}
-        onClose={closePost}
-        post={selectedPost}
-        author={selectedPost ? (getUser(selectedPost.authorId) ?? null) : null}
-        currentUser={currentUser}
-        onReact={handlePostReact}
-        onEdit={(id) => setShowEditModal(id)}
-        onDelete={(id) => setPostToDelete(id)}
-      />
-
       {currentUser && (
         <PostModal
           isOpen={!!showEditModal}
           onClose={() => setShowEditModal(null)}
           currentUser={currentUser}
-          initialPost={posts.find(p => p.id === showEditModal) || selectedPost || undefined}
+          initialPost={posts.find(p => p.id === showEditModal) || undefined}
           onSubmit={handleEditPost}
           onUploadImages={handleUploadImages}
         />

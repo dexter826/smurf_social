@@ -36,6 +36,7 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
   // Dispatch nội dung dựa trên Enum MessageType
   switch (type) {
     case MessageType.TEXT:
+    case MessageType.SHARE_POST:
       return <TextMessage message={message} isMe={isMe} />;
 
     case MessageType.IMAGE:

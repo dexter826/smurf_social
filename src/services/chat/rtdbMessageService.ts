@@ -1,6 +1,6 @@
 import { ref, set, get, update, push, remove, query, orderByChild, limitToLast, endBefore, onChildAdded, onChildChanged, onChildRemoved, off, increment } from 'firebase/database';
 import { rtdb } from '../../firebase/config';
-import { RtdbMessage, RtdbConversation, MessageType, MediaObject } from '../../../shared/types';
+import { RtdbMessage, RtdbConversation, MessageType, MediaObject, SharedPostMessagePayload } from '../../../shared/types';
 import { TIME_LIMITS, IMAGE_COMPRESSION } from '../../constants';
 import { compressImage } from '../../utils/imageUtils';
 import { uploadWithProgress, UploadProgress, generateVideoThumbnail } from '../../utils/uploadUtils';
@@ -171,7 +171,7 @@ async function createAndSendMediaMessage(
         media: [mediaPlaceholder],
         mentions: options.mentions || [],
         isForwarded: false,
-        replyToId: options.replyToId || null,
+        replyToId: options.replyToId,
         isEdited: false,
         isRecalled: false,
         deletedBy: {},
@@ -261,7 +261,7 @@ async function createAndSendMediaAlbumMessage(
         media: mediaPlaceholders,
         mentions: options.mentions || [],
         isForwarded: false,
-        replyToId: options.replyToId || null,
+        replyToId: options.replyToId,
         isEdited: false,
         isRecalled: false,
         deletedBy: {},
@@ -360,7 +360,7 @@ export const rtdbMessageService = {
                 media: [],
                 mentions: options?.mentions || [],
                 isForwarded: options?.isForwarded || false,
-                replyToId: options?.replyToId || null,
+                replyToId: options?.replyToId,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -380,6 +380,55 @@ export const rtdbMessageService = {
                 throw error;
             }
             console.error('[rtdbMessageService] Lỗi sendTextMessage:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Gửi tin nhắn chia sẻ bài viết
+     */
+    sendSharedPostMessage: async (
+        convId: string,
+        senderId: string,
+        payload: SharedPostMessagePayload,
+        options?: {
+            replyToId?: string;
+            isForwarded?: boolean;
+            mentions?: string[];
+        }
+    ): Promise<string> => {
+        try {
+            const newMsgRef = push(ref(rtdb, `messages/${convId}`));
+            const msgId = newMsgRef.key!;
+            const content = JSON.stringify(payload);
+
+            const messageData: RtdbMessage = {
+                senderId,
+                type: MessageType.SHARE_POST,
+                content,
+                media: [],
+                mentions: options?.mentions || [],
+                isForwarded: options?.isForwarded || false,
+                isEdited: false,
+                isRecalled: false,
+                deletedBy: {},
+                readBy: {},
+                deliveredTo: {},
+                reactions: {},
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            };
+
+            if (options?.replyToId) {
+                messageData.replyToId = options.replyToId;
+            }
+
+            await updateConversationAfterMessage(convId, senderId, messageData, '[Chia sẻ bài viết]', msgId);
+            await set(newMsgRef, messageData);
+
+            return msgId;
+        } catch (error) {
+            console.error('[rtdbMessageService] Lỗi sendSharedPostMessage:', error);
             throw error;
         }
     },
@@ -525,7 +574,7 @@ export const rtdbMessageService = {
                 media: [],
                 mentions: options?.mentions || [],
                 isForwarded: false,
-                replyToId: options?.replyToId || null,
+                replyToId: options?.replyToId,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -884,7 +933,7 @@ export const rtdbMessageService = {
                 media: srcMsg.media || [],
                 mentions: [],
                 isForwarded: true,
-                replyToId: null,
+                replyToId: undefined,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -910,6 +959,7 @@ export const rtdbMessageService = {
                 displayContent = `[File] ${srcMsg.media?.[0]?.fileName || 'Tài liệu'}`;
             }
             else if (srcMsg.type === MessageType.VOICE) displayContent = '[Tin nhắn thoại]';
+            else if (srcMsg.type === MessageType.SHARE_POST) displayContent = '[Chia sẻ bài viết]';
             else if (srcMsg.type === MessageType.CALL) {
                 try {
                     const parsed = JSON.parse(srcMsg.content) as { callType?: 'voice' | 'video' };
@@ -967,7 +1017,7 @@ export const rtdbMessageService = {
                 media: [],
                 mentions: [],
                 isForwarded: false,
-                replyToId: null,
+                replyToId: undefined,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
@@ -1009,7 +1059,7 @@ export const rtdbMessageService = {
                 media: [],
                 mentions: [],
                 isForwarded: false,
-                replyToId: null,
+                replyToId: undefined,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},

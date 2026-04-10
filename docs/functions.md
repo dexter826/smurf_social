@@ -196,7 +196,15 @@ Trigger: `/messages/{convId}/{msgId}` — onValueCreated
 
 Khi có tin nhắn mới (không phải `system`, không phải đã thu hồi):
 
-- Với tin nhắn `call`: chỉ gửi push khi `status = "started"`, bỏ qua các trạng thái khác.
+- Mapping `type` sang `contentSnippet`:
+  - `image` → `đã gửi một hình ảnh`.
+  - `video` → `đã gửi một video`.
+  - `gif` → `đã gửi một GIF`.
+  - `file` → `đã gửi một tệp tin`.
+  - `voice` → `đã gửi một tin nhắn thoại`.
+  - `share_post` → parse JSON `content`, ưu tiên `snippet` (tối đa 80 ký tự), fallback `đã chia sẻ một bài viết`.
+  - `call` → parse JSON `content`; chỉ khi `status = "started"` mới gửi push, các trạng thái khác hoặc parse lỗi sẽ bỏ qua.
+  - `text` và các type chưa map riêng → fallback: normalize mention `@[id:name]` rồi cắt tối đa 100 ký tự.
 - Kiểm tra `isMuted` của từng thành viên trong `user_chats`.
 - Nếu có `@mention` trong nhóm: gửi push loại `mention` cho người được nhắc (bỏ qua mute).
 - Các thành viên còn lại (không bị mute): gửi push loại `chat`.

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Send } from 'lucide-react';
 import { Button, ReactionSelector, ReactionDisplay } from '../../ui';
 import { ReactionType } from '../../../../shared/types';
 import { REACTION_LABELS } from '../../../constants';
@@ -13,6 +13,7 @@ interface ReactionActionsProps {
   commentCount: number;
   onReact: (type: ReactionType | 'REMOVE') => void;
   onCommentClick?: () => void;
+  onShareClick?: () => void;
   onViewReactions?: () => void;
   showEmptyDivider?: boolean;
   className?: string;
@@ -24,7 +25,7 @@ interface ReactionActionsProps {
 
 export const ReactionActions: React.FC<ReactionActionsProps> = ({
   reactionSummary, reactionCount, myReaction, commentCount,
-  onReact, onCommentClick, onViewReactions,
+  onReact, onCommentClick, onShareClick, onViewReactions,
   showEmptyDivider = false,
   className = '',
   statsClassName = 'px-4 py-2.5 flex justify-between items-center border-b border-border-light/50',
@@ -115,6 +116,18 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
         >
           Bình luận
         </Button>
+
+        {onShareClick && (
+          <Button
+            variant="ghost"
+            fullWidth
+            className="flex-1 h-10 rounded-xl text-sm font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-all duration-200"
+            onClick={onShareClick}
+            icon={<Send size={18} />}
+          >
+            Chia sẻ
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -7,8 +7,9 @@ import { useRtdbChatStore } from '../../store';
 import { useContactStore } from '../../store/contactStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { UserAvatar, ConfirmDialog, IconButton, ScreenLoader } from '../ui';
-import { ReactionType } from '../../../shared/types';
+import { ReactionType, Post } from '../../../shared/types';
 import { PostViewModal, PostModal } from '../feed';
+import { SharePostModal } from '../chat';
 import { usePostStore } from '../../store';
 import { usePostNavigation } from '../../hooks/usePostNavigation';
 import { useUserCache } from '../../store/userCacheStore';
@@ -25,6 +26,7 @@ import { OutgoingCallDialog } from '../chat/call/OutgoingCallDialog';
 import { CallWindow } from '../chat/call/CallWindow';
 import { CONFIRM_MESSAGES } from '../../constants';
 import { soundManager } from '../../services/soundManager';
+import { useSharePostStore } from '../../store/sharePostStore';
 
 export const AppLayout: React.FC = () => {
   const { user } = useAuthStore();
@@ -46,6 +48,7 @@ export const AppLayout: React.FC = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const { post: postToShare, authorName: shareAuthorName, openSharePost, closeSharePost } = useSharePostStore();
 
   const handleEditPost = async (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
     if (!showEditModal) return;
@@ -135,6 +138,10 @@ export const AppLayout: React.FC = () => {
     if (user) await reactToPost(postId, user.id, reaction);
   };
 
+  const handleOpenShareModal = (post: Post, authorName: string) => {
+    openSharePost(post, authorName);
+  };
+
   const navItems = [
     { to: '/feed', Icon: LayoutGrid, label: 'Nhật ký' },
     { to: '/', Icon: MessageCircle, label: 'Tin nhắn' },
@@ -211,25 +218,27 @@ export const AppLayout: React.FC = () => {
             <Settings size={20} />
           </NavLink>
 
-          <NavLink
-            to={`/profile/${user.id}`}
-            title="Trang cá nhân"
-            className={({ isActive }) =>
-              `w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 outline-none
-              ${isActive
-                ? 'ring-2 ring-white ring-offset-2 ring-offset-primary'
-                : 'hover:ring-2 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-primary'
-              }`
-            }
-          >
-            <UserAvatar
-              userId={user.id}
-              src={user.avatar?.url}
-              size="sm"
-              showBorder={false}
-              initialStatus={user.status}
-            />
-          </NavLink>
+          {user && (
+            <NavLink
+              to={`/profile/${user.id}`}
+              title="Trang cá nhân"
+              className={({ isActive }) =>
+                `w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 outline-none
+                ${isActive
+                  ? 'ring-2 ring-white ring-offset-2 ring-offset-primary'
+                  : 'hover:ring-2 hover:ring-white/40 hover:ring-offset-2 hover:ring-offset-primary'
+                }`
+              }
+            >
+              <UserAvatar
+                userId={user.id}
+                src={user.avatar?.url}
+                size="sm"
+                showBorder={false}
+                initialStatus={user.status}
+              />
+            </NavLink>
+          )}
 
           <IconButton
             onClick={() => setShowLogoutConfirm(true)}
@@ -325,6 +334,17 @@ export const AppLayout: React.FC = () => {
           isLoading={isModalLoading}
           onEdit={(id) => setShowEditModal(id)}
           onDelete={(id) => setPostToDelete(id)}
+          onShare={handleOpenShareModal}
+        />
+      )}
+
+      {user && (
+        <SharePostModal
+          isOpen={!!postToShare}
+          onClose={closeSharePost}
+          post={postToShare}
+          authorName={shareAuthorName}
+          currentUserId={user.id}
         />
       )}
 

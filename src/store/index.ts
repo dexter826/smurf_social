@@ -5,6 +5,7 @@ export { useContactStore } from './contactStore';
 export { useNotificationStore } from './notificationStore';
 export { useCommentStore } from './comments';
 export { useReportStore } from './reportStore';
+export { useSharePostStore } from './sharePostStore';
 export { useThemeStore } from './themeStore';
 export { useToastStore, toast } from './toastStore';
 export { useUserCache } from './userCacheStore';

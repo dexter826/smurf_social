@@ -18,6 +18,7 @@ export const onMessageCreated = onValueCreated(
 
     const { convId } = event.params;
     const { senderId, content, type, mentions = [] } = message;
+    const safeContent = typeof content === 'string' ? content : '';
     if (type === 'system') return;
 
     try {
@@ -41,11 +42,12 @@ export const onMessageCreated = onValueCreated(
       switch (type) {
         case 'image': contentSnippet = 'đã gửi một hình ảnh'; break;
         case 'video': contentSnippet = 'đã gửi một video'; break;
+        case 'gif': contentSnippet = 'đã gửi một GIF'; break;
         case 'file': contentSnippet = 'đã gửi một tệp tin'; break;
         case 'voice': contentSnippet = 'đã gửi một tin nhắn thoại'; break;
         case 'call': {
           try {
-            const parsed = JSON.parse(content) as { callType?: string; status?: string };
+            const parsed = JSON.parse(safeContent) as { callType?: string; status?: string };
             if (parsed.status === 'started') {
               contentSnippet = parsed.callType === 'video'
                 ? 'đang gọi video cho bạn'
@@ -58,8 +60,23 @@ export const onMessageCreated = onValueCreated(
           }
           break;
         }
+        case 'share_post': {
+          try {
+            const parsed = JSON.parse(safeContent) as { snippet?: string };
+            const shortSnippet = (parsed.snippet || '').trim().slice(0, 80);
+            contentSnippet = shortSnippet
+              ? `đã chia sẻ một bài viết: ${shortSnippet}`
+              : 'đã chia sẻ một bài viết';
+          } catch {
+            contentSnippet = 'đã chia sẻ một bài viết';
+          }
+          break;
+        }
+        case 'text':
+          contentSnippet = safeContent.replace(/@\[[^:]+:([^\]]+)\]/g, '@$1').substring(0, 100);
+          break;
         default:
-          contentSnippet = content.replace(/@\[[^:]+:([^\]]+)\]/g, '@$1').substring(0, 100);
+          contentSnippet = safeContent.replace(/@\[[^:]+:([^\]]+)\]/g, '@$1').substring(0, 100);
       }
 
       for (const receiverId of memberIds) {

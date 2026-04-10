@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { RtdbMessage, MessageType } from '../../../shared/types';
+import { RtdbMessage, MessageType, SharedPostMessagePayload } from '../../../shared/types';
 import { rtdbMessageService } from '../../services/chat/rtdbMessageService';
 import { useAuthStore } from '../authStore';
 import type { RtdbChatState } from '../rtdbChatStore';
@@ -14,6 +14,7 @@ export interface RtdbMessageSlice {
     subscribeToMessages: (conversationId: string) => () => void;
     loadMoreMessages: (conversationId: string) => Promise<void>;
     sendTextMessage: (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => Promise<void>;
+    sendSharedPostMessage: (conversationId: string, senderId: string, payload: SharedPostMessagePayload, replyToId?: string) => Promise<void>;
     sendImageMessage: (conversationId: string, senderId: string, files: File[], replyToId?: string) => Promise<void>;
     sendFileMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendVideoMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
@@ -160,6 +161,55 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendTextMessage:', error);
+            throw error;
+        }
+    },
+
+    sendSharedPostMessage: async (conversationId: string, senderId: string, payload: SharedPostMessagePayload, replyToId?: string) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        try {
+            const content = JSON.stringify(payload);
+            const msgId = await rtdbMessageService.sendSharedPostMessage(conversationId, senderId, payload, {
+                replyToId
+            });
+
+            set((state) => {
+                const existing = state.messages[conversationId] || [];
+                if (existing.some(m => m.id === msgId)) return state;
+
+                const optimisticMsg = {
+                    id: msgId,
+                    data: {
+                        senderId,
+                        type: MessageType.SHARE_POST,
+                        content,
+                        media: [],
+                        mentions: [],
+                        isForwarded: false,
+                        isEdited: false,
+                        isRecalled: false,
+                        deletedBy: {},
+                        readBy: {},
+                        deliveredTo: {},
+                        reactions: {},
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    } as RtdbMessage
+                };
+
+                if (replyToId) {
+                    optimisticMsg.data.replyToId = replyToId;
+                }
+
+                return {
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                    }
+                };
+            });
+        } catch (error) {
+            console.error('[rtdbMessageSlice] Lỗi sendSharedPostMessage:', error);
             throw error;
         }
     },

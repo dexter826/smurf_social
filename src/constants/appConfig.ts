@@ -17,6 +17,8 @@ export const PAGINATION = {
   CHAT_CACHE_LIMIT: 50,
   USER_CACHE_LIMIT: 100,
   NOTIFY_CACHE_LIMIT: 50,
+  SHARE_MODAL_LIMIT: 20,
+  SHARE_SEARCH_LIMIT: 50,
 } as const;
 
 // Giới hạn Firebase

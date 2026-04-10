@@ -61,6 +61,7 @@ export const TOAST_MESSAGES = {
     UPDATE_GROUP_FAILED: 'Không thể cập nhật nhóm.',
     FILE_LIMIT: (max: number) => `Chỉ được gửi tối đa ${max} file cùng lúc.`,
     AUDIO_PLAY_FAILED: 'Không thể phát file âm thanh này.',
+    SHARE_POST_FAILED: 'Không thể chia sẻ bài viết.',
   },
 
   REPORT: {

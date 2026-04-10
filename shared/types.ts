@@ -37,6 +37,7 @@ export enum ReactionType {
 
 export enum MessageType {
     TEXT = "text",
+    SHARE_POST = "share_post",
     IMAGE = "image",
     VIDEO = "video",
     FILE = "file",
@@ -263,6 +264,16 @@ export interface CallMessagePayload {
     callType: 'voice' | 'video';
     status: 'started' | 'ended' | 'missed' | 'rejected';
     duration?: number;
+}
+
+export interface SharedPostMessagePayload {
+    postId: string;
+    authorId: string;
+    authorName: string;
+    snippet: string;
+    url: string;
+    previewMediaUrl?: string;
+    previewMediaType?: 'image' | 'video';
 }
 
 export interface RtdbMessage {

@@ -118,9 +118,14 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
   const isTextLike = 
     message.data.type === MessageType.TEXT || 
+    message.data.type === MessageType.SHARE_POST ||
     message.data.isRecalled ||
     message.data.replyToId || 
     message.data.type === MessageType.CALL;
+
+  const isSharedPost = message.data.type === MessageType.SHARE_POST &&
+    !message.data.isRecalled &&
+    !message.data.replyToId;
 
   return (
     <>
@@ -169,15 +174,17 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             <div
               className={`
                 relative text-sm transition-all duration-200
-                ${isTextLike
+                ${isSharedPost
+                  ? 'rounded-2xl'
+                  : isTextLike
                   ? `px-3 py-1.5 rounded-2xl min-w-[72px] shadow-sm
-                    ${isMe
-                    ? 'bg-bg-message-sent border border-primary/10 text-text-primary'
-                    : 'bg-bg-message-received border border-border-light text-text-primary'
-                  }`
+                      ${isMe
+                      ? 'bg-bg-message-sent border border-primary/10 text-text-primary'
+                      : 'bg-bg-message-received border border-border-light text-text-primary'
+                    }`
                   : 'rounded-2xl'
                 }
-                ${(isTextLike && hasReactions) ? 'pb-3' : ''}
+                ${(isTextLike && !isSharedPost && hasReactions) ? 'pb-3' : ''}
               `}
             >
               {/* Reply preview */}
@@ -221,8 +228,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 onJoinCall={onJoinCall}
               />
 
-              {/* Timestamp for all message types */}
-              {!message.data.isRecalled && (
+              {/* Timestamp */}
+              {!message.data.isRecalled && !isSharedPost && (
                 <div className={`
                   text-[10px] flex items-center justify-end gap-1 px-1
                   ${isTextLike 

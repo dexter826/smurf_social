@@ -4,6 +4,7 @@ import { Search, X, MessageCircle } from 'lucide-react';
 import { formatTimeOnly } from '../../../utils/dateUtils';
 import { Input, IconButton } from '../../ui';
 import { PAGINATION } from '../../../constants';
+import { parseSharedPostMessage } from '../../../utils/postShareMessage';
 
 interface ChatDetailsSearchProps {
   messages: Array<{ id: string; data: RtdbMessage }>;
@@ -40,7 +41,15 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
           return false;
         }
 
-        const contentMatch = msg.data.content?.toLowerCase().includes(term);
+        const sharedPostPayload = msg.data.type === MessageType.SHARE_POST
+          ? parseSharedPostMessage(msg.data.content)
+          : null;
+
+        const contentToSearch = sharedPostPayload
+          ? `${sharedPostPayload.authorName} ${sharedPostPayload.snippet}`.toLowerCase()
+          : msg.data.content?.toLowerCase();
+
+        const contentMatch = contentToSearch?.includes(term);
         const fileNameMatch = msg.data.type === MessageType.FILE &&
           (msg.data.media || []).some(m => m.fileName?.toLowerCase().includes(term));
         return contentMatch || fileNameMatch;
@@ -112,6 +121,14 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
                             searchTerm
                           )}
                         </span>
+                      ) : msg.data.type === MessageType.SHARE_POST ? (
+                        (() => {
+                          const payload = parseSharedPostMessage(msg.data.content);
+                          const text = payload
+                            ? `[Chia sẻ bài viết] ${payload.authorName}: ${payload.snippet}`
+                            : '[Chia sẻ bài viết]';
+                          return highlightText(text, searchTerm);
+                        })()
                       ) : (
                         highlightText(msg.data.content, searchTerm)
                       )}

@@ -20,11 +20,12 @@ interface PostItemProps {
   onDelete?: (postId: string) => void;
   onViewDetail?: (post: Post) => void;
   onProfileClick?: () => void;
+  onShare?: (post: Post, authorName: string) => void;
 }
 
 const PostItemInner: React.FC<PostItemProps> = ({
   post, author, currentUser,
-  onReact, onEdit, onDelete, onViewDetail, onProfileClick,
+  onReact, onEdit, onDelete, onViewDetail, onProfileClick, onShare,
 }) => {
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const canAccessByVisibility = isOwner
     || post.visibility === Visibility.PUBLIC
     || (post.visibility === Visibility.FRIENDS && isFriend);
+  const canShare = !isDeleted && post.visibility !== Visibility.PRIVATE && canAccessByVisibility;
   const canShowInteractions = !isSystemPost || (!isDeleted && canAccessByVisibility);
 
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
@@ -184,6 +186,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
           commentCount={post.commentCount}
           onReact={(type) => onReact(post.id, type)}
           onCommentClick={handleViewDetail}
+          onShareClick={canShare ? () => onShare?.(post, author?.fullName || 'Người dùng') : undefined}
           onViewReactions={() => setIsReactionsModalOpen(true)}
         />
       )}
@@ -194,7 +197,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
         sourceId={post.id}
         sourceType="post"
         currentUserId={currentUser.id}
-        context="POST"
       />
     </article>
   );

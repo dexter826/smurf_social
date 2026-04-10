@@ -11,9 +11,16 @@ import { useReactionStore } from '../reactionStore';
 import { convertDoc } from '../../utils/firebaseUtils';
 
 export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set, get) => ({
-  createPost: async (userId, content, media, visibility = Visibility.FRIENDS, pendingFiles, onProgress) => {
+  createPost: async (
+    userId: string,
+    content: string,
+    media: MediaObject[],
+    visibility: Visibility = Visibility.FRIENDS,
+    pendingFiles?: File[],
+    onProgress?: (progress: number) => void
+  ) => {
     const postId = postService.generatePostId();
-    const previewMedia = pendingFiles ? pendingFiles.map(f => ({
+    const previewMedia = pendingFiles ? pendingFiles.map((f: File) => ({
       url: URL.createObjectURL(f),
       fileName: f.name,
       mimeType: f.type,
@@ -66,22 +73,31 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       toast.error(TOAST_MESSAGES.POST.CREATE_FAILED(msg));
       throw error;
     } finally {
-      previewMedia.forEach(m => URL.revokeObjectURL(m.url));
+      previewMedia.forEach((m: MediaObject) => URL.revokeObjectURL(m.url));
     }
   },
 
-  updatePost: async (postId, content, media, visibility, pendingFiles, onProgress) => {
+  updatePost: async (
+    postId: string,
+    content: string,
+    media: MediaObject[],
+    visibility: Visibility,
+    pendingFiles?: File[],
+    onProgress?: (progress: number) => void
+  ) => {
     const { posts, selectedPost } = get();
     const existing = posts.find(p => p.id === postId) || (selectedPost?.id === postId ? selectedPost : null);
     const authorId = existing?.authorId || '';
 
-    const previewMedia = pendingFiles ? pendingFiles.map(f => ({
+    const previewMedia = pendingFiles ? pendingFiles.map((f: File) => ({
       url: URL.createObjectURL(f), fileName: f.name, mimeType: f.type, size: f.size, isSensitive: false,
     } as MediaObject)) : [];
 
     set(state => ({
       posts: state.posts.map(p => p.id === postId ? { ...p, content, media: [...media, ...previewMedia], visibility, updatedAt: Timestamp.now() } : p),
-      selectedPost: state.selectedPost?.id === postId ? { ...state.selectedPost, content, media: [...media, ...previewMedia], visibility, updatedAt: Timestamp.now() } : state.selectedPost,
+      selectedPost: state.selectedPost && state.selectedPost.id === postId
+        ? { ...state.selectedPost, content, media: [...media, ...previewMedia], visibility, updatedAt: Timestamp.now() }
+        : state.selectedPost,
       uploadingStates: pendingFiles?.length ? { ...state.uploadingStates, [postId]: { progress: 0 } } : state.uploadingStates
     }));
 
@@ -102,7 +118,9 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
         return {
           uploadingStates: newStates,
           posts: state.posts.map(p => p.id === postId ? { ...p, media: finalMedia } : p),
-          selectedPost: state.selectedPost?.id === postId ? { ...state.selectedPost, media: finalMedia } : state.selectedPost
+          selectedPost: state.selectedPost && state.selectedPost.id === postId
+            ? { ...state.selectedPost, media: finalMedia }
+            : state.selectedPost
         };
       });
       toast.success(TOAST_MESSAGES.POST.UPDATE_SUCCESS);
@@ -118,11 +136,11 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       }
       toast.error(TOAST_MESSAGES.POST.UPDATE_FAILED(msg));
     } finally {
-      previewMedia.forEach(m => URL.revokeObjectURL(m.url));
+      previewMedia.forEach((m: MediaObject) => URL.revokeObjectURL(m.url));
     }
   },
 
-  deletePost: async (postId, userId) => {
+  deletePost: async (postId: string, userId: string) => {
     try {
       await postService.deletePost(postId, userId);
       set(state => ({ posts: state.posts.filter(p => p.id !== postId) }));
@@ -134,7 +152,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
-  reactToPost: async (postId, userId, reaction) => {
+  reactToPost: async (postId: string, userId: string, reaction: ReactionType | 'REMOVE') => {
     const { setOptimisticReaction, clearOptimisticReaction } = useReactionStore.getState();
     setOptimisticReaction(postId, reaction === 'REMOVE' ? null : reaction);
     try {
@@ -147,7 +165,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
-  uploadMedia: async (files, userId) => {
+  uploadMedia: async (files: File[], userId: string) => {
     try {
       return await postService.uploadPostMedia(files, userId);
     } catch (error) {
@@ -156,7 +174,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
-  setSelectedPost: (post) => {
+  setSelectedPost: (post: Post | null) => {
     const { selectedPost, selectedPostUnsubscribe } = get();
     if (post?.id === selectedPost?.id && !!selectedPostUnsubscribe === !!post) return;
 
@@ -185,7 +203,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
-  fetchPostById: async (postId, currentUserId, friendIds) => {
+  fetchPostById: async (postId: string, currentUserId: string, friendIds: string[]) => {
     const { selectedPost, setSelectedPost } = get();
     if (selectedPost?.id === postId) return;
 
@@ -194,7 +212,6 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     try {
       const post = await postService.getPostById(postId, currentUserId, friendIds);
       if (!post) {
-        toast.info('Bài viết này đã bị xóa hoặc không còn tồn tại');
         setSelectedPost(null);
         return;
       }
