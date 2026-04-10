@@ -41,7 +41,7 @@ service firebase.storage {
 
     // Media bài viết (max 50MB per file)
     match /posts/{userId}/{allPaths=**} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isOwner(userId)
                    && request.resource.size <= 50 * 1024 * 1024
                    && (isValidImage() || isValidVideo());
@@ -50,7 +50,7 @@ service firebase.storage {
 
     // Ảnh bình luận (max 5MB)
     match /comments/{userId}/{allPaths=**} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isOwner(userId)
                    && request.resource.size <= 5 * 1024 * 1024
                    && isValidImage();
@@ -90,7 +90,7 @@ service firebase.storage {
 
     // Video thumbnails (max 2MB) - gắn với owner qua path
     match /thumbnails/{userId}/{allPaths=**} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isOwner(userId)
                    && request.resource.size <= 2 * 1024 * 1024
                    && isValidImage();

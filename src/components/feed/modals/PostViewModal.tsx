@@ -72,8 +72,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const isSystemPost = post?.type === PostType.AVATAR_UPDATE || post?.type === PostType.COVER_UPDATE;
   const isFriend = (post && friendIds?.includes(post.authorId)) || false;
   const isDeleted = post?.status === PostStatus.DELETED;
-  const isPrivate = post?.visibility === Visibility.PRIVATE;
-  const canShowInteractions = !post || !isSystemPost || (!isDeleted && (isOwner || (isFriend && !isPrivate)));
+  const canAccessByVisibility = !post
+    || isOwner
+    || post.visibility === Visibility.PUBLIC
+    || (post.visibility === Visibility.FRIENDS && isFriend);
+  const canShowInteractions = !post || !isSystemPost || (!isDeleted && canAccessByVisibility);
 
   const readonlyMessage = useMemo(() => {
     if (!post) return undefined;
@@ -81,11 +84,11 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
     if (isSystemPost) {
       if (!isOwner && !isFriend) return undefined;
       if (isDeleted) return "";
-      if (isPrivate && isFriend) return "";
+      if (post.visibility === Visibility.PRIVATE && isFriend) return "";
     }
 
     return undefined;
-  }, [post, isSystemPost, isOwner, isFriend, isDeleted, isPrivate]);
+  }, [post, isSystemPost, isOwner, isFriend, isDeleted]);
 
   if (!isOpen) return null;
 
@@ -251,7 +254,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           style={{ zIndex: 'var(--z-sticky)' }}
         >
           <UserAvatar
-            userId={author?.id}
+            userId={author?.id || post.authorId}
             src={author?.avatar?.url}
             name={author?.fullName}
             size="md"
@@ -429,9 +432,6 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
         sourceId={post.id}
         sourceType="post"
         currentUserId={currentUser.id}
-        authorId={post.authorId}
-        context="POST"
-        friendsIds={friendIds}
       />
 
       <MediaViewer

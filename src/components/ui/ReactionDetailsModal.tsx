@@ -5,7 +5,6 @@ import { batchGetUsers } from '../../utils/batchUtils';
 import { getReactionIcon } from '../chat/reactions/ReactionIcons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { canViewInteraction } from '../../utils/privacyUtils';
 
 interface ReactionDetailsModalProps {
   isOpen: boolean;
@@ -14,10 +13,6 @@ interface ReactionDetailsModalProps {
   sourceId?: string;
   sourceType?: 'post' | 'comment' | 'message';
   currentUserId: string;
-  authorId?: string;
-  context?: 'POST' | 'CHAT';
-  friendsIds?: string[];
-  initialCount?: number;
 }
 
 export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
@@ -27,10 +22,6 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
   sourceId,
   sourceType,
   currentUserId,
-  authorId,
-  context = 'CHAT',
-  friendsIds = [],
-  initialCount,
 }) => {
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -101,7 +92,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
     loadUsers();
   }, [isOpen, reactionEntries]);
 
-  const filteredUsers = useMemo(() => {
+  const displayList = useMemo(() => {
     const list = reactionEntries
       .map(([userId, type]) => ({
         user: usersMap[userId],
@@ -110,35 +101,8 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
       }))
       .filter(item => !!item.user);
 
-    if (context === 'POST') {
-      const isOwner = currentUserId === authorId;
-      if (isOwner) {
-        return {
-          displayList: list.filter(item => activeTab === 'ALL' || item.type === activeTab),
-          othersCount: 0
-        };
-      }
-
-      const friends = list.filter(item =>
-        canViewInteraction(item.userId, authorId || '', currentUserId, friendsIds)
-      );
-
-      const totalCount = initialCount !== undefined ? Math.max(initialCount, list.length) : list.length;
-      const othersCount = totalCount - friends.length;
-
-      return {
-        displayList: friends.filter(item => activeTab === 'ALL' || item.type === activeTab),
-        othersCount
-      };
-    }
-
-    return {
-      displayList: list.filter(item => activeTab === 'ALL' || item.type === activeTab),
-      othersCount: 0
-    };
-  }, [usersMap, reactionEntries, activeTab, context, currentUserId, authorId, friendsIds]);
-
-  const { displayList, othersCount } = filteredUsers;
+    return list.filter(item => activeTab === 'ALL' || item.type === activeTab);
+  }, [usersMap, reactionEntries, activeTab]);
 
   return (
     <Modal
@@ -184,7 +148,7 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                 </div>
               ))}
             </div>
-          ) : (displayList.length > 0 || othersCount > 0) ? (
+          ) : (displayList.length > 0) ? (
             <div className={`flex flex-col h-full ${displayList.length === 0 ? 'items-center justify-center p-10' : 'p-2'}`}>
               {displayList.length > 0 && (
                 <div className="space-y-1 w-full">
@@ -214,14 +178,6 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-
-              {context === 'POST' && othersCount > 0 && (
-                <div className={`text-center ${displayList.length > 0 ? 'px-4 py-8 border-t border-divider/30 bg-bg-secondary/5 mt-4 w-full' : 'p-6'}`}>
-                  <p className="text-sm text-text-secondary italic">
-                    Có {Math.max(initialCount || 0, displayList.length + othersCount)} lượt bày tỏ cảm xúc. Bạn chỉ có thể thấy của bạn bè.
-                  </p>
                 </div>
               )}
             </div>

@@ -39,8 +39,10 @@ const PostItemInner: React.FC<PostItemProps> = ({
   const isSystemPost = post.type === PostType.AVATAR_UPDATE || post.type === PostType.COVER_UPDATE;
   const isFriend = friendIds?.includes(post.authorId) || false;
   const isDeleted = post.status === PostStatus.DELETED;
-  const isPrivate = post.visibility === Visibility.PRIVATE;
-  const canShowInteractions = !isSystemPost || (!isDeleted && (isOwner || (isFriend && !isPrivate)));
+  const canAccessByVisibility = isOwner
+    || post.visibility === Visibility.PUBLIC
+    || (post.visibility === Visibility.FRIENDS && isFriend);
+  const canShowInteractions = !isSystemPost || (!isDeleted && canAccessByVisibility);
 
   const { filteredSummary, filteredCount, currentUserReaction } = useFilteredReactions(
     post.id, 'post', post.authorId, post.reactionCount
@@ -192,10 +194,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
         sourceId={post.id}
         sourceType="post"
         currentUserId={currentUser.id}
-        authorId={post.authorId}
         context="POST"
-        friendsIds={friendIds}
-        initialCount={post.reactionCount}
       />
     </article>
   );

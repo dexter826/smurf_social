@@ -40,6 +40,13 @@ import {
 // Xử lý document thành đối tượng User
 const userConverter = (doc: DocumentSnapshot) => convertDoc<User>(doc);
 
+const normalizeDefaultPostVisibility = (value: unknown): Visibility => {
+  if (value === Visibility.PUBLIC || value === Visibility.FRIENDS || value === Visibility.PRIVATE) {
+    return value;
+  }
+  return Visibility.FRIENDS;
+};
+
 export const userService = {
   // Lấy thông tin user
   getUserById: async (id: string): Promise<User | undefined> => {
@@ -373,7 +380,7 @@ export const userService = {
         return {
           showOnlineStatus: data.showOnlineStatus ?? true,
           showReadReceipts: data.showReadReceipts ?? true,
-          defaultPostVisibility: data.defaultPostVisibility || Visibility.FRIENDS,
+          defaultPostVisibility: normalizeDefaultPostVisibility(data.defaultPostVisibility),
           createdAt: data.createdAt as Timestamp || Timestamp.now(),
           updatedAt: data.updatedAt as Timestamp || Timestamp.now()
         } as UserSettings;

@@ -2,6 +2,28 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { FieldValue, FieldPath } from 'firebase-admin/firestore';
 import { db } from '../app';
 
+const MAX_BATCH_OPS = 450;
+
+async function commitInChunks(ops: Array<(batch: FirebaseFirestore.WriteBatch) => void>) {
+    let batch = db.batch();
+    let opCount = 0;
+
+    for (const op of ops) {
+        op(batch);
+        opCount++;
+
+        if (opCount >= MAX_BATCH_OPS) {
+            await batch.commit();
+            batch = db.batch();
+            opCount = 0;
+        }
+    }
+
+    if (opCount > 0) {
+        await batch.commit();
+    }
+}
+
 /**
  * Xử lý tất cả thay đổi trên quan hệ bạn bè (Add, Remove)
  */
@@ -19,29 +41,23 @@ export const onFriendWrite = onDocumentWritten(
                 const friendPostsSnapshot = await db.collection('posts')
                     .where('authorId', '==', friendId)
                     .where('status', '==', 'active')
-                    .where('visibility', '==', 'friends')
+                    .where('visibility', 'in', ['friends', 'public'])
                     .orderBy('createdAt', 'desc')
                     .limit(100)
                     .get();
 
                 if (friendPostsSnapshot.empty) return;
 
-                const batch = db.batch();
-                let batchCount = 0;
-                for (const postDoc of friendPostsSnapshot.docs) {
-                    batch.set(db.collection('users').doc(userId).collection('feeds').doc(postDoc.id), {
+                const ops = friendPostsSnapshot.docs.map(postDoc => (
+                    (batch: FirebaseFirestore.WriteBatch) => batch.set(db.collection('users').doc(userId).collection('feeds').doc(postDoc.id), {
                         postId: postDoc.id,
                         authorId: friendId,
                         createdAt: postDoc.data().createdAt,
                         updatedAt: FieldValue.serverTimestamp(),
-                    });
-                    batchCount++;
-                    if (batchCount >= 500) {
-                        await batch.commit();
-                        batchCount = 0;
-                    }
-                }
-                if (batchCount > 0) await batch.commit();
+                    })
+                ));
+
+                await commitInChunks(ops);
                 console.log(`[onFriendWrite/Add] Fan-out ${friendPostsSnapshot.size} bài viết từ ${friendId} sang feed của ${userId}`);
             } catch (error) {
                 console.error('[onFriendWrite/Add] Lỗi:', error);
@@ -69,17 +85,11 @@ export const onFriendWrite = onDocumentWritten(
 
                 if (postsToRemove.length === 0) return;
 
-                const batch = db.batch();
-                let batchCount = 0;
-                for (const postId of postsToRemove) {
-                    batch.delete(db.collection('users').doc(userId).collection('feeds').doc(postId));
-                    batchCount++;
-                    if (batchCount >= 500) {
-                        await batch.commit();
-                        batchCount = 0;
-                    }
-                }
-                if (batchCount > 0) await batch.commit();
+                const ops = postsToRemove.map(postId => (
+                    (batch: FirebaseFirestore.WriteBatch) => batch.delete(db.collection('users').doc(userId).collection('feeds').doc(postId))
+                ));
+
+                await commitInChunks(ops);
                 console.log(`[onFriendWrite/Remove] Đã xóa ${postsToRemove.length} bài viết của ${friendId} khỏi feed của ${userId}`);
             } catch (error) {
                 console.error('[onFriendWrite/Remove] Lỗi:', error);

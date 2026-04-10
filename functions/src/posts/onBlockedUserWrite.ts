@@ -2,6 +2,31 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { FieldPath, FieldValue, Firestore } from 'firebase-admin/firestore';
 import { db } from '../app';
 
+const MAX_BATCH_OPS = 450;
+
+async function commitInChunks(
+    firestore: Firestore,
+    ops: Array<(batch: FirebaseFirestore.WriteBatch) => void>
+): Promise<void> {
+    let batch = firestore.batch();
+    let opCount = 0;
+
+    for (const op of ops) {
+        op(batch);
+        opCount++;
+
+        if (opCount >= MAX_BATCH_OPS) {
+            await batch.commit();
+            batch = firestore.batch();
+            opCount = 0;
+        }
+    }
+
+    if (opCount > 0) {
+        await batch.commit();
+    }
+}
+
 /**
  * Đồng bộ feed khi block options thay đổi
  */
@@ -53,11 +78,11 @@ async function removePostsFromFeed(db: Firestore, targetUserId: string, authorId
 
         if (toRemove.length === 0) return;
 
-        const batch = db.batch();
-        toRemove.forEach(postId =>
-            batch.delete(db.collection('users').doc(targetUserId).collection('feeds').doc(postId))
-        );
-        await batch.commit();
+        const ops = toRemove.map(postId => (
+            (batch: FirebaseFirestore.WriteBatch) => batch.delete(db.collection('users').doc(targetUserId).collection('feeds').doc(postId))
+        ));
+
+        await commitInChunks(db, ops);
     } catch (error) {
         console.error('removePostsFromFeed:', error);
     }
@@ -74,16 +99,15 @@ async function restorePostsIfFriend(db: Firestore, targetUserId: string, authorI
         const postsSnap = await db.collection('posts')
             .where('authorId', '==', authorId)
             .where('status', '==', 'active')
-            .where('visibility', '==', 'friends')
+            .where('visibility', 'in', ['friends', 'public'])
             .orderBy('createdAt', 'desc')
             .limit(100)
             .get();
 
         if (postsSnap.empty) return;
 
-        const batch = db.batch();
-        postsSnap.docs.forEach(postDoc => {
-            batch.set(
+        const ops = postsSnap.docs.map(postDoc => (
+            (batch: FirebaseFirestore.WriteBatch) => batch.set(
                 db.collection('users').doc(targetUserId).collection('feeds').doc(postDoc.id),
                 {
                     postId: postDoc.id,
@@ -91,9 +115,10 @@ async function restorePostsIfFriend(db: Firestore, targetUserId: string, authorI
                     createdAt: postDoc.data().createdAt,
                     updatedAt: FieldValue.serverTimestamp()
                 }
-            );
-        });
-        await batch.commit();
+            )
+        ));
+
+        await commitInChunks(db, ops);
     } catch (error) {
         console.error('restorePostsIfFriend:', error);
     }

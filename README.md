@@ -76,7 +76,7 @@ Dự án được xây dựng theo kiến trúc **Client-side SPA** với Fireba
 - Feed cá nhân theo danh sách bạn bè (fan-out on write)
 - 6 loại cảm xúc: Like · Love · Haha · Wow · Sad · Angry
 - Bình luận lồng nhau (nested) và reactions trên comment
-- Kiểm soát quyền xem: công khai / chỉ bạn bè
+- Kiểm soát quyền xem: công khai / chỉ bạn bè / chỉ mình tôi
 
 ### 👥 Quan hệ xã hội
 

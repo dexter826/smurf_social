@@ -201,7 +201,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 </div>
                 <p className="text-sm text-text-secondary font-medium">
                   {hasAnyHidden
-                    ? `Có ${totalCommentCount} bình luận. Bạn chỉ có thể xem bình luận của bạn bè.`
+                    ? `Có ${totalCommentCount} bình luận trong bài viết này.`
                     : 'Hãy là người đầu tiên bình luận!'}
                 </p>
                 {!hasAnyHidden && (
@@ -223,8 +223,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 <div className="mx-4 my-2 py-2 border-b border-border-light/30 text-center">
                   <p className="text-xs text-text-tertiary italic">
                     Có {totalCommentCount} bình luận. {readonly 
-                      ? (readonlyMessage === "" ? "" : (readonlyMessage || 'Chỉ bạn bè mới có thể bình luận.')) 
-                      : 'Bạn chỉ có thể xem bình luận của bạn bè.'}
+                      ? (readonlyMessage === "" ? "" : (readonlyMessage || 'Bạn không thể tương tác với bài viết này.')) 
+                      : 'Một số bình luận có thể bị giới hạn theo quyền riêng tư.'}
                   </p>
                 </div>
               )}

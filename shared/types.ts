@@ -16,6 +16,7 @@ export enum Gender {
 
 export enum Visibility {
     FRIENDS = "friends",
+    PUBLIC = "public",
     PRIVATE = "private",
 }
 

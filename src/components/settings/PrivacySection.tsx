@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Eye, MessageCircle, Users, Lock, ChevronDown } from 'lucide-react';
+import { Eye, MessageCircle, Users, Lock, ChevronDown, Globe2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { presenceService } from '../../services/presenceService';
@@ -34,9 +34,13 @@ const PrivacySection: React.FC = () => {
 
   if (!settings || !currentUser) return <Skeleton height={200} className="rounded-2xl" />;
 
-  const isPrivate = settings.defaultPostVisibility === Visibility.PRIVATE;
-  const visibilityLabel = isPrivate ? 'Chỉ mình tôi' : 'Bạn bè';
-  const VisibilityIcon = isPrivate ? Lock : Users;
+  const visibilityMap: Record<Visibility, { label: string; Icon: typeof Users }> = {
+    [Visibility.PUBLIC]: { label: 'Công khai', Icon: Globe2 },
+    [Visibility.FRIENDS]: { label: 'Bạn bè', Icon: Users },
+    [Visibility.PRIVATE]: { label: 'Chỉ mình tôi', Icon: Lock },
+  };
+
+  const { label: visibilityLabel, Icon: VisibilityIcon } = visibilityMap[settings.defaultPostVisibility] ?? visibilityMap[Visibility.FRIENDS];
 
   return (
     <div className="space-y-3 animate-fade-in">
@@ -80,6 +84,11 @@ const PrivacySection: React.FC = () => {
             </div>
           }
         >
+          <DropdownItem
+            icon={<Globe2 size={15} />}
+            label="Công khai"
+            onClick={() => handleChangeVisibility(Visibility.PUBLIC)}
+          />
           <DropdownItem
             icon={<Users size={15} />}
             label="Bạn bè"

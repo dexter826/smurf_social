@@ -104,7 +104,7 @@ export const postSchema = z.object({
     .max(VALIDATION.POST_CONTENT_MAX_LENGTH, `Nội dung không được quá ${VALIDATION.POST_CONTENT_MAX_LENGTH} ký tự`)
     .optional()
     .or(z.literal('')),
-  visibility: z.enum([Visibility.FRIENDS, Visibility.PRIVATE]),
+  visibility: z.enum([Visibility.FRIENDS, Visibility.PUBLIC, Visibility.PRIVATE]),
   media: z.array(z.any())
     .max(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST, `Chỉ được tải lên tối đa ${MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST} media`),
   hasPendingFiles: z.boolean().optional(),

@@ -59,6 +59,22 @@ service cloud.firestore {
       return isAuthenticated() && exists(/databases/$(database)/documents/users/$(userId)/friends/$(request.auth.uid));
     }
 
+    function canReadPostData(postData) {
+      return !isContentBlocked(postData.authorId) && (
+        (postData.status != 'deleted' && (
+          postData.authorId == request.auth.uid ||
+          postData.visibility == 'public' ||
+          (postData.visibility == 'friends' && isFriend(postData.authorId))
+        )) ||
+        (postData.type in ['avatar_update', 'cover_update'])
+      );
+    }
+
+    function canReadPostById(postId) {
+      return exists(/databases/$(database)/documents/posts/$(postId)) &&
+        canReadPostData(get(/databases/$(database)/documents/posts/$(postId)).data);
+    }
+
     // Quản lý người dùng
     match /users/{userId} {
       match /private/fcm {
@@ -112,15 +128,7 @@ service cloud.firestore {
     // Bài viết
     match /posts/{postId} {
       allow read: if isNotBanned() && (
-        isAdmin() || (
-          !isContentBlocked(resource.data.authorId) && (
-            (resource.data.status != 'deleted' && (
-              resource.data.authorId == request.auth.uid ||
-              (resource.data.visibility == 'friends' && isFriend(resource.data.authorId))
-            )) ||
-            (resource.data.type in ['avatar_update', 'cover_update'])
-          )
-        )
+        isAdmin() || canReadPostData(resource.data)
       );
 
       allow create: if isNotBanned() && request.resource.data.authorId == request.auth.uid;
@@ -133,14 +141,10 @@ service cloud.firestore {
 
       // Cảm xúc bài viết
       match /reactions/{reactorId} {
-        allow read: if isNotBanned() && (
-          isOwner(get(/databases/$(database)/documents/posts/$(postId)).data.authorId) ||
-          reactorId == request.auth.uid ||
-          isFriend(get(/databases/$(database)/documents/posts/$(postId)).data.authorId)
-        );
+        allow read: if isNotBanned() && canReadPostById(postId);
         allow write: if isNotBanned() &&
           reactorId == request.auth.uid &&
-          !isContentBlocked(get(/databases/$(database)/documents/posts/$(postId)).data.authorId);
+          canReadPostById(postId);
       }
     }
 
@@ -149,18 +153,14 @@ service cloud.firestore {
       allow read: if isNotBanned() &&
         'postId' in resource.data && (
           isAdmin() || (
-            !isContentBlocked(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) &&
-            resource.data.status != 'deleted' && (
-              isOwner(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId) ||
-              resource.data.authorId == request.auth.uid ||
-              isFriend(get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId)
-            )
+            resource.data.status != 'deleted' &&
+            canReadPostById(resource.data.postId)
           )
         );
 
       allow create: if isNotBanned() &&
         request.resource.data.authorId == request.auth.uid &&
-        !isContentBlocked(get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.authorId);
+        canReadPostById(request.resource.data.postId);
 
       allow update: if isNotBanned() && (
         isAdmin() ||
@@ -177,14 +177,11 @@ service cloud.firestore {
 
       // Cảm xúc bình luận
       match /reactions/{reactorId} {
-        allow read: if isNotBanned() && (
-          isOwner(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId) ||
-          reactorId == request.auth.uid ||
-          isFriend(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId)
-        );
+        allow read: if isNotBanned() &&
+          canReadPostById(get(/databases/$(database)/documents/comments/$(commentId)).data.postId);
         allow write: if isNotBanned() &&
           reactorId == request.auth.uid &&
-          !isContentBlocked(get(/databases/$(database)/documents/comments/$(commentId)).data.authorId);
+          canReadPostById(get(/databases/$(database)/documents/comments/$(commentId)).data.postId);
       }
     }
 

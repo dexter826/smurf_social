@@ -39,11 +39,11 @@ const postConverter = (doc: DocumentSnapshot) => convertDoc<Post>(doc);
 // Phân quyền hiển thị
 function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] {
   if (isOwner) {
-    return [Visibility.FRIENDS, Visibility.PRIVATE];
+    return [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
   } else if (isFriend) {
-    return [Visibility.FRIENDS];
+    return [Visibility.PUBLIC, Visibility.FRIENDS];
   }
-  return [];
+  return [Visibility.PUBLIC];
 }
 
 export const postService = {

@@ -2,7 +2,6 @@ import { StateCreator } from 'zustand';
 import { CommentStoreState } from './types';
 import { commentService } from '../../services/commentService';
 import { PAGINATION } from '../../constants';
-import { filterInteractions } from '../../utils/privacyUtils';
 import { Comment } from '../../../shared/types';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { getSafeMillis } from '../../utils/timestampHelpers';
@@ -24,22 +23,20 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
   hasMoreReply: {},
   loadingPosts: {},
 
-  isLoadingPost: (postId) => get().loadingPosts[postId] || false,
+  isLoadingPost: (postId: string) => get().loadingPosts[postId] || false,
 
-  getFilteredRootComments: (postId, postOwnerId, currentUserId, friendIds) => {
+  getFilteredRootComments: (postId: string, _postOwnerId: string, _currentUserId: string, _friendIds: string[]) => {
     const comments = get().rootComments[postId] || [];
-    const { visibleItems, hiddenCount } = filterInteractions(comments, postOwnerId, currentUserId, friendIds);
-    return { visibleComments: visibleItems, hiddenCount };
+    return { visibleComments: comments, hiddenCount: 0 };
   },
 
-  getFilteredReplies: (postId, parentId, postOwnerId, currentUserId, friendIds) => {
+  getFilteredReplies: (postId: string, parentId: string, _postOwnerId: string, _currentUserId: string, _friendIds: string[]) => {
     const postReplies = get().replies[postId] || {};
     const replies = postReplies[parentId] || [];
-    const { visibleItems, hiddenCount } = filterInteractions(replies, postOwnerId, currentUserId, friendIds);
-    return { visibleReplies: visibleItems, hiddenCount };
+    return { visibleReplies: replies, hiddenCount: 0 };
   },
 
-  fetchRootComments: async (postId, blockedUserIds = [], loadMore = false) => {
+  fetchRootComments: async (postId: string, blockedUserIds: string[] = [], loadMore = false) => {
     if (get().loadingPosts[postId]) return;
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
@@ -51,7 +48,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     finally { set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: false } })); }
   },
 
-  fetchReplies: async (postId, parentId, blockedUserIds = [], loadMore = false) => {
+  fetchReplies: async (postId: string, parentId: string, blockedUserIds: string[] = [], loadMore = false) => {
     if (get().loadingPosts[postId]) return;
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
@@ -63,7 +60,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     finally { set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: false } })); }
   },
 
-  subscribeToComments: (postId, blockedUserIds = []) => {
+  subscribeToComments: (postId: string, blockedUserIds: string[] = []) => {
     return commentService.subscribeToComments(postId, blockedUserIds, (action, data) => {
       set(state => {
         if (action === 'initial') {
@@ -100,7 +97,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     });
   },
 
-  subscribeToReplies: (postId, parentId, blockedUserIds = []) => {
+  subscribeToReplies: (postId: string, parentId: string, blockedUserIds: string[] = []) => {
     return commentService.subscribeToReplies(postId, parentId, blockedUserIds, (action, data) => {
       set(state => {
         const postReplies = state.replies[postId] || {};
@@ -130,31 +127,31 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     });
   },
 
-  setRootComments: (postId, comments, lastDoc, hasMore) => set(s => ({
+  setRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => set(s => ({
     rootComments: { ...s.rootComments, [postId]: comments },
     lastRootDoc: { ...s.lastRootDoc, [postId]: lastDoc },
     hasMoreRoot: { ...s.hasMoreRoot, [postId]: hasMore }
   })),
 
-  addRootComments: (postId, comments, lastDoc, hasMore) => set(s => ({
+  addRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => set(s => ({
     rootComments: { ...s.rootComments, [postId]: [...(s.rootComments[postId] || []), ...comments] },
     lastRootDoc: { ...s.lastRootDoc, [postId]: lastDoc },
     hasMoreRoot: { ...s.hasMoreRoot, [postId]: hasMore }
   })),
 
-  setReplies: (postId, parentId, replies, lastDoc, hasMore) => set(s => ({
+  setReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => set(s => ({
     replies: { ...s.replies, [postId]: { ...(s.replies[postId] || {}), [parentId]: replies } },
     lastReplyDoc: { ...s.lastReplyDoc, [postId]: { ...(s.lastReplyDoc[postId] || {}), [parentId]: lastDoc } },
     hasMoreReply: { ...s.hasMoreReply, [postId]: { ...(s.hasMoreReply[postId] || {}), [parentId]: hasMore } }
   })),
 
-  addReplies: (postId, parentId, replies, lastDoc, hasMore) => set(s => ({
+  addReplies: (postId: string, parentId: string, replies: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => set(s => ({
     replies: { ...s.replies, [postId]: { ...(s.replies[postId] || {}), [parentId]: [...(s.replies[postId]?.[parentId] || []), ...replies] } },
     lastReplyDoc: { ...s.lastReplyDoc, [postId]: { ...(s.lastReplyDoc[postId] || {}), [parentId]: lastDoc } },
     hasMoreReply: { ...s.hasMoreReply, [postId]: { ...(s.hasMoreReply[postId] || {}), [parentId]: hasMore } }
   })),
 
-  clearComments: (postId) => set(s => {
+  clearComments: (postId: string) => set(s => {
     const { [postId]: _r, ...rootComments } = s.rootComments;
     const { [postId]: _re, ...replies } = s.replies;
     const { [postId]: _lr, ...lastRootDoc } = s.lastRootDoc;

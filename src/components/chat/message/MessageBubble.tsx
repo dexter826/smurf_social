@@ -163,7 +163,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               sourceType="message"
               reactions={message.data.reactions}
               currentUserId={currentUserId}
-              context="CHAT"
             />
 
             {/* Bubble */}

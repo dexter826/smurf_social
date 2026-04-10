@@ -355,10 +355,6 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
           sourceId={comment.id}
           sourceType="comment"
           currentUserId={currentUser.id}
-          authorId={comment.authorId}
-          context="POST"
-          friendsIds={friendIds}
-          initialCount={comment.reactionCount}
         />
       )}
     </div>
