@@ -24,6 +24,7 @@ export const useProfileBlock = ({
   const blockedUsers = useAuthStore(state => state.blockedUsers);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [isFullyBlockedByPartner, setIsFullyBlockedByPartner] = useState(false);
+  const [isMessageBlockedByPartner, setIsMessageBlockedByPartner] = useState(false);
 
   const isBlockedByMe = useMemo(() =>
     !!blockedUsers[profileUserId || ''],
@@ -43,14 +44,18 @@ export const useProfileBlock = ({
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) {
       setIsFullyBlockedByPartner(false);
+      setIsMessageBlockedByPartner(false);
       return;
     }
     const blockRef = doc(db, 'users', profileUserId, 'blockedUsers', currentUser.id);
     const unsub = onSnapshot(blockRef, (snap) => {
       if (snap.exists()) {
-        setIsFullyBlockedByPartner(snap.data()?.isFullyBlocked === true);
+        const data = snap.data();
+        setIsFullyBlockedByPartner(data?.isFullyBlocked === true);
+        setIsMessageBlockedByPartner(data?.isMessageBlocked === true);
       } else {
         setIsFullyBlockedByPartner(false);
+        setIsMessageBlockedByPartner(false);
       }
     });
     return () => unsub();
@@ -102,6 +107,7 @@ export const useProfileBlock = ({
   return {
     isBlockedByMe,
     isFullyBlockedByPartner,
+    isMessageBlockedByPartner,
     currentBlockOptions,
     isBlockModalOpen,
     handleOpenBlockModal,

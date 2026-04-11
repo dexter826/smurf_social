@@ -36,7 +36,7 @@ const ProfilePage: React.FC = () => {
     handleMessage, handleFriendAction, confirmUnfriend,
     handleSaveProfile, handleAvatarChange, handleCoverChange,
     handleAvatarDelete, handleCoverDelete,
-    isBlockedByMe, isFullyBlockedByPartner, currentBlockOptions,
+    isBlockedByMe, isFullyBlockedByPartner, isMessageBlockedByPartner, currentBlockOptions,
     isBlockModalOpen, handleOpenBlockModal, handleApplyBlock,
     handleUnblockUser, confirmUnblock, closeBlockModal,
   } = useProfile();
@@ -163,6 +163,7 @@ const ProfilePage: React.FC = () => {
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
           isFullyBlockedByMe={currentBlockOptions?.isFullyBlocked ?? false}
+          isMessageBlockedByPartner={isMessageBlockedByPartner}
           uploadingType={uploadingType}
           uploadProgress={uploadProgress}
           onAvatarClick={() => handleMediaClick(PostType.AVATAR_UPDATE)}

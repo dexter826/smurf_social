@@ -32,6 +32,7 @@ interface ProfileHeaderProps {
   onAvatarClick?: () => void;
   onCoverClick?: () => void;
   isFullyBlockedByMe?: boolean;
+  isMessageBlockedByPartner?: boolean;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -39,6 +40,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onEditClick, onMessageClick, onFriendClick,
   onAvatarChange, onCoverChange, onAvatarDelete, onCoverDelete,
   onBlockClick, onUnblockClick, isBlockedByMe = false, isFullyBlockedByMe = false,
+  isMessageBlockedByPartner = false,
   uploadingType, uploadProgress,
   onAvatarClick, onCoverClick,
 }) => {
@@ -226,50 +228,67 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <span className="px-3 py-2 rounded-xl bg-error/10 text-error text-sm font-medium border border-error/20">
                   Tài khoản đã bị khóa
                 </span>
-              ) : isFullyBlockedByMe ? (
-                <Dropdown
-                  trigger={
-                    <Button variant="secondary" icon={<MoreHorizontal size={17} />} />
-                  }
-                  align="right"
-                >
-                  <DropdownItem icon={<UserCheck size={15} />} label="Quản lý chặn" onClick={onUnblockClick} />
-                  <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
-                </Dropdown>
+              ) : isBlockedByMe ? (
+                /* ── If blocked by me: Show direct Manage Block button instead of hididing in menu ── */
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="secondary" 
+                    className="bg-error/5 text-error border-error/20 hover:bg-error/10"
+                    onClick={onUnblockClick}
+                    icon={<Ban size={17} />}
+                  >
+                    Quản lý chặn
+                  </Button>
+                  
+                  <Dropdown
+                    trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
+                    align="right"
+                  >
+                    <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
+                  </Dropdown>
+                </div>
               ) : (
                 <>
-                  {/* Message */}
-                  <Button onClick={onMessageClick} icon={<MessageCircle size={17} />}>
-                    Nhắn tin
-                  </Button>
+                  {!isMessageBlockedByPartner && (
+                    <>
+                      <Button 
+                        onClick={onMessageClick} 
+                        icon={<MessageCircle size={17} />}
+                        disabled={isBlockedByMe && !isFullyBlockedByMe}
+                        variant="primary"
+                        title={(isBlockedByMe && !isFullyBlockedByMe) ? "Bạn đã chặn tin nhắn từ người này" : undefined}
+                      >
+                        Nhắn tin
+                      </Button>
 
-                  {/* Friend action */}
-                  {friendStatus === FriendStatus.FRIEND ? (
-                    <Button
-                      variant="secondary"
-                      onClick={onFriendClick}
-                      icon={<UserCheck size={17} />}
-                      className="bg-primary/10 text-primary border-primary/20 hover:bg-error/10 hover:text-error hover:border-error/20"
-                    >
-                      Bạn bè
-                    </Button>
-                  ) : friendStatus === FriendStatus.PENDING_SENT ? (
-                    <Button
-                      variant="secondary"
-                      onClick={onFriendClick}
-                      icon={<X size={17} />}
-                      className="hover:bg-error/10 hover:text-error hover:border-error/20"
-                    >
-                      Hủy lời mời
-                    </Button>
-                  ) : friendStatus === FriendStatus.PENDING_RECEIVED ? (
-                    <Button onClick={onFriendClick} icon={<UserPlus size={17} />}>
-                      Chấp nhận
-                    </Button>
-                  ) : (
-                    <Button variant="secondary" onClick={onFriendClick} icon={<UserPlus size={17} />}>
-                      Kết bạn
-                    </Button>
+                      {friendStatus === FriendStatus.FRIEND ? (
+                        <Button
+                          variant="secondary"
+                          onClick={onFriendClick}
+                          icon={<UserCheck size={17} />}
+                          className="bg-primary/10 text-primary border-primary/20 hover:bg-error/10 hover:text-error hover:border-error/20"
+                        >
+                          Bạn bè
+                        </Button>
+                      ) : friendStatus === FriendStatus.PENDING_SENT ? (
+                        <Button
+                          variant="secondary"
+                          onClick={onFriendClick}
+                          icon={<X size={17} />}
+                          className="hover:bg-error/10 hover:text-error hover:border-error/20"
+                        >
+                          Hủy lời mời
+                        </Button>
+                      ) : friendStatus === FriendStatus.PENDING_RECEIVED ? (
+                        <Button onClick={onFriendClick} icon={<UserPlus size={17} />}>
+                          Chấp nhận
+                        </Button>
+                      ) : (
+                        <Button variant="secondary" onClick={onFriendClick} icon={<UserPlus size={17} />}>
+                          Kết bạn
+                        </Button>
+                      )}
+                    </>
                   )}
 
                   {/* More options */}
@@ -277,7 +296,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
                     align="right"
                   >
-                    <DropdownItem icon={isBlockedByMe ? <UserCheck size={15} /> : <Ban size={15} />} label={isBlockedByMe ? "Quản lý chặn" : "Chặn"} variant={isBlockedByMe ? "default" : "danger"} onClick={isBlockedByMe ? onUnblockClick : onBlockClick} />
+                    <DropdownItem 
+                      icon={<Ban size={15} />} 
+                      label="Chặn" 
+                      variant="danger" 
+                      onClick={onBlockClick} 
+                    />
                     <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
                   </Dropdown>
                 </>
