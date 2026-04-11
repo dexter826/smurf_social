@@ -175,14 +175,6 @@ export function useCallManager(currentUserId: string) {
             return preCheck;
         }
 
-        const sendCallMessage = useRtdbChatStore.getState().sendCallMessage;
-        const msgId = await sendCallMessage(conversationId, currentUserId, {
-            callType,
-            status: 'started',
-        });
-
-        await rtdbCallService.startActiveCall(conversationId, currentUserId, callType, msgId);
-
         setPhase('outgoing');
         setSession({
             conversationId,
@@ -194,6 +186,14 @@ export function useCallManager(currentUserId: string) {
             calleeName,
             calleeAvatar
         });
+
+        const sendCallMessage = useRtdbChatStore.getState().sendCallMessage;
+        const msgId = await sendCallMessage(conversationId, currentUserId, {
+            callType,
+            status: 'started',
+        });
+
+        await rtdbCallService.startActiveCall(conversationId, currentUserId, callType, msgId);
 
         timeoutRef.current = setTimeout(async () => {
             await rtdbCallService.clearSignalingForUsers([currentUserId, ...recipientIds]);

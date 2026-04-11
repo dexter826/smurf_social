@@ -321,20 +321,81 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
-    sendCallMessage: async (conversationId: string, senderId: string, payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }) => {
+    sendCallMessage: async (conversationId, senderId, payload) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
-            return await rtdbMessageService.sendCallMessage(conversationId, senderId, payload);
+            const msgId = await rtdbMessageService.sendCallMessage(conversationId, senderId, payload);
+            
+            // Optimistic Update cho tin nhắn cuộc gọi
+            set((state) => {
+                const existing = state.messages[conversationId] || [];
+                if (existing.some(m => m.id === msgId)) return state;
+
+                const optimisticMsg = {
+                    id: msgId,
+                    data: {
+                        senderId,
+                        type: MessageType.CALL,
+                        content: JSON.stringify(payload),
+                        media: [],
+                        mentions: [],
+                        isForwarded: false,
+                        isEdited: false,
+                        isRecalled: false,
+                        deletedBy: {},
+                        readBy: {},
+                        deliveredTo: {},
+                        reactions: {},
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    } as RtdbMessage
+                };
+
+                return {
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                    }
+                };
+            });
+
+            return msgId;
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendCallMessage:', error);
             throw error;
         }
     },
 
-    updateCallMessage: async (conversationId: string, messageId: string, payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }) => {
+    updateCallMessage: async (conversationId, messageId, payload) => {
         try {
             const content = JSON.stringify(payload);
             await rtdbMessageService.updateMessageContent(conversationId, messageId, content, payload);
+            
+            // Cập nhật trạng thái cuộc gọi ngay trong store cục bộ
+            set((state) => {
+                const conversationMessages = state.messages[conversationId];
+                if (!conversationMessages) return state;
+
+                const messageIndex = conversationMessages.findIndex(m => m.id === messageId);
+                if (messageIndex === -1) return state;
+
+                const newMessages = [...conversationMessages];
+                newMessages[messageIndex] = {
+                    ...newMessages[messageIndex],
+                    data: {
+                        ...newMessages[messageIndex].data,
+                        content,
+                        updatedAt: Date.now()
+                    }
+                };
+
+                return {
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: newMessages
+                    }
+                };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi updateCallMessage:', error);
             throw error;

@@ -106,7 +106,6 @@ export const messageActionService = {
                 media: srcMsg.media || [],
                 mentions: [],
                 isForwarded: true,
-                replyToId: undefined,
                 isEdited: false,
                 isRecalled: false,
                 deletedBy: {},
