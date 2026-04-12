@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { extractFirstUrl, fetchLinkPreview, LinkPreviewData } from '../services/linkPreviewService';
 
 interface UseLinkPreviewOptions {
-    /** Debounce delay in ms before fetching */
     debounce?: number;
 }
 
@@ -14,10 +13,6 @@ interface UseLinkPreviewResult {
     isDismissed: boolean;
 }
 
-/**
- * Detects URL in text, debounces, and fetches link preview.
- * Used in input areas (ChatInput, PostModal).
- */
 export function useLinkPreview(
     text: string,
     { debounce = 600 }: UseLinkPreviewOptions = {}
@@ -32,9 +27,9 @@ export function useLinkPreview(
     useEffect(() => {
         const detected = extractFirstUrl(text);
 
-        // If URL changed, reset dismissed state
         if (detected !== dismissedUrlRef.current) {
             setIsDismissed(false);
+            dismissedUrlRef.current = null;
         }
 
         if (!detected) {
@@ -45,7 +40,6 @@ export function useLinkPreview(
             return;
         }
 
-        // Same URL already dismissed
         if (detected === dismissedUrlRef.current) {
             setUrl(detected);
             return;

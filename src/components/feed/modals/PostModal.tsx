@@ -291,7 +291,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               size="lg"
               fullWidth
               onClick={handleSubmit(onFormSubmit)}
-              disabled={isSubmitting || (isEdit && !isDirty && pendingFiles.length === 0)}
+              disabled={isSubmitting || !isValid || (isEdit && !isDirty && pendingFiles.length === 0)}
               isLoading={isSubmitting && uploadProgress === 0}
             >
               {isSubmitting && uploadProgress > 0
