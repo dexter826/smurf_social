@@ -341,8 +341,6 @@ const ChatPage: React.FC = () => {
         onClose={() => setForwardingMessage(null)}
         message={forwardingMessage}
         currentUserId={currentUser.id}
-        conversations={conversations}
-        usersMap={usersMap}
       />
 
       {(partner || blockTarget) && (

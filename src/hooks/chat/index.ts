@@ -11,3 +11,4 @@ export { useConversationParticipants } from './useConversationParticipants';
 export { useCallManager } from './useCallManager';
 export { useCallSounds } from './useCallSounds';
 export { useMessageStatus } from './useMessageStatus';
+export * from './useShareTargets';

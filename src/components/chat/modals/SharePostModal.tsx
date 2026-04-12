@@ -1,17 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Search, Play } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, Play } from 'lucide-react';
 import { Modal, Input, Button, UserAvatar } from '../../ui';
-import { Post, RtdbConversation, RtdbUserChat, User, UserStatus, Visibility } from '../../../../shared/types';
+import { Post, Visibility } from '../../../../shared/types';
 import { useRtdbChatStore } from '../../../store';
-import { useUserCache } from '../../../store/userCacheStore';
-import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
-import { useAuthStore } from '../../../store/authStore';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES } from '../../../constants/toastMessages';
 import { buildSharedPostPayload, getPostSnippet, getPreviewMedia } from '../../../utils/postShareMessage';
-import { friendService } from '../../../services/friendService';
-import { PAGINATION } from '../../../constants';
-import { getDirectConversationId } from '../../../utils/chatUtils';
+import { useShareTargets } from '../../../hooks/chat';
+import { ShareTargetItem } from './ShareTargetItem';
 
 interface SharePostModalProps {
   isOpen: boolean;
@@ -20,10 +16,6 @@ interface SharePostModalProps {
   authorName: string;
   currentUserId: string;
 }
-
-type ShareableEntry =
-  | { type: 'conversation'; id: string; item: { id: string; data: RtdbConversation; userChat: RtdbUserChat } }
-  | { type: 'friend'; id: string; item: User };
 
 export const SharePostModal: React.FC<SharePostModalProps> = ({
   isOpen,
@@ -36,38 +28,8 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
   const [selectedConversationIds, setSelectedConversationIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const conversations = useRtdbChatStore(state => state.conversations);
   const sendSharedPostMessage = useRtdbChatStore(state => state.sendSharedPostMessage);
-  const { users: usersMap, fetchUsers } = useUserCache();
-  const blockedUsers = useAuthStore(state => state.blockedUsers);
-  const [allFriends, setAllFriends] = useState<User[]>([]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const userIds = Array.from(new Set(
-      conversations.flatMap(conv => Object.keys(conv.data.members || {}))
-    )).filter(id => id !== currentUserId);
-
-    if (userIds.length > 0) {
-      fetchUsers(userIds);
-    }
-  }, [isOpen, conversations, fetchUsers, currentUserId]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const loadFriends = async () => {
-      try {
-        const friends = await friendService.getAllFriends(currentUserId);
-        setAllFriends(friends);
-      } catch (error) {
-        console.error('Lỗi load friends trong SharePostModal:', error);
-      }
-    };
-
-    loadFriends();
-  }, [isOpen, currentUserId]);
+  const { filteredItems, usersMap } = useShareTargets(currentUserId, searchTerm, isOpen);
 
   useEffect(() => {
     if (!isOpen) {
@@ -76,72 +38,6 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
       setIsSubmitting(false);
     }
   }, [isOpen]);
-
-  const shareableItems = useMemo(() => {
-    const validConvs = conversations.filter(conv => {
-      if (conv.data.isDisbanded) return false;
-      if (!conv.data.isGroup) {
-        const partnerId = Object.keys(conv.data.members).find(id => id !== currentUserId);
-        if (!partnerId) return false;
-        const isBlockedByMe = blockedUsers[partnerId]?.isFullyBlocked || blockedUsers[partnerId]?.isMessageBlocked;
-        if (isBlockedByMe) return false;
-        const partner = usersMap[partnerId];
-        if (partner?.status === UserStatus.BANNED) return false;
-      }
-      return true;
-    });
-
-    const convItems: ShareableEntry[] = validConvs.map(conv => ({
-      type: 'conversation',
-      id: conv.id,
-      item: conv
-    }));
-
-    const existingChatPartnerIds = new Set(
-      validConvs
-        .filter(c => !c.data.isGroup)
-        .map(c => Object.keys(c.data.members).find(id => id !== currentUserId))
-        .filter(Boolean)
-    );
-
-    const friendItems: ShareableEntry[] = allFriends
-      .filter(friend => friend.id !== currentUserId)
-      .filter(friend => !existingChatPartnerIds.has(friend.id))
-      .filter(friend => {
-        const blocked = blockedUsers[friend.id];
-        return !blocked?.isFullyBlocked && !blocked?.isMessageBlocked && friend.status !== UserStatus.BANNED;
-      })
-      .map(friend => ({
-        type: 'friend',
-        id: getDirectConversationId(currentUserId, friend.id),
-        item: friend
-      }));
-
-    return [...convItems, ...friendItems];
-  }, [conversations, allFriends, currentUserId, blockedUsers, usersMap]);
-
-  const filteredItems = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    
-    if (!normalizedSearch) {
-      return shareableItems.slice(0, PAGINATION.SHARE_MODAL_LIMIT);
-    }
-    return shareableItems.filter(entry => {
-      if (entry.type === 'conversation') {
-        const conversation = entry.item.data;
-        if (conversation.isGroup) {
-          return (conversation.name || '').toLowerCase().includes(normalizedSearch);
-        }
-        const partnerId = Object.keys(conversation.members).find(id => id !== currentUserId) || '';
-        const partnerName = usersMap[partnerId]?.fullName || '';
-        return partnerName.toLowerCase().includes(normalizedSearch);
-      } else {
-        const friend = entry.item;
-        return (friend.fullName || '').toLowerCase().includes(normalizedSearch) ||
-               (friend.email || '').toLowerCase().includes(normalizedSearch);
-      }
-    }).slice(0, PAGINATION.SHARE_SEARCH_LIMIT);
-  }, [searchTerm, shareableItems, currentUserId, usersMap]);
 
   const isPrivatePost = post?.visibility === Visibility.PRIVATE;
   const canSubmit = selectedConversationIds.size > 0 && !!post && !isPrivatePost && !isSubmitting;
@@ -257,7 +153,7 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
         <div className="overflow-y-auto scroll-hide min-h-0 max-h-72 space-y-1">
           {filteredItems.length > 0 ? (
             filteredItems.map(entry => (
-              <ShareConversationItem
+              <ShareTargetItem
                 key={entry.id}
                 entry={entry}
                 currentUserId={currentUserId}
@@ -274,84 +170,5 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
         </div>
       </div>
     </Modal>
-  );
-};
-
-interface ShareConversationItemProps {
-  entry: ShareableEntry;
-  currentUserId: string;
-  usersMap: Record<string, User>;
-  selected: boolean;
-  onToggle: () => void;
-}
-
-const ShareConversationItem: React.FC<ShareConversationItemProps> = ({
-  entry,
-  currentUserId,
-  usersMap,
-  selected,
-  onToggle,
-}) => {
-  const isGroup = entry.type === 'conversation' && entry.item.data.isGroup;
-  
-  let partner: User | undefined;
-  let title = '';
-  let avatarUrl = '';
-  let participants: User[] = [];
-
-  if (entry.type === 'conversation') {
-    const conv = entry.item.data;
-    const partnerId = Object.keys(conv.members).find(uid => uid !== currentUserId) || '';
-    partner = usersMap[partnerId];
-    title = (isGroup ? conv.name : partner?.fullName) || (isGroup ? 'Nhóm chưa đặt tên' : 'Người dùng');
-    avatarUrl = (isGroup ? conv.avatar?.url : partner?.avatar?.url) || '';
-  } else {
-    partner = entry.item;
-    title = partner.fullName || 'Người dùng';
-    avatarUrl = partner.avatar?.url || '';
-  }
-
-  const participantIds = isGroup && entry.type === 'conversation' ? Object.keys(entry.item.data.members) : [];
-  const groupParticipants = useConversationParticipants(participantIds);
-
-  if (entry.type === 'conversation' && !isGroup && partner?.status === UserStatus.BANNED) {
-    return null;
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors ${
-        selected
-          ? 'border-primary/40 bg-primary/5'
-          : 'border-transparent hover:bg-bg-hover'
-      }`}
-    >
-      <div className="flex items-center gap-3 min-w-0 flex-1 text-left">
-        <UserAvatar
-          userId={isGroup ? '' : partner?.id || ''}
-          src={avatarUrl}
-          name={title}
-          size="sm"
-          isGroup={isGroup}
-          members={groupParticipants}
-        />
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium text-text-primary truncate">{title}</span>
-          {isGroup && entry.type === 'conversation' && (
-            <span className="text-[11px] text-text-tertiary truncate">
-              Nhóm • {Object.keys(entry.item.data.members).length} thành viên
-            </span>
-          )}
-          {entry.type === 'friend' && (
-            <span className="text-[11px] text-text-tertiary truncate">Bạn bè</span>
-          )}
-        </div>
-      </div>
-      <span className={`w-5 h-5 shrink-0 rounded-md border flex items-center justify-center transition-colors ${selected ? 'border-primary bg-primary text-white' : 'border-border-light bg-bg-primary'}`}>
-        {selected && <Check size={13} />}
-      </span>
-    </button>
   );
 };
