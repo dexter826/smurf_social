@@ -65,7 +65,7 @@ export const NotificationDropdown: React.FC = () => {
         }
         variant="ghost"
         title="Thông báo"
-        className={`text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200 ${isOpen ? 'bg-white/20 text-white' : ''}`}
+        className={`text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200 active:bg-white/20 ${isOpen ? 'bg-white/20 text-white' : ''}`}
       />
 
       {isOpen && createPortal(

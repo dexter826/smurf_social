@@ -1,5 +1,5 @@
 export { VisibilityBadge } from './VisibilityBadge';
 export { TruncatedText } from './TruncatedText';
-export { ReactionActions } from './ReactionActions';
+export { InteractionActions } from './InteractionActions';
 export { PostMediaGrid } from './PostMediaGrid';
 export { SystemPostMedia } from './SystemPostMedia';

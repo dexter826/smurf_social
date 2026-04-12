@@ -7,7 +7,7 @@ import { Post, PostStatus, Visibility, PostType, User, ReportType, ReactionType 
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store';
 import { useFriendIds, useFilteredReactions } from '../../hooks';
-import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from './shared';
+import { VisibilityBadge, TruncatedText, InteractionActions, PostMediaGrid, SystemPostMedia } from './shared';
 import { LinkPreviewCard } from '../shared/LinkPreviewCard';
 import { extractFirstUrl } from '../../services/linkPreviewService';
 
@@ -179,7 +179,7 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
       {/* ── Reactions & comments ── */}
       {canShowInteractions && (
-        <ReactionActions
+        <InteractionActions
           reactionSummary={filteredSummary}
           reactionCount={filteredCount}
           myReaction={currentUserReaction}

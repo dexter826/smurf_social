@@ -10,7 +10,7 @@ import { CommentSection } from '../comment/CommentSection';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { useReportStore } from '../../../store/reportStore';
 import { useFriendIds, useFilteredReactions } from '../../../hooks';
-import { VisibilityBadge, TruncatedText, ReactionActions, PostMediaGrid, SystemPostMedia } from '../shared';
+import { VisibilityBadge, TruncatedText, InteractionActions, PostMediaGrid, SystemPostMedia } from '../shared';
 import { LinkPreviewCard } from '../../shared/LinkPreviewCard';
 import { extractFirstUrl } from '../../../services/linkPreviewService';
 
@@ -447,7 +447,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
               {/* Reaction actions */}
               {canShowInteractions && (
-                <ReactionActions
+                <InteractionActions
                   reactionSummary={filteredSummary}
                   reactionCount={filteredCount}
                   myReaction={currentUserReaction}

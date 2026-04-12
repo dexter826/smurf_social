@@ -6,7 +6,7 @@ import { REACTION_LABELS } from '../../../constants';
 import { getReactionIcon } from '../../chat/reactions/ReactionIcons';
 import { getReactionColorClass, getReactionBgClass } from '../../../utils';
 
-interface ReactionActionsProps {
+interface InteractionActionsProps {
   reactionSummary: Partial<Record<ReactionType, number>>;
   reactionCount: number;
   myReaction: string | null;
@@ -23,7 +23,7 @@ interface ReactionActionsProps {
   selectorPosition?: 'top' | 'bottom';
 }
 
-export const ReactionActions: React.FC<ReactionActionsProps> = ({
+export const InteractionActions: React.FC<InteractionActionsProps> = ({
   reactionSummary, reactionCount, myReaction, commentCount,
   onReact, onCommentClick, onShareClick, onViewReactions,
   showEmptyDivider = false,
@@ -99,7 +99,7 @@ export const ReactionActions: React.FC<ReactionActionsProps> = ({
             icon={
               myReaction
                 ? getReactionIcon(myReaction as ReactionType, 'w-[18px] h-[18px]', 18)
-                : <Heart size={18} className="transition-transform duration-200 group-hover/reaction-btn:scale-110" />
+                : <Heart size={18} className="transition-transform duration-200" />
             }
           >
             {myReaction ? REACTION_LABELS[myReaction as ReactionType] : 'Thích'}

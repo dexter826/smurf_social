@@ -202,7 +202,7 @@ export const AppLayout: React.FC = () => {
             icon={mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             title={mode === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
             variant="ghost"
-            className="text-white/70 hover:bg-white/10 hover:text-white"
+            className="text-white/70 hover:bg-white/10 hover:text-white active:bg-white/20"
           />
 
           <div className="w-px h-6 bg-white/10 mx-1" />
@@ -245,7 +245,7 @@ export const AppLayout: React.FC = () => {
             icon={<LogOut size={20} />}
             title="Đăng xuất"
             variant="ghost"
-            className="text-white/70 hover:bg-red-500/20 hover:text-red-400 transition-all duration-200"
+            className="text-white/70 hover:bg-red-500/20 hover:text-red-400 active:bg-red-500/30 transition-all duration-200"
           />
         </div>
       </header>
@@ -268,8 +268,8 @@ export const AppLayout: React.FC = () => {
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-                ${isActive ? 'text-white bg-white/20 rounded-xl' : 'text-white/60 active:text-white'}`
+                `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200 rounded-xl
+                ${isActive ? 'text-white bg-white/20' : 'text-white/60 hover:bg-white/10 active:text-white active:bg-white/20'}`
               }
             >
               <div className="relative">
@@ -288,8 +288,8 @@ export const AppLayout: React.FC = () => {
           <NavLink
             to="/notifications"
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-              ${isActive ? 'text-white bg-white/20 rounded-xl' : 'text-white/60 active:text-white'}`
+              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200 rounded-xl
+              ${isActive ? 'text-white bg-white/20' : 'text-white/60 hover:bg-white/10 active:text-white active:bg-white/20'}`
             }
           >
             <div className="relative">
@@ -304,8 +304,8 @@ export const AppLayout: React.FC = () => {
           <NavLink
             to="/menu"
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200
-              ${isActive ? 'text-white bg-white/20 rounded-xl' : 'text-white/60 active:text-white'}`
+              `flex flex-col items-center justify-center w-full min-h-[56px] py-2 gap-1 transition-all duration-200 rounded-xl
+              ${isActive ? 'text-white bg-white/20' : 'text-white/60 hover:bg-white/10 active:text-white active:bg-white/20'}`
             }
           >
             <Menu size={22} />

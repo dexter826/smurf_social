@@ -42,7 +42,7 @@ export const MobileMenuPage: React.FC = () => {
 
         <MenuItem
           icon={<UserIcon size={20} />}
-          iconBg="bg-primary/10 text-primary"
+          iconBg="bg-bg-tertiary text-text-secondary"
           label="Xem hồ sơ"
           description="Trang cá nhân của bạn"
           onClick={() => navigate(`/profile/${user?.id}`)}
