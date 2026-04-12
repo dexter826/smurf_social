@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { RtdbMessage, MediaObject, MessageType } from '../../../../shared/types';
-import { Image, Film, FileText, Download, Play, Mic } from 'lucide-react';
+import { Image, Film, FileText, Download, Play, Mic, Link2, ExternalLink } from 'lucide-react';
 import { LazyImage, MediaViewer } from '../../ui';
 import { downloadFile } from '../../../utils';
 
@@ -9,7 +9,7 @@ interface ChatDetailsMediaProps {
   onMessageClick?: (messageId: string) => void;
 }
 
-type MediaTab = 'images' | 'videos' | 'files' | 'voice';
+type MediaTab = 'images' | 'videos' | 'files' | 'voice' | 'links';
 
 interface MediaViewerState {
   isOpen: boolean;
@@ -47,9 +47,39 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
     const videos: Array<{ key: string; msgId: string; media: MediaObject }> = [];
     const files: Array<{ key: string; msgId: string; media: MediaObject }> = [];
     const voice: Array<{ key: string; msgId: string; media?: MediaObject; content?: string }> = [];
+    const links: Array<{ key: string; msgId: string; url: string; title?: string }> = [];
+
+    const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 
     sortedMessages.forEach((msg) => {
-      // Logic đặc biệt cho tin nhắn thoại (có thể không có mảng media nếu nội dung nằm trực tiếp ở content)
+      // Trích xuất links từ tin nhắn văn bản
+      if (msg.data.type === MessageType.TEXT && msg.data.content) {
+        const matches = msg.data.content.match(URL_REGEX);
+        if (matches) {
+          matches.forEach((url, i) => {
+            links.push({ key: `${msg.id}_link_${i}`, msgId: msg.id, url });
+          });
+        }
+      }
+
+      // Trích xuất từ bài viết chia sẻ
+      if (msg.data.type === MessageType.SHARE_POST && msg.data.content) {
+        try {
+          const payload = JSON.parse(msg.data.content);
+          if (payload.url) {
+            links.push({
+              key: `${msg.id}_share`,
+              msgId: msg.id,
+              url: payload.url,
+              title: payload.authorName ? `Bài viết của ${payload.authorName}` : 'Bài viết chia sẻ',
+            });
+          }
+        } catch (e) {
+          // Bỏ qua nếu lỗi parse
+        }
+      }
+
+      // Logic đặc biệt cho tin nhắn thoại
       if (msg.data.type === MessageType.VOICE) {
         voice.push({
           key: msg.id,
@@ -73,7 +103,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
       });
     });
 
-    return { images, videos, files, voice };
+    return { images, videos, files, voice, links };
   }, [sortedMessages]);
 
   const imageViewerItems = useMemo(
@@ -92,6 +122,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
     { id: 'images', label: 'Ảnh', icon: <Image size={14} /> },
     { id: 'videos', label: 'Video', icon: <Film size={14} /> },
     { id: 'files', label: 'File', icon: <FileText size={14} /> },
+    { id: 'links', label: 'Link', icon: <Link2 size={14} /> },
     { id: 'voice', label: 'Thoại', icon: <Mic size={14} /> },
   ];
 
@@ -220,6 +251,46 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
                 >
                   <Download size={16} />
                 </button>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'links':
+        if (mediaItems.links.length === 0) return <EmptyState message="Chưa có liên kết nào được chia sẻ" />;
+        return (
+          <div className="space-y-0.5 p-2">
+            {mediaItems.links.map((item) => (
+              <div
+                key={item.key}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-bg-hover transition-colors duration-200"
+              >
+                <button
+                  type="button"
+                  onClick={() => onMessageClick?.(item.msgId)}
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                >
+                  <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Link2 size={17} className="text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text-primary truncate">
+                      {item.title || 'Liên kết'}
+                    </p>
+                    <p className="text-xs text-text-tertiary truncate max-w-[200px]">
+                      {item.url}
+                    </p>
+                  </div>
+                </button>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-active text-text-tertiary hover:text-primary transition-all duration-200 flex-shrink-0"
+                  title="Mở liên kết"
+                >
+                  <ExternalLink size={16} />
+                </a>
               </div>
             ))}
           </div>

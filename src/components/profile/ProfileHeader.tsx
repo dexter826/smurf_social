@@ -4,7 +4,7 @@ import {
   Trash2, Pencil, Settings, MoreHorizontal, Flag, Ban, X, Image as ImageIcon,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { User, ReportType, UserStatus, FriendStatus } from '../../../shared/types';
+import { User, ReportType, UserStatus, FriendStatus, Visibility } from '../../../shared/types';
 import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
@@ -20,8 +20,8 @@ interface ProfileHeaderProps {
   onEditClick?: () => void;
   onMessageClick?: () => void;
   onFriendClick?: () => void;
-  onAvatarChange?: (file: File, shareToFeed: boolean) => void;
-  onCoverChange?: (file: File, shareToFeed: boolean) => void;
+  onAvatarChange?: (file: File, visibility: Visibility) => void;
+  onCoverChange?: (file: File, visibility: Visibility) => void;
   onAvatarDelete?: () => void;
   onCoverDelete?: () => void;
   onBlockClick?: () => void;
@@ -46,6 +46,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const currentUser = useAuthStore(state => state.user);
+  const userSettings = useAuthStore(state => state.settings);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { openReportModal } = useReportStore();
@@ -70,9 +71,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     e.target.value = '';
   };
 
-  const handleCropComplete = (croppedFile: File, shareToFeed: boolean) => {
-    if (cropState?.type === 'avatar') onAvatarChange?.(croppedFile, shareToFeed);
-    else if (cropState?.type === 'cover') onCoverChange?.(croppedFile, shareToFeed);
+  const handleCropComplete = (croppedFile: File, visibility: Visibility) => {
+    if (cropState?.type === 'avatar') onAvatarChange?.(croppedFile, visibility);
+    else if (cropState?.type === 'cover') onCoverChange?.(croppedFile, visibility);
     if (cropState?.image) URL.revokeObjectURL(cropState.image);
     setCropState(null);
   };
@@ -318,6 +319,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           aspect={cropState.type === 'avatar' ? 1 : 16 / 9}
           title={cropState.type === 'avatar' ? 'Cắt ảnh đại diện' : 'Cắt ảnh bìa'}
           showShareOption={true}
+          initialVisibility={userSettings.defaultPostVisibility}
           onCropComplete={handleCropComplete}
           onImageChange={handleImageChange}
           onCancel={handleCropCancel}

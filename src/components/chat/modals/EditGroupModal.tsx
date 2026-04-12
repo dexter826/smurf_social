@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Users } from 'lucide-react';
-import { RtdbConversation, RtdbUserChat, MediaObject } from '../../../../shared/types';
+import { RtdbConversation, RtdbUserChat, MediaObject, Visibility } from '../../../../shared/types';
 import { Modal, Input, Button, ImageCropper } from '../../ui';
 import { toast } from '../../../store/toastStore';
 import { TOAST_MESSAGES } from '../../../constants';
@@ -50,7 +50,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
     e.target.value = '';
   };
 
-  const handleCropComplete = (croppedFile: File, _shareToFeed: boolean) => {
+  const handleCropComplete = (croppedFile: File, _visibility: Visibility) => {
     if (cropImage) URL.revokeObjectURL(cropImage);
     setPreviewUrl(URL.createObjectURL(croppedFile));
     setPendingFile(croppedFile);

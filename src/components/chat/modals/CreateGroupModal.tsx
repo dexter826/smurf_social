@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, Users, Camera, Check, Loader2, Crown } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User } from '../../../../shared/types';
+import { User, Visibility } from '../../../../shared/types';
 import { friendService } from '../../../services/friendService';
 import { useAuthStore } from '../../../store/authStore';
 import { Modal, Input, Button, Avatar, UserAvatar, IconButton, ImageCropper } from '../../ui';
@@ -66,7 +66,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     e.target.value = '';
   };
 
-  const handleCropComplete = (croppedFile: File, _shareToFeed: boolean) => {
+  const handleCropComplete = (croppedFile: File, _visibility: Visibility) => {
     if (cropImage) URL.revokeObjectURL(cropImage);
     setPreviewUrl(URL.createObjectURL(croppedFile));
     setPendingFile(croppedFile);

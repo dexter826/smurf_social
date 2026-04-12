@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useRef } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
-import { Modal, Button, Checkbox } from './index';
-import { ZoomIn, ZoomOut, RotateCcw, ImagePlus } from 'lucide-react';
+import { Modal, Button } from './index';
+import { ZoomIn, ZoomOut, RotateCcw, ImagePlus, Globe2, Users, Lock, ChevronDown } from 'lucide-react';
+import { Visibility } from '../../../shared/types';
+import { Dropdown, DropdownItem } from './index';
 import { getCroppedImg } from '../../utils/imageUtils';
 
 interface ImageCropperProps {
@@ -10,7 +12,8 @@ interface ImageCropperProps {
   aspect?: number;
   title?: string;
   showShareOption?: boolean;
-  onCropComplete: (croppedFile: File, shareToFeed: boolean) => void;
+  initialVisibility?: Visibility;
+  onCropComplete: (croppedFile: File, visibility: Visibility) => void;
   onImageChange?: (file: File) => void;
   onCancel: () => void;
 }
@@ -24,12 +27,13 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   onCropComplete,
   onImageChange,
   onCancel,
+  initialVisibility,
 }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [shareToFeed, setShareToFeed] = useState(true);
+  const [visibility, setVisibility] = useState<Visibility>(initialVisibility || Visibility.FRIENDS);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,7 +58,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       const croppedFile = new File([croppedBlob], `cropped_${Date.now()}.jpg`, {
         type: 'image/jpeg'
       });
-      onCropComplete(croppedFile, shareToFeed);
+      onCropComplete(croppedFile, visibility);
     } catch (error) {
       console.error('Lỗi crop ảnh:', error);
     } finally {
@@ -91,13 +95,40 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       footer={
         <div className="flex flex-col w-full gap-4">
           {showShareOption && (
-            <div className="flex items-center gap-2 px-1">
-              <Checkbox
-                id="share-to-feed-checkbox"
-                label="Chia sẻ lên bảng tin"
-                checked={shareToFeed}
-                onChange={(e) => setShareToFeed((e.target as HTMLInputElement).checked)}
-              />
+            <div className="flex items-center justify-between px-1 py-1 bg-bg-tertiary rounded-xl mb-1">
+              <span className="text-xs font-semibold text-text-secondary px-2 uppercase tracking-wider">Ai có thể xem?</span>
+              <Dropdown
+                trigger={
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-primary hover:bg-bg-hover rounded-lg border border-border-light transition-all text-sm font-medium text-text-primary">
+                    {visibility === Visibility.PUBLIC && <Globe2 size={16} className="text-primary flex-shrink-0" />}
+                    {visibility === Visibility.FRIENDS && <Users size={16} className="text-primary flex-shrink-0" />}
+                    {visibility === Visibility.PRIVATE && <Lock size={16} className="text-primary flex-shrink-0" />}
+                    <span>
+                      {visibility === Visibility.PUBLIC && 'Công khai'}
+                      {visibility === Visibility.FRIENDS && 'Bạn bè'}
+                      {visibility === Visibility.PRIVATE && 'Chỉ mình tôi'}
+                    </span>
+                    <ChevronDown size={15} className="text-text-tertiary" />
+                  </button>
+                }
+                align="right"
+              >
+                <DropdownItem 
+                  icon={<Globe2 size={15} />} 
+                  label="Công khai" 
+                  onClick={() => setVisibility(Visibility.PUBLIC)}
+                />
+                <DropdownItem 
+                  icon={<Users size={15} />} 
+                  label="Bạn bè" 
+                  onClick={() => setVisibility(Visibility.FRIENDS)}
+                />
+                <DropdownItem 
+                  icon={<Lock size={15} />} 
+                  label="Chỉ mình tôi" 
+                  onClick={() => setVisibility(Visibility.PRIVATE)}
+                />
+              </Dropdown>
             </div>
           )}
 

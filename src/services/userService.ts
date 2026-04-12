@@ -140,7 +140,7 @@ export const userService = {
     userId: string,
     file: File,
     type: 'avatar' | 'cover',
-    shareToFeed: boolean = true,
+    visibility: Visibility,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
     try {
@@ -177,12 +177,11 @@ export const userService = {
       await userService.updateProfile(userId, { [type]: mediaObject });
 
       if (currentUser) {
-        const settings = await userService.getUserSettings(userId);
           await systemPostService.createProfileUpdatePost({
             userId: userId,
             type: type === 'avatar' ? PostType.AVATAR_UPDATE : PostType.COVER_UPDATE,
             media: [mediaObject],
-            visibility: shareToFeed ? settings.defaultPostVisibility : Visibility.PRIVATE
+            visibility: visibility
           });
       }
 
@@ -202,20 +201,20 @@ export const userService = {
   uploadAvatar: async (
     userId: string,
     file: File,
-    shareToFeed: boolean = true,
+    visibility: Visibility,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
-    return userService.uploadProfileMedia(userId, file, 'avatar', shareToFeed, onProgress);
+    return userService.uploadProfileMedia(userId, file, 'avatar', visibility, onProgress);
   },
 
   // Tải lên ảnh bìa
   uploadCoverImage: async (
     userId: string,
     file: File,
-    shareToFeed: boolean = true,
+    visibility: Visibility,
     onProgress?: ProgressCallback
   ): Promise<MediaObject> => {
-    return userService.uploadProfileMedia(userId, file, 'cover', shareToFeed, onProgress);
+    return userService.uploadProfileMedia(userId, file, 'cover', visibility, onProgress);
   },
 
 
