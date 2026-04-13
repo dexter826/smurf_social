@@ -67,8 +67,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
   const isDelivered = useMemo(() => {
     if (!isGroup && partnerStatus === UserStatus.BANNED) return false;
-    return !!(message.data.deliveredTo &&
-      Object.keys(message.data.deliveredTo).some(uid => uid !== currentUserId));
+    if (!message.data.deliveredTo) return false;
+    return Object.keys(message.data.deliveredTo).some(uid => uid !== currentUserId);
   }, [message.data.deliveredTo, currentUserId, isGroup, partnerStatus]);
 
   const isPartnerBanned = !isGroup && partnerStatus === UserStatus.BANNED;

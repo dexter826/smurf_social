@@ -94,9 +94,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     ? UserStatus.BANNED
     : (partnerStatus ?? partner?.status);
 
+  const isFriend = useMemo(() =>
+    conversation.data.isGroup
+      ? true
+      : currentUserFriendIds.includes(partner?.id ?? ''),
+    [conversation.data.isGroup, currentUserFriendIds, partner?.id]
+  );
+
   const { lastReadByMap } = useMessageStatus({
     messages, conversation, currentUserId, usersMap,
     partnerStatus: resolvedPartnerStatus,
+    isFriend,
   });
 
   return (

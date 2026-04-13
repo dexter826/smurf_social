@@ -78,7 +78,6 @@ export const useConversationItem = ({
       const isGroup = conversation.data.isGroup;
       try {
         const parsed = JSON.parse(content);
-        const isVideo = parsed.callType === 'video';
         const status = parsed.status;
 
         if (isGroup) {
@@ -114,13 +113,19 @@ export const useConversationItem = ({
     return getMessageDisplayContent({ 
         type: lastMessage.type, 
         content: lastMessage.content,
-        media: [], // lastMessage snippet in DB doesn't usually have full media array
+        media: [],
         isRecalled: false
     } as any);
   }, [lastMessage, currentUserId, conversation.userChat?.clearedAt, conversation.data.isGroup]);
 
+  const isFriend = useMemo(() =>
+    !conversation.data.isGroup && partner
+      ? currentUserFriendIds.includes(partner.id)
+      : true,
+    [conversation.data.isGroup, partner, currentUserFriendIds]
+  );
+
   const messagesForStatus = useMemo(() => {
-    if (isMessageRequest) return [];
     if (storeMessages.length > 0) return storeMessages;
 
     if (!lastMessage?.messageId || !lastMessage.senderId) return [];
@@ -144,7 +149,7 @@ export const useConversationItem = ({
         reactions: {},
       } as any,
     }];
-  }, [isMessageRequest, storeMessages, lastMessage]);
+  }, [storeMessages, lastMessage]);
 
   const { lastMessageReaders, isLastMessageRead, isLastMessageDelivered } = useMessageStatus({
     messages: messagesForStatus,
@@ -152,6 +157,7 @@ export const useConversationItem = ({
     currentUserId,
     usersMap,
     partnerStatus: partner?.status as UserStatus | undefined,
+    isFriend,
   });
 
   const displayTime = useMemo(() => {

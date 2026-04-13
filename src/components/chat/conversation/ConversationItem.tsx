@@ -270,6 +270,9 @@ export const ConversationItem = Object.assign(
     const prevMemberKeys = Object.keys(prev.conversation.data.members).sort().join(',');
     const nextMemberKeys = Object.keys(next.conversation.data.members).sort().join(',');
 
+    const prevFriendIds = (prev.currentUserFriendIds || []).slice().sort().join(',');
+    const nextFriendIds = (next.currentUserFriendIds || []).slice().sort().join(',');
+
     return (
       prev.isActive === next.isActive &&
       prev.conversation.id === next.conversation.id &&
@@ -283,6 +286,7 @@ export const ConversationItem = Object.assign(
       prev.onMute === next.onMute &&
       prevMemberKeys === nextMemberKeys &&
       lastMessageEqual &&
+      prevFriendIds === nextFriendIds &&
       JSON.stringify(prev.conversation.data.typing) === JSON.stringify(next.conversation.data.typing)
     );
   }),

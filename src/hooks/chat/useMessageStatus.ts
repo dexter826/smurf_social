@@ -8,6 +8,7 @@ interface UseMessageStatusOptions {
     currentUserId: string;
     usersMap: Record<string, User>;
     partnerStatus?: UserStatus;
+    isFriend?: boolean;
 }
 
 export interface MessageStatusResult {
@@ -23,6 +24,7 @@ export function useMessageStatus({
     currentUserId,
     usersMap,
     partnerStatus,
+    isFriend = true,
 }: UseMessageStatusOptions): MessageStatusResult {
     const { settings } = useAuthStore();
 
@@ -52,6 +54,7 @@ export function useMessageStatus({
     const lastReadByMap = useMemo(() => {
         const map: Record<string, User[]> = {};
 
+        if (!isFriend && !conversation.data.isGroup) return map;
         if (settings?.showReadReceipts === false) return map;
         if (messages.length === 0) return map;
         if (eligibleMemberIds.length === 0) return map;
@@ -92,7 +95,7 @@ export function useMessageStatus({
         }
 
         return map;
-    }, [messages, conversation.data.isGroup, eligibleMemberIds, usersMap, settings?.showReadReceipts]);
+    }, [messages, conversation.data.isGroup, eligibleMemberIds, usersMap, settings?.showReadReceipts, isFriend]);
 
     const lastSentMessage = useMemo(() => {
         for (let i = messages.length - 1; i >= 0; i--) {

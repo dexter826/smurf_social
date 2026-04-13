@@ -12,10 +12,9 @@ export const onUserProfileUpdated = onDocumentWritten("users/{userId}", async (e
   const before = change.before.data() as User | undefined;
   const after = change.after.data() as User | undefined;
 
-  if (!after) {
-    return;
-  }
+  if (!after) return;
 
+  // Kiểm tra thay đổi các trường quan trọng
   const interestsChanged = JSON.stringify(before?.interests || []) !== JSON.stringify(after.interests || []);
   const locationChanged = before?.location !== after.location;
   const schoolChanged = before?.school !== after.school;
@@ -25,27 +24,18 @@ export const onUserProfileUpdated = onDocumentWritten("users/{userId}", async (e
     return;
   }
 
-  const interestsText = after.interests && after.interests.length > 0 
-    ? after.interests.join(", ") 
-    : "Không có";
-  const locationText = after.location || "Không rõ";
-  const schoolText = after.school || "Không rõ";
-  const generationText = after.generation || "Không rõ";
-
-  const profileText = `Sở thích: ${interestsText}. Địa điểm: ${locationText}. Trường học: ${schoolText}. Thế hệ: ${generationText}.`;
+  const interestsText = after.interests?.length ? after.interests.join(", ") : "Không có";
+  const profileText = `Sở thích: ${interestsText}. Địa điểm: ${after.location || "Không rõ"}. Trường học: ${after.school || "Không rõ"}. Thế hệ: ${after.generation || "Không rõ"}.`;
   
   try {
     const genAI = new GoogleGenerativeAI(geminiApiKey.value());
     const model = genAI.getGenerativeModel({ model: "gemini-embedding-2-preview" });
     const result = await model.embedContent(profileText);
-    const userVector = result.embedding.values;
-
-    await change.after.ref.update({
-      userVector: userVector
-    });
     
-    console.log(`Cập nhật Gemini Embedding thành công cho user: ${event.params.userId}`);
+    await change.after.ref.update({
+      userVector: result.embedding.values
+    });
   } catch (error) {
-    console.error(`Lỗi tạo Embedding bằng Gemini cho user ${event.params.userId}:`, error);
+    console.error(`Lỗi tạo Embedding cho user ${event.params.userId}:`, error);
   }
 });

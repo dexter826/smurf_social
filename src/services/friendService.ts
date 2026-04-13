@@ -11,7 +11,8 @@ import {
   addDoc,
   onSnapshot,
   writeBatch,
-  serverTimestamp
+  serverTimestamp,
+  arrayRemove
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../firebase/config';
@@ -178,8 +179,6 @@ export const friendService = {
       });
 
       await batch.commit();
-
-
     } catch (error) {
       console.error("Lỗi chấp nhận kết bạn", error);
       throw error;
@@ -298,14 +297,10 @@ export const friendService = {
 
   removeSuggestion: async (currentUserId: string, targetUserId: string): Promise<void> => {
     try {
-      const userRef = doc(db, 'users', currentUserId);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) return;
-      const current: string[] = userSnap.data()?.suggestedFriends ?? [];
-      const updated = current.filter(id => id !== targetUserId);
-      await updateDoc(userRef, { suggestedFriends: updated });
+      await updateDoc(doc(db, 'users', currentUserId), {
+        suggestedFriends: arrayRemove(targetUserId)
+      });
     } catch {
-      // silent — không critical
     }
   },
 
