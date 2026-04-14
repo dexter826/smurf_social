@@ -24,7 +24,12 @@ import { convertDocs } from '../utils/firebaseUtils';
 
 export const notificationService = {
   // Theo dõi thông báo mới nhất
-  subscribeToNotifications: (userId: string, callback: (notifications: Notification[]) => void, limitCount: number = 20) => {
+  subscribeToNotifications: (
+    userId: string,
+    callback: (notifications: Notification[]) => void,
+    limitCount: number = 20,
+    onError?: (error: unknown) => void
+  ) => {
     const q = query(
       collection(db, 'notifications'),
       where('receiverId', '==', userId),
@@ -32,9 +37,16 @@ export const notificationService = {
       limit(limitCount)
     );
 
-    return onSnapshot(q, (snapshot) => {
-      callback(convertDocs<Notification>(snapshot.docs));
-    });
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        callback(convertDocs<Notification>(snapshot.docs));
+      },
+      (error) => {
+        console.error('Lỗi subscribeToNotifications:', error);
+        onError?.(error);
+      }
+    );
   },
 
   // Đánh dấu thông báo đã đọc

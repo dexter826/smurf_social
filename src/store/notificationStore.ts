@@ -134,10 +134,17 @@ export const useNotificationStore = create<NotificationState>()(
         useLoadingStore.getState().setLoading('notifications', true);
         set({ currentLimit: limit });
 
-        const unsubscribe = notificationService.subscribeToNotifications(userId, (notifications) => {
-          get().setNotifications(notifications);
-          useLoadingStore.getState().setLoading('notifications', false);
-        }, limit);
+        const unsubscribe = notificationService.subscribeToNotifications(
+          userId,
+          (notifications) => {
+            get().setNotifications(notifications);
+            useLoadingStore.getState().setLoading('notifications', false);
+          },
+          limit,
+          () => {
+            useLoadingStore.getState().setLoading('notifications', false);
+          }
+        );
 
         set({ _unsubscribe: unsubscribe });
 
