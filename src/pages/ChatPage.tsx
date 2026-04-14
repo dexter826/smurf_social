@@ -150,7 +150,7 @@ const ChatPage: React.FC = () => {
           onBlock={openBlockModal}
           isSearchFocused={isSearchFocused}
           onSearchFocus={setSearchFocused}
-          searchResults={{ conversations: [], users: searchResults.users }}
+          searchResults={searchResults}
           searchHistory={searchHistory}
           onRemoveFromHistory={removeFromSearchHistory}
           onClearHistory={clearSearchHistory}
@@ -159,7 +159,12 @@ const ChatPage: React.FC = () => {
             await getOrCreateConversation(currentUser.id, user.id);
             setSearchFocused(false);
           }}
-          onSelectConversation={(id) => { handleSelectConversation(id); setSearchFocused(false); }}
+          onSelectConversation={(id) => {
+            const conv = conversations.find(c => c.id === id);
+            if (conv) addToSearchHistory(conv);
+            handleSelectConversation(id);
+            setSearchFocused(false);
+          }}
           onSearch={handleSearch}
           onPin={handlePin}
           onMute={handleMute}

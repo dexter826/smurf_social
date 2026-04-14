@@ -11,8 +11,11 @@ export interface RtdbConversationSlice {
     selectedConversationId: string | null;
     searchTerm: string;
     isSearchFocused: boolean;
-    searchResults: { users: User[] };
-    searchHistory: Record<string, User[]>;
+    searchResults: { 
+        conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>;
+        users: User[] 
+    };
+    searchHistory: Record<string, Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat } | User>>;
     isChatVisible: boolean;
     typingUsers: Record<string, string[]>;
     userChats: Record<string, RtdbUserChat>;
@@ -27,7 +30,7 @@ export interface RtdbConversationSlice {
     toggleMarkUnread: (conversationId: string, userId: string, markedUnread: boolean) => Promise<void>;
     deleteConversation: (conversationId: string, userId: string) => Promise<void>;
     setSearchFocused: (focused: boolean) => void;
-    addToSearchHistory: (item: User, userId: string) => void;
+    addToSearchHistory: (item: User | { id: string; data: RtdbConversation; userChat: RtdbUserChat }, userId: string) => void;
     removeFromSearchHistory: (itemId: string, userId: string) => void;
     clearSearchHistory: (userId: string) => void;
     setSearchTerm: (term: string) => void;
@@ -42,7 +45,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
     selectedConversationId: null,
     searchTerm: '',
     isSearchFocused: false,
-    searchResults: { users: [] },
+    searchResults: { conversations: [], users: [] },
     searchHistory: {},
     isChatVisible: false,
     typingUsers: {},
@@ -109,14 +112,28 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
 
         try {
             if (!term.trim()) {
-                set({ searchResults: { users: [] } });
+                set({ searchResults: { conversations: [], users: [] } });
                 return;
             }
 
+            const allConversations = get().conversations;
+            const matchedConversations = allConversations.filter(conv => {
+                if (conv.data.isGroup) {
+                    return conv.data.name?.toLowerCase().includes(term.toLowerCase());
+                }
+                return false;
+            });
+
             const friendResults = await friendService.searchFriends(term, userId);
-            set({ searchResults: { users: friendResults } });
+            
+            set({ 
+                searchResults: { 
+                    conversations: matchedConversations,
+                    users: friendResults 
+                } 
+            });
         } catch (error) {
-            console.error("Lỗi tìm bạn bè:", error);
+            console.error("Lỗi tìm kiếm:", error);
         } finally {
             useLoadingStore.getState().setLoading('contacts.search', false);
         }
@@ -182,11 +199,11 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
     setSearchFocused: (focused: boolean) => {
         set({ isSearchFocused: focused });
         if (!focused) {
-            set({ searchTerm: '', searchResults: { users: [] } });
+            set({ searchTerm: '', searchResults: { conversations: [], users: [] } });
         }
     },
 
-    addToSearchHistory: (item: User, userId: string) => {
+    addToSearchHistory: (item: User | { id: string; data: RtdbConversation; userChat: RtdbUserChat }, userId: string) => {
         set((state) => {
             const userHistory = state.searchHistory[userId] || [];
             const filtered = userHistory.filter(h => h.id !== item.id);

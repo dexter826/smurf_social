@@ -100,41 +100,71 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
   }
 
   /* ── Search results ── */
-  if (results.users.length === 0) {
+  const hasConversations = results.conversations.length > 0;
+  const hasUsers = results.users.length > 0;
+
+  if (!hasConversations && !hasUsers) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px] text-center p-8">
         <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
           <Search size={22} className="text-text-tertiary" />
         </div>
-        <p className="text-sm text-text-secondary">Không tìm thấy bạn bè phù hợp</p>
+        <p className="text-sm text-text-secondary">Không tìm thấy kết quả phù hợp</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col py-2">
-      <div className="flex items-center px-4 py-2 mb-1">
-        <span className="text-xs font-semibold text-text-tertiary flex items-center gap-1.5">
-          <Search size={12} />
-          Kết quả tìm kiếm
-        </span>
-      </div>
-      <div>
-        {results.users
-          .filter(u => u.status !== UserStatus.BANNED)
-          .map((user) => (
-            <div
-              key={user.id}
-              onClick={() => onSelectUser(user)}
-              className="flex items-center gap-3 px-3 py-2.5 mx-1 hover:bg-bg-hover active:bg-bg-active cursor-pointer transition-colors duration-200 rounded-xl"
-            >
-              <UserAvatar userId={user.id} size="md" />
-              <span className="flex-1 min-w-0 text-sm font-medium text-text-primary truncate">
-                {user.fullName}
-              </span>
-            </div>
-          ))}
-      </div>
+      {/* 1. Conversations Section (Groups) */}
+      {hasConversations && (
+        <div className="mb-4">
+          <div className="flex items-center px-4 py-2 mb-1">
+            <span className="text-xs font-semibold text-text-tertiary flex items-center gap-1.5">
+              <Search size={12} />
+              Hội thoại
+            </span>
+          </div>
+          <div>
+            {results.conversations.map((conv) => (
+              <HistoryConversationItem
+                key={conv.id}
+                conversation={conv}
+                currentUserId={currentUserId}
+                onSelect={() => onSelectConversation(conv.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Users Section (Friends) */}
+      {hasUsers && (
+        <div>
+          <div className="flex items-center px-4 py-2 mb-1">
+            <span className="text-xs font-semibold text-text-tertiary flex items-center gap-1.5">
+              <Search size={12} />
+              Bạn bè
+            </span>
+          </div>
+          <div>
+            {results.users
+              .filter(u => u.status !== UserStatus.BANNED)
+              .map((user) => (
+                <div
+                  key={user.id}
+                  onClick={() => onSelectUser(user)}
+                  className="flex items-center gap-3 px-3 py-2.5 mx-1 hover:bg-bg-hover active:bg-bg-active cursor-pointer transition-colors duration-200 rounded-xl"
+                >
+                  <UserAvatar userId={user.id} size="md" />
+                  <span className="flex-1 min-w-0 text-sm font-medium text-text-primary truncate">
+                    {user.fullName}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -144,7 +174,7 @@ interface HistoryConversationItemProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
   currentUserId: string;
   onSelect: () => void;
-  onRemove: () => void;
+  onRemove?: () => void;
 }
 
 const HistoryConversationItem: React.FC<HistoryConversationItemProps> = ({
@@ -170,12 +200,14 @@ const HistoryConversationItem: React.FC<HistoryConversationItemProps> = ({
       <span className="flex-1 min-w-0 text-sm font-medium text-text-primary truncate">
         {displayName}
       </span>
-      <button
-        onClick={(e) => { e.stopPropagation(); onRemove(); }}
-        className="w-7 h-7 flex items-center justify-center rounded-full text-text-tertiary hover:bg-bg-tertiary opacity-0 group-hover:opacity-100 transition-all duration-200"
-      >
-        <X size={13} />
-      </button>
+      {onRemove && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          className="w-7 h-7 flex items-center justify-center rounded-full text-text-tertiary hover:bg-bg-tertiary opacity-0 group-hover:opacity-100 transition-all duration-200"
+        >
+          <X size={13} />
+        </button>
+      )}
     </div>
   );
 };

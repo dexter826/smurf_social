@@ -279,7 +279,7 @@ export const useChat = () => {
     handleTyping,
     handleSearch,
     setSearchFocused,
-    addToSearchHistory: (item: User) => {
+    addToSearchHistory: (item: User | { id: string; data: RtdbConversation; userChat: RtdbUserChat }) => {
       if (currentUser?.id) addToSearchHistory(item, currentUser.id);
     },
     removeFromSearchHistory: (id: string) => {

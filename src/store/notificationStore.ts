@@ -146,7 +146,14 @@ export const useNotificationStore = create<NotificationState>()(
           }
         );
 
-        set({ _unsubscribe: unsubscribe });
+        const wrappedUnsubscribe = () => {
+          unsubscribe();
+          if (get()._unsubscribe === wrappedUnsubscribe) {
+            set({ _unsubscribe: null });
+          }
+        };
+
+        set({ _unsubscribe: wrappedUnsubscribe });
 
         if (window.Notification?.permission === 'default') {
           notificationService.requestPushPermission(userId).catch(err => {
@@ -154,7 +161,7 @@ export const useNotificationStore = create<NotificationState>()(
           });
         }
 
-        return unsubscribe;
+        return wrappedUnsubscribe;
       },
 
       loadMore: (userId) => {
