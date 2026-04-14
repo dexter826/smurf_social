@@ -84,22 +84,40 @@ export const useNotificationStore = create<NotificationState>()(
       },
 
       markAllAsRead: async (userId) => {
-        await notificationService.markAllAsRead(userId);
+        const previousNotifications = [...get().notifications];
+        const previousUnreadCount = get().unreadCount;
+
         set((state) => ({
           notifications: state.notifications.map(n => ({ ...n, isRead: true })),
           unreadCount: 0
         }));
+
+        try {
+          await notificationService.markAllAsRead(userId);
+        } catch (error) {
+          console.error("Lỗi đánh dấu tất cả đã đọc:", error);
+          set({ notifications: previousNotifications, unreadCount: previousUnreadCount });
+        }
       },
 
       deleteNotification: async (id) => {
-        const notification = get().notifications.find(n => n.id === id);
+        const previousNotifications = [...get().notifications];
+        const previousUnreadCount = get().unreadCount;
+        const notification = previousNotifications.find(n => n.id === id);
+        
         if (!notification) return;
 
-        await notificationService.deleteNotification(id);
         set((state) => ({
           notifications: state.notifications.filter(n => n.id !== id),
           unreadCount: notification.isRead ? state.unreadCount : Math.max(0, state.unreadCount - 1)
         }));
+
+        try {
+          await notificationService.deleteNotification(id);
+        } catch (error) {
+          console.error("Lỗi xóa thông báo:", error);
+          set({ notifications: previousNotifications, unreadCount: previousUnreadCount });
+        }
       },
 
       clearAllNotifications: async (userId) => {
@@ -108,7 +126,9 @@ export const useNotificationStore = create<NotificationState>()(
       },
 
       initialize: (userId, limit = PAGINATION.NOTIFICATIONS) => {
-        const { _unsubscribe } = get();
+        const { _unsubscribe, currentLimit } = get();
+        
+        if (_unsubscribe && currentLimit === limit) return _unsubscribe;
         if (_unsubscribe) _unsubscribe();
 
         useLoadingStore.getState().setLoading('notifications', true);
@@ -121,9 +141,11 @@ export const useNotificationStore = create<NotificationState>()(
 
         set({ _unsubscribe: unsubscribe });
 
-        notificationService.requestPushPermission(userId).catch(err => {
-          console.warn("Lỗi push permission:", err);
-        });
+        if (window.Notification?.permission === 'default') {
+          notificationService.requestPushPermission(userId).catch(err => {
+            console.warn("Lỗi push permission:", err);
+          });
+        }
 
         return unsubscribe;
       },

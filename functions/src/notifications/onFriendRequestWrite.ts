@@ -70,23 +70,20 @@ export const onFriendRequestWrite = onDocumentWritten(
                 const { senderId, receiverId } = after;
                 try {
                     const acceptorName = await getSenderName(receiverId);
-                    const body = buildPushBody(NotificationType.SYSTEM, acceptorName, {
-                        contentSnippet: `${acceptorName} đã chấp nhận lời mời kết bạn.`
-                    });
+                    const body = buildPushBody(NotificationType.FRIEND_ACCEPT, acceptorName);
 
                     await createNotification({
                         receiverId: senderId,
                         actorId: receiverId,
-                        type: NotificationType.SYSTEM,
+                        type: NotificationType.FRIEND_ACCEPT,
                         data: { 
                             friendRequestId: reqId,
-                            contentSnippet: `đã chấp nhận lời mời kết bạn.` 
                         },
                     });
 
                     await sendPushNotification({
                         receiverId: senderId,
-                        type: NotificationType.SYSTEM,
+                        type: NotificationType.FRIEND_ACCEPT,
                         body,
                     });
                 } catch (error) {

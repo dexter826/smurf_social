@@ -55,6 +55,7 @@ export enum NotificationType {
     REPORT = "report",
     CHAT = "chat",
     MENTION = "mention",
+    FRIEND_ACCEPT = "friend_accept",
 }
 
 export enum ReportType {

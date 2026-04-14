@@ -40,16 +40,16 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
       case NotificationType.FRIEND_REQUEST:
         navigate('/contacts');
         break;
+      case NotificationType.FRIEND_ACCEPT:
+        navigate(`/profile/${notification.actorId}`);
+        break;
       case NotificationType.REPORT:
         if (currentUser?.role === 'admin') {
           navigate('/admin/reports');
         }
         break;
       case NotificationType.SYSTEM:
-        navigate(notification.data.friendRequestId
-          ? `/profile/${notification.actorId}`
-          : '/notifications'
-        );
+        navigate('/notifications');
         break;
       default:
         break;
@@ -100,14 +100,14 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
               : 'bg-primary/10 text-primary'
             }`}
           >
-            {notification.type === NotificationType.REPORT
-              ? <ShieldAlert size={20} strokeWidth={2.5} />
-              : <Bell size={20} strokeWidth={2.5} />
-            }
+            {notification.type === NotificationType.REPORT ? (
+              <ShieldAlert size={20} strokeWidth={2.5} />
+            ) : (
+              <Bell size={20} strokeWidth={2.5} />
+            )}
           </div>
         )}
-        
-        {/* Unread indicator dot on avatar for better visibility in list */}
+
         {!notification.isRead && (
           <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-bg-primary ring-1 ring-primary/20 shadow-sm" />
         )}
@@ -154,38 +154,27 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
         {!notification.isRead && (
           <button
             onClick={handleMarkAsRead}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-primary
-              bg-primary/5 hover:bg-primary/10 active:bg-primary/20 
-              transition-all duration-200 opacity-0 group-hover:opacity-100"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-text-tertiary
+              hover:text-primary hover:bg-primary/10 active:bg-primary/20 
+              transition-all duration-200 
+              md:opacity-0 md:group-hover:opacity-100"
             title="Đánh dấu đã đọc"
           >
-            <Check size={15} strokeWidth={3} />
+            <Check size={16} strokeWidth={2.5} />
           </button>
         )}
         
-        {/* Delete button (always available on hover) */}
+        {/* Delete button */}
         <button
           onClick={handleDelete}
           className="w-8 h-8 flex items-center justify-center rounded-full text-text-tertiary
             hover:text-error hover:bg-error/10 active:bg-error/20
-            transition-all duration-200 opacity-0 group-hover:opacity-100"
+            transition-all duration-200
+            md:opacity-0 md:group-hover:opacity-100"
           title="Xóa thông báo"
         >
-          <Trash2 size={15} />
+          <Trash2 size={16} strokeWidth={2} />
         </button>
-        
-        {/* Mobile/Default Delete button when MarkAsRead is not shown on touch */}
-        {!notification.isRead && (
-          <button
-            onClick={handleDelete}
-            className="w-8 h-8 items-center justify-center rounded-full text-text-tertiary
-              hover:text-error hover:bg-error/10 opacity-0 pointer-events-none absolute
-              [@media(hover:none)]:relative [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto flex md:hidden"
-            title="Xóa thông báo"
-          >
-            <Trash2 size={14} />
-          </button>
-        )}
       </div>
     </div>
   );

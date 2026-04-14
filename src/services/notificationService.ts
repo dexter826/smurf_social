@@ -53,20 +53,29 @@ export const notificationService = {
   // Đánh dấu tất cả là đã đọc
   markAllAsRead: async (userId: string): Promise<void> => {
     try {
-      const q = query(
-        collection(db, 'notifications'),
-        where('receiverId', '==', userId),
-        where('isRead', '==', false)
-      );
-      const snapshot = await getDocs(q);
-      const batch = writeBatch(db);
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, {
-          isRead: true,
-          updatedAt: serverTimestamp()
+      const CHUNK_SIZE = 400;
+      let hasMore = true;
+
+      while (hasMore) {
+        const q = query(
+          collection(db, 'notifications'),
+          where('receiverId', '==', userId),
+          where('isRead', '==', false),
+          limit(CHUNK_SIZE)
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) break;
+
+        const batch = writeBatch(db);
+        snapshot.docs.forEach(doc => {
+          batch.update(doc.ref, {
+            isRead: true,
+            updatedAt: serverTimestamp()
+          });
         });
-      });
-      await batch.commit();
+        await batch.commit();
+        hasMore = snapshot.size === CHUNK_SIZE;
+      }
     } catch (err) {
       console.error('Lỗi markAllAsRead:', err);
     }
@@ -180,6 +189,8 @@ export const notificationService = {
           : `đã bình luận.`;
       case NotificationType.FRIEND_REQUEST:
         return `đã gửi lời mời kết bạn.`;
+      case NotificationType.FRIEND_ACCEPT:
+        return `đã chấp nhận lời mời kết bạn.`;
       case NotificationType.REPORT:
       case NotificationType.SYSTEM:
         return notification.data.contentSnippet || "Thông báo hệ thống mới.";

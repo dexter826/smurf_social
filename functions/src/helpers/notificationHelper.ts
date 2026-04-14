@@ -47,6 +47,8 @@ export function buildPushBody(
         : `${senderName} đã bình luận.`;
     case NotificationType.FRIEND_REQUEST:
       return `${senderName} đã gửi lời mời kết bạn.`;
+    case NotificationType.FRIEND_ACCEPT:
+      return `${senderName} đã chấp nhận lời mời kết bạn.`;
     case NotificationType.CHAT:
       return extra?.contentSnippet || 'Bạn có tin nhắn mới.';
     case NotificationType.MENTION:
