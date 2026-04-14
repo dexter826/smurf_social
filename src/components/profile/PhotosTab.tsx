@@ -24,7 +24,8 @@ type MediaItem = {
 const PhotosTabInner: React.FC<PhotosTabProps> = ({
   userId, isFullyBlockedByPartner = false,
 }) => {
-  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [realtimeMedia, setRealtimeMedia] = useState<MediaItem[]>([]);
+  const [historyMedia, setHistoryMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -56,7 +57,12 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
       lastDocRef.current = lastDoc;
       setHasMore(posts.length === MEDIA_PAGE_SIZE && !!lastDoc);
       const newMedia = extractMedia(posts);
-      setMedia(prev => isLoadMore ? [...prev, ...newMedia] : newMedia);
+      if (isLoadMore) {
+        setHistoryMedia(prev => [...prev, ...newMedia]);
+      } else {
+        setRealtimeMedia(newMedia);
+        setHistoryMedia([]);
+      }
     } catch {
       // silent
     } finally {
@@ -67,12 +73,47 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
 
   useEffect(() => {
     if (isFullyBlockedByPartner) {
-      setLoading(false); setMedia([]); setHasMore(false); return;
+      setLoading(false); setRealtimeMedia([]); setHistoryMedia([]); setHasMore(false); return;
     }
+
     lastDocRef.current = null;
-    setMedia([]); setHasMore(true);
+    setRealtimeMedia([]);
+    setHistoryMedia([]);
+    setHasMore(true);
+
     loadMedia(false);
-  }, [userId, isFullyBlockedByPartner, loadMedia]);
+
+    const unsubscribe = postService.subscribeToUserPosts(
+      userId,
+      currentUser?.id || '',
+      friendIds,
+      (action) => {
+        if (action === 'add' || action === 'update' || action === 'remove') {
+          postService.getUserPosts(userId, currentUser?.id || '', friendIds, MEDIA_PAGE_SIZE)
+            .then(({ posts: latestPosts, lastDoc }) => {
+              setRealtimeMedia(extractMedia(latestPosts));
+              if (historyMedia.length === 0) {
+                lastDocRef.current = lastDoc;
+                setHasMore(latestPosts.length === MEDIA_PAGE_SIZE && !!lastDoc);
+              }
+            });
+        }
+      },
+      MEDIA_PAGE_SIZE
+    );
+
+    return () => unsubscribe();
+  }, [userId, isFullyBlockedByPartner, currentUser?.id, friendIds, extractMedia, loadMedia]);
+
+  const media = useMemo(() => {
+    const combined = [...realtimeMedia, ...historyMedia];
+    const seen = new Set();
+    return combined.filter(item => {
+      if (seen.has(item.url)) return false;
+      seen.add(item.url);
+      return true;
+    });
+  }, [realtimeMedia, historyMedia]);
 
   useEffect(() => {
     if (!observerRef.current || !hasMore || loading) return;

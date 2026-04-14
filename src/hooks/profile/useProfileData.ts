@@ -61,13 +61,8 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
     lastIdRef.current = profileUserId;
     try {
       const isBlockedWith = profileUserId ? isFullyBlocked(profileUserId) : false;
-      const [userData, userPosts] = await Promise.all([
-        userService.getUserById(profileUserId),
-        isBlockedWith ? Promise.resolve({ posts: [], lastDoc: null }) : postService.getUserPosts(profileUserId, currentUser?.id || '', rawFriendIds, 20)
-      ]);
-
+      const userData = await userService.getUserById(profileUserId);
       setProfile(userData || null);
-      setDbPosts(userPosts.posts || []);
 
     } catch (error) {
       console.error("Lỗi load profile", error);
@@ -93,8 +88,39 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
       useUserCache.getState().setUser(updatedUser);
     });
 
-    return () => unsubscribeProfile();
-  }, [profileUserId]);
+    const unsubscribePosts = postService.subscribeToUserPosts(
+      profileUserId,
+      currentUser?.id || '',
+      friendIds,
+      (action, posts) => {
+        setDbPosts(prev => {
+          if (action === 'add') {
+            const newPosts = posts.filter(p => !prev.some(prevP => prevP.id === p.id));
+            return [...newPosts, ...prev].sort((a, b) =>
+              (b.createdAt as any)?.toMillis() - (a.createdAt as any)?.toMillis()
+            ).slice(0, 20);
+          }
+          if (action === 'update') {
+            return prev.map(p => {
+              const updated = posts.find(u => u.id === p.id);
+              return updated ? { ...p, ...updated } : p;
+            });
+          }
+          if (action === 'remove') {
+            const removedIds = posts.map(p => p.id);
+            return prev.filter(p => !removedIds.includes(p.id));
+          }
+          return prev;
+        });
+      },
+      20
+    );
+
+    return () => {
+      unsubscribeProfile();
+      unsubscribePosts();
+    };
+  }, [profileUserId, currentUser?.id, friendIds]);
 
   return {
     profile,
