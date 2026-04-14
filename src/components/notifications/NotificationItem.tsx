@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { Trash2, Bell, ShieldAlert } from 'lucide-react';
+import { Trash2, Bell, ShieldAlert, Check } from 'lucide-react';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { Notification, NotificationType } from '../../../shared/types';
 import { UserAvatar, Skeleton } from '../ui';
@@ -61,6 +61,11 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
     await deleteNotification(notification.id);
   }, [notification.id, deleteNotification]);
 
+  const handleMarkAsRead = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await markAsRead(notification.id);
+  }, [notification.id, markAsRead]);
+
   const notifText = (() => {
     const raw = notificationService.getNotificationText(notification);
     if (!isSystem && sender?.fullName && raw.startsWith(sender.fullName)) {
@@ -73,83 +78,114 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
     <div
       role="button"
       tabIndex={0}
-      className={`group relative flex items-start gap-3 px-4 py-3.5 cursor-pointer
-        transition-colors duration-200 outline-none
+      className={`group relative flex items-start gap-3.5 px-4 py-3.5 cursor-pointer
+        transition-all duration-200 outline-none rounded-xl border
         hover:bg-bg-hover active:bg-bg-active
         focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset
-        border-b border-border-subtle last:border-0
-        ${!notification.isRead ? 'bg-primary/[0.025]' : ''}`}
+        ${!notification.isRead 
+          ? 'bg-primary/[0.04] border-primary/10' 
+          : 'bg-bg-primary border-border-subtle'
+        }`}
       onClick={handleClick}
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleClick()}
     >
-      {/* Unread left bar */}
-      {!notification.isRead && (
-        <div className="absolute left-0 top-3 bottom-3 w-[3px] bg-primary rounded-r-full" />
-      )}
-
       {/* Avatar / icon */}
-      <div className="flex-shrink-0 mt-0.5">
+      <div className="flex-shrink-0 relative">
         {!isSystem ? (
           <UserAvatar userId={notification.actorId} size="md" showStatus={false} />
         ) : (
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm
             ${notification.type === NotificationType.REPORT
               ? 'bg-error/10 text-error'
               : 'bg-primary/10 text-primary'
             }`}
           >
             {notification.type === NotificationType.REPORT
-              ? <ShieldAlert size={20} strokeWidth={2} />
-              : <Bell size={20} strokeWidth={2} />
+              ? <ShieldAlert size={20} strokeWidth={2.5} />
+              : <Bell size={20} strokeWidth={2.5} />
             }
           </div>
+        )}
+        
+        {/* Unread indicator dot on avatar for better visibility in list */}
+        {!notification.isRead && (
+          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-bg-primary ring-1 ring-primary/20 shadow-sm" />
         )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pt-0.5">
         <p className={`text-sm leading-relaxed break-words line-clamp-2
           ${!notification.isRead ? 'text-text-primary' : 'text-text-secondary'}`}
         >
           {!isSystem && (
             <span 
-              className="font-semibold text-text-primary mr-1 hover:underline cursor-pointer transition-colors duration-200"
+              className={`${!notification.isRead ? 'font-bold' : 'font-semibold'} text-text-primary mr-1.5 hover:text-primary transition-colors duration-200 cursor-pointer`}
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/profile/${notification.actorId}`);
               }}
             >
               {sender?.fullName ?? (
-                <Skeleton width={56} height={12} className="inline-block align-middle" />
+                <Skeleton width={60} height={14} className="inline-block align-middle" />
               )}
             </span>
           )}
-          <span className={!notification.isRead ? 'font-medium' : ''}>
+          <span className={!notification.isRead ? 'font-medium text-text-primary' : ''}>
             {notifText}
           </span>
         </p>
-        <p
-          className="mt-0.5 text-[11px] text-text-tertiary"
-          title={formatDateTime(notification.createdAt)}
-        >
-          {formatRelativeTime(notification.createdAt)}
-        </p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <p
+            className="text-[11px] text-text-tertiary"
+            title={formatDateTime(notification.createdAt)}
+          >
+            {formatRelativeTime(notification.createdAt)}
+          </p>
+          {notification.isRead && (
+            <span className="w-1 h-1 bg-text-tertiary/40 rounded-full" />
+          )}
+        </div>
       </div>
 
-      {/* Right: unread dot + delete */}
-      <div className="flex flex-col items-center gap-2 flex-shrink-0 ml-1">
+      {/* Right side: Actions */}
+      <div className="flex flex-col items-center justify-center flex-shrink-0 ml-1 self-stretch min-w-[32px] gap-1">
+        {/* Mark as read button (only if unread) */}
         {!notification.isRead && (
-          <div className="w-2 h-2 bg-primary rounded-full mt-1" />
+          <button
+            onClick={handleMarkAsRead}
+            className="w-8 h-8 flex items-center justify-center rounded-full text-primary
+              bg-primary/5 hover:bg-primary/10 active:bg-primary/20 
+              transition-all duration-200 opacity-0 group-hover:opacity-100"
+            title="Đánh dấu đã đọc"
+          >
+            <Check size={15} strokeWidth={3} />
+          </button>
         )}
+        
+        {/* Delete button (always available on hover) */}
         <button
           onClick={handleDelete}
-          className="w-7 h-7 flex items-center justify-center rounded-full text-text-tertiary
-            hover:text-error hover:bg-error/10 transition-all duration-200
-            opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-text-tertiary
+            hover:text-error hover:bg-error/10 active:bg-error/20
+            transition-all duration-200 opacity-0 group-hover:opacity-100"
           title="Xóa thông báo"
         >
-          <Trash2 size={14} />
+          <Trash2 size={15} />
         </button>
+        
+        {/* Mobile/Default Delete button when MarkAsRead is not shown on touch */}
+        {!notification.isRead && (
+          <button
+            onClick={handleDelete}
+            className="w-8 h-8 items-center justify-center rounded-full text-text-tertiary
+              hover:text-error hover:bg-error/10 opacity-0 pointer-events-none absolute
+              [@media(hover:none)]:relative [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto flex md:hidden"
+            title="Xóa thông báo"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
     </div>
   );

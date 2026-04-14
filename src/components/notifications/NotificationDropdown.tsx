@@ -71,7 +71,7 @@ export const NotificationDropdown: React.FC = () => {
       {isOpen && createPortal(
         <div
           ref={menuRef}
-          className="fixed bg-bg-primary rounded-2xl shadow-xl border border-border-light overflow-hidden animate-fade-in"
+          className="fixed bg-bg-primary rounded-2xl shadow-2xl border border-divider overflow-hidden animate-in fade-in zoom-in-95 duration-200"
           style={{
             zIndex: 'var(--z-popover)',
             top: pos ? `${pos.top}px` : undefined,
@@ -81,16 +81,25 @@ export const NotificationDropdown: React.FC = () => {
             visibility: pos ? 'visible' : 'hidden',
           }}
         >
-          {/* Dropdown header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
-            <h3 className="text-sm font-semibold text-text-primary">Thông báo</h3>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-divider bg-bg-primary">
+            <div>
+              <h3 className="text-[15px] font-bold text-text-primary tracking-tight">
+                Thông báo
+              </h3>
+              {unreadCount > 0 && (
+                <p className="text-[11px] font-semibold text-primary mt-0.5">
+                  Bạn có {unreadCount} thông báo mới
+                </p>
+              )}
+            </div>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={() => user && markAllAsRead(user.id)}
-                className="text-xs font-semibold text-primary hover:underline transition-colors duration-200"
+                className="text-[12px] font-bold text-primary hover:bg-primary/5 px-2.5 py-1.5 rounded-lg transition-all duration-200"
               >
-                Đánh dấu tất cả đã đọc
+                Đọc tất cả
               </button>
             )}
           </div>
@@ -99,10 +108,10 @@ export const NotificationDropdown: React.FC = () => {
           <NotificationList onItemClick={close} maxHeight="420px" />
 
           {/* Footer */}
-          <div className="px-4 py-2.5 border-t border-border-light text-center">
+          <div className="p-2 border-t border-divider bg-bg-secondary/30">
             <button
               type="button"
-              className="text-xs font-semibold text-text-secondary hover:text-primary transition-colors duration-200"
+              className="flex items-center justify-center w-full py-2.5 text-[13px] font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200"
               onClick={handleViewAll}
             >
               Xem tất cả thông báo

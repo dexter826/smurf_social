@@ -22,7 +22,7 @@ const STEPS = [
   {
     id: 1,
     title: 'Thông tin cơ bản',
-    subtitle: 'Giúp chúng tôi biết thêm về bạn',
+    subtitle: 'Vui lòng cập nhật chi tiết hồ sơ để bắt đầu trải nghiệm.',
     icon: UserCircle,
   },
   {
@@ -166,8 +166,8 @@ const OnboardingPage: React.FC = () => {
   return (
     <div className="flex min-h-[100dvh] bg-bg-primary bg-app-pattern transition-theme">
       <AuthBrandingPanel
-        headline={<>Chào mừng,<br />bạn mới!</>}
-        subtext="Hãy thiết lập hồ sơ của bạn để kết nối với những người bạn thú vị trên Smurfy."
+        headline="Hoàn thiện thông tin cá nhân"
+        subtext="Hoàn tất thiết lập hồ sơ để tiếp cận đầy đủ các tính năng trên Smurfy."
       />
 
       {/* Right panel */}

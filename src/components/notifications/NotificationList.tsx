@@ -27,18 +27,21 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 
   if (visible.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-text-tertiary">
-        <div className="w-12 h-12 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-          <BellOff size={20} className="opacity-50" />
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-20 h-20 bg-bg-secondary rounded-3xl flex items-center justify-center mb-5 border border-divider shadow-sm rotate-3">
+          <BellOff size={32} className="text-text-tertiary opacity-40 -rotate-3" />
         </div>
-        <p className="text-sm font-medium">Chưa có thông báo nào</p>
+        <h4 className="text-[16px] font-bold text-text-primary tracking-tight">Chưa có thông báo</h4>
+        <p className="text-[13px] mt-1.5 text-text-secondary leading-relaxed max-w-[200px]">
+          Các cập nhật và hoạt động mới nhất của bạn sẽ được hiển thị tại đây.
+        </p>
       </div>
     );
   }
 
   return (
     <div
-      className="overflow-y-auto scroll-hide"
+      className="overflow-y-auto scroll-hide p-2 flex flex-col gap-1.5"
       style={{ maxHeight }}
     >
       {visible.map(n => (
