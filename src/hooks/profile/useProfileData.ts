@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { User, Post } from '../../../shared/types';
+import { User, Post, MediaObject } from '../../../shared/types';
 import { useFriendIds } from '../utils';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
@@ -38,11 +38,11 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
 
     const combinedPosts = [...storeMediaPosts, ...dbPosts];
 
-    const mediaMap = new Map<string, { url: string; isSensitive: boolean }>();
+    const mediaMap = new Map<string, MediaObject>();
     combinedPosts.forEach(post => {
       post.media?.forEach(m => {
         if (m.url && !mediaMap.has(m.url)) {
-          mediaMap.set(m.url, { url: m.url, isSensitive: !!m.isSensitive });
+          mediaMap.set(m.url, m);
         }
       });
     });

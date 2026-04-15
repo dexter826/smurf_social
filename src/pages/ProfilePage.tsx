@@ -1,21 +1,23 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Gender, UserStatus, MaritalStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
-import { Button, ConfirmDialog, BlockOptionsModal, SensitiveMediaGuard } from '../components/ui';
+import { Button, ConfirmDialog, BlockOptionsModal } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import { PostModal } from '../components/feed';
 import { usePostStore, useSharePostStore } from '../store';
-import { ProfileHeader } from '../components/profile/ProfileHeader';
-import { ProfileTabs } from '../components/profile/ProfileTabs';
-import { EditProfileModal } from '../components/profile/EditProfileModal';
-import { PostsTab } from '../components/profile/PostsTab';
-import { PhotosTab } from '../components/profile/PhotosTab';
-import { ProfileSkeleton } from '../components/profile/ProfileSkeleton';
-import { User as UserIcon, Lock, Cake, MapPin, GraduationCap, Heart, CalendarDays, Sparkles } from 'lucide-react';
+import { 
+  ProfileHeader, 
+  ProfileTabs, 
+  EditProfileModal, 
+  PostsTab, 
+  PhotosTab, 
+  ProfileAboutCard, 
+  ProfileMediaPreview,
+  ProfileSkeleton
+} from '../components/profile';
+import { Lock } from 'lucide-react';
 import { useProfile, usePostNavigation } from '../hooks';
-import { toDate } from '../utils/dateUtils';
-import { ReactionType, Visibility, MediaObject, PostType, PostStatus, Post } from '../../shared/types';
+import { UserStatus, ReactionType, Visibility, MediaObject, PostType, PostStatus, Post } from '../../shared/types';
 import { postService } from '../services/postService';
 import { db } from '../firebase/config';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
@@ -180,171 +182,12 @@ const ProfilePage: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-4 md:gap-6">
               {/* ── Left sidebar ── */}
               <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 space-y-4">
-                {/* About card */}
-                <div className="bg-bg-primary rounded-2xl border border-border-light p-4">
-                  <h3 className="font-semibold text-base text-text-primary mb-4">Giới thiệu</h3>
-
-                  {profile.bio && (
-                    <p className="text-sm text-text-secondary italic text-center mb-4 leading-relaxed">
-                      "{profile.bio}"
-                    </p>
-                  )}
-
-                  {(profile.gender || profile.dob || profile.location || profile.school || profile.maritalStatus || profile.generation || profile.createdAt || (profile.interests && profile.interests.length > 0)) ? (
-                    <div className="space-y-3">
-                      {profile.gender && (
-                        <div className="flex items-center gap-3 text-sm text-text-secondary">
-                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                            <UserIcon size={15} />
-                          </div>
-                          <span>
-                            Giới tính{' '}
-                            <strong className="text-text-primary font-medium">
-                              {profile.gender === Gender.MALE ? 'Nam' : 'Nữ'}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-                      {profile.dob && (
-                        <div className="flex items-center gap-3 text-sm text-text-secondary">
-                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                            <Cake size={15} />
-                          </div>
-                          <span>
-                            Sinh ngày{' '}
-                            <strong className="text-text-primary font-medium">
-                              {toDate(profile.dob)?.toLocaleDateString('vi-VN')}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-                      {profile.location && (
-                        <div className="flex items-center gap-3 text-sm text-text-secondary">
-                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                            <MapPin size={15} />
-                          </div>
-                          <span>
-                            Đến từ{' '}
-                            <strong className="text-text-primary font-medium">
-                              {profile.location}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-                      {profile.school && (
-                        <div className="flex flex-col gap-1 items-start text-sm text-text-secondary">
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                              <GraduationCap size={15} />
-                            </div>
-                            <span className="mt-1">
-                              Từng học tại <strong className="text-text-primary font-medium">{profile.school}</strong>
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {profile.maritalStatus && profile.maritalStatus !== MaritalStatus.NONE && (
-                        <div className="flex items-center gap-3 text-sm text-text-secondary">
-                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                            <Heart size={15} />
-                          </div>
-                          <span>
-                            Trạng thái:{' '}
-                            <strong className="text-text-primary font-medium">
-                              {profile.maritalStatus === MaritalStatus.SINGLE ? 'Độc thân vui vẻ' :
-                               profile.maritalStatus === MaritalStatus.MARRIED ? 'Đã kết hôn' :
-                               profile.maritalStatus === MaritalStatus.DIVORCED ? 'Đã ly hôn' :
-                               profile.maritalStatus === MaritalStatus.WIDOWED ? 'Chăn đơn gối chiếc' :
-                               'Mối quan hệ phức tạp'}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-                      {profile.generation && (
-                        <div className="flex items-center gap-3 text-sm text-text-secondary">
-                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                            <Sparkles size={15} />
-                          </div>
-                          <span>
-                            Thành viên hệ{' '}
-                            <strong className="text-text-primary font-medium">
-                              {profile.generation}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-                      {profile.createdAt && (
-                        <div className="flex items-center gap-3 text-sm text-text-secondary">
-                          <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                            <CalendarDays size={15} />
-                          </div>
-                          <span>
-                            Tham gia từ{' '}
-                            <strong className="text-text-primary font-medium">
-                              Tháng {toDate(profile.createdAt)?.toLocaleDateString('vi-VN', { month: 'numeric', year: 'numeric' })}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-                      {profile.interests && profile.interests.length > 0 && (
-                        <div className="pt-3 mt-3 border-t border-border-light/60">
-                          <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2.5 ml-1">Sở thích</h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            {profile.interests.map(tag => (
-                              <span key={tag} className="px-2.5 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-text-tertiary text-center py-2">
-                      Chưa có thông tin giới thiệu
-                    </p>
-                  )}
-                </div>
-
-                {/* Media preview card (desktop only) */}
-                <div className="bg-bg-primary rounded-2xl border border-border-light p-4 hidden md:block">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-base text-text-primary">Ảnh/Video</h3>
-                    <button
-                      onClick={() => setActiveTab('media')}
-                      className="text-xs text-primary font-semibold hover:underline transition-colors"
-                    >
-                      Xem tất cả
-                    </button>
-                  </div>
-
-                  {latestMedia.length > 0 && !isFullyBlockedByPartner ? (
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {latestMedia.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="aspect-square rounded-xl overflow-hidden bg-bg-secondary cursor-pointer group"
-                          onClick={() => setActiveTab('media')}
-                        >
-                          <SensitiveMediaGuard isSensitive={item.isSensitive} size="xs" className="w-full h-full">
-                            {item.url.includes('.mp4') || item.url.includes('video') ? (
-                              <video src={item.url} className="w-full h-full object-cover" />
-                            ) : (
-                              <img
-                                src={item.url} alt=""
-                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              />
-                            )}
-                          </SensitiveMediaGuard>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-text-tertiary text-center py-2">
-                      Chưa có ảnh hoặc video nào
-                    </p>
-                  )}
-                </div>
+                <ProfileAboutCard profile={profile} />
+                <ProfileMediaPreview 
+                  media={latestMedia} 
+                  isBlocked={isFullyBlockedByPartner} 
+                  onSeeAll={() => setActiveTab('media')} 
+                />
               </div>
 
               {/* ── Posts column ── */}
