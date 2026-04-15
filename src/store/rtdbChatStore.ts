@@ -58,7 +58,7 @@ export const useRtdbChatStore = create<RtdbChatState>()(
                     hasMoreMessages: {},
                     searchTerm: '',
                     isSearchFocused: false,
-                    searchResults: { users: [] },
+                    searchResults: { users: [], conversations: [] },
                     searchHistory: {},
                     isChatVisible: false,
                     isLoadingMore: {},
