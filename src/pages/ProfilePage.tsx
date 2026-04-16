@@ -48,10 +48,9 @@ const ProfilePage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  const handleEditPost = async (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
+  const handleEditPost = (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
     if (!showEditModal) return;
-    await updatePost(showEditModal, content, media, visibility, pendingFiles, onProgress);
-    setShowEditModal(null);
+    updatePost(showEditModal, content, media, visibility, pendingFiles, onProgress);
   };
 
   const handleDeletePost = async () => {

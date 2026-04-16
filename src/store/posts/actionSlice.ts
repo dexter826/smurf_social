@@ -67,11 +67,9 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       console.error("[postStore] Lỗi đăng bài:", error);
       const msg = error?.message || 'Lỗi không xác định';
       set(state => ({
-        posts: state.posts.filter(p => p.id !== postId),
         uploadingStates: { ...state.uploadingStates, [postId]: { ...state.uploadingStates[postId], error: msg } }
       }));
       toast.error(TOAST_MESSAGES.POST.CREATE_FAILED(msg));
-      throw error;
     } finally {
       previewMedia.forEach((m: MediaObject) => URL.revokeObjectURL(m.url));
     }

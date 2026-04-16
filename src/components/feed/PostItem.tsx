@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { MoreHorizontal, Edit, Trash2, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
-import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, ReactionDetailsModal } from '../ui';
+import { UserAvatar, Skeleton, Dropdown, DropdownItem, IconButton, ReactionDetailsModal, UploadProgress } from '../ui';
 import { Post, PostStatus, Visibility, PostType, User, ReportType, ReactionType } from '../../../shared/types';
 import { useReportStore } from '../../store/reportStore';
 import { usePostStore } from '../../store';
@@ -162,20 +162,30 @@ const PostItemInner: React.FC<PostItemProps> = ({
         </div>
       )}
 
-      {/* ── Media ── */}
-      {!isSystemPost ? (
-        <PostMediaGrid
-          media={post.media || []}
-          onClick={handleViewDetail}
-          uploadProgress={uploadState?.progress}
-        />
-      ) : (
-        <SystemPostMedia
-          type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
-          media={post.media || []}
-          onClick={handleViewDetail}
-        />
-      )}
+      {/* ── Media & Upload Progress ── */}
+      <div className="relative">
+        {isUploading && (
+          <div className="px-4 py-2 border-b border-border-light bg-bg-secondary/30">
+            <UploadProgress 
+              progress={uploadState.progress} 
+              className="!mb-0"
+            />
+          </div>
+        )}
+        
+        {!isSystemPost ? (
+          <PostMediaGrid
+            media={post.media || []}
+            onClick={handleViewDetail}
+          />
+        ) : (
+          <SystemPostMedia
+            type={post.type as PostType.AVATAR_UPDATE | PostType.COVER_UPDATE}
+            media={post.media || []}
+            onClick={handleViewDetail}
+          />
+        )}
+      </div>
 
       {/* ── Reactions & comments ── */}
       {canShowInteractions && (

@@ -24,7 +24,7 @@ const FeedPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  const handleEditPost = useCallback(async (
+  const handleEditPost = useCallback((
     content: string,
     media: MediaObject[],
     visibility: Visibility,
@@ -32,8 +32,7 @@ const FeedPage: React.FC = () => {
     onProgress?: (progress: number) => void
   ) => {
     if (!showEditModal) return;
-    await handleUpdate(showEditModal, content, media, visibility, pendingFiles, onProgress);
-    setShowEditModal(null);
+    handleUpdate(showEditModal, content, media, visibility, pendingFiles, onProgress);
   }, [showEditModal, handleUpdate]);
 
   const handleDeletePost = useCallback(async () => {

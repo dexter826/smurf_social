@@ -56,14 +56,14 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
     e.target.value = '';
   };
 
-  const handleCreatePost = async (
+  const handleCreatePost = (
     content: string,
     media: MediaObject[],
     visibility: Visibility,
     pendingFiles?: File[],
     onProgress?: (progress: number) => void
   ) => {
-    await createPost(currentUser.id, content, media, visibility, pendingFiles, onProgress);
+    createPost(currentUser.id, content, media, visibility, pendingFiles, onProgress);
     setPendingFiles([]);
   };
 

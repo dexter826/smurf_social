@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { IconButton, LazyImage, CircularProgressOverlay, SensitiveMediaGuard } from '../../ui';
+import { IconButton, LazyImage, SensitiveMediaGuard } from '../../ui';
 import { MediaObject } from '../../../../shared/types';
 
 interface MediaItem {
@@ -14,11 +14,10 @@ interface PostMediaGridProps {
   media: MediaObject[];
   onClick?: () => void;
   onItemClick?: (index: number) => void;
-  uploadProgress?: number;
 }
 
 const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
-  media, onClick, onItemClick, uploadProgress
+  media, onClick, onItemClick
 }) => {
   const allMedia = useMemo<MediaItem[]>(() =>
     media.map(m => ({
@@ -70,14 +69,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
             />
           )}
 
-          {isBlob && (
-            <CircularProgressOverlay
-              isVisible={true}
-              progress={uploadProgress ?? 0}
-              size={32}
-              showPercentage={(uploadProgress ?? 0) > 0}
-            />
-          )}
+
 
           {!isBlob && item.type === 'video' && (
             <div className="absolute top-2 right-2 p-1 bg-black/20 backdrop-blur-md rounded-full text-white pointer-events-none group-hover:opacity-0 transition-opacity">
@@ -133,14 +125,7 @@ const PostMediaGridInner: React.FC<PostMediaGridProps> = ({
               />
             )}
 
-            {isBlob && (
-              <CircularProgressOverlay
-                isVisible={true}
-                progress={uploadProgress ?? 0}
-                size={48}
-                showPercentage={true}
-              />
-            )}
+
           </div>
         </SensitiveMediaGuard>
       </div>

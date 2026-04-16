@@ -27,7 +27,7 @@ interface PostModalProps {
     visibility: Visibility,
     pendingFiles?: File[],
     onProgress?: (progress: number) => void
-  ) => Promise<void>;
+  ) => void | Promise<void>;
   onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<MediaObject[]>;
 }
 
@@ -61,7 +61,7 @@ export const PostModal: React.FC<PostModalProps> = ({
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<{ url: string; type: 'image' | 'video' }[]>([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
+
 
   const linkPreview = useLinkPreview(isEdit ? '' : (formData.content || ''));
 
@@ -186,21 +186,13 @@ export const PostModal: React.FC<PostModalProps> = ({
     setValue('hasPendingFiles', newFiles.length > 0, { shouldDirty: true, shouldValidate: true });
   };
 
-  const onFormSubmit = async (data: PostFormValues) => {
-    try {
-      setUploadProgress(0);
-      await onSubmit(
-        data.content || '', data.media, data.visibility,
-        pendingFiles, (p) => setUploadProgress(Math.round(p))
-      );
-      previews.forEach(p => URL.revokeObjectURL(p.url));
-      setPendingFiles([]);
-      setPreviews([]);
-      setUploadProgress(0);
-      onClose();
-    } catch {
-      setUploadProgress(0);
-    }
+  const onFormSubmit = (data: PostFormValues) => {
+    // Kích hoạt gửi bài và đóng modal ngay lập tức
+    onSubmit(
+      data.content || '', data.media, data.visibility,
+      pendingFiles
+    );
+    onClose();
   };
 
   const handleCloseAttempt = () => {
@@ -285,30 +277,18 @@ export const PostModal: React.FC<PostModalProps> = ({
               </div>
             )}
 
-            {/* Submit button */}
             <Button
               variant="primary"
               size="lg"
               fullWidth
               onClick={handleSubmit(onFormSubmit)}
               disabled={isSubmitting || !isValid || (isEdit && !isDirty && pendingFiles.length === 0)}
-              isLoading={isSubmitting && uploadProgress === 0}
+              isLoading={isSubmitting}
             >
-              {isSubmitting && uploadProgress > 0
-                ? `Đang tải lên ${uploadProgress}%`
-                : isEdit ? 'Lưu thay đổi' : 'Đăng bài'
-              }
+              {isEdit ? 'Lưu thay đổi' : 'Đăng bài'}
             </Button>
 
-            {/* Upload progress bar */}
-            {isSubmitting && uploadProgress > 0 && (
-              <div className="w-full h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
-                <div
-                  className="h-full btn-gradient transition-all duration-300 rounded-full"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            )}
+
           </div>
         }
       >
@@ -404,14 +384,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                         </>
                       )}
 
-                      {isSubmitting && item.isPending && (
-                        <CircularProgressOverlay
-                          isVisible
-                          progress={uploadProgress}
-                          size={40}
-                          showPercentage={uploadProgress > 0}
-                        />
-                      )}
+
 
                       {!isSubmitting && !isSystemPost && (
                         <button
