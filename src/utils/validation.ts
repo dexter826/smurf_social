@@ -20,6 +20,7 @@ export const registerSchema = z.object({
   email: z.string()
     .min(1, 'Vui lòng nhập email')
     .email('Email không hợp lệ'),
+  dob: z.number({ message: 'Vui lòng chọn ngày sinh' }),
   password: z.string()
     .min(1, 'Vui lòng nhập mật khẩu')
     .min(VALIDATION.PASSWORD_MIN_LENGTH, `Mật khẩu phải có ít nhất ${VALIDATION.PASSWORD_MIN_LENGTH} ký tự`),
@@ -37,19 +38,13 @@ export const forgotPasswordSchema = z.object({
     .email('Email không hợp lệ'),
 });
 
-const dobValidation = z.number()
-  .optional()
+const dobValidation = z.number({ message: 'Vui lòng chọn ngày sinh' })
+  .refine((val) => val <= Date.now(), 'Ngày sinh không được là ngày trong tương lai')
   .refine((val) => {
-    if (val === undefined) return true;
-    return val <= Date.now();
-  }, 'Ngày sinh không được là ngày trong tương lai')
-  .refine((val) => {
-    if (val === undefined) return true;
     const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
     return age >= 13;
   }, 'Bạn phải từ 13 tuổi trở lên')
   .refine((val) => {
-    if (val === undefined) return true;
     const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
     return age <= 120;
   }, 'Ngày sinh không hợp lệ');
@@ -71,14 +66,12 @@ export const profileSchema = z.object({
   generation: z.nativeEnum(Generation).optional(),
 });
 
-// Schema cho Onboarding (tất cả optional, chỉ các field ảnh hưởng gợi ý bạn bè)
+// Schema cho Onboarding
 export const onboardingSchema = z.object({
-  gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.NONE]).optional(),
-  dob: dobValidation,
-  location: z.string().optional(),
-  school: z.string().max(100, 'Trường học không được quá 100 ký tự').optional(),
-  interests: z.array(z.string()).optional(),
-  generation: z.nativeEnum(Generation).optional(),
+  location: z.string().min(1, 'Vui lòng chọn nơi ở hiện tại'),
+  interests: z.array(z.string())
+    .min(3, 'Vui lòng chọn ít nhất 3 sở thích')
+    .max(10, 'Tối đa 10 sở thích'),
 });
 
 // Schema cho Đổi mật khẩu

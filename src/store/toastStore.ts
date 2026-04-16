@@ -18,6 +18,10 @@ interface ToastState {
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   addToast: (message, type = 'info') => {
+    // Kiểm tra xem tin nhắn này đã đang hiển thị chưa
+    const isDuplicate = useToastStore.getState().toasts.some(t => t.message === message);
+    if (isDuplicate) return;
+
     const id = Math.random().toString(36).substring(2, 9);
     set((state) => ({
       toasts: [...state.toasts, { id, message, type }]

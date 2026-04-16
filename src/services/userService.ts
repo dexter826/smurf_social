@@ -20,7 +20,7 @@ import {
 } from 'firebase/firestore';
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { User, MediaObject, UserRole, UserStatus, BlockOptions, BlockedUserEntry, UserSettings, Visibility, PostType } from '../../shared/types';
+import { User, MediaObject, UserRole, UserStatus, BlockOptions, BlockedUserEntry, UserSettings, Visibility, PostType, Gender, MaritalStatus, Generation } from '../../shared/types';
 import { friendService } from './friendService';
 import { systemPostService } from './systemPostService';
 import { SOCIAL_MESSAGES } from '../constants/socialMessages';
@@ -110,12 +110,19 @@ export const userService = {
       batch.set(userRef, {
         fullName: data.fullName || '',
         email: data.email || '',
+        dob: data.dob || null,
+        gender: data.gender || Gender.NONE,
+        location: data.location || '',
+        bio: data.bio || '',
         avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
-        cover: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
+        cover: data.cover || { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
         status: UserStatus.ACTIVE,
         role: UserRole.USER,
-        school: '',
-        interests: [],
+        school: data.school || '',
+        interests: data.interests || [],
+        generation: data.generation || Generation.UNKNOWN,
+        maritalStatus: data.maritalStatus || MaritalStatus.NONE,
+        suggestedFriends: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });

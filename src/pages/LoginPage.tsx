@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '../store/authStore';
 import { useLoadingStore } from '../store/loadingStore';
-import { Button, Input, Checkbox } from '../components/ui';
+import { Button, Input, Checkbox, DatePicker } from '../components/ui';
 import { toast } from '../store/toastStore';
 import { TOAST_MESSAGES } from '../constants';
 import { Mail, Lock, Eye, EyeOff, User, AlertCircle, CheckCircle } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
   loginSchema, registerSchema, forgotPasswordSchema,
   LoginFormValues, RegisterFormValues, ForgotPasswordFormValues,
 } from '../utils/validation';
+import { calculateGeneration } from '../utils/userUtils';
 
 type Tab = 'login' | 'register' | 'forgot';
 
@@ -40,7 +41,7 @@ const LoginPage: React.FC = () => {
 
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: { name: '', email: '', dob: undefined, password: '', confirmPassword: '' },
   });
 
   const forgotForm = useForm<ForgotPasswordFormValues>({
@@ -101,7 +102,8 @@ const LoginPage: React.FC = () => {
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
       setAuthError(null); setInfoMessage(null); setShowResend(false);
-      await register(data.email, data.password, data.name);
+      const gen = calculateGeneration(data.dob);
+      await register(data.email, data.password, data.name, data.dob, gen);
       toast.success(TOAST_MESSAGES.AUTH.REGISTER_SUCCESS);
       navigate('/verify-email', { state: { source: 'register' } });
     } catch (error) { handleAuthError(error); }
@@ -136,239 +138,252 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] bg-bg-primary bg-app-pattern transition-theme">
+    <div className="flex flex-col lg:flex-row h-screen lg:overflow-hidden bg-bg-secondary selection:bg-primary/20">
       <AuthBrandingPanel
         headline={<>Kết nối <br /> Mọi nơi.</>}
         subtext="Trải nghiệm mạng xã hội thế hệ mới với Smurfy. An toàn và riêng tư."
       />
 
-      {/* ── Right panel ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme overflow-y-auto min-h-[100dvh] lg:min-h-0">
-        <div className="w-full max-w-[420px] animate-fade-in">
-
-          {/* Mobile logo */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <img src="/logo_text_blue.png" alt="Smurfy" className="h-10 object-contain" />
-          </div>
-
-          {/* Tab switcher (login / register only) */}
-          {activeTab !== 'forgot' && (
-            <div className="flex bg-bg-secondary rounded-xl p-1 mb-8 border border-border-light">
-              {(['login', 'register'] as Tab[]).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => handleTabChange(tab)}
-                  className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200
-                    ${activeTab === tab
-                      ? 'bg-bg-primary text-text-primary shadow-sm border border-border-light'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                    }`}
-                >
-                  {tab === 'login' ? 'Đăng nhập' : 'Đăng ký'}
-                </button>
-              ))}
+      {/* Right panel (form) */}
+      <div className="w-full lg:w-1/2 h-full overflow-y-auto bg-bg-primary transition-theme scroll-hide">
+        <div className="min-h-full flex items-center justify-center p-6 md:p-12 animate-fade-in">
+          <div className="w-full max-w-[480px]">
+            {/* Mobile logo */}
+            <div className="lg:hidden flex justify-center mb-8">
+              <img src="/logo_text_blue.png" alt="Smurfy" className="h-10 object-contain" />
             </div>
-          )}
 
-          {/* Heading */}
-          <div className="mb-7">
-            {activeTab === 'forgot' ? (
-              <>
-                <h1 className="text-2xl font-bold text-text-primary mb-1">Khôi phục mật khẩu</h1>
-                <p className="text-sm text-text-secondary">Nhập email để nhận link đặt lại mật khẩu.</p>
-              </>
-            ) : activeTab === 'login' ? (
-              <>
-                <h1 className="text-2xl font-bold text-text-primary mb-1">Chào mừng trở lại</h1>
-                <p className="text-sm text-text-secondary">Đăng nhập để tiếp tục với Smurfy.</p>
-              </>
-            ) : (
-              <>
-                <h1 className="text-2xl font-bold text-text-primary mb-1">Tạo tài khoản</h1>
-                <p className="text-sm text-text-secondary">Tham gia cộng đồng Smurfy ngay hôm nay.</p>
-              </>
-            )}
-          </div>
-
-          {/* ── Forgot password form ── */}
-          {activeTab === 'forgot' && (
-            <form onSubmit={forgotForm.handleSubmit(onForgotSubmit)} className="space-y-4">
-              {verificationSent && (
-                <div className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-xl animate-fade-in">
-                  <CheckCircle size={17} className="text-success shrink-0" />
-                  <p className="text-xs font-medium text-success">Email đặt lại mật khẩu đã được gửi!</p>
-                </div>
-              )}
-              <Input
-                label="Địa chỉ Email"
-                icon={<Mail size={17} />}
-                type="email"
-                placeholder="Nhập địa chỉ email"
-                {...forgotForm.register('email')}
-                error={forgotForm.formState.errors.email?.message}
-                autoComplete="email"
-                size="lg"
-              />
-              <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isLoading}>
-                Gửi mã khôi phục
-              </Button>
-              <div className="text-center pt-1">
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('login')}
-                  className="text-sm text-text-secondary hover:text-primary font-medium transition-colors duration-200"
-                >
-                  ← Quay lại đăng nhập
-                </button>
+            {/* Tab switcher (login / register only) */}
+            {activeTab !== 'forgot' && (
+              <div className="flex bg-bg-secondary rounded-xl p-1 mb-6 border border-border-light">
+                {(['login', 'register'] as Tab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => handleTabChange(tab)}
+                    className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200
+                      ${activeTab === tab
+                        ? 'bg-bg-primary text-text-primary shadow-sm border border-border-light'
+                        : 'text-text-tertiary hover:text-text-secondary'
+                      }`}
+                  >
+                    {tab === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+                  </button>
+                ))}
               </div>
-            </form>
-          )}
+            )}
 
-          {/* ── Login / Register form ── */}
-          {activeTab !== 'forgot' && (
-            <form
-              onSubmit={
-                activeTab === 'login'
-                  ? loginForm.handleSubmit(onLoginSubmit)
-                  : registerForm.handleSubmit(onRegisterSubmit)
-              }
-              className="space-y-4"
-            >
-              {/* Info banner */}
-              {infoMessage && (
-                <div className="flex items-start gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-xl animate-fade-in">
-                  <AlertCircle size={17} className="text-primary shrink-0 mt-0.5" />
-                  <div className="space-y-1.5 text-xs text-primary font-medium leading-relaxed">
-                    <p>{infoMessage}</p>
-                    {showResend && (
-                      <button
-                        type="button"
-                        onClick={handleResendEmail}
-                        className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
-                      >
-                        Gửi lại email xác thực
-                      </button>
-                    )}
-                  </div>
-                </div>
+            {/* Heading */}
+            <div className="mb-4">
+              {activeTab === 'forgot' ? (
+                <>
+                  <h1 className="text-2xl font-bold text-text-primary mb-1">Khôi phục mật khẩu</h1>
+                  <p className="text-sm text-text-secondary">Nhập email để nhận link đặt lại mật khẩu.</p>
+                </>
+              ) : activeTab === 'login' ? (
+                <>
+                  <h1 className="text-2xl font-bold text-text-primary mb-1">Chào mừng trở lại</h1>
+                  <p className="text-sm text-text-secondary">Đăng nhập để tiếp tục với Smurfy.</p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-xl md:text-2xl font-bold text-text-primary mb-0.5">Tạo tài khoản</h1>
+                  <p className="text-xs md:text-sm text-text-secondary">Tham gia cộng đồng Smurfy ngay hôm nay.</p>
+                </>
               )}
+            </div>
 
-              {/* Error banner */}
-              {authError && (
-                <div className="flex items-center gap-3 p-3.5 bg-error/5 border border-error/20 rounded-xl animate-fade-in">
-                  <AlertCircle size={17} className="text-error shrink-0" />
-                  <p className="text-xs text-error font-medium leading-relaxed">{authError}</p>
-                </div>
-              )}
-
-              {/* Verification sent */}
-              {verificationSent && !authError && activeTab === 'login' && (
-                <div className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-xl animate-fade-in">
-                  <CheckCircle size={17} className="text-success shrink-0" />
-                  <p className="text-xs text-success font-medium">Đã gửi link xác thực. Vui lòng kiểm tra email.</p>
-                </div>
-              )}
-
-              {/* Name field (register only) */}
-              {activeTab === 'register' && (
-                <Input
-                  label="Họ và Tên"
-                  icon={<User size={17} />}
-                  placeholder="Nhập họ tên"
-                  {...registerForm.register('name')}
-                  error={registerForm.formState.errors.name?.message}
-                  size="lg"
-                />
-              )}
-
-              {/* Email */}
-              <Input
-                label="Email"
-                icon={<Mail size={17} />}
-                type="email"
-                placeholder="Nhập địa chỉ email"
-                {...(activeTab === 'login' ? loginForm.register('email') : registerForm.register('email'))}
-                error={activeTab === 'login'
-                  ? loginForm.formState.errors.email?.message
-                  : registerForm.formState.errors.email?.message
-                }
-                autoComplete="email"
-                size="lg"
-              />
-
-              {/* Password */}
-              <div>
-                <Input
-                  label="Mật khẩu"
-                  icon={<Lock size={17} />}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Nhập mật khẩu"
-                  autoComplete={activeTab === 'login' ? 'current-password' : 'new-password'}
-                  {...(activeTab === 'login' ? loginForm.register('password') : registerForm.register('password'))}
-                  error={activeTab === 'login'
-                    ? loginForm.formState.errors.password?.message
-                    : registerForm.formState.errors.password?.message
-                  }
-                  size="lg"
-                  rightElement={
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => setShowPassword(p => !p)}
-                      className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
-                    >
-                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                    </button>
-                  }
-                />
-                {activeTab === 'login' && (
-                  <div className="flex items-center justify-between mt-2.5">
-                    <Checkbox
-                      label="Ghi nhớ đăng nhập"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleTabChange('forgot')}
-                      className="text-xs text-primary hover:underline font-semibold transition-colors"
-                    >
-                      Quên mật khẩu?
-                    </button>
+            {/* ── Forgot password form ── */}
+            {activeTab === 'forgot' && (
+              <form onSubmit={forgotForm.handleSubmit(onForgotSubmit)} className="space-y-4">
+                {verificationSent && (
+                  <div className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-xl animate-fade-in">
+                    <CheckCircle size={17} className="text-success shrink-0" />
+                    <p className="text-xs font-medium text-success">Email đặt lại mật khẩu đã được gửi!</p>
                   </div>
                 )}
-              </div>
-
-              {/* Confirm password (register only) */}
-              {activeTab === 'register' && (
                 <Input
-                  label="Xác nhận mật khẩu"
-                  icon={<Lock size={17} />}
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Xác nhận mật khẩu"
-                  autoComplete="new-password"
-                  {...registerForm.register('confirmPassword')}
-                  error={registerForm.formState.errors.confirmPassword?.message}
+                  label="Địa chỉ Email"
+                  icon={<Mail size={17} />}
+                  type="email"
+                  placeholder="Nhập địa chỉ email"
+                  {...forgotForm.register('email')}
+                  error={forgotForm.formState.errors.email?.message}
+                  autoComplete="email"
                   size="lg"
-                  rightElement={
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => setShowConfirmPassword(p => !p)}
-                      className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                    </button>
-                  }
                 />
-              )}
+                <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isLoading}>
+                  Gửi mã khôi phục
+                </Button>
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('login')}
+                    className="text-sm text-text-secondary hover:text-primary font-medium transition-colors duration-200"
+                  >
+                    ← Quay lại đăng nhập
+                  </button>
+                </div>
+              </form>
+            )}
 
-              <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isLoading} className="mt-1">
-                {activeTab === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
-              </Button>
-            </form>
-          )}
+            {/* ── Login / Register form ── */}
+            {activeTab !== 'forgot' && (
+              <form
+                onSubmit={
+                  activeTab === 'login'
+                    ? loginForm.handleSubmit(onLoginSubmit)
+                    : registerForm.handleSubmit(onRegisterSubmit)
+                }
+                className="space-y-3.5"
+              >
+                {/* Info banner */}
+                {infoMessage && (
+                  <div className="flex items-start gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-xl animate-fade-in">
+                    <AlertCircle size={17} className="text-primary shrink-0 mt-0.5" />
+                    <div className="space-y-1.5 text-xs text-primary font-medium leading-relaxed">
+                      <p>{infoMessage}</p>
+                      {showResend && (
+                        <button
+                          type="button"
+                          onClick={handleResendEmail}
+                          className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
+                        >
+                          Gửi lại email xác thực
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Error banner */}
+                {authError && (
+                  <div className="flex items-center gap-3 p-3.5 bg-error/5 border border-error/20 rounded-xl animate-fade-in">
+                    <AlertCircle size={17} className="text-error shrink-0" />
+                    <p className="text-xs text-error font-medium leading-relaxed">{authError}</p>
+                  </div>
+                )}
+
+                {/* Verification sent */}
+                {verificationSent && !authError && activeTab === 'login' && (
+                  <div className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-xl animate-fade-in">
+                    <CheckCircle size={17} className="text-success shrink-0" />
+                    <p className="text-xs text-success font-medium">Đã gửi link xác thực. Vui lòng kiểm tra email.</p>
+                  </div>
+                )}
+
+                {/* Name field (register only) */}
+                {activeTab === 'register' && (
+                  <Input
+                    label="Họ tên"
+                    icon={<User size={17} />}
+                    placeholder="Nhập họ tên"
+                    {...registerForm.register('name')}
+                    error={registerForm.formState.errors.name?.message}
+                    size="lg"
+                  />
+                )}
+
+                {/* Email */}
+                <Input
+                  label="Email"
+                  icon={<Mail size={17} />}
+                  type="email"
+                  placeholder="Nhập địa chỉ email"
+                  {...(activeTab === 'login' ? loginForm.register('email') : registerForm.register('email'))}
+                  error={activeTab === 'login'
+                    ? loginForm.formState.errors.email?.message
+                    : registerForm.formState.errors.email?.message
+                  }
+                  autoComplete="email"
+                  size="lg"
+                />
+
+                {/* DOB (register only) */}
+                {activeTab === 'register' && (
+                  <DatePicker
+                    label="Ngày sinh"
+                    value={registerForm.watch('dob')}
+                    onChange={(ts) => registerForm.setValue('dob', ts, { shouldValidate: true })}
+                    placeholder="Chọn ngày sinh"
+                    error={registerForm.formState.errors.dob?.message}
+                    size="lg"
+                  />
+                )}
+
+                {/* Password */}
+                <div>
+                  <Input
+                    label="Mật khẩu"
+                    icon={<Lock size={17} />}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Nhập mật khẩu"
+                    autoComplete={activeTab === 'login' ? 'current-password' : 'new-password'}
+                    {...(activeTab === 'login' ? loginForm.register('password') : registerForm.register('password'))}
+                    error={activeTab === 'login'
+                      ? loginForm.formState.errors.password?.message
+                      : registerForm.formState.errors.password?.message
+                    }
+                    size="lg"
+                    rightElement={
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPassword(p => !p)}
+                        className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                      </button>
+                    }
+                  />
+                  {activeTab === 'login' && (
+                    <div className="flex items-center justify-between mt-2.5">
+                      <Checkbox
+                        label="Ghi nhớ đăng nhập"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange('forgot')}
+                        className="text-xs text-primary hover:underline font-semibold transition-colors"
+                      >
+                        Quên mật khẩu?
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Confirm password (register only) */}
+                {activeTab === 'register' && (
+                  <Input
+                    label="Xác nhận mật khẩu"
+                    icon={<Lock size={17} />}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Xác nhận mật khẩu"
+                    autoComplete="new-password"
+                    {...registerForm.register('confirmPassword')}
+                    error={registerForm.formState.errors.confirmPassword?.message}
+                    size="lg"
+                    rightElement={
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowConfirmPassword(p => !p)}
+                        className="p-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                      </button>
+                    }
+                  />
+                )}
+
+                <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isLoading} className="mt-1">
+                  {activeTab === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
+                </Button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </div>

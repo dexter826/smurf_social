@@ -48,7 +48,7 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 | `gender`                 | String Enum   | _Optional_        | `"male"`, `"female"`, `""`                                                                                      |
 | `bio`                    | String        | _Optional_        | Tiểu sử (Max 500 ký tự). Mặc định `""`                                                                          |
 | `location`               | String        | _Optional_        | Vị trí. Mặc định `""`                                                                                           |
-| `dob`                    | Timestamp     | _Optional_        | Ngày sinh                                                                                                       |
+| `dob`                    | Timestamp     | **Required**      | Ngày sinh                                                                                                       |
 | `school`                 | String        | _Optional_        | Trường học / nơi học                                                                                            |
 | `maritalStatus`          | String Enum   | _Optional_        | `"none"`, `"single"`, `"married"`, `"divorced"`, `"widowed"`, `"other"`                                         |
 | `interests`              | Array<String> | _Optional_        | Danh sách sở thích. Mặc định `[]`                                                                               |

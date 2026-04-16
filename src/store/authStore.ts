@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { onAuthStateChanged } from "firebase/auth";
 import { onSnapshot, doc, Timestamp } from 'firebase/firestore';
 import { auth, db } from "../firebase/config";
-import { User, BlockOptions, UserSettings, Visibility } from "../../shared/types";
+import { User, BlockOptions, UserSettings, Visibility, Generation } from "../../shared/types";
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
 import { friendService } from "../services/friendService";
@@ -27,7 +27,7 @@ interface AuthState {
   isInitialized: boolean;
   isBanned: boolean;
   login: (email: string, pass: string, remember?: boolean) => Promise<void>;
-  register: (email: string, pass: string, name: string) => Promise<void>;
+  register: (email: string, pass: string, name: string, dob: number, generation: Generation) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
   checkVerificationStatus: () => Promise<void>;
@@ -94,16 +94,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (email, pass, name) => {
+  register: async (email, pass, name, dob, generation) => {
     useLoadingStore.getState().setLoading("auth.register", true);
     try {
       const firebaseUser = await authService.register(email, pass);
       await userService.createUserDocument(firebaseUser.uid, {
-        id: firebaseUser.uid,
         fullName: name,
-        avatar: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
-        cover: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
         email: email.trim(),
+        dob: Timestamp.fromDate(new Date(dob)),
+        generation: generation,
       });
 
       await authService.sendVerificationEmail();

@@ -58,36 +58,29 @@ const EmailVerificationPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] bg-bg-primary bg-app-pattern transition-theme">
+    <div className="flex flex-col lg:flex-row h-screen lg:overflow-hidden bg-bg-primary transition-theme selection:bg-primary/20">
       <AuthBrandingPanel
-        headline="Xác thực tài khoản của bạn"
+        headline={<>Xác thực <br /> Tài khoản.</>}
         subtext="Để đảm bảo an toàn, vui lòng xác thực email của bạn trước khi bắt đầu khám phá Smurfy."
       />
 
       {/* ── Right panel ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-bg-primary transition-theme overflow-y-auto min-h-[100dvh] lg:min-h-0">
-        <div className="w-full max-w-[420px] animate-fade-in">
+      <div className="w-full lg:w-1/2 h-full overflow-y-auto bg-bg-primary transition-theme scroll-hide">
+        <div className="min-h-full flex items-center justify-center p-6 md:p-12 animate-fade-in">
+          <div className="w-full max-w-[480px]">
 
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <img src="/logo_text_blue.png" alt="Smurfy" className="h-10 object-contain" />
           </div>
 
-          {/* Icon */}
-          <div className="mb-8">
-            <div className="relative w-20 h-20 mx-auto mb-6">
-              {/* Outer glow ring */}
-              <div className="absolute inset-0 rounded-2xl btn-gradient opacity-20 blur-md" />
-              <div className="relative w-20 h-20 btn-gradient rounded-2xl flex items-center justify-center shadow-accent">
-                <Mail size={34} className="text-white" />
-              </div>
-            </div>
-
-            <h1 className="text-2xl font-bold text-text-primary mb-2 text-center">
+          {/* Header */}
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-text-primary mb-1">
               Xác thực Email
             </h1>
-            <p className="text-sm text-text-secondary text-center leading-relaxed max-w-sm mx-auto">
-              Chúng tôi đã gửi link xác thực đến email của bạn. Vui lòng kiểm tra hộp thư (và cả mục Spam).
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Chúng tôi đã gửi link xác thực đến email của bạn. Vui lòng kiểm tra hộp thư để tiếp tục.
             </p>
           </div>
 
@@ -99,8 +92,8 @@ const EmailVerificationPage: React.FC = () => {
               { step: '3', text: 'Quay lại đây và nhấn "Đã xác thực email"' },
             ].map(({ step, text }) => (
               <div key={step} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full btn-gradient flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <span className="text-white text-xs font-bold">{step}</span>
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-bold">{step}</span>
                 </div>
                 <p className="text-sm text-text-secondary">{text}</p>
               </div>
@@ -115,6 +108,7 @@ const EmailVerificationPage: React.FC = () => {
               onClick={handleCheckStatus}
               isLoading={isChecking || isLoading}
               icon={<ShieldCheck size={18} />}
+              className="mt-1"
             >
               Đã xác thực email
             </Button>
@@ -132,10 +126,10 @@ const EmailVerificationPage: React.FC = () => {
           </div>
 
           {/* Back to login */}
-          <div className="pt-6 mt-2 border-t border-border-light">
+          <div className="pt-6 mt-8 border-t border-border-light">
             <button
               onClick={handleLogout}
-              className="group flex items-center gap-2 text-sm font-medium text-text-tertiary hover:text-error transition-colors duration-200 mx-auto"
+              className="group flex items-center gap-2 text-sm font-medium text-text-tertiary hover:text-primary transition-colors duration-200"
             >
               <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
               Quay lại Đăng nhập
@@ -144,6 +138,7 @@ const EmailVerificationPage: React.FC = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 
