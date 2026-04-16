@@ -147,7 +147,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             </p>
           </div>
         ) : (
-          <div className="px-3 md:px-4 py-2.5 min-h-full flex flex-col justify-end">
+          <div className={`px-3 md:px-4 py-2.5 min-h-full flex flex-col ${messages.length > 0 ? 'justify-end' : ''}`}>
             {isLoadingMore && (
               <div className="flex justify-center py-3">
                 <Loading size="sm" />

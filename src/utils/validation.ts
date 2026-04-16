@@ -12,6 +12,18 @@ export const loginSchema = z.object({
     .min(VALIDATION.PASSWORD_MIN_LENGTH, `Mật khẩu phải có ít nhất ${VALIDATION.PASSWORD_MIN_LENGTH} ký tự`),
 });
 
+// Quy tắc chung cho ngày sinh
+const dobValidation = z.number({ message: 'Vui lòng chọn ngày sinh' })
+  .refine((val) => val <= Date.now(), 'Ngày sinh không được là ngày trong tương lai')
+  .refine((val) => {
+    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
+    return age >= 13;
+  }, 'Bạn phải từ 13 tuổi trở lên')
+  .refine((val) => {
+    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
+    return age <= 120;
+  }, 'Ngày sinh không hợp lệ');
+
 // Schema cho Đăng ký
 export const registerSchema = z.object({
   name: z.string()
@@ -20,7 +32,7 @@ export const registerSchema = z.object({
   email: z.string()
     .min(1, 'Vui lòng nhập email')
     .email('Email không hợp lệ'),
-  dob: z.number({ message: 'Vui lòng chọn ngày sinh' }),
+  dob: dobValidation,
   password: z.string()
     .min(1, 'Vui lòng nhập mật khẩu')
     .min(VALIDATION.PASSWORD_MIN_LENGTH, `Mật khẩu phải có ít nhất ${VALIDATION.PASSWORD_MIN_LENGTH} ký tự`),
@@ -37,17 +49,6 @@ export const forgotPasswordSchema = z.object({
     .min(1, 'Vui lòng nhập email')
     .email('Email không hợp lệ'),
 });
-
-const dobValidation = z.number({ message: 'Vui lòng chọn ngày sinh' })
-  .refine((val) => val <= Date.now(), 'Ngày sinh không được là ngày trong tương lai')
-  .refine((val) => {
-    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
-    return age >= 13;
-  }, 'Bạn phải từ 13 tuổi trở lên')
-  .refine((val) => {
-    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
-    return age <= 120;
-  }, 'Ngày sinh không hợp lệ');
 
 // Schema cho Chỉnh sửa hồ sơ
 export const profileSchema = z.object({

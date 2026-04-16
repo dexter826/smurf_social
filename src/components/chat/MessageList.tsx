@@ -75,7 +75,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
   /* ── Empty state ── */
   if (groupedMessages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+      <div className="flex flex-col items-center justify-center flex-1 text-center py-12">
         <UserAvatar
           userId={conversation.data.isGroup ? '' : partner?.id ?? ''}
           src={avatarSrc}

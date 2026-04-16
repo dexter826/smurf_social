@@ -157,8 +157,18 @@ export const ConversationList = React.memo<ConversationListProps>(({
             currentUserId={currentUserId}
             selectedId={selectedId}
             history={searchHistory}
-            onSelectConversation={(id) => { onSelectConversation(id); onSearchFocus?.(false); }}
-            onSelectUser={(user) => { onSelectUser?.(user); onSearchFocus?.(false); }}
+            onSelectConversation={(id) => {
+              setSearchTerm('');
+              onSearch('');
+              onSelectConversation(id);
+              onSearchFocus?.(false);
+            }}
+            onSelectUser={(user) => {
+              setSearchTerm('');
+              onSearch('');
+              onSelectUser?.(user);
+              onSearchFocus?.(false);
+            }}
             onRemoveFromHistory={onRemoveFromHistory}
             onClearHistory={onClearHistory}
             isLoading={isLoading && searchTerm !== ''}
