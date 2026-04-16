@@ -3,7 +3,6 @@ import { X, Image as ImageIcon, Video, Users, Lock, Globe2 } from 'lucide-react'
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, ConfirmDialog } from '../../ui';
-import { CircularProgressOverlay } from '../../ui/CircularProgress';
 import { toast } from '../../../store/toastStore';
 import { validateFile } from '../../../utils';
 import { User, Post, Visibility, MediaObject, PostType } from '../../../../shared/types';
@@ -25,17 +24,15 @@ interface PostModalProps {
     content: string,
     media: MediaObject[],
     visibility: Visibility,
-    pendingFiles?: File[],
-    onProgress?: (progress: number) => void
+    pendingFiles?: File[]
   ) => void | Promise<void>;
-  onUploadImages: (files: File[], onProgress?: (progress: number) => void) => Promise<MediaObject[]>;
 }
 
 const EMPTY_FILES: File[] = [];
 
 export const PostModal: React.FC<PostModalProps> = ({
   isOpen, onClose, currentUser, initialPost,
-  initialFiles = EMPTY_FILES, onSubmit, onUploadImages,
+  initialFiles = EMPTY_FILES, onSubmit,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);

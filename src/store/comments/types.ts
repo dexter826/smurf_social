@@ -1,4 +1,4 @@
-import { Comment, ReactionType } from '../../../shared/types';
+import { Comment, ReactionType, MediaObject } from '../../../shared/types';
 import { DocumentSnapshot } from 'firebase/firestore';
 
 export interface CommentState {
@@ -9,6 +9,7 @@ export interface CommentState {
   lastReplyDoc: Record<string, Record<string, DocumentSnapshot | null>>;
   hasMoreReply: Record<string, Record<string, boolean>>;
   loadingPosts: Record<string, boolean>;
+  uploadingStates: Record<string, { progress: number; error?: string }>;
 }
 
 export interface CommentActions {
@@ -16,8 +17,8 @@ export interface CommentActions {
   fetchReplies: (postId: string, parentId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
   subscribeToComments: (postId: string, blockedUserIds?: string[]) => () => void;
   subscribeToReplies: (postId: string, parentId: string, blockedUserIds?: string[]) => () => void;
-  createComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, replyToId?: string, image?: any) => Promise<string>;
-  updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, replyToUserId?: string, replyToId?: string, image?: any) => Promise<void>;
+  createComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, replyToId?: string, image?: MediaObject | File) => Promise<string>;
+  updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, replyToUserId?: string, replyToId?: string, image?: MediaObject | File) => Promise<void>;
   deleteComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;
   reactToComment: (postId: string, commentId: string, userId: string, reaction: ReactionType | 'REMOVE', parentId?: string | null) => Promise<void>;
   setRootComments: (postId: string, comments: Comment[], lastDoc: DocumentSnapshot | null, hasMore: boolean) => void;

@@ -11,14 +11,7 @@ import { useReactionStore } from '../reactionStore';
 import { convertDoc } from '../../utils/firebaseUtils';
 
 export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set, get) => ({
-  createPost: async (
-    userId: string,
-    content: string,
-    media: MediaObject[],
-    visibility: Visibility = Visibility.FRIENDS,
-    pendingFiles?: File[],
-    onProgress?: (progress: number) => void
-  ) => {
+  createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.FRIENDS, pendingFiles?: File[]) => {
     const postId = postService.generatePostId();
     const previewMedia = pendingFiles ? pendingFiles.map((f: File) => ({
       url: URL.createObjectURL(f),
@@ -43,7 +36,6 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       let finalMedia = [...media];
       if (pendingFiles?.length) {
         finalMedia = [...finalMedia, ...await postService.uploadPostMedia(pendingFiles, userId, (progress) => {
-          onProgress?.(progress);
           set(state => ({
             uploadingStates: { ...state.uploadingStates, [postId]: { ...state.uploadingStates[postId], progress } }
           }));
@@ -75,14 +67,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
-  updatePost: async (
-    postId: string,
-    content: string,
-    media: MediaObject[],
-    visibility: Visibility,
-    pendingFiles?: File[],
-    onProgress?: (progress: number) => void
-  ) => {
+  updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => {
     const { posts, selectedPost } = get();
     const existing = posts.find(p => p.id === postId) || (selectedPost?.id === postId ? selectedPost : null);
     const authorId = existing?.authorId || '';
@@ -103,7 +88,6 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       let finalMedia = [...media];
       if (pendingFiles?.length) {
         finalMedia = [...finalMedia, ...await postService.uploadPostMedia(pendingFiles, authorId, (progress) => {
-          onProgress?.(progress);
           set(state => ({
             uploadingStates: { ...state.uploadingStates, [postId]: { ...state.uploadingStates[postId], progress } }
           }));

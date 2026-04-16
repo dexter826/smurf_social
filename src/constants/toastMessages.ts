@@ -88,4 +88,8 @@ export const TOAST_MESSAGES = {
     BAN_FAILED: 'Không thể khóa tài khoản.',
     UNBAN_FAILED: 'Không thể mở khóa tài khoản.',
   },
+  COMMENT: {
+    CREATE_FAILED: (detail?: string) => detail ? `Lỗi bình luận: ${detail}` : 'Không thể gửi bình luận.',
+    UPDATE_FAILED: (detail?: string) => detail ? `Lỗi cập nhật: ${detail}` : 'Không thể cập nhật bình luận.',
+  },
 } as const;

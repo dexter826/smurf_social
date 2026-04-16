@@ -4,7 +4,7 @@ import { Button, ConfirmDialog, UploadProgress } from '../../ui';
 import { CONFIRM_MESSAGES } from '../../../constants';
 import { toast } from '../../../store/toastStore';
 import { Comment, User, ReportType, MediaObject } from '../../../../shared/types';
-import { commentService } from '../../../services/commentService';
+
 import { useCommentStore } from '../../../store';
 import { useUserCache } from '../../../store/userCacheStore';
 import { useReportStore } from '../../../store/reportStore';
@@ -48,7 +48,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const friendIdsKey = useMemo(() => friendIds, [friendIds.join(',')]);
 
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [activeInputId, setActiveInputId] = useState<string | 'root'>('root');
   const [inputMode, setInputMode] = useState<'comment' | 'reply' | 'edit'>('comment');
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
@@ -131,16 +130,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setActiveInputId('root'); setInputMode('comment');
   }, []);
 
-  const handleCommentSubmit = useCallback(async (content: string, image?: MediaObject) => {
+  const handleCommentSubmit = useCallback(async (content: string, image?: MediaObject | File) => {
     if (inputMode === 'edit' && editingComment) {
-      await updateComment(
+      updateComment(
         postId, editingComment.id, content,
         editingComment.parentId, editingComment.replyToUserId,
         editingComment.replyToId, image
       );
     } else {
       const parentId = replyingTo ? (replyingTo.parentId || replyingTo.id) : null;
-      await createComment(
+      createComment(
         postId, currentUser.id, content,
         parentId, replyingTo?.authorId, replyingTo?.id, image
       );
@@ -158,17 +157,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }, [commentToDelete, postId, currentUser.id, deleteComment]);
 
-  const handleUploadMedia = useCallback(async (file: File) => {
-    setUploadProgress(0);
-    try {
-      const media = await commentService.uploadCommentImage(
-        file, currentUser.id, (p) => setUploadProgress(p)
-      );
-      return media;
-    } finally {
-      setUploadProgress(null);
-    }
-  }, [currentUser.id]);
+
 
   const hasAnyHidden = useMemo(() => {
     if (rootHiddenCount > 0) return true;
@@ -247,7 +236,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     handleEditClick={handleEditClick}
                     handleCommentSubmit={handleCommentSubmit}
                     handleDeleteClick={setCommentToDelete}
-                    handleUploadMedia={handleUploadMedia}
                     loadReplies={loadReplies}
                     resetInput={resetInput}
                     onProfileClick={onProfileClick}
@@ -302,19 +290,13 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             </div>
           )}
 
-          {/* Upload progress */}
-          {uploadProgress !== null && (
-            <div className="mb-2.5">
-              <UploadProgress progress={uploadProgress} fileName="Đang tải lên ảnh..." />
-            </div>
-          )}
+
 
           {/* Root comment input */}
           {activeInputId === 'root' && (
             <CommentInput
               user={{ id: currentUser.id, fullName: currentUser.fullName, avatar: currentUser.avatar }}
               onSubmit={handleCommentSubmit}
-              onUploadMedia={handleUploadMedia}
               autoFocus={autoFocus}
               placeholder="Nhập bình luận..."
             />

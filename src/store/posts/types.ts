@@ -17,8 +17,8 @@ export interface PostActions {
   fetchPosts: (currentUserId: string, loadMore?: boolean, force?: boolean) => Promise<void>;
   subscribeToPosts: (currentUserId: string) => () => void;
   refreshFeed: (currentUserId: string) => Promise<void>;
-  createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
-  updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
+  createPost: (userId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
+  updatePost: (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   deletePost: (postId: string, userId: string) => Promise<void>;
   reactToPost: (postId: string, userId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   uploadMedia: (files: File[], userId: string) => Promise<MediaObject[]>;

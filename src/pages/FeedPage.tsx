@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { StickyNote, Sparkles } from 'lucide-react';
 import { PostItem, PostModal, CreatePost, FeedSkeleton, FriendSuggestionsWidget } from '../components/feed';
-import { postService } from '../services/postService';
+
 import { useAuthStore } from '../store/authStore';
 import { useSharePostStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
@@ -28,11 +28,10 @@ const FeedPage: React.FC = () => {
     content: string,
     media: MediaObject[],
     visibility: Visibility,
-    pendingFiles?: File[],
-    onProgress?: (progress: number) => void
+    pendingFiles?: File[]
   ) => {
     if (!showEditModal) return;
-    handleUpdate(showEditModal, content, media, visibility, pendingFiles, onProgress);
+    handleUpdate(showEditModal, content, media, visibility, pendingFiles);
   }, [showEditModal, handleUpdate]);
 
   const handleDeletePost = useCallback(async () => {
@@ -41,11 +40,6 @@ const FeedPage: React.FC = () => {
     await handleDelete(postToDelete, post?.media);
     setPostToDelete(null);
   }, [postToDelete, posts, handleDelete]);
-
-  const handleUploadImages = useCallback(async (files: File[], onProgress?: (progress: number) => void) => {
-    if (!currentUser) throw new Error('Not authenticated');
-    return postService.uploadPostMedia(files, currentUser.id, onProgress);
-  }, [currentUser]);
 
   const handleOpenShareModal = useCallback((post: Post, authorName: string) => {
     openSharePost(post, authorName);
@@ -132,7 +126,6 @@ const FeedPage: React.FC = () => {
         currentUser={currentUser}
         initialPost={editPost}
         onSubmit={handleEditPost}
-        onUploadImages={handleUploadImages}
       />
 
       <ConfirmDialog

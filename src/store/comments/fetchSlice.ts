@@ -22,6 +22,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
   lastReplyDoc: {},
   hasMoreReply: {},
   loadingPosts: {},
+  uploadingStates: {},
 
   isLoadingPost: (postId: string) => get().loadingPosts[postId] || false,
 

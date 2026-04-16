@@ -18,7 +18,7 @@ import {
 import { Lock } from 'lucide-react';
 import { useProfile, usePostNavigation } from '../hooks';
 import { UserStatus, ReactionType, Visibility, MediaObject, PostType, PostStatus, Post } from '../../shared/types';
-import { postService } from '../services/postService';
+
 import { db } from '../firebase/config';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { convertDoc } from '../utils/firebaseUtils';
@@ -48,9 +48,9 @@ const ProfilePage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  const handleEditPost = (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
+  const handleEditPost = (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => {
     if (!showEditModal) return;
-    updatePost(showEditModal, content, media, visibility, pendingFiles, onProgress);
+    updatePost(showEditModal, content, media, visibility, pendingFiles);
   };
 
   const handleDeletePost = async () => {
@@ -78,10 +78,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
-    if (!currentUser) throw new Error('Not authenticated');
-    return postService.uploadPostMedia(files, currentUser.id, onProgress);
-  };
+
 
   const handleOpenShareModal = useCallback((post: Post, authorName: string) => {
     openSharePost(post, authorName);
@@ -251,7 +248,6 @@ const ProfilePage: React.FC = () => {
           currentUser={currentUser}
           initialPost={posts.find(p => p.id === showEditModal) || undefined}
           onSubmit={handleEditPost}
-          onUploadImages={handleUploadImages}
         />
       )}
 

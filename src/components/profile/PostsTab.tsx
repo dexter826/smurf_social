@@ -4,7 +4,6 @@ import { PostItem, CreatePost, PostModal } from '../feed';
 import { ConfirmDialog } from '../ui';
 import { usePostStore } from '../../store';
 import { useUserPosts, useIntersectionObserver } from '../../hooks';
-import { postService } from '../../services/postService';
 import { FileText } from 'lucide-react';
 
 interface PostsTabProps {
@@ -34,11 +33,10 @@ export const PostsTab: React.FC<PostsTabProps> = ({
     content: string,
     media: MediaObject[],
     visibility: Visibility,
-    pendingFiles?: File[],
-    onProgress?: (progress: number) => void
+    pendingFiles?: File[]
   ) => {
     if (!showEditModal) return;
-    await performUpdate(showEditModal, content, media, visibility, pendingFiles, onProgress);
+    await performUpdate(showEditModal, content, media, visibility, pendingFiles);
     setShowEditModal(null);
   }, [showEditModal, performUpdate]);
 
@@ -98,9 +96,6 @@ export const PostsTab: React.FC<PostsTabProps> = ({
         currentUser={currentUser}
         initialPost={posts.find(p => p.id === showEditModal)}
         onSubmit={handleEditPost}
-        onUploadImages={(files, onProgress) =>
-          postService.uploadPostMedia(files, currentUser.id, onProgress)
-        }
       />
 
       <ConfirmDialog

@@ -3,7 +3,6 @@ import { Image as ImageIcon, X, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, IconButton, Button, EmojiPicker } from '../../ui';
-import { CircularProgressOverlay } from '../../ui/CircularProgress';
 import { validateFile } from '../../../utils';
 import { toast } from '../../../store/toastStore';
 import { commentSchema, CommentFormValues } from '../../../utils/validation';
@@ -17,9 +16,8 @@ interface CommentInputProps {
   placeholder?: string;
   initialValue?: string;
   initialImage?: MediaObject;
-  onSubmit: (content: string, image?: MediaObject) => Promise<void>;
+  onSubmit: (content: string, image?: MediaObject | File) => void;
   onCancel?: () => void;
-  onUploadMedia: (file: File) => Promise<MediaObject>;
   autoFocus?: boolean;
 }
 
@@ -30,7 +28,6 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   initialImage,
   onSubmit,
   onCancel,
-  onUploadMedia,
   autoFocus = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,8 +43,6 @@ export const CommentInput: React.FC<CommentInputProps> = ({
   });
 
   const formData = watch();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -80,32 +75,22 @@ export const CommentInput: React.FC<CommentInputProps> = ({
     e.target.value = '';
   };
 
-  const handleFormSubmit = async (data: CommentFormValues) => {
-    let imageMedia: MediaObject | undefined;
+  const handleFormSubmit = (data: CommentFormValues) => {
+    let imageToSubmit: MediaObject | File | undefined = pendingImage || undefined;
 
-    if (pendingImage) {
-      setIsUploading(true);
-      setUploadProgress(0);
-      try {
-        imageMedia = await onUploadMedia(pendingImage);
-        setUploadProgress(100);
-      } catch {
-        setIsUploading(false);
-        setUploadProgress(0);
-        return;
-      } finally {
-        setIsUploading(false);
-        setUploadProgress(0);
-      }
-    } else if (data.image && initialImage && 'url' in initialImage) {
-      imageMedia = initialImage;
+    if (!imageToSubmit && data.image && initialImage && 'url' in initialImage) {
+      imageToSubmit = initialImage;
     }
 
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (previewUrl) {
+      // Đã có logic revoke trong store hoặc useEffect dọn dẹp
+    }
+
     setPendingImage(null);
     setPreviewUrl(null);
     reset({ content: '', image: undefined, hasPendingImage: false });
-    await onSubmit(data.content || '', imageMedia);
+    
+    onSubmit(data.content || '', imageToSubmit);
   };
 
   const handleRemoveMedia = () => {
@@ -118,7 +103,6 @@ export const CommentInput: React.FC<CommentInputProps> = ({
 
   const isEdit = !!initialValue || !!initialImage;
   const canSubmit = (!!formData.content?.trim() || !!pendingImage || !!formData.image) && 
-                   !isUploading && 
                    (!isEdit || isDirty);
 
   return (
@@ -148,7 +132,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             />
 
             {/* Image preview */}
-            {(formData.image || previewUrl || isUploading) && (
+            {(formData.image || previewUrl) && (
               <div className="px-3 pb-2">
                 <div className="relative inline-block">
                   {(formData.image || previewUrl) && (
@@ -156,23 +140,15 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                       <img
                         src={previewUrl || formData.image}
                         alt="Preview"
-                        className={`h-20 w-auto rounded-xl object-cover border border-border-light ${isUploading ? 'opacity-50' : ''}`}
+                        className="h-20 w-auto rounded-xl object-cover border border-border-light"
                       />
-                      <CircularProgressOverlay
-                        isVisible={isUploading}
-                        progress={uploadProgress}
-                        size={32}
-                        showPercentage={false}
-                      />
-                      {!isUploading && (
-                        <button
-                          type="button"
-                          onClick={handleRemoveMedia}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-text-primary text-bg-primary rounded-full flex items-center justify-center shadow-md transition-colors duration-200 hover:bg-text-secondary"
-                        >
-                          <X size={11} />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={handleRemoveMedia}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-text-primary text-bg-primary rounded-full flex items-center justify-center shadow-md transition-colors duration-200 hover:bg-text-secondary"
+                      >
+                        <X size={11} />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -188,7 +164,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                   icon={<ImageIcon size={15} />}
                   size="sm"
                   title="Thêm ảnh"
-                  disabled={isUploading}
+                  disabled={false}
                   className="text-text-tertiary hover:text-success"
                 />
                 <EmojiPicker
@@ -201,7 +177,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                     )
                   }
                   size={15}
-                  disabled={isUploading}
+                  disabled={false}
                 />
               </div>
 

@@ -2,45 +2,134 @@ import { StateCreator } from 'zustand';
 import { CommentStoreState } from './types';
 import { commentService } from '../../services/commentService';
 import { useReactionStore } from '../reactionStore';
-import { Comment, CommentStatus } from '../../../shared/types';
+import { Comment, CommentStatus, MediaObject } from '../../../shared/types';
 import { Timestamp } from 'firebase/firestore';
+import { toast } from '../toastStore';
+import { TOAST_MESSAGES } from '../../constants';
 
 export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (set, get) => ({
   createComment: async (postId, userId, content, parentId, replyToUserId, replyToId, image) => {
     const realId = commentService.generateCommentId();
+    
+    // Xử lý ảnh xem trước nếu là File
+    let previewUrl = '';
+    if (image instanceof File) {
+      previewUrl = URL.createObjectURL(image);
+    }
+
     const opt: Comment = {
       id: realId, postId, authorId: userId, content, parentId: parentId || undefined,
       replyToUserId: replyToUserId || undefined, replyToId: replyToId || undefined,
-      image: image || undefined, createdAt: Timestamp.now(), replyCount: 0,
+      image: image instanceof File 
+        ? { url: previewUrl, fileName: image.name, mimeType: image.type, size: image.size, isSensitive: false } as MediaObject
+        : image || undefined, 
+      createdAt: Timestamp.now(), replyCount: 0,
       status: CommentStatus.ACTIVE, updatedAt: Timestamp.now(),
     };
 
-    const prev = { rootComments: { ...get().rootComments }, replies: { ...get().replies } };
-    if (parentId) {
-      set(s => {
-        const pr = s.replies[postId] || {};
-        const rr = pr[parentId] || [];
-        return {
-          replies: { ...s.replies, [postId]: { ...pr, [parentId]: [...rr, opt] } },
-          rootComments: { ...s.rootComments, [postId]: (s.rootComments[postId] || []).map(c => c.id === parentId ? { ...c, replyCount: (c.replyCount || 0) + 1 } : c) }
-        };
-      });
+    set(s => ({
+      rootComments: !parentId 
+        ? { ...s.rootComments, [postId]: [opt, ...(s.rootComments[postId] || [])] }
+        : s.rootComments,
+      replies: parentId
+        ? { 
+            ...s.replies, 
+            [postId]: { 
+              ...(s.replies[postId] || {}), 
+              [parentId]: [...((s.replies[postId] || {})[parentId] || []), opt] 
+            } 
+          }
+        : s.replies,
+      uploadingStates: { ...s.uploadingStates, [realId]: { progress: 0 } }
+    }));
+
+    if (!parentId) {
+      // Cập nhật số lượng reply nếu là reply (phần này logic cũ đang để ở set, tôi tách ra cho rõ)
     } else {
-      set(s => ({ rootComments: { ...s.rootComments, [postId]: [opt, ...(s.rootComments[postId] || [])] } }));
+      set(s => ({
+        rootComments: { 
+          ...s.rootComments, 
+          [postId]: (s.rootComments[postId] || []).map(c => c.id === parentId ? { ...c, replyCount: (c.replyCount || 0) + 1 } : c) 
+        }
+      }));
     }
 
     try {
-      await commentService.createComment(postId, userId, content, parentId || null, replyToUserId, replyToId, image, realId, opt.createdAt, opt.updatedAt);
+      let finalImage = image instanceof File ? undefined : image;
+      
+      if (image instanceof File) {
+        finalImage = await commentService.uploadCommentImage(image, userId, (progress) => {
+          set(state => ({
+            uploadingStates: { ...state.uploadingStates, [realId]: { ...state.uploadingStates[realId], progress } }
+          }));
+        });
+      }
+
+      await commentService.createComment(
+        postId, userId, content, parentId || null, 
+        replyToUserId, replyToId, finalImage, realId, 
+        opt.createdAt as any, opt.updatedAt as any
+      );
+
+      set(state => {
+        const { [realId]: _, ...newStates } = state.uploadingStates;
+        return { uploadingStates: newStates };
+      });
+      
       return realId;
-    } catch (err) { set(prev); console.error('Lỗi thêm bình luận:', err); throw err; }
+    } catch (err: any) {
+      console.error('Lỗi thêm bình luận:', err);
+      const msg = err?.message || 'Lỗi tải lên';
+      set(state => ({
+        uploadingStates: { ...state.uploadingStates, [realId]: { ...state.uploadingStates[realId], error: msg } }
+      }));
+      toast.error(TOAST_MESSAGES.COMMENT.CREATE_FAILED());
+      throw err;
+    } finally {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    }
   },
 
   updateComment: async (postId, commentId, content, parentId, _replyToUserId, _replyToId, image) => {
     try {
-      await commentService.updateComment(commentId, content, image);
-      const c = parentId ? get().replies[postId]?.[parentId]?.find(r => r.id === commentId) : get().rootComments[postId]?.find(cc => cc.id === commentId);
-      get().updateCommentInStore(postId, commentId, content, parentId, c?.replyToUserId, c?.replyToId, image);
-    } catch (err) { console.error('Lỗi cập nhật bình luận:', err); throw err; }
+      let finalImage = image instanceof File ? undefined : image;
+      let previewUrl = '';
+
+      if (image instanceof File) {
+        previewUrl = URL.createObjectURL(image);
+        // Cập nhật giao diện tạm thời với ảnh blob
+        const tempImage = { url: previewUrl, fileName: image.name, mimeType: image.type, size: image.size, isSensitive: false } as MediaObject;
+        get().updateCommentInStore(postId, commentId, content, parentId || undefined, _replyToUserId, _replyToId, tempImage);
+        
+        set(state => ({
+          uploadingStates: { ...state.uploadingStates, [commentId]: { progress: 0 } }
+        }));
+
+        finalImage = await commentService.uploadCommentImage(image, get().rootComments[postId]?.[0]?.authorId || '', (progress) => {
+          set(state => ({
+            uploadingStates: { ...state.uploadingStates, [commentId]: { ...state.uploadingStates[commentId], progress } }
+          }));
+        });
+      }
+
+      await commentService.updateComment(commentId, content, finalImage);
+      get().updateCommentInStore(postId, commentId, content, parentId || undefined, _replyToUserId, _replyToId, finalImage || undefined);
+      
+      set(state => {
+        const { [commentId]: _, ...newStates } = state.uploadingStates;
+        return { uploadingStates: newStates };
+      });
+
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    } catch (err: any) {
+      console.error('Lỗi cập nhật bình luận:', err);
+      const msg = err?.message || 'Lỗi tải lên';
+      set(state => ({
+        uploadingStates: { ...state.uploadingStates, [commentId]: { ...state.uploadingStates[commentId], error: msg } }
+      }));
+      toast.error(TOAST_MESSAGES.COMMENT.UPDATE_FAILED());
+      throw err;
+    }
   },
 
   deleteComment: async (postId, commentId, userId, parentId) => {
@@ -78,5 +167,5 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     return { replies: { ...s.replies, [postId]: { ...pr, [parentId]: (pr[parentId] || []).map(r => r.id === commentId ? update(r) : r) } } };
   }),
 
-  reset: () => set({ rootComments: {}, replies: {}, lastRootDoc: {}, hasMoreRoot: {}, lastReplyDoc: {}, hasMoreReply: {}, loadingPosts: {} }),
+  reset: () => set({ rootComments: {}, replies: {}, lastRootDoc: {}, hasMoreRoot: {}, lastReplyDoc: {}, hasMoreReply: {}, loadingPosts: {}, uploadingStates: {} }),
 });

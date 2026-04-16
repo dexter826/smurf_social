@@ -4,7 +4,7 @@ import { PostModal } from './modals/PostModal';
 import { User, Visibility, MediaObject } from '../../../shared/types';
 import { Avatar, Skeleton } from '../ui';
 import { usePostStore } from '../../store';
-import { postService } from '../../services/postService';
+
 import { toast } from '../../store/toastStore';
 import { validateFile } from '../../utils/uploadUtils';
 import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../constants';
@@ -60,10 +60,9 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
     content: string,
     media: MediaObject[],
     visibility: Visibility,
-    pendingFiles?: File[],
-    onProgress?: (progress: number) => void
+    pendingFiles?: File[]
   ) => {
-    createPost(currentUser.id, content, media, visibility, pendingFiles, onProgress);
+    createPost(currentUser.id, content, media, visibility, pendingFiles);
     setPendingFiles([]);
   };
 
@@ -113,7 +112,6 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
         currentUser={currentUser}
         initialFiles={pendingFiles}
         onSubmit={handleCreatePost}
-        onUploadImages={(files, onProgress) => postService.uploadPostMedia(files, currentUser.id, onProgress)}
       />
     </>
   );

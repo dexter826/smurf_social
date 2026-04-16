@@ -4,7 +4,7 @@ import { ChevronDown, ChevronRight, Ellipsis, Flag, PenTool, Pencil, Trash2 } fr
 import {
   UserAvatar, LazyImage, Skeleton, ReactionSelector,
   ReactionDisplay, ReactionDetailsModal, Dropdown, DropdownItem,
-  SensitiveMediaGuard,
+  SensitiveMediaGuard, UploadProgress,
 } from '../../ui';
 import { CommentInput } from './CommentInput';
 import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../../shared/types';
@@ -31,9 +31,8 @@ interface CommentItemProps {
   rootAuthorId?: string;
   handleReplyClick: (comment: Comment) => void;
   handleEditClick: (comment: Comment) => void;
-  handleCommentSubmit: (content: string, image?: MediaObject) => Promise<void>;
+  handleCommentSubmit: (content: string, image?: MediaObject | File) => Promise<void>;
   handleDeleteClick: (comment: Comment) => void;
-  handleUploadMedia: (file: File) => Promise<MediaObject | undefined>;
   loadReplies: (parentId: string) => Promise<void>;
   resetInput: () => void;
   onProfileClick?: () => void;
@@ -49,14 +48,18 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
   isLoadingReplyMap, variant, postOwnerId, activeInputId, inputMode,
   isReply = false, rootAuthorId,
   handleReplyClick, handleEditClick, handleCommentSubmit, handleDeleteClick,
-  handleUploadMedia, loadReplies, resetInput, onProfileClick,
+  loadReplies, resetInput, onProfileClick,
   openReportModal, getFilteredReplies,
 }) => {
   const navigate = useNavigate();
-  const { reactToComment } = useCommentStore();
+  const { reactToComment, uploadingStates } = useCommentStore();
   const friendIds = useFriendIds();
   const [showReactions, setShowReactions] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
+  
+  const uploadState = uploadingStates[comment.id];
+  const isUploading = !!uploadState && !uploadState.error;
+  const uploadError = uploadState?.error;
 
   const author = users[comment.authorId];
   const isEditing = activeInputId === comment.id && inputMode === 'edit';
@@ -141,7 +144,6 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                       initialImage={comment.image}
                       onSubmit={handleCommentSubmit}
                       onCancel={resetInput}
-                      onUploadMedia={handleUploadMedia}
                       autoFocus
                     />
                   </div>
@@ -155,14 +157,28 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                       />
                     </p>
                     {comment.image && (
-                      <div className="mt-2 rounded-xl overflow-hidden border border-border-light">
+                      <div className="mt-2 rounded-xl overflow-hidden border border-border-light relative group/media">
                         <SensitiveMediaGuard isSensitive={comment.image.isSensitive}>
                           <LazyImage
                             src={comment.image.url}
-                            className="max-h-52 w-full object-contain"
+                            className={`max-h-52 w-full object-contain transition-all duration-200 ${isUploading ? 'blur-[1px] opacity-70' : ''}`}
                             alt="attach"
                           />
                         </SensitiveMediaGuard>
+                        
+                        {isUploading && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 px-4">
+                            <UploadProgress 
+                              progress={uploadState.progress} 
+                              className="max-w-[120px] !mb-0"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {uploadError && (
+                      <div className="mt-1.5 px-2 py-1 bg-error/5 border border-error/20 rounded-lg">
+                        <span className="text-[10px] text-error font-medium">{uploadError}</span>
                       </div>
                     )}
                   </>
@@ -272,7 +288,6 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                 placeholder={`Trả lời ${author?.fullName}...`}
                 onSubmit={handleCommentSubmit}
                 onCancel={resetInput}
-                onUploadMedia={handleUploadMedia}
                 autoFocus
               />
             </div>
@@ -321,7 +336,6 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                         handleEditClick={handleEditClick}
                         handleCommentSubmit={handleCommentSubmit}
                         handleDeleteClick={handleDeleteClick}
-                        handleUploadMedia={handleUploadMedia}
                         loadReplies={loadReplies}
                         resetInput={resetInput}
                         onProfileClick={onProfileClick}

@@ -18,7 +18,7 @@ interface UseUserPostsReturn {
   handleLoadMore: () => void;
   handleReact: (postId: string, reaction: ReactionType | 'REMOVE') => Promise<void>;
   handleDelete: (postId: string, media?: any[]) => Promise<void>;
-  handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => Promise<void>;
+  handleUpdate: (postId: string, content: string, media: any[], visibility: Visibility, pendingFiles?: File[]) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -184,8 +184,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
     content: string,
     media: any[],
     visibility: Visibility,
-    pendingFiles?: File[],
-    onProgress?: (progress: number) => void
+    pendingFiles?: File[]
   ) => {
     const { updatePost } = usePostStore.getState();
 
@@ -195,7 +194,7 @@ export const useUserPosts = (userId: string, currentUser: User): UseUserPostsRet
         : p
     ));
 
-    await updatePost(postId, content, media, visibility, pendingFiles, onProgress);
+    await updatePost(postId, content, media, visibility, pendingFiles);
   }, []);
 
   const refresh = useCallback(async () => {

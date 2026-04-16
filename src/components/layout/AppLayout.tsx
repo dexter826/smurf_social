@@ -50,9 +50,9 @@ export const AppLayout: React.FC = () => {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const { post: postToShare, authorName: shareAuthorName, openSharePost, closeSharePost } = useSharePostStore();
 
-  const handleEditPost = async (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[], onProgress?: (progress: number) => void) => {
+  const handleEditPost = async (content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => {
     if (!showEditModal) return;
-    await updatePost(showEditModal, content, media, visibility, pendingFiles, onProgress);
+    await updatePost(showEditModal, content, media, visibility, pendingFiles);
     setShowEditModal(null);
   };
 
@@ -65,10 +65,6 @@ export const AppLayout: React.FC = () => {
     setPostToDelete(null);
   };
 
-  const handleUploadImages = async (files: File[], onProgress?: (progress: number) => void) => {
-    if (!user) throw new Error('Not authenticated');
-    return postService.uploadPostMedia(files, user.id, onProgress);
-  };
 
   const isAdmin = user?.role === 'admin';
   const isChatRoom = location.pathname === '/' && !!selectedConversationId;
@@ -355,7 +351,6 @@ export const AppLayout: React.FC = () => {
           currentUser={user}
           initialPost={posts.find(p => p.id === showEditModal) || selectedPost || undefined}
           onSubmit={handleEditPost}
-          onUploadImages={handleUploadImages}
         />
       )}
 
