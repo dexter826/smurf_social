@@ -140,33 +140,117 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
     },
 
     togglePin: async (conversationId: string, userId: string, pinned: boolean) => {
+        set(state => ({
+            conversations: state.conversations.map(c =>
+                c.id === conversationId
+                    ? { ...c, userChat: { ...c.userChat, isPinned: pinned } }
+                    : c
+            ),
+            userChats: {
+                ...state.userChats,
+                [conversationId]: { ...state.userChats[conversationId], isPinned: pinned }
+            }
+        }));
+
         try {
             await rtdbConversationService.togglePin(userId, conversationId, pinned);
         } catch (error) {
+            set(state => ({
+                conversations: state.conversations.map(c =>
+                    c.id === conversationId
+                        ? { ...c, userChat: { ...c.userChat, isPinned: !pinned } }
+                        : c
+                ),
+                userChats: {
+                    ...state.userChats,
+                    [conversationId]: { ...state.userChats[conversationId], isPinned: !pinned }
+                }
+            }));
             console.error("Lỗi ghim hội thoại:", error);
             throw error;
         }
     },
 
     toggleMute: async (conversationId: string, userId: string, muted: boolean) => {
+        set(state => ({
+            conversations: state.conversations.map(c =>
+                c.id === conversationId
+                    ? { ...c, userChat: { ...c.userChat, isMuted: muted } }
+                    : c
+            ),
+            userChats: {
+                ...state.userChats,
+                [conversationId]: { ...state.userChats[conversationId], isMuted: muted }
+            }
+        }));
+
         try {
             await rtdbConversationService.toggleMute(userId, conversationId, muted);
         } catch (error) {
+            set(state => ({
+                conversations: state.conversations.map(c =>
+                    c.id === conversationId
+                        ? { ...c, userChat: { ...c.userChat, isMuted: !muted } }
+                        : c
+                ),
+                userChats: {
+                    ...state.userChats,
+                    [conversationId]: { ...state.userChats[conversationId], isMuted: !muted }
+                }
+            }));
             console.error("Lỗi tắt thông báo:", error);
             throw error;
         }
     },
 
     toggleArchive: async (conversationId: string, userId: string, archived: boolean) => {
+        set(state => ({
+            conversations: state.conversations.map(c =>
+                c.id === conversationId
+                    ? { ...c, userChat: { ...c.userChat, isArchived: archived } }
+                    : c
+            ),
+            userChats: {
+                ...state.userChats,
+                [conversationId]: { ...state.userChats[conversationId], isArchived: archived }
+            }
+        }));
+
         try {
             await rtdbConversationService.toggleArchive(userId, conversationId, archived);
         } catch (error) {
+            set(state => ({
+                conversations: state.conversations.map(c =>
+                    c.id === conversationId
+                        ? { ...c, userChat: { ...c.userChat, isArchived: !archived } }
+                        : c
+                ),
+                userChats: {
+                    ...state.userChats,
+                    [conversationId]: { ...state.userChats[conversationId], isArchived: !archived }
+                }
+            }));
             console.error("Lỗi lưu trữ hội thoại:", error);
             throw error;
         }
     },
 
     toggleMarkUnread: async (conversationId: string, userId: string, markedUnread: boolean) => {
+        const prevUnread = get().userChats[conversationId]?.unreadCount ?? 0;
+        const nextUnread = markedUnread ? Math.max(prevUnread, 1) : 0;
+
+        set(state => ({
+            conversations: state.conversations.map(c =>
+                c.id === conversationId
+                    ? { ...c, userChat: { ...c.userChat, unreadCount: nextUnread } }
+                    : c
+            ),
+            userChats: {
+                ...state.userChats,
+                [conversationId]: { ...state.userChats[conversationId], unreadCount: nextUnread }
+            }
+        }));
+
         try {
             if (markedUnread) {
                 await rtdbConversationService.markAsUnread(userId, conversationId);
@@ -174,7 +258,18 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
                 await rtdbConversationService.resetUnreadCount(userId, conversationId);
             }
         } catch (error) {
-            console.error("Lỗi đánh dấu chưa đọc:", error);
+            set(state => ({
+                conversations: state.conversations.map(c =>
+                    c.id === conversationId
+                        ? { ...c, userChat: { ...c.userChat, unreadCount: prevUnread } }
+                        : c
+                ),
+                userChats: {
+                    ...state.userChats,
+                    [conversationId]: { ...state.userChats[conversationId], unreadCount: prevUnread }
+                }
+            }));
+            console.error("Đánh dấu chưa đọc thất bại:", error);
             throw error;
         }
     },

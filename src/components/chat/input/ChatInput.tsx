@@ -241,11 +241,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         .map(f => f.file);
       const otherFiles = selectedFiles.filter(f => f.type !== 'image' && f.type !== 'video');
 
-      if (albumFiles.length > 0) await onSendImages(albumFiles, replyingTo?.id);
+      if (albumFiles.length > 0) {
+        onSendImages(albumFiles, replyingTo?.id).catch(() => {
+          toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
+        });
+      }
 
       for (const item of otherFiles) {
-        if (item.type === 'voice') await onSendVoice?.(item.file, replyingTo?.id, item.duration);
-        else await onSendFile(item.file, replyingTo?.id);
+        if (item.type === 'voice') {
+          try { onSendVoice?.(item.file, replyingTo?.id, item.duration); } catch {
+            toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
+          }
+        } else {
+          onSendFile(item.file, replyingTo?.id);
+        }
       }
 
       if (inputText.trim()) {

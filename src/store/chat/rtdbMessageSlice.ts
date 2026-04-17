@@ -314,7 +314,41 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     sendGifMessage: async (conversationId: string, senderId: string, gifUrl: string, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         try {
-            await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId });
+            const msgId = await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId });
+            if (!msgId) return;
+
+            set(state => {
+                const existing = state.messages[conversationId] || [];
+                if (existing.some(m => m.id === msgId)) return state;
+
+                const optimisticMsg = {
+                    id: msgId,
+                    data: {
+                        senderId,
+                        type: MessageType.GIF,
+                        content: gifUrl,
+                        media: [],
+                        mentions: [],
+                        isForwarded: false,
+                        isEdited: false,
+                        isRecalled: false,
+                        deletedBy: {},
+                        readBy: {},
+                        deliveredTo: {},
+                        reactions: {},
+                        replyToId: replyToId || null,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    } as RtdbMessage
+                };
+
+                return {
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                    }
+                };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendGifMessage:', error);
             throw error;
@@ -326,7 +360,6 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         try {
             const msgId = await rtdbMessageService.sendCallMessage(conversationId, senderId, payload);
             
-            // Optimistic Update cho tin nhắn cuộc gọi
             set((state) => {
                 const existing = state.messages[conversationId] || [];
                 if (existing.some(m => m.id === msgId)) return state;
@@ -371,7 +404,6 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
             const content = JSON.stringify(payload);
             await rtdbMessageService.updateMessageContent(conversationId, messageId, content, payload);
             
-            // Cập nhật trạng thái cuộc gọi ngay trong store cục bộ
             set((state) => {
                 const conversationMessages = state.messages[conversationId];
                 if (!conversationMessages) return state;
@@ -426,18 +458,67 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         const userId = useAuthStore.getState().user?.id;
         if (!userId) return;
 
+        const snapshot = get().messages[conversationId]?.find(m => m.id === messageId);
+
+        set(state => {
+            const msgs = state.messages[conversationId];
+            if (!msgs) return state;
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: msgs.map(m =>
+                        m.id === messageId
+                            ? { ...m, data: { ...m.data, isRecalled: true } }
+                            : m
+                    )
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.recallMessage(conversationId, messageId, userId);
         } catch (error) {
+            if (snapshot) {
+                set(state => ({
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: state.messages[conversationId]?.map(m =>
+                            m.id === messageId ? snapshot : m
+                        ) || []
+                    }
+                }));
+            }
             console.error('[rtdbMessageSlice] Lỗi recallMessage:', error);
             throw error;
         }
     },
 
     deleteMessageForMe: async (conversationId: string, messageId: string, userId: string) => {
+        const snapshot = get().messages[conversationId]?.find(m => m.id === messageId);
+        set(state => {
+            const msgs = state.messages[conversationId] || [];
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: msgs.filter(m => m.id !== messageId)
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.deleteForMe(conversationId, messageId, userId);
         } catch (error) {
+            if (snapshot) {
+                set(state => {
+                    const msgs = state.messages[conversationId] || [];
+                    return {
+                        messages: {
+                            ...state.messages,
+                            [conversationId]: [...msgs, snapshot].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                        }
+                    };
+                });
+            }
             console.error('[rtdbMessageSlice] Lỗi deleteMessageForMe:', error);
             throw error;
         }
@@ -456,18 +537,77 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         const userId = useAuthStore.getState().user?.id;
         if (!userId) return;
 
+        const snapshot = get().messages[conversationId]?.find(m => m.id === messageId);
+
+        set(state => {
+            const msgs = state.messages[conversationId];
+            if (!msgs) return state;
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: msgs.map(m =>
+                        m.id === messageId
+                            ? { ...m, data: { ...m.data, content, isEdited: true, updatedAt: Date.now() } }
+                            : m
+                    )
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.editMessage(conversationId, messageId, userId, content);
         } catch (error) {
+            if (snapshot) {
+                set(state => ({
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: state.messages[conversationId]?.map(m =>
+                            m.id === messageId ? snapshot : m
+                        ) || []
+                    }
+                }));
+            }
             console.error('[rtdbMessageSlice] Lỗi editMessage:', error);
             throw error;
         }
     },
 
     toggleReaction: async (conversationId: string, messageId: string, userId: string, emoji: string) => {
+        const snapshot = get().messages[conversationId]?.find(m => m.id === messageId);
+
+        set(state => {
+            const msgs = state.messages[conversationId];
+            if (!msgs) return state;
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: msgs.map(m => {
+                        if (m.id !== messageId) return m;
+                        const reactions = { ...(m.data.reactions || {}) };
+                        if (reactions[userId] === emoji) {
+                            delete reactions[userId];
+                        } else {
+                            reactions[userId] = emoji;
+                        }
+                        return { ...m, data: { ...m.data, reactions } };
+                    })
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.toggleReaction(conversationId, messageId, userId, emoji);
         } catch (error) {
+            if (snapshot) {
+                set(state => ({
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: state.messages[conversationId]?.map(m =>
+                            m.id === messageId ? snapshot : m
+                        ) || []
+                    }
+                }));
+            }
             console.error('[rtdbMessageSlice] Lỗi toggleReaction:', error);
             throw error;
         }
