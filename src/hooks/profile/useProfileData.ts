@@ -24,7 +24,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
   const rawFriendIds = useFriendIds();
   const friendIds = useMemo(() => rawFriendIds, [JSON.stringify(rawFriendIds)]);
 
-  const { isFullyBlocked } = useBlockedUsers();
+  const { isBlocked } = useBlockedUsers();
   const lastIdRef = useRef<string | undefined>(undefined);
 
   const allStorePosts = usePostStore(state => state.posts);
@@ -60,10 +60,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
 
     lastIdRef.current = profileUserId;
     try {
-      const isBlockedWith = profileUserId ? isFullyBlocked(profileUserId) : false;
-      const userData = await userService.getUserById(profileUserId);
-      setProfile(userData || null);
-
+      await userService.getUserById(profileUserId).then(userData => setProfile(userData || null));
     } catch (error) {
       console.error("Lỗi load profile", error);
     } finally {
@@ -71,7 +68,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
         setLoading(false);
       }
     }
-  }, [profileUserId, currentUser?.id, rawFriendIds, isFullyBlocked]);
+  }, [profileUserId, currentUser?.id, rawFriendIds, isBlocked]);
 
   useEffect(() => {
     loadProfile(true);

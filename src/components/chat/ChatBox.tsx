@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat } from '../../../shared/types';
+import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat, BlockOptions } from '../../../shared/types';
 import { Loading } from '../ui';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageRequestBanner } from './message/MessageRequestBanner';
@@ -35,9 +35,7 @@ interface ChatBoxProps {
   isBlocked?: boolean;
   isBlockedByMe?: boolean;
   partnerStatus?: UserStatus;
-  myBlockOptions?: {
-    isFullyBlocked: boolean; isMessageBlocked: boolean;
-  };
+  myBlockOptions?: BlockOptions;
   onUnblock?: () => void;
   onManageBlock?: () => void;
   shouldShowBlockBanner?: boolean;

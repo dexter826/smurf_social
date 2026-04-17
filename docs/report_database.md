@@ -89,11 +89,13 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 
 | Field              | Type      | Required/Optional | Description/Default                                             |
 | :----------------- | :-------- | :---------------- | :-------------------------------------------------------------- |
-| `blockedUid`       | String    | **Required**      | Document ID người bị chặn                                       |
-| `isFullyBlocked`   | Boolean   | **Required**      | Chặn hoàn toàn (tin nhắn, kết bạn, hoạt động). Mặc định `false` |
-| `isMessageBlocked` | Boolean   | **Required**      | Chỉ chặn tin nhắn và cuộc gọi. Mặc định `false`                 |
-| `createdAt`        | Timestamp | **Required**      | Thời điểm tạo                                                   |
-| `updatedAt`        | Timestamp | **Required**      | Thời điểm cập nhật                                              |
+| `blockedUid`          | String    | **Required**      | Document ID người bị chặn                                     |
+| `blockMessages`       | Boolean   | **Required**      | Chặn tin nhắn. Mặc định `false`                               |
+| `blockCalls`          | Boolean   | **Required**      | Chặn cuộc gọi. Mặc định `false`                               |
+| `blockViewMyActivity` | Boolean   | **Required**      | Chặn xem bài đăng của tôi. Mặc định `false`                   |
+| `hideTheirActivity`   | Boolean   | **Required**      | Ẩn hoạt động của người này. Mặc định `false`                  |
+| `createdAt`           | Timestamp | **Required**      | Thời điểm tạo                                                 |
+| `updatedAt`           | Timestamp | **Required**      | Thời điểm cập nhật                                            |
 
 **1.5. Sub-collection `feeds` (Bên trong `users/{uid}` - Bảng tin Fan-out)**
 

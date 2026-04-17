@@ -43,7 +43,7 @@ async function getVisibleFriendIds(authorId: string): Promise<string[]> {
         );
 
         blockSnaps.forEach((snap, idx) => {
-            if (snap.exists && snap.data()?.isFullyBlocked === true) {
+            if (snap.exists && snap.data()?.hideTheirActivity === true) {
                 usersHidingAuthor.add(chunk[idx]);
             }
         });

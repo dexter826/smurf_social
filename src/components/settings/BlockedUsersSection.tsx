@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ban, Settings2, MessageSquareOff, PhoneOff, EyeOff } from 'lucide-react';
+import { Ban, Settings2, MessageSquareOff, PhoneOff, EyeOff, Eye } from 'lucide-react';
 import { User, BlockOptions, BlockedUserEntry } from '../../../shared/types';
 import { UserAvatar, Button, Skeleton } from '../ui';
 
@@ -20,8 +20,10 @@ const BLOCK_TAG_MAP: {
   label: string;
   color: string;
 }[] = [
-    { key: 'isFullyBlocked', icon: <Ban size={10} />, label: 'Chặn hồ sơ', color: 'text-error bg-error/10 border-error/20' },
-    { key: 'isMessageBlocked', icon: <MessageSquareOff size={10} />, label: 'Chặn liên lạc', color: 'text-error bg-error/10 border-error/20 opacity-80' },
+    { key: 'blockMessages', icon: <MessageSquareOff size={10} />, label: 'Chặn tin nhắn', color: 'text-error bg-error/10 border-error/20' },
+    { key: 'blockCalls', icon: <PhoneOff size={10} />, label: 'Chặn cuộc gọi', color: 'text-error bg-error/10 border-error/20 opacity-90' },
+    { key: 'blockViewMyActivity', icon: <Eye size={10} />, label: 'Ẩn bài của tôi', color: 'text-warning bg-warning/10 border-warning/20' },
+    { key: 'hideTheirActivity', icon: <EyeOff size={10} />, label: 'Ẩn bài của họ', color: 'text-warning bg-warning/10 border-warning/20 opacity-90' },
   ];
 
 const BlockOptionTags: React.FC<{ options: BlockOptions }> = React.memo(({ options }) => {

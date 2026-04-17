@@ -6,13 +6,12 @@ export const useBlockedUsers = () => {
 
   const blockedUserIds = useMemo(() => Object.keys(blockedUsers), [blockedUsers]);
 
-  const isFullyBlocked = useCallback(
-    (userId: string) => !!blockedUsers[userId]?.isFullyBlocked,
+  const isHidingMyActivity = useCallback(
+    (userId: string) => !!blockedUsers[userId]?.blockViewMyActivity,
     [blockedUsers]
   );
-
   const isMessageBlocked = useCallback(
-    (userId: string) => !!blockedUsers[userId]?.isMessageBlocked || !!blockedUsers[userId]?.isFullyBlocked,
+    (userId: string) => !!blockedUsers[userId]?.blockMessages,
     [blockedUsers]
   );
 
@@ -25,7 +24,7 @@ export const useBlockedUsers = () => {
     blockedUsers, 
     blockedUserIds, 
     isBlocked,
-    isFullyBlocked, 
+    isHidingMyActivity,
     isMessageBlocked 
   };
 };

@@ -62,8 +62,8 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
         const partnerId = Object.keys(conv.data.members).find(id => id !== currentUserId);
         if (!partnerId) return false;
         
-        // Loại bỏ nếu người kia bị mình chặn hoặc ngược lại
-        const isBlockedByMe = blockedUsers[partnerId]?.isFullyBlocked || blockedUsers[partnerId]?.isMessageBlocked;
+        // Loại bỏ nếu mình đã chặn nhắn tin người kia
+        const isBlockedByMe = blockedUsers[partnerId]?.blockMessages || blockedUsers[partnerId]?.blockCalls;
         if (isBlockedByMe) return false;
         
         const partner = usersMap[partnerId];
@@ -91,7 +91,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
       .filter(friend => !existingChatPartnerIds.has(friend.id))
       .filter(friend => {
         const blocked = blockedUsers[friend.id];
-        return !blocked?.isFullyBlocked && !blocked?.isMessageBlocked && friend.status !== UserStatus.BANNED;
+        return !blocked?.blockMessages && !blocked?.blockCalls && friend.status !== UserStatus.BANNED;
       })
       .map(friend => ({
         type: 'friend',

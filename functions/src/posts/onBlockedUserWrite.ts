@@ -28,7 +28,7 @@ async function commitInChunks(
 }
 
 /**
- * Đồng bộ feed khi block options thay đổi
+ * Đồng bộ feed khi hideTheirActivity thay đổi
  */
 export const onBlockedUserWrite = onDocumentWritten(
     { document: 'users/{userId}/blockedUsers/{blockedUid}', region: 'us-central1' },
@@ -36,19 +36,16 @@ export const onBlockedUserWrite = onDocumentWritten(
         const userId = event.params.userId;
         const blockedUid = event.params.blockedUid;
 
-
         const before = event.data?.before?.data();
         const after = event.data?.after?.data();
 
-        const prevHide = before?.isFullyBlocked ?? false;
-        const newHide = after?.isFullyBlocked ?? false;
+        const prevHide = before?.hideTheirActivity ?? false;
+        const newHide = after?.hideTheirActivity ?? false;
 
         const tasks: Promise<void>[] = [];
 
         if (!prevHide && newHide) tasks.push(removePostsFromFeed(db, userId, blockedUid));
-        if (!prevHide && newHide) tasks.push(removePostsFromFeed(db, blockedUid, userId));
         if (prevHide && !newHide) tasks.push(restorePostsIfFriend(db, userId, blockedUid));
-        if (prevHide && !newHide) tasks.push(restorePostsIfFriend(db, blockedUid, userId));
 
         if (tasks.length > 0) await Promise.all(tasks);
     }

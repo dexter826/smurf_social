@@ -25,10 +25,10 @@ export const useChatBlock = ({
   partner,
   isGroup,
   usersMap,
-  conversation,
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
   const [isMessageBlockedByPartner, setIsMessageBlockedByPartner] = useState(false);
+  const [isCallBlockedByPartner, setIsCallBlockedByPartner] = useState(false);
 
   const myBlockedUsers = useAuthStore(state => state.blockedUsers);
 
@@ -38,10 +38,8 @@ export const useChatBlock = ({
   );
 
   const isBlockedByMe = !!myBlockOptions;
-  const isMessageBlockedByMe = !!myBlockOptions?.isMessageBlocked || !!myBlockOptions?.isFullyBlocked;
-
-  const isCallBlockedByMe = isMessageBlockedByMe;
-  const isCallBlockedByPartner = isMessageBlockedByPartner;
+  const isMessageBlockedByMe = !!(myBlockOptions?.blockMessages || myBlockOptions?.blockCalls);
+  const isCallBlockedByMe = !!myBlockOptions?.blockCalls;
 
   const isBlocked = isMessageBlockedByMe || isMessageBlockedByPartner || partnerStatus === UserStatus.BANNED;
   const shouldShowBlockBanner = isBlockedByMe;
@@ -59,9 +57,11 @@ export const useChatBlock = ({
     return () => unsub();
   }, [partnerId]);
 
+  // Lắng nghe realtime: partner có blockMessages/blockCalls cho tôi không
   useEffect(() => {
     if (!partnerId || !currentUser || isGroup) {
       setIsMessageBlockedByPartner(false);
+      setIsCallBlockedByPartner(false);
       return;
     }
 
@@ -69,9 +69,11 @@ export const useChatBlock = ({
     const unsub = onSnapshot(blockRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        setIsMessageBlockedByPartner(data.isMessageBlocked === true || data.isFullyBlocked === true);
+        setIsMessageBlockedByPartner(data.blockMessages === true);
+        setIsCallBlockedByPartner(data.blockCalls === true);
       } else {
         setIsMessageBlockedByPartner(false);
+        setIsCallBlockedByPartner(false);
       }
     });
     return () => unsub();
@@ -95,9 +97,7 @@ export const useChatBlock = ({
     try {
       await userService.unblockUser(currentUser.id, finalTargetId);
       useAuthStore.getState().updateBlockEntry('remove', finalTargetId);
-      
       usePostStore.getState().refreshFeed(currentUser.id);
-      
       toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
     } catch {
       toast.error(TOAST_MESSAGES.BLOCK.UNBLOCK_FAILED);
@@ -107,9 +107,10 @@ export const useChatBlock = ({
   const handleApplyBlock = useCallback(async (options: BlockOptions, targetIdOverride?: string) => {
     const finalTargetId = targetIdOverride || partnerId;
     if (!finalTargetId || !currentUser) return;
-    
-    const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
-    
+
+    const hasAnyOption = options.blockMessages || options.blockCalls
+      || options.blockViewMyActivity || options.hideTheirActivity;
+
     if (!hasAnyOption) {
       return handleUnblock(finalTargetId);
     }
@@ -117,11 +118,11 @@ export const useChatBlock = ({
     try {
       await userService.blockUser(currentUser.id, finalTargetId, options);
       useAuthStore.getState().updateBlockEntry('add', finalTargetId, options);
-      
-      if (options.isFullyBlocked) {
+
+      if (options.hideTheirActivity) {
         usePostStore.getState().filterPostsByAuthor(finalTargetId);
       }
-      
+
       toast.success(TOAST_MESSAGES.BLOCK.BLOCK_SUCCESS);
     } catch {
       toast.error(TOAST_MESSAGES.BLOCK.BLOCK_FAILED);

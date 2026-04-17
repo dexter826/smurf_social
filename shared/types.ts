@@ -380,8 +380,10 @@ export interface Report extends BaseEntity {
 // ========== BLOCK OPTIONS ==========
 
 export interface BlockOptions {
-    isFullyBlocked: boolean;
-    isMessageBlocked: boolean;
+    blockMessages: boolean;
+    blockCalls: boolean;
+    blockViewMyActivity: boolean;
+    hideTheirActivity: boolean;
 }
 
 export interface BlockedUserEntry extends BlockOptions {

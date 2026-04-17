@@ -8,6 +8,8 @@ import { usePostStore } from '../store';
 import { ConfirmDialog } from '../components/ui';
 import { CONFIRM_MESSAGES } from '../constants';
 import { userService } from '../services/userService';
+import { toast } from '../store/toastStore';
+import { TOAST_MESSAGES } from '../constants';
 import PrivacySection from '../components/settings/PrivacySection';
 import SecuritySection from '../components/settings/SecuritySection';
 import BlockedUsersSection, { BlockedUserWithOptions } from '../components/settings/BlockedUsersSection';
@@ -64,6 +66,9 @@ const SettingsPage: React.FC = () => {
       useAuthStore.getState().updateBlockEntry('remove', unblockUserId);
       setBlockedList(prev => prev.filter(item => item.user.id !== unblockUserId));
       usePostStore.getState().refreshFeed(currentUser.id);
+      toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
+    } catch {
+      toast.error(TOAST_MESSAGES.BLOCK.UNBLOCK_FAILED);
     } finally {
       setUnblockUserId(null);
     }
@@ -73,26 +78,38 @@ const SettingsPage: React.FC = () => {
     if (!manageBlockTarget || !currentUser) return;
     const targetId = manageBlockTarget.user.id;
 
-    const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
+    const hasAnyOption = options.blockMessages || options.blockCalls
+      || options.blockViewMyActivity || options.hideTheirActivity;
     if (!hasAnyOption) {
       setManageBlockTarget(null);
-      await userService.unblockUser(currentUser.id, targetId);
-      useAuthStore.getState().updateBlockEntry('remove', targetId);
-      setBlockedList(prev => prev.filter(item => item.user.id !== targetId));
-      usePostStore.getState().refreshFeed(currentUser.id);
+      try {
+        await userService.unblockUser(currentUser.id, targetId);
+        useAuthStore.getState().updateBlockEntry('remove', targetId);
+        setBlockedList(prev => prev.filter(item => item.user.id !== targetId));
+        usePostStore.getState().refreshFeed(currentUser.id);
+        toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
+      } catch {
+        toast.error(TOAST_MESSAGES.BLOCK.UNBLOCK_FAILED);
+      }
       return;
     }
 
-    await userService.blockUser(currentUser.id, targetId, options);
-    useAuthStore.getState().updateBlockEntry('add', targetId, options);
-    if (options.isFullyBlocked) usePostStore.getState().filterPostsByAuthor(targetId);
+    try {
+      await userService.blockUser(currentUser.id, targetId, options);
+      useAuthStore.getState().updateBlockEntry('add', targetId, options);
+      if (options.hideTheirActivity) usePostStore.getState().filterPostsByAuthor(targetId);
 
-    setBlockedList(prev =>
-      prev.map(item =>
-        item.user.id === targetId ? { ...item, options: { ...item.options, ...options } } : item
-      )
-    );
-    setManageBlockTarget(null);
+      setBlockedList(prev =>
+        prev.map(item =>
+          item.user.id === targetId ? { ...item, options: { ...item.options, ...options } } : item
+        )
+      );
+      toast.success(TOAST_MESSAGES.BLOCK.BLOCK_SUCCESS);
+    } catch {
+      toast.error(TOAST_MESSAGES.BLOCK.BLOCK_FAILED);
+    } finally {
+      setManageBlockTarget(null);
+    }
   }, [manageBlockTarget, currentUser]);
 
   const currentLabel = useMemo(
@@ -216,7 +233,7 @@ const SettingsPage: React.FC = () => {
           targetName={manageBlockTarget.user.fullName}
           initialOptions={manageBlockTarget.options}
           onApply={handleUpdateBlockOptions}
-          onUnblock={() => handleUpdateBlockOptions({ isFullyBlocked: false, isMessageBlocked: false })}
+          onUnblock={() => handleUpdateBlockOptions({ blockMessages: false, blockCalls: false, blockViewMyActivity: false, hideTheirActivity: false })}
           onClose={() => setManageBlockTarget(null)}
         />
       )}

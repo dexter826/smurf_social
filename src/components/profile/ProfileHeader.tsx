@@ -31,7 +31,6 @@ interface ProfileHeaderProps {
   uploadProgress?: number;
   onAvatarClick?: () => void;
   onCoverClick?: () => void;
-  isFullyBlockedByMe?: boolean;
   isMessageBlockedByPartner?: boolean;
 }
 
@@ -39,7 +38,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user, isOwnProfile, friendStatus = FriendStatus.NOT_FRIEND,
   onEditClick, onMessageClick, onFriendClick,
   onAvatarChange, onCoverChange, onAvatarDelete, onCoverDelete,
-  onBlockClick, onUnblockClick, isBlockedByMe = false, isFullyBlockedByMe = false,
+  onBlockClick, onUnblockClick, isBlockedByMe = false,
   isMessageBlockedByPartner = false,
   uploadingType, uploadProgress,
   onAvatarClick, onCoverClick,
@@ -255,9 +254,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       <Button 
                         onClick={onMessageClick} 
                         icon={<MessageCircle size={17} />}
-                        disabled={isBlockedByMe && !isFullyBlockedByMe}
+                        disabled={isBlockedByMe}
                         variant="primary"
-                        title={(isBlockedByMe && !isFullyBlockedByMe) ? "Bạn đã chặn tin nhắn từ người này" : undefined}
+                        title={isBlockedByMe ? 'Bạn đã chặn liên lạc với người này' : undefined}
                       >
                         Nhắn tin
                       </Button>

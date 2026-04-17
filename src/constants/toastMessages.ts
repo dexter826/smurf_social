@@ -48,9 +48,9 @@ export const TOAST_MESSAGES = {
   },
 
   BLOCK: {
-    BLOCK_SUCCESS: 'Đã chặn người dùng.',
+    BLOCK_SUCCESS: 'Đã cập nhật thiết lập chặn.',
     UNBLOCK_SUCCESS: 'Đã bỏ chặn người dùng.',
-    BLOCK_FAILED: 'Không thể chặn người dùng.',
+    BLOCK_FAILED: 'Không thể cập nhật thiết lập chặn.',
     UNBLOCK_FAILED: 'Không thể bỏ chặn người dùng.',
   },
 

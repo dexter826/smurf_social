@@ -23,8 +23,7 @@ export const useProfileBlock = ({
 }: UseProfileBlockProps) => {
   const blockedUsers = useAuthStore(state => state.blockedUsers);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
-  const [isFullyBlockedByPartner, setIsFullyBlockedByPartner] = useState(false);
-  const [isMessageBlockedByPartner, setIsMessageBlockedByPartner] = useState(false);
+  const [isBlockedByPartner, setIsBlockedByPartner] = useState(false);
 
   const isBlockedByMe = useMemo(() =>
     !!blockedUsers[profileUserId || ''],
@@ -41,21 +40,19 @@ export const useProfileBlock = ({
     setIsBlockModalOpen(true);
   }, [currentUser, profile, isOwnProfile]);
 
+  // Lắng nghe realtime block từ phía đối phương (họ có blockViewMyActivity không)
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) {
-      setIsFullyBlockedByPartner(false);
-      setIsMessageBlockedByPartner(false);
+      setIsBlockedByPartner(false);
       return;
     }
     const blockRef = doc(db, 'users', profileUserId, 'blockedUsers', currentUser.id);
     const unsub = onSnapshot(blockRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        setIsFullyBlockedByPartner(data?.isFullyBlocked === true);
-        setIsMessageBlockedByPartner(data?.isMessageBlocked === true);
+        setIsBlockedByPartner(data?.blockViewMyActivity === true);
       } else {
-        setIsFullyBlockedByPartner(false);
-        setIsMessageBlockedByPartner(false);
+        setIsBlockedByPartner(false);
       }
     });
     return () => unsub();
@@ -66,9 +63,7 @@ export const useProfileBlock = ({
     try {
       await userService.unblockUser(currentUser.id, profile.id);
       useAuthStore.getState().updateBlockEntry('remove', profile.id);
-      
       usePostStore.getState().refreshFeed(currentUser.id);
-      
       toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
     } catch {
       toast.error(TOAST_MESSAGES.BLOCK.UNBLOCK_FAILED);
@@ -83,31 +78,31 @@ export const useProfileBlock = ({
   const handleApplyBlock = useCallback(async (options: BlockOptions) => {
     if (!currentUser || !profile || isOwnProfile) return;
 
-    const hasAnyOption = options.isFullyBlocked || options.isMessageBlocked;
-    
+    const hasAnyOption = options.blockMessages || options.blockCalls
+      || options.blockViewMyActivity || options.hideTheirActivity;
+
     if (!hasAnyOption) {
-      return handleUnblockUser();
+      return confirmUnblock();
     }
 
     try {
       await userService.blockUser(currentUser.id, profile.id, options);
       useAuthStore.getState().updateBlockEntry('add', profile.id, options);
-      
-      if (options.isFullyBlocked) {
+
+      if (options.hideTheirActivity) {
         usePostStore.getState().filterPostsByAuthor(profile.id);
       }
-      
+
       toast.success(TOAST_MESSAGES.BLOCK.BLOCK_SUCCESS);
     } catch {
       toast.error(TOAST_MESSAGES.BLOCK.BLOCK_FAILED);
       throw new Error('block failed');
     }
-  }, [currentUser, profile, isOwnProfile, handleUnblockUser]);
+  }, [currentUser, profile, isOwnProfile, confirmUnblock]);
 
   return {
     isBlockedByMe,
-    isFullyBlockedByPartner,
-    isMessageBlockedByPartner,
+    isBlockedByPartner,
     currentBlockOptions,
     isBlockModalOpen,
     handleOpenBlockModal,

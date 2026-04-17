@@ -21,7 +21,6 @@ import {
 import { db, functions } from '../firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import { User, MediaObject, UserRole, UserStatus, BlockOptions, BlockedUserEntry, UserSettings, Visibility, PostType, Gender, MaritalStatus, Generation } from '../../shared/types';
-import { friendService } from './friendService';
 import { systemPostService } from './systemPostService';
 import { SOCIAL_MESSAGES } from '../constants/socialMessages';
 import { batchGetUsers } from '../utils/batchUtils';
@@ -235,8 +234,10 @@ export const userService = {
         const data = d.data();
         result[d.id] = {
           blockedUid: data.blockedUid,
-          isFullyBlocked: data.isFullyBlocked ?? false,
-          isMessageBlocked: data.isMessageBlocked ?? false,
+          blockMessages: data.blockMessages ?? false,
+          blockCalls: data.blockCalls ?? false,
+          blockViewMyActivity: data.blockViewMyActivity ?? false,
+          hideTheirActivity: data.hideTheirActivity ?? false,
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
         };
@@ -260,13 +261,6 @@ export const userService = {
         },
         { merge: true }
       );
-      if (options.isFullyBlocked) {
-        try {
-          await friendService.unfriend(userId, blockedUserId);
-        } catch (e) {
-          console.error('Không thể huỷ kết bạn tự động khi chặn', e);
-        }
-      }
     } catch (error) {
       console.error('Lỗi chặn người dùng', error);
       throw error;

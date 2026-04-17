@@ -38,7 +38,7 @@ const ProfilePage: React.FC = () => {
     handleMessage, handleFriendAction, confirmUnfriend,
     handleSaveProfile, handleAvatarChange, handleCoverChange,
     handleAvatarDelete, handleCoverDelete,
-    isBlockedByMe, isFullyBlockedByPartner, isMessageBlockedByPartner, currentBlockOptions,
+    isBlockedByMe, isBlockedByPartner, currentBlockOptions,
     isBlockModalOpen, handleOpenBlockModal, handleApplyBlock,
     handleUnblockUser, confirmUnblock, closeBlockModal,
   } = useProfile();
@@ -160,8 +160,7 @@ const ProfilePage: React.FC = () => {
           onBlockClick={handleOpenBlockModal}
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
-          isFullyBlockedByMe={currentBlockOptions?.isFullyBlocked ?? false}
-          isMessageBlockedByPartner={isMessageBlockedByPartner}
+          isMessageBlockedByPartner={isBlockedByPartner}
           uploadingType={uploadingType}
           uploadProgress={uploadProgress}
           onAvatarClick={() => handleMediaClick(PostType.AVATAR_UPDATE)}
@@ -172,7 +171,7 @@ const ProfilePage: React.FC = () => {
         )}
       </div>
 
-      {canViewContent ? (
+      {canViewContent && (
         <div className="max-w-5xl mx-auto px-4 pt-2 pb-12">
           {activeTab === 'posts' ? (
             <div className="flex flex-col md:flex-row gap-4 md:gap-6">
@@ -181,7 +180,7 @@ const ProfilePage: React.FC = () => {
                 <ProfileAboutCard profile={profile} />
                 <ProfileMediaPreview 
                   media={latestMedia} 
-                  isBlocked={isFullyBlockedByPartner} 
+                  isBlocked={isBlockedByPartner} 
                   onSeeAll={() => setActiveTab('media')} 
                 />
               </div>
@@ -192,7 +191,7 @@ const ProfilePage: React.FC = () => {
                   userId={profile.id}
                   currentUser={currentUser}
                   onViewPost={viewPost}
-                  isFullyBlockedByPartner={isFullyBlockedByPartner}
+                  isFullyBlockedByPartner={isBlockedByPartner}
                   onSharePost={handleOpenShareModal}
                 />
               </div>
@@ -202,35 +201,11 @@ const ProfilePage: React.FC = () => {
               {activeTab === 'media' && (
                 <PhotosTab
                   userId={profile.id}
-                  isFullyBlockedByPartner={isFullyBlockedByPartner}
+                  isFullyBlockedByPartner={isBlockedByPartner}
                 />
               )}
             </div>
           )}
-        </div>
-      ) : (
-        /* ── Cannot view content ── */
-        <div className="flex items-center justify-center p-4 py-16">
-          <div className="bg-bg-primary rounded-2xl border border-border-light p-10 w-full max-w-md text-center animate-fade-in">
-            <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-5 border border-border-light">
-              <Lock size={28} className="text-text-tertiary" />
-            </div>
-            <h2 className="text-xl font-bold text-text-primary mb-2">Không thể xem trang này</h2>
-            <p className="text-sm text-text-secondary mb-7 leading-relaxed">
-              {isBlockedByMe
-                ? 'Bạn đã chặn người dùng này. Bỏ chặn để xem nội dung của họ.'
-                : !isFullyBlockedByPartner
-                  ? 'Bạn không thể xem trang cá nhân này.'
-                  : 'Người dùng này đã giới hạn quyền xem trang cá nhân.'}
-            </p>
-            <div className="flex gap-3 justify-center">
-              {isBlockedByMe ? (
-                <Button onClick={handleUnblockUser}>Quản lý chặn</Button>
-              ) : (
-                <Button onClick={() => navigate(-1)} variant="secondary">Quay lại</Button>
-              )}
-            </div>
-          </div>
         </div>
       )}
 
