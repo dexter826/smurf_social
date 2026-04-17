@@ -4,6 +4,7 @@ import { rtdbConversationService } from '../../services/chat/rtdbConversationSer
 import { friendService } from '../../services/friendService';
 import { useAuthStore } from '../authStore';
 import { useLoadingStore } from '../loadingStore';
+import { useUserCache } from '../userCacheStore';
 import type { RtdbChatState } from '../rtdbChatStore';
 
 export interface RtdbConversationSlice {
@@ -116,20 +117,35 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
                 return;
             }
 
+            const termLower = term.toLowerCase();
+            const { users: usersMap } = useUserCache.getState();
             const allConversations = get().conversations;
+
             const matchedConversations = allConversations.filter(conv => {
                 if (conv.data.isGroup) {
-                    return conv.data.name?.toLowerCase().includes(term.toLowerCase());
+                    return conv.data.name?.toLowerCase().includes(termLower);
                 }
-                return false;
+                
+                const partnerId = Object.keys(conv.data.members).find(id => id !== userId);
+                const partner = partnerId ? usersMap[partnerId] : null;
+                return partner?.fullName?.toLowerCase().includes(termLower);
             });
 
             const friendResults = await friendService.searchFriends(term, userId);
             
+            const matchedPartnerIds = new Set(
+                matchedConversations
+                    .filter(c => !c.data.isGroup)
+                    .map(c => Object.keys(c.data.members).find(id => id !== userId))
+                    .filter(Boolean)
+            );
+
+            const filteredFriends = friendResults.filter(u => !matchedPartnerIds.has(u.id));
+            
             set({ 
                 searchResults: { 
                     conversations: matchedConversations,
-                    users: friendResults 
+                    users: filteredFriends 
                 } 
             });
         } catch (error) {

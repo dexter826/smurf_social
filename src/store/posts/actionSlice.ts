@@ -123,11 +123,24 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
   },
 
   deletePost: async (postId: string, userId: string) => {
+    const { posts, selectedPost } = get();
+    const snapshot = posts.find(p => p.id === postId) ?? null;
+
+    set(state => ({
+      posts: state.posts.filter(p => p.id !== postId),
+      selectedPost: state.selectedPost?.id === postId ? null : state.selectedPost
+    }));
+
     try {
       await postService.deletePost(postId, userId);
-      set(state => ({ posts: state.posts.filter(p => p.id !== postId) }));
       toast.success(TOAST_MESSAGES.POST.DELETE_SUCCESS);
     } catch (error) {
+      if (snapshot) {
+        set(state => ({
+          posts: [snapshot, ...state.posts],
+          selectedPost: selectedPost?.id === postId ? selectedPost : state.selectedPost
+        }));
+      }
       console.error("Lỗi xóa bài viết:", error);
       toast.error(TOAST_MESSAGES.POST.DELETE_FAILED);
       throw error;
