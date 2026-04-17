@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Users, Search, Bell, ArrowUpDown, Sparkles, RefreshCw } from 'lucide-react';
 import { useContacts } from '../hooks';
-import { Button, Input, ConfirmDialog } from '../components/ui';
-import { CONFIRM_MESSAGES } from '../constants';
+import { Button, Input, ConfirmDialog, BlockOptionsModal } from '../components/ui';
+import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../constants';
 import { FriendRequestItem, FriendItem, AddFriendModal, SuggestionItem } from '../components/contacts';
+import { useAuthStore } from '../store/authStore';
+import { toast } from '../store/toastStore';
+import { BlockOptions, User } from '../../shared/types';
 
 type Tab = 'all' | 'requests' | 'sent' | 'suggestions';
 
@@ -18,10 +21,15 @@ const ContactsPage: React.FC = () => {
     handleAcceptRequest, handleRejectRequest, handleCancelRequest,
     handleUnfriend, handleMessage, handleAddFriend,
     handleDismissSuggestion, handleRefreshSuggestions,
+    handleApplyBlock, handleUnblock,
   } = useContacts();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [unfriendId, setUnfriendId] = useState<string | null>(null);
+  const [blockTarget, setBlockTarget] = useState<User | null>(null);
+
+  const blockedUsers = useAuthStore(state => state.blockedUsers);
+  const currentBlockOptions = blockTarget ? blockedUsers[blockTarget.id] : undefined;
 
   const onUnfriendConfirm = async () => {
     if (!unfriendId) return;
@@ -32,6 +40,28 @@ const ContactsPage: React.FC = () => {
   const onMessageClick = async (friendId: string) => {
     const convId = await handleMessage(friendId);
     if (convId) navigate(`/?conv=${convId}`);
+  };
+
+  const onApplyBlock = async (options: BlockOptions) => {
+    if (!blockTarget) return;
+    try {
+      await handleApplyBlock(blockTarget.id, options);
+      toast.success(TOAST_MESSAGES.BLOCK.BLOCK_SUCCESS);
+      setBlockTarget(null);
+    } catch {
+      toast.error(TOAST_MESSAGES.BLOCK.BLOCK_FAILED);
+    }
+  };
+
+  const onUnblock = async () => {
+    if (!blockTarget) return;
+    try {
+      await handleUnblock(blockTarget.id);
+      toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
+      setBlockTarget(null);
+    } catch {
+      toast.error(TOAST_MESSAGES.BLOCK.UNBLOCK_FAILED);
+    }
   };
 
   const tabConfig: { id: Tab; label: string; icon: React.ReactNode; count?: number; badge?: boolean }[] = [
@@ -206,6 +236,7 @@ const ContactsPage: React.FC = () => {
                             friend={friend}
                             onUnfriend={(id) => setUnfriendId(id)}
                             onMessage={onMessageClick}
+                            onBlock={(id) => setBlockTarget(friend)}
                           />
                         ))}
                       </div>
@@ -316,6 +347,17 @@ const ContactsPage: React.FC = () => {
         confirmLabel={CONFIRM_MESSAGES.FRIEND.UNFRIEND.CONFIRM}
         variant="danger"
       />
+
+      {blockTarget && (
+        <BlockOptionsModal
+          isOpen
+          targetName={blockTarget.fullName}
+          initialOptions={currentBlockOptions}
+          onApply={onApplyBlock}
+          onUnblock={onUnblock}
+          onClose={() => setBlockTarget(null)}
+        />
+      )}
     </div>
   );
 };

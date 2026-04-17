@@ -6,6 +6,7 @@ import { useUserCache } from '../store/userCacheStore';
 import { useRtdbChatStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
 import { friendService } from '../services/friendService';
+import { userService } from '../services/userService';
 
 type TabType = 'all' | 'requests' | 'sent' | 'suggestions';
 
@@ -42,6 +43,8 @@ interface UseContactsReturn {
   handleAddFriend: (receiverId: string) => Promise<void>;
   handleDismissSuggestion: (userId: string) => void;
   handleRefreshSuggestions: () => Promise<void>;
+  handleApplyBlock: (targetId: string, options: any) => Promise<void>;
+  handleUnblock: (targetId: string) => Promise<void>;
 }
 
 /**
@@ -171,6 +174,29 @@ export const useContacts = (): UseContactsReturn => {
     await refreshSuggestions();
   }, [refreshSuggestions]);
 
+  const handleApplyBlock = useCallback(async (targetId: string, options: any) => {
+    if (!currentUser) return;
+    try {
+      await userService.blockUser(currentUser.id, targetId, options);
+      useAuthStore.getState().updateBlockEntry('add', targetId, options);
+      // Refresh feed logic if needed
+    } catch (error) {
+      console.error("Lỗi chặn người dùng", error);
+      throw error;
+    }
+  }, [currentUser]);
+
+  const handleUnblock = useCallback(async (targetId: string) => {
+    if (!currentUser) return;
+    try {
+      await userService.unblockUser(currentUser.id, targetId);
+      useAuthStore.getState().updateBlockEntry('remove', targetId);
+    } catch (error) {
+      console.error("Lỗi bỏ chặn người dùng", error);
+      throw error;
+    }
+  }, [currentUser]);
+
   return {
     currentUser,
     friends,
@@ -197,5 +223,7 @@ export const useContacts = (): UseContactsReturn => {
     handleAddFriend,
     handleDismissSuggestion,
     handleRefreshSuggestions,
+    handleApplyBlock,
+    handleUnblock,
   };
 };
