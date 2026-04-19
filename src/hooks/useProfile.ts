@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { User } from '../../shared/types';
+import { User, FriendStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { userService } from '../services/userService';
 import { toast } from '../store/toastStore';
@@ -10,6 +10,7 @@ import { useProfileData } from './profile/useProfileData';
 import { useProfileFriend } from './profile/useProfileFriend';
 import { useProfileMedia } from './profile/useProfileMedia';
 import { useProfileBlock } from './profile/useProfileBlock';
+import { getDirectConversationId } from '../utils/chatUtils';
 
 type TabType = 'posts' | 'media';
 
@@ -30,6 +31,7 @@ export const useProfile = () => {
     isOwnProfile,
     loadProfile,
   });
+  const { friendStatus } = friend;
 
   const media = useProfileMedia({
     profile,
@@ -48,16 +50,46 @@ export const useProfile = () => {
   const isBannedProfile = profile?.status === 'banned';
   const canViewContent = true;
 
-  const handleMessage = useCallback(() => {
+  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
+
+  const handleMessage = useCallback(async (bypassSettingsCheck: boolean = false) => {
     if (!currentUser || !profile) return;
     if (profile.status === 'banned') {
       toast.error(TOAST_MESSAGES.CHAT.BLOCKED_USER);
       return;
     }
-    const sortedIds = [currentUser.id, profile.id].sort();
-    const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
-    navigate(`/?conv=${convId}`);
-  }, [currentUser, profile, navigate]);
+
+    // Kiểm tra cài đặt của chính mình nếu là người lạ
+    const isFriend = friendStatus === FriendStatus.FRIEND;
+    if (!isFriend && !bypassSettingsCheck) {
+      const { settings } = useAuthStore.getState();
+      if (settings && !settings.allowMessagesFromStrangers) {
+        setShowPrivacyConfirm(true);
+        return;
+      }
+    }
+
+    try {
+      const convId = getDirectConversationId(currentUser.id, profile.id);
+      navigate(`/?conv=${convId}`);
+    } catch (error: any) {
+      console.error('[handleMessage] Lỗi:', error);
+      toast.error("Không thể khởi tạo cuộc trò chuyện.");
+    }
+  }, [currentUser, profile, navigate, friendStatus]);
+
+  const confirmEnablePrivacy = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      await userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: true });
+      useAuthStore.getState().updateSettings({ allowMessagesFromStrangers: true });
+      setShowPrivacyConfirm(false);
+      // Tiếp tục nhắn tin
+      handleMessage(true);
+    } catch (error) {
+      toast.error("Không thể cập nhật cài đặt.");
+    }
+  }, [currentUser, handleMessage]);
 
   const handleSaveProfile = useCallback(async (data: Partial<User>) => {
     if (!profile) return;
@@ -88,6 +120,9 @@ export const useProfile = () => {
     loadProfile,
     handleMessage,
     handleSaveProfile,
+    showPrivacyConfirm,
+    setShowPrivacyConfirm,
+    confirmEnablePrivacy,
 
     // Friend
     friendStatus: friend.friendStatus,

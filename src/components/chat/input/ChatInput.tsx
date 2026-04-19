@@ -38,6 +38,8 @@ interface ChatInputProps {
   onDeleteConversation?: () => void;
   onManageBlock?: () => void;
   isBlockedByMe?: boolean;
+  isStrangerBlocking?: boolean;
+  onEnableStrangerMessaging?: () => void;
   conversationId?: string;
 }
 
@@ -48,6 +50,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   currentUserId, usersMap, participants = [],
   isGroup = false, isDisbanded = false,
   onDeleteConversation, onManageBlock, isBlockedByMe = false,
+  isStrangerBlocking = false,
+  onEnableStrangerMessaging,
   conversationId,
 }) => {
   const { saveDraft, clearDraft, draftMessages } = useRtdbChatStore();
@@ -373,6 +377,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             {!isDisbanded && onManageBlock && isBlockedByMe && (
               <Button onClick={onManageBlock} size="sm">
                 Quản lý chặn
+              </Button>
+            )}
+            {!isDisbanded && isStrangerBlocking && onEnableStrangerMessaging && (
+              <Button onClick={onEnableStrangerMessaging} size="sm">
+                Bật nhận tin nhắn
               </Button>
             )}
           </div>

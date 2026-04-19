@@ -130,6 +130,7 @@ export const userService = {
       batch.set(settingsRef, {
         showOnlineStatus: true,
         showReadReceipts: true,
+        allowMessagesFromStrangers: true,
         defaultPostVisibility: Visibility.FRIENDS,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -378,6 +379,7 @@ export const userService = {
         return {
           showOnlineStatus: data.showOnlineStatus ?? true,
           showReadReceipts: data.showReadReceipts ?? true,
+          allowMessagesFromStrangers: data.allowMessagesFromStrangers ?? true,
           defaultPostVisibility: normalizeDefaultPostVisibility(data.defaultPostVisibility),
           createdAt: data.createdAt as Timestamp || Timestamp.now(),
           updatedAt: data.updatedAt as Timestamp || Timestamp.now()
@@ -388,6 +390,7 @@ export const userService = {
       return {
         showOnlineStatus: true,
         showReadReceipts: true,
+        allowMessagesFromStrangers: true,
         defaultPostVisibility: Visibility.FRIENDS,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()

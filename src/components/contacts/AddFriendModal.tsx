@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, MessageCircle, User as UserIcon, Clock, Check, XCircle } from 'lucide-react';
-import { Button, Input, Loading, Modal, UserAvatar } from '../ui';
+import { Button, Input, Loading, Modal, UserAvatar, ConfirmDialog } from '../ui';
 import { useContactStore } from '../../store/contactStore';
 import { useAuthStore } from '../../store/authStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { useRtdbChatStore } from '../../store';
+import { toast } from '../../store/toastStore';
+import { userService } from '../../services/userService';
 import { User, FriendStatus } from '../../../shared/types';
 
 interface AddFriendModalProps {
@@ -76,11 +78,40 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
     if (request) await acceptFriendRequest(request.id, request.senderId, currentUser.id);
   });
 
-  const handleMessage = async () => {
+  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
+
+  const handleMessage = (bypassSettingsCheck: boolean = false) => {
     if (!foundUser || !currentUser) return;
-    const convId = await getOrCreateConversation(currentUser.id, foundUser.id);
-    handleClose();
-    navigate(`/?conv=${convId}`);
+
+    // Kiểm tra cài đặt của chính mình nếu là người lạ
+    if (relationship !== FriendStatus.FRIEND && !bypassSettingsCheck) {
+      const { settings } = useAuthStore.getState();
+      if (settings && !settings.allowMessagesFromStrangers) {
+        setShowPrivacyConfirm(true);
+        return;
+      }
+    }
+
+    try {
+      const convId = getOrCreateConversation(currentUser.id, foundUser.id);
+      handleClose();
+      navigate(`/?conv=${convId}`);
+    } catch (error: any) {
+      console.error('[handleMessage] Lỗi:', error);
+      toast.error("Không thể khởi tạo cuộc trò chuyện.");
+    }
+  };
+
+  const confirmEnablePrivacy = () => {
+    if (!currentUser) return;
+    try {
+      userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: true });
+      useAuthStore.getState().updateSettings({ allowMessagesFromStrangers: true });
+      setShowPrivacyConfirm(false);
+      handleMessage(true);
+    } catch (error) {
+      toast.error("Không thể cập nhật cài đặt.");
+    }
   };
 
   const handleViewProfile = () => {
@@ -147,7 +178,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
                     variant="secondary"
                     icon={<Check size={16} />}
                     className="bg-success/10 text-success border-success/20 hover:bg-success/15"
-                    onClick={handleMessage}
+                    onClick={() => handleMessage()}
                   >
                     Bạn bè
                   </Button>
@@ -182,7 +213,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
                 <Button
                   variant="secondary"
                   icon={<MessageCircle size={16} />}
-                  onClick={handleMessage}
+                  onClick={() => handleMessage()}
                 >
                   Nhắn tin
                 </Button>
@@ -220,6 +251,15 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
           )}
         </div>
       </div>
+      
+      <ConfirmDialog
+        isOpen={showPrivacyConfirm}
+        onClose={() => setShowPrivacyConfirm(false)}
+        onConfirm={confirmEnablePrivacy}
+        title="Bật nhận tin nhắn từ người lạ"
+        message="Bạn đang tắt nhận tin nhắn từ người lạ. Hệ thống sẽ bật lại cài đặt này để bạn có thể nhắn tin cho người này. Bạn có đồng ý không?"
+        confirmLabel="Đồng ý"
+      />
     </Modal>
   );
 };

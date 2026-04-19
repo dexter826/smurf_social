@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
-import { BlockOptionsModal } from '../components/ui';
+import { BlockOptionsModal, ConfirmDialog } from '../components/ui';
+import { User } from '../../shared/types';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
 import { useAuthStore } from '../store/authStore';
@@ -41,6 +42,7 @@ const ChatPage: React.FC = () => {
     getOrCreateConversation, setIsChatVisible,
     isLoadingMore, hasMoreMessages, handleLoadMoreMessages,
     friendRequestStatus, canCall, receivedRequests, participants,
+    isStrangerBlocking,
   } = useChat();
 
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
@@ -71,6 +73,49 @@ const ChatPage: React.FC = () => {
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
+
+  const handleSelectUserFromSearch = (user: User, bypassSettingsCheck: boolean = false) => {
+    if (!currentUser) return;
+    
+    // Kiểm tra nếu là người lạ
+    const isFriend = friendIds.includes(user.id);
+    if (!isFriend && !bypassSettingsCheck) {
+      const { settings } = useAuthStore.getState();
+      if (settings && !settings.allowMessagesFromStrangers) {
+        setPendingUser(user);
+        setShowPrivacyConfirm(true);
+        return;
+      }
+    }
+
+    addToSearchHistory(user);
+    getOrCreateConversation(currentUser.id, user.id);
+    setSearchFocused(false);
+  };
+
+  const confirmEnablePrivacy = () => {
+    if (!currentUser) return;
+    try {
+      useAuthStore.getState().updateSettings({ allowMessagesFromStrangers: true });
+      
+      import('../services/userService').then(({ userService }) => {
+        userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: true });
+      });
+      
+      setShowPrivacyConfirm(false);
+      
+      if (pendingUser) {
+        const userToMessage = pendingUser;
+        setPendingUser(null);
+        handleSelectUserFromSearch(userToMessage, true);
+      }
+    } catch (error) {
+      toast.error("Không thể cập nhật cài đặt.");
+    }
+  };
 
   const openBlockModal = (partnerId?: string, partnerName?: string) => {
     if (partnerId && partnerName) {
@@ -154,11 +199,7 @@ const ChatPage: React.FC = () => {
           searchHistory={searchHistory}
           onRemoveFromHistory={removeFromSearchHistory}
           onClearHistory={clearSearchHistory}
-          onSelectUser={async (user) => {
-            addToSearchHistory(user);
-            await getOrCreateConversation(currentUser.id, user.id);
-            setSearchFocused(false);
-          }}
+          onSelectUser={handleSelectUserFromSearch}
           onSelectConversation={(id) => {
             const conv = conversations.find(c => c.id === id);
             if (conv) addToSearchHistory(conv);
@@ -234,6 +275,8 @@ const ChatPage: React.FC = () => {
               blockedMessage={blockedMessage}
               onManageBlock={openBlockModal}
               isBlockedByMe={isBlockedByMe}
+              isStrangerBlocking={isStrangerBlocking}
+              onEnableStrangerMessaging={confirmEnablePrivacy}
               replyingTo={replyingTo}
               editingMessage={editingMessage}
               currentUserId={currentUser.id}
@@ -358,6 +401,15 @@ const ChatPage: React.FC = () => {
           onClose={closeBlockModal}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={showPrivacyConfirm}
+        onClose={() => { setShowPrivacyConfirm(false); setPendingUser(null); }}
+        onConfirm={confirmEnablePrivacy}
+        title="Bật nhận tin nhắn từ người lạ"
+        message="Bạn đang tắt nhận tin nhắn từ người lạ. Hệ thống sẽ bật lại cài đặt này để bạn có thể nhắn tin cho người này. Bạn có đồng ý không?"
+        confirmLabel="Đồng ý"
+      />
     </div>
   );
 };

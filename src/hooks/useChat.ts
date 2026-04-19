@@ -158,6 +158,7 @@ export const useChat = () => {
     isGroup: selectedConversation?.data.isGroup ?? false,
     usersMap,
     conversation: selectedConversation?.data,
+    isFriend,
   });
 
   const groups = useChatGroups({
@@ -300,10 +301,10 @@ export const useChat = () => {
     partnerId,
     partnerStatus: block.partnerStatus,
     blockedMessage: block.blockedMessage,
-    getBlockedMessage: block.getBlockedMessage,
     handleApplyBlock: block.handleApplyBlock,
     handleUnblock: block.handleUnblock,
     shouldShowBlockBanner: block.shouldShowBlockBanner,
+    isStrangerBlocking: block.isStrangerBlocking,
     friendRequestStatus,
     currentReceivedRequest,
     isFriend,

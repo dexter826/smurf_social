@@ -10,6 +10,7 @@ import { friendService } from "../services/friendService";
 const DEFAULT_SETTINGS: UserSettings = {
   showOnlineStatus: true,
   showReadReceipts: true,
+  allowMessagesFromStrangers: true,
   defaultPostVisibility: Visibility.FRIENDS,
   createdAt: Timestamp.now(),
   updatedAt: Timestamp.now(),

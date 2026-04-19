@@ -82,7 +82,8 @@ service cloud.firestore {
       }
 
       match /private/settings {
-        allow read, write: if isOwner(userId);
+        allow read: if isAuthenticated();
+        allow write: if isOwner(userId);
       }
 
       allow read: if isAuthenticated() && (isOwner(userId) || isNotBanned());

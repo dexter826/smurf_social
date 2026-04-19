@@ -41,6 +41,7 @@ const ProfilePage: React.FC = () => {
     isBlockedByMe, isBlockedByPartner, currentBlockOptions,
     isBlockModalOpen, handleOpenBlockModal, handleApplyBlock,
     handleUnblockUser, confirmUnblock, closeBlockModal,
+    showPrivacyConfirm, setShowPrivacyConfirm, confirmEnablePrivacy
   } = useProfile();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -151,7 +152,7 @@ const ProfilePage: React.FC = () => {
           isOwnProfile={isOwnProfile}
           friendStatus={friendStatus}
           onEditClick={() => setIsEditModalOpen(true)}
-          onMessageClick={handleMessage}
+          onMessageClick={() => handleMessage()}
           onFriendClick={onFriendActionClick}
           onAvatarChange={handleAvatarChange}
           onCoverChange={handleCoverChange}
@@ -255,6 +256,15 @@ const ProfilePage: React.FC = () => {
         onApply={handleApplyBlock}
         onUnblock={confirmUnblock}
         onClose={closeBlockModal}
+      />
+
+      <ConfirmDialog
+        isOpen={showPrivacyConfirm}
+        onClose={() => setShowPrivacyConfirm(false)}
+        onConfirm={confirmEnablePrivacy}
+        title="Bật nhận tin nhắn từ người lạ"
+        message="Bạn đang tắt nhận tin nhắn từ người lạ. Hệ thống sẽ bật lại cài đặt này để bạn có thể nhắn tin cho người này. Bạn có đồng ý không?"
+        confirmLabel="Đồng ý"
       />
     </div>
   );

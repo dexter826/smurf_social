@@ -7,6 +7,8 @@ import { useRtdbChatStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
 import { friendService } from '../services/friendService';
 import { userService } from '../services/userService';
+import { toast } from '../store/toastStore';
+import { getDirectConversationId } from '../utils/chatUtils';
 
 type TabType = 'all' | 'requests' | 'sent' | 'suggestions';
 
@@ -39,12 +41,15 @@ interface UseContactsReturn {
   handleRejectRequest: (requestId: string) => Promise<void>;
   handleCancelRequest: (requestId: string) => Promise<void>;
   handleUnfriend: (friendId: string) => Promise<void>;
-  handleMessage: (friendId: string) => Promise<string | null>;
+  handleMessage: (friendId: string) => string | null;
   handleAddFriend: (receiverId: string) => Promise<void>;
   handleDismissSuggestion: (userId: string) => void;
   handleRefreshSuggestions: () => Promise<void>;
   handleApplyBlock: (targetId: string, options: any) => Promise<void>;
   handleUnblock: (targetId: string) => Promise<void>;
+  showPrivacyConfirm: boolean;
+  setShowPrivacyConfirm: (show: boolean) => void;
+  confirmEnablePrivacy: () => string | null;
 }
 
 /**
@@ -68,7 +73,7 @@ export const useContacts = (): UseContactsReturn => {
   } = useContactStore();
 
   const { users: userCache, fetchUsers } = useUserCache();
-  const { getOrCreateConversation } = useRtdbChatStore();
+  const { selectConversation } = useRtdbChatStore();
   const contactsLoading = useLoadingStore(state => state.loadingStates['contacts.friends'] ?? false);
   const suggestionsLoading = useLoadingStore(state => state.loadingStates['contacts.suggestions'] ?? false);
 
@@ -151,11 +156,48 @@ export const useContacts = (): UseContactsReturn => {
     await unfriend(currentUser.id, friendId);
   }, [currentUser, unfriend]);
 
-  const handleMessage = useCallback(async (friendId: string): Promise<string | null> => {
+  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
+  const [pendingPartnerId, setPendingPartnerId] = useState<string | null>(null);
+
+  const handleMessage = useCallback((partnerId: string, bypassSettingsCheck: boolean = false): string | null => {
     if (!currentUser) return null;
-    const conversationId = await getOrCreateConversation(currentUser.id, friendId);
-    return conversationId;
-  }, [currentUser, getOrCreateConversation]);
+
+    // Kiểm tra cài đặt của chính mình nếu là người lạ
+    const isFriend = friends.some(f => f.id === partnerId);
+    if (!isFriend && !bypassSettingsCheck) {
+      const { settings } = useAuthStore.getState();
+      if (settings && !settings.allowMessagesFromStrangers) {
+        setPendingPartnerId(partnerId);
+        setShowPrivacyConfirm(true);
+        return null;
+      }
+    }
+
+    try {
+      const conversationId = getDirectConversationId(currentUser.id, partnerId);
+      selectConversation(conversationId);
+      return conversationId;
+    } catch (error: any) {
+      console.error('[handleMessage] Lỗi không xác định:', error);
+      toast.error("Đã có lỗi xảy ra khi khởi tạo cuộc trò chuyện.");
+      return null;
+    }
+  }, [currentUser, friends, selectConversation]);
+
+  const confirmEnablePrivacy = useCallback(() => {
+    if (!currentUser || !pendingPartnerId) return null;
+    try {
+      userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: true });
+      useAuthStore.getState().updateSettings({ allowMessagesFromStrangers: true });
+      setShowPrivacyConfirm(false);
+      const partnerId = pendingPartnerId;
+      setPendingPartnerId(null);
+      return handleMessage(partnerId, true);
+    } catch (error) {
+      toast.error("Không thể cập nhật cài đặt.");
+      return null;
+    }
+  }, [currentUser, pendingPartnerId, handleMessage]);
 
   const handleAddFriend = useCallback(async (receiverId: string) => {
     if (!currentUser) return;
@@ -225,5 +267,8 @@ export const useContacts = (): UseContactsReturn => {
     handleRefreshSuggestions,
     handleApplyBlock,
     handleUnblock,
+    showPrivacyConfirm,
+    setShowPrivacyConfirm,
+    confirmEnablePrivacy,
   };
 };

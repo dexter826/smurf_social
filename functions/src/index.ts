@@ -34,3 +34,4 @@ export { onUserProfileUpdated } from './friends/onUserProfileUpdated';
 export { onMessageCreated } from './notifications/onMessageCreated';
 
 
+export { startDirectConversation } from './chat/startDirectConversation';

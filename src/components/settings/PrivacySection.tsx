@@ -25,6 +25,13 @@ const PrivacySection: React.FC = () => {
     updateSettings({ showReadReceipts: newValue });
     await userService.updateUserSettings(currentUser.id, { showReadReceipts: newValue });
   }, [currentUser, settings, updateSettings]);
+  
+  const handleToggleAllowMessagesFromStrangers = useCallback(async () => {
+    if (!currentUser || !settings) return;
+    const newValue = !settings.allowMessagesFromStrangers;
+    updateSettings({ allowMessagesFromStrangers: newValue });
+    await userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: newValue });
+  }, [currentUser, settings, updateSettings]);
 
   const handleChangeVisibility = useCallback(async (visibility: Visibility) => {
     if (!currentUser) return;
@@ -56,6 +63,13 @@ const PrivacySection: React.FC = () => {
         title="Thông báo đã xem"
         description="Cho phép người khác biết khi bạn đã xem tin nhắn"
         action={<Toggle enabled={settings.showReadReceipts} onToggle={handleToggleReadReceipts} />}
+      />
+
+      <SettingItem
+        icon={<MessageCircle size={18} />}
+        title="Tin nhắn từ người lạ"
+        description="Cho phép người lạ khởi đầu cuộc trò chuyện với bạn"
+        action={<Toggle enabled={settings.allowMessagesFromStrangers} onToggle={handleToggleAllowMessagesFromStrangers} />}
       />
 
       {/* Post visibility */}

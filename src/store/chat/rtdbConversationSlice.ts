@@ -5,6 +5,7 @@ import { friendService } from '../../services/friendService';
 import { useAuthStore } from '../authStore';
 import { useLoadingStore } from '../loadingStore';
 import { useUserCache } from '../userCacheStore';
+import { getDirectConversationId } from '../../utils/chatUtils';
 import type { RtdbChatState } from '../rtdbChatStore';
 
 export interface RtdbConversationSlice {
@@ -23,7 +24,7 @@ export interface RtdbConversationSlice {
 
     subscribeToConversations: (userId: string) => () => void;
     selectConversation: (conversationId: string | null) => void;
-    getOrCreateConversation: (user1Id: string, user2Id: string) => Promise<string>;
+    getOrCreateConversation: (user1Id: string, user2Id: string) => string;
     searchConversations: (userId: string, term: string) => Promise<void>;
     togglePin: (conversationId: string, userId: string, pinned: boolean) => Promise<void>;
     toggleMute: (conversationId: string, userId: string, muted: boolean) => Promise<void>;
@@ -100,9 +101,8 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
-    getOrCreateConversation: async (user1Id: string, user2Id: string) => {
-        const sortedIds = [user1Id, user2Id].sort();
-        const conversationId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
+    getOrCreateConversation: (user1Id: string, user2Id: string) => {
+        const conversationId = getDirectConversationId(user1Id, user2Id);
         set({ selectedConversationId: conversationId });
         return conversationId;
     },

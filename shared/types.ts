@@ -183,6 +183,7 @@ export interface MediaObject {
 export interface UserSettings {
     showOnlineStatus: boolean;
     showReadReceipts: boolean;
+    allowMessagesFromStrangers: boolean;
     defaultPostVisibility: Visibility;
     createdAt: Timestamp;
     updatedAt: Timestamp;
