@@ -10,7 +10,7 @@ import { sendPushNotification } from '../helpers/fcmHelper';
  */
 export const rejectReport = onCall(
   {
-    region: 'us-central1',
+    region: 'asia-south1',
     cors: true
   },
   async (request) => {

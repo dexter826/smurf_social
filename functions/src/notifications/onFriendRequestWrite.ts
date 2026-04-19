@@ -9,7 +9,7 @@ import { db } from '../app';
  * Xử lý tất cả thay đổi trên friendRequests
  */
 export const onFriendRequestWrite = onDocumentWritten(
-    { document: 'friendRequests/{reqId}', region: 'us-central1' },
+    { document: 'friendRequests/{reqId}', region: 'asia-south1' },
     async (event) => {
         const before = event.data?.before.data();
         const after = event.data?.after.data();

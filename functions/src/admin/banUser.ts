@@ -7,7 +7,7 @@ import { banUserById } from '../helpers/adminHelper';
  * Khóa/mở khóa tài khoản
  */
 export const banUser = onCall(
-  { region: 'us-central1', cors: true },
+  { region: 'asia-south1', cors: true },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
 

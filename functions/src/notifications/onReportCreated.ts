@@ -8,7 +8,7 @@ import { sendPushNotification } from '../helpers/fcmHelper';
  * Xử lý khi có báo cáo mới
  */
 export const onReportCreated = onDocumentCreated(
-  { document: 'reports/{reportId}', region: 'us-central1' },
+  { document: 'reports/{reportId}', region: 'asia-south1' },
   async (event) => {
     const report = event.data?.data();
     if (!report) return;

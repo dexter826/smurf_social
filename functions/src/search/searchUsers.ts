@@ -7,7 +7,7 @@ import { User } from '../types';
  */
 export const searchUsers = onCall(
   {
-    region: 'us-central1',
+    region: 'asia-south1',
     cors: true
   },
   async (request) => {

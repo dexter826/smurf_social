@@ -63,7 +63,7 @@ async function touchAuthorFeed(postId: string, authorId: string) {
  * Xử lý tất cả thay đổi trên bài viết (Create, Soft-delete)
  */
 export const onPostWrite = onDocumentWritten(
-    { document: 'posts/{postId}', region: 'us-central1' },
+    { document: 'posts/{postId}', region: 'asia-south1' },
     async (event) => {
         const postId = event.params.postId;
         const before = event.data?.before.data();

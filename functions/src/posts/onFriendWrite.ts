@@ -28,7 +28,7 @@ async function commitInChunks(ops: Array<(batch: FirebaseFirestore.WriteBatch) =
  * Xử lý tất cả thay đổi trên quan hệ bạn bè (Add, Remove)
  */
 export const onFriendWrite = onDocumentWritten(
-    { document: 'users/{userId}/friends/{friendId}', region: 'us-central1' },
+    { document: 'users/{userId}/friends/{friendId}', region: 'asia-south1' },
     async (event) => {
         const userId = event.params.userId;
         const friendId = event.params.friendId;

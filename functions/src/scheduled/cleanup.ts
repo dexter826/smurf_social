@@ -15,7 +15,7 @@ async function deleteStorageFileByUrl(url: string): Promise<void> {
   }
 }
 
-export const systemCleanup = onSchedule({ schedule: 'every sunday 03:00', region: 'us-central1', timeZone: 'Asia/Ho_Chi_Minh' },
+export const systemCleanup = onSchedule({ schedule: 'every sunday 03:00', region: 'asia-south1', timeZone: 'Asia/Ho_Chi_Minh' },
   async () => {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

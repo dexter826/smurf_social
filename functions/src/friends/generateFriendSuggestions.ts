@@ -19,7 +19,7 @@ const ACTIVE_USER_QUERY_LIMIT = 300;
 
 export const generateFriendSuggestions = onCall(
   {
-    region: 'us-central1',
+    region: 'asia-south1',
     cors: true,
   },
   async (request) => {

@@ -61,7 +61,7 @@ async function deleteCommentById(commentId: string, adminId: string): Promise<vo
 }
 
 export const resolveReport = onCall(
-  { region: 'us-central1', cors: true },
+  { region: 'asia-south1', cors: true },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
 
