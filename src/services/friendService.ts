@@ -297,10 +297,20 @@ export const friendService = {
 
   removeSuggestion: async (currentUserId: string, targetUserId: string): Promise<void> => {
     try {
-      await updateDoc(doc(db, 'users', currentUserId), {
-        suggestedFriends: arrayRemove(targetUserId)
+      const userRef = doc(db, 'users', currentUserId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) return;
+
+      const suggestions = userSnap.data()?.suggestedFriends || [];
+      const updatedSuggestions = suggestions.filter((s: any) => 
+        (typeof s === 'string' ? s : s.id) !== targetUserId
+      );
+
+      await updateDoc(userRef, {
+        suggestedFriends: updatedSuggestions
       });
-    } catch {
+    } catch (error) {
+      console.error("Lỗi xóa gợi ý:", error);
     }
   },
 
@@ -323,7 +333,9 @@ export const friendService = {
       const userSnap = await getDoc(doc(db, 'users', userId));
       if (!userSnap.exists()) return [];
 
-      const suggestedIds: string[] = userSnap.data()?.suggestedFriends ?? [];
+      const suggestions = userSnap.data()?.suggestedFriends || [];
+      const suggestedIds = suggestions.map((s: any) => typeof s === 'string' ? s : s.id);
+      
       if (suggestedIds.length === 0) return [];
 
       const usersMap = await batchGetUsers(suggestedIds);

@@ -204,7 +204,7 @@ export interface User extends BaseEntity {
     updatedAt: Timestamp;
     deletedAt?: Timestamp;
     userVector?: number[];
-    suggestedFriends?: string[];
+    suggestedFriends?: Array<{ id: string; mutualCount: number }>;
     suggestionsLastUpdated?: Timestamp;
     school?: string;
     maritalStatus?: MaritalStatus;

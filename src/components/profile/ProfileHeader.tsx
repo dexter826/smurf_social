@@ -8,7 +8,6 @@ import { User, ReportType, UserStatus, FriendStatus, Visibility } from '../../..
 import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
-import { getHybridReason } from '../../utils/userUtils';
 import { useReportStore } from '../../store/reportStore';
 import { BookUser } from 'lucide-react';
 import { validateFile } from '../../utils/uploadUtils';
@@ -199,7 +198,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {!isOwnProfile && friendStatus !== FriendStatus.FRIEND && (
                 <div className="flex items-center justify-center md:justify-start gap-1.5 mt-1 text-text-tertiary text-xs md:text-sm font-medium animate-fade-in group">
                   <BookUser size={14} className="text-primary/70 group-hover:text-primary transition-colors" />
-                  <span className="truncate">{getHybridReason(currentUser, user)}</span>
+                  <span className="truncate">
+                    {(() => {
+                      const suggestion = currentUser?.suggestedFriends?.find(s => s.id === user.id);
+                      return suggestion?.mutualCount && suggestion.mutualCount > 0
+                        ? `${suggestion.mutualCount} bạn chung`
+                        : "Có thể bạn quen";
+                    })()}
+                  </span>
                 </div>
               )}
             </div>

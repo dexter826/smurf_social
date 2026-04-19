@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { UserAvatar, Skeleton } from '../ui';
 import { User } from '../../../shared/types';
 import { useAuthStore } from '../../store/authStore';
-import { getHybridReason } from '../../utils/userUtils';
 
 interface SuggestionItemProps {
     user: User;
@@ -26,9 +25,10 @@ const SuggestionItemInner: React.FC<SuggestionItemProps> = ({
     const navigate = useNavigate();
     const currentUser = useAuthStore((state) => state.user);
 
-    const getSmartReason = () => {
-        return getHybridReason(currentUser, user);
-    };
+    const suggestion = currentUser?.suggestedFriends?.find(s => s.id === user.id);
+    const smartReason = suggestion?.mutualCount && suggestion.mutualCount > 0
+        ? `${suggestion.mutualCount} bạn chung`
+        : "Có thể bạn quen";
 
     const handleAdd = useCallback(
         (e: React.MouseEvent) => {
@@ -67,7 +67,7 @@ const SuggestionItemInner: React.FC<SuggestionItemProps> = ({
                         size="xl" 
                     />
                     <p className="mt-3 text-sm font-semibold text-text-primary text-center truncate w-full">{user.fullName}</p>
-                    <p className="text-[11px] text-text-tertiary text-center line-clamp-2 h-8 leading-4 mt-0.5">{getSmartReason()}</p>
+                    <p className="text-[11px] text-text-tertiary text-center line-clamp-2 h-8 leading-4 mt-0.5">{smartReason}</p>
                 </button>
                 <button
                     onClick={handleAdd}
@@ -95,7 +95,7 @@ const SuggestionItemInner: React.FC<SuggestionItemProps> = ({
                 />
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-text-primary truncate">{user.fullName}</p>
-                    <p className="text-xs text-text-tertiary truncate">{getSmartReason()}</p>
+                    <p className="text-xs text-text-tertiary truncate">{smartReason}</p>
                 </div>
             </button>
 

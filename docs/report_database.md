@@ -54,7 +54,7 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 | `interests`              | Array<String> | _Optional_        | Danh sách sở thích. Mặc định `[]`                                                                               |
 | `generation`             | String Enum   | _Optional_        | `"Gen Alpha"`, `"Gen Z"`, `"Millennials"`, `"Gen X"`, `"Baby Boomers"`, `""`                                    |
 | `userVector`             | Array<Number> | _Optional_        | Vector hồ sơ dùng cho cosine similarity trong Cloud Function gợi ý bạn bè. Ghi bởi hệ thống, không do user nhập |
-| `suggestedFriends`       | Array<String> | _Optional_        | Cache danh sách userId được gợi ý. Ghi bởi `generateFriendSuggestions`                                          |
+| `suggestedFriends`       | Array<Object> | _Optional_        | Cache danh sách gợi ý gồm `{ id: string, mutualCount: number }`. Ghi bởi Cloud Function                         |
 | `suggestionsLastUpdated` | Timestamp     | _Optional_        | Thời điểm cập nhật gợi ý gần nhất                                                                               |
 | `createdAt`              | Timestamp     | **Required**      | Thời điểm tạo                                                                                                   |
 | `updatedAt`              | Timestamp     | **Required**      | Thời điểm cập nhật                                                                                              |
@@ -87,15 +87,15 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 
 **1.4. Sub-collection `blockedUsers` (Bên trong `users/{uid}`)**
 
-| Field              | Type      | Required/Optional | Description/Default                                             |
-| :----------------- | :-------- | :---------------- | :-------------------------------------------------------------- |
-| `blockedUid`          | String    | **Required**      | Document ID người bị chặn                                     |
-| `blockMessages`       | Boolean   | **Required**      | Chặn tin nhắn. Mặc định `false`                               |
-| `blockCalls`          | Boolean   | **Required**      | Chặn cuộc gọi. Mặc định `false`                               |
-| `blockViewMyActivity` | Boolean   | **Required**      | Chặn xem bài đăng của tôi. Mặc định `false`                   |
-| `hideTheirActivity`   | Boolean   | **Required**      | Ẩn hoạt động của người này. Mặc định `false`                  |
-| `createdAt`           | Timestamp | **Required**      | Thời điểm tạo                                                 |
-| `updatedAt`           | Timestamp | **Required**      | Thời điểm cập nhật                                            |
+| Field                 | Type      | Required/Optional | Description/Default                          |
+| :-------------------- | :-------- | :---------------- | :------------------------------------------- |
+| `blockedUid`          | String    | **Required**      | Document ID người bị chặn                    |
+| `blockMessages`       | Boolean   | **Required**      | Chặn tin nhắn. Mặc định `false`              |
+| `blockCalls`          | Boolean   | **Required**      | Chặn cuộc gọi. Mặc định `false`              |
+| `blockViewMyActivity` | Boolean   | **Required**      | Chặn xem bài đăng của tôi. Mặc định `false`  |
+| `hideTheirActivity`   | Boolean   | **Required**      | Ẩn hoạt động của người này. Mặc định `false` |
+| `createdAt`           | Timestamp | **Required**      | Thời điểm tạo                                |
+| `updatedAt`           | Timestamp | **Required**      | Thời điểm cập nhật                           |
 
 **1.5. Sub-collection `feeds` (Bên trong `users/{uid}` - Bảng tin Fan-out)**
 

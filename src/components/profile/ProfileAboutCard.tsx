@@ -9,7 +9,7 @@ interface ProfileAboutCardProps {
 
 export const ProfileAboutCard: React.FC<ProfileAboutCardProps> = ({ profile }) => {
   const hasDetails = profile.gender || profile.dob || profile.location || profile.school || 
-                     profile.maritalStatus || profile.generation || profile.createdAt || 
+                     profile.maritalStatus || profile.createdAt || 
                      (profile.interests && profile.interests.length > 0);
 
   return (
@@ -92,19 +92,7 @@ export const ProfileAboutCard: React.FC<ProfileAboutCardProps> = ({ profile }) =
               </span>
             </div>
           )}
-          {profile.generation && (
-            <div className="flex items-center gap-3 text-sm text-text-secondary">
-              <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">
-                <Sparkles size={15} />
-              </div>
-              <span>
-                Thành viên hệ{' '}
-                <strong className="text-text-primary font-medium">
-                  {profile.generation}
-                </strong>
-              </span>
-            </div>
-          )}
+
           {profile.createdAt && (
             <div className="flex items-center gap-3 text-sm text-text-secondary">
               <div className="w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg flex-shrink-0">

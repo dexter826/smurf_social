@@ -29,14 +29,7 @@ const MARITAL_STATUS_OPTIONS = [
   { value: MaritalStatus.OTHER, label: 'Khác' },
 ];
 
-const GENERATION_OPTIONS = [
-  { value: Generation.UNKNOWN, label: 'Chưa xác định' },
-  { value: Generation.Z, label: 'Gen Z (1997-2012)' },
-  { value: Generation.MILLENNIALS, label: 'Millennials (1981-1996)' },
-  { value: Generation.X, label: 'Gen X (1965-1980)' },
-  { value: Generation.BOOMERS, label: 'Boomer (Trước 1965)' },
-  { value: Generation.ALPHA, label: 'Gen Alpha (Từ 2013)' },
-];
+
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   user, isOpen, onClose, onSave,
@@ -247,17 +240,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
 
-          {/* Generation */}
-          <div>
-            <Select
-              label="Thế hệ"
-              value={formData.generation || Generation.UNKNOWN}
-              onChange={(val) => setValue('generation', val as Generation, { shouldDirty: true })}
-              options={GENERATION_OPTIONS}
-              placeholder="Chọn thế hệ"
-              size="lg"
-            />
-          </div>
+
 
           {/* Marital status */}
           <div>
