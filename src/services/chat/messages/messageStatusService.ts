@@ -2,12 +2,13 @@ import { ref, get, update, query, orderByChild, limitToLast } from 'firebase/dat
 import { rtdb } from '../../../firebase/config';
 import { RtdbMessage } from '../../../../shared/types';
 import { userService } from '../../userService';
+import { getRtdbServerTimestamp, getServerSyncedNow } from '../chatTime';
 
 export const messageStatusService = {
     markAsRead: async (convId: string, uid: string, lastMsgId?: string): Promise<void> => {
         try {
             const settings = await userService.getUserSettings(uid);
-            const now = Date.now();
+            const now = getServerSyncedNow();
 
             const messagesRef = ref(rtdb, `messages/${convId}`);
             const lastMessagesQuery = query(messagesRef, orderByChild('createdAt'), limitToLast(50));
@@ -15,8 +16,8 @@ export const messageStatusService = {
 
             const updates: Record<string, any> = {
                 [`user_chats/${uid}/${convId}/unreadCount`]: 0,
-                [`user_chats/${uid}/${convId}/updatedAt`]: now,
-                [`conversations/${convId}/updatedAt`]: now
+                [`user_chats/${uid}/${convId}/updatedAt`]: getRtdbServerTimestamp(),
+                [`conversations/${convId}/updatedAt`]: getRtdbServerTimestamp()
             };
 
             if (lastMsgId) {
@@ -77,7 +78,7 @@ export const messageStatusService = {
                 const msgData = childSnap.val() as RtdbMessage;
 
                 if (msgData.senderId !== uid && !msgData.deliveredTo?.[uid]) {
-                    updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = Date.now();
+                    updates[`messages/${convId}/${msgId}/deliveredTo/${uid}`] = getRtdbServerTimestamp();
                     hasUpdates = true;
                 }
             });
@@ -93,14 +94,14 @@ export const messageStatusService = {
                 const lastMsg = lastMsgSnap.val();
                 if (lastMsg.senderId !== uid && !lastMsg.deliveredTo?.[uid]) {
                     await update(ref(rtdb, lastMsgPath), {
-                        [`deliveredTo/${uid}`]: Date.now()
+                        [`deliveredTo/${uid}`]: getRtdbServerTimestamp()
                     });
                 }
             }
 
             if (hasUpdates) {
                 await update(ref(rtdb), {
-                    [`conversations/${convId}/updatedAt`]: Date.now()
+                    [`conversations/${convId}/updatedAt`]: getRtdbServerTimestamp()
                 });
             }
         } catch (error) {

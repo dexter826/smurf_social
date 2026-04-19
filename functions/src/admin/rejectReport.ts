@@ -11,7 +11,8 @@ import { sendPushNotification } from '../helpers/fcmHelper';
 export const rejectReport = onCall(
   {
     region: 'asia-south1',
-    cors: true
+    cors: true,
+    invoker: 'public',
   },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');

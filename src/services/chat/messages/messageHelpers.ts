@@ -11,6 +11,7 @@ import {
     validateVoiceFile
 } from '../../../utils/fileValidation';
 import { rtdbConversationService } from '../rtdbConversationService';
+import { getRtdbServerTimestamp, getServerSyncedNow } from '../chatTime';
 
 export type ProgressWithId = (messageId: string, progress: UploadProgress) => void;
 
@@ -57,10 +58,10 @@ export async function markMessageUploadFailed(convId: string, msgId: string): Pr
                 readBy: data.readBy || {},
                 deliveredTo: data.deliveredTo || {}
             },
-            updatedAt: Date.now()
+            updatedAt: getRtdbServerTimestamp()
         });
     } else {
-        await update(convRef, { lastMessage: null, updatedAt: Date.now() });
+        await update(convRef, { lastMessage: null, updatedAt: getRtdbServerTimestamp() });
     }
 }
 
@@ -76,7 +77,6 @@ export async function updateConversationAfterMessage(
         const convSnap = await get(convRef);
 
         const updates: Record<string, any> = {};
-        const now = Date.now();
 
         let conversation: RtdbConversation;
         if (!convSnap.exists()) {
@@ -98,18 +98,18 @@ export async function updateConversationAfterMessage(
             senderId,
             content: displayContent,
             type: messageData.type,
-            timestamp: now,
+            timestamp: getRtdbServerTimestamp(),
             messageId: messageId || null,
             readBy: messageData.readBy || {},
             deliveredTo: messageData.deliveredTo || {}
         };
-        updates[`conversations/${convId}/updatedAt`] = now;
+        updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
 
         const isSilentMessage = messageData.type === MessageType.SYSTEM || messageData.type === MessageType.CALL;
 
         for (const memberId of memberIds) {
-            updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = now;
-            updates[`user_chats/${memberId}/${convId}/updatedAt`] = now;
+            updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = getRtdbServerTimestamp();
+            updates[`user_chats/${memberId}/${convId}/updatedAt`] = getRtdbServerTimestamp();
             if (memberId !== senderId) {
                 if (!isSilentMessage) {
                     updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
@@ -154,7 +154,7 @@ export async function createAndSendMediaMessage(
         uploadFile = await compressImage(file, IMAGE_COMPRESSION.CHAT);
     }
 
-    const createdAt = Date.now();
+    const createdAt = getServerSyncedNow();
     const newMsgRef = push(ref(rtdb, `messages/${convId}`));
     const msgId = newMsgRef.key!;
 
@@ -186,7 +186,11 @@ export async function createAndSendMediaMessage(
     assignReplyToIdIfPresent(messageData, options.replyToId);
 
     await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent, msgId);
-    await set(newMsgRef, messageData);
+    await set(newMsgRef, {
+        ...messageData,
+        createdAt: getRtdbServerTimestamp(),
+        updatedAt: getRtdbServerTimestamp()
+    });
 
     const path = `chats/${convId}/${createdAt}_${file.name}`;
     let fileUrl = '';
@@ -225,7 +229,7 @@ export async function createAndSendMediaMessage(
 
     await update(newMsgRef, {
         media: [mediaObject],
-        updatedAt: Date.now()
+        updatedAt: getRtdbServerTimestamp()
     });
 
     return msgId;
@@ -245,7 +249,7 @@ export async function createAndSendMediaAlbumMessage(
     if (files.length === 0) {
         throw new Error('Không có file để gửi');
     }
-    const createdAt = Date.now();
+    const createdAt = getServerSyncedNow();
     const newMsgRef = push(ref(rtdb, `messages/${convId}`));
     const msgId = newMsgRef.key!;
 
@@ -277,7 +281,11 @@ export async function createAndSendMediaAlbumMessage(
     assignReplyToIdIfPresent(messageData, options.replyToId);
 
     await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent, msgId);
-    await set(newMsgRef, messageData);
+    await set(newMsgRef, {
+        ...messageData,
+        createdAt: getRtdbServerTimestamp(),
+        updatedAt: getRtdbServerTimestamp()
+    });
 
     const bytesByIndex = new Array(files.length).fill(0);
     const totalBytesByIndex = new Array(files.length).fill(0);
@@ -320,7 +328,7 @@ export async function createAndSendMediaAlbumMessage(
         const media = await Promise.all(mediaUploads);
         await update(newMsgRef, {
             media,
-            updatedAt: Date.now()
+            updatedAt: getRtdbServerTimestamp()
         });
     } catch (error) {
         options.onProgressWithId?.(msgId, {

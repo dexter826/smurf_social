@@ -21,6 +21,7 @@ export const generateFriendSuggestions = onCall(
   {
     region: 'asia-south1',
     cors: true,
+    invoker: 'public',
   },
   async (request) => {
     if (!request.auth) {

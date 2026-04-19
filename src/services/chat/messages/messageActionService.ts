@@ -3,6 +3,7 @@ import { rtdb } from '../../../firebase/config';
 import { RtdbMessage, RtdbConversation, MessageType } from '../../../../shared/types';
 import { TIME_LIMITS } from '../../../constants';
 import { updateConversationAfterMessage } from './messageHelpers';
+import { getRtdbServerTimestamp, getServerSyncedNow } from '../chatTime';
 
 export const messageActionService = {
     recallMessage: async (convId: string, msgId: string, uid: string): Promise<void> => {
@@ -24,7 +25,7 @@ export const messageActionService = {
                 content: '',
                 media: [],
                 isRecalled: true,
-                updatedAt: Date.now()
+                updatedAt: getRtdbServerTimestamp()
             });
 
             const convRef = ref(rtdb, `conversations/${convId}`);
@@ -35,7 +36,7 @@ export const messageActionService = {
                 if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
                     await update(convRef, {
                         'lastMessage/content': 'Tin nhắn đã thu hồi',
-                        updatedAt: Date.now()
+                        updatedAt: getRtdbServerTimestamp()
                     });
                 }
             }
@@ -70,7 +71,7 @@ export const messageActionService = {
                 throw new Error('Chỉ người gửi mới được chỉnh sửa tin nhắn');
             }
 
-            const now = Date.now();
+            const now = getServerSyncedNow();
             const diffInMillis = now - msgData.createdAt;
 
             if (diffInMillis > TIME_LIMITS.MESSAGE_EDIT_WINDOW) {
@@ -82,7 +83,7 @@ export const messageActionService = {
             await update(msgRef, {
                 content: newContent,
                 isEdited: true,
-                updatedAt: now
+                updatedAt: getRtdbServerTimestamp()
             });
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi editMessage:', error);
@@ -112,8 +113,8 @@ export const messageActionService = {
                 readBy: {},
                 deliveredTo: {},
                 reactions: {},
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
             };
 
             let displayContent = srcMsg.content;
@@ -143,7 +144,11 @@ export const messageActionService = {
             }
 
             await updateConversationAfterMessage(targetConvId, senderId, messageData, displayContent, msgId);
-            await set(newMsgRef, messageData);
+            await set(newMsgRef, {
+                ...messageData,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            });
 
             return msgId;
         } catch (error) {
@@ -167,14 +172,14 @@ export const messageActionService = {
 
             const coreUpdates: Record<string, any> = {
                 [`messages/${convId}/${msgId}/content`]: newContent,
-                [`messages/${convId}/${msgId}/updatedAt`]: Date.now(),
+                [`messages/${convId}/${msgId}/updatedAt`]: getRtdbServerTimestamp(),
             };
 
             if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
                 coreUpdates[`conversations/${convId}/lastMessage/content`] = payload
                     ? JSON.stringify(payload)
                     : newContent;
-                coreUpdates[`conversations/${convId}/updatedAt`] = Date.now();
+                coreUpdates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
             }
 
             await update(ref(rtdb), coreUpdates);

@@ -8,7 +8,8 @@ import { User } from '../types';
 export const searchUsers = onCall(
   {
     region: 'asia-south1',
-    cors: true
+    cors: true,
+    invoker: 'public'
   },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');

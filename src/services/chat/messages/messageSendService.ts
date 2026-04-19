@@ -9,6 +9,7 @@ import {
     createAndSendMediaMessage,
     updateConversationAfterMessage
 } from './messageHelpers';
+import { getRtdbServerTimestamp, getServerSyncedNow } from '../chatTime';
 
 export const messageSendService = {
     sendTextMessage: async (
@@ -40,14 +41,18 @@ export const messageSendService = {
                 readBy: {},
                 deliveredTo: {},
                 reactions: {},
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
             };
 
             assignReplyToIdIfPresent(messageData, options?.replyToId);
 
             await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
-            await set(newMsgRef, messageData);
+            await set(newMsgRef, {
+                ...messageData,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            });
 
             return msgId;
         } catch (error) {
@@ -87,14 +92,18 @@ export const messageSendService = {
                 readBy: {},
                 deliveredTo: {},
                 reactions: {},
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
             };
 
             assignReplyToIdIfPresent(messageData, options?.replyToId);
 
             await updateConversationAfterMessage(convId, senderId, messageData, '[Chia sẻ bài viết]', msgId);
-            await set(newMsgRef, messageData);
+            await set(newMsgRef, {
+                ...messageData,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            });
 
             return msgId;
         } catch (error) {
@@ -235,14 +244,18 @@ export const messageSendService = {
                 readBy: {},
                 deliveredTo: {},
                 reactions: {},
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
             };
 
             assignReplyToIdIfPresent(messageData, options?.replyToId);
 
             await updateConversationAfterMessage(convId, senderId, messageData, '[GIF]', msgId);
-            await set(newMsgRef, messageData);
+            await set(newMsgRef, {
+                ...messageData,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            });
 
             return msgId;
         } catch (error) {
@@ -272,12 +285,16 @@ export const messageSendService = {
                 readBy: {},
                 deliveredTo: {},
                 reactions: {},
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
             };
 
             await updateConversationAfterMessage(convId, 'system', messageData, content, msgId);
-            await set(newMsgRef, messageData);
+            await set(newMsgRef, {
+                ...messageData,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            });
 
             return msgId;
         } catch (error) {
@@ -310,12 +327,16 @@ export const messageSendService = {
                 readBy: {},
                 deliveredTo: {},
                 reactions: {},
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
             };
 
             await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
-            await set(newMsgRef, messageData);
+            await set(newMsgRef, {
+                ...messageData,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            });
 
             return msgId;
         } catch (error) {

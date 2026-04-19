@@ -1,6 +1,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { db, auth, rtdb } from '../app';
 import { UserStatus, FriendRequestStatus } from '../types';
+import { ServerValue } from 'firebase-admin/database';
 
 export async function banUserById(userId: string): Promise<void> {
     await db.collection('users').doc(userId).update({
@@ -26,8 +27,8 @@ export async function banUserById(userId: string): Promise<void> {
         batch.commit(),
         rtdb.ref(`presence/${userId}`).update({
             isOnline: false,
-            lastSeen: Date.now(),
-            updatedAt: Date.now(),
+            lastSeen: ServerValue.TIMESTAMP,
+            updatedAt: ServerValue.TIMESTAMP,
         }),
     ]);
 }

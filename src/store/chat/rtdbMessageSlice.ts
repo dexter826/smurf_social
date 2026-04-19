@@ -4,6 +4,7 @@ import { rtdbMessageService } from '../../services/chat/messages';
 import { useAuthStore } from '../authStore';
 import type { RtdbChatState } from '../rtdbChatStore';
 import { PAGINATION } from '../../constants';
+import { getServerSyncedNow } from '../../services/chat/chatTime';
 
 export interface RtdbMessageSlice {
     messages: Record<string, Array<{ id: string; data: RtdbMessage }>>;
@@ -147,8 +148,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                         readBy: {},
                         deliveredTo: {},
                         reactions: {},
-                        createdAt: Date.now(),
-                        updatedAt: Date.now()
+                        createdAt: getServerSyncedNow(),
+                        updatedAt: getServerSyncedNow()
                     } as RtdbMessage
                 };
 
@@ -192,8 +193,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                         readBy: {},
                         deliveredTo: {},
                         reactions: {},
-                        createdAt: Date.now(),
-                        updatedAt: Date.now()
+                        createdAt: getServerSyncedNow(),
+                        updatedAt: getServerSyncedNow()
                     } as RtdbMessage
                 };
 
@@ -337,8 +338,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                         deliveredTo: {},
                         reactions: {},
                         replyToId: replyToId || null,
-                        createdAt: Date.now(),
-                        updatedAt: Date.now()
+                        createdAt: getServerSyncedNow(),
+                        updatedAt: getServerSyncedNow()
                     } as RtdbMessage
                 };
 
@@ -379,8 +380,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                         readBy: {},
                         deliveredTo: {},
                         reactions: {},
-                        createdAt: Date.now(),
-                        updatedAt: Date.now()
+                        createdAt: getServerSyncedNow(),
+                        updatedAt: getServerSyncedNow()
                     } as RtdbMessage
                 };
 
@@ -417,7 +418,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                     data: {
                         ...newMessages[messageIndex].data,
                         content,
-                        updatedAt: Date.now()
+                        updatedAt: getServerSyncedNow()
                     }
                 };
 
@@ -547,7 +548,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                     ...state.messages,
                     [conversationId]: msgs.map(m =>
                         m.id === messageId
-                            ? { ...m, data: { ...m.data, content, isEdited: true, updatedAt: Date.now() } }
+                            ? { ...m, data: { ...m.data, content, isEdited: true, updatedAt: getServerSyncedNow() } }
                             : m
                     )
                 }

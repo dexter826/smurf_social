@@ -2,6 +2,7 @@ import { ref, set, get, update, onValue, onChildRemoved, push, query, orderByChi
 import { rtdb } from '../../firebase/config';
 import { RtdbConversation, RtdbUserChat } from '../../../shared/types';
 import { TIME_LIMITS } from '../../constants';
+import { getRtdbServerTimestamp, getServerSyncedNow } from './chatTime';
 
 export const rtdbConversationService = {
     /**
@@ -11,7 +12,7 @@ export const rtdbConversationService = {
         try {
             const sortedIds = [user1Id, user2Id].sort();
             const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
-            const now = Date.now();
+            const now = getServerSyncedNow();
 
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
@@ -30,7 +31,7 @@ export const rtdbConversationService = {
                     lastMessage: null,
                     createdAt: now,
                     updatedAt: now
-                } as RtdbConversation;
+                };
 
                 [user1Id, user2Id].forEach(uid => {
                     updates[`user_chats/${uid}/${convId}`] = {
@@ -43,13 +44,13 @@ export const rtdbConversationService = {
                         clearedAt: 0,
                         createdAt: now,
                         updatedAt: now
-                    } as RtdbUserChat;
+                    };
                 });
             } else {
                 updates[`user_chats/${user1Id}/${convId}/isArchived`] = false;
                 updates[`user_chats/${user2Id}/${convId}/isArchived`] = false;
-                updates[`user_chats/${user1Id}/${convId}/updatedAt`] = now;
-                updates[`user_chats/${user2Id}/${convId}/updatedAt`] = now;
+                updates[`user_chats/${user1Id}/${convId}/updatedAt`] = getRtdbServerTimestamp();
+                updates[`user_chats/${user2Id}/${convId}/updatedAt`] = getRtdbServerTimestamp();
             }
 
             if (Object.keys(updates).length > 0) {
@@ -70,7 +71,7 @@ export const rtdbConversationService = {
         try {
             const sortedIds = [user1Id, user2Id].sort();
             const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
-            const now = Date.now();
+            const now = getServerSyncedNow();
 
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
@@ -87,7 +88,7 @@ export const rtdbConversationService = {
                     lastMessage: null,
                     createdAt: now,
                     updatedAt: now
-                } as RtdbConversation;
+                };
                 [user1Id, user2Id].forEach(uid => {
                     updates[`user_chats/${uid}/${convId}`] = {
                         isPinned: false,
@@ -99,14 +100,14 @@ export const rtdbConversationService = {
                         clearedAt: 0,
                         createdAt: now,
                         updatedAt: now
-                    } as RtdbUserChat;
+                    };
                 });
                 await update(ref(rtdb), updates);
             } else {
                 const updates: Record<string, any> = {};
                 updates[`user_chats/${user1Id}/${convId}/isArchived`] = false;
-                updates[`user_chats/${user1Id}/${convId}/lastMsgTimestamp`] = now;
-                updates[`user_chats/${user1Id}/${convId}/updatedAt`] = now;
+                updates[`user_chats/${user1Id}/${convId}/lastMsgTimestamp`] = getRtdbServerTimestamp();
+                updates[`user_chats/${user1Id}/${convId}/updatedAt`] = getRtdbServerTimestamp();
                 await update(ref(rtdb), updates);
             }
 
@@ -239,7 +240,7 @@ export const rtdbConversationService = {
             const convRef = ref(rtdb, `conversations/${convId}`);
             await update(convRef, {
                 ...updates,
-                updatedAt: Date.now()
+                updatedAt: getRtdbServerTimestamp()
             });
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi updateConversationMeta:', error);
@@ -255,7 +256,7 @@ export const rtdbConversationService = {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
             await update(userChatRef, {
                 isPinned,
-                updatedAt: Date.now()
+                updatedAt: getRtdbServerTimestamp()
             });
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi togglePin:', error);
@@ -271,7 +272,7 @@ export const rtdbConversationService = {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
             await update(userChatRef, {
                 isMuted,
-                updatedAt: Date.now()
+                updatedAt: getRtdbServerTimestamp()
             });
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi toggleMute:', error);
@@ -287,7 +288,7 @@ export const rtdbConversationService = {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
             await update(userChatRef, {
                 isArchived,
-                updatedAt: Date.now()
+                updatedAt: getRtdbServerTimestamp()
             });
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi toggleArchive:', error);
@@ -309,9 +310,9 @@ export const rtdbConversationService = {
                 await remove(userChatRef);
             } else {
                 await update(userChatRef, {
-                    clearedAt: Date.now(),
+                    clearedAt: getServerSyncedNow(),
                     unreadCount: 0,
-                    updatedAt: Date.now()
+                    updatedAt: getRtdbServerTimestamp()
                 });
             }
         } catch (error) {
@@ -334,7 +335,7 @@ export const rtdbConversationService = {
                 updates.lastReadMsgId = lastReadMsgId;
             }
 
-            updates.updatedAt = Date.now();
+            updates.updatedAt = getServerSyncedNow();
             await update(userChatRef, updates);
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi resetUnreadCount:', error);
@@ -353,13 +354,12 @@ export const rtdbConversationService = {
             if (!snapshot.exists()) return;
 
             const userChats = snapshot.val() as Record<string, RtdbUserChat>;
-            const updates: Record<string, number> = {};
+            const updates: Record<string, any> = {};
 
             for (const convId of Object.keys(userChats)) {
                 if (userChats[convId].unreadCount > 0) {
-                    const now = Date.now();
                     updates[`user_chats/${uid}/${convId}/unreadCount`] = 0;
-                    updates[`user_chats/${uid}/${convId}/updatedAt`] = now;
+                    updates[`user_chats/${uid}/${convId}/updatedAt`] = getRtdbServerTimestamp();
                 }
             }
 
@@ -380,7 +380,7 @@ export const rtdbConversationService = {
             const userChatRef = ref(rtdb, `user_chats/${uid}/${convId}`);
             await update(userChatRef, {
                 unreadCount: 1,
-                updatedAt: Date.now()
+                updatedAt: getRtdbServerTimestamp()
             });
         } catch (error) {
             console.error('[rtdbConversationService] Lỗi markAsUnread:', error);
@@ -415,7 +415,7 @@ export const rtdbConversationService = {
         const unsubscribe = onValue(typingRef, (snapshot) => {
             if (snapshot.exists()) {
                 const typingData = snapshot.val();
-                const now = Date.now();
+                const now = getServerSyncedNow();
                 const activeTypingUsers = Object.entries(typingData)
                     .filter(([_, timestamp]) => (now - (timestamp as number)) < TIME_LIMITS.TYPING_TIMEOUT)
                     .map(([uid]) => uid);

@@ -3,7 +3,11 @@ import { generateToken04 } from '../helpers/zegoTokenHelper';
 
 
 export const generateZegoToken = onCall(
-  { region: 'asia-south1', cors: true },
+  {
+    region: 'asia-south1',
+    cors: true,
+    invoker: 'public',
+  },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required.');

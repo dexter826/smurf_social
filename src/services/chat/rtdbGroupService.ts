@@ -6,6 +6,7 @@ import { compressImage } from '../../utils/imageUtils';
 import { IMAGE_COMPRESSION, GROUP_LIMITS } from '../../constants';
 import { validateAvatarFile } from '../../utils/fileValidation';
 import { systemMessages } from '../../constants/systemMessages';
+import { getRtdbServerTimestamp, getServerSyncedNow } from './chatTime';
 
 export const rtdbGroupService = {
     sendGroupSystemMessage: async (
@@ -20,7 +21,7 @@ export const rtdbGroupService = {
 
             const conversation = convSnap.val() as RtdbConversation;
             const memberIds = Object.keys(conversation.members || {});
-            const now = Date.now();
+            const now = getServerSyncedNow();
 
             const systemMsgRef = push(ref(rtdb, `messages/${convId}`));
             const systemMsgId = systemMsgRef.key!;
@@ -31,8 +32,8 @@ export const rtdbGroupService = {
                 type: 'system',
                 content,
                 media: [],
-                createdAt: now,
-                updatedAt: now
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
             };
 
             updates[`conversations/${convId}/lastMessage`] = {
@@ -42,11 +43,11 @@ export const rtdbGroupService = {
                 timestamp: now,
                 messageId: systemMsgId
             };
-            updates[`conversations/${convId}/updatedAt`] = now;
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
 
             memberIds.forEach(uid => {
-                updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = now;
-                updates[`user_chats/${uid}/${convId}/updatedAt`] = now;
+                updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = getRtdbServerTimestamp();
+                updates[`user_chats/${uid}/${convId}/updatedAt`] = getRtdbServerTimestamp();
             });
 
             await update(ref(rtdb), updates);
@@ -82,7 +83,7 @@ export const rtdbGroupService = {
                 }
             });
 
-            const conversationData: RtdbConversation = {
+            const conversationData: any = {
                 isGroup: true,
                 name,
                 avatar: avatar || null,
@@ -90,14 +91,14 @@ export const rtdbGroupService = {
                 members,
                 typing: {},
                 lastMessage: null,
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
             };
 
             await set(newConvRef, conversationData);
 
             const updates: Record<string, any> = {};
-            const now = Date.now();
+            const now = getServerSyncedNow();
             allMemberIds.forEach(uid => {
                 updates[`user_chats/${uid}/${convId}`] = {
                     isPinned: false,
@@ -109,7 +110,7 @@ export const rtdbGroupService = {
                     clearedAt: 0,
                     createdAt: now,
                     updatedAt: now
-                } as RtdbUserChat;
+                    };
             });
 
             await update(ref(rtdb), updates);
@@ -146,7 +147,7 @@ export const rtdbGroupService = {
             }
 
             const updates: Record<string, any> = {};
-            const now = Date.now();
+            const now = getServerSyncedNow();
 
             memberIds.forEach(uid => {
                 if (!currentMemberIds.includes(uid)) {
@@ -161,11 +162,11 @@ export const rtdbGroupService = {
                         clearedAt: now,
                         createdAt: now,
                         updatedAt: now
-                    } as RtdbUserChat;
+                    };
                 }
             });
 
-            updates[`conversations/${convId}/updatedAt`] = now;
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
             await update(ref(rtdb), updates);
         } catch (error) {
             console.error('[rtdbGroupService] Lỗi addMembers:', error);
@@ -190,7 +191,7 @@ export const rtdbGroupService = {
 
             const updates: Record<string, any> = {};
             updates[`conversations/${convId}/members/${uid}`] = null;
-            updates[`conversations/${convId}/updatedAt`] = Date.now();
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
             updates[`user_chats/${uid}/${convId}`] = null;
 
             await update(ref(rtdb), updates);
@@ -215,11 +216,11 @@ export const rtdbGroupService = {
                 throw new Error('Chỉ người tạo nhóm mới được quyền giải tán nhóm');
             }
 
-            const now = Date.now();
+            const now = getServerSyncedNow();
             const updates: Record<string, any> = {};
 
             updates[`conversations/${convId}/isDisbanded`] = true;
-            updates[`conversations/${convId}/updatedAt`] = now;
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
 
             updates[`messages/${convId}`] = null;
 
@@ -237,9 +238,9 @@ export const rtdbGroupService = {
                 if (uid === actorId) {
                     updates[`user_chats/${uid}/${convId}`] = null;
                 } else {
-                    updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = now;
+                    updates[`user_chats/${uid}/${convId}/lastMsgTimestamp`] = getRtdbServerTimestamp();
                     updates[`user_chats/${uid}/${convId}/isArchived`] = false;
-                    updates[`user_chats/${uid}/${convId}/updatedAt`] = now;
+                    updates[`user_chats/${uid}/${convId}/updatedAt`] = getRtdbServerTimestamp();
                 }
             });
 
@@ -259,7 +260,7 @@ export const rtdbGroupService = {
     ): Promise<void> => {
         try {
             const convRef = ref(rtdb, `conversations/${convId}`);
-            const updateData: any = { ...updates, updatedAt: Date.now() };
+            const updateData: any = { ...updates, updatedAt: getRtdbServerTimestamp() };
             await update(convRef, updateData);
         } catch (error) {
             console.error('[rtdbGroupService] Lỗi updateGroupInfo:', error);
@@ -284,7 +285,7 @@ export const rtdbGroupService = {
 
             const updates: Record<string, any> = {};
             updates[`conversations/${convId}/members/${uid}`] = role;
-            updates[`conversations/${convId}/updatedAt`] = Date.now();
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
 
             await update(ref(rtdb), updates);
         } catch (error) {
@@ -308,7 +309,7 @@ export const rtdbGroupService = {
             const conversation = convSnap.val() as RtdbConversation;
             const memberIds = Object.keys(conversation.members || {});
             const updates: Record<string, any> = {};
-            const now = Date.now();
+            const now = getServerSyncedNow();
 
             if (memberIds.length <= 1) {
                 if (conversation.creatorId === uid) {
@@ -318,7 +319,7 @@ export const rtdbGroupService = {
                     await update(ref(rtdb), updates);
                 } else {
                     updates[`conversations/${convId}/members/${uid}`] = null;
-                    updates[`conversations/${convId}/updatedAt`] = now;
+                    updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
                     updates[`user_chats/${uid}/${convId}`] = null;
                     await update(ref(rtdb), updates);
                 }
@@ -335,7 +336,7 @@ export const rtdbGroupService = {
                 }
             }
             updates[`conversations/${convId}/members/${uid}`] = null;
-            updates[`conversations/${convId}/updatedAt`] = now;
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
             updates[`user_chats/${uid}/${convId}`] = null;
 
             await update(ref(rtdb), updates);

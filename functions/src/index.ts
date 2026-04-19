@@ -5,7 +5,8 @@ setGlobalOptions({
     region: 'asia-south1',
     memory: '512MiB',
     cpu: 0.5,
-    concurrency: 1
+    concurrency: 1,
+    invoker: 'public'
 });
 
 

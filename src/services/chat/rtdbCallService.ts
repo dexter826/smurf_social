@@ -2,6 +2,7 @@ import { ref, set, get, update, remove, onValue, off, onDisconnect } from 'fireb
 import { doc, getDoc } from 'firebase/firestore';
 import { rtdb, db } from '../../firebase/config';
 import { RtdbCallSignaling } from '../../../shared/types';
+import { getServerSyncedNow } from './chatTime';
 
 export const rtdbCallService = {
     initiateCall: async (
@@ -28,7 +29,7 @@ export const rtdbCallService = {
             }
         }
 
-        const now = Date.now();
+        const now = getServerSyncedNow();
         const signalingData: RtdbCallSignaling = {
             callerId,
             callerName,
@@ -62,7 +63,7 @@ export const rtdbCallService = {
         status: 'accepted' | 'rejected' | 'ended' | 'busy',
         isGroupCall = false,
     ): Promise<void> => {
-        const now = Date.now();
+        const now = getServerSyncedNow();
         const updates: Record<string, any> = {};
 
         updates[`call_signaling/${calleeId}`] = null;
@@ -120,8 +121,8 @@ export const rtdbCallService = {
             callerId,
             callType,
             messageId,
-            startedAt: Date.now(),
-            participants: { [callerId]: Date.now() },
+            startedAt: getServerSyncedNow(),
+            participants: { [callerId]: getServerSyncedNow() },
         });
 
         onDisconnect(participantRef).remove();
@@ -129,7 +130,7 @@ export const rtdbCallService = {
 
     markCallConnected: async (convId: string): Promise<void> => {
         await update(ref(rtdb, `conversations/${convId}/activeCall`), {
-            startedAt: Date.now(),
+            startedAt: getServerSyncedNow(),
         });
     },
 
@@ -140,7 +141,7 @@ export const rtdbCallService = {
     ): Promise<number> => {
         const participantRef = ref(rtdb, `conversations/${convId}/activeCall/participants/${userId}`);
         if (isJoining) {
-            await set(participantRef, Date.now());
+            await set(participantRef, getServerSyncedNow());
             onDisconnect(participantRef).remove();
 
             const snapshot = await get(ref(rtdb, `conversations/${convId}/activeCall/participants`));
@@ -204,7 +205,7 @@ export const rtdbCallService = {
             }
 
             if (activeCall.messageId) {
-                const duration = Math.max(0, Math.floor((Date.now() - activeCall.startedAt) / 1000));
+                const duration = Math.max(0, Math.floor((getServerSyncedNow() - activeCall.startedAt) / 1000));
 
                 await updateMessageFn(convId, activeCall.messageId, {
                     callType: activeCall.callType,
