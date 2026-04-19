@@ -4,7 +4,7 @@ import { generateToken04 } from '../helpers/zegoTokenHelper';
 
 export const generateZegoToken = onCall(
   {
-    region: 'asia-south1',
+    region: 'asia-southeast1',
     cors: true,
     invoker: 'public',
   },

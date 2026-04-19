@@ -62,7 +62,7 @@ async function deleteCommentById(commentId: string, adminId: string): Promise<vo
 
 export const resolveReport = onCall(
   {
-    region: 'asia-south1',
+    region: 'asia-southeast1',
     cors: true,
     invoker: 'public',
   },

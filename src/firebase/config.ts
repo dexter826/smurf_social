@@ -35,7 +35,7 @@ export const db = initializeFirestore(app, {
 
 export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app, 'asia-south1');
+export const functions = getFunctions(app, 'asia-southeast1');
 
 // Kết nối Emulator nếu chạy ở localhost hoặc IP nội bộ
 const hostname = window.location.hostname;

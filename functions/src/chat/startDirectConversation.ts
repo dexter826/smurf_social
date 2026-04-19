@@ -6,7 +6,7 @@ import { db, rtdb } from '../app';
  */
 export const startDirectConversation = onCall(
   {
-    region: 'asia-south1',
+    region: 'asia-southeast1',
     cors: true,
   },
   async (request) => {

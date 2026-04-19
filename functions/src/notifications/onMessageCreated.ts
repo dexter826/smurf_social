@@ -10,7 +10,7 @@ import { sendPushNotification } from '../helpers/fcmHelper';
 export const onMessageCreated = onValueCreated(
   {
     ref: '/messages/{convId}/{msgId}',
-    region: 'asia-south1'
+    region: 'asia-southeast1'
   },
   async (event) => {
     const message = event.data.val();

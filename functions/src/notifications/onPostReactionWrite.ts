@@ -9,7 +9,7 @@ import { sendPushNotification } from '../helpers/fcmHelper';
  * Xử lý khi có reaction mới trên bài viết
  */
 export const onPostReactionWrite = onDocumentWritten(
-  { document: 'posts/{postId}/reactions/{userId}', region: 'asia-south1' },
+  { document: 'posts/{postId}/reactions/{userId}', region: 'asia-southeast1' },
   async (event) => {
     const beforeData = event.data?.before?.data() as { type: string } | undefined;
     const afterData = event.data?.after?.data() as { type: string } | undefined;

@@ -31,7 +31,7 @@ async function commitInChunks(
  * Đồng bộ feed khi hideTheirActivity thay đổi
  */
 export const onBlockedUserWrite = onDocumentWritten(
-    { document: 'users/{userId}/blockedUsers/{blockedUid}', region: 'asia-south1' },
+    { document: 'users/{userId}/blockedUsers/{blockedUid}', region: 'asia-southeast1' },
     async (event) => {
         const userId = event.params.userId;
         const blockedUid = event.params.blockedUid;

@@ -8,7 +8,7 @@ import { banUserById } from '../helpers/adminHelper';
  */
 export const banUser = onCall(
   {
-    region: 'asia-south1',
+    region: 'asia-southeast1',
     cors: true,
     invoker: 'public',
   },

@@ -2,7 +2,7 @@ import { setGlobalOptions } from 'firebase-functions/v2';
 
 // Cấu hình tối ưu để tiết kiệm Quota CPU/Memory
 setGlobalOptions({
-    region: 'asia-south1',
+    region: 'asia-southeast1',
     memory: '512MiB',
     cpu: 0.5,
     concurrency: 1,

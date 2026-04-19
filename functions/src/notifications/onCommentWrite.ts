@@ -9,7 +9,7 @@ import { sendPushNotification } from '../helpers/fcmHelper';
  * Xử lý tất cả thay đổi trên bình luận (Create, Soft-delete)
  */
 export const onCommentWrite = onDocumentWritten(
-    { document: 'comments/{commentId}', region: 'asia-south1' },
+    { document: 'comments/{commentId}', region: 'asia-southeast1' },
     async (event) => {
         const commentId = event.params.commentId;
         const before = event.data?.before.data();
