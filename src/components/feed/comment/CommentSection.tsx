@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { X, MessageCircle, ChevronDown, ListFilter, Check } from 'lucide-react';
+import { X, MessageCircle, ChevronDown, ListFilter } from 'lucide-react';
 import { Button, ConfirmDialog, UploadProgress, Dropdown, DropdownItem } from '../../ui';
 import { CONFIRM_MESSAGES } from '../../../constants';
 import { toast } from '../../../store/toastStore';
@@ -192,13 +192,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             >
               <DropdownItem
                 label="Mới nhất"
-                icon={rootSortOrder[postId] !== 'asc' ? <Check size={14} className="text-primary" /> : <div className="w-[14px]" />}
                 className={rootSortOrder[postId] !== 'asc' ? 'bg-primary/5 !text-primary' : ''}
                 onClick={() => setRootSortOrder(postId, 'desc')}
               />
               <DropdownItem
                 label="Cũ nhất"
-                icon={rootSortOrder[postId] === 'asc' ? <Check size={14} className="text-primary" /> : <div className="w-[14px]" />}
                 className={rootSortOrder[postId] === 'asc' ? 'bg-primary/5 !text-primary' : ''}
                 onClick={() => setRootSortOrder(postId, 'asc')}
               />

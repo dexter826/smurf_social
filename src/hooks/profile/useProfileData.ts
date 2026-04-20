@@ -6,6 +6,7 @@ import { postService } from '../../services/postService';
 import { useUserCache } from '../../store/userCacheStore';
 import { useBlockedUsers } from '../utils/useBlockedUsers';
 import { usePostStore } from '../../store';
+import { getSafeMillis } from '../../utils/timestampHelpers';
 
 interface UseProfileDataProps {
   profileUserId: string | undefined;
@@ -94,7 +95,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
           if (action === 'add') {
             const newPosts = posts.filter(p => !prev.some(prevP => prevP.id === p.id));
             return [...newPosts, ...prev].sort((a, b) =>
-              (b.createdAt as any)?.toMillis() - (a.createdAt as any)?.toMillis()
+              getSafeMillis(b.createdAt) - getSafeMillis(a.createdAt)
             ).slice(0, 20);
           }
           if (action === 'update') {

@@ -144,10 +144,11 @@ export const useChatGroups = ({
     }
   }, [selectedConversationId, removeMember, sendGroupSystemMessage, currentUserId, getActorName, getName]);
 
-  const handleLeaveGroup = useCallback(async (): Promise<{ needAssignAdmin: boolean }> => {
-    if (!selectedConversationId || !currentUserId) return { needAssignAdmin: false };
+  const handleLeaveGroup = useCallback(async (conversationId?: string): Promise<{ needAssignAdmin: boolean }> => {
+    const id = conversationId || selectedConversationId;
+    if (!id || !currentUserId) return { needAssignAdmin: false };
 
-    const conv = conversations.find(c => c.id === selectedConversationId);
+    const conv = conversations.find(c => c.id === id);
 
     if (conv?.data?.isGroup && conv.data.creatorId === currentUserId) {
       const memberCount = Object.keys(conv.data.members || {}).length;
@@ -157,10 +158,10 @@ export const useChatGroups = ({
     }
 
     try {
-      await sendGroupSystemMessage(selectedConversationId, currentUserId, systemMessages.LEAVE_GROUP(getActorName()));
+      await sendGroupSystemMessage(id, currentUserId, systemMessages.LEAVE_GROUP(getActorName()));
     } catch {
     }
-    await leaveGroup(selectedConversationId, currentUserId);
+    await leaveGroup(id, currentUserId);
     return { needAssignAdmin: false };
   }, [selectedConversationId, currentUserId, conversations, leaveGroup, sendGroupSystemMessage, getActorName]);
 

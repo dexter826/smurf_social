@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   Pin, VolumeX, Trash2, MoreVertical, Ban, Archive,
-  Volume2, User as UserIcon,
+  Volume2, User as UserIcon, MessageSquare,
 } from 'lucide-react';
 import { RtdbConversation, RtdbUserChat, ReactionType, UserStatus } from '../../../../shared/types';
 import { Dropdown, DropdownItem, ConfirmDialog, UserAvatar, IconButton, BannedBadge } from '../../ui';
@@ -67,7 +67,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
   onPin, onMute, onDelete, onBlock, onArchive, onMarkUnread, onViewProfile,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const typingUsers = useMemo(() => {
     const typing = conversation.data.typing || {};
@@ -204,11 +204,11 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onPin(conversation.id, !(memberSettings?.isPinned || false))}
             />
           )}
-          {onViewProfile && !conversation.data.isGroup && (
+          {onMarkUnread && (
             <DropdownItem
-              icon={<UserIcon size={14} />}
-              label="Xem trang cá nhân"
-              onClick={onViewProfile}
+              icon={<MessageSquare size={14} />}
+              label={isUnread ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc'}
+              onClick={() => onMarkUnread(conversation.id, !isUnread)}
             />
           )}
           {onMute && (
@@ -225,6 +225,13 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
               onClick={() => onArchive(conversation.id, !(memberSettings?.isArchived || false))}
             />
           )}
+          {onViewProfile && !conversation.data.isGroup && (
+            <DropdownItem
+              icon={<UserIcon size={14} />}
+              label="Xem trang cá nhân"
+              onClick={onViewProfile}
+            />
+          )}
           {onBlock && !conversation.data.isGroup && partner?.status !== UserStatus.BANNED && (
             <DropdownItem
               icon={<Ban size={14} />}
@@ -236,21 +243,24 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           {onDelete && (
             <DropdownItem
               icon={<Trash2 size={14} />}
-              label={isGroupCreator ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}
+              label="Xóa cuộc trò chuyện"
               variant="danger"
-              onClick={() => setShowDeleteConfirm(true)}
+              onClick={() => setShowConfirm(true)}
             />
           )}
         </Dropdown>
       </div>
 
       <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => { onDelete?.(); setShowDeleteConfirm(false); }}
-        title={isGroupCreator ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.TITLE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
-        message={isGroupCreator ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.MESSAGE : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
-        confirmLabel={isGroupCreator ? CONFIRM_MESSAGES.CHAT.DISBAND_GROUP.CONFIRM : CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={() => {
+          onDelete?.();
+          setShowConfirm(false);
+        }}
+        title={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.TITLE}
+        message={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.CHAT.DELETE_CONVERSATION.CONFIRM}
         variant="danger"
       />
     </div>

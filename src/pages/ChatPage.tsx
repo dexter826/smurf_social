@@ -213,14 +213,7 @@ const ChatPage: React.FC = () => {
           onMute={handleMute}
           onArchive={handleArchive}
           onMarkUnread={handleMarkUnread}
-          onDelete={(id) => {
-            const conv = conversations.find(c => c.id === id);
-            if (conv && conv.data.isGroup && conv.data.creatorId === currentUser.id) {
-              handleDisbandGroup(id);
-            } else {
-              handleDelete(id);
-            }
-          }}
+          onDelete={handleDelete}
           onMarkAllRead={handleMarkAllRead}
           onNewGroup={() => setShowCreateGroup(true)}
         />

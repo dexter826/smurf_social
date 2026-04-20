@@ -213,7 +213,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
 
         try {
             await rtdbMessageService.sendSharedPostMessage(conversationId, senderId, payload, {
-                replyToId
+                replyToId,
+                messageId: msgId
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendSharedPostMessage:', error);
@@ -551,7 +552,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         });
 
         try {
-            await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId });
+            await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId, messageId: msgId });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendGifMessage:', error);
             set((state) => {

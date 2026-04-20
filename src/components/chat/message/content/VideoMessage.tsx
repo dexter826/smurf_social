@@ -24,15 +24,15 @@ export const VideoMessage: React.FC<VideoMessageProps> = ({
   if (!videoUrl) return null;
 
   return (
-    <div className="rounded-2xl overflow-hidden max-w-[280px] bg-black/5 relative shadow-sm border border-border-light">
+    <div className="rounded-2xl overflow-hidden max-w-[320px] max-h-[420px] bg-black/5 relative shadow-sm border border-border-light w-fit">
       <LazyVideo
         src={videoUrl}
         thumbnail={thumbnailUrl}
-        className="w-full h-auto"
-        autoPlay={!isUploading} // Tắt autoplay khi đang upload để tránh tốn tài nguyên
+        className="max-w-full max-h-[420px] object-contain"
+        autoPlay={!isUploading} 
         muted
         loop
-        controls={!isUploading} // Chỉ hiện điều khiển khi đã upload xong
+        controls={!isUploading} 
         onLoad={onLoad}
       />
       

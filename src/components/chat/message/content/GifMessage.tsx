@@ -14,11 +14,11 @@ export const GifMessage: React.FC<GifMessageProps> = ({ message, onLoad }) => {
   const gifUrl = message.data.content;
   
   return (
-    <div className="rounded-xl overflow-hidden max-w-[280px] shadow-md bg-bg-secondary border border-border-light animate-fade-in hover:shadow-lg transition-shadow duration-300">
+    <div className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] shadow-md bg-bg-secondary border border-border-light animate-fade-in hover:shadow-lg transition-shadow duration-300 w-fit">
       <LazyImage 
         src={gifUrl} 
         alt="GIF" 
-        className="w-full h-auto object-contain"
+        className="max-w-full max-h-[420px] object-contain"
         wrapperClassName="w-full h-full"
         onLoad={onLoad}
       />

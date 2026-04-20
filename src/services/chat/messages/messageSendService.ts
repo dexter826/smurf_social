@@ -77,11 +77,12 @@ export const messageSendService = {
             replyToId?: string;
             isForwarded?: boolean;
             mentions?: string[];
+            messageId?: string;
         }
     ): Promise<string> => {
         try {
-            const newMsgRef = push(ref(rtdb, `messages/${convId}`));
-            const msgId = newMsgRef.key!;
+            const msgId = options?.messageId || push(ref(rtdb, `messages/${convId}`)).key!;
+            const newMsgRef = ref(rtdb, `messages/${convId}/${msgId}`);
             const content = JSON.stringify(payload);
 
             const messageData: RtdbMessage = {
@@ -234,11 +235,12 @@ export const messageSendService = {
         options?: {
             replyToId?: string;
             mentions?: string[];
+            messageId?: string;
         }
     ): Promise<string> => {
         try {
-            const newMsgRef = push(ref(rtdb, `messages/${convId}`));
-            const msgId = newMsgRef.key!;
+            const msgId = options?.messageId || push(ref(rtdb, `messages/${convId}`)).key!;
+            const newMsgRef = ref(rtdb, `messages/${convId}/${msgId}`);
 
             const messageData: RtdbMessage = {
                 senderId,

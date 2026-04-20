@@ -119,11 +119,11 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
 
   const first = mediaItems[0];
   return (
-    <div className="rounded-2xl overflow-hidden max-w-[280px] cursor-pointer group relative shadow-sm border border-border-light" onClick={() => onOpenImage(0)}>
+    <div className="rounded-2xl overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative shadow-sm border border-border-light w-fit bg-bg-secondary" onClick={() => onOpenImage(0)}>
       <LazyImage 
         src={first.url} 
         alt="media content" 
-        className="w-full h-auto object-cover" 
+        className="max-w-full max-h-[420px] object-contain" 
         onLoad={onLoad}
       />
       
