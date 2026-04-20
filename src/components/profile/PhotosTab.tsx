@@ -11,7 +11,7 @@ const MEDIA_PAGE_SIZE = 15;
 
 interface PhotosTabProps {
   userId: string;
-  isFullyBlockedByPartner?: boolean;
+  isViewActivityBlocked?: boolean;
 }
 
 type MediaItem = {
@@ -22,7 +22,7 @@ type MediaItem = {
 };
 
 const PhotosTabInner: React.FC<PhotosTabProps> = ({
-  userId, isFullyBlockedByPartner = false,
+  userId, isViewActivityBlocked = false,
 }) => {
   const [realtimeMedia, setRealtimeMedia] = useState<MediaItem[]>([]);
   const [historyMedia, setHistoryMedia] = useState<MediaItem[]>([]);
@@ -72,7 +72,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
   }, [userId, currentUser, friendIds, extractMedia]);
 
   useEffect(() => {
-    if (isFullyBlockedByPartner) {
+    if (isViewActivityBlocked) {
       setLoading(false); setRealtimeMedia([]); setHistoryMedia([]); setHasMore(false); return;
     }
 
@@ -103,7 +103,7 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
     );
 
     return () => unsubscribe();
-  }, [userId, isFullyBlockedByPartner, currentUser?.id, friendIds, extractMedia, loadMedia]);
+  }, [userId, isViewActivityBlocked, currentUser?.id, friendIds, extractMedia, loadMedia]);
 
   const media = useMemo(() => {
     const combined = [...realtimeMedia, ...historyMedia];
@@ -132,9 +132,9 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
       isSensitive: m.isSensitive,
     })), [media]);
 
-  if (loading && !isFullyBlockedByPartner) return <PhotosTabSkeleton />;
+  if (loading && !isViewActivityBlocked) return <PhotosTabSkeleton />;
 
-  if (media.length === 0 || isFullyBlockedByPartner) {
+  if (media.length === 0 || isViewActivityBlocked) {
     return (
       <div className="bg-bg-primary rounded-2xl border border-border-light p-10 text-center">
         <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-3 border border-border-light">

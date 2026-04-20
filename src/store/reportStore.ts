@@ -90,8 +90,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
             blockViewMyActivity: true,
             hideTheirActivity: true,
           };
-          await userService.blockUser(reporterId, targetOwnerId, defaultBlockOptions);
-          useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);
+          await useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);
           set({ isOpen: false, isSubmitting: false });
           return true;
         }
@@ -116,8 +115,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
           blockViewMyActivity: true,
           hideTheirActivity: true,
         };
-        await userService.blockUser(reporterId, targetOwnerId, defaultBlockOptions);
-        useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);
+        await useAuthStore.getState().updateBlockEntry('add', targetOwnerId, defaultBlockOptions);
       }
 
       set({ isOpen: false, isSubmitting: false });

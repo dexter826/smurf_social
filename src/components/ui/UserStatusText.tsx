@@ -4,7 +4,7 @@ import { usePresence } from '../../hooks/usePresence';
 import { useUserCache } from '../../store/userCacheStore';
 
 import { useContactStore } from '../../store/contactStore';
-import { useBlockedUsers } from '../../hooks';
+
 
 interface UserStatusTextProps {
   userId: string;
@@ -21,12 +21,10 @@ export const UserStatusText: React.FC<UserStatusTextProps> = ({
   const presence = usePresence(userId, initialStatus);
   const cachedUser = useUserCache(state => state.users[userId]);
   const isFriend = useContactStore(state => state.friends.some(f => f.id === userId));
-  const { isBlocked: checkBlocked } = useBlockedUsers();
 
-  const isBlocked = checkBlocked(userId);
   const effectiveStatus = cachedUser?.status ?? initialStatus;
 
-  if (effectiveStatus === 'banned' || !isFriend || isBlocked) return null;
+  if (effectiveStatus === 'banned' || !isFriend) return null;
 
   const isOnline = presence && 'isOnline' in presence && presence.isOnline;
 

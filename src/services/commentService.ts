@@ -44,7 +44,7 @@ export const commentService = {
   /** Lấy danh sách bình luận gốc của bài viết */
   getRootComments: async (
     postId: string, 
-    blockedUserIds: string[] = [], 
+    hiddenActivityUserIds: string[] = [], 
     limitCount: number = PAGINATION.COMMENTS, 
     lastDoc?: DocumentSnapshot,
     sortOrder: 'asc' | 'desc' = 'desc'
@@ -71,7 +71,7 @@ export const commentService = {
       const usersMap = await batchGetUsers(authorIds);
 
       const comments = convertDocs<Comment>(docsToProcess)
-        .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+        .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
       return {
         comments,
@@ -85,7 +85,7 @@ export const commentService = {
   },
 
   /** Lấy danh sách phản hồi cho một bình luận */
-  getReplies: async (postId: string, commentId: string, blockedUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
+  getReplies: async (postId: string, commentId: string, hiddenActivityUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
       let q = query(
         collection(db, 'comments'),
@@ -108,7 +108,7 @@ export const commentService = {
       const usersMap = await batchGetUsers(authorIds);
 
       const replies = convertDocs<Comment>(docsToProcess)
-        .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+        .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
       return {
         replies,
@@ -265,7 +265,7 @@ export const commentService = {
   /** Theo dõi bình luận bài viết thời gian thực */
   subscribeToComments: (
     postId: string,
-    blockedUserIds: string[] = [],
+    hiddenActivityUserIds: string[] = [],
     callback: (action: 'initial' | 'add' | 'update' | 'remove', data: Comment[] | { comments: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }) => void,
     limitCount: number = PAGINATION.COMMENTS,
     sortOrder: 'asc' | 'desc' = 'desc'
@@ -294,7 +294,7 @@ export const commentService = {
         const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
         const comments = convertDocs<Comment>(docsToProcess)
-          .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+          .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
         callback('initial', {
           comments,
@@ -308,7 +308,7 @@ export const commentService = {
       
       const changeDocs = changes
         .map(change => ({ change, comment: commentConverter(change.doc) }))
-        .filter(({ comment }) => !blockedUserIds.includes(comment.authorId) && usersMap[comment.authorId]?.status !== 'banned');
+        .filter(({ comment }) => !hiddenActivityUserIds.includes(comment.authorId) && usersMap[comment.authorId]?.status !== 'banned');
 
       const added = changeDocs.filter(d => d.change.type === 'added').map(d => d.comment);
       const modified = changeDocs.filter(d => d.change.type === 'modified').map(d => d.comment);
@@ -325,7 +325,7 @@ export const commentService = {
   subscribeToReplies: (
     postId: string,
     parentId: string,
-    blockedUserIds: string[] = [],
+    hiddenActivityUserIds: string[] = [],
     callback: (action: 'initial' | 'add' | 'update' | 'remove', data: Comment[] | { replies: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }) => void,
     limitCount: number = PAGINATION.REPLIES
   ) => {
@@ -353,7 +353,7 @@ export const commentService = {
 
         const replies = docsToProcess
           .map(commentConverter)
-          .filter(c => !blockedUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+          .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
 
         callback('initial', {
           replies,
@@ -365,7 +365,7 @@ export const commentService = {
 
       snapshot.docChanges().forEach(change => {
         const reply = commentConverter(change.doc);
-        if (blockedUserIds.includes(reply.authorId)) return;
+        if (hiddenActivityUserIds.includes(reply.authorId)) return;
 
         if (change.type === 'added') {
           callback('add', [reply]);

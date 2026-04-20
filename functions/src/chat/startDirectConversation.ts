@@ -60,7 +60,7 @@ export const startDirectConversation = onCall(
         db.collection('users').doc(targetUserId).collection('blockedUsers').doc(currentUserId).get()
       ]);
 
-      if (block1.exists || block2.exists) {
+      if (block1.data()?.blockMessages || block2.data()?.blockMessages) {
         throw new HttpsError('permission-denied', 'Không thể bắt đầu trò chuyện với người dùng này.');
       }
 

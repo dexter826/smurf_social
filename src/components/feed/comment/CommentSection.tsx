@@ -44,8 +44,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const { users, fetchUsers } = useUserCache();
   const { openReportModal } = useReportStore();
   const friendIds = useFriendIds();
-  const { blockedUserIds: rawBlockedUserIds } = useBlockedUsers();
-  const blockedUserIds = useMemo(() => rawBlockedUserIds, [rawBlockedUserIds.join(',')]);
+  const { hiddenActivityUserIds: rawHiddenActivityUserIds } = useBlockedUsers();
+  const hiddenActivityUserIds = useMemo(() => rawHiddenActivityUserIds, [rawHiddenActivityUserIds.join(',')]);
   const friendIdsKey = useMemo(() => friendIds, [friendIds.join(',')]);
 
   const [isLoadingReplyMap, setIsLoadingReplyMap] = useState<Record<string, boolean>>({});
@@ -84,9 +84,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   }, [postId]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToComments(postId, blockedUserIds);
+    const unsubscribe = subscribeToComments(postId, hiddenActivityUserIds);
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
-  }, [postId, blockedUserIds, subscribeToComments, rootSortOrder[postId]]);
+  }, [postId, hiddenActivityUserIds, subscribeToComments, rootSortOrder[postId]]);
 
   useEffect(() => {
     if (currentRootComments.length === 0) return;
@@ -106,9 +106,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     setIsLoadingReplyMap(prev => ({ ...prev, [parentId]: true }));
     try {
       if (replySubscriptionsRef.current[parentId]) {
-        await fetchReplies(postId, parentId, blockedUserIds, true);
+        await fetchReplies(postId, parentId, hiddenActivityUserIds, true);
       } else {
-        const unsub = subscribeToReplies(postId, parentId, blockedUserIds);
+        const unsub = subscribeToReplies(postId, parentId, hiddenActivityUserIds);
         replySubscriptionsRef.current[parentId] = unsub;
       }
     } finally {
@@ -276,7 +276,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => fetchRootComments(postId, blockedUserIds, true)}
+                    onClick={() => fetchRootComments(postId, hiddenActivityUserIds, true)}
                     isLoading={isLoading}
                     className="text-primary w-full justify-center text-xs font-semibold hover:bg-primary/5"
                   >

@@ -4,7 +4,6 @@ import { useFriendIds } from '../utils';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { useUserCache } from '../../store/userCacheStore';
-import { useBlockedUsers } from '../utils/useBlockedUsers';
 import { usePostStore } from '../../store';
 import { getSafeMillis } from '../../utils/timestampHelpers';
 
@@ -25,7 +24,6 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
   const rawFriendIds = useFriendIds();
   const friendIds = useMemo(() => rawFriendIds, [JSON.stringify(rawFriendIds)]);
 
-  const { isBlocked } = useBlockedUsers();
   const lastIdRef = useRef<string | undefined>(undefined);
 
   const allStorePosts = usePostStore(state => state.posts);
@@ -69,7 +67,7 @@ export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataPro
         setLoading(false);
       }
     }
-  }, [profileUserId, currentUser?.id, rawFriendIds, isBlocked]);
+  }, [profileUserId, currentUser?.id, rawFriendIds]);
 
   useEffect(() => {
     loadProfile(true);

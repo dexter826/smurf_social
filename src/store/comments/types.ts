@@ -14,10 +14,10 @@ export interface CommentState {
 }
 
 export interface CommentActions {
-  fetchRootComments: (postId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
-  fetchReplies: (postId: string, parentId: string, blockedUserIds?: string[], loadMore?: boolean) => Promise<void>;
-  subscribeToComments: (postId: string, blockedUserIds?: string[]) => () => void;
-  subscribeToReplies: (postId: string, parentId: string, blockedUserIds?: string[]) => () => void;
+  fetchRootComments: (postId: string, hiddenActivityUserIds?: string[], loadMore?: boolean) => Promise<void>;
+  fetchReplies: (postId: string, parentId: string, hiddenActivityUserIds?: string[], loadMore?: boolean) => Promise<void>;
+  subscribeToComments: (postId: string, hiddenActivityUserIds?: string[]) => () => void;
+  subscribeToReplies: (postId: string, parentId: string, hiddenActivityUserIds?: string[]) => () => void;
   createComment: (postId: string, userId: string, content: string, parentId?: string | null, replyToUserId?: string, replyToId?: string, image?: MediaObject | File) => Promise<string>;
   updateComment: (postId: string, commentId: string, content: string, parentId?: string | null, replyToUserId?: string, replyToId?: string, image?: MediaObject | File) => Promise<void>;
   deleteComment: (postId: string, commentId: string, userId: string, parentId?: string | null) => Promise<void>;

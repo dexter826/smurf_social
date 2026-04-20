@@ -38,34 +38,34 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     return { visibleReplies: replies, hiddenCount: 0 };
   },
 
-  fetchRootComments: async (postId: string, blockedUserIds: string[] = [], loadMore = false) => {
+  fetchRootComments: async (postId: string, hiddenActivityUserIds: string[] = [], loadMore = false) => {
     if (get().loadingPosts[postId]) return;
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
       const sortOrder = get().rootSortOrder[postId] || 'desc';
       const lastDoc = loadMore ? get().lastRootDoc[postId] : undefined;
-      const result = await commentService.getRootComments(postId, blockedUserIds, PAGINATION.COMMENTS, lastDoc || undefined, sortOrder);
+      const result = await commentService.getRootComments(postId, hiddenActivityUserIds, PAGINATION.COMMENTS, lastDoc || undefined, sortOrder);
       if (loadMore) get().addRootComments(postId, result.comments, result.lastDoc, result.hasMore);
       else get().setRootComments(postId, result.comments, result.lastDoc, result.hasMore);
     } catch (err) { console.error('Lỗi tải bình luận gốc:', err); }
     finally { set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: false } })); }
   },
 
-  fetchReplies: async (postId: string, parentId: string, blockedUserIds: string[] = [], loadMore = false) => {
+  fetchReplies: async (postId: string, parentId: string, hiddenActivityUserIds: string[] = [], loadMore = false) => {
     if (get().loadingPosts[postId]) return;
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
       const lastDoc = loadMore ? get().lastReplyDoc[postId]?.[parentId] : undefined;
-      const result = await commentService.getReplies(postId, parentId, blockedUserIds, PAGINATION.REPLIES, lastDoc || undefined);
+      const result = await commentService.getReplies(postId, parentId, hiddenActivityUserIds, PAGINATION.REPLIES, lastDoc || undefined);
       if (loadMore) get().addReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
       else get().setReplies(postId, parentId, result.replies, result.lastDoc, result.hasMore);
     } catch (err) { console.error('Lỗi tải phản hồi:', err); }
     finally { set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: false } })); }
   },
 
-  subscribeToComments: (postId: string, blockedUserIds: string[] = []) => {
+  subscribeToComments: (postId: string, hiddenActivityUserIds: string[] = []) => {
     const sortOrder = get().rootSortOrder[postId] || 'desc';
-    return commentService.subscribeToComments(postId, blockedUserIds, (action, data) => {
+    return commentService.subscribeToComments(postId, hiddenActivityUserIds, (action, data) => {
       set(state => {
         if (action === 'initial') {
           const { comments, lastDoc, hasMore } = data as { comments: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean };
@@ -101,8 +101,8 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     }, PAGINATION.COMMENTS, sortOrder);
   },
 
-  subscribeToReplies: (postId: string, parentId: string, blockedUserIds: string[] = []) => {
-    return commentService.subscribeToReplies(postId, parentId, blockedUserIds, (action, data) => {
+  subscribeToReplies: (postId: string, parentId: string, hiddenActivityUserIds: string[] = []) => {
+    return commentService.subscribeToReplies(postId, parentId, hiddenActivityUserIds, (action, data) => {
       set(state => {
         const postReplies = state.replies[postId] || {};
         const currentReplies = postReplies[parentId] || [];

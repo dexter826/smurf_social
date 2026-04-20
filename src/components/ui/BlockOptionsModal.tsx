@@ -56,23 +56,11 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
     setOptions(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const hasAnyOption = options.blockMessages || options.blockCalls
-    || options.blockViewMyActivity || options.hideTheirActivity;
-
-  const isPreviouslyBlocked = initialOptions?.blockMessages || initialOptions?.blockCalls
-    || initialOptions?.blockViewMyActivity || initialOptions?.hideTheirActivity;
-
-  const hasChanges = JSON.stringify(options) !== JSON.stringify({
-    blockMessages: initialOptions?.blockMessages ?? false,
-    blockCalls: initialOptions?.blockCalls ?? false,
-    blockViewMyActivity: initialOptions?.blockViewMyActivity ?? false,
-    hideTheirActivity: initialOptions?.hideTheirActivity ?? false,
-  });
-
   const handleApply = async () => {
     setIsLoading(true);
     try {
-      if (!hasAnyOption && onUnblock) {
+      const allFalse = !options.blockMessages && !options.blockCalls && !options.blockViewMyActivity && !options.hideTheirActivity;
+      if (allFalse && onUnblock) {
         await onUnblock();
       } else {
         await onApply(options);
@@ -233,13 +221,12 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
             Hủy
           </Button>
           <Button
-            variant={!hasAnyOption && isPreviouslyBlocked ? 'primary' : 'danger'}
+            variant="danger"
             onClick={handleApply}
             isLoading={isLoading}
-            disabled={!hasChanges && !isLoading}
             className="flex-1 font-bold h-11 shadow-sm transition-all"
           >
-            {!hasAnyOption && isPreviouslyBlocked ? 'Xác nhận Bỏ chặn' : 'Áp dụng'}
+            Xác nhận
           </Button>
         </div>
       </div>

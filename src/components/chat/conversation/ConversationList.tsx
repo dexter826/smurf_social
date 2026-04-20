@@ -13,7 +13,6 @@ interface ConversationListProps {
   selectedId: string | null;
   currentUserId: string;
   currentUserFriendIds?: string[];
-  blockedUserIds?: string[];
   isLoading: boolean;
   isSearching?: boolean;
   onSelectConversation: (id: string) => void;
@@ -45,7 +44,7 @@ interface ConversationListProps {
 
 export const ConversationList = React.memo<ConversationListProps>(({
   conversations, selectedId, currentUserId,
-  currentUserFriendIds = [], blockedUserIds = [],
+  currentUserFriendIds = [],
   isLoading, onSelectConversation, onSearch,
   onPin, onMute, onDelete, onBlock, onArchive, onMarkUnread,
   onViewProfile, onNewChat, onNewGroup,
@@ -58,7 +57,7 @@ export const ConversationList = React.memo<ConversationListProps>(({
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const { friendConversations, requestConversations, displayConversations } = useConversationGroups({
-    conversations, currentUserId, currentUserFriendIds, blockedUserIds,
+    conversations, currentUserId, currentUserFriendIds,
     viewMode: (viewMode || 'normal') as 'normal' | 'archived',
     activeFilter,
   });

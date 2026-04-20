@@ -5,7 +5,7 @@ import { usePresence } from '../../hooks/usePresence';
 import { useAuthStore } from '../../store/authStore';
 import { useContactStore } from '../../store/contactStore';
 import { useUserCache } from '../../store/userCacheStore';
-import { useBlockedUsers } from '../../hooks';
+
 
 export interface AvatarProps {
     src?: string | MediaObject;
@@ -171,7 +171,7 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
     const presence = usePresence(isGroup ? undefined : userId, initialStatus);
     const currentUser = useAuthStore(state => state.user);
     const isFriend = useContactStore(state => state.friends.some(f => f.id === userId));
-    const { isBlocked: checkBlocked } = useBlockedUsers();
+
     const cachedUser = useUserCache(state => userId ? state.users[userId] : undefined);
     const fetchUsers = useUserCache(state => state.fetchUsers);
 
@@ -189,9 +189,8 @@ const UserAvatarInner: React.FC<UserAvatarProps> = ({
         const effectiveStatus = cachedUser?.status ?? initialStatus;
         if (effectiveStatus === 'banned') return undefined;
         if (userId === currentUser?.id) return presence && 'isOnline' in presence && presence.isOnline ? 'active' : undefined;
-        const isBlocked = checkBlocked(userId);
-        return (isFriend && !isBlocked && presence && 'isOnline' in presence && presence.isOnline) ? 'active' : undefined;
-    }, [presence, showStatus, userId, currentUser?.id, isFriend, checkBlocked, initialStatus, cachedUser?.status]);
+        return (isFriend && presence && 'isOnline' in presence && presence.isOnline) ? 'active' : undefined;
+    }, [presence, showStatus, userId, currentUser?.id, isFriend, initialStatus, cachedUser?.status]);
 
     return (
         <Avatar

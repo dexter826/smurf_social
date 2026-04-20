@@ -48,7 +48,6 @@ const ChatPage: React.FC = () => {
 
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
   const friendIds = useFriendIds();
-  const { blockedUserIds } = useBlockedUsers();
   const selectedMemberSettings = useConversationMemberSettings(
     selectedConversationId || '', currentUser?.id || ''
   );
@@ -188,7 +187,6 @@ const ChatPage: React.FC = () => {
           selectedId={selectedConversationId}
           currentUserId={currentUser.id}
           currentUserFriendIds={friendIds}
-          blockedUserIds={blockedUserIds}
           isLoading={isLoading}
           isSearching={isSearching}
           viewMode={viewMode}

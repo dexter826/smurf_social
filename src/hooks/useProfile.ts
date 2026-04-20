@@ -59,6 +59,11 @@ export const useProfile = () => {
       return;
     }
 
+    if (block.isMessageBlockedByPartner) {
+      toast.error("Bạn không thể nhắn tin cho người dùng này do cài đặt quyền riêng tư.");
+      return;
+    }
+
     // Kiểm tra cài đặt của chính mình nếu là người lạ
     const isFriend = friendStatus === FriendStatus.FRIEND;
     if (!isFriend && !bypassSettingsCheck) {
@@ -141,6 +146,7 @@ export const useProfile = () => {
     // Block
     isBlockedByMe: block.isBlockedByMe,
     isBlockedByPartner: block.isBlockedByPartner,
+    isMessageBlockedByPartner: block.isMessageBlockedByPartner,
     currentBlockOptions: block.currentBlockOptions,
     isBlockModalOpen: block.isBlockModalOpen,
     handleOpenBlockModal: block.handleOpenBlockModal,

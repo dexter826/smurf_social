@@ -240,34 +240,6 @@
           "order": "ASCENDING"
         }
       ]
-    },
-    {
-      "collectionGroup": "blockedUsers",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "blockedUid",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "blockedUsers",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "isFullyBlocked",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
     }
   ],
   "fieldOverrides": [

@@ -62,8 +62,7 @@ const SettingsPage: React.FC = () => {
   const handleUnblock = useCallback(async () => {
     if (!unblockUserId || !currentUser) return;
     try {
-      await userService.unblockUser(currentUser.id, unblockUserId);
-      useAuthStore.getState().updateBlockEntry('remove', unblockUserId);
+      await useAuthStore.getState().updateBlockEntry('remove', unblockUserId);
       setBlockedList(prev => prev.filter(item => item.user.id !== unblockUserId));
       usePostStore.getState().refreshFeed(currentUser.id);
       toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
@@ -83,8 +82,7 @@ const SettingsPage: React.FC = () => {
     if (!hasAnyOption) {
       setManageBlockTarget(null);
       try {
-        await userService.unblockUser(currentUser.id, targetId);
-        useAuthStore.getState().updateBlockEntry('remove', targetId);
+        await useAuthStore.getState().updateBlockEntry('remove', targetId);
         setBlockedList(prev => prev.filter(item => item.user.id !== targetId));
         usePostStore.getState().refreshFeed(currentUser.id);
         toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
@@ -95,8 +93,7 @@ const SettingsPage: React.FC = () => {
     }
 
     try {
-      await userService.blockUser(currentUser.id, targetId, options);
-      useAuthStore.getState().updateBlockEntry('add', targetId, options);
+      await useAuthStore.getState().updateBlockEntry('add', targetId, options);
       if (options.hideTheirActivity) usePostStore.getState().filterPostsByAuthor(targetId);
 
       setBlockedList(prev =>

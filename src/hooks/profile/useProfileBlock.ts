@@ -24,6 +24,7 @@ export const useProfileBlock = ({
   const blockedUsers = useAuthStore(state => state.blockedUsers);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [isBlockedByPartner, setIsBlockedByPartner] = useState(false);
+  const [isMessageBlockedByPartner, setIsMessageBlockedByPartner] = useState(false);
 
   const isBlockedByMe = useMemo(() =>
     !!blockedUsers[profileUserId || ''],
@@ -40,7 +41,6 @@ export const useProfileBlock = ({
     setIsBlockModalOpen(true);
   }, [currentUser, profile, isOwnProfile]);
 
-  // Lắng nghe realtime block từ phía đối phương (họ có blockViewMyActivity không)
   useEffect(() => {
     if (!currentUser || !profileUserId || isOwnProfile) {
       setIsBlockedByPartner(false);
@@ -51,8 +51,10 @@ export const useProfileBlock = ({
       if (snap.exists()) {
         const data = snap.data();
         setIsBlockedByPartner(data?.blockViewMyActivity === true);
+        setIsMessageBlockedByPartner(data?.blockMessages === true);
       } else {
         setIsBlockedByPartner(false);
+        setIsMessageBlockedByPartner(false);
       }
     });
     return () => unsub();
@@ -61,8 +63,7 @@ export const useProfileBlock = ({
   const confirmUnblock = useCallback(async () => {
     if (!currentUser || !profile || isOwnProfile) return;
     try {
-      await userService.unblockUser(currentUser.id, profile.id);
-      useAuthStore.getState().updateBlockEntry('remove', profile.id);
+      await useAuthStore.getState().updateBlockEntry('remove', profile.id);
       usePostStore.getState().refreshFeed(currentUser.id);
       toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
     } catch {
@@ -86,8 +87,7 @@ export const useProfileBlock = ({
     }
 
     try {
-      await userService.blockUser(currentUser.id, profile.id, options);
-      useAuthStore.getState().updateBlockEntry('add', profile.id, options);
+      await useAuthStore.getState().updateBlockEntry('add', profile.id, options);
 
       if (options.hideTheirActivity) {
         usePostStore.getState().filterPostsByAuthor(profile.id);
@@ -103,6 +103,7 @@ export const useProfileBlock = ({
   return {
     isBlockedByMe,
     isBlockedByPartner,
+    isMessageBlockedByPartner,
     currentBlockOptions,
     isBlockModalOpen,
     handleOpenBlockModal,

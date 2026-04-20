@@ -219,8 +219,7 @@ export const useContacts = (): UseContactsReturn => {
   const handleApplyBlock = useCallback(async (targetId: string, options: any) => {
     if (!currentUser) return;
     try {
-      await userService.blockUser(currentUser.id, targetId, options);
-      useAuthStore.getState().updateBlockEntry('add', targetId, options);
+      await useAuthStore.getState().updateBlockEntry('add', targetId, options);
       // Refresh feed logic if needed
     } catch (error) {
       console.error("Lỗi chặn người dùng", error);
@@ -231,8 +230,7 @@ export const useContacts = (): UseContactsReturn => {
   const handleUnblock = useCallback(async (targetId: string) => {
     if (!currentUser) return;
     try {
-      await userService.unblockUser(currentUser.id, targetId);
-      useAuthStore.getState().updateBlockEntry('remove', targetId);
+      await useAuthStore.getState().updateBlockEntry('remove', targetId);
     } catch (error) {
       console.error("Lỗi bỏ chặn người dùng", error);
       throw error;

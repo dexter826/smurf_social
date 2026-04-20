@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { NotificationType, CommentStatus } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
+import { isBlockingMessages } from '../helpers/blockHelper';
 
 /**
  * Xử lý tất cả thay đổi trên bình luận (Create, Soft-delete)
@@ -37,6 +38,10 @@ export const onCommentWrite = onDocumentWritten(
                 }
 
                 if (receiverId && receiverId !== senderId) {
+                    if (await isBlockingMessages(receiverId, senderId)) {
+                        console.log(`[onCommentWrite] ${receiverId} blocked messages from ${senderId}, skipping notification.`);
+                        return;
+                    }
                     const body = buildPushBody(NotificationType.COMMENT, senderName, { contentSnippet });
                     await createNotification({
                         receiverId,

@@ -6,7 +6,6 @@ import { useUserCache } from '../store/userCacheStore';
 import { useIntersectionObserver } from './utils/useIntersectionObserver';
 import { useLoadingStore } from '../store/loadingStore';
 import { useFriendIds } from './utils';
-import { useBlockedUsers } from './utils';
 
 interface UseFeedReturn {
   posts: Post[];
@@ -24,7 +23,7 @@ interface UseFeedReturn {
 export const useFeed = (): UseFeedReturn => {
   const { user: currentUser } = useAuthStore();
   const friendIds = useFriendIds();
-  const { blockedUserIds } = useBlockedUsers();
+
   const {
     posts,
     hasMore,

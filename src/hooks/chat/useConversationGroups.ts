@@ -6,7 +6,6 @@ interface UseConversationGroupsProps {
   conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>;
   currentUserId: string;
   currentUserFriendIds: string[];
-  blockedUserIds: string[];
   viewMode: 'normal' | 'archived';
   activeFilter: 'all' | 'group' | 'stranger';
 }
@@ -15,7 +14,6 @@ export const useConversationGroups = ({
   conversations,
   currentUserId,
   currentUserFriendIds,
-  blockedUserIds,
   viewMode,
   activeFilter
 }: UseConversationGroupsProps) => {
@@ -50,7 +48,7 @@ export const useConversationGroups = ({
       friendConversations: friends.sort(sortFn),
       requestConversations: requests.sort(sortFn)
     };
-  }, [conversations, currentUserId, currentUserFriendIds, blockedUserIds]);
+  }, [conversations, currentUserId, currentUserFriendIds]);
 
   const displayConversations = useMemo(() => {
     if (viewMode === 'archived') {

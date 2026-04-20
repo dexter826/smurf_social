@@ -55,12 +55,6 @@ export const friendService = {
       if ((receiverSnap.data() as any)?.status === 'banned') {
         throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
       }
-      if (receiverBlockedSnap.exists() && receiverBlockedSnap.data().isFullyBlocked === true) {
-        throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
-      }
-      if (senderBlockedSnap.exists() && senderBlockedSnap.data().isFullyBlocked === true) {
-        throw new Error("Bạn đã chặn người dùng này");
-      }
       if (isFriendSnap.exists()) {
         throw new Error("Hai người đã là bạn bè");
       }

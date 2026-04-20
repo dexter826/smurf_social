@@ -34,41 +34,6 @@ export const searchUsers = onCall(
         .map((d) => ({ id: d.id, ...d.data() } as User))
         .filter((u) => u.id !== currentUserId && u.status !== 'banned');
 
-      if (currentUserId && users.length > 0) {
-        const blockedUsersSnap = await db
-          .collection('users')
-          .doc(currentUserId)
-          .collection('blockedUsers')
-          .get();
-
-        const myHiddenUsers = new Set(
-          blockedUsersSnap.docs
-            .filter(d => d.data().isFullyBlocked === true)
-            .map(d => d.id)
-        );
-
-        users = users.filter((u) => !myHiddenUsers.has(u.id));
-
-        if (users.length > 0) {
-          const safeUsers: User[] = [];
-
-          for (const targetUser of users) {
-            const targetBlockedSnap = await db
-              .collection('users')
-              .doc(targetUser.id)
-              .collection('blockedUsers')
-              .doc(currentUserId)
-              .get();
-
-            if (!targetBlockedSnap.exists || targetBlockedSnap.data()?.isFullyBlocked !== true) {
-              safeUsers.push(targetUser);
-            }
-          }
-
-          users = safeUsers;
-        }
-      }
-
       return { users };
     } catch (error) {
       console.error('[searchUsers] Lỗi:', error);

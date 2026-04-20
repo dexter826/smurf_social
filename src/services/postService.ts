@@ -479,6 +479,18 @@ export const postService = {
         return null;
       }
 
+      if (!isOwner) {
+        const blockSnap = await getDoc(doc(db, 'users', data.authorId, 'blockedUsers', currentUserId));
+        if (blockSnap.exists() && blockSnap.data().blockViewMyActivity === true) {
+          return null;
+        }
+
+        const myBlockSnap = await getDoc(doc(db, 'users', currentUserId, 'blockedUsers', data.authorId));
+        if (myBlockSnap.exists() && myBlockSnap.data().hideTheirActivity === true) {
+          return null;
+        }
+      }
+
       return convertDoc<Post>(postSnap);
     } catch (error) {
       console.error("Lỗi lấy chi tiết bài viết", error);

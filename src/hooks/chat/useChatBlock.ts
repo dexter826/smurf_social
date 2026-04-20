@@ -129,8 +129,7 @@ export const useChatBlock = ({
     const finalTargetId = targetIdOverride || partnerId;
     if (!finalTargetId || !currentUser) return;
     try {
-      await userService.unblockUser(currentUser.id, finalTargetId);
-      useAuthStore.getState().updateBlockEntry('remove', finalTargetId);
+      await useAuthStore.getState().updateBlockEntry('remove', finalTargetId);
       usePostStore.getState().refreshFeed(currentUser.id);
       toast.success(TOAST_MESSAGES.BLOCK.UNBLOCK_SUCCESS);
     } catch {
@@ -150,8 +149,7 @@ export const useChatBlock = ({
     }
 
     try {
-      await userService.blockUser(currentUser.id, finalTargetId, options);
-      useAuthStore.getState().updateBlockEntry('add', finalTargetId, options);
+      await useAuthStore.getState().updateBlockEntry('add', finalTargetId, options);
 
       if (options.hideTheirActivity) {
         usePostStore.getState().filterPostsByAuthor(finalTargetId);

@@ -3,6 +3,7 @@ import { rtdb } from '../app';
 import { NotificationType } from '../types';
 import { getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
+import { isBlockingMessages } from '../helpers/blockHelper';
 
 /**
  * Xử lý khi có tin nhắn mới trong RTDB
@@ -80,6 +81,10 @@ export const onMessageCreated = onValueCreated(
       }
 
       for (const receiverId of memberIds) {
+        if (!isGroup && await isBlockingMessages(receiverId, senderId)) {
+          continue;
+        }
+
         const isMentioned = isGroup && mentions.includes(receiverId);
         const notificationType = isMentioned ? NotificationType.MENTION : NotificationType.CHAT;
 

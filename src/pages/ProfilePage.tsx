@@ -38,7 +38,7 @@ const ProfilePage: React.FC = () => {
     handleMessage, handleFriendAction, confirmUnfriend,
     handleSaveProfile, handleAvatarChange, handleCoverChange,
     handleAvatarDelete, handleCoverDelete,
-    isBlockedByMe, isBlockedByPartner, currentBlockOptions,
+    isBlockedByMe, isBlockedByPartner, isMessageBlockedByPartner, currentBlockOptions,
     isBlockModalOpen, handleOpenBlockModal, handleApplyBlock,
     handleUnblockUser, confirmUnblock, closeBlockModal,
     showPrivacyConfirm, setShowPrivacyConfirm, confirmEnablePrivacy
@@ -161,7 +161,7 @@ const ProfilePage: React.FC = () => {
           onBlockClick={handleOpenBlockModal}
           onUnblockClick={handleUnblockUser}
           isBlockedByMe={isBlockedByMe}
-          isMessageBlockedByPartner={isBlockedByPartner}
+          isMessageBlockedByPartner={isMessageBlockedByPartner}
           uploadingType={uploadingType}
           uploadProgress={uploadProgress}
           onAvatarClick={() => handleMediaClick(PostType.AVATAR_UPDATE)}
@@ -181,7 +181,7 @@ const ProfilePage: React.FC = () => {
                 <ProfileAboutCard profile={profile} />
                 <ProfileMediaPreview 
                   media={latestMedia} 
-                  isBlocked={isBlockedByPartner} 
+                  isBlocked={isBlockedByPartner || !!currentBlockOptions?.hideTheirActivity} 
                   onSeeAll={() => setActiveTab('media')} 
                 />
               </div>
@@ -192,7 +192,7 @@ const ProfilePage: React.FC = () => {
                   userId={profile.id}
                   currentUser={currentUser}
                   onViewPost={viewPost}
-                  isFullyBlockedByPartner={isBlockedByPartner}
+                  isViewActivityBlocked={isBlockedByPartner || !!currentBlockOptions?.hideTheirActivity}
                   onSharePost={handleOpenShareModal}
                 />
               </div>
@@ -202,7 +202,7 @@ const ProfilePage: React.FC = () => {
               {activeTab === 'media' && (
                 <PhotosTab
                   userId={profile.id}
-                  isFullyBlockedByPartner={isBlockedByPartner}
+                  isViewActivityBlocked={isBlockedByPartner || !!currentBlockOptions?.hideTheirActivity}
                 />
               )}
             </div>

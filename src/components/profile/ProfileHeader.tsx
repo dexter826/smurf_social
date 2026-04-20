@@ -227,25 +227,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <span className="px-3 py-2 rounded-xl bg-error/10 text-error text-sm font-medium border border-error/20">
                   Tài khoản đã bị khóa
                 </span>
-              ) : isBlockedByMe ? (
-                /* ── If blocked by me: Show direct Manage Block button instead of hididing in menu ── */
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="secondary" 
-                    className="bg-error/5 text-error border-error/20 hover:bg-error/10"
-                    onClick={onUnblockClick}
-                    icon={<Ban size={17} />}
-                  >
-                    Quản lý chặn
-                  </Button>
-                  
-                  <Dropdown
-                    trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
-                    align="right"
-                  >
-                    <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
-                  </Dropdown>
-                </div>
               ) : (
                 <>
                   {!isMessageBlockedByPartner && (
@@ -253,9 +234,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       <Button 
                         onClick={onMessageClick} 
                         icon={<MessageCircle size={17} />}
-                        disabled={isBlockedByMe}
                         variant="primary"
-                        title={isBlockedByMe ? 'Bạn đã chặn liên lạc với người này' : undefined}
                       >
                         Nhắn tin
                       </Button>
@@ -291,18 +270,38 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   )}
 
                   {/* More options */}
-                  <Dropdown
-                    trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
-                    align="right"
-                  >
-                    <DropdownItem 
-                      icon={<Ban size={15} />} 
-                      label="Chặn" 
-                      variant="danger" 
-                      onClick={onBlockClick} 
-                    />
-                    <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
-                  </Dropdown>
+                  {isBlockedByMe ? (
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="secondary" 
+                        className="bg-error/5 text-error border-error/20 hover:bg-error/10"
+                        onClick={onUnblockClick}
+                        icon={<Ban size={17} />}
+                      >
+                        Quản lý chặn
+                      </Button>
+                      
+                      <Dropdown
+                        trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
+                        align="right"
+                      >
+                        <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
+                      </Dropdown>
+                    </div>
+                  ) : (
+                    <Dropdown
+                      trigger={<Button variant="secondary" icon={<MoreHorizontal size={17} />} />}
+                      align="right"
+                    >
+                      <DropdownItem 
+                        icon={<Ban size={15} />} 
+                        label="Chặn" 
+                        variant="danger" 
+                        onClick={onBlockClick} 
+                      />
+                      <DropdownItem icon={<Flag size={15} />} label="Báo cáo" variant="danger" onClick={() => openReportModal(ReportType.USER, user.id, user.id)} />
+                    </Dropdown>
+                  )}
                 </>
               )}
             </div>

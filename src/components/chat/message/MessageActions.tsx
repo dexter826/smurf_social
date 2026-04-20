@@ -57,11 +57,13 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       >
         {message.data.type !== 'call' && (
           <>
-            <DropdownItem
-              icon={<Forward size={14} />}
-              label="Chuyển tiếp"
-              onClick={() => { onForward?.(message); setShowMenu(false); }}
-            />
+            {!isInteractionDisabled && (
+              <DropdownItem
+                icon={<Forward size={14} />}
+                label="Chuyển tiếp"
+                onClick={() => { onForward?.(message); setShowMenu(false); }}
+              />
+            )}
             {!isInteractionDisabled && canEdit && (
               <DropdownItem
                 icon={<Edit2 size={14} />}
@@ -79,14 +81,12 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
             )}
           </>
         )}
-        {!isInteractionDisabled && (
-          <DropdownItem
-            icon={<Trash2 size={14} />}
-            label="Xóa phía tôi"
-            variant="danger"
-            onClick={() => { onDeleteForMe?.(message.id); setShowMenu(false); }}
-          />
-        )}
+        <DropdownItem
+          icon={<Trash2 size={14} />}
+          label="Xóa phía tôi"
+          variant="danger"
+          onClick={() => { onDeleteForMe?.(message.id); setShowMenu(false); }}
+        />
       </Dropdown>
     </div>
   );
