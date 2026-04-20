@@ -1,4 +1,4 @@
-import { ref, set, get, update, push, increment } from 'firebase/database';
+import { ref, set, get, update, push, remove } from 'firebase/database';
 import { rtdb } from '../../firebase/config';
 import { RtdbConversation, RtdbUserChat, MediaObject, MemberRole } from '../../../shared/types';
 import { uploadWithProgress, UploadProgress, deleteStorageFile } from '../../utils/uploadUtils';
@@ -56,9 +56,7 @@ export const rtdbGroupService = {
             throw error;
         }
     },
-    /**
-     * Tạo nhóm mới
-     */
+
     createGroup: async (
         creatorId: string,
         name: string,
@@ -91,6 +89,7 @@ export const rtdbGroupService = {
                 members,
                 typing: {},
                 lastMessage: null,
+                joinApprovalMode: false,
                 createdAt: getServerSyncedNow(),
                 updatedAt: getServerSyncedNow()
             };
@@ -110,7 +109,7 @@ export const rtdbGroupService = {
                     clearedAt: 0,
                     createdAt: now,
                     updatedAt: now
-                    };
+                };
             });
 
             await update(ref(rtdb), updates);
@@ -122,9 +121,7 @@ export const rtdbGroupService = {
         }
     },
 
-    /**
-     * Thêm thành viên vào nhóm
-     */
+    /** Thêm thành viên trực tiếp (Admin/Creator hoặc Member khi approval mode off) */
     addMembers: async (convId: string, memberIds: string[], actorId: string): Promise<void> => {
         try {
             const convRef = ref(rtdb, `conversations/${convId}`);
@@ -135,11 +132,6 @@ export const rtdbGroupService = {
             }
 
             const conversation = convSnap.val() as RtdbConversation;
-
-            if (conversation.members[actorId] !== 'admin') {
-                throw new Error('Chỉ Quản trị viên mới có quyền thêm thành viên');
-            }
-
             const currentMemberIds = Object.keys(conversation.members || {});
 
             if (currentMemberIds.length + memberIds.length > GROUP_LIMITS.MAX_MEMBERS) {
@@ -174,9 +166,133 @@ export const rtdbGroupService = {
         }
     },
 
-    /**
-     * Xóa thành viên khỏi nhóm
-     */
+    /** Mời thành viên — nếu approval mode bật thì vào pending, tắt thì vào thẳng */
+    inviteMember: async (convId: string, uid: string, actorId: string): Promise<'direct' | 'pending'> => {
+        try {
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+            if (!convSnap.exists()) throw new Error('Nhóm không tồn tại');
+
+            const conversation = convSnap.val() as RtdbConversation;
+            const currentMemberIds = Object.keys(conversation.members || {});
+
+            if (currentMemberIds.includes(uid)) return 'direct';
+
+            const actorRole = conversation.members[actorId];
+            const isAdminOrCreator = actorRole === 'admin' || conversation.creatorId === actorId;
+            const useApproval = conversation.joinApprovalMode && !isAdminOrCreator;
+
+            if (useApproval) {
+                const updates: Record<string, any> = {};
+                updates[`conversations/${convId}/pendingMembers/${uid}`] = {
+                    addedBy: actorId,
+                    timestamp: getServerSyncedNow()
+                };
+                updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
+                await update(ref(rtdb), updates);
+                return 'pending';
+            } else {
+                await rtdbGroupService.addMembers(convId, [uid], actorId);
+                return 'direct';
+            }
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi inviteMember:', error);
+            throw error;
+        }
+    },
+
+    /** Duyệt các thành viên đang chờ */
+    approveMembers: async (convId: string, uids: string[]): Promise<void> => {
+        try {
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+            if (!convSnap.exists()) throw new Error('Nhóm không tồn tại');
+
+            const now = getServerSyncedNow();
+            const updates: Record<string, any> = {};
+
+            uids.forEach(uid => {
+                updates[`conversations/${convId}/members/${uid}`] = 'member';
+                updates[`conversations/${convId}/pendingMembers/${uid}`] = null;
+                updates[`user_chats/${uid}/${convId}`] = {
+                    isPinned: false,
+                    isMuted: false,
+                    isArchived: false,
+                    unreadCount: 0,
+                    lastReadMsgId: null,
+                    lastMsgTimestamp: now,
+                    clearedAt: now,
+                    createdAt: now,
+                    updatedAt: now
+                };
+            });
+
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
+            await update(ref(rtdb), updates);
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi approveMembers:', error);
+            throw error;
+        }
+    },
+
+    /** Từ chối thành viên đang chờ */
+    rejectMembers: async (convId: string, uids: string[]): Promise<void> => {
+        try {
+            const updates: Record<string, any> = {};
+            uids.forEach(uid => {
+                updates[`conversations/${convId}/pendingMembers/${uid}`] = null;
+            });
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
+            await update(ref(rtdb), updates);
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi rejectMembers:', error);
+            throw error;
+        }
+    },
+
+    /** Bật/tắt chế độ phê duyệt; tắt thì auto-approve tất cả pending */
+    toggleApprovalMode: async (convId: string, enabled: boolean): Promise<string[]> => {
+        try {
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+            if (!convSnap.exists()) throw new Error('Nhóm không tồn tại');
+
+            const conversation = convSnap.val() as RtdbConversation;
+            const pendingMembers = conversation.pendingMembers || {};
+            const pendingUids = Object.keys(pendingMembers);
+
+            const updates: Record<string, any> = {};
+            updates[`conversations/${convId}/joinApprovalMode`] = enabled;
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
+
+            if (!enabled && pendingUids.length > 0) {
+                const now = getServerSyncedNow();
+                pendingUids.forEach(uid => {
+                    updates[`conversations/${convId}/members/${uid}`] = 'member';
+                    updates[`conversations/${convId}/pendingMembers/${uid}`] = null;
+                    updates[`user_chats/${uid}/${convId}`] = {
+                        isPinned: false,
+                        isMuted: false,
+                        isArchived: false,
+                        unreadCount: 0,
+                        lastReadMsgId: null,
+                        lastMsgTimestamp: now,
+                        clearedAt: now,
+                        createdAt: now,
+                        updatedAt: now
+                    };
+                });
+            }
+
+            await update(ref(rtdb), updates);
+            return !enabled ? pendingUids : [];
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi toggleApprovalMode:', error);
+            throw error;
+        }
+    },
+
+    /** Xóa thành viên — Admin không xóa được Admin khác, chỉ Creator mới xóa được Admin */
     removeMember: async (convId: string, uid: string, actorId: string): Promise<void> => {
         try {
             const convRef = ref(rtdb, `conversations/${convId}`);
@@ -184,9 +300,15 @@ export const rtdbGroupService = {
             if (!convSnap.exists()) throw new Error('Nhóm không tồn tại');
 
             const conversation = convSnap.val() as RtdbConversation;
+            const actorRole = conversation.members[actorId];
+            const targetRole = conversation.members[uid];
+            const isCreator = conversation.creatorId === actorId;
 
-            if (conversation.members[actorId] !== 'admin') {
-                throw new Error('Chỉ Quản trị viên mới có quyền xóa thành viên');
+            if (!isCreator && actorRole !== 'admin') {
+                throw new Error('Không có quyền xóa thành viên');
+            }
+            if (!isCreator && targetRole === 'admin') {
+                throw new Error('Admin không thể xóa Admin khác. Chỉ Trưởng nhóm mới có quyền này.');
             }
 
             const updates: Record<string, any> = {};
@@ -201,9 +323,6 @@ export const rtdbGroupService = {
         }
     },
 
-    /**
-     * Giải tán nhóm (Chỉ Creator)
-     */
     disbandGroup: async (convId: string, actorId: string): Promise<void> => {
         try {
             const convRef = ref(rtdb, `conversations/${convId}`);
@@ -221,7 +340,6 @@ export const rtdbGroupService = {
 
             updates[`conversations/${convId}/isDisbanded`] = true;
             updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
-
             updates[`messages/${convId}`] = null;
 
             updates[`conversations/${convId}/lastMessage`] = {
@@ -251,9 +369,6 @@ export const rtdbGroupService = {
         }
     },
 
-    /**
-     * Cập nhật thông tin nhóm (tên, avatar)
-     */
     updateGroupInfo: async (
         convId: string,
         updates: { name?: string; avatar?: MediaObject }
@@ -268,9 +383,6 @@ export const rtdbGroupService = {
         }
     },
 
-    /**
-     * Cập nhật role của thành viên
-     */
     updateMemberRole: async (convId: string, uid: string, role: MemberRole, actorId: string): Promise<void> => {
         try {
             const convRef = ref(rtdb, `conversations/${convId}`);
@@ -280,7 +392,7 @@ export const rtdbGroupService = {
             const conversation = convSnap.val() as RtdbConversation;
 
             if (conversation.creatorId !== actorId) {
-                throw new Error('Chỉ người tạo nhóm mới có quyền thay đổi vai trò thảnh viên');
+                throw new Error('Chỉ người tạo nhóm mới có quyền thay đổi vai trò thành viên');
             }
 
             const updates: Record<string, any> = {};
@@ -294,9 +406,36 @@ export const rtdbGroupService = {
         }
     },
 
-    /**
-     * Rời khỏi nhóm
-     */
+    /** Chuyển quyền Trưởng nhóm — Creator cũ trở thành Admin, người mới trở thành Creator */
+    transferCreator: async (convId: string, newCreatorId: string, actorId: string): Promise<void> => {
+        try {
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+            if (!convSnap.exists()) throw new Error('Nhóm không tồn tại');
+
+            const conversation = convSnap.val() as RtdbConversation;
+
+            if (conversation.creatorId !== actorId) {
+                throw new Error('Chỉ Trưởng nhóm mới có thể chuyển quyền');
+            }
+
+            const updates: Record<string, any> = {};
+            updates[`conversations/${convId}/creatorId`] = newCreatorId;
+            // Đảm bảo người mới là admin
+            updates[`conversations/${convId}/members/${newCreatorId}`] = 'admin';
+            // Creator cũ hạ xuống admin nếu chưa phải
+            if (conversation.members[actorId] !== 'admin') {
+                updates[`conversations/${convId}/members/${actorId}`] = 'admin';
+            }
+            updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
+
+            await update(ref(rtdb), updates);
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi transferCreator:', error);
+            throw error;
+        }
+    },
+
     leaveGroup: async (convId: string, uid: string): Promise<void> => {
         try {
             const convRef = ref(rtdb, `conversations/${convId}`);
@@ -309,7 +448,6 @@ export const rtdbGroupService = {
             const conversation = convSnap.val() as RtdbConversation;
             const memberIds = Object.keys(conversation.members || {});
             const updates: Record<string, any> = {};
-            const now = getServerSyncedNow();
 
             if (memberIds.length <= 1) {
                 if (conversation.creatorId === uid) {
@@ -346,9 +484,6 @@ export const rtdbGroupService = {
         }
     },
 
-    /**
-     * Upload ảnh đại diện nhóm
-     */
     uploadGroupAvatar: async (
         conversationId: string,
         file: File,

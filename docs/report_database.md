@@ -69,14 +69,14 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 
 **1.2. Sub-collection `private/settings` (Bên trong `users/{uid}`)**
 
-| Field                   | Type        | Required/Optional | Description/Default                                        |
-| :---------------------- | :---------- | :---------------- | :--------------------------------------------------------- |
-| `showOnlineStatus`      | Boolean     | **Required**      | Trạng thái online                                          |
-| `showReadReceipts`      | Boolean     | **Required**      | Đã xem tin nhắn. Mặc định `true`                           |
-| `allowMessagesFromStrangers` | Boolean | **Required**      | Cho phép người lạ nhắn tin. Mặc định `true`                |
-| `defaultPostVisibility` | String Enum | **Required**      | `"public"`, `"friends"`, `"private"`. Mặc định `"friends"` |
-| `createdAt`             | Timestamp   | **Required**      | Thời điểm tạo                                              |
-| `updatedAt`             | Timestamp   | **Required**      | Thời điểm cập nhật                                         |
+| Field                        | Type        | Required/Optional | Description/Default                                        |
+| :--------------------------- | :---------- | :---------------- | :--------------------------------------------------------- |
+| `showOnlineStatus`           | Boolean     | **Required**      | Trạng thái online                                          |
+| `showReadReceipts`           | Boolean     | **Required**      | Đã xem tin nhắn. Mặc định `true`                           |
+| `allowMessagesFromStrangers` | Boolean     | **Required**      | Cho phép người lạ nhắn tin. Mặc định `true`                |
+| `defaultPostVisibility`      | String Enum | **Required**      | `"public"`, `"friends"`, `"private"`. Mặc định `"friends"` |
+| `createdAt`                  | Timestamp   | **Required**      | Thời điểm tạo                                              |
+| `updatedAt`                  | Timestamp   | **Required**      | Thời điểm cập nhật                                         |
 
 **1.3. Sub-collection `friends` (Bên trong `users/{uid}`)**
 
@@ -237,19 +237,21 @@ _Mô tả: Lưu trạng thái Online/Offline và lần truy cập cuối cùng c
 
 _Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Group, snippet tin nhắn mới nhất._
 
-| Field         | Type        | Required/Optional | Description/Default                                                              |
-| :------------ | :---------- | :---------------- | :------------------------------------------------------------------------------- |
-| `isGroup`     | Boolean     | **Required**      | Có phải nhóm hay không                                                           |
-| `creatorId`   | String      | **Required**      | ID người tạo                                                                     |
-| `createdAt`   | Number      | **Required**      | Timestamp tạo                                                                    |
-| `updatedAt`   | Number      | **Required**      | Timestamp cập nhật                                                               |
-| `members`     | Map         | **Required**      | Danh sách thành viên (UID: Vai trò)                                              |
-| `name`        | String      | _Optional_        | Tên nhóm. `null` với chat 1-1                                                    |
-| `avatar`      | MediaObject | _Optional_        | Ảnh đại diện nhóm. `null` với chat 1-1 hoặc nhóm chưa đặt ảnh                    |
-| `isDisbanded` | Boolean     | _Optional_        | Đã giải tán hay chưa. Mặc định `false`. _(Chỉ Người tạo nhóm mới có quyền xóa)_  |
-| `typing`      | Map         | _Optional_        | Trạng thái đang gõ (UID: Timestamp)                                              |
-| `lastMessage` | Object      | _Optional_        | Snippet tin nhắn mới nhất                                                        |
-| `activeCall`  | Object      | _Optional_        | `{ callerId, callType, messageId, startedAt, participants: { uid: timestamp } }` |
+| Field              | Type        | Required/Optional | Description/Default                                                                       |
+| :----------------- | :---------- | :---------------- | :---------------------------------------------------------------------------------------- |
+| `isGroup`          | Boolean     | **Required**      | Có phải nhóm hay không                                                                    |
+| `creatorId`        | String      | **Required**      | ID người tạo                                                                              |
+| `createdAt`        | Number      | **Required**      | Timestamp tạo                                                                             |
+| `updatedAt`        | Number      | **Required**      | Timestamp cập nhật                                                                        |
+| `members`          | Map         | **Required**      | Danh sách thành viên (UID: Vai trò)                                                       |
+| `name`             | String      | _Optional_        | Tên nhóm. `null` với chat 1-1                                                             |
+| `avatar`           | MediaObject | _Optional_        | Ảnh đại diện nhóm. `null` với chat 1-1 hoặc nhóm chưa đặt ảnh                             |
+| `isDisbanded`      | Boolean     | _Optional_        | Đã giải tán hay chưa. Mặc định `false`. _(Chỉ Người tạo nhóm mới có quyền xóa)_           |
+| `typing`           | Map         | _Optional_        | Trạng thái đang gõ (UID: Timestamp)                                                       |
+| `lastMessage`      | Object      | _Optional_        | Snippet tin nhắn mới nhất                                                                 |
+| `joinApprovalMode` | Boolean     | _Optional_        | Chế độ phê duyệt: Khi bật, thành viên mới do Member mời phải chờ duyệt. Mặc định `false`. |
+| `pendingMembers`   | Map         | _Optional_        | Danh sách chờ duyệt: `{ uid: { addedBy: string, timestamp: number } }`                    |
+| `activeCall`       | Object      | _Optional_        | `{ callerId, callType, messageId, startedAt, participants: { uid: timestamp } }`          |
 
 ### 3. Node `messages`
 

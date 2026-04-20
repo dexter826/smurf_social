@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { MediaObject } from '../../../shared/types';
 import { useRtdbChatStore } from '../../store';
 import { systemMessages } from '../../constants/systemMessages';
+import { toast } from '../../store/toastStore';
 
 interface UseChatGroupsProps {
   selectedConversationId: string | null;
@@ -11,9 +12,7 @@ interface UseChatGroupsProps {
   currentUserName?: string;
 }
 
-/**
- * Quản lý các hành động liên quan đến nhóm chat
- */
+/** Quản lý các hành động liên quan đến nhóm chat */
 export const useChatGroups = ({
   selectedConversationId,
   currentUserId,
@@ -24,9 +23,14 @@ export const useChatGroups = ({
     createGroup,
     updateGroupInfo,
     addMember,
+    inviteMember,
+    approveMembers,
+    rejectMembers,
+    toggleApprovalMode,
     removeMember,
     leaveGroup,
     updateMemberRole,
+    transferCreator,
     disbandGroup,
     sendGroupSystemMessage,
   } = useRtdbChatStore();
@@ -48,6 +52,7 @@ export const useChatGroups = ({
     );
   }, [currentUserId, createGroup, sendGroupSystemMessage, getActorName]);
 
+  /** Thêm thành viên trực tiếp (Admin/Creator) */
   const handleAddMembers = useCallback(async (userIds: string[]) => {
     if (!selectedConversationId) return;
     try {
@@ -66,15 +71,76 @@ export const useChatGroups = ({
     }
   }, [selectedConversationId, addMember, sendGroupSystemMessage, currentUserId, getActorName, getName]);
 
-  const handleRemoveMember = useCallback(async (userId: string) => {
-    if (!selectedConversationId) return;
-    await removeMember(selectedConversationId, userId);
-    if (currentUserId) {
+  /** Mời thành viên — phân nhánh direct/pending theo approval mode */
+  const handleInviteMembers = useCallback(async (userIds: string[]) => {
+    if (!selectedConversationId || !currentUserId) return;
+    try {
+      for (const uid of userIds) {
+        const result = await inviteMember(selectedConversationId, uid);
+        const msgContent = result === 'pending'
+          ? systemMessages.INVITE_PENDING(getActorName(), getName(uid))
+          : systemMessages.ADD_MEMBERS(getActorName(), getName(uid));
+        await sendGroupSystemMessage(selectedConversationId, currentUserId, msgContent);
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Không thể mời thành viên');
+    }
+  }, [selectedConversationId, currentUserId, inviteMember, sendGroupSystemMessage, getActorName, getName]);
+
+  const handleApproveMembers = useCallback(async (uids: string[]) => {
+    if (!selectedConversationId || !currentUserId) return;
+    await approveMembers(selectedConversationId, uids);
+    for (const uid of uids) {
       await sendGroupSystemMessage(
         selectedConversationId,
         currentUserId,
-        systemMessages.REMOVE_MEMBER(getActorName(), getName(userId))
+        systemMessages.APPROVE_MEMBER(getActorName(), getName(uid))
       );
+    }
+  }, [selectedConversationId, currentUserId, approveMembers, sendGroupSystemMessage, getActorName, getName]);
+
+  const handleRejectMembers = useCallback(async (uids: string[]) => {
+    if (!selectedConversationId || !currentUserId) return;
+    await rejectMembers(selectedConversationId, uids);
+    for (const uid of uids) {
+      await sendGroupSystemMessage(
+        selectedConversationId,
+        currentUserId,
+        systemMessages.REJECT_MEMBER(getActorName(), getName(uid))
+      );
+    }
+  }, [selectedConversationId, currentUserId, rejectMembers, sendGroupSystemMessage, getActorName, getName]);
+
+  const handleToggleApprovalMode = useCallback(async (enabled: boolean) => {
+    if (!selectedConversationId || !currentUserId) return;
+    const autoApprovedUids = await toggleApprovalMode(selectedConversationId, enabled);
+    const msg = enabled
+      ? systemMessages.TOGGLE_APPROVAL_ON(getActorName())
+      : systemMessages.TOGGLE_APPROVAL_OFF(getActorName());
+    await sendGroupSystemMessage(selectedConversationId, currentUserId, msg);
+    // Gửi system message cho từng người được auto-approve khi tắt mode
+    for (const uid of autoApprovedUids) {
+      await sendGroupSystemMessage(
+        selectedConversationId,
+        currentUserId,
+        systemMessages.APPROVE_MEMBER(getActorName(), getName(uid))
+      );
+    }
+  }, [selectedConversationId, currentUserId, toggleApprovalMode, sendGroupSystemMessage, getActorName, getName]);
+
+  const handleRemoveMember = useCallback(async (userId: string) => {
+    if (!selectedConversationId) return;
+    try {
+      await removeMember(selectedConversationId, userId);
+      if (currentUserId) {
+        await sendGroupSystemMessage(
+          selectedConversationId,
+          currentUserId,
+          systemMessages.REMOVE_MEMBER(getActorName(), getName(userId))
+        );
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Không thể xóa thành viên');
     }
   }, [selectedConversationId, removeMember, sendGroupSystemMessage, currentUserId, getActorName, getName]);
 
@@ -109,6 +175,17 @@ export const useChatGroups = ({
     await sendGroupSystemMessage(selectedConversationId, currentUserId, systemMessages.LEAVE_GROUP(getActorName()));
     await leaveGroup(selectedConversationId, currentUserId);
   }, [selectedConversationId, currentUserId, updateMemberRole, leaveGroup, sendGroupSystemMessage, getActorName, getName]);
+
+  /** Chuyển quyền Trưởng nhóm mà không rời nhóm */
+  const handleTransferCreator = useCallback(async (newCreatorId: string) => {
+    if (!selectedConversationId || !currentUserId) return;
+    await transferCreator(selectedConversationId, newCreatorId);
+    await sendGroupSystemMessage(
+      selectedConversationId,
+      currentUserId,
+      systemMessages.TRANSFER_CREATOR(getActorName(), getName(newCreatorId))
+    );
+  }, [selectedConversationId, currentUserId, transferCreator, sendGroupSystemMessage, getActorName, getName]);
 
   const handlePromoteToAdmin = useCallback(async (userId: string) => {
     if (!selectedConversationId) return;
@@ -166,9 +243,14 @@ export const useChatGroups = ({
   return {
     handleCreateGroup,
     handleAddMembers,
+    handleInviteMembers,
+    handleApproveMembers,
+    handleRejectMembers,
+    handleToggleApprovalMode,
     handleRemoveMember,
     handleLeaveGroup,
     handleAssignAdminAndLeave,
+    handleTransferCreator,
     handlePromoteToAdmin,
     handleDemoteFromAdmin,
     handleEditGroup,

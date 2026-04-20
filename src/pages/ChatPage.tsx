@@ -35,9 +35,10 @@ const ChatPage: React.FC = () => {
     handleTyping, handleSearch, handlePin, handleMute, handleArchive,
     handleMarkUnread, handleDelete, handleMarkAllRead,
     handleApplyBlock, handleUnblock, shouldShowBlockBanner, myBlockOptions,
-    handleCreateGroup, handleAddMembers, handleRemoveMember,
+    handleCreateGroup, handleAddMembers, handleInviteMembers, handleRemoveMember,
     handleLeaveGroup, handleAssignAdminAndLeave, handlePromoteToAdmin,
     handleDemoteFromAdmin, handleEditGroup, handleDisbandGroup,
+    handleApproveMembers, handleRejectMembers, handleToggleApprovalMode, handleTransferCreator,
     addToSearchHistory, removeFromSearchHistory, clearSearchHistory,
     getOrCreateConversation, setIsChatVisible,
     isLoadingMore, hasMoreMessages, handleLoadMoreMessages,
@@ -71,6 +72,7 @@ const ChatPage: React.FC = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
+  const [showTransferCreator, setShowTransferCreator] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
 
@@ -343,6 +345,10 @@ const ChatPage: React.FC = () => {
           onRemoveMember={handleRemoveMember}
           onPromoteToAdmin={handlePromoteToAdmin}
           onDemoteFromAdmin={handleDemoteFromAdmin}
+          onApproveMembers={handleApproveMembers}
+          onRejectMembers={handleRejectMembers}
+          onToggleApprovalMode={handleToggleApprovalMode}
+          onTransferCreator={() => setShowTransferCreator(true)}
           onMemberClick={(userId) => navigate(`/profile/${userId}`)}
           onMessageClick={(messageId) => scrollToMessage(messageId)}
         />
@@ -361,7 +367,7 @@ const ChatPage: React.FC = () => {
           conversation={selectedConversation}
           currentUserId={currentUser.id}
           onClose={() => setShowAddMember(false)}
-          onAddMembers={handleAddMembers}
+          onAddMembers={handleInviteMembers}
         />
       )}
 
@@ -378,10 +384,22 @@ const ChatPage: React.FC = () => {
       {selectedConversation?.data.isGroup && (
         <TransferAdminModal
           isOpen={showAssignAdmin}
+          mode="transfer_and_leave"
           conversation={selectedConversation}
           currentUserId={currentUser.id}
           onClose={() => setShowAssignAdmin(false)}
           onConfirm={handleAssignAdminAndLeave}
+        />
+      )}
+
+      {selectedConversation?.data.isGroup && (
+        <TransferAdminModal
+          isOpen={showTransferCreator}
+          mode="transfer_only"
+          conversation={selectedConversation}
+          currentUserId={currentUser.id}
+          onClose={() => setShowTransferCreator(false)}
+          onConfirm={handleTransferCreator}
         />
       )}
 

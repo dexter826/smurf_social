@@ -22,6 +22,12 @@
         "creatorId": {
           ".write": "auth != null && data.parent().child('members').child(auth.uid).val() === 'admin'"
         },
+        "joinApprovalMode": {
+          ".write": "auth != null && data.parent().child('members').child(auth.uid).val() === 'admin'"
+        },
+        "pendingMembers": {
+          ".write": "auth != null && data.parent().child('members').child(auth.uid).exists()"
+        },
         "isDisbanded": {
           ".write": "auth != null && data.parent().child('creatorId').val() === auth.uid"
         }

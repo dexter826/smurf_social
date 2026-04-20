@@ -31,6 +31,10 @@ interface ChatDetailsPanelProps {
   onRemoveMember?: (userId: string) => void;
   onPromoteToAdmin?: (userId: string) => void;
   onDemoteFromAdmin?: (userId: string) => void;
+  onApproveMembers?: (uids: string[]) => Promise<void>;
+  onRejectMembers?: (uids: string[]) => Promise<void>;
+  onToggleApprovalMode?: (enabled: boolean) => Promise<void>;
+  onTransferCreator?: () => void;
 }
 
 type TabId = 'info' | 'members' | 'media' | 'search';
@@ -41,6 +45,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
   onToggleMute, onTogglePin, onToggleBlock, onToggleArchive, onToggleMarkUnread,
   onDelete, onMemberClick, onMessageClick, onLeaveGroup, onEditGroup,
   onAddMember, onRemoveMember, onPromoteToAdmin, onDemoteFromAdmin,
+  onApproveMembers, onRejectMembers, onToggleApprovalMode, onTransferCreator,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('info');
 
@@ -86,6 +91,8 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
               onLeaveGroup={onLeaveGroup}
               onEditGroup={onEditGroup}
               onViewProfile={() => partner && onMemberClick?.(partner.id)}
+              onToggleApprovalMode={onToggleApprovalMode}
+              onTransferCreator={onTransferCreator}
             />
           </>
         );
@@ -95,11 +102,14 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
             conversation={conversation}
             currentUserId={currentUserId}
             participants={participants}
+            usersMap={usersMap}
             onMemberClick={onMemberClick}
             onAddMember={onAddMember}
             onRemoveMember={onRemoveMember}
             onPromoteToAdmin={onPromoteToAdmin}
             onDemoteFromAdmin={onDemoteFromAdmin}
+            onApproveMembers={onApproveMembers}
+            onRejectMembers={onRejectMembers}
           />
         );
       case 'media':

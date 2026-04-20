@@ -7,35 +7,46 @@ import {
 } from '../../ui';
 import {
   Crown, Shield, UserPlus, MoreVertical,
-  UserMinus, ShieldPlus, ShieldMinus, Lock,
+  UserMinus, ShieldPlus, ShieldMinus, Lock, Users, ChevronRight,
 } from 'lucide-react';
+import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
+import { PendingMembersModal } from './PendingMembersModal';
 
 interface ChatDetailsMemberListProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
   currentUserId: string;
   participants: User[];
+  usersMap: Record<string, User>;
   onMemberClick?: (userId: string) => void;
   onAddMember?: () => void;
   onRemoveMember?: (userId: string) => void;
   onPromoteToAdmin?: (userId: string) => void;
   onDemoteFromAdmin?: (userId: string) => void;
+  onApproveMembers?: (uids: string[]) => Promise<void>;
+  onRejectMembers?: (uids: string[]) => Promise<void>;
 }
 
 export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
-  conversation, currentUserId, participants,
+  conversation, currentUserId, participants, usersMap,
   onMemberClick, onAddMember, onRemoveMember,
   onPromoteToAdmin, onDemoteFromAdmin,
+  onApproveMembers, onRejectMembers,
 }) => {
   const navigate = useNavigate();
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [showPendingModal, setShowPendingModal] = useState(false);
 
   if (!conversation.data.isGroup) return null;
 
   const creatorId = conversation.data.creatorId;
   const memberRoles = conversation.data.members;
+  const pendingMembers = conversation.data.pendingMembers || {};
+  const pendingEntries = Object.entries(pendingMembers);
+
   const isCurrentUserAdmin = memberRoles[currentUserId] === 'admin';
   const isCurrentUserCreator = creatorId === currentUserId;
+  const canManageMembers = isCurrentUserAdmin || isCurrentUserCreator;
 
   const getMemberRole = (memberId: string) => {
     if (memberId === creatorId) return 'creator';
@@ -43,22 +54,41 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
     return 'member';
   };
 
+  /** Admin chỉ xóa được Member, Creator xóa được tất cả */
   const canManageMember = (memberId: string) => {
     if (memberId === currentUserId) return false;
     if (memberId === creatorId) return false;
-    if (!isCurrentUserAdmin && !isCurrentUserCreator) return false;
+    if (!canManageMembers) return false;
     if (memberRoles[memberId] === 'admin' && !isCurrentUserCreator) return false;
     return true;
   };
 
+
   return (
     <div className="py-3">
-      {/* Header */}
+      {/* Nút mở danh sách chờ duyệt - Chỉ Admin thấy */}
+      {canManageMembers && pendingEntries.length > 0 && (
+        <button
+          onClick={() => setShowPendingModal(true)}
+          className="w-[calc(100%-1.5rem)] mx-3 mb-4 flex items-center gap-3 px-4 py-3 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/10 transition-all duration-200 group"
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+            <Users size={20} />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-primary">Phê duyệt thành viên</p>
+            <p className="text-xs text-primary/70">{pendingEntries.length} người đang chờ duyệt</p>
+          </div>
+          <ChevronRight size={18} className="text-primary/40 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+      )}
+
+      {/* Header thành viên */}
       <div className="flex items-center justify-between px-4 py-2">
         <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">
           Thành viên ({participants.length})
         </p>
-        {(isCurrentUserAdmin || isCurrentUserCreator) && onAddMember && (
+        {onAddMember && (
           <button
             onClick={onAddMember}
             className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors duration-200"
@@ -69,6 +99,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
         )}
       </div>
 
+      {/* Danh sách thành viên */}
       <div>
         {participants.map((member) => {
           const isCurrentUser = member.id === currentUserId;
@@ -82,7 +113,6 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
               className={`flex items-center gap-3 px-4 py-2.5 transition-colors duration-200 group
                 ${isBanned ? 'opacity-60' : 'hover:bg-bg-hover active:bg-bg-active'}`}
             >
-              {/* Avatar + info */}
               <div
                 onClick={() => !isCurrentUser && !isBanned && onMemberClick?.(member.id)}
                 className={`flex items-center gap-3 flex-1 min-w-0 ${!isCurrentUser && !isBanned ? 'cursor-pointer' : ''}`}
@@ -140,7 +170,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
                     />
                   }
                 >
-                  {!isBanned && role === 'member' && onPromoteToAdmin && (
+                  {!isBanned && role === 'member' && isCurrentUserCreator && onPromoteToAdmin && (
                     <DropdownItem
                       icon={<ShieldPlus size={14} />}
                       label="Thăng làm Admin"
@@ -169,6 +199,17 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
         })}
       </div>
 
+      {/* Modal duyệt thành viên */}
+      <PendingMembersModal
+        isOpen={showPendingModal}
+        onClose={() => setShowPendingModal(false)}
+        conversation={conversation}
+        usersMap={usersMap}
+        onApproveMembers={onApproveMembers}
+        onRejectMembers={onRejectMembers}
+      />
+
+      {/* Confirm xóa thành viên */}
       <ConfirmDialog
         isOpen={!!confirmRemove}
         onClose={() => setConfirmRemove(null)}

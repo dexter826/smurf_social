@@ -10,4 +10,10 @@ export const systemMessages = {
     UPDATE_GROUP_NAME: (actorName: string, newName: string) => `${actorName} đã đổi tên nhóm thành "${newName}"`,
     UPDATE_GROUP_AVATAR: (actorName: string) => `${actorName} đã cập nhật ảnh nhóm`,
     UPDATE_GROUP_BOTH: (actorName: string, newName: string) => `${actorName} đã cập nhật ảnh nhóm và đổi tên nhóm thành "${newName}"`,
+    INVITE_PENDING: (actorName: string, targetName: string) => `${actorName} đã mời ${targetName} vào nhóm (chờ duyệt)`,
+    APPROVE_MEMBER: (actorName: string, targetName: string) => `${actorName} đã chấp nhận ${targetName} vào nhóm`,
+    REJECT_MEMBER: (actorName: string, targetName: string) => `${actorName} đã từ chối ${targetName}`,
+    TOGGLE_APPROVAL_ON: (actorName: string) => `${actorName} đã bật chế độ phê duyệt thành viên`,
+    TOGGLE_APPROVAL_OFF: (actorName: string) => `${actorName} đã tắt chế độ phê duyệt. Tất cả thành viên chờ đã được chấp nhận`,
+    TRANSFER_CREATOR: (actorName: string, targetName: string) => `${actorName} đã chuyển quyền trưởng nhóm cho ${targetName}`,
 };

@@ -3,6 +3,7 @@ import { RtdbConversation, RtdbUserChat, ReportType, User, UserStatus } from '..
 import {
   Bell, BellOff, Pin, PinOff, Trash2, ChevronRight,
   Ban, LogOut, Edit3, User as UserIcon, Flag, Archive as ArchiveIcon,
+  Crown, Shield, ToggleLeft, ToggleRight, ShieldCheck,
 } from 'lucide-react';
 import { ConfirmDialog } from '../../ui';
 import { useReportStore } from '../../../store/reportStore';
@@ -22,6 +23,8 @@ interface ChatDetailsActionsProps {
   onLeaveGroup?: () => void;
   onEditGroup?: () => void;
   onViewProfile?: () => void;
+  onTransferCreator?: () => void;
+  onToggleApprovalMode?: (enabled: boolean) => Promise<void>;
 }
 
 type ActionVariant = 'default' | 'danger';
@@ -31,22 +34,38 @@ interface Action {
   label: string;
   onClick?: () => void;
   variant: ActionVariant;
+  isToggle?: boolean;
+  isActive?: boolean;
 }
 
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   conversation, currentUserId, partner,
   onToggleMute, onTogglePin, onToggleBlock, onToggleArchive,
   onDelete, onLeaveGroup, onEditGroup, onViewProfile,
+  onTransferCreator, onToggleApprovalMode,
 }) => {
   const { openReportModal } = useReportStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showApprovalOffConfirm, setShowApprovalOffConfirm] = useState(false);
+  const [showTransferConfirm, setShowTransferConfirm] = useState(false);
 
   const memberSettings = useConversationMemberSettings(conversation.id, currentUserId);
   const isGroup = conversation.data.isGroup;
   const isCreator = isGroup && conversation.data.creatorId === currentUserId;
+  const isAdmin = isGroup && conversation.data.members[currentUserId] === 'admin';
+  const isAdminOrCreator = isAdmin || isCreator;
   const isDisbandAction = isGroup && isCreator;
   const isMuted = memberSettings?.isMuted || false;
+  const approvalMode = conversation.data.joinApprovalMode ?? false;
+
+  const handleApprovalToggle = () => {
+    if (approvalMode) {
+      setShowApprovalOffConfirm(true);
+    } else {
+      onToggleApprovalMode?.(true);
+    }
+  };
 
   const actions: Action[] = [
     {
@@ -71,6 +90,13 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
       icon: <Edit3 size={18} />,
       label: 'Chỉnh sửa nhóm',
       onClick: onEditGroup,
+      variant: 'default' as ActionVariant,
+    }] : []),
+    // Chuyển quyền Creator — chỉ Creator
+    ...(isGroup && isCreator && onTransferCreator ? [{
+      icon: <Crown size={18} />,
+      label: 'Chuyển quyền trưởng nhóm',
+      onClick: () => setShowTransferConfirm(true),
       variant: 'default' as ActionVariant,
     }] : []),
     ...(!isGroup && onViewProfile ? [{
@@ -129,14 +155,43 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
               }
             `}
           >
-            <span className={`flex-shrink-0 ${action.variant === 'danger' ? 'text-error' : 'text-text-secondary'}`}>
+            <span className={`flex-shrink-0 ${action.variant === 'danger' ? 'text-error' : action.isActive ? 'text-primary' : 'text-text-secondary'}`}>
               {action.icon}
             </span>
             <span className="flex-1 text-sm font-medium">{action.label}</span>
-            <ChevronRight size={14} className="text-text-tertiary flex-shrink-0" />
+            {!action.isToggle && <ChevronRight size={14} className="text-text-tertiary flex-shrink-0" />}
           </button>
         ))}
       </div>
+
+      {/* Cài đặt nhóm (Chỉ Admin/Creator) */}
+      {isGroup && isAdminOrCreator && onToggleApprovalMode && (
+        <div className="mt-2 border-t border-border-light pt-2">
+          <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wide">
+            Cài đặt nhóm
+          </p>
+          <div
+            className="flex items-center justify-between w-full px-4 py-3 hover:bg-bg-hover transition-colors cursor-pointer group"
+            onClick={handleApprovalToggle}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors
+                ${approvalMode ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
+                <ShieldCheck size={20} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-text-primary">Phê duyệt thành viên</span>
+                <span className="text-[10px] text-text-tertiary">Kiểm soát người mới vào nhóm</span>
+              </div>
+            </div>
+            <div className={`w-9 h-5 rounded-full transition-all duration-300 relative
+              ${approvalMode ? 'bg-primary' : 'bg-bg-secondary border border-border-light'}`}>
+              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-300
+                ${approvalMode ? 'left-5' : 'left-1'}`} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}
@@ -161,6 +216,27 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         title={CONFIRM_MESSAGES.CHAT.LEAVE_GROUP.TITLE}
         message={CONFIRM_MESSAGES.CHAT.LEAVE_GROUP.MESSAGE}
         confirmLabel={CONFIRM_MESSAGES.CHAT.LEAVE_GROUP.CONFIRM}
+        variant="danger"
+      />
+
+
+      <ConfirmDialog
+        isOpen={showApprovalOffConfirm}
+        onClose={() => setShowApprovalOffConfirm(false)}
+        onConfirm={() => { onToggleApprovalMode?.(false); setShowApprovalOffConfirm(false); }}
+        title={CONFIRM_MESSAGES.CHAT.TOGGLE_APPROVAL_OFF.TITLE}
+        message={CONFIRM_MESSAGES.CHAT.TOGGLE_APPROVAL_OFF.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.CHAT.TOGGLE_APPROVAL_OFF.CONFIRM}
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showTransferConfirm}
+        onClose={() => setShowTransferConfirm(false)}
+        onConfirm={() => { onTransferCreator?.(); setShowTransferConfirm(false); }}
+        title={CONFIRM_MESSAGES.CHAT.TRANSFER_CREATOR.TITLE}
+        message={CONFIRM_MESSAGES.CHAT.TRANSFER_CREATOR.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.CHAT.TRANSFER_CREATOR.CONFIRM}
         variant="danger"
       />
     </div>

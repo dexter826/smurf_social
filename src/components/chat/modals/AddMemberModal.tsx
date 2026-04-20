@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Check, Loader2, UserPlus } from 'lucide-react';
+import { Search, Check, Loader2, UserPlus, Info } from 'lucide-react';
 import { User, RtdbConversation, RtdbUserChat } from '../../../../shared/types';
 import { friendService } from '../../../services/friendService';
 import { Modal, Input, Button, UserAvatar } from '../../ui';
@@ -24,6 +24,13 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   const [isAdding, setIsAdding] = useState(false);
 
   const existingMemberIds = Object.keys(conversation.data.members);
+  const pendingMemberIds = Object.keys(conversation.data.pendingMembers || {});
+  const approvalMode = conversation.data.joinApprovalMode ?? false;
+
+  // Kiểm tra role của actor
+  const actorRole = conversation.data.members[currentUserId];
+  const isAdminOrCreator = actorRole === 'admin' || conversation.data.creatorId === currentUserId;
+  const willRequireApproval = approvalMode && !isAdminOrCreator;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -31,7 +38,9 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
     setSearchTerm('');
     setIsLoading(true);
     friendService.getAllFriends(currentUserId)
-      .then(list => setFriends(list.filter(f => !existingMemberIds.includes(f.id))))
+      .then(list => setFriends(
+        list.filter(f => !existingMemberIds.includes(f.id) && !pendingMemberIds.includes(f.id))
+      ))
       .catch(() => { })
       .finally(() => setIsLoading(false));
   }, [isOpen]);
@@ -54,7 +63,6 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       await onAddMembers(selectedIds);
       onClose();
     } catch {
-      // silent
     } finally {
       setIsAdding(false);
     }
@@ -63,6 +71,8 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   const filteredFriends = friends.filter(f =>
     f.fullName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const buttonLabel = `Mời ${selectedIds.length > 0 ? `(${selectedIds.length})` : ''}`;
 
   return (
     <Modal
@@ -79,12 +89,14 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
             disabled={selectedIds.length === 0 || isAdding}
             isLoading={isAdding}
           >
-            Thêm {selectedIds.length > 0 && `(${selectedIds.length})`}
+            {buttonLabel}
           </Button>
         </div>
       }
     >
       <div className="flex flex-col gap-4 min-h-0">
+        {/* Approval mode banner */}
+
         {/* Member count */}
         <p className="text-xs text-text-secondary">
           Số thành viên hiện tại:{' '}
