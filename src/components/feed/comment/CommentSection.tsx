@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { X, MessageCircle } from 'lucide-react';
-import { Button, ConfirmDialog, UploadProgress } from '../../ui';
+import { X, MessageCircle, ChevronDown, ListFilter, Check } from 'lucide-react';
+import { Button, ConfirmDialog, UploadProgress, Dropdown, DropdownItem } from '../../ui';
 import { CONFIRM_MESSAGES } from '../../../constants';
 import { toast } from '../../../store/toastStore';
 import { Comment, User, ReportType, MediaObject } from '../../../../shared/types';
@@ -38,6 +38,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     fetchRootComments, fetchReplies, subscribeToComments, subscribeToReplies,
     createComment, updateComment, deleteComment,
     getFilteredRootComments, getFilteredReplies,
+    rootSortOrder, setRootSortOrder
   } = useCommentStore();
 
   const { users, fetchUsers } = useUserCache();
@@ -85,7 +86,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   useEffect(() => {
     const unsubscribe = subscribeToComments(postId, blockedUserIds);
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
-  }, [postId, blockedUserIds, subscribeToComments]);
+  }, [postId, blockedUserIds, subscribeToComments, rootSortOrder[postId]]);
 
   useEffect(() => {
     if (currentRootComments.length === 0) return;
@@ -177,6 +178,33 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         {header && <div className="bg-bg-primary">{header}</div>}
 
         <div className="pb-4">
+          {/* Comment Filter Header */}
+          <div className="px-4 pt-2 pb-1 flex items-center justify-end">
+            <Dropdown
+              trigger={
+                <button className="flex items-center gap-1 text-[11px] font-semibold text-text-tertiary transition-colors duration-200">
+                  <span>Sắp xếp:</span>
+                  <span className="text-text-secondary">{rootSortOrder[postId] === 'asc' ? 'Cũ nhất' : 'Mới nhất'}</span>
+                  <ChevronDown size={12} />
+                </button>
+              }
+              align="right"
+            >
+              <DropdownItem
+                label="Mới nhất"
+                icon={rootSortOrder[postId] !== 'asc' ? <Check size={14} className="text-primary" /> : <div className="w-[14px]" />}
+                className={rootSortOrder[postId] !== 'asc' ? 'bg-primary/5 !text-primary' : ''}
+                onClick={() => setRootSortOrder(postId, 'desc')}
+              />
+              <DropdownItem
+                label="Cũ nhất"
+                icon={rootSortOrder[postId] === 'asc' ? <Check size={14} className="text-primary" /> : <div className="w-[14px]" />}
+                className={rootSortOrder[postId] === 'asc' ? 'bg-primary/5 !text-primary' : ''}
+                onClick={() => setRootSortOrder(postId, 'asc')}
+              />
+            </Dropdown>
+          </div>
+
           {isLoading && filteredRootComments.length === 0 ? (
             <div className="px-4 py-4">
               <CommentSkeleton />
@@ -254,7 +282,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     isLoading={isLoading}
                     className="text-primary w-full justify-center text-xs font-semibold hover:bg-primary/5"
                   >
-                    Xem thêm bình luận cũ...
+                    Xem thêm bình luận...
                   </Button>
                 </div>
               )}

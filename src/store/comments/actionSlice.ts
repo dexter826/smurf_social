@@ -26,21 +26,27 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
       status: CommentStatus.ACTIVE, updatedAt: Timestamp.now(),
     };
 
-    set(s => ({
-      rootComments: !parentId 
-        ? { ...s.rootComments, [postId]: [opt, ...(s.rootComments[postId] || [])] }
-        : s.rootComments,
-      replies: parentId
-        ? { 
-            ...s.replies, 
-            [postId]: { 
-              ...(s.replies[postId] || {}), 
-              [parentId]: [...((s.replies[postId] || {})[parentId] || []), opt] 
-            } 
-          }
-        : s.replies,
-      uploadingStates: { ...s.uploadingStates, [realId]: { progress: 0 } }
-    }));
+    set(s => {
+      const sortOrder = s.rootSortOrder[postId] || 'desc';
+      const currentRoot = s.rootComments[postId] || [];
+      const newRoot = !parentId 
+        ? (sortOrder === 'desc' ? [opt, ...currentRoot] : [...currentRoot, opt])
+        : currentRoot;
+
+      return {
+        rootComments: { ...s.rootComments, [postId]: newRoot },
+        replies: parentId
+          ? { 
+              ...s.replies, 
+              [postId]: { 
+                ...(s.replies[postId] || {}), 
+                [parentId]: [...((s.replies[postId] || {})[parentId] || []), opt] 
+              } 
+            }
+          : s.replies,
+        uploadingStates: { ...s.uploadingStates, [realId]: { progress: 0 } }
+      };
+    });
 
     if (!parentId) {
     } else {
@@ -181,5 +187,15 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     return { replies: { ...s.replies, [postId]: { ...pr, [parentId]: (pr[parentId] || []).map(r => r.id === commentId ? update(r) : r) } } };
   }),
 
-  reset: () => set({ rootComments: {}, replies: {}, lastRootDoc: {}, hasMoreRoot: {}, lastReplyDoc: {}, hasMoreReply: {}, loadingPosts: {}, uploadingStates: {} }),
+  reset: () => set({ 
+    rootComments: {}, 
+    replies: {}, 
+    lastRootDoc: {}, 
+    hasMoreRoot: {}, 
+    lastReplyDoc: {}, 
+    hasMoreReply: {}, 
+    loadingPosts: {}, 
+    uploadingStates: {},
+    rootSortOrder: {}
+  }),
 });

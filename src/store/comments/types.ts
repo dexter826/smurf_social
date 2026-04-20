@@ -10,6 +10,7 @@ export interface CommentState {
   hasMoreReply: Record<string, Record<string, boolean>>;
   loadingPosts: Record<string, boolean>;
   uploadingStates: Record<string, { progress: number; error?: string }>;
+  rootSortOrder: Record<string, 'asc' | 'desc'>;
 }
 
 export interface CommentActions {
@@ -30,6 +31,7 @@ export interface CommentActions {
   isLoadingPost: (postId: string) => boolean;
   getFilteredRootComments: (postId: string, postOwnerId: string, currentUserId: string, friendIds: string[]) => { visibleComments: Comment[]; hiddenCount: number };
   getFilteredReplies: (postId: string, parentId: string, postOwnerId: string, currentUserId: string, friendIds: string[]) => { visibleReplies: Comment[]; hiddenCount: number };
+  setRootSortOrder: (postId: string, order: 'asc' | 'desc') => void;
   reset: () => void;
 }
 

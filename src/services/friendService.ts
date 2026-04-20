@@ -314,13 +314,16 @@ export const friendService = {
     }
   },
 
-  generateFriendSuggestions: async (limit?: number): Promise<string[]> => {
+  generateFriendSuggestions: async (limit?: number, force: boolean = false): Promise<string[]> => {
     try {
-      const fn = httpsCallable<{ limit?: number }, { suggestionIds: string[] }>(
+      const fn = httpsCallable<{ limit?: number, force?: boolean }, { suggestionIds: string[] }>(
         functions,
         'generateFriendSuggestions'
       );
-      const result = await fn(limit !== undefined ? { limit } : {});
+      const result = await fn({ 
+        ...(limit !== undefined ? { limit } : {}),
+        force 
+      });
       return result.data.suggestionIds;
     } catch (error) {
       console.error("Lỗi tạo gợi ý kết bạn", error);

@@ -62,8 +62,8 @@ async function collectFriendsOfFriendsPool(
 // Lấy thông tin user theo danh sách ID
 async function fetchUsersByIds(ids: string[]): Promise<Array<{ id: string; userVector?: number[]; status: string }>> {
     const results: Array<{ id: string; userVector?: number[]; status: string }> = [];
-    for (let i = 0; i < ids.length; i += 10) {
-        const chunk = ids.slice(i, i + 10);
+    for (let i = 0; i < ids.length; i += 30) {
+        const chunk = ids.slice(i, i + 30);
         if (chunk.length === 0) continue;
         const snap = await db.collection('users').where(FieldPath.documentId(), 'in', chunk).get();
         for (const doc of snap.docs) {
@@ -105,6 +105,7 @@ export const generateFriendSuggestions = onCall(
         if (!userId) throw new HttpsError('unauthenticated', 'Chưa đăng nhập');
 
         const limit = Number(request.data?.limit) || K_SUGGESTION_LIMIT;
+        const force = Boolean(request.data?.force);
         const userRef = db.collection('users').doc(userId);
         const userDoc = await userRef.get();
         const userData = userDoc.data();
@@ -124,7 +125,7 @@ export const generateFriendSuggestions = onCall(
         const isStale = !lastUpdated || lastUpdated.toMillis() < oneWeekAgoMs;
 
         // Trả về cache nếu chưa hết hạn
-        if (!isStale && cachedSuggestions.length > 0) {
+        if (!force && !isStale && cachedSuggestions.length > 0) {
             return { suggestionIds: cachedSuggestions.slice(0, limit).map(s => s.id) };
         }
 

@@ -23,6 +23,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
   hasMoreReply: {},
   loadingPosts: {},
   uploadingStates: {},
+  rootSortOrder: {},
 
   isLoadingPost: (postId: string) => get().loadingPosts[postId] || false,
 
@@ -41,8 +42,9 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     if (get().loadingPosts[postId]) return;
     set(state => ({ loadingPosts: { ...state.loadingPosts, [postId]: true } }));
     try {
+      const sortOrder = get().rootSortOrder[postId] || 'desc';
       const lastDoc = loadMore ? get().lastRootDoc[postId] : undefined;
-      const result = await commentService.getRootComments(postId, blockedUserIds, PAGINATION.COMMENTS, lastDoc || undefined);
+      const result = await commentService.getRootComments(postId, blockedUserIds, PAGINATION.COMMENTS, lastDoc || undefined, sortOrder);
       if (loadMore) get().addRootComments(postId, result.comments, result.lastDoc, result.hasMore);
       else get().setRootComments(postId, result.comments, result.lastDoc, result.hasMore);
     } catch (err) { console.error('Lỗi tải bình luận gốc:', err); }
@@ -62,6 +64,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
   },
 
   subscribeToComments: (postId: string, blockedUserIds: string[] = []) => {
+    const sortOrder = get().rootSortOrder[postId] || 'desc';
     return commentService.subscribeToComments(postId, blockedUserIds, (action, data) => {
       set(state => {
         if (action === 'initial') {
@@ -74,7 +77,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
         }
         const comments = data as Comment[];
         if (action === 'add') {
-          const merged = mergeOptimisticComments(state.rootComments[postId] || [], comments, 'desc');
+          const merged = mergeOptimisticComments(state.rootComments[postId] || [], comments, sortOrder);
           return { rootComments: { ...state.rootComments, [postId]: merged } };
         }
         if (action === 'update') {
@@ -95,7 +98,7 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
         }
         return {};
       });
-    });
+    }, PAGINATION.COMMENTS, sortOrder);
   },
 
   subscribeToReplies: (postId: string, parentId: string, blockedUserIds: string[] = []) => {
@@ -151,6 +154,16 @@ export const createFetchSlice: StateCreator<CommentStoreState, [], [], any> = (s
     lastReplyDoc: { ...s.lastReplyDoc, [postId]: { ...(s.lastReplyDoc[postId] || {}), [parentId]: lastDoc } },
     hasMoreReply: { ...s.hasMoreReply, [postId]: { ...(s.hasMoreReply[postId] || {}), [parentId]: hasMore } }
   })),
+
+  setRootSortOrder: (postId: string, order: 'asc' | 'desc') => {
+    set(s => ({
+      rootSortOrder: { ...s.rootSortOrder, [postId]: order },
+      // Xóa dữ liệu cũ để fetch mới theo thứ tự mới
+      rootComments: { ...s.rootComments, [postId]: [] },
+      lastRootDoc: { ...s.lastRootDoc, [postId]: null },
+      hasMoreRoot: { ...s.hasMoreRoot, [postId]: false }
+    }));
+  },
 
   clearComments: (postId: string) => set(s => {
     const { [postId]: _r, ...rootComments } = s.rootComments;

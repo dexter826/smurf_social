@@ -19,7 +19,7 @@ interface ContactState {
   subscribeToRequests: (userId: string) => () => void;
   searchUsers: (searchTerm: string, userId: string) => Promise<User[]>;
   loadSuggestions: (userId: string) => Promise<void>;
-  refreshSuggestions: (limit?: number) => Promise<void>;
+  refreshSuggestions: (limit?: number, force?: boolean) => Promise<void>;
   dismissSuggestion: (userId: string) => void;
 
   sendFriendRequest: (senderId: string, receiverId: string) => Promise<void>;
@@ -106,10 +106,10 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
-      refreshSuggestions: async (limit?: number) => {
+      refreshSuggestions: async (limit?: number, force: boolean = true) => {
         useLoadingStore.getState().setLoading('contacts.suggestions', true);
         try {
-          const suggestionIds = await friendService.generateFriendSuggestions(limit);
+          const suggestionIds = await friendService.generateFriendSuggestions(limit, force);
           if (suggestionIds.length > 0) {
             const userId = useAuthStore.getState().user?.id;
             if (userId) {
