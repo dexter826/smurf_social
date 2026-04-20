@@ -80,7 +80,7 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
   };
 
   return (
-    <div className="flex flex-col w-full max-w-sm bg-bg-primary border border-border-light rounded-2xl shadow-xl overflow-hidden animate-fade-in" style={{ height: '400px' }}>
+    <div className="flex flex-col w-full max-w-sm bg-bg-primary border border-border-light rounded-xl shadow-xl overflow-hidden animate-fade-in" style={{ height: '400px' }}>
       {/* Header */}
       <div className="flex items-center gap-2 p-3 border-b border-border-light bg-bg-secondary/30">
         <div className="relative flex-1">

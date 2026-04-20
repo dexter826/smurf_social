@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { Play, Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import { RtdbMessage } from '../../../../../shared/types';
 import { LazyImage, CircularProgressOverlay } from '../../../ui';
 
@@ -50,33 +50,25 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
   if (count === 0) return null;
 
   const renderItem = (item: any, idx: number) => {
-    const isVid = item.mimeType?.startsWith('video/');
     return (
       <div
         key={`${message.id}-media-${idx}`}
         className="relative overflow-hidden cursor-pointer border border-border-light/30 aspect-square group"
         onClick={() => onOpenImage(idx)}
       >
-        {isVid ? (
-          item.thumbnailUrl
-            ? <img src={item.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-            : <video src={item.url} className="w-full h-full object-cover" preload="metadata" playsInline muted onLoadedData={handleItemLoad} />
-        ) : (
-          <LazyImage 
-            src={item.url} 
-            alt="media item" 
-            className="w-full h-full object-cover" 
-            wrapperClassName="w-full h-full" 
-            onLoad={handleItemLoad}
-          />
-        )}
-        {isVid && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
-              <Play size={14} className="text-text-primary ml-0.5 fill-current" />
-            </div>
+        <LazyImage 
+          src={item.url} 
+          alt="media item" 
+          className="w-full h-full object-cover" 
+          wrapperClassName="w-full h-full" 
+          onLoad={handleItemLoad}
+        />
+        
+        <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="bg-black/10 p-2 rounded-full backdrop-blur-sm">
+            <ImageIcon className="text-white drop-shadow-md" size={16} />
           </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -85,7 +77,7 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
     const rowLayouts: Record<number, number[]> = { 5: [3, 2], 7: [4, 3], 10: [4, 3, 3] };
     const singleGrid: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-2', 6: 'grid-cols-3', 8: 'grid-cols-4', 9: 'grid-cols-3' };
 
-    const wrapperClass = "relative rounded-2xl overflow-hidden flex flex-col gap-0.5 w-full max-w-[320px] border border-border-light bg-bg-secondary shadow-sm";
+    const wrapperClass = "relative overflow-hidden flex flex-col gap-0.5 w-full max-w-[320px] border border-border-light bg-bg-secondary shadow-sm";
 
     let contentUI;
     if (rowLayouts[count]) {
@@ -108,7 +100,7 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
     } else {
       const cols = singleGrid[count] ?? 'grid-cols-3';
       contentUI = (
-        <div className={`relative rounded-2xl overflow-hidden grid gap-0.5 ${cols} shadow-sm bg-bg-secondary w-full max-w-[320px] border border-border-light`}>
+        <div className={`relative rounded-xl overflow-hidden grid gap-0.5 ${cols} shadow-sm bg-bg-secondary w-full max-w-[320px] border border-border-light`}>
           {mediaItems.map((item, idx) => renderItem(item, idx))}
           <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} size="md" />
         </div>
@@ -119,7 +111,7 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
 
   const first = mediaItems[0];
   return (
-    <div className="rounded-2xl overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative shadow-sm border border-border-light w-fit bg-bg-secondary" onClick={() => onOpenImage(0)}>
+    <div className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative shadow-sm border border-border-light w-fit bg-bg-secondary" onClick={() => onOpenImage(0)}>
       <LazyImage 
         src={first.url} 
         alt="media content" 

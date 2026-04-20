@@ -51,17 +51,17 @@ export const MessengerSkeleton: React.FC = () => (
         <div className="flex items-end gap-2 max-w-[70%]">
           <Skeleton variant="circle" width={30} height={30} className="flex-shrink-0 mb-0.5" />
           <div className="space-y-1.5">
-            <Skeleton height={38} width={200} className="rounded-2xl rounded-bl-sm" />
-            <Skeleton height={38} width={150} className="rounded-2xl rounded-bl-sm opacity-70" />
+            <Skeleton height={38} width={200} className="rounded-xl rounded-bl-sm" />
+            <Skeleton height={38} width={150} className="rounded-xl rounded-bl-sm opacity-70" />
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 max-w-[70%] ml-auto">
-          <Skeleton height={44} width={220} className="rounded-2xl rounded-br-sm bg-primary/15" />
-          <Skeleton height={120} width={220} className="rounded-2xl rounded-br-sm bg-primary/15 opacity-70" />
+          <Skeleton height={44} width={220} className="rounded-xl rounded-br-sm bg-primary/15" />
+          <Skeleton height={120} width={220} className="rounded-xl rounded-br-sm bg-primary/15 opacity-70" />
         </div>
         <div className="flex items-end gap-2 max-w-[70%]">
           <Skeleton variant="circle" width={30} height={30} className="flex-shrink-0 mb-0.5" />
-          <Skeleton height={38} width={160} className="rounded-2xl rounded-bl-sm" />
+          <Skeleton height={38} width={160} className="rounded-xl rounded-bl-sm" />
         </div>
       </div>
 

@@ -131,18 +131,12 @@ export const messageSendService = {
     ): Promise<string> => {
         try {
             const files = Array.isArray(file) ? file : [file];
-
-            const videoCount = files.filter(f => f.type.startsWith('video/')).length;
-            const imageCount = files.filter(f => f.type.startsWith('image/')).length;
-            const displayContent = videoCount > 0 && imageCount > 0
-                ? '[Album Media]'
-                : videoCount > 0 ? '[Video]' : '[Hình ảnh]';
+            const displayContent = files.length > 1 ? '[Album hình ảnh]' : '[Hình ảnh]';
 
             if (files.length <= 1) {
-                const type = files[0].type.startsWith('video/') ? MessageType.VIDEO : MessageType.IMAGE;
-                return await createAndSendMediaMessage(convId, senderId, files[0], type, {
+                return await createAndSendMediaMessage(convId, senderId, files[0], MessageType.IMAGE, {
                     ...options,
-                    compress: type === MessageType.IMAGE,
+                    compress: true,
                     displayContent
                 });
             }

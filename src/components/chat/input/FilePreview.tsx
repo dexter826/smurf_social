@@ -91,7 +91,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               key={item.id}
               className="relative flex-shrink-0 group"
             >
-              <div className={`w-[72px] h-[72px] rounded-2xl border overflow-hidden transition-all duration-200
+              <div className={`w-[72px] h-[72px] rounded-xl border overflow-hidden transition-all duration-200
                 ${item.type === 'file' ? `${fileStyle?.bg} ${fileStyle?.border}` : 'bg-bg-secondary border-border-light'}`}
               >
                 {item.preview ? (

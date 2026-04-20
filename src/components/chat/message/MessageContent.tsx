@@ -43,7 +43,6 @@ const MessageContentInner: React.FC<MessageContentProps> = ({
           payload={payload}
           isMe={isMe}
           isEdited={!!isEdited}
-          timestamp={createdAt}
           hasReactions={hasReactions}
         />
       );

@@ -66,21 +66,18 @@ export const VoiceMessage: React.FC<VoiceMessageProps> = ({
       : `0:${String(rawDuration).padStart(2, '0')}`)
     : null;
 
-  const voiceClass = `flex flex-col gap-2 p-2.5 rounded-2xl border max-w-[260px] shadow-sm transition-all duration-200 ${
-    isMe 
-      ? 'bg-bg-message-sent text-text-primary border border-primary/10' 
-      : 'bg-bg-message-received text-text-primary border border-border-light'
-  }`;
+  // Simplified container without background and timestamp
+  const voiceClass = `flex flex-col gap-2 min-w-[200px] transition-all duration-200 group`;
 
   const btnClass = `w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl transition-all duration-200 border relative ${
     isThisPlaying 
       ? 'bg-primary text-white border-primary shadow-md scale-95' 
-      : (isMe ? 'bg-primary/10 text-primary border-primary/20' : 'bg-bg-secondary text-primary border-border-light')
+      : (isMe ? 'bg-primary/20 text-primary border-primary/30' : 'bg-primary/10 text-primary border-primary/20')
   }`;
 
   return (
-    <div className={`${voiceClass} cursor-pointer group`} onClick={handleToggle}>
-      <div className="flex items-center gap-3.5">
+    <div className={voiceClass} onClick={handleToggle}>
+      <div className="flex items-center gap-3.5 cursor-pointer">
         <div className={btnClass}>
           {isUploading ? (
             <CircularProgress progress={uploadProgress!.progress} size="sm" showPercentage={false} />
@@ -101,7 +98,7 @@ export const VoiceMessage: React.FC<VoiceMessageProps> = ({
                 <div 
                   key={i} 
                   className={`w-0.5 rounded-full transition-all duration-300 ${
-                    isThisPlaying ? 'bg-primary' : (isMe ? 'bg-primary/40' : 'bg-text-tertiary/40')
+                    isThisPlaying ? 'bg-primary' : (isMe ? 'bg-primary/60' : 'bg-text-tertiary/40')
                   } ${isUploading ? 'animate-pulse' : ''}`}
                   style={{ 
                     height: isThisPlaying ? `${30 + Math.random() * 70}%` : '20%',
@@ -112,17 +109,13 @@ export const VoiceMessage: React.FC<VoiceMessageProps> = ({
             </div>
             
             <div className={`flex items-center gap-1 font-bold text-[10px] uppercase tracking-wider ${
-              isMe ? 'text-primary/70' : 'text-text-tertiary'
+              isMe ? 'text-primary/80' : 'text-text-tertiary'
             }`}>
               <Mic size={10} strokeWidth={3} />
               <span>{durationStr ?? '0:00'}</span>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className={`flex justify-end text-[10px] font-bold tracking-tight opacity-40 px-1 ${isMe ? 'text-primary' : 'text-text-tertiary'}`}>
-        {new Date(message.data.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
       </div>
     </div>
   );

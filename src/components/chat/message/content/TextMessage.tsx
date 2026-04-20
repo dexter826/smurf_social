@@ -25,7 +25,7 @@ export const TextMessage: React.FC<TextMessageProps> = ({ message, isMe }) => {
           const [, userId, name] = match;
           return (
             <a key={index} href={`/profile/${userId}`}
-              className="font-bold hover:underline transition-all duration-200"
+              className={`font-bold hover:underline transition-all duration-200 ${isMe ? 'text-black/90 dark:text-white/90' : 'text-primary'}`}
               onClick={(e) => e.stopPropagation()}
             >
               @{name}
@@ -38,7 +38,7 @@ export const TextMessage: React.FC<TextMessageProps> = ({ message, isMe }) => {
       if (part.startsWith('@') && part.endsWith('\u200B')) {
         const name = part.slice(1, -1);
         return (
-          <span key={index} className="font-bold">
+          <span key={index} className={`font-bold ${isMe ? 'text-black/90 dark:text-white/90' : 'text-primary'}`}>
             @{name}
           </span>
         );
@@ -49,7 +49,7 @@ export const TextMessage: React.FC<TextMessageProps> = ({ message, isMe }) => {
         const href = part.startsWith('www.') ? `https://${part}` : part;
         return (
           <a key={index} href={href} target="_blank" rel="noopener noreferrer"
-            className={`underline break-all transition-all duration-200 hover:opacity-80 ${isMe ? 'text-black/80 dark:text-white/90' : 'text-primary'}`}
+            className={`underline break-all transition-all duration-200 hover:opacity-80 ${isMe ? 'text-black/90 dark:text-white/90' : 'text-primary'}`}
             onClick={(e) => e.stopPropagation()}
           >
             {part}

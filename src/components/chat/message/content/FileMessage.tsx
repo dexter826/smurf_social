@@ -28,15 +28,12 @@ const getFileStyle = (fileName: string) => {
   return { icon: <Paperclip size={18} />, color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-50 dark:bg-slate-500/10', border: 'border-slate-100 dark:border-slate-500/20', label: ext.toUpperCase().slice(0, 4) || 'FILE' };
 };
 
-
-
 export const FileMessage: React.FC<FileMessageProps> = ({ 
   message, isMe, uploadProgress, onOpenImage 
 }) => {
   const fileData = message.data.media?.[0];
   const isUploading = isMe && uploadProgress && uploadProgress.progress < 100;
   
-  // Ưu tiên sử dụng localUrl cho preview nếu đang upload
   const fileUrl = isUploading && uploadProgress?.localUrls?.[0] 
     ? uploadProgress.localUrls[0] 
     : (fileData?.url || '');
@@ -49,15 +46,14 @@ export const FileMessage: React.FC<FileMessageProps> = ({
   const isVideoFile = fileMime.startsWith('video/');
   const fileStyle = getFileStyle(fileName);
 
-  const containerClass = `flex flex-col gap-2 p-2.5 rounded-2xl border max-w-[320px] shadow-sm transition-all duration-200 ${
-    isMe ? 'bg-bg-message-sent border-primary/20' : 'bg-bg-message-received border-border-light'
-  }`;
+  // Removed bg, border, padding, and timestamp since MessageBubble wraps it
+  const containerClass = `flex flex-col gap-2 transition-all duration-200 min-w-[200px] w-full max-w-[320px]`;
 
   return (
     <div className={containerClass}>
       {(isImageFile || isVideoFile) && fileUrl && (
         <div 
-          className="rounded-xl overflow-hidden cursor-pointer bg-black/5 aspect-video flex items-center justify-center group relative shadow-inner" 
+          className="rounded-xl overflow-hidden cursor-pointer bg-black/5 aspect-video flex items-center justify-center group relative shadow-inner mb-1" 
           onClick={() => isImageFile ? onOpenImage(0) : undefined}
         >
           {isImageFile
@@ -70,8 +66,8 @@ export const FileMessage: React.FC<FileMessageProps> = ({
                   muted={isUploading}
                   controls={!isUploading}
                 />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/5">
-                  <div className="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform active:scale-95">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/5 pointer-events-none">
+                  <div className="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform active:scale-95 group-hover:bg-white/40">
                     <FileVideo size={22} className="text-white" />
                   </div>
                 </div>
@@ -85,7 +81,7 @@ export const FileMessage: React.FC<FileMessageProps> = ({
       )}
       
       {/* File Info & Progress */}
-      <div className="flex items-center gap-3 px-1 relative">
+      <div className="flex items-center gap-3 relative">
         <div className="relative">
           <div className={`w-11 h-11 flex-shrink-0 flex flex-col items-center justify-center rounded-xl shadow-sm border ${fileStyle.bg} ${fileStyle.color} ${fileStyle.border}`}>
             {fileStyle.icon}
@@ -99,9 +95,11 @@ export const FileMessage: React.FC<FileMessageProps> = ({
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="font-bold truncate text-[13px] text-text-primary mb-0.5 leading-tight">{fileName}</div>
+          <div className="font-bold truncate text-[13px] text-text-primary mb-0.5 leading-tight hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); if(fileUrl && !isUploading) downloadFile(fileUrl, fileName); }}>
+            {fileName}
+          </div>
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-tertiary uppercase tracking-tight">
-            <span>{fileSize}</span>
+            <span className={isMe ? 'text-primary/70' : 'text-text-tertiary'}>{fileSize}</span>
             {isUploading && (
               <>
                 <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
@@ -115,7 +113,7 @@ export const FileMessage: React.FC<FileMessageProps> = ({
           <button
             onClick={(e) => { e.stopPropagation(); downloadFile(fileUrl, fileName); }}
             className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 border shadow-sm ${
-              isMe ? 'bg-primary/10 hover:bg-primary/20 text-primary border-primary/20' : 'bg-bg-primary hover:bg-bg-hover text-text-secondary border-border-light'
+              isMe ? 'bg-primary/10 hover:bg-primary/20 text-primary border-primary/20' : 'bg-primary/10 hover:bg-primary/20 text-primary border-primary/10'
             }`}
             title="Tải về"
           >
@@ -128,10 +126,6 @@ export const FileMessage: React.FC<FileMessageProps> = ({
             </div>
           )
         )}
-      </div>
-      
-      <div className={`px-1 flex justify-end text-[10px] font-bold tracking-tight opacity-40 ${isMe ? 'text-primary' : 'text-text-tertiary'}`}>
-        {new Date(message.data.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
       </div>
     </div>
   );

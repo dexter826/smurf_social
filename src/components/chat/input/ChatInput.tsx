@@ -240,15 +240,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onTyping(false);
 
     try {
-      const albumFiles = selectedFiles
-        .filter(f => f.type === 'image' || f.type === 'video')
-        .map(f => f.file);
+      const imageFiles = selectedFiles.filter(f => f.type === 'image').map(f => f.file);
+      const videoFiles = selectedFiles.filter(f => f.type === 'video').map(f => f.file);
       const otherFiles = selectedFiles.filter(f => f.type !== 'image' && f.type !== 'video');
 
-      if (albumFiles.length > 0) {
-        onSendImages(albumFiles, replyingTo?.id).catch(() => {
+      if (imageFiles.length > 0) {
+        onSendImages(imageFiles, replyingTo?.id).catch(() => {
           toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
         });
+      }
+
+      for (const video of videoFiles) {
+        try { onSendVideo?.(video, replyingTo?.id); } catch {
+          toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
+        }
       }
 
       for (const item of otherFiles) {
@@ -435,24 +440,24 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       {/* Reply / edit banner */}
       {(replyingTo || editingMessage) && (
-        <div className="px-4 py-1.5 border-b border-border-light bg-bg-secondary/80 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
-            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="px-4 py-2 border-b border-border-light bg-bg-secondary/80 backdrop-blur-md flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2 duration-300">
+          <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 border-l-4 border-primary pl-3">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
               {editingMessage
-                ? <Edit2 size={13} className="text-primary" />
-                : <Reply size={13} className="text-primary" />
+                ? <Edit2 size={14} className="text-primary" />
+                : <Reply size={14} className="text-primary" />
               }
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold text-primary leading-none mb-0.5">
+              <p className="text-[11px] font-bold text-primary leading-none mb-1">
                 {editingMessage
-                  ? 'Đang chỉnh sửa'
+                  ? 'Đang chỉnh sửa tin nhắn'
                   : replyingTo?.data.senderId === currentUserId
                     ? 'Trả lời chính bạn'
                     : `Trả lời ${usersMap[replyingTo?.data.senderId || '']?.fullName || ''}`
                 }
               </p>
-              <p className="text-[11px] text-text-secondary truncate opacity-80">
+              <p className="text-[11px] text-text-secondary truncate opacity-80 italic">
                 {editingMessage
                   ? editingMessage.data.content
                   : getMessageDisplayContent(replyingTo!.data)
@@ -462,10 +467,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </div>
           <IconButton
             onClick={onCancelAction}
-            icon={<X size={13} />}
+            icon={<X size={14} />}
             size="sm"
             variant="ghost"
-            className="flex-shrink-0"
+            className="flex-shrink-0 hover:bg-black/5 dark:hover:bg-white/5"
           />
         </div>
       )}
@@ -518,7 +523,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             autoResize
             maxHeight={120}
             containerClassName="flex-1"
-            className="rounded-2xl bg-bg-secondary border-border-light"
+            className="rounded-xl bg-bg-secondary border-border-light"
             renderOverlay={renderMentionOverlay}
             rightElement={
               <EmojiPicker

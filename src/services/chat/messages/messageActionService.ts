@@ -120,13 +120,7 @@ export const messageActionService = {
 
             let displayContent = srcMsg.content;
             if (srcMsg.type === MessageType.IMAGE) {
-                const media = srcMsg.media || [];
-                const videoCount = media.filter(m => m.mimeType?.startsWith('video/')).length;
-                const imageCount = media.filter(m => m.mimeType?.startsWith('image/')).length;
-                displayContent = videoCount > 0 && imageCount > 0
-                    ? '[Album Media]'
-                    : (videoCount > 0 ? (media.length > 1 ? '[Album Video]' : '[Video]')
-                        : (media.length > 1 ? '[Album ảnh]' : '[Hình ảnh]'));
+                displayContent = (srcMsg.media || []).length > 1 ? '[Album hình ảnh]' : '[Hình ảnh]';
             } else if (srcMsg.type === MessageType.VIDEO) {
                 displayContent = '[Video]';
             } else if (srcMsg.type === MessageType.FILE) {

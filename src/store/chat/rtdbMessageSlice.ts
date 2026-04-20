@@ -247,7 +247,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 id: msgId,
                 data: {
                     senderId,
-                    type: files.length > 1 ? MessageType.IMAGE : (files[0].type.startsWith('video/') ? MessageType.VIDEO : MessageType.IMAGE),
+                    type: MessageType.IMAGE,
                     content: '',
                     media: mediaPlaceholders,
                     mentions: [],
@@ -314,7 +314,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 data: {
                     senderId,
                     type: MessageType.FILE,
-                    content: file.name,
+                    content: '',
                     media: [{
                         url: localUrl,
                         fileName: file.name,
@@ -741,22 +741,22 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         const msgId = rtdbMessageService.generateMessageId(targetConversationId);
         const createdAt = getServerSyncedNow();
 
+        const optimisticMsg = {
+            id: msgId,
+            data: {
+                ...srcMessage,
+                senderId,
+                isForwarded: true,
+                createdAt,
+                updatedAt: createdAt,
+                readBy: {},
+                deliveredTo: {},
+                reactions: {}
+            } as RtdbMessage
+        };
+
         set((state) => {
             const existing = state.messages[targetConversationId] || [];
-            const optimisticMsg = {
-                id: msgId,
-                data: {
-                    ...srcMessage,
-                    senderId,
-                    isForwarded: true,
-                    createdAt,
-                    updatedAt: createdAt,
-                    readBy: {},
-                    deliveredTo: {},
-                    reactions: {}
-                } as RtdbMessage
-            };
-
             return {
                 messages: {
                     ...state.messages,
@@ -773,7 +773,6 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 const msgs = state.messages[targetConversationId] || [];
                 return { messages: { ...state.messages, [targetConversationId]: msgs.filter(m => m.id !== msgId) } };
             });
-            throw error;
         }
     },
 

@@ -14,7 +14,7 @@ const formatTime = (seconds: number) => {
 };
 
 export const RecordingUI: React.FC<RecordingUIProps> = ({ duration, onCancel, onStop }) => (
-  <div className="flex-1 flex items-center justify-between bg-bg-secondary rounded-2xl px-4 py-2.5 border border-primary/30 animate-fade-in">
+  <div className="flex-1 flex items-center justify-between bg-bg-secondary rounded-xl px-4 py-2.5 border border-primary/30 animate-fade-in">
     <div className="flex items-center gap-2.5">
       {/* Pulsing mic indicator */}
       <div className="relative flex-shrink-0">

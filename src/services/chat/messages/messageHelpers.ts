@@ -166,7 +166,7 @@ export async function createAndSendMediaMessage(
     const messageData: RtdbMessage = {
         senderId,
         type,
-        content: type === MessageType.FILE ? file.name : (type === MessageType.VOICE && options.voiceDuration ? String(options.voiceDuration) : ''),
+        content: type === MessageType.FILE ? '' : (type === MessageType.VOICE && options.voiceDuration ? String(options.voiceDuration) : ''),
         media: [mediaPlaceholder],
         mentions: options.mentions || [],
         isForwarded: false,
@@ -299,8 +299,7 @@ export async function createAndSendMediaAlbumMessage(
     };
 
     const mediaUploads = files.map(async (file, index) => {
-        const isImage = file.type.startsWith('image/');
-        const uploadFile = isImage ? await compressImage(file, IMAGE_COMPRESSION.CHAT) : file;
+        const uploadFile = await compressImage(file, IMAGE_COMPRESSION.CHAT);
         const path = `chats/${convId}/${createdAt}_${index}_${file.name}`;
 
         const fileUrl = await uploadWithProgress(path, uploadFile, (progress) => {

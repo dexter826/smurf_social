@@ -2,19 +2,17 @@ import React, { useCallback } from 'react';
 import { Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SharedPostPayload } from '../../../../utils/postShareMessage';
-import { formatTimeOnly } from '../../../../utils/dateUtils';
 import { UserAvatar } from '../../../ui';
 
 interface SharedPostMessageProps {
   payload: SharedPostPayload;
   isMe: boolean;
   isEdited: boolean;
-  timestamp: number;
   hasReactions: boolean;
 }
 
 export const SharedPostMessage: React.FC<SharedPostMessageProps> = ({
-  payload, isMe, isEdited, timestamp, hasReactions,
+  payload, isMe, isEdited, hasReactions,
 }) => {
   const navigate = useNavigate();
 
@@ -23,19 +21,16 @@ export const SharedPostMessage: React.FC<SharedPostMessageProps> = ({
     window.open(payload.url, '_blank', 'noopener,noreferrer');
   }, [navigate, payload.postId, payload.url]);
 
-  const borderCls = isMe ? 'border-primary/15' : 'border-border-light';
-  const textBg = isMe ? 'bg-bg-message-sent' : 'bg-bg-message-received';
-
   return (
     <div className="flex flex-col min-w-0 w-[260px] max-w-full">
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); handleOpenPost(); }}
-        className={`w-full overflow-hidden rounded-xl border text-left transition-all duration-200 active:scale-[0.98] focus-visible:outline-none ${borderCls}`}
+        className={`w-full text-left transition-all duration-200 active:scale-[0.98] focus-visible:outline-none`}
       >
         {/* Media preview */}
         {payload.previewMediaUrl && (
-          <div className="relative w-full bg-bg-tertiary overflow-hidden" style={{ aspectRatio: '4/3', maxHeight: 180 }}>
+          <div className="relative w-full bg-black/5 dark:bg-white/5 overflow-hidden rounded-lg mb-2" style={{ aspectRatio: '4/3', maxHeight: 160 }}>
             <img
               src={payload.previewMediaUrl}
               alt=""
@@ -53,7 +48,7 @@ export const SharedPostMessage: React.FC<SharedPostMessageProps> = ({
         )}
 
         {/* Info */}
-        <div className={`px-2.5 py-2 ${textBg} ${hasReactions ? 'pb-5' : ''}`}>
+        <div className={`px-1`}>
           {/* Author row */}
           <div className="flex items-center gap-2 mb-1.5">
             <UserAvatar
@@ -67,16 +62,13 @@ export const SharedPostMessage: React.FC<SharedPostMessageProps> = ({
           </div>
 
           {/* Snippet */}
-          <p className="text-[12px] leading-snug text-text-secondary line-clamp-2 break-all">
+          <p className="text-[13px] font-medium leading-snug text-text-primary line-clamp-3 break-words">
             {payload.snippet}
           </p>
 
           {/* Footer */}
           <div className="mt-1.5 flex items-center justify-between">
-            <span className="text-[10px] text-text-tertiary">Xem bài viết</span>
-            <span className={`text-[10px] ${isMe ? 'text-text-primary opacity-50' : 'text-text-tertiary'}`}>
-              {formatTimeOnly(timestamp)}
-            </span>
+            <span className="text-[10px] font-semibold text-primary hover:underline">Xem bài viết</span>
           </div>
         </div>
       </button>

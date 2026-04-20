@@ -21,10 +21,16 @@ export const VideoMessage: React.FC<VideoMessageProps> = ({
     
   const thumbnailUrl = message.data.media?.[0]?.thumbnailUrl;
 
+  React.useEffect(() => {
+    if (videoUrl && onLoad) {
+      onLoad(); // Ensure timestamp shows immediately for videos since they might not trigger native image onLoad
+    }
+  }, [videoUrl, onLoad]);
+
   if (!videoUrl) return null;
 
   return (
-    <div className="rounded-2xl overflow-hidden max-w-[320px] max-h-[420px] bg-black/5 relative shadow-sm border border-border-light w-fit">
+    <div className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] bg-black/5 relative shadow-sm border border-border-light w-fit">
       <LazyVideo
         src={videoUrl}
         thumbnail={thumbnailUrl}
@@ -33,7 +39,6 @@ export const VideoMessage: React.FC<VideoMessageProps> = ({
         muted
         loop
         controls={!isUploading} 
-        onLoad={onLoad}
       />
       
       <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} size="md" />

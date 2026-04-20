@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Smile } from 'lucide-react';
 import { RtdbMessage, User, MessageType, UserStatus } from '../../../../shared/types';
@@ -125,23 +125,14 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     );
   }
 
-  const isTextLike = 
-    message.data.type === MessageType.TEXT || 
-    message.data.type === MessageType.SHARE_POST ||
-    message.data.isRecalled ||
-    message.data.replyToId || 
-    message.data.type === MessageType.CALL;
-
-  const isSharedPost = message.data.type === MessageType.SHARE_POST &&
-    !message.data.isRecalled &&
-    !message.data.replyToId;
+  const shouldWrapBackground = !isMedia || message.data.isRecalled;
 
   return (
     <>
       <div
         id={`msg-${message.id}`}
         ref={observerRef}
-        className={`flex w-full group ${isMe ? 'justify-end' : 'justify-start gap-2'}`}
+        className={`flex w-full group ${isMe ? 'justify-end' : 'justify-start gap-2'} ${hasReactions ? 'mb-4' : 'mb-0.5'}`}
       >
         {/* Avatar (received only) */}
         {!isMe && (
@@ -170,7 +161,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
           )}
 
           {/* Bubble + reaction zone */}
-          <div className={`relative group/message w-fit max-w-full ${hasReactions ? 'mb-4' : ''}`}>
+          <div className={`relative group/message w-fit max-w-full`}>
             <ReactionDetailsModal
               isOpen={showReactionDetails}
               onClose={() => setShowReactionDetails(false)}
@@ -180,85 +171,88 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               currentUserId={currentUserId}
             />
 
-            {/* Bubble */}
-            <div
-              className={`
-                relative text-sm transition-all duration-300 animate-in fade-in
-                ${isSharedPost
-                  ? 'rounded-2xl'
-                  : isTextLike
-                  ? `px-3 py-1.5 rounded-2xl min-w-[72px] shadow-sm
-                      ${isMe
-                      ? 'bg-bg-message-sent border border-primary/10 text-text-primary'
-                      : 'bg-bg-message-received border border-border-light text-text-primary'
-                    }`
-                  : 'rounded-2xl'
-                }
-                ${(isTextLike && !isSharedPost && hasReactions) ? 'pb-3' : ''}
-              `}
-            >
-              {/* Reply preview */}
-              {!message.data.isRecalled && message.data.replyToId && (() => {
-                const replyToMsg = allMessages.find(m => m.id === message.data.replyToId);
-                const replyAuthorName = replyToMsg?.data.senderId === currentUserId
-                  ? 'Bạn'
-                  : usersMap[replyToMsg?.data.senderId || '']?.fullName || 'Người dùng';
-
-                return (
-                  <div
-                    className={`mb-2 px-3 py-1.5 rounded-xl border-l-4 text-xs cursor-pointer transition-colors
-                      ${isMe
-                        ? 'bg-black/5 dark:bg-white/5 border-primary/40 text-text-primary/80'
-                        : 'bg-bg-tertiary/50 border-primary/40 text-text-secondary'
-                      }`}
-                    onClick={() => replyToMsg && scrollToMessage(message.data.replyToId!)}
-                  >
-                    <div className="font-bold mb-0.5 text-primary">
-                      {replyAuthorName}
-                    </div>
-                    <div className="truncate opacity-70">
-                      {replyToMsg?.data.isRecalled
-                        ? 'Tin nhắn đã thu hồi'
-                        : getMessageDisplayContent(replyToMsg!.data)
-                      }
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <MessageContent
-                message={message}
-                isMe={isMe}
-                isGroup={isGroup}
-                uploadProgress={uploadProgress}
-                onOpenImage={setSelectedImageIndex}
-                onLoad={handleContentLoad}
-                onCall={onCall}
-                onJoinCall={onJoinCall}
-              />
-
-              {/* Timestamp */}
-              {!message.data.isRecalled && !isSharedPost && (
-                <div className={`
-                  text-[10px] flex items-center justify-end gap-1 px-1
-                  transition-all duration-500 ease-out transform
-                  ${isContentReady ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
-                  ${isTextLike 
-                    ? `mt-1 ${isMe ? 'text-text-primary opacity-50' : 'text-text-tertiary'}`
-                    : (message.data.type === MessageType.IMAGE || message.data.type === MessageType.VIDEO || message.data.type === MessageType.GIF)
-                      ? `absolute bottom-2 ${isMe ? 'right-2' : 'left-2'} px-1.5 py-0.5 rounded-full bg-black/40 text-white backdrop-blur-sm z-20`
-                      : 'hidden'
+            <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} w-full`}>
+              {/* Main Content Bubble */}
+              <div
+                className={`
+                  relative text-sm transition-all duration-300 animate-in fade-in max-w-full
+                  ${shouldWrapBackground
+                    ? `shadow-sm min-w-[80px]
+                        ${isMe
+                        ? 'bg-bg-message-sent border border-primary/10 text-text-primary rounded-xl rounded-br-sm'
+                        : 'bg-bg-message-received border border-border-light text-text-primary rounded-xl rounded-bl-sm'
+                      }`
+                    : `overflow-hidden ${isMe ? 'rounded-xl rounded-br-sm' : 'rounded-xl rounded-bl-sm'}`
                   }
-                `}>
-                  {formatTimeOnly(message.data.createdAt)}
+                `}
+              >
+                {/* Reply preview */}
+                {!message.data.isRecalled && message.data.replyToId && (() => {
+                  const replyToMsg = allMessages.find(m => m.id === message.data.replyToId);
+                  const replyAuthorName = replyToMsg?.data.senderId === currentUserId
+                    ? 'Bạn'
+                    : usersMap[replyToMsg?.data.senderId || '']?.fullName || 'Người dùng';
+
+                  return (
+                    <div
+                      className={`
+                        mx-1 mt-1 mb-1 px-2.5 py-1.5 rounded-xl border-l-4 text-[11px] cursor-pointer 
+                        transition-all duration-200 hover:brightness-95 active:scale-[0.98]
+                        ${isMe
+                          ? 'bg-black/5 dark:bg-white/5 border-primary/40 text-text-primary/80'
+                          : 'bg-black/5 dark:bg-white/5 border-primary/40 text-text-secondary'
+                        }
+                        ${!shouldWrapBackground ? 'bg-black/40 backdrop-blur-md border-primary/60 text-white/90' : ''}
+                      `}
+                      onClick={() => replyToMsg && scrollToMessage(message.data.replyToId!)}
+                    >
+                      <div className={`font-bold mb-0.5 ${!shouldWrapBackground ? 'text-primary-light' : 'text-primary'}`}>
+                        {replyAuthorName}
+                      </div>
+                      <div className="truncate opacity-80 italic">
+                        {replyToMsg?.data.isRecalled
+                          ? 'Tin nhắn đã thu hồi'
+                          : getMessageDisplayContent(replyToMsg!.data)
+                        }
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className={shouldWrapBackground ? "px-3 py-2" : ""}>
+                  <MessageContent
+                    message={message}
+                    isMe={isMe}
+                    isGroup={isGroup}
+                    uploadProgress={uploadProgress}
+                    onOpenImage={setSelectedImageIndex}
+                    onLoad={handleContentLoad}
+                    onCall={onCall}
+                    onJoinCall={onJoinCall}
+                  />
                 </div>
-              )}
+
+                {/* Timestamp */}
+                {!message.data.isRecalled && (
+                  <div className={`
+                    text-[10px] flex items-center gap-1
+                    transition-all duration-500 ease-out transform
+                    ${isContentReady ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
+                    ${!shouldWrapBackground
+                      ? `absolute bottom-2 ${isMe ? 'right-2' : 'left-2'} px-1.5 py-0.5 rounded-full bg-black/40 text-white backdrop-blur-sm z-20`
+                      : `pb-1.5 ${isMe ? 'justify-end text-text-primary opacity-60 px-3' : 'justify-start text-text-tertiary px-3'}`
+                    }
+                  `}>
+                    {formatTimeOnly(message.data.createdAt)}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Reaction badge + emoji button */}
             {!message.data.isRecalled && message.data.type !== MessageType.CALL && (
               <div
-                className={`absolute -bottom-2 flex items-center gap-1 ${isMe ? 'left-1' : 'right-1'}`}
+                className={`absolute -bottom-3 flex items-center gap-1 ${isMe ? 'left-2' : 'right-2'}`}
                 style={{ zIndex: 10 }}
               >
                 {hasReactions && (
@@ -321,11 +315,9 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             )}
           </div>
 
-          {/* Timestamp for media messages (REMOVED: consolidated inside bubble above) */}
-
           {/* Read status */}
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (
-            <div className="mt-0.5">
+            <div className={hasReactions ? "mt-4" : "mt-1"}>
               <div
                 className="cursor-pointer"
                 onClick={() => isGroup && lastReadByUsers.length > 0 && setShowReaders(!showReaders)}
@@ -399,3 +391,4 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 };
 
 export const MessageBubble = React.memo(MessageBubbleInner);
+

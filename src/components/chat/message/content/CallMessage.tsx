@@ -10,9 +10,6 @@ interface CallMessageProps {
   onJoinCall?: (callType: 'voice' | 'video') => void;
 }
 
-/**
- * Hiển thị thông tin cuộc gọi (kết thúc, nhỡ, đang diễn ra)
- */
 export const CallMessage: React.FC<CallMessageProps> = ({ 
   message, isMe, isGroup = false, onCall, onJoinCall 
 }) => {
@@ -34,7 +31,7 @@ export const CallMessage: React.FC<CallMessageProps> = ({
   
   const iconColor = isMissedOrRejected 
     ? 'text-red-500' 
-    : (isMe ? 'text-black dark:text-white' : 'text-primary');
+    : (isMe ? 'text-text-primary' : 'text-primary');
 
   let title = '';
   if (isGroup) {
@@ -57,27 +54,32 @@ export const CallMessage: React.FC<CallMessageProps> = ({
     durationStr = mins > 0 ? `${mins} phút ${secs} giây` : `${secs} giây`;
   }
 
-  const btnBaseClass = "mt-2 px-4 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all outline-none shadow-sm active:scale-95 border";
+  const btnBaseClass = "w-full py-1.5 rounded-lg text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all outline-none shadow-sm active:scale-[0.98] border";
   const btnClass = isMe 
-    ? `${btnBaseClass} bg-primary/10 text-primary hover:bg-primary/20 border-primary/20` 
-    : `${btnBaseClass} bg-primary text-white hover:bg-primary/90 border-transparent`;
+    ? `${btnBaseClass} bg-bg-primary text-text-primary border-border-light hover:bg-bg-secondary` 
+    : `${btnBaseClass} bg-primary/10 text-primary border-primary/20 hover:bg-primary/20`;
 
   return (
-    <div className={`flex flex-col gap-1 w-full max-w-[260px] p-1 ${isMe ? 'items-end' : 'items-start'}`}>
-      <div className={`flex items-center gap-2.5 text-sm font-bold ${isMissedOrRejected ? 'text-red-500' : (isMe ? 'text-black dark:text-white' : 'text-text-primary')}`}>
-        {isMissedOrRejected 
-          ? <PhoneMissed size={18} className={iconColor} strokeWidth={2.5} /> 
-          : (isVideo ? <VideoIcon size={18} className={iconColor} strokeWidth={2.5} /> : <PhoneIncoming size={18} className={iconColor} strokeWidth={2.5} />)
-        }
-        <span className="tracking-tight">{title}</span>
-      </div>
-      
-      {durationStr && (
-        <div className={`flex items-center gap-2 text-[11px] font-medium opacity-60 ${isMe ? 'text-black dark:text-white' : 'text-text-tertiary'}`}>
-          <div className="w-1 h-1 rounded-full bg-current opacity-40" />
-          <span>{durationStr}</span>
+    <div className="flex flex-col gap-2.5 min-w-[180px] w-full max-w-[240px]">
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${isMissedOrRejected ? 'bg-red-500/10' : (isMe ? 'bg-black/5 dark:bg-white/10' : 'bg-primary/10')}`}>
+          {isMissedOrRejected 
+            ? <PhoneMissed size={20} className={iconColor} strokeWidth={2} /> 
+            : (isVideo ? <VideoIcon size={20} className={iconColor} strokeWidth={2} /> : <PhoneIncoming size={20} className={iconColor} strokeWidth={2} />)
+          }
         </div>
-      )}
+        
+        <div className="flex flex-col flex-1 min-w-0">
+          <span className={`text-[13px] font-bold leading-tight truncate ${isMissedOrRejected ? 'text-red-500' : 'text-text-primary'}`}>
+            {title}
+          </span>
+          {durationStr && (
+            <span className={`text-[11px] font-semibold mt-0.5 truncate ${isMe ? 'text-text-primary opacity-70' : 'text-text-tertiary'}`}>
+              {durationStr}
+            </span>
+          )}
+        </div>
+      </div>
       
       {status === 'started' ? (
         <button onClick={() => onJoinCall?.(callType)} className={btnClass}>

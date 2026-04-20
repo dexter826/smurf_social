@@ -25,6 +25,7 @@ export const useChatScroll = ({
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const prevMessagesLength = useRef(messages.length);
+  const prevLastMessageId = useRef<string | null>(messages.length > 0 ? messages[messages.length - 1].id : null);
   const scrollHeightBeforeLoad = useRef(0);
   const loadMoreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -58,12 +59,11 @@ export const useChatScroll = ({
       setUnreadCount(0);
     }
   }, [conversationId, isLoading, messages.length > 0, scrollToBottom]);
+
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       const lastMsg = messages[messages.length - 1];
-      const prevLastMsg = messages[prevMessagesLength.current - 1];
-      
-      const isNewMessage = !prevLastMsg || lastMsg.data.createdAt > prevLastMsg.data.createdAt;
+      const isNewMessage = prevLastMessageId.current !== lastMsg.id;
       const isMyMessage = lastMsg.data.senderId === currentUserId;
 
       if (isNewMessage) {
@@ -73,12 +73,14 @@ export const useChatScroll = ({
           setUnreadCount(prev => prev + 1);
         }
       } else if (messagesContainerRef.current) {
+        // Handle pagination (prepended messages)
         const currentScrollHeight = messagesContainerRef.current.scrollHeight;
-        const heightDiff = currentScrollHeight - scrollHeightBeforeLoad.current;
-        messagesContainerRef.current.scrollTop = heightDiff;
+        messagesContainerRef.current.scrollTop = currentScrollHeight - scrollHeightBeforeLoad.current;
       }
     }
+    
     prevMessagesLength.current = messages.length;
+    prevLastMessageId.current = messages.length > 0 ? messages[messages.length - 1].id : null;
   }, [messages, shouldAutoScroll, scrollToBottom, currentUserId]);
 
   const handleScroll = useCallback(() => {
@@ -99,7 +101,7 @@ export const useChatScroll = ({
       }
 
       loadMoreTimeoutRef.current = setTimeout(() => {
-        scrollHeightBeforeLoad.current = scrollHeight;
+        scrollHeightBeforeLoad.current = scrollHeight - scrollTop;
         onLoadMore();
       }, 150);
     }
