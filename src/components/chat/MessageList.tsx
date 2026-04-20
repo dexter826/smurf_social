@@ -22,13 +22,15 @@ interface MessageListProps {
   partner?: User;
   isBlocked?: boolean;
   partnerStatus?: UserStatus;
+  onContentLoad?: () => void;
+  onMarkAsRead?: (messageId: string) => void;
 }
 
 const MessageListInner: React.FC<MessageListProps> = ({
   messages, currentUserId, usersMap, conversation, participants,
   lastReadByMap, onRecall, onDeleteForMe, onForward, onReply, onEdit,
   onCall, onJoinCall, chatName, avatarSrc, partner,
-  isBlocked = false, partnerStatus,
+  isBlocked = false, partnerStatus, onContentLoad, onMarkAsRead,
 }) => {
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Array<{ id: string; data: RtdbMessage }> }[] = [];
@@ -140,6 +142,8 @@ const MessageListInner: React.FC<MessageListProps> = ({
                   isBlocked={isBlocked}
                   partnerStatus={partnerStatus}
                   conversationId={conversation.id}
+                  onContentLoad={onContentLoad}
+                  onMarkAsRead={onMarkAsRead}
                 />
               );
             })}

@@ -1,9 +1,10 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useLayoutEffect } from 'react';
 import { RtdbMessage } from '../../../shared/types';
 
 interface UseChatScrollProps {
   messages: Array<{ id: string; data: RtdbMessage }>;
   conversationId: string;
+  currentUserId: string;
   isLoading: boolean;
   hasMoreMessages: boolean;
   isLoadingMore: boolean;
@@ -13,6 +14,7 @@ interface UseChatScrollProps {
 export const useChatScroll = ({
   messages,
   conversationId,
+  currentUserId,
   isLoading,
   hasMoreMessages,
   isLoadingMore,
@@ -21,51 +23,77 @@ export const useChatScroll = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const prevMessagesLength = useRef(messages.length);
   const scrollHeightBeforeLoad = useRef(0);
   const loadMoreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cuộn xuống cuối khi mới vào hoặc đổi hội thoại
-  useEffect(() => {
-    if (messages.length > 0 && !isLoading) {
-      const timer = setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
-        setShouldAutoScroll(true);
-      }, 50);
-      return () => clearTimeout(timer);
+  // Cuộn xuống đáy
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'instant') => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior });
+      setShouldAutoScroll(true);
+      setUnreadCount(0);
     }
-  }, [conversationId, isLoading, messages.length === 0]);
+  }, []);
 
   useEffect(() => {
-    if (messages.length > 0 && prevMessagesLength.current > 0) {
-      if (messages.length > prevMessagesLength.current) {
-        const lastMsg = messages[messages.length - 1];
-        const prevLastMsg = messages[prevMessagesLength.current - 1];
-        
-        const isNewMessage = lastMsg.data.createdAt > prevLastMsg.data.createdAt;
+    const container = messagesContainerRef.current;
+    if (!container || !container.firstElementChild) return;
 
-        if (isNewMessage) {
-          if (shouldAutoScroll) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-          }
-        } else if (messagesContainerRef.current) {
-          const currentScrollHeight = messagesContainerRef.current.scrollHeight;
-          const heightDiff = currentScrollHeight - scrollHeightBeforeLoad.current;
-          messagesContainerRef.current.scrollTop = heightDiff;
+    const content = container.firstElementChild;
+    const resizeObserver = new ResizeObserver(() => {
+      if (shouldAutoScroll) {
+        scrollToBottom('instant');
+      }
+    });
+
+    resizeObserver.observe(content);
+    return () => resizeObserver.disconnect();
+  }, [shouldAutoScroll, scrollToBottom]);
+
+  useLayoutEffect(() => {
+    if (messages.length > 0 && !isLoading) {
+      scrollToBottom('instant');
+      setUnreadCount(0);
+    }
+  }, [conversationId, isLoading, messages.length > 0, scrollToBottom]);
+  useEffect(() => {
+    if (messages.length > prevMessagesLength.current) {
+      const lastMsg = messages[messages.length - 1];
+      const prevLastMsg = messages[prevMessagesLength.current - 1];
+      
+      const isNewMessage = !prevLastMsg || lastMsg.data.createdAt > prevLastMsg.data.createdAt;
+      const isMyMessage = lastMsg.data.senderId === currentUserId;
+
+      if (isNewMessage) {
+        if (isMyMessage || shouldAutoScroll) {
+          scrollToBottom('smooth');
+        } else {
+          setUnreadCount(prev => prev + 1);
         }
+      } else if (messagesContainerRef.current) {
+        const currentScrollHeight = messagesContainerRef.current.scrollHeight;
+        const heightDiff = currentScrollHeight - scrollHeightBeforeLoad.current;
+        messagesContainerRef.current.scrollTop = heightDiff;
       }
     }
     prevMessagesLength.current = messages.length;
-  }, [messages, shouldAutoScroll]);
+  }, [messages, shouldAutoScroll, scrollToBottom, currentUserId]);
 
   const handleScroll = useCallback(() => {
     if (!messagesContainerRef.current) return;
 
     const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
+    
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
     setShouldAutoScroll(isAtBottom);
+    
+    if (isAtBottom) {
+      setUnreadCount(0);
+    }
 
-    if (scrollTop < 150 && hasMoreMessages && !isLoadingMore && onLoadMore) {
+    if (scrollTop < 100 && hasMoreMessages && !isLoadingMore && onLoadMore) {
       if (loadMoreTimeoutRef.current) {
         clearTimeout(loadMoreTimeoutRef.current);
       }
@@ -88,6 +116,12 @@ export const useChatScroll = ({
   return {
     messagesEndRef,
     messagesContainerRef,
-    handleScroll
+    handleScroll,
+    scrollToBottom,
+    shouldAutoScroll,
+    unreadCount
   };
 };
+
+
+

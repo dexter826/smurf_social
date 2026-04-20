@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat, BlockOptions } from '../../../shared/types';
 import { Loading } from '../ui';
+import { ChevronDown } from 'lucide-react';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageRequestBanner } from './message/MessageRequestBanner';
 import { useChatScroll } from '../../hooks/chat/useChatScroll';
@@ -43,6 +44,7 @@ interface ChatBoxProps {
   onVideoCall?: () => void;
   canCall?: boolean;
   onJoinCall?: (callType: 'voice' | 'video') => void;
+  handleMarkAsRead?: (messageId: string) => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -54,11 +56,15 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   isLoading, isLoadingMore, hasMoreMessages, onLoadMore,
   isBlocked = false, isBlockedByMe = false, partnerStatus,
   myBlockOptions, onUnblock, onManageBlock, shouldShowBlockBanner = false,
-  onCall, onVideoCall, canCall = true, onJoinCall,
+  onCall, onVideoCall, canCall = true, onJoinCall, handleMarkAsRead,
 }) => {
-  const { messagesEndRef, messagesContainerRef, handleScroll } = useChatScroll({
+  const { 
+    messagesEndRef, messagesContainerRef, handleScroll, scrollToBottom, 
+    shouldAutoScroll, unreadCount 
+  } = useChatScroll({
     messages,
     conversationId: conversation.id,
+    currentUserId,
     isLoading: !!isLoading,
     hasMoreMessages: !!hasMoreMessages,
     isLoadingMore: !!isLoadingMore,
@@ -145,7 +151,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             </p>
           </div>
         ) : (
-          <div className={`px-3 md:px-4 py-2.5 min-h-full flex flex-col ${messages.length > 0 ? 'justify-end' : ''}`}>
+          <div className="px-3 md:px-4 py-2.5 min-h-full flex flex-col">
+            <div className="flex-1" />
             {isLoadingMore && (
               <div className="flex justify-center py-3">
                 <Loading size="sm" />
@@ -171,10 +178,34 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               onCall={onCall}
               onJoinCall={onJoinCall}
               onEdit={onEdit}
+              onMarkAsRead={handleMarkAsRead}
+              onContentLoad={() => {
+                if (messagesContainerRef.current) {
+                  const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+                  const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+                  if (isAtBottom) {
+                    scrollToBottom('instant');
+                  }
+                }
+              }}
             />
 
             <div ref={messagesEndRef} />
           </div>
+        )}
+
+        {(!shouldAutoScroll || unreadCount > 0) && (
+          <button
+            onClick={() => scrollToBottom('smooth')}
+            className="absolute bottom-4 right-4 z-30 w-10 h-10 bg-bg-primary border border-border-light rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:text-primary transition-all duration-300 animate-in fade-in zoom-in slide-in-from-bottom-4"
+          >
+            <ChevronDown size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-bg-primary">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
         )}
       </div>
 

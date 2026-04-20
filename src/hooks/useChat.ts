@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { RtdbMessage, RtdbConversation, RtdbUserChat, MemberRole, User, UserStatus } from '../../shared/types';
 import { useAuthStore } from '../store/authStore';
 import { useRtdbChatStore } from '../store';
@@ -184,43 +184,34 @@ export const useChat = () => {
       unsubTyping();
     };
   }, [selectedConversationId, currentUser, isConversationInStore, subscribeToMessages, subscribeToTyping, markAsDelivered]);
+  const readTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-
-  useEffect(() => {
-    if (!selectedConversationId || !currentUser || !isConversationInStore) return;
-
-    const selectedConvData = conversations.find(c => c.id === selectedConversationId)?.data;
-    const isGroup = selectedConvData?.isGroup || false;
-
-    if (!isGroup) {
-      const activeParticipantIds = Object.keys(selectedConvData?.members || {});
-      const activePartnerId = activeParticipantIds.find(id => id !== currentUser.id);
-      const isMessageRequest = activePartnerId ? !friendIds.includes(activePartnerId) : false;
-      if (isMessageRequest) return;
-    }
-
-    markAsRead(selectedConversationId, currentUser.id);
-  }, [selectedConversationId, currentUser?.id, isConversationInStore]);
+  const handleMarkAsRead = useCallback((_messageId: string) => {
+    if (!selectedConversationId || !currentUser) return;
+    if (readTimeoutRef.current) clearTimeout(readTimeoutRef.current);
+    readTimeoutRef.current = setTimeout(() => {
+      markAsRead(selectedConversationId, currentUser.id);
+    }, 400);
+  }, [selectedConversationId, currentUser, markAsRead]);
 
   useEffect(() => {
     if (!selectedConversationId || !currentUser || !isConversationInStore) return;
-
-    const selectedConvData = conversations.find(c => c.id === selectedConversationId)?.data;
-    const isGroup = selectedConvData?.isGroup || false;
-
-    if (!isGroup) {
-      const activeParticipantIds = Object.keys(selectedConvData?.members || {});
-      const activePartnerId = activeParticipantIds.find(id => id !== currentUser.id);
-      const isMessageRequest = activePartnerId ? !friendIds.includes(activePartnerId) : false;
-      if (isMessageRequest) return;
-    }
 
     const msgs = messages[selectedConversationId] || [];
     const hasUnread = msgs.some(m =>
       m.data.senderId !== currentUser.id && (!m.data.readBy || !m.data.readBy[currentUser.id])
     );
-    if (hasUnread) markAsRead(selectedConversationId, currentUser.id);
-  }, [messages, selectedConversationId, currentUser, markAsRead, conversations, friendIds, isConversationInStore]);
+
+    if (hasUnread) {
+      markAsDelivered(selectedConversationId, currentUser.id);
+    }
+  }, [messages, selectedConversationId, currentUser, markAsDelivered, isConversationInStore]);
+
+  useEffect(() => {
+    return () => {
+      if (readTimeoutRef.current) clearTimeout(readTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedConversationId || !currentUser) return;
@@ -274,6 +265,7 @@ export const useChat = () => {
     setReplyingTo,
     editingMessage,
     setEditingMessage,
+    handleMarkAsRead,
     handleSelectConversation,
     handleLoadMoreMessages,
     handleForwardMessage,

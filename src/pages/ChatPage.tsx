@@ -42,7 +42,7 @@ const ChatPage: React.FC = () => {
     getOrCreateConversation, setIsChatVisible,
     isLoadingMore, hasMoreMessages, handleLoadMoreMessages,
     friendRequestStatus, canCall, receivedRequests, participants,
-    isStrangerBlocking,
+    isStrangerBlocking, handleMarkAsRead,
   } = useChat();
 
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
@@ -262,6 +262,7 @@ const ChatPage: React.FC = () => {
               onVideoCall={() => handleInitiateCall('video')}
               canCall={canCall}
               onJoinCall={(callType) => joinActiveCall(selectedConversation.id, callType)}
+              handleMarkAsRead={handleMarkAsRead}
             />
             <ChatInput
               key={selectedConversationId}

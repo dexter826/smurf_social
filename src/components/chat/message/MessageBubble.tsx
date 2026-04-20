@@ -14,6 +14,7 @@ import { scrollToMessage } from '../../../utils';
 import { MessageContent } from './MessageContent';
 import { MessageActions } from './MessageActions';
 import { MessageStatus } from './MessageStatus';
+import { useIntersectionObserver } from '../../../hooks/utils/useIntersectionObserver';
 
 interface MessageBubbleProps {
   message: { id: string; data: RtdbMessage };
@@ -37,6 +38,8 @@ interface MessageBubbleProps {
   onJoinCall?: (callType: 'voice' | 'video') => void;
   conversationId: string;
   allMessages?: Array<{ id: string; data: RtdbMessage }>;
+  onContentLoad?: () => void;
+  onMarkAsRead?: (messageId: string) => void;
 }
 
 const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
@@ -44,7 +47,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   onRecall, onDeleteForMe, onForward, onReply, onEdit,
   currentUserId, usersMap, isGroup = false, lastReadByUsers = [],
   isBlocked = false, partnerStatus, onCall, onJoinCall,
-  conversationId, allMessages = [],
+  conversationId, allMessages = [], onContentLoad, onMarkAsRead,
 }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -63,9 +66,19 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   
   const [isContentReady, setIsContentReady] = useState(!isMedia);
 
+  const observerRef = useIntersectionObserver(() => {
+    if (!isMe && !message.data.readBy?.[currentUserId] && onMarkAsRead) {
+      onMarkAsRead(message.id);
+    }
+  }, { 
+    threshold: 0.5, 
+    enabled: !isMe && !message.data.readBy?.[currentUserId] && !!onMarkAsRead 
+  });
+
   const handleContentLoad = useCallback(() => {
     setIsContentReady(true);
-  }, []);
+    onContentLoad?.();
+  }, [onContentLoad]);
 
   const handleProfileClick = useCallback(() => {
     if (sender?.id) navigate(`/profile/${sender.id}`);
@@ -127,6 +140,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     <>
       <div
         id={`msg-${message.id}`}
+        ref={observerRef}
         className={`flex w-full group ${isMe ? 'justify-end' : 'justify-start gap-2'}`}
       >
         {/* Avatar (received only) */}
