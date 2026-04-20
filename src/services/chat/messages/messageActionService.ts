@@ -94,11 +94,12 @@ export const messageActionService = {
     forwardMessage: async (
         targetConvId: string,
         senderId: string,
-        srcMsg: RtdbMessage
+        srcMsg: RtdbMessage,
+        messageId?: string
     ): Promise<string> => {
         try {
-            const newMsgRef = push(ref(rtdb, `messages/${targetConvId}`));
-            const msgId = newMsgRef.key!;
+            const msgId = messageId || push(ref(rtdb, `messages/${targetConvId}`)).key!;
+            const newMsgRef = ref(rtdb, `messages/${targetConvId}/${msgId}`);
 
             const messageData: RtdbMessage = {
                 senderId,

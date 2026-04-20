@@ -4,12 +4,13 @@ import { LazyImage } from '../../../ui';
 
 interface GifMessageProps {
   message: { id: string; data: RtdbMessage };
+  onLoad?: () => void;
 }
 
 /**
  * Hiển thị tin nhắn GIF từ Giphy
  */
-export const GifMessage: React.FC<GifMessageProps> = ({ message }) => {
+export const GifMessage: React.FC<GifMessageProps> = ({ message, onLoad }) => {
   const gifUrl = message.data.content;
   
   return (
@@ -19,6 +20,7 @@ export const GifMessage: React.FC<GifMessageProps> = ({ message }) => {
         alt="GIF" 
         className="w-full h-auto object-contain"
         wrapperClassName="w-full h-full"
+        onLoad={onLoad}
       />
     </div>
   );

@@ -170,7 +170,8 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 px-4">
                             <UploadProgress 
                               progress={uploadState.progress} 
-                              className="max-w-[120px] !mb-0"
+                              variant="inline"
+                              className="max-w-[140px]"
                             />
                           </div>
                         )}

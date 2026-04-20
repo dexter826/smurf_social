@@ -7,4 +7,3 @@ export * from './FileMessage';
 export * from './VoiceMessage';
 export * from './CallMessage';
 export * from './RecalledMessage';
-export * from './UploadBar';

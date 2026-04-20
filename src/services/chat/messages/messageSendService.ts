@@ -12,6 +12,10 @@ import {
 import { getRtdbServerTimestamp, getServerSyncedNow } from '../chatTime';
 
 export const messageSendService = {
+    generateMessageId: (convId: string): string => {
+        return push(ref(rtdb, `messages/${convId}`)).key!;
+    },
+
     sendTextMessage: async (
         convId: string,
         senderId: string,
@@ -20,13 +24,14 @@ export const messageSendService = {
             replyToId?: string;
             isForwarded?: boolean;
             mentions?: string[];
+            messageId?: string;
         }
     ): Promise<string> => {
         try {
             validateMessageContent(content);
 
-            const newMsgRef = push(ref(rtdb, `messages/${convId}`));
-            const msgId = newMsgRef.key!;
+            const msgId = options?.messageId || push(ref(rtdb, `messages/${convId}`)).key!;
+            const newMsgRef = ref(rtdb, `messages/${convId}/${msgId}`);
 
             const messageData: RtdbMessage = {
                 senderId,
@@ -120,6 +125,7 @@ export const messageSendService = {
             replyToId?: string;
             onProgressWithId?: ProgressWithId;
             mentions?: string[];
+            messageId?: string;
         }
     ): Promise<string> => {
         try {
@@ -158,6 +164,7 @@ export const messageSendService = {
             replyToId?: string;
             onProgressWithId?: ProgressWithId;
             mentions?: string[];
+            messageId?: string;
         }
     ): Promise<string> => {
         try {
@@ -180,6 +187,7 @@ export const messageSendService = {
             replyToId?: string;
             onProgressWithId?: ProgressWithId;
             mentions?: string[];
+            messageId?: string;
         }
     ): Promise<string> => {
         try {
@@ -203,6 +211,7 @@ export const messageSendService = {
             duration?: number;
             onProgressWithId?: ProgressWithId;
             mentions?: string[];
+            messageId?: string;
         }
     ): Promise<string> => {
         try {
@@ -306,11 +315,12 @@ export const messageSendService = {
     sendCallMessage: async (
         convId: string,
         senderId: string,
-        payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number }
+        payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number },
+        messageId?: string
     ): Promise<string> => {
         try {
-            const newMsgRef = push(ref(rtdb, `messages/${convId}`));
-            const msgId = newMsgRef.key!;
+            const msgId = messageId || push(ref(rtdb, `messages/${convId}`)).key!;
+            const newMsgRef = ref(rtdb, `messages/${convId}/${msgId}`);
 
             const content = JSON.stringify(payload);
 

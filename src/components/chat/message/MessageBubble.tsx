@@ -54,11 +54,17 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const [showReactionSelector, setShowReactionSelector] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const { toggleReaction, uploadProgress } = useRtdbChatStore();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
+  const isMedia = useMemo(() => 
+    message.data.type === MessageType.IMAGE || 
+    message.data.type === MessageType.VIDEO || 
+    message.data.type === MessageType.GIF,
+  [message.data.type]);
+                  
+  const [isContentReady, setIsContentReady] = useState(!isMedia);
+
+  const handleContentLoad = useCallback(() => {
+    setIsContentReady(true);
   }, []);
 
   const handleProfileClick = useCallback(() => {
@@ -94,16 +100,6 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     [message.data.reactions]
   );
 
-  const handleToggleVoice = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!audioRef.current) {
-      const voiceUrl = message.data.media?.[0]?.url || message.data.content;
-      audioRef.current = new Audio(voiceUrl);
-      audioRef.current.onended = () => setIsPlaying(false);
-    }
-    if (isPlaying) { audioRef.current.pause(); setIsPlaying(false); }
-    else { audioRef.current.play(); setIsPlaying(true); }
-  };
 
   /* ── System message ── */
   if (message.data.type === MessageType.SYSTEM) {
@@ -173,7 +169,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             {/* Bubble */}
             <div
               className={`
-                relative text-sm transition-all duration-200
+                relative text-sm transition-all duration-300 animate-in fade-in
                 ${isSharedPost
                   ? 'rounded-2xl'
                   : isTextLike
@@ -221,9 +217,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 isMe={isMe}
                 isGroup={isGroup}
                 uploadProgress={uploadProgress}
-                isPlaying={isPlaying}
-                onToggleVoice={handleToggleVoice}
                 onOpenImage={setSelectedImageIndex}
+                onLoad={handleContentLoad}
                 onCall={onCall}
                 onJoinCall={onJoinCall}
               />
@@ -232,6 +227,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               {!message.data.isRecalled && !isSharedPost && (
                 <div className={`
                   text-[10px] flex items-center justify-end gap-1 px-1
+                  transition-all duration-500 ease-out transform
+                  ${isContentReady ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
                   ${isTextLike 
                     ? `mt-1 ${isMe ? 'text-text-primary opacity-50' : 'text-text-tertiary'}`
                     : (message.data.type === MessageType.IMAGE || message.data.type === MessageType.VIDEO || message.data.type === MessageType.GIF)

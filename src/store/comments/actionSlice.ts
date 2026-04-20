@@ -11,7 +11,6 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
   createComment: async (postId, userId, content, parentId, replyToUserId, replyToId, image) => {
     const realId = commentService.generateCommentId();
     
-    // Xử lý ảnh xem trước nếu là File
     let previewUrl = '';
     if (image instanceof File) {
       previewUrl = URL.createObjectURL(image);
@@ -44,7 +43,6 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     }));
 
     if (!parentId) {
-      // Cập nhật số lượng reply nếu là reply (phần này logic cũ đang để ở set, tôi tách ra cho rõ)
     } else {
       set(s => ({
         rootComments: { 
@@ -80,9 +78,26 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     } catch (err: any) {
       console.error('Lỗi thêm bình luận:', err);
       const msg = err?.message || 'Lỗi tải lên';
-      set(state => ({
-        uploadingStates: { ...state.uploadingStates, [realId]: { ...state.uploadingStates[realId], error: msg } }
-      }));
+      set(state => {
+        const root = state.rootComments[postId] || [];
+        const nextRoot = parentId 
+          ? root.map(c => c.id === parentId ? { ...c, replyCount: Math.max(0, (c.replyCount || 0) - 1) } : c)
+          : root.filter(c => c.id !== realId);
+
+        const nextReplies = { ...state.replies };
+        if (parentId && nextReplies[postId]?.[parentId]) {
+          nextReplies[postId] = {
+            ...nextReplies[postId],
+            [parentId]: nextReplies[postId][parentId].filter(c => c.id !== realId)
+          };
+        }
+
+        return {
+          rootComments: { ...state.rootComments, [postId]: nextRoot },
+          replies: nextReplies,
+          uploadingStates: { ...state.uploadingStates, [realId]: { ...state.uploadingStates[realId], error: msg } }
+        };
+      });
       toast.error(TOAST_MESSAGES.COMMENT.CREATE_FAILED());
       throw err;
     } finally {
@@ -97,7 +112,6 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
 
       if (image instanceof File) {
         previewUrl = URL.createObjectURL(image);
-        // Cập nhật giao diện tạm thời với ảnh blob
         const tempImage = { url: previewUrl, fileName: image.name, mimeType: image.type, size: image.size, isSensitive: false } as MediaObject;
         get().updateCommentInStore(postId, commentId, content, parentId || undefined, _replyToUserId, _replyToId, tempImage);
         

@@ -10,7 +10,7 @@ export interface RtdbMessageSlice {
     messages: Record<string, Array<{ id: string; data: RtdbMessage }>>;
     hasMoreMessages: Record<string, boolean>;
     isLoadingMore: Record<string, boolean>;
-    uploadProgress: Record<string, { progress: number; error?: boolean; localUrl?: string }>;
+    uploadProgress: Record<string, { progress: number; error?: boolean; localUrls?: string[] }>;
 
     subscribeToMessages: (conversationId: string) => () => void;
     loadMoreMessages: (conversationId: string) => Promise<void>;
@@ -122,280 +122,490 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
 
     sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: MessageType.TEXT,
+                    content,
+                    media: [],
+                    mentions: mentions || [],
+                    isForwarded: false,
+                    replyToId: replyToId || null,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                }
+            };
+        });
+
         try {
-            const msgId = await rtdbMessageService.sendTextMessage(conversationId, senderId, content, {
+            await rtdbMessageService.sendTextMessage(conversationId, senderId, content, {
                 mentions,
-                replyToId
-            });
-
-            set((state) => {
-                const existing = state.messages[conversationId] || [];
-                if (existing.some(m => m.id === msgId)) return state;
-
-                const optimisticMsg = {
-                    id: msgId,
-                    data: {
-                        senderId,
-                        type: MessageType.TEXT,
-                        content,
-                        media: [],
-                        mentions: mentions || [],
-                        isForwarded: false,
-                        replyToId: replyToId || null,
-                        isEdited: false,
-                        isRecalled: false,
-                        deletedBy: {},
-                        readBy: {},
-                        deliveredTo: {},
-                        reactions: {},
-                        createdAt: getServerSyncedNow(),
-                        updatedAt: getServerSyncedNow()
-                    } as RtdbMessage
-                };
-
-                return {
-                    messages: {
-                        ...state.messages,
-                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
-                    }
-                };
+                replyToId,
+                messageId: msgId
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendTextMessage:', error);
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
+            });
             throw error;
         }
     },
 
     sendSharedPostMessage: async (conversationId: string, senderId: string, payload: SharedPostMessagePayload, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
-        try {
-            const content = JSON.stringify(payload);
-            const msgId = await rtdbMessageService.sendSharedPostMessage(conversationId, senderId, payload, {
-                replyToId
-            });
+        
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+        const content = JSON.stringify(payload);
 
-            set((state) => {
-                const existing = state.messages[conversationId] || [];
-                if (existing.some(m => m.id === msgId)) return state;
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: MessageType.SHARE_POST,
+                    content,
+                    media: [],
+                    mentions: [],
+                    isForwarded: false,
+                    replyToId: replyToId || null,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
 
-                const optimisticMsg = {
-                    id: msgId,
-                    data: {
-                        senderId,
-                        type: MessageType.SHARE_POST,
-                        content,
-                        media: [],
-                        mentions: [],
-                        isForwarded: false,
-                        isEdited: false,
-                        isRecalled: false,
-                        deletedBy: {},
-                        readBy: {},
-                        deliveredTo: {},
-                        reactions: {},
-                        createdAt: getServerSyncedNow(),
-                        updatedAt: getServerSyncedNow()
-                    } as RtdbMessage
-                };
-
-                if (replyToId) {
-                    optimisticMsg.data.replyToId = replyToId;
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
                 }
+            };
+        });
 
-                return {
-                    messages: {
-                        ...state.messages,
-                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
-                    }
-                };
+        try {
+            await rtdbMessageService.sendSharedPostMessage(conversationId, senderId, payload, {
+                replyToId
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendSharedPostMessage:', error);
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
+            });
             throw error;
         }
     },
 
     sendImageMessage: async (conversationId: string, senderId: string, files: File[], replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
-        let uploadedMsgId: string | undefined;
+        
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+
+        // Optimistic update
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const mediaPlaceholders = files.map(file => ({
+                url: URL.createObjectURL(file), // Local preview
+                fileName: file.name,
+                mimeType: file.type,
+                size: file.size,
+                isSensitive: false
+            }));
+
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: files.length > 1 ? MessageType.IMAGE : (files[0].type.startsWith('video/') ? MessageType.VIDEO : MessageType.IMAGE),
+                    content: '',
+                    media: mediaPlaceholders,
+                    mentions: [],
+                    isForwarded: false,
+                    replyToId: replyToId || null,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                },
+                uploadProgress: {
+                    ...state.uploadProgress,
+                    [msgId]: { progress: 0, localUrls: mediaPlaceholders.map(m => m.url) }
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.sendImageMessage(conversationId, senderId, files, {
                 replyToId,
+                messageId: msgId,
                 onProgressWithId: (messageId, progress) => {
-                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendImageMessage:', error);
-            if (uploadedMsgId) {
-                set((state) => {
-                    const msgs = state.messages[conversationId] || [];
-                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
-                });
-                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
-            }
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                const nextUploadProgress = { ...state.uploadProgress };
+                delete nextUploadProgress[msgId];
+                return { 
+                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    uploadProgress: nextUploadProgress
+                };
+            });
             throw error;
         }
     },
 
     sendFileMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
-        let uploadedMsgId: string | undefined;
+        
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+
+        const localUrl = URL.createObjectURL(file);
+
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: MessageType.FILE,
+                    content: file.name,
+                    media: [{
+                        url: localUrl,
+                        fileName: file.name,
+                        mimeType: file.type,
+                        size: file.size,
+                        isSensitive: false
+                    }],
+                    mentions: [],
+                    isForwarded: false,
+                    replyToId: replyToId || null,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                },
+                uploadProgress: {
+                    ...state.uploadProgress,
+                    [msgId]: { progress: 0, localUrls: [localUrl] }
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.sendFileMessage(conversationId, senderId, file, {
                 replyToId,
+                messageId: msgId,
                 onProgressWithId: (messageId, progress) => {
-                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendFileMessage:', error);
-            if (uploadedMsgId) {
-                set((state) => {
-                    const msgs = state.messages[conversationId] || [];
-                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
-                });
-                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
-            }
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                const nextUploadProgress = { ...state.uploadProgress };
+                delete nextUploadProgress[msgId];
+                return { 
+                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    uploadProgress: nextUploadProgress
+                };
+            });
             throw error;
         }
     },
 
     sendVideoMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
-        let uploadedMsgId: string | undefined;
+        
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+        const localUrl = URL.createObjectURL(file);
+
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: MessageType.VIDEO,
+                    content: '',
+                    media: [{
+                        url: localUrl,
+                        fileName: file.name,
+                        mimeType: file.type,
+                        size: file.size,
+                        isSensitive: false
+                    }],
+                    mentions: [],
+                    isForwarded: false,
+                    replyToId: replyToId || null,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                },
+                uploadProgress: {
+                    ...state.uploadProgress,
+                    [msgId]: { progress: 0, localUrls: [localUrl] }
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.sendVideoMessage(conversationId, senderId, file, {
                 replyToId,
+                messageId: msgId,
                 onProgressWithId: (messageId, progress) => {
-                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendVideoMessage:', error);
-            if (uploadedMsgId) {
-                set((state) => {
-                    const msgs = state.messages[conversationId] || [];
-                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
-                });
-                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
-            }
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                const nextUploadProgress = { ...state.uploadProgress };
+                delete nextUploadProgress[msgId];
+                return { 
+                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    uploadProgress: nextUploadProgress
+                };
+            });
             throw error;
         }
     },
 
     sendVoiceMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string, duration?: number) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
-        let uploadedMsgId: string | undefined;
+        
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+        const localUrl = URL.createObjectURL(file);
+
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: MessageType.VOICE,
+                    content: duration ? String(duration) : '',
+                    media: [{
+                        url: localUrl,
+                        fileName: file.name,
+                        mimeType: file.type,
+                        size: file.size,
+                        isSensitive: false
+                    }],
+                    mentions: [],
+                    isForwarded: false,
+                    replyToId: replyToId || null,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                },
+                uploadProgress: {
+                    ...state.uploadProgress,
+                    [msgId]: { progress: 0, localUrls: [localUrl] }
+                }
+            };
+        });
+
         try {
             await rtdbMessageService.sendVoiceMessage(conversationId, senderId, file, {
                 replyToId,
+                messageId: msgId,
                 duration,
                 onProgressWithId: (messageId, progress) => {
-                    uploadedMsgId = messageId;
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendVoiceMessage:', error);
-            if (uploadedMsgId) {
-                set((state) => {
-                    const msgs = state.messages[conversationId] || [];
-                    return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== uploadedMsgId) } };
-                });
-                set((state) => { const next = { ...state.uploadProgress }; delete next[uploadedMsgId!]; return { uploadProgress: next }; });
-            }
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                const nextUploadProgress = { ...state.uploadProgress };
+                delete nextUploadProgress[msgId];
+                return { 
+                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    uploadProgress: nextUploadProgress
+                };
+            });
             throw error;
         }
     },
 
     sendGifMessage: async (conversationId: string, senderId: string, gifUrl: string, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: MessageType.GIF,
+                    content: gifUrl,
+                    media: [],
+                    mentions: [],
+                    isForwarded: false,
+                    replyToId: replyToId || null,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                }
+            };
+        });
+
         try {
-            const msgId = await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId });
-            if (!msgId) return;
-
-            set(state => {
-                const existing = state.messages[conversationId] || [];
-                if (existing.some(m => m.id === msgId)) return state;
-
-                const optimisticMsg = {
-                    id: msgId,
-                    data: {
-                        senderId,
-                        type: MessageType.GIF,
-                        content: gifUrl,
-                        media: [],
-                        mentions: [],
-                        isForwarded: false,
-                        isEdited: false,
-                        isRecalled: false,
-                        deletedBy: {},
-                        readBy: {},
-                        deliveredTo: {},
-                        reactions: {},
-                        replyToId: replyToId || null,
-                        createdAt: getServerSyncedNow(),
-                        updatedAt: getServerSyncedNow()
-                    } as RtdbMessage
-                };
-
-                return {
-                    messages: {
-                        ...state.messages,
-                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
-                    }
-                };
-            });
+            await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendGifMessage:', error);
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
+            });
             throw error;
         }
     },
 
     sendCallMessage: async (conversationId, senderId, payload) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        const msgId = rtdbMessageService.generateMessageId(conversationId);
+        const createdAt = getServerSyncedNow();
+
+        set((state) => {
+            const existing = state.messages[conversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    senderId,
+                    type: MessageType.CALL,
+                    content: JSON.stringify(payload),
+                    media: [],
+                    mentions: [],
+                    isForwarded: false,
+                    isEdited: false,
+                    isRecalled: false,
+                    deletedBy: {},
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {},
+                    createdAt,
+                    updatedAt: createdAt
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                }
+            };
+        });
+
         try {
-            const msgId = await rtdbMessageService.sendCallMessage(conversationId, senderId, payload);
-            
-            set((state) => {
-                const existing = state.messages[conversationId] || [];
-                if (existing.some(m => m.id === msgId)) return state;
-
-                const optimisticMsg = {
-                    id: msgId,
-                    data: {
-                        senderId,
-                        type: MessageType.CALL,
-                        content: JSON.stringify(payload),
-                        media: [],
-                        mentions: [],
-                        isForwarded: false,
-                        isEdited: false,
-                        isRecalled: false,
-                        deletedBy: {},
-                        readBy: {},
-                        deliveredTo: {},
-                        reactions: {},
-                        createdAt: getServerSyncedNow(),
-                        updatedAt: getServerSyncedNow()
-                    } as RtdbMessage
-                };
-
-                return {
-                    messages: {
-                        ...state.messages,
-                        [conversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
-                    }
-                };
-            });
-
+            await rtdbMessageService.sendCallMessage(conversationId, senderId, payload, msgId);
             return msgId;
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendCallMessage:', error);
+            set((state) => {
+                const msgs = state.messages[conversationId] || [];
+                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
+            });
             throw error;
         }
     },
@@ -525,11 +735,43 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
-    forwardMessage: async (targetConversationId: string, senderId: string, srcMessage: RtdbMessage) => {
+    forwardMessage: async (targetConversationId, senderId, srcMessage) => {
+        if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
+        const msgId = rtdbMessageService.generateMessageId(targetConversationId);
+        const createdAt = getServerSyncedNow();
+
+        set((state) => {
+            const existing = state.messages[targetConversationId] || [];
+            const optimisticMsg = {
+                id: msgId,
+                data: {
+                    ...srcMessage,
+                    senderId,
+                    isForwarded: true,
+                    createdAt,
+                    updatedAt: createdAt,
+                    readBy: {},
+                    deliveredTo: {},
+                    reactions: {}
+                } as RtdbMessage
+            };
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [targetConversationId]: [...existing, optimisticMsg].sort((a, b) => a.data.createdAt - b.data.createdAt)
+                }
+            };
+        });
+
         try {
-            await rtdbMessageService.forwardMessage(targetConversationId, senderId, srcMessage);
+            await rtdbMessageService.forwardMessage(targetConversationId, senderId, srcMessage, msgId);
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi forwardMessage:', error);
+            set((state) => {
+                const msgs = state.messages[targetConversationId] || [];
+                return { messages: { ...state.messages, [targetConversationId]: msgs.filter(m => m.id !== msgId) } };
+            });
             throw error;
         }
     },

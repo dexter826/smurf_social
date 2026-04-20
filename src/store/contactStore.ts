@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, FriendRequest } from '../../shared/types';
+import { User, FriendRequest, FriendRequestStatus } from '../../shared/types';
+import { Timestamp } from 'firebase/firestore';
 import { userService } from '../services/userService';
 import { friendService } from '../services/friendService';
 import { useLoadingStore } from './loadingStore';
@@ -136,10 +137,32 @@ export const useContactStore = create<ContactState>()(
       },
 
       sendFriendRequest: async (senderId: string, receiverId: string) => {
+        const tempId = `temp-${Date.now()}`;
+        const tempRequest: FriendRequest = {
+          id: tempId,
+          senderId,
+          receiverId,
+          status: FriendRequestStatus.PENDING,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
+        };
+
+        set(state => ({
+          sentRequests: [tempRequest, ...state.sentRequests]
+        }));
+
         try {
-          await friendService.sendFriendRequest(senderId, receiverId);
+          const realRequest = await friendService.sendFriendRequest(senderId, receiverId);
+          if (realRequest) {
+            set(state => ({
+              sentRequests: state.sentRequests.map(r => r.id === tempId ? realRequest : r)
+            }));
+          }
         } catch (error) {
           console.error("Lỗi gửi lời mời:", error);
+          set(state => ({
+            sentRequests: state.sentRequests.filter(r => r.id !== tempId)
+          }));
           throw error;
         }
       },

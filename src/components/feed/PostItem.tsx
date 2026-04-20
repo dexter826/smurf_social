@@ -168,7 +168,6 @@ const PostItemInner: React.FC<PostItemProps> = ({
           <div className="px-4 py-2 border-b border-border-light bg-bg-secondary/30">
             <UploadProgress 
               progress={uploadState.progress} 
-              className="!mb-0"
             />
           </div>
         )}

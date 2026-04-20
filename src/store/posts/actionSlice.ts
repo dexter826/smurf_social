@@ -13,13 +13,13 @@ import { convertDoc } from '../../utils/firebaseUtils';
 export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set, get) => ({
   createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.FRIENDS, pendingFiles?: File[]) => {
     const postId = postService.generatePostId();
-    const previewMedia = pendingFiles ? pendingFiles.map((f: File) => ({
+    const previewMedia = pendingFiles?.map((f: File) => ({
       url: URL.createObjectURL(f),
       fileName: f.name,
       mimeType: f.type,
       size: f.size,
       isSensitive: false,
-    } as MediaObject)) : [];
+    } as MediaObject)) || [];
 
     const tempPost: Post = {
       id: postId, authorId: userId, type: PostType.REGULAR, content,
@@ -59,6 +59,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       console.error("[postStore] Lỗi đăng bài:", error);
       const msg = error?.message || 'Lỗi không xác định';
       set(state => ({
+        posts: state.posts.filter(p => p.id !== postId),
         uploadingStates: { ...state.uploadingStates, [postId]: { ...state.uploadingStates[postId], error: msg } }
       }));
       toast.error(TOAST_MESSAGES.POST.CREATE_FAILED(msg));

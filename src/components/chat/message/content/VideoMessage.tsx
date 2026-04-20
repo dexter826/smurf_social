@@ -1,38 +1,42 @@
 import React from 'react';
 import { RtdbMessage } from '../../../../../shared/types';
-import { LazyVideo } from '../../../ui';
-import { UploadBar } from './UploadBar';
+import { LazyVideo, CircularProgressOverlay } from '../../../ui';
 
 interface VideoMessageProps {
   message: { id: string; data: RtdbMessage };
   isMe: boolean;
-  uploadProgress?: { progress: number; error?: boolean };
+  uploadProgress?: { progress: number; error?: boolean; localUrls?: string[] };
+  onLoad?: () => void;
 }
 
-/**
- * Hiển thị tin nhắn video
- */
 export const VideoMessage: React.FC<VideoMessageProps> = ({ 
-  message, isMe, uploadProgress 
+  message, isMe, uploadProgress, onLoad 
 }) => {
-  const videoUrl = message.data.media?.[0]?.url || '';
-  const isUploading = isMe && uploadProgress && !videoUrl;
+  const isUploading = isMe && uploadProgress && uploadProgress.progress < 100;
+  
+  // Ưu tiên dùng Blob URL khi đang upload để thấy preview ngay lập tức
+  const videoUrl = (isUploading && uploadProgress?.localUrls?.[0]) 
+    ? uploadProgress.localUrls[0] 
+    : message.data.media?.[0]?.url || message.data.content;
+    
+  const thumbnailUrl = message.data.media?.[0]?.thumbnailUrl;
 
-  if (isUploading) {
-    return (
-      <div className="relative rounded-2xl overflow-hidden max-w-[300px] border border-border-light shadow-sm bg-bg-secondary aspect-video">
-        <UploadBar progress={uploadProgress.progress} error={uploadProgress.error} light />
-      </div>
-    );
-  }
+  if (!videoUrl) return null;
 
   return (
-    <div className="rounded-2xl overflow-hidden max-w-[300px] shadow-sm border border-border-light bg-black/5">
-      <LazyVideo 
-        src={videoUrl} 
-        thumbnail={message.data.media?.[0]?.thumbnailUrl} 
-        className="w-full h-auto max-h-[400px] object-contain flex" 
+    <div className="rounded-2xl overflow-hidden max-w-[280px] bg-black/5 relative shadow-sm border border-border-light">
+      <LazyVideo
+        src={videoUrl}
+        thumbnail={thumbnailUrl}
+        className="w-full h-auto"
+        autoPlay={!isUploading} // Tắt autoplay khi đang upload để tránh tốn tài nguyên
+        muted
+        loop
+        controls={!isUploading} // Chỉ hiện điều khiển khi đã upload xong
+        onLoad={onLoad}
       />
+      
+      <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} size="md" />
     </div>
   );
 };

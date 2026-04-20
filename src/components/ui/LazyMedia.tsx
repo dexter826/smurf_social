@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+const DEFAULT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdG09IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNGNEY1RjciLz48cmVjdCB4PSIxNTAiIHk9IjEwMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHJ4PSIxMiIgZmlsbD0iI0QxRDVREIi8+PGNpcmNsZSBjeD0iMTgwIiBjeT0iMTMwIiByPSIxMiIgZmlsbD0iI0Y0RjVGNyIvPjxwYXRoIGQ9Ik0xNTAgMTYwTDE4MCAxMzBMMjEwIDE2MEwyMzAgMTQwTDI1MCAxNjBWMTkwSDE1MFYxNjBaIiBmaWxsPSIjRjRGNUY3Ii8+PC9zdmc+';
+
 interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
@@ -7,47 +9,59 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallback?: string;
   className?: string;
   wrapperClassName?: string;
+  onLoad?: (e?: any) => void;
 }
 
-export const LazyImage: React.FC<LazyImageProps> = ({
-  src, alt, placeholder, fallback = '/placeholder-image.png',
-  className = '', wrapperClassName = '', ...props
+/**
+ * Hiển thị ảnh với cơ chế Lazy load và hiệu ứng Fade-in
+ */
+export const LazyImage: React.FC<LazyImageProps> = ({ 
+  src, alt, className = '', wrapperClassName = '', fallback = DEFAULT_PLACEHOLDER, 
+  onLoad: externalOnLoad, ...props 
 }) => {
+  const isBlob = src.startsWith('blob:');
+  const [isInView, setIsInView] = useState(isBlob);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
   const [error, setError] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (isBlob) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setIsInView(true); observer.disconnect(); } },
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
       { rootMargin: '300px' }
     );
-    if (wrapperRef.current) observer.observe(wrapperRef.current);
+
+    if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [src, isBlob]);
 
   return (
-    <div ref={wrapperRef} className={`relative overflow-hidden ${wrapperClassName}`}>
-      {!isLoaded && !placeholder && (
-        <div className="absolute inset-0 bg-bg-secondary animate-pulse" />
+    <div ref={containerRef} className={`relative overflow-hidden ${wrapperClassName}`}>
+      {!isLoaded && (
+        <div className={`w-full h-full bg-bg-secondary animate-pulse ${className}`} />
       )}
-      {!isLoaded && placeholder && (
-        <img
-          src={placeholder}
-          alt=""
-          aria-hidden="true"
-          className={`absolute inset-0 w-full h-full object-cover blur-md scale-110 opacity-70 transition-opacity duration-300 ${className}`}
-        />
-      )}
+      
       {isInView && (
         <img
           src={error ? fallback : src}
           alt={alt}
-          onLoad={() => setIsLoaded(true)}
-          onError={() => { setError(true); setIsLoaded(true); }}
+          onLoad={() => {
+            setIsLoaded(true);
+            externalOnLoad?.();
+          }}
+          onError={() => {
+            setError(true);
+            setIsLoaded(true);
+            externalOnLoad?.();
+          }}
           className={`relative z-10 w-full h-full object-cover transition-opacity duration-500 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
-          loading="lazy"
+          loading={isBlob ? 'eager' : 'lazy'}
           {...props}
         />
       )}
@@ -60,23 +74,34 @@ interface LazyVideoProps extends React.VideoHTMLAttributes<HTMLVideoElement> {
   thumbnail?: string;
   className?: string;
   wrapperClassName?: string;
+  autoPlay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  controls?: boolean;
+  onLoad?: (e?: any) => void;
 }
 
+/**
+ * Hiển thị video với cơ chế Lazy load và hỗ trợ thumbnail
+ */
 export const LazyVideo: React.FC<LazyVideoProps> = ({
-  src, thumbnail, className = '', wrapperClassName = '', ...props
+  src, thumbnail, className = '', wrapperClassName = '', 
+  autoPlay, muted, loop, controls, onLoad: externalOnLoad, ...props
 }) => {
-  const [isInView, setIsInView] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
+  const isBlob = src.startsWith('blob:');
+  const [isInView, setIsInView] = useState(isBlob);
+  const [showVideo, setShowVideo] = useState(isBlob);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (isBlob) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setIsInView(true); observer.disconnect(); } },
       { rootMargin: '300px' }
     );
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [src, isBlob]);
 
   if (!isInView) {
     return (
@@ -103,7 +128,10 @@ export const LazyVideo: React.FC<LazyVideoProps> = ({
         <video
           src={src} poster={thumbnail}
           className={`w-full h-full object-cover ${className}`}
-          controls preload="none" playsInline
+          controls={controls ?? !autoPlay} 
+          preload={isBlob ? 'auto' : 'none'} 
+          playsInline autoPlay={autoPlay} muted={muted} loop={loop}
+          onLoadedData={externalOnLoad}
           {...props}
         />
       )}

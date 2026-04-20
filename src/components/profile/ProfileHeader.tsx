@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User, ReportType, UserStatus, FriendStatus, Visibility } from '../../../shared/types';
-import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress } from '../ui';
+import { UserAvatar, Button, Dropdown, DropdownItem, ImageCropper, LazyImage, CircularProgress, CircularProgressOverlay } from '../ui';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 import { useReportStore } from '../../store/reportStore';
@@ -108,9 +108,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           {/* Cover upload progress */}
           {uploadingType === 'cover' && uploadProgress !== undefined && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <CircularProgress progress={uploadProgress} size={56} strokeWidth={4} showPercentage />
-            </div>
+            <CircularProgressOverlay isVisible progress={uploadProgress} size="lg" />
           )}
 
           {/* Edit cover button */}
@@ -157,12 +155,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   onClick={onAvatarClick}
                 />
                 {uploadingType === 'avatar' && uploadProgress !== undefined && (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"
-                    style={{ zIndex: 'var(--z-overlay)' }}
-                  >
-                    <CircularProgress progress={uploadProgress} size={40} showPercentage />
-                  </div>
+                  <CircularProgressOverlay isVisible progress={uploadProgress} size="md" blur={false} />
                 )}
               </div>
 

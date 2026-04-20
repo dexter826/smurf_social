@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatBytes } from '../../utils/uploadUtils';
+import { ProgressBar } from './ProgressBar';
 
 interface UploadProgressProps {
   progress: number;
@@ -7,35 +8,26 @@ interface UploadProgressProps {
   totalBytes?: number;
   fileName?: string;
   className?: string;
+  variant?: 'default' | 'inline';
 }
 
+/**
+ * Component hiển thị tiến trình tải lên kèm metadata.
+ */
 export const UploadProgress: React.FC<UploadProgressProps> = ({
-  progress, bytesTransferred, totalBytes, fileName, className = '',
+  progress, bytesTransferred, totalBytes, fileName, className = '', variant = 'default',
 }) => {
-  const pct = Math.min(Math.round(progress), 100);
-  const isComplete = pct >= 100;
+  const metadata = bytesTransferred !== undefined && totalBytes !== undefined && progress < 100
+    ? `${formatBytes(bytesTransferred)} / ${formatBytes(totalBytes)}`
+    : undefined;
 
   return (
-    <div className={`w-full ${className}`}>
-      <div className="flex items-center justify-between mb-1.5">
-        {fileName && (
-          <span className="text-xs text-text-secondary truncate max-w-[200px]">{fileName}</span>
-        )}
-        <span className={`text-xs font-semibold ml-auto ${isComplete ? 'text-success' : 'text-primary'}`}>
-          {isComplete ? 'Hoàn tất' : `${pct}%`}
-        </span>
-      </div>
-      <div className="w-full h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-base ${isComplete ? 'bg-success' : 'btn-gradient'}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      {bytesTransferred !== undefined && totalBytes !== undefined && !isComplete && (
-        <p className="text-xs text-text-tertiary mt-1">
-          {formatBytes(bytesTransferred)} / {formatBytes(totalBytes)}
-        </p>
-      )}
-    </div>
+    <ProgressBar
+      progress={progress}
+      label={variant === 'default' ? fileName : undefined}
+      metadata={metadata}
+      showPercentage
+      className={className}
+    />
   );
 };

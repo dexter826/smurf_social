@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { onAuthStateChanged } from "firebase/auth";
 import { onSnapshot, doc, Timestamp } from 'firebase/firestore';
 import { auth, db } from "../firebase/config";
-import { User, BlockOptions, UserSettings, Visibility, Generation } from "../../shared/types";
+import { User, BlockOptions, UserSettings, Visibility, Generation, MediaObject } from "../../shared/types";
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
 import { friendService } from "../services/friendService";
@@ -35,10 +35,10 @@ interface AuthState {
   logout: (keepBanned?: boolean) => Promise<void>;
   setUser: (user: User | null) => void;
   initialize: () => () => void;
-  updateUserProfile: (updates: Partial<User>) => void;
-  updateAvatar: (avatar: any) => void;
-  updateSettings: (settings: Partial<UserSettings>) => void;
-  updateBlockEntry: (action: "add" | "remove", targetUserId: string, options?: BlockOptions) => void;
+  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  updateAvatar: (avatar: MediaObject) => void;
+  updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
+  updateBlockEntry: (action: "add" | "remove", targetUserId: string, options?: BlockOptions) => Promise<void>;
   completeOnboarding: (data: Partial<User>) => Promise<void>;
 }
 
@@ -192,12 +192,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  updateUserProfile: (updates) => {
+  updateUserProfile: async (updates) => {
     const { user } = get();
     if (!user) return;
+    const previousUser = { ...user };
     const updatedUser = { ...user, ...updates };
+    
     set({ user: updatedUser });
     useUserCache.getState().setUser(updatedUser);
+
+    try {
+      await userService.updateProfile(user.id, updates);
+    } catch (error) {
+      console.error("Lỗi cập nhật profile:", error);
+      set({ user: previousUser });
+      useUserCache.getState().setUser(previousUser);
+      throw error;
+    }
   },
 
   updateAvatar: (avatar) => {
@@ -208,34 +219,68 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useUserCache.getState().setUser(updatedUser);
   },
 
-  updateSettings: (settingsUpdates) => {
-    const { settings } = get();
-    if (!settings) return;
+  updateSettings: async (settingsUpdates) => {
+    const { user, settings } = get();
+    if (!user || !settings) return;
+    const previousSettings = { ...settings };
+    
     set({ settings: { ...settings, ...settingsUpdates } });
+
+    try {
+      await userService.updateUserSettings(user.id, settingsUpdates);
+    } catch (error) {
+      console.error("Lỗi cập nhật cài đặt:", error);
+      set({ settings: previousSettings });
+      throw error;
+    }
   },
 
-  updateBlockEntry: (action, targetUserId, options?) => {
-    const current = get().blockedUsers;
+  updateBlockEntry: async (action, targetUserId, options?) => {
+    const { user, blockedUsers } = get();
+    if (!user) return;
+    const previousBlocked = { ...blockedUsers };
+
     if (action === "add" && options) {
-      set({ blockedUsers: { ...current, [targetUserId]: options } });
+      set({ blockedUsers: { ...blockedUsers, [targetUserId]: options } });
+      try {
+        await userService.blockUser(user.id, targetUserId, options);
+      } catch (error) {
+        set({ blockedUsers: previousBlocked });
+        throw error;
+      }
     } else if (action === "remove") {
-      const updated = { ...current };
+      const updated = { ...blockedUsers };
       delete updated[targetUserId];
       set({ blockedUsers: updated });
+      try {
+        await userService.unblockUser(user.id, targetUserId);
+      } catch (error) {
+        set({ blockedUsers: previousBlocked });
+        throw error;
+      }
     }
   },
 
   completeOnboarding: async (data) => {
     const { user } = get();
     if (!user) return;
-    if (Object.keys(data).length > 0) {
-      await userService.updateProfile(user.id, data);
-    }
+    const previousUser = { ...user };
     const updatedUser = { ...user, ...data };
+
     set({ user: updatedUser });
     useUserCache.getState().setUser(updatedUser);
 
-    friendService.generateFriendSuggestions(20).catch(() => {});
+    try {
+      if (Object.keys(data).length > 0) {
+        await userService.updateProfile(user.id, data);
+      }
+      friendService.generateFriendSuggestions(20).catch(() => {});
+    } catch (error) {
+      console.error("Lỗi hoàn tất onboarding:", error);
+      set({ user: previousUser });
+      useUserCache.getState().setUser(previousUser);
+      throw error;
+    }
   },
 
   initialize: () => {

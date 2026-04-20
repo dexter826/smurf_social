@@ -136,27 +136,24 @@ export async function createAndSendMediaMessage(
         displayContent: string;
         mentions?: string[];
         voiceDuration?: number;
+        messageId?: string;
     }
 ): Promise<string> {
-    if (type === MessageType.IMAGE) {
-        validateImageFile(file);
-    } else if (type === MessageType.VIDEO) {
-        validateVideoFile(file);
-    } else if (type === MessageType.FILE) {
-        validateChatFile(file);
-    } else if (type === MessageType.VOICE) {
-        validateVoiceFile(file);
-    }
+    if (type === MessageType.IMAGE) validateImageFile(file);
+    else if (type === MessageType.VIDEO) validateVideoFile(file);
+    else if (type === MessageType.FILE) validateChatFile(file);
+    else if (type === MessageType.VOICE) validateVoiceFile(file);
 
     let uploadFile: File = file;
-
     if (options.compress && type === MessageType.IMAGE) {
         uploadFile = await compressImage(file, IMAGE_COMPRESSION.CHAT);
     }
 
     const createdAt = getServerSyncedNow();
-    const newMsgRef = push(ref(rtdb, `messages/${convId}`));
-    const msgId = newMsgRef.key!;
+    const newMsgRef = options.messageId 
+        ? ref(rtdb, `messages/${convId}/${options.messageId}`)
+        : push(ref(rtdb, `messages/${convId}`));
+    const msgId = options.messageId || newMsgRef.key!;
 
     const mediaPlaceholder: MediaObject = {
         url: '',
@@ -185,17 +182,8 @@ export async function createAndSendMediaMessage(
 
     assignReplyToIdIfPresent(messageData, options.replyToId);
 
-    await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent, msgId);
-    await set(newMsgRef, {
-        ...messageData,
-        createdAt: getRtdbServerTimestamp(),
-        updatedAt: getRtdbServerTimestamp()
-    });
-
     const path = `chats/${convId}/${createdAt}_${file.name}`;
-    let fileUrl = '';
-    let thumbnailUrl: string | undefined = undefined;
-
+    
     const thumbPromise = type === MessageType.VIDEO ? (async () => {
         try {
             const thumbFile = await generateVideoThumbnail(file);
@@ -224,18 +212,23 @@ export async function createAndSendMediaMessage(
         }
     })();
 
-    const [url, thumbUrlResult] = await Promise.all([uploadPromise, thumbPromise]);
-    fileUrl = url;
-    thumbnailUrl = thumbUrlResult;
+    const [url, thumbnailUrl] = await Promise.all([uploadPromise, thumbPromise]);
 
     const mediaObject: MediaObject = {
         ...mediaPlaceholder,
-        url: fileUrl,
+        url,
         ...(thumbnailUrl && { thumbnailUrl })
     };
 
-    await update(newMsgRef, {
-        media: [mediaObject],
+    const finalMessageData: RtdbMessage = {
+        ...messageData,
+        media: [mediaObject]
+    };
+
+    await updateConversationAfterMessage(convId, senderId, finalMessageData, options.displayContent, msgId);
+    await set(newMsgRef, {
+        ...finalMessageData,
+        createdAt: getRtdbServerTimestamp(),
         updatedAt: getRtdbServerTimestamp()
     });
 
@@ -251,14 +244,16 @@ export async function createAndSendMediaAlbumMessage(
         onProgressWithId?: ProgressWithId;
         displayContent: string;
         mentions?: string[];
+        messageId?: string;
     }
 ): Promise<string> {
-    if (files.length === 0) {
-        throw new Error('Không có file để gửi');
-    }
+    if (files.length === 0) throw new Error('Không có file để gửi');
+    
     const createdAt = getServerSyncedNow();
-    const newMsgRef = push(ref(rtdb, `messages/${convId}`));
-    const msgId = newMsgRef.key!;
+    const newMsgRef = options.messageId 
+        ? ref(rtdb, `messages/${convId}/${options.messageId}`)
+        : push(ref(rtdb, `messages/${convId}`));
+    const msgId = options.messageId || newMsgRef.key!;
 
     const mediaPlaceholders: MediaObject[] = files.map(file => ({
         url: '',
@@ -287,13 +282,6 @@ export async function createAndSendMediaAlbumMessage(
 
     assignReplyToIdIfPresent(messageData, options.replyToId);
 
-    await updateConversationAfterMessage(convId, senderId, messageData, options.displayContent, msgId);
-    await set(newMsgRef, {
-        ...messageData,
-        createdAt: getRtdbServerTimestamp(),
-        updatedAt: getRtdbServerTimestamp()
-    });
-
     const bytesByIndex = new Array(files.length).fill(0);
     const totalBytesByIndex = new Array(files.length).fill(0);
 
@@ -313,7 +301,6 @@ export async function createAndSendMediaAlbumMessage(
     const mediaUploads = files.map(async (file, index) => {
         const isImage = file.type.startsWith('image/');
         const uploadFile = isImage ? await compressImage(file, IMAGE_COMPRESSION.CHAT) : file;
-
         const path = `chats/${convId}/${createdAt}_${index}_${file.name}`;
 
         const fileUrl = await uploadWithProgress(path, uploadFile, (progress) => {
@@ -333,8 +320,12 @@ export async function createAndSendMediaAlbumMessage(
 
     try {
         const media = await Promise.all(mediaUploads);
-        await update(newMsgRef, {
-            media,
+        const finalMessageData = { ...messageData, media };
+
+        await updateConversationAfterMessage(convId, senderId, finalMessageData, options.displayContent, msgId);
+        await set(newMsgRef, {
+            ...finalMessageData,
+            createdAt: getRtdbServerTimestamp(),
             updatedAt: getRtdbServerTimestamp()
         });
     } catch (error) {
