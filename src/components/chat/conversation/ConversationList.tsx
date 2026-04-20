@@ -131,7 +131,7 @@ export const ConversationList = React.memo<ConversationListProps>(({
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             onMarkAllRead={onMarkAllRead}
-            strangerCount={requestConversations.length}
+            strangerCount={requestConversations.filter(c => (c.userChat?.unreadCount || 0) > 0).length}
           />
         ) : (
           <div className="flex-shrink-0 flex items-center px-4 h-10 bg-bg-secondary border-b border-border-light">

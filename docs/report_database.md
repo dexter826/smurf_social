@@ -73,6 +73,7 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 | :---------------------- | :---------- | :---------------- | :--------------------------------------------------------- |
 | `showOnlineStatus`      | Boolean     | **Required**      | Trạng thái online                                          |
 | `showReadReceipts`      | Boolean     | **Required**      | Đã xem tin nhắn. Mặc định `true`                           |
+| `allowMessagesFromStrangers` | Boolean | **Required**      | Cho phép người lạ nhắn tin. Mặc định `true`                |
 | `defaultPostVisibility` | String Enum | **Required**      | `"public"`, `"friends"`, `"private"`. Mặc định `"friends"` |
 | `createdAt`             | Timestamp   | **Required**      | Thời điểm tạo                                              |
 | `updatedAt`             | Timestamp   | **Required**      | Thời điểm cập nhật                                         |

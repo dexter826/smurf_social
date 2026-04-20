@@ -63,7 +63,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
         if (!partnerId) return false;
         
         // Loại bỏ nếu mình đã chặn nhắn tin người kia
-        const isBlockedByMe = blockedUsers[partnerId]?.blockMessages || blockedUsers[partnerId]?.blockCalls;
+        const isBlockedByMe = !!blockedUsers[partnerId]?.blockMessages;
         if (isBlockedByMe) return false;
         
         const partner = usersMap[partnerId];
@@ -91,7 +91,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
       .filter(friend => !existingChatPartnerIds.has(friend.id))
       .filter(friend => {
         const blocked = blockedUsers[friend.id];
-        return !blocked?.blockMessages && !blocked?.blockCalls && friend.status !== UserStatus.BANNED;
+        return !blocked?.blockMessages && friend.status !== UserStatus.BANNED;
       })
       .map(friend => ({
         type: 'friend',
