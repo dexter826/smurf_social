@@ -2,7 +2,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingProps {
-  variant?: 'spinner' | 'page' | 'overlay' | 'inline';
+  variant?: 'spinner' | 'page' | 'overlay' | 'inline' | 'cube';
   size?: 'sm' | 'md' | 'lg' | number;
   text?: string;
   className?: string;
@@ -19,11 +19,19 @@ export const Loading: React.FC<LoadingProps> = ({
   const iconSize = typeof size === 'number' ? size : ({ sm: 16, md: 32, lg: 48 })[size];
   const spinner = <Loader2 className={`animate-spin ${color} shrink-0`} size={iconSize} />;
 
-  if (variant === 'page') {
+  if (variant === 'cube' || variant === 'page') {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-bg-primary transition-theme" style={{ zIndex: 'var(--z-toast)' }}>
-        {spinner}
-        {text && <p className="mt-4 text-text-secondary font-medium">{text}</p>}
+      <div
+        className={`fixed inset-0 flex flex-col justify-center items-center bg-bg-primary gap-6 ${className}`}
+        style={{ zIndex: 'var(--z-toast)' }}
+      >
+        <div className="grid grid-cols-2 gap-2.5 w-20 h-20 animate-rotate-loader">
+          <div className="w-[35px] h-[35px] rounded-xl screen-loader-cube" />
+          <div className="w-[35px] h-[35px] rounded-xl screen-loader-cube" />
+          <div className="w-[35px] h-[35px] rounded-xl screen-loader-cube" />
+          <div className="w-[35px] h-[35px] rounded-xl screen-loader-cube" />
+        </div>
+        {text && <p className="text-text-secondary font-medium animate-pulse">{text}</p>}
       </div>
     );
   }

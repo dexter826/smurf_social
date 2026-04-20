@@ -6,7 +6,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { useRtdbChatStore } from '../../store';
 import { useContactStore } from '../../store/contactStore';
 import { useLoadingStore } from '../../store/loadingStore';
-import { UserAvatar, ConfirmDialog, IconButton, ScreenLoader } from '../ui';
+import { UserAvatar, ConfirmDialog, IconButton, Loading } from '../ui';
 import { ReactionType, Post } from '../../../shared/types';
 import { PostViewModal, PostModal } from '../feed';
 import { SharePostModal } from '../chat';
@@ -241,7 +241,7 @@ export const AppLayout: React.FC = () => {
 
       {/* ── Main Content ── */}
       <main className={`flex-1 relative flex flex-col h-full overflow-hidden transition-theme md:pb-0 ${isChatRoom ? 'pb-0' : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]'}`}>
-        <React.Suspense fallback={<ScreenLoader />}>
+        <React.Suspense fallback={<Loading variant="page" />}>
           <Outlet />
         </React.Suspense>
       </main>

@@ -39,11 +39,43 @@ function getCached(url: string): LinkPreviewData | null {
     }
 }
 
+function cleanupCache(): void {
+    try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
+        if (keys.length < 100) return; // Chỉ dọn dẹp nếu > 100 mục
+
+        // Xóa các mục đã hết hạn
+        keys.forEach(key => {
+            const raw = localStorage.getItem(key);
+            if (raw) {
+                const { ts } = JSON.parse(raw);
+                if (Date.now() - ts > CACHE_TTL) {
+                    localStorage.removeItem(key);
+                }
+            }
+        });
+
+        // Nếu vẫn còn quá nhiều, xóa bớt mục cũ nhất
+        const remainingKeys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
+        if (remainingKeys.length > 150) {
+            const sorted = remainingKeys.map(key => {
+                const raw = localStorage.getItem(key);
+                return { key, ts: raw ? JSON.parse(raw).ts : 0 };
+            }).sort((a, b) => a.ts - b.ts);
+            
+            sorted.slice(0, 50).forEach(item => localStorage.removeItem(item.key));
+        }
+    } catch (e) {
+        // Bỏ qua lỗi truy cập localStorage
+    }
+}
+
 function setCache(url: string, data: LinkPreviewData): void {
     try {
+        cleanupCache();
         localStorage.setItem(CACHE_PREFIX + url, JSON.stringify({ data, ts: Date.now() }));
     } catch {
-        // localStorage full - ignore
+        // localStorage đầy hoặc bị chặn
     }
 }
 

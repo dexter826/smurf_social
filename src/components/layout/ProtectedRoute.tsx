@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { ScreenLoader } from '../ui';
+import { Loading } from '../ui';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
   const { user, isPendingVerification, isInitialized, isBanned } = useAuthStore();
 
   if (!isInitialized) {
-    return <ScreenLoader />;
+    return <Loading variant="page" />;
   }
 
   if (isPendingVerification) {

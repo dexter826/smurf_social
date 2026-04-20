@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { AppLayout } from './components/layout/AppLayout';
-import { ScreenLoader, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
+import { Loading, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
 import { ReportModal } from './components/ui/ReportModal';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -26,7 +26,7 @@ const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 
 const BannedRoute: React.FC = () => {
   const { user, isBanned, isInitialized } = useAuthStore();
-  if (!isInitialized) return <ScreenLoader />;
+  if (!isInitialized) return <Loading variant="page" />;
   if (!isBanned && user?.status !== 'banned') {
     return <Navigate to={user ? '/' : '/login'} replace />;
   }
@@ -60,7 +60,7 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <HashRouter>
         <GlobalPresenceManager />
-        <React.Suspense fallback={<ScreenLoader />}>
+        <React.Suspense fallback={<Loading variant="page" />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
 

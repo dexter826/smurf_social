@@ -36,6 +36,8 @@ import {
   validateCoverFile,
   FileValidationError
 } from '../utils/fileValidation';
+import { useUserCache } from '../store/userCacheStore';
+
 
 // Xử lý document thành đối tượng User
 const userConverter = (doc: DocumentSnapshot) => convertDoc<User>(doc);
@@ -53,7 +55,9 @@ export const userService = {
     try {
       const userDoc = await getDoc(doc(db, 'users', id));
       if (userDoc.exists()) {
-        return userConverter(userDoc);
+        const user = userConverter(userDoc);
+        useUserCache.getState().setUser(user);
+        return user;
       }
       return undefined;
     } catch (error) {
@@ -296,7 +300,9 @@ export const userService = {
     const userRef = doc(db, 'users', userId);
     return onSnapshot(userRef, (snapshot) => {
       if (snapshot.exists()) {
-        callback(userConverter(snapshot));
+        const user = userConverter(snapshot);
+        useUserCache.getState().updateUser(user);
+        callback(user);
       }
     });
   },

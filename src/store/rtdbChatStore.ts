@@ -73,18 +73,26 @@ export const useRtdbChatStore = create<RtdbChatState>()(
             storage: createJSONStorage(() => localStorage),
             partialize: (state) => {
                 const cachedMessages: Record<string, Array<{ id: string; data: RtdbMessage }>> = {};
+                
+                // Chỉ cache số lượng tin nhắn giới hạn để tối ưu dung lượng localStorage
                 Object.keys(state.messages).forEach(convId => {
-                    cachedMessages[convId] = (state.messages[convId] || []).slice(-PAGINATION.CHAT_CACHE_LIMIT);
+                    const msgs = state.messages[convId];
+                    if (msgs?.length) {
+                        cachedMessages[convId] = msgs.slice(-PAGINATION.CHAT_CACHE_LIMIT);
+                    }
                 });
+
                 return {
                     conversations: state.conversations,
                     searchHistory: state.searchHistory,
-                    messages: cachedMessages
+                    messages: cachedMessages,
+                    draftMessages: state.draftMessages,
+                    userChats: state.userChats
                 };
             },
         }
     )
 );
-const useRtdbChatStoreClone = useRtdbChatStore;
+
 import { registerStore } from './storeUtils';
-registerStore(() => useRtdbChatStoreClone.getState().reset());
+registerStore(() => useRtdbChatStore.getState().reset());
