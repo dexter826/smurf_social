@@ -59,7 +59,15 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
 
         const unsubscribe = rtdbConversationService.subscribeToUserConversations(userId, (conversations, allUserChats) => {
             const currentSelectedId = get().selectedConversationId;
+            
+            conversations.forEach(conv => {
+                if (conv.id !== currentSelectedId && (conv.userChat?.unreadCount || 0) > 0) {
+                    get().markAsDelivered(conv.id, userId).catch(() => {});
+                }
+            });
+
             const prevConversations = get().conversations;
+
             const prevIds = new Set(prevConversations.map(c => c.id));
             const newIds = new Set(conversations.map(c => c.id));
 

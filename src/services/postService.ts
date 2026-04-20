@@ -33,10 +33,7 @@ import {
   FileValidationError
 } from '../utils/fileValidation';
 
-// Chuyển đổi Firestore document sang Post
 const postConverter = (doc: DocumentSnapshot) => convertDoc<Post>(doc);
-
-// Phân quyền hiển thị
 function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] {
   if (isOwner) {
     return [Visibility.PUBLIC, Visibility.FRIENDS, Visibility.PRIVATE];
@@ -511,7 +508,6 @@ export const postService = {
     onProgress?: (progress: number, fileIndex: number, totalFiles: number) => void
   ): Promise<MediaObject[]> => {
     try {
-      // Validate files
       for (const file of files) {
         if (file.type.startsWith('image/')) {
           validateImageFile(file);
@@ -522,11 +518,11 @@ export const postService = {
         }
       }
 
-      const media: MediaObject[] = [];
       const totalFiles = files.length;
+      const progressMap = new Map<number, number>();
 
-      for (let i = 0; i < totalFiles; i++) {
-        let file = files[i];
+      const uploadPromises = files.map(async (originalFile, i) => {
+        let file = originalFile;
         const isVideo = file.type.startsWith('video/');
         const typeFolder = isVideo ? 'videos' : 'images';
         const createdAt = Date.now();
@@ -537,49 +533,47 @@ export const postService = {
 
         if (isImageFile(file)) {
           file = await compressImage(file, IMAGE_COMPRESSION.POST);
-        } else if (isVideo) {
-          // Trích xuất và upload thumbnail
+        }
+        const thumbPromise = isVideo ? (async () => {
           try {
             const thumbFile = await generateVideoThumbnail(file);
             const thumbPath = `thumbnails/${userId}/${createdAt}_${thumbFile.name}`;
-            thumbnailUrl = await uploadWithProgress(thumbPath, thumbFile);
+            return await uploadWithProgress(thumbPath, thumbFile);
           } catch (e) {
             console.error("Lỗi tạo/up thumbnail:", e);
+            return undefined;
           }
-        }
+        })() : Promise.resolve(undefined);
 
-        const url = await withRetry(() =>
+        const uploadPromise = withRetry(() =>
           uploadWithProgress(path, file, (progress) => {
-            const fileProgress = progress.progress / 100;
-            const overallProgress = ((i + fileProgress) / totalFiles) * 100;
-            onProgress?.(overallProgress, i, totalFiles);
+            progressMap.set(i, progress.progress);
+            const totalProgress = Array.from(progressMap.values()).reduce((a, b) => a + b, 0) / totalFiles;
+            onProgress?.(totalProgress, i, totalFiles);
           })
         );
 
-        const mediaObject: MediaObject = {
+        const [url, thumbUrlResult] = await Promise.all([uploadPromise, thumbPromise]);
+        thumbnailUrl = thumbUrlResult;
+
+        return {
           url,
           fileName,
           mimeType: file.type,
           size: file.size,
-          isSensitive: false
-        };
+          isSensitive: false,
+          ...(thumbnailUrl && { thumbnailUrl })
+        } as MediaObject;
+      });
 
-        if (thumbnailUrl) {
-          mediaObject.thumbnailUrl = thumbnailUrl;
-        }
-
-        media.push(mediaObject);
-      }
-
-      return media;
+      return await Promise.all(uploadPromises);
     } catch (error) {
-      if (error instanceof FileValidationError) {
-        throw error;
-      }
-      console.error("Lỗi upload media", error);
+      if (error instanceof FileValidationError) throw error;
+      console.error("Lỗi upload media song song:", error);
       throw error;
     }
   },
+
 
 };
 

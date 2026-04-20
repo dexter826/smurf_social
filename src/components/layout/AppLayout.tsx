@@ -82,13 +82,6 @@ export const AppLayout: React.FC = () => {
   }, [user, subscribeToConversations, subscribeToRequests, subscribeToFriends, initNotifications]);
 
   useEffect(() => {
-    if (!user) return;
-    conversations
-      .filter(c => c.id !== selectedConversationId && (c.userChat?.unreadCount || 0) > 0)
-      .forEach(c => markAsDelivered(c.id, user.id));
-  }, [conversations, selectedConversationId, user, markAsDelivered]);
-
-  useEffect(() => {
     const unlock = () => {
       soundManager.unlock();
       window.removeEventListener('click', unlock);

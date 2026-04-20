@@ -196,30 +196,37 @@ export async function createAndSendMediaMessage(
     let fileUrl = '';
     let thumbnailUrl: string | undefined = undefined;
 
-    if (type === MessageType.VIDEO) {
+    const thumbPromise = type === MessageType.VIDEO ? (async () => {
         try {
             const thumbFile = await generateVideoThumbnail(file);
             const thumbPath = `thumbnails/${senderId}/${createdAt}_${thumbFile.name}`;
-            thumbnailUrl = await uploadWithProgress(thumbPath, thumbFile);
+            return await uploadWithProgress(thumbPath, thumbFile);
         } catch (e) {
             console.error('[rtdbMessageService] Lỗi tạo/up thumbnail video:', e);
+            return undefined;
         }
-    }
+    })() : Promise.resolve(undefined);
 
-    try {
-        fileUrl = await uploadWithProgress(path, uploadFile, (progress) => {
-            options.onProgressWithId?.(msgId, progress);
-        });
-    } catch (error) {
-        options.onProgressWithId?.(msgId, {
-            progress: 0,
-            bytesTransferred: 0,
-            totalBytes: uploadFile.size,
-            state: 'error'
-        });
-        await markMessageUploadFailed(convId, msgId);
-        throw error;
-    }
+    const uploadPromise = (async () => {
+        try {
+            return await uploadWithProgress(path, uploadFile, (progress) => {
+                options.onProgressWithId?.(msgId, progress);
+            });
+        } catch (error) {
+            options.onProgressWithId?.(msgId, {
+                progress: 0,
+                bytesTransferred: 0,
+                totalBytes: uploadFile.size,
+                state: 'error'
+            });
+            await markMessageUploadFailed(convId, msgId);
+            throw error;
+        }
+    })();
+
+    const [url, thumbUrlResult] = await Promise.all([uploadPromise, thumbPromise]);
+    fileUrl = url;
+    thumbnailUrl = thumbUrlResult;
 
     const mediaObject: MediaObject = {
         ...mediaPlaceholder,
