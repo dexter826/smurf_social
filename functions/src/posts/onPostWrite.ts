@@ -33,23 +33,34 @@ async function getVisibleFriendIds(authorId: string): Promise<string[]> {
     if (friendsSnap.empty) return [];
 
     const friendIds = friendsSnap.docs.map(d => d.id);
-    const usersHidingAuthor = new Set<string>();
+    const hiddenOrBlockedIds = new Set<string>();
     const chunkSize = 20;
 
     for (let i = 0; i < friendIds.length; i += chunkSize) {
         const chunk = friendIds.slice(i, i + chunkSize);
-        const blockSnaps = await Promise.all(
-            chunk.map(fid => db.collection('users').doc(fid).collection('blockedUsers').doc(authorId).get())
-        );
 
-        blockSnaps.forEach((snap, idx) => {
-            if (snap.exists && snap.data()?.hideTheirActivity === true) {
-                usersHidingAuthor.add(chunk[idx]);
+        const blockCheckPromises = chunk.flatMap(fid => [
+            db.collection('users').doc(fid).collection('blockedUsers').doc(authorId).get(),
+            db.collection('users').doc(authorId).collection('blockedUsers').doc(fid).get()
+        ]);
+
+        const snaps = await Promise.all(blockCheckPromises);
+
+        for (let j = 0; j < chunk.length; j++) {
+            const friendId = chunk[j];
+            const friendBlockSnap = snaps[j * 2];     
+            const authorBlockSnap = snaps[j * 2 + 1]; 
+
+            const isHiddenByFriend = friendBlockSnap.exists && friendBlockSnap.data()?.hideTheirActivity === true;
+            const isBlockedByAuthor = authorBlockSnap.exists && authorBlockSnap.data()?.blockViewMyActivity === true;
+
+            if (isHiddenByFriend || isBlockedByAuthor) {
+                hiddenOrBlockedIds.add(friendId);
             }
-        });
+        }
     }
 
-    return friendIds.filter(friendId => !usersHidingAuthor.has(friendId));
+    return friendIds.filter(friendId => !hiddenOrBlockedIds.has(friendId));
 }
 
 async function touchAuthorFeed(postId: string, authorId: string) {

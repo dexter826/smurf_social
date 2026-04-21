@@ -22,7 +22,6 @@ const ContactsPage: React.FC = () => {
     handleUnfriend, handleMessage, handleAddFriend,
     handleDismissSuggestion, handleRefreshSuggestions,
     handleApplyBlock, handleUnblock,
-    showPrivacyConfirm, setShowPrivacyConfirm, confirmEnablePrivacy,
   } = useContacts();
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -72,10 +71,6 @@ const ContactsPage: React.FC = () => {
     { id: 'sent', label: 'Lời mời đã gửi', icon: <UserPlus size={18} />, count: sentRequests.length },
   ];
 
-  const onConfirmPrivacy = async () => {
-    const convId = await confirmEnablePrivacy();
-    if (convId) navigate(`/?conv=${convId}`);
-  };
 
   return (
     <div className="flex h-full w-full overflow-hidden">
@@ -365,14 +360,6 @@ const ContactsPage: React.FC = () => {
         />
       )}
 
-      <ConfirmDialog
-        isOpen={showPrivacyConfirm}
-        onClose={() => setShowPrivacyConfirm(false)}
-        onConfirm={onConfirmPrivacy}
-        title="Bật nhận tin nhắn từ người lạ"
-        message="Bạn đang tắt nhận tin nhắn từ người lạ. Hệ thống sẽ bật lại cài đặt này để bạn có thể nhắn tin cho người này. Bạn có đồng ý không?"
-        confirmLabel="Đồng ý"
-      />
     </div>
   );
 };

@@ -65,63 +65,60 @@ export async function markMessageUploadFailed(convId: string, msgId: string): Pr
     }
 }
 
-export async function updateConversationAfterMessage(
+export async function ensureConversationExists(convId: string, senderId: string): Promise<RtdbConversation | null> {
+    const convRef = ref(rtdb, `conversations/${convId}`);
+    const convSnap = await get(convRef);
+
+    if (convSnap.exists()) {
+        return convSnap.val() as RtdbConversation;
+    }
+
+    const isDirect = convId.startsWith('direct_');
+    if (!isDirect) return null;
+
+    const userIds = convId.replace('direct_', '').split('_');
+    await rtdbConversationService.initializeDirectConversation(userIds[0], userIds[1], senderId);
+    
+    const newSnap = await get(convRef);
+    return newSnap.exists() ? newSnap.val() as RtdbConversation : null;
+}
+
+export function getConversationUpdatePaths(
     convId: string,
     senderId: string,
     messageData: Partial<RtdbMessage>,
     displayContent: string,
+    conversation: RtdbConversation,
     messageId?: string
-): Promise<void> {
-    try {
-        const convRef = ref(rtdb, `conversations/${convId}`);
-        const convSnap = await get(convRef);
+): Record<string, any> {
+    const updates: Record<string, any> = {};
+    const memberIds = Object.keys(conversation.members || {});
 
-        const updates: Record<string, any> = {};
+    updates[`conversations/${convId}/lastMessage`] = {
+        senderId,
+        content: displayContent,
+        type: messageData.type,
+        timestamp: getRtdbServerTimestamp(),
+        messageId: messageId || null,
+        readBy: messageData.readBy || {},
+        deliveredTo: messageData.deliveredTo || {}
+    };
+    updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
 
-        let conversation: RtdbConversation;
-        if (!convSnap.exists()) {
-            const isDirect = convId.startsWith('direct_');
-            if (!isDirect) return;
+    const isSilentMessage = messageData.type === MessageType.SYSTEM || messageData.type === MessageType.CALL;
 
-            const userIds = convId.replace('direct_', '').split('_');
-            await rtdbConversationService.initializeDirectConversation(userIds[0], userIds[1], senderId);
-            const newSnap = await get(convRef);
-            if (!newSnap.exists()) return;
-            conversation = newSnap.val() as RtdbConversation;
-        } else {
-            conversation = convSnap.val() as RtdbConversation;
-        }
-
-        const memberIds = Object.keys(conversation.members || {});
-
-        updates[`conversations/${convId}/lastMessage`] = {
-            senderId,
-            content: displayContent,
-            type: messageData.type,
-            timestamp: getRtdbServerTimestamp(),
-            messageId: messageId || null,
-            readBy: messageData.readBy || {},
-            deliveredTo: messageData.deliveredTo || {}
-        };
-        updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
-
-        const isSilentMessage = messageData.type === MessageType.SYSTEM || messageData.type === MessageType.CALL;
-
-        for (const memberId of memberIds) {
-            updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = getRtdbServerTimestamp();
-            updates[`user_chats/${memberId}/${convId}/updatedAt`] = getRtdbServerTimestamp();
-            if (memberId !== senderId) {
-                if (!isSilentMessage) {
-                    updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
-                }
-                updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
+    for (const memberId of memberIds) {
+        updates[`user_chats/${memberId}/${convId}/lastMsgTimestamp`] = getRtdbServerTimestamp();
+        updates[`user_chats/${memberId}/${convId}/updatedAt`] = getRtdbServerTimestamp();
+        if (memberId !== senderId) {
+            if (!isSilentMessage) {
+                updates[`user_chats/${memberId}/${convId}/unreadCount`] = increment(1);
             }
+            updates[`user_chats/${memberId}/${convId}/isArchived`] = false;
         }
-
-        await update(ref(rtdb), updates);
-    } catch (error) {
-        console.error('[rtdbMessageService] Lỗi updateConversationAfterMessage:', error);
     }
+
+    return updates;
 }
 
 export async function createAndSendMediaMessage(
@@ -225,12 +222,17 @@ export async function createAndSendMediaMessage(
         media: [mediaObject]
     };
 
-    await updateConversationAfterMessage(convId, senderId, finalMessageData, options.displayContent, msgId);
-    await set(newMsgRef, {
+    const conversation = await ensureConversationExists(convId, senderId);
+    if (!conversation) throw new Error('Conversation not found');
+
+    const updates = getConversationUpdatePaths(convId, senderId, finalMessageData, options.displayContent, conversation, msgId);
+    updates[`messages/${convId}/${msgId}`] = {
         ...finalMessageData,
         createdAt: getRtdbServerTimestamp(),
         updatedAt: getRtdbServerTimestamp()
-    });
+    };
+
+    await update(ref(rtdb), updates);
 
     return msgId;
 }
@@ -321,12 +323,17 @@ export async function createAndSendMediaAlbumMessage(
         const media = await Promise.all(mediaUploads);
         const finalMessageData = { ...messageData, media };
 
-        await updateConversationAfterMessage(convId, senderId, finalMessageData, options.displayContent, msgId);
-        await set(newMsgRef, {
+        const conversation = await ensureConversationExists(convId, senderId);
+        if (!conversation) throw new Error('Conversation not found');
+
+        const updates = getConversationUpdatePaths(convId, senderId, finalMessageData, options.displayContent, conversation, msgId);
+        updates[`messages/${convId}/${msgId}`] = {
             ...finalMessageData,
             createdAt: getRtdbServerTimestamp(),
             updatedAt: getRtdbServerTimestamp()
-        });
+        };
+
+        await update(ref(rtdb), updates);
     } catch (error) {
         options.onProgressWithId?.(msgId, {
             progress: 0,

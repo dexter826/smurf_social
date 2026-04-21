@@ -117,7 +117,17 @@ export const generateFriendSuggestions = onCall(
 
         const myVector = userData.userVector;
         const friendIds = await loadFriendIds(userId);
-        const blockedIds = await loadBlockedIds(userId);
+        const myBlockedIds = await loadBlockedIds(userId);
+        
+        // Lấy danh sách những người đã chặn mình (collectionGroup)
+        const blockedMeSnap = await db.collectionGroup('blockedUsers')
+            .where('blockedUid', '==', userId)
+            .get();
+        
+        const blockedIds = new Set([
+            ...Array.from(myBlockedIds),
+            ...blockedMeSnap.docs.map(d => d.ref.parent.parent!.id)
+        ]);
         
         const cachedSuggestions = userData.suggestedFriends as Array<{ id: string; mutualCount: number }> || [];
         const lastUpdated = userData.suggestionsLastUpdated;

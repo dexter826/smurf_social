@@ -64,15 +64,6 @@ export const useProfile = () => {
       return;
     }
 
-    // Kiểm tra cài đặt của chính mình nếu là người lạ
-    const isFriend = friendStatus === FriendStatus.FRIEND;
-    if (!isFriend && !bypassSettingsCheck) {
-      const { settings } = useAuthStore.getState();
-      if (settings && !settings.allowMessagesFromStrangers) {
-        setShowPrivacyConfirm(true);
-        return;
-      }
-    }
 
     try {
       const convId = getDirectConversationId(currentUser.id, profile.id);
@@ -81,20 +72,8 @@ export const useProfile = () => {
       console.error('[handleMessage] Lỗi:', error);
       toast.error("Không thể khởi tạo cuộc trò chuyện.");
     }
-  }, [currentUser, profile, navigate, friendStatus]);
+  }, [currentUser, profile, navigate, block.isMessageBlockedByPartner]);
 
-  const confirmEnablePrivacy = useCallback(async () => {
-    if (!currentUser) return;
-    try {
-      await userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: true });
-      useAuthStore.getState().updateSettings({ allowMessagesFromStrangers: true });
-      setShowPrivacyConfirm(false);
-      // Tiếp tục nhắn tin
-      handleMessage(true);
-    } catch (error) {
-      toast.error("Không thể cập nhật cài đặt.");
-    }
-  }, [currentUser, handleMessage]);
 
   const handleSaveProfile = useCallback(async (data: Partial<User>) => {
     if (!profile) return;
@@ -125,9 +104,6 @@ export const useProfile = () => {
     loadProfile,
     handleMessage,
     handleSaveProfile,
-    showPrivacyConfirm,
-    setShowPrivacyConfirm,
-    confirmEnablePrivacy,
 
     // Friend
     friendStatus: friend.friendStatus,

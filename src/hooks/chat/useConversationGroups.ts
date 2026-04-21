@@ -70,8 +70,35 @@ export const useConversationGroups = ({
     if (activeFilter === 'group') {
       return filteredList.filter(c => c.data.isGroup);
     }
-    return filteredList;
-  }, [viewMode, friendConversations, conversations, activeFilter]);
+    
+    if (activeFilter === 'stranger') {
+      return requestConversations.filter(conv => {
+        const clearedAt = conv.userChat?.clearedAt || 0;
+        const lastMsgTimestamp = conv.data.lastMessage?.timestamp || conv.data.updatedAt || 0;
+        return !(clearedAt > 0 && lastMsgTimestamp <= clearedAt);
+      });
+    }
+
+    // Tab Chính (all) hiện tại chỉ hiện filteredList (không bao gồm người lạ)
+    const allConversations = filteredList;
+
+    return allConversations.sort((a, b) => {
+      const isAPinned = a.userChat?.isPinned ?? false;
+      const isBPinned = b.userChat?.isPinned ?? false;
+      if (isAPinned && !isBPinned) return -1;
+      if (!isAPinned && isBPinned) return 1;
+      return (b.userChat?.lastMsgTimestamp || b.data.updatedAt || 0) - (a.userChat?.lastMsgTimestamp || a.data.updatedAt || 0);
+    });
+  }, [viewMode, friendConversations, conversations, activeFilter, requestConversations]);
+
+  const strangerUnreadCount = useMemo(() => {
+    return requestConversations.reduce((sum, conv) => {
+      const clearedAt = conv.userChat?.clearedAt || 0;
+      const lastMsgTimestamp = conv.data.lastMessage?.timestamp || conv.data.updatedAt || 0;
+      if (clearedAt > 0 && lastMsgTimestamp <= clearedAt) return sum;
+      return sum + (conv.userChat?.unreadCount || 0);
+    }, 0);
+  }, [requestConversations]);
 
   return {
     friendConversations,
@@ -80,6 +107,7 @@ export const useConversationGroups = ({
       const lastMsgTimestamp = conv.data.lastMessage?.timestamp || conv.data.updatedAt || 0;
       return !(clearedAt > 0 && lastMsgTimestamp <= clearedAt);
     }),
-    displayConversations
+    displayConversations,
+    strangerUnreadCount
   };
 };

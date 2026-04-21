@@ -2,7 +2,7 @@ import { ref, set, get, update, push, increment } from 'firebase/database';
 import { rtdb } from '../../../firebase/config';
 import { RtdbMessage, RtdbConversation, MessageType } from '../../../../shared/types';
 import { TIME_LIMITS } from '../../../constants';
-import { updateConversationAfterMessage } from './messageHelpers';
+import { getConversationUpdatePaths, ensureConversationExists } from './messageHelpers';
 import { getRtdbServerTimestamp, getServerSyncedNow } from '../chatTime';
 
 export const messageActionService = {
@@ -21,12 +21,12 @@ export const messageActionService = {
                 throw new Error('Chỉ người gửi mới được thu hồi tin nhắn');
             }
 
-            await update(msgRef, {
-                content: '',
-                media: [],
-                isRecalled: true,
-                updatedAt: getRtdbServerTimestamp()
-            });
+            const updates: Record<string, any> = {
+                [`messages/${convId}/${msgId}/content`]: '',
+                [`messages/${convId}/${msgId}/media`]: [],
+                [`messages/${convId}/${msgId}/isRecalled`]: true,
+                [`messages/${convId}/${msgId}/updatedAt`]: getRtdbServerTimestamp()
+            };
 
             const convRef = ref(rtdb, `conversations/${convId}`);
             const convSnap = await get(convRef);
@@ -34,12 +34,12 @@ export const messageActionService = {
             if (convSnap.exists()) {
                 const conv = convSnap.val() as RtdbConversation;
                 if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
-                    await update(convRef, {
-                        'lastMessage/content': 'Tin nhắn đã thu hồi',
-                        updatedAt: getRtdbServerTimestamp()
-                    });
+                    updates[`conversations/${convId}/lastMessage/content`] = 'Tin nhắn đã thu hồi';
+                    updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
                 }
             }
+
+            await update(ref(rtdb), updates);
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi recallMessage:', error);
             throw error;
@@ -80,11 +80,24 @@ export const messageActionService = {
                 );
             }
 
-            await update(msgRef, {
-                content: newContent,
-                isEdited: true,
-                updatedAt: getRtdbServerTimestamp()
-            });
+            const updates: Record<string, any> = {
+                [`messages/${convId}/${msgId}/content`]: newContent,
+                [`messages/${convId}/${msgId}/isEdited`]: true,
+                [`messages/${convId}/${msgId}/updatedAt`]: getRtdbServerTimestamp()
+            };
+
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+
+            if (convSnap.exists()) {
+                const conv = convSnap.val() as RtdbConversation;
+                if (conv.lastMessage && conv.lastMessage.messageId === msgId) {
+                    updates[`conversations/${convId}/lastMessage/content`] = newContent;
+                    updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
+                }
+            }
+
+            await update(ref(rtdb), updates);
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi editMessage:', error);
             throw error;
@@ -138,12 +151,17 @@ export const messageActionService = {
                 }
             }
 
-            await updateConversationAfterMessage(targetConvId, senderId, messageData, displayContent, msgId);
-            await set(newMsgRef, {
+            const conversation = await ensureConversationExists(targetConvId, senderId);
+            if (!conversation) throw new Error('Conversation not found');
+
+            const updates = getConversationUpdatePaths(targetConvId, senderId, messageData, displayContent, conversation, msgId);
+            updates[`messages/${targetConvId}/${msgId}`] = {
                 ...messageData,
                 createdAt: getRtdbServerTimestamp(),
                 updatedAt: getRtdbServerTimestamp()
-            });
+            };
+
+            await update(ref(rtdb), updates);
 
             return msgId;
         } catch (error) {

@@ -83,26 +83,20 @@ export const messageStatusService = {
                 }
             });
 
-            if (hasUpdates) {
-                await update(ref(rtdb), updates);
-            }
-
             const lastMsgPath = `conversations/${convId}/lastMessage`;
             const lastMsgSnap = await get(ref(rtdb, lastMsgPath));
 
             if (lastMsgSnap.exists()) {
                 const lastMsg = lastMsgSnap.val();
                 if (lastMsg.senderId !== uid && !lastMsg.deliveredTo?.[uid]) {
-                    await update(ref(rtdb, lastMsgPath), {
-                        [`deliveredTo/${uid}`]: getRtdbServerTimestamp()
-                    });
+                    updates[`${lastMsgPath}/deliveredTo/${uid}`] = getRtdbServerTimestamp();
+                    hasUpdates = true;
                 }
             }
 
             if (hasUpdates) {
-                await update(ref(rtdb), {
-                    [`conversations/${convId}/updatedAt`]: getRtdbServerTimestamp()
-                });
+                updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
+                await update(ref(rtdb), updates);
             }
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi markAsDelivered:', error);

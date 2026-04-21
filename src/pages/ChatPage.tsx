@@ -42,8 +42,8 @@ const ChatPage: React.FC = () => {
     addToSearchHistory, removeFromSearchHistory, clearSearchHistory,
     getOrCreateConversation, setIsChatVisible,
     isLoadingMore, hasMoreMessages, handleLoadMoreMessages,
-    friendRequestStatus, canCall, receivedRequests, participants,
-    isStrangerBlocking, handleMarkAsRead,
+    friendRequestStatus, canCall, receivedRequests, sentRequests, participants,
+    handleMarkAsRead, isLoadingSettings,
   } = useChat();
 
   const isSearching = useLoadingStore(state => state.loadingStates['contacts.search']);
@@ -75,48 +75,15 @@ const ChatPage: React.FC = () => {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
-  const [pendingUser, setPendingUser] = useState<User | null>(null);
 
   const handleSelectUserFromSearch = (user: User, bypassSettingsCheck: boolean = false) => {
     if (!currentUser) return;
     
-    // Kiểm tra nếu là người lạ
-    const isFriend = friendIds.includes(user.id);
-    if (!isFriend && !bypassSettingsCheck) {
-      const { settings } = useAuthStore.getState();
-      if (settings && !settings.allowMessagesFromStrangers) {
-        setPendingUser(user);
-        setShowPrivacyConfirm(true);
-        return;
-      }
-    }
-
     addToSearchHistory(user);
     getOrCreateConversation(currentUser.id, user.id);
     setSearchFocused(false);
   };
 
-  const confirmEnablePrivacy = () => {
-    if (!currentUser) return;
-    try {
-      useAuthStore.getState().updateSettings({ allowMessagesFromStrangers: true });
-      
-      import('../services/userService').then(({ userService }) => {
-        userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: true });
-      });
-      
-      setShowPrivacyConfirm(false);
-      
-      if (pendingUser) {
-        const userToMessage = pendingUser;
-        setPendingUser(null);
-        handleSelectUserFromSearch(userToMessage, true);
-      }
-    } catch (error) {
-      toast.error("Không thể cập nhật cài đặt.");
-    }
-  };
 
   const openBlockModal = (partnerId?: string, partnerName?: string) => {
     if (partnerId && partnerName) {
@@ -171,6 +138,16 @@ const ChatPage: React.FC = () => {
   const handleAcceptFriendRequest = async (userId: string) => {
     const request = receivedRequests.find(r => r.senderId === userId);
     if (request) await friendService.acceptFriendRequest(request.id, request.senderId, currentUser.id);
+  };
+
+  const handleDeclineFriendRequest = async (userId: string) => {
+    const request = receivedRequests.find(r => r.senderId === userId);
+    if (request) await friendService.rejectFriendRequest(request.id);
+  };
+
+  const handleCancelFriendRequest = async (userId: string) => {
+    const request = sentRequests.find(r => r.receiverId === userId);
+    if (request) await friendService.cancelFriendRequest(request.id);
   };
 
   const handleBackToList = () => {
@@ -239,6 +216,8 @@ const ChatPage: React.FC = () => {
               onEdit={(msg) => { setEditingMessage(msg); setReplyingTo(null); }}
               onAddFriend={handleSendFriendRequest}
               onAcceptFriend={handleAcceptFriendRequest}
+              onDeclineFriend={handleDeclineFriendRequest}
+              onCancelFriend={handleCancelFriendRequest}
               onBlock={openBlockModal}
               isLoading={isLoading}
               isLoadingMore={isLoadingMore}
@@ -269,8 +248,6 @@ const ChatPage: React.FC = () => {
               blockedMessage={blockedMessage}
               onManageBlock={openBlockModal}
               isBlockedByMe={isBlockedByMe}
-              isStrangerBlocking={isStrangerBlocking}
-              onEnableStrangerMessaging={confirmEnablePrivacy}
               replyingTo={replyingTo}
               editingMessage={editingMessage}
               currentUserId={currentUser.id}
@@ -282,6 +259,7 @@ const ChatPage: React.FC = () => {
               onCancelAction={() => { setReplyingTo(null); setEditingMessage(null); }}
               onEditMessage={editingMessage ? (text) => handleEditMessage(editingMessage.id, text) : undefined}
               conversationId={selectedConversationId}
+              isLoadingSettings={isLoadingSettings}
             />
           </>
         ) : (
@@ -412,14 +390,6 @@ const ChatPage: React.FC = () => {
         />
       )}
 
-      <ConfirmDialog
-        isOpen={showPrivacyConfirm}
-        onClose={() => { setShowPrivacyConfirm(false); setPendingUser(null); }}
-        onConfirm={confirmEnablePrivacy}
-        title="Bật nhận tin nhắn từ người lạ"
-        message="Bạn đang tắt nhận tin nhắn từ người lạ. Hệ thống sẽ bật lại cài đặt này để bạn có thể nhắn tin cho người này. Bạn có đồng ý không?"
-        confirmLabel="Đồng ý"
-      />
     </div>
   );
 };

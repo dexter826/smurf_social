@@ -56,11 +56,20 @@ export const ConversationList = React.memo<ConversationListProps>(({
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
-  const { friendConversations, requestConversations, displayConversations } = useConversationGroups({
+  const { 
+    friendConversations, 
+    requestConversations, 
+    displayConversations,
+    strangerUnreadCount
+  } = useConversationGroups({
     conversations, currentUserId, currentUserFriendIds,
     viewMode: (viewMode || 'normal') as 'normal' | 'archived',
     activeFilter,
   });
+
+  const filterBadges = {
+    stranger: strangerUnreadCount > 0 ? strangerUnreadCount : undefined
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -130,7 +139,7 @@ export const ConversationList = React.memo<ConversationListProps>(({
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             onMarkAllRead={onMarkAllRead}
-            strangerCount={requestConversations.filter(c => (c.userChat?.unreadCount || 0) > 0).length}
+            badges={filterBadges}
           />
         ) : (
           <div className="flex-shrink-0 flex items-center px-4 h-10 bg-bg-secondary border-b border-border-light">
@@ -188,18 +197,15 @@ export const ConversationList = React.memo<ConversationListProps>(({
           </div>
         ) : (
           <div className="py-1">
-            {/* Stranger tab */}
-            {activeFilter === 'stranger' ? (
-              requestConversations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-8">
-                  <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-                    <Users size={22} className="text-text-tertiary" />
-                  </div>
-                  <p className="text-sm text-text-secondary">Không có tin nhắn từ người lạ</p>
+            {displayConversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-8">
+                <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
+                  <Users size={22} className="text-text-tertiary" />
                 </div>
-              ) : (
-                requestConversations.map(renderConversationItem)
-              )
+                <p className="text-sm text-text-secondary">
+                  {activeFilter === 'stranger' ? 'Không có tin nhắn chờ' : 'Không có cuộc trò chuyện nào'}
+                </p>
+              </div>
             ) : (
               displayConversations.map(renderConversationItem)
             )}

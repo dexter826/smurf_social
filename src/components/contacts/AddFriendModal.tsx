@@ -9,6 +9,7 @@ import { useRtdbChatStore } from '../../store';
 import { toast } from '../../store/toastStore';
 import { userService } from '../../services/userService';
 import { User, FriendStatus } from '../../../shared/types';
+import { TOAST_MESSAGES } from '../../constants';
 
 interface AddFriendModalProps {
   isOpen: boolean;
@@ -63,34 +64,44 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
 
   const handleAddFriend = () => withLoading(async () => {
     if (!foundUser || !currentUser) return;
-    await sendFriendRequest(currentUser.id, foundUser.id);
+    try {
+      await sendFriendRequest(currentUser.id, foundUser.id);
+      toast.success(TOAST_MESSAGES.FRIEND.SEND_SUCCESS);
+    } catch (error: any) {
+      toast.error(TOAST_MESSAGES.FRIEND.ACTION_FAILED(error.message));
+    }
   });
 
   const handleCancelRequest = () => withLoading(async () => {
     if (!foundUser || !currentUser) return;
     const request = sentRequests.find(r => r.receiverId === foundUser.id);
-    if (request) await cancelFriendRequest(request.id);
+    if (request) {
+      try {
+        await cancelFriendRequest(request.id);
+        toast.success(TOAST_MESSAGES.FRIEND.CANCEL_SUCCESS);
+      } catch (error: any) {
+        toast.error(TOAST_MESSAGES.FRIEND.ACTION_FAILED(error.message));
+      }
+    }
   });
 
   const handleAcceptRequest = () => withLoading(async () => {
     if (!foundUser || !currentUser) return;
     const request = receivedRequests.find(r => r.senderId === foundUser.id);
-    if (request) await acceptFriendRequest(request.id, request.senderId, currentUser.id);
+    if (request) {
+      try {
+        await acceptFriendRequest(request.id, request.senderId, currentUser.id);
+        toast.success(TOAST_MESSAGES.FRIEND.ACCEPT_SUCCESS);
+      } catch (error: any) {
+        toast.error(TOAST_MESSAGES.FRIEND.ACTION_FAILED(error.message));
+      }
+    }
   });
 
-  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
 
   const handleMessage = (bypassSettingsCheck: boolean = false) => {
     if (!foundUser || !currentUser) return;
 
-    // Kiểm tra cài đặt của chính mình nếu là người lạ
-    if (relationship !== FriendStatus.FRIEND && !bypassSettingsCheck) {
-      const { settings } = useAuthStore.getState();
-      if (settings && !settings.allowMessagesFromStrangers) {
-        setShowPrivacyConfirm(true);
-        return;
-      }
-    }
 
     try {
       const convId = getOrCreateConversation(currentUser.id, foundUser.id);
@@ -102,17 +113,6 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
     }
   };
 
-  const confirmEnablePrivacy = () => {
-    if (!currentUser) return;
-    try {
-      userService.updateUserSettings(currentUser.id, { allowMessagesFromStrangers: true });
-      useAuthStore.getState().updateSettings({ allowMessagesFromStrangers: true });
-      setShowPrivacyConfirm(false);
-      handleMessage(true);
-    } catch (error) {
-      toast.error("Không thể cập nhật cài đặt.");
-    }
-  };
 
   const handleViewProfile = () => {
     if (!foundUser) return;
@@ -252,14 +252,6 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
         </div>
       </div>
       
-      <ConfirmDialog
-        isOpen={showPrivacyConfirm}
-        onClose={() => setShowPrivacyConfirm(false)}
-        onConfirm={confirmEnablePrivacy}
-        title="Bật nhận tin nhắn từ người lạ"
-        message="Bạn đang tắt nhận tin nhắn từ người lạ. Hệ thống sẽ bật lại cài đặt này để bạn có thể nhắn tin cho người này. Bạn có đồng ý không?"
-        confirmLabel="Đồng ý"
-      />
     </Modal>
   );
 };

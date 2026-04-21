@@ -6,6 +6,8 @@ import { User, BlockOptions, UserSettings, Visibility, Generation, MediaObject }
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
 import { friendService } from "../services/friendService";
+import { isFullyBlocked } from "../utils/blockUtils";
+import { collection } from 'firebase/firestore';
 
 const DEFAULT_SETTINGS: UserSettings = {
   showOnlineStatus: true,
@@ -19,6 +21,9 @@ import { presenceService } from "../services/presenceService";
 import { resetAllStores } from "./storeUtils";
 import { useUserCache } from "./userCacheStore";
 import { useLoadingStore } from "./loadingStore";
+import { usePostStore } from "./posts";
+import { useRtdbChatStore } from "./rtdbChatStore";
+import { getDirectConversationId } from "../utils/chatUtils";
 
 interface AuthState {
   user: User | null;
@@ -242,8 +247,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     if (action === "add" && options) {
       set({ blockedUsers: { ...blockedUsers, [targetUserId]: options } });
+      
+      if (options.hideTheirActivity || options.blockViewMyActivity) {
+        usePostStore.getState().filterPostsByAuthor(targetUserId);
+      }
+      
+      if (options.blockMessages) {
+        const directConvId = getDirectConversationId(user.id, targetUserId);
+        const chatStore = useRtdbChatStore.getState();
+        if (chatStore.selectedConversationId === directConvId) {
+          chatStore.selectConversation(null);
+        }
+      }
+
       try {
         await userService.blockUser(user.id, targetUserId, options);
+        
+        if (isFullyBlocked(options)) {
+          await friendService.unfriend(user.id, targetUserId);
+        }
       } catch (error) {
         set({ blockedUsers: previousBlocked });
         throw error;
@@ -286,10 +308,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: () => {
     let userUnsubscribe: (() => void) | null = null;
     let settingsUnsubscribe: (() => void) | null = null;
+    let blockUnsubscribe: (() => void) | null = null;
 
     const setupSubscriptions = (uid: string) => {
       if (userUnsubscribe) userUnsubscribe();
       if (settingsUnsubscribe) settingsUnsubscribe();
+      if (blockUnsubscribe) blockUnsubscribe();
 
       userUnsubscribe = userService.subscribeToUser(
         uid,
@@ -319,6 +343,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }
         }
       );
+
+      blockUnsubscribe = onSnapshot(
+        collection(db, 'users', uid, 'blockedUsers'),
+        (snapshot) => {
+          const blockedUsers: Record<string, BlockOptions> = {};
+          snapshot.forEach(doc => {
+            blockedUsers[doc.id] = doc.data() as BlockOptions;
+          });
+          set({ blockedUsers });
+        }
+      );
     };
 
     (set as any)({ _setupUserSubscription: setupSubscriptions });
@@ -326,6 +361,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
       if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
+      if (blockUnsubscribe) { blockUnsubscribe(); blockUnsubscribe = null; }
 
       if (firebaseUser) {
         if (!firebaseUser.emailVerified) {
@@ -383,6 +419,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       authUnsubscribe();
       if (userUnsubscribe) userUnsubscribe();
       if (settingsUnsubscribe) settingsUnsubscribe();
+      if (blockUnsubscribe) blockUnsubscribe();
     };
   },
 }));

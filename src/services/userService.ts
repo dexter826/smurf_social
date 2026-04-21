@@ -253,6 +253,38 @@ export const userService = {
     }
   },
 
+  // Lấy thông tin chặn cụ thể
+  getBlockEntry: async (userId: string, targetId: string): Promise<BlockedUserEntry | null> => {
+    try {
+      const docSnap = await getDoc(doc(db, 'users', userId, 'blockedUsers', targetId));
+      if (docSnap.exists()) {
+        return docSnap.data() as BlockedUserEntry;
+      }
+      return null;
+    } catch (error) {
+      console.error('Lỗi lấy thông tin chặn:', error);
+      return null;
+    }
+  },
+
+  // Kiểm tra hàng loạt xem danh sách chặn
+  checkMultipleBlockStatuses: async (partnerIds: string[], currentUserId: string): Promise<Record<string, BlockOptions>> => {
+    try {
+      const results: Record<string, BlockOptions> = {};
+      const promises = partnerIds.map(async (partnerId) => {
+        const snap = await getDoc(doc(db, 'users', partnerId, 'blockedUsers', currentUserId));
+        if (snap.exists()) {
+          results[partnerId] = snap.data() as BlockOptions;
+        }
+      });
+      await Promise.allSettled(promises);
+      return results;
+    } catch (error) {
+      console.error('Lỗi checkMultipleBlockStatuses:', error);
+      return {};
+    }
+  },
+
   // Chặn người dùng
   blockUser: async (userId: string, blockedUserId: string, options: BlockOptions): Promise<void> => {
     try {

@@ -19,6 +19,9 @@ import { db, functions } from '../firebase/config';
 import { FriendRequest, FriendRequestStatus, User } from '../../shared/types';
 import { convertDoc, convertDocs } from '../utils/firebaseUtils';
 import { batchGetUsers } from '../utils/batchUtils';
+import { userService } from './userService';
+import { isFullyBlocked } from '../utils/blockUtils';
+import { useUserCache } from '../store/userCacheStore';
 
 export const friendService = {
   // Kiểm tra yêu cầu kết bạn đang chờ
@@ -44,10 +47,8 @@ export const friendService = {
         throw new Error("Không thể gửi lời mời kết bạn cho chính mình");
       }
 
-      const [receiverSnap, receiverBlockedSnap, senderBlockedSnap, isFriendSnap] = await Promise.all([
+      const [receiverSnap, isFriendSnap] = await Promise.all([
         getDoc(doc(db, 'users', receiverId)),
-        getDoc(doc(db, 'users', receiverId, 'blockedUsers', senderId)),
-        getDoc(doc(db, 'users', senderId, 'blockedUsers', receiverId)),
         getDoc(doc(db, 'users', senderId, 'friends', receiverId)),
       ]);
 
@@ -55,6 +56,16 @@ export const friendService = {
       if ((receiverSnap.data() as any)?.status === 'banned') {
         throw new Error("Không thể gửi lời mời kết bạn cho người dùng này");
       }
+
+      const [blockToMe, blockByMe] = await Promise.all([
+        userService.getBlockEntry(receiverId, senderId),
+        userService.getBlockEntry(senderId, receiverId)
+      ]);
+
+      if ((blockToMe && isFullyBlocked(blockToMe)) || (blockByMe && isFullyBlocked(blockByMe))) {
+        throw new Error("Không thể kết bạn do cài đặt chặn hiện tại");
+      }
+
       if (isFriendSnap.exists()) {
         throw new Error("Hai người đã là bạn bè");
       }
@@ -162,6 +173,15 @@ export const friendService = {
 
   acceptFriendRequest: async (requestId: string, senderId: string, receiverId: string): Promise<void> => {
     try {
+      const [blockToMe, blockByMe] = await Promise.all([
+        userService.getBlockEntry(receiverId, senderId),
+        userService.getBlockEntry(senderId, receiverId)
+      ]);
+
+      if ((blockToMe && isFullyBlocked(blockToMe)) || (blockByMe && isFullyBlocked(blockByMe))) {
+        throw new Error("Không thể chấp nhận kết bạn do cài đặt chặn hiện tại");
+      }
+
       const batch = writeBatch(db);
       const now = serverTimestamp();
 
@@ -261,8 +281,13 @@ export const friendService = {
       }
 
       try {
-        const friendsMap = await batchGetUsers(friendIds);
-        callback(Object.values(friendsMap));
+        await useUserCache.getState().fetchUsers(friendIds);
+        const cachedUsers = useUserCache.getState().users;
+        const friends = friendIds
+          .map(id => cachedUsers[id])
+          .filter((u): u is User => Boolean(u) && u.status !== 'banned');
+        
+        callback(friends);
       } catch (error) {
         console.error("Lỗi fetch friends realtime", error);
       }
@@ -327,7 +352,11 @@ export const friendService = {
 
   getCachedSuggestions: async (userId: string): Promise<User[]> => {
     try {
-      const userSnap = await getDoc(doc(db, 'users', userId));
+      const [userSnap, blockedUsersMap] = await Promise.all([
+        getDoc(doc(db, 'users', userId)),
+        userService.getBlockedUsers(userId)
+      ]);
+
       if (!userSnap.exists()) return [];
 
       const suggestions = userSnap.data()?.suggestedFriends || [];
@@ -338,7 +367,11 @@ export const friendService = {
       const usersMap = await batchGetUsers(suggestedIds);
       return suggestedIds
         .map(id => usersMap[id])
-        .filter((u): u is User => Boolean(u) && u.status !== 'banned');
+        .filter((u): u is User => 
+          Boolean(u) && 
+          u.status !== 'banned' && 
+          !blockedUsersMap[u.id] // Lọc những người mình đã chặn
+        );
     } catch (error) {
       console.error("Lỗi lấy gợi ý kết bạn đã cache", error);
       return [];

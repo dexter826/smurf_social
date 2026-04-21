@@ -7,16 +7,16 @@ interface ConversationFiltersProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
   onMarkAllRead?: () => void;
-  strangerCount?: number;
+  badges?: Partial<Record<FilterType, number>>;
 }
 
 export const ConversationFilters: React.FC<ConversationFiltersProps> = ({
-  activeFilter, onFilterChange, onMarkAllRead, strangerCount = 0,
+  activeFilter, onFilterChange, onMarkAllRead, badges = {},
 }) => {
   const filters: { id: FilterType; label: string; badge?: number }[] = [
-    { id: 'all', label: 'Tất cả' },
-    { id: 'group', label: 'Nhóm' },
-    { id: 'stranger', label: 'Người lạ', badge: strangerCount },
+    { id: 'all', label: 'Chính', badge: badges.all },
+    { id: 'group', label: 'Nhóm', badge: badges.group },
+    { id: 'stranger', label: 'Người lạ', badge: badges.stranger },
   ];
 
   return (

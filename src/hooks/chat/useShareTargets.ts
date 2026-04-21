@@ -3,7 +3,8 @@ import { useRtdbChatStore } from '../../store';
 import { useUserCache } from '../../store/userCacheStore';
 import { useAuthStore } from '../../store/authStore';
 import { friendService } from '../../services/friendService';
-import { RtdbConversation, RtdbUserChat, User, UserStatus } from '../../../shared/types';
+import { userService } from '../../services/userService';
+import { BlockOptions, RtdbConversation, RtdbUserChat, User, UserStatus } from '../../../shared/types';
 import { getDirectConversationId } from '../../utils/chatUtils';
 import { PAGINATION } from '../../constants';
 
@@ -19,6 +20,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
   const { users: usersMap, fetchUsers } = useUserCache();
   const blockedUsers = useAuthStore(state => state.blockedUsers);
   const [allFriends, setAllFriends] = useState<User[]>([]);
+  const [blockedByPartners, setBlockedByPartners] = useState<Record<string, BlockOptions>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Load cache thông tin thành viên trong hội thoại
@@ -53,6 +55,31 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
     loadFriends();
   }, [isOpen, currentUserId]);
 
+  // Load thông tin những người chặn mình (để chặn 2 chiều)
+  useEffect(() => {
+    if (!isOpen) {
+      setBlockedByPartners({});
+      return;
+    }
+
+    const loadBlockedBy = async () => {
+      const partnerIds = conversations
+        .filter(c => !c.data.isGroup)
+        .map(c => Object.keys(c.data.members).find(id => id !== currentUserId))
+        .filter((id): id is string => !!id);
+      
+      const friendIds = allFriends.map(f => f.id);
+      const allTargetIds = Array.from(new Set([...partnerIds, ...friendIds]));
+
+      if (allTargetIds.length > 0) {
+        const results = await userService.checkMultipleBlockStatuses(allTargetIds, currentUserId);
+        setBlockedByPartners(results);
+      }
+    };
+
+    loadBlockedBy();
+  }, [isOpen, conversations, allFriends, currentUserId]);
+
   // Tổng hợp danh sách có thể chia sẻ
   const shareableItems = useMemo(() => {
     // 1. Lọc các hội thoại hợp lệ
@@ -62,9 +89,10 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
         const partnerId = Object.keys(conv.data.members).find(id => id !== currentUserId);
         if (!partnerId) return false;
         
-        // Loại bỏ nếu mình đã chặn nhắn tin người kia
+        // Loại bỏ nếu mình đã chặn nhắn tin người kia hoặc họ chặn mình
         const isBlockedByMe = !!blockedUsers[partnerId]?.blockMessages;
-        if (isBlockedByMe) return false;
+        const isBlockedByPartner = !!blockedByPartners[partnerId]?.blockMessages;
+        if (isBlockedByMe || isBlockedByPartner) return false;
         
         const partner = usersMap[partnerId];
         if (partner?.status === UserStatus.BANNED) return false;
@@ -91,7 +119,8 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
       .filter(friend => !existingChatPartnerIds.has(friend.id))
       .filter(friend => {
         const blocked = blockedUsers[friend.id];
-        return !blocked?.blockMessages && friend.status !== UserStatus.BANNED;
+        const blockedBy = blockedByPartners[friend.id];
+        return !blocked?.blockMessages && !blockedBy?.blockMessages && friend.status !== UserStatus.BANNED;
       })
       .map(friend => ({
         type: 'friend',
@@ -99,16 +128,20 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
         item: friend
       }));
 
-    return [...convEntries, ...friendEntries];
-  }, [conversations, allFriends, currentUserId, blockedUsers, usersMap]);
+    return {
+      allItems: [...convEntries, ...friendEntries],
+      recentItems: convEntries,
+      friendItems: friendEntries
+    };
+  }, [conversations, allFriends, currentUserId, blockedUsers, blockedByPartners, usersMap]);
 
   // Filter theo search term
   const filteredItems = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     
-    let results = shareableItems;
+    let results = shareableItems.allItems;
     if (normalizedSearch) {
-      results = shareableItems.filter(entry => {
+      results = shareableItems.allItems.filter(entry => {
         if (entry.type === 'conversation') {
           const conversation = entry.item.data;
           if (conversation.isGroup) {
@@ -127,7 +160,13 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
 
     const limit = normalizedSearch ? PAGINATION.SHARE_SEARCH_LIMIT : PAGINATION.SHARE_MODAL_LIMIT;
     return results.slice(0, limit);
-  }, [searchTerm, shareableItems, currentUserId, usersMap]);
+  }, [searchTerm, shareableItems.allItems, currentUserId, usersMap]);
 
-  return { filteredItems, isLoading, usersMap };
+  return { 
+    filteredItems, 
+    recentItems: shareableItems.recentItems,
+    friendItems: shareableItems.friendItems,
+    isLoading, 
+    usersMap 
+  };
 };

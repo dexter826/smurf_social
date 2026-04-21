@@ -48,12 +48,6 @@ service cloud.firestore {
       return theyBlockedMyView(contentOwnerId) || iHideTheirActivity(contentOwnerId);
     }
 
-    function isBlockedEitherWay(otherUserId) {
-      return isAuthenticated() && (
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(otherUserId)) && get(/databases/$(database)/documents/users/$(request.auth.uid)/blockedUsers/$(otherUserId)).data.blockViewMyActivity == true) ||
-        (exists(/databases/$(database)/documents/users/$(otherUserId)/blockedUsers/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(otherUserId)/blockedUsers/$(request.auth.uid)).data.blockViewMyActivity == true)
-      );
-    }
 
     function isFriend(userId) {
       return isAuthenticated() && exists(/databases/$(database)/documents/users/$(userId)/friends/$(request.auth.uid));
@@ -118,8 +112,7 @@ service cloud.firestore {
       );
       allow create: if isNotBanned() &&
         request.resource.data.senderId == request.auth.uid &&
-        request.resource.data.senderId != request.resource.data.receiverId &&
-        !isBlockedEitherWay(request.resource.data.receiverId);
+        request.resource.data.senderId != request.resource.data.receiverId;
       allow update, delete: if isAuthenticated() && (
         resource.data.senderId == request.auth.uid ||
         resource.data.receiverId == request.auth.uid

@@ -25,12 +25,14 @@ export const useChatBlock = ({
   partner,
   isGroup,
   usersMap,
+  conversation,
   isFriend = true,
 }: UseChatBlockProps) => {
   const [partnerStatus, setPartnerStatus] = useState<UserStatus | undefined>();
   const [isMessageBlockedByPartner, setIsMessageBlockedByPartner] = useState(false);
   const [isCallBlockedByPartner, setIsCallBlockedByPartner] = useState(false);
   const [isPartnerBlockingStrangers, setIsPartnerBlockingStrangers] = useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const { settings, blockedUsers: myBlockedUsers } = useAuthStore();
 
   const myBlockOptions = useMemo(() =>
@@ -38,12 +40,17 @@ export const useChatBlock = ({
     [partnerId, myBlockedUsers]
   );
 
-  const isBlockedByMe = !!myBlockOptions;
+  const isBlockedByMe = !!myBlockOptions?.blockMessages;
   const isMessageBlockedByMe = !!myBlockOptions?.blockMessages;
   const isCallBlockedByMe = !!myBlockOptions?.blockCalls;
+  const isFullyBlockedByMe = !!myBlockOptions && 
+    myBlockOptions.blockMessages && 
+    myBlockOptions.blockCalls && 
+    myBlockOptions.blockViewMyActivity && 
+    myBlockOptions.hideTheirActivity;
 
   const isBlocked = isMessageBlockedByMe || isMessageBlockedByPartner || partnerStatus === UserStatus.BANNED;
-  const shouldShowBlockBanner = isBlockedByMe;
+  const shouldShowBlockBanner = !!myBlockOptions;
 
   useEffect(() => {
     if (!partnerId) {
@@ -62,9 +69,11 @@ export const useChatBlock = ({
     if (!partnerId || !currentUser || isGroup) {
       setIsMessageBlockedByPartner(false);
       setIsCallBlockedByPartner(false);
+      setIsLoadingSettings(false);
       return;
     }
 
+    setIsLoadingSettings(true);
     const blockRef = doc(db, 'users', partnerId, 'blockedUsers', currentUser.id);
     const unsub = onSnapshot(blockRef, (snap) => {
       if (snap.exists()) {
@@ -82,6 +91,7 @@ export const useChatBlock = ({
   useEffect(() => {
     if (!partnerId || isGroup || isFriend || !currentUser) {
       setIsPartnerBlockingStrangers(false);
+      setIsLoadingSettings(false);
       return;
     }
 
@@ -93,37 +103,34 @@ export const useChatBlock = ({
       } else {
         setIsPartnerBlockingStrangers(false);
       }
+      setIsLoadingSettings(false);
     }, () => {
       setIsPartnerBlockingStrangers(false);
+      setIsLoadingSettings(false);
     });
 
     return () => unsub();
   }, [partnerId, isGroup, isFriend, currentUser]);
 
-  const { blockedMessage, isStrangerBlocking } = useMemo(() => {
+  const { blockedMessage } = useMemo(() => {
     if (!isGroup && partnerId) {
       const currentStatus = partnerStatus || partner?.status || usersMap[partnerId]?.status;
-      if (currentStatus === UserStatus.BANNED) return { blockedMessage: 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.', isStrangerBlocking: false };
-      if (isMessageBlockedByMe) return { blockedMessage: 'Bạn đã chặn liên lạc với người này. Bỏ chặn để gửi tin nhắn.', isStrangerBlocking: false };
-      if (isMessageBlockedByPartner) return { blockedMessage: 'Không thể gửi tin nhắn cho người dùng này.', isStrangerBlocking: false };
+      if (currentStatus === UserStatus.BANNED) return { blockedMessage: 'Không thể gửi tin nhắn - Người dùng này đã bị khóa tài khoản.' };
+      if (isMessageBlockedByMe) return { blockedMessage: 'Bạn đã chặn liên lạc với người này. Bỏ chặn để gửi tin nhắn.' };
+      if (isMessageBlockedByPartner) return { blockedMessage: 'Không thể gửi tin nhắn cho người dùng này.' };
       
       if (!isFriend) {
-        if (isPartnerBlockingStrangers) {
+        const isInitiator = !conversation || conversation.creatorId === currentUser?.id;
+        
+        if (isPartnerBlockingStrangers && isInitiator) {
           return {
             blockedMessage: 'Người dùng này không nhận tin nhắn từ người lạ.',
-            isStrangerBlocking: false
-          };
-        }
-        if (settings && !settings.allowMessagesFromStrangers) {
-          return {
-            blockedMessage: 'Bạn đang tắt nhận tin nhắn từ người lạ. Hãy bật lại để nhắn tin.',
-            isStrangerBlocking: true
           };
         }
       }
     }
-    return { blockedMessage: undefined, isStrangerBlocking: false };
-  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isMessageBlockedByMe, isMessageBlockedByPartner, isFriend, settings, isPartnerBlockingStrangers]);
+    return { blockedMessage: undefined };
+  }, [isGroup, partnerId, partnerStatus, partner, usersMap, isMessageBlockedByMe, isMessageBlockedByPartner, isFriend, isPartnerBlockingStrangers, conversation, currentUser]);
 
   const handleUnblock = useCallback(async (targetIdOverride?: string) => {
     const finalTargetId = targetIdOverride || partnerId;
@@ -174,6 +181,6 @@ export const useChatBlock = ({
     handleUnblock,
     blockedMessage,
     shouldShowBlockBanner,
-    isStrangerBlocking,
+    isLoadingSettings,
   };
 };

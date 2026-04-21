@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserPlus, Ban, MessageCircle, Clock, UserCheck } from 'lucide-react';
+import { UserPlus, Ban, MessageCircle, UserCheck, UserX, X } from 'lucide-react';
 import { Button } from '../../ui';
 
 type FriendRequestStatus = 'none' | 'sent' | 'received';
@@ -9,18 +9,20 @@ interface MessageRequestBannerProps {
   friendRequestStatus?: FriendRequestStatus;
   onAddFriend: () => void;
   onAcceptFriend?: () => void;
+  onDeclineFriend?: () => void;
+  onCancelFriend?: () => void;
   onBlock: () => void;
 }
 
 export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
   partnerName, friendRequestStatus = 'none',
-  onAddFriend, onAcceptFriend, onBlock,
+  onAddFriend, onAcceptFriend, onDeclineFriend, onCancelFriend, onBlock,
 }) => {
   const getMessage = () => {
     switch (friendRequestStatus) {
-      case 'sent': return `Đang chờ ${partnerName} chấp nhận lời mời kết bạn`;
-      case 'received': return `${partnerName} đã gửi lời mời kết bạn cho bạn`;
-      default: return `${partnerName} chưa có trong danh sách bạn bè của bạn`;
+      case 'sent': return `Đang chờ ${partnerName} chấp nhận kết bạn`;
+      case 'received': return `${partnerName} đã gửi lời mời kết bạn`;
+      default: return `${partnerName} chưa có trong danh sách bạn bè`;
     }
   };
 
@@ -29,10 +31,15 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
       case 'sent':
         return (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="flex items-center gap-1.5 text-xs text-text-secondary bg-bg-secondary px-3 py-1.5 rounded-full border border-border-light">
-              <Clock size={13} />
-              Đã gửi lời mời
-            </span>
+            <Button
+              onClick={onCancelFriend}
+              variant="ghost"
+              size="sm"
+              icon={<X size={15} />}
+              className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary"
+            >
+              Hủy lời mời
+            </Button>
             <Button
               onClick={onBlock}
               variant="ghost"
@@ -49,6 +56,15 @@ export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button onClick={onAcceptFriend} size="sm" icon={<UserCheck size={15} />}>
               Chấp nhận
+            </Button>
+            <Button
+              onClick={onDeclineFriend}
+              variant="ghost"
+              size="sm"
+              icon={<UserX size={15} />}
+              className="text-text-secondary hover:text-text-primary hover:bg-bg-secondary"
+            >
+              Từ chối
             </Button>
             <Button
               onClick={onBlock}

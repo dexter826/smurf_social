@@ -28,6 +28,8 @@ interface ChatBoxProps {
   onEdit?: (message: { id: string; data: RtdbMessage }) => void;
   onAddFriend?: (userId: string) => void;
   onAcceptFriend?: (userId: string) => void;
+  onDeclineFriend?: (userId: string) => void;
+  onCancelFriend?: (userId: string) => void;
   onBlock?: (userId: string) => void;
   isLoading?: boolean;
   isLoadingMore?: boolean;
@@ -52,7 +54,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   currentUserFriendIds = [], friendRequestStatus = 'none',
   usersMap, typingUsers, onBack, onInfoClick,
   onRecall, onDeleteForMe, onForward, onReply, onEdit,
-  onAddFriend, onAcceptFriend, onBlock,
+  onAddFriend, onAcceptFriend, onDeclineFriend, onCancelFriend, onBlock,
   isLoading, isLoadingMore, hasMoreMessages, onLoadMore,
   isBlocked = false, isBlockedByMe = false, partnerStatus,
   myBlockOptions, onUnblock, onManageBlock, shouldShowBlockBanner = false,
@@ -133,6 +135,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           friendRequestStatus={friendRequestStatus}
           onAddFriend={() => onAddFriend(partner.id)}
           onAcceptFriend={onAcceptFriend ? () => onAcceptFriend(partner.id) : undefined}
+          onDeclineFriend={onDeclineFriend ? () => onDeclineFriend(partner.id) : undefined}
+          onCancelFriend={onCancelFriend ? () => onCancelFriend(partner.id) : undefined}
           onBlock={() => onBlock(partner.id)}
         />
       )}

@@ -296,7 +296,7 @@ export const useChat = () => {
     handleApplyBlock: block.handleApplyBlock,
     handleUnblock: block.handleUnblock,
     shouldShowBlockBanner: block.shouldShowBlockBanner,
-    isStrangerBlocking: block.isStrangerBlocking,
+    isLoadingSettings: block.isLoadingSettings,
     friendRequestStatus,
     currentReceivedRequest,
     isFriend,

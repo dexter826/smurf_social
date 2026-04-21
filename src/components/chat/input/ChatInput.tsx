@@ -38,9 +38,8 @@ interface ChatInputProps {
   onDeleteConversation?: () => void;
   onManageBlock?: () => void;
   isBlockedByMe?: boolean;
-  isStrangerBlocking?: boolean;
-  onEnableStrangerMessaging?: () => void;
   conversationId?: string;
+  isLoadingSettings?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -50,9 +49,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   currentUserId, usersMap, participants = [],
   isGroup = false, isDisbanded = false,
   onDeleteConversation, onManageBlock, isBlockedByMe = false,
-  isStrangerBlocking = false,
-  onEnableStrangerMessaging,
-  conversationId,
+  conversationId, isLoadingSettings = false,
 }) => {
   const { saveDraft, clearDraft, draftMessages } = useRtdbChatStore();
   const [inputText, setInputText] = useState(() =>
@@ -357,6 +354,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const canSend = (inputText.trim() || selectedFiles.length > 0) && !blockedMessage;
 
+  if (isLoadingSettings) {
+    return (
+      <div className="flex-shrink-0 border-t border-border-light bg-bg-primary pb-safe h-[60px] flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   /* ── Blocked / disbanded state ── */
   if (blockedMessage || isDisbanded) {
     return (
@@ -382,11 +387,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             {!isDisbanded && onManageBlock && isBlockedByMe && (
               <Button onClick={onManageBlock} size="sm">
                 Quản lý chặn
-              </Button>
-            )}
-            {!isDisbanded && isStrangerBlocking && onEnableStrangerMessaging && (
-              <Button onClick={onEnableStrangerMessaging} size="sm">
-                Bật nhận tin nhắn
               </Button>
             )}
           </div>

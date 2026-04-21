@@ -1,4 +1,4 @@
-import { ref, set, push } from 'firebase/database';
+import { ref, update, push } from 'firebase/database';
 import { rtdb } from '../../../firebase/config';
 import { RtdbMessage, MessageType, SharedPostMessagePayload } from '../../../../shared/types';
 import { validateMessageContent, FileValidationError } from '../../../utils/fileValidation';
@@ -7,7 +7,8 @@ import {
     assignReplyToIdIfPresent,
     createAndSendMediaAlbumMessage,
     createAndSendMediaMessage,
-    updateConversationAfterMessage
+    getConversationUpdatePaths,
+    ensureConversationExists
 } from './messageHelpers';
 import { getRtdbServerTimestamp, getServerSyncedNow } from '../chatTime';
 
@@ -52,12 +53,17 @@ export const messageSendService = {
 
             assignReplyToIdIfPresent(messageData, options?.replyToId);
 
-            await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
-            await set(newMsgRef, {
+            const conversation = await ensureConversationExists(convId, senderId);
+            if (!conversation) throw new Error('Conversation not found');
+
+            const updates = getConversationUpdatePaths(convId, senderId, messageData, content, conversation, msgId);
+            updates[`messages/${convId}/${msgId}`] = {
                 ...messageData,
                 createdAt: getRtdbServerTimestamp(),
                 updatedAt: getRtdbServerTimestamp()
-            });
+            };
+
+            await update(ref(rtdb), updates);
 
             return msgId;
         } catch (error) {
@@ -104,12 +110,17 @@ export const messageSendService = {
 
             assignReplyToIdIfPresent(messageData, options?.replyToId);
 
-            await updateConversationAfterMessage(convId, senderId, messageData, '[Chia sẻ bài viết]', msgId);
-            await set(newMsgRef, {
+            const conversation = await ensureConversationExists(convId, senderId);
+            if (!conversation) throw new Error('Conversation not found');
+
+            const updates = getConversationUpdatePaths(convId, senderId, messageData, '[Chia sẻ bài viết]', conversation, msgId);
+            updates[`messages/${convId}/${msgId}`] = {
                 ...messageData,
                 createdAt: getRtdbServerTimestamp(),
                 updatedAt: getRtdbServerTimestamp()
-            });
+            };
+
+            await update(ref(rtdb), updates);
 
             return msgId;
         } catch (error) {
@@ -255,12 +266,17 @@ export const messageSendService = {
 
             assignReplyToIdIfPresent(messageData, options?.replyToId);
 
-            await updateConversationAfterMessage(convId, senderId, messageData, '[GIF]', msgId);
-            await set(newMsgRef, {
+            const conversation = await ensureConversationExists(convId, senderId);
+            if (!conversation) throw new Error('Conversation not found');
+
+            const updates = getConversationUpdatePaths(convId, senderId, messageData, '[GIF]', conversation, msgId);
+            updates[`messages/${convId}/${msgId}`] = {
                 ...messageData,
                 createdAt: getRtdbServerTimestamp(),
                 updatedAt: getRtdbServerTimestamp()
-            });
+            };
+
+            await update(ref(rtdb), updates);
 
             return msgId;
         } catch (error) {
@@ -294,12 +310,17 @@ export const messageSendService = {
                 updatedAt: getServerSyncedNow()
             };
 
-            await updateConversationAfterMessage(convId, 'system', messageData, content, msgId);
-            await set(newMsgRef, {
+            const conversation = await ensureConversationExists(convId, 'system');
+            if (!conversation) throw new Error('Conversation not found');
+
+            const updates = getConversationUpdatePaths(convId, 'system', messageData, content, conversation, msgId);
+            updates[`messages/${convId}/${msgId}`] = {
                 ...messageData,
                 createdAt: getRtdbServerTimestamp(),
                 updatedAt: getRtdbServerTimestamp()
-            });
+            };
+
+            await update(ref(rtdb), updates);
 
             return msgId;
         } catch (error) {
@@ -337,12 +358,17 @@ export const messageSendService = {
                 updatedAt: getServerSyncedNow()
             };
 
-            await updateConversationAfterMessage(convId, senderId, messageData, content, msgId);
-            await set(newMsgRef, {
+            const conversation = await ensureConversationExists(convId, senderId);
+            if (!conversation) throw new Error('Conversation not found');
+
+            const updates = getConversationUpdatePaths(convId, senderId, messageData, content, conversation, msgId);
+            updates[`messages/${convId}/${msgId}`] = {
                 ...messageData,
                 createdAt: getRtdbServerTimestamp(),
                 updatedAt: getRtdbServerTimestamp()
-            });
+            };
+
+            await update(ref(rtdb), updates);
 
             return msgId;
         } catch (error) {
