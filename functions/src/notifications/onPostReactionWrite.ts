@@ -4,7 +4,6 @@ import { db } from '../app';
 import { NotificationType } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
-import { isBlockingMessages } from '../helpers/blockHelper';
 
 /**
  * Xử lý khi có reaction mới trên bài viết
@@ -40,7 +39,6 @@ export const onPostReactionWrite = onDocumentWritten(
       const postOwnerId: string = postSnap.data()!.authorId;
       if (userId === postOwnerId) return;
 
-      if (await isBlockingMessages(postOwnerId, userId)) return;
 
       const senderName = await getSenderName(userId);
       const body = buildPushBody(NotificationType.REACTION, senderName);

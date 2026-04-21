@@ -4,7 +4,6 @@ import { db } from '../app';
 import { NotificationType } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
-import { isBlockingMessages } from '../helpers/blockHelper';
 
 /**
  * Xử lý khi có reaction mới trên bình luận
@@ -40,7 +39,6 @@ export const onCommentReactionWrite = onDocumentWritten(
       const commentOwnerId: string = commentSnap.data()!.authorId;
       if (userId === commentOwnerId) return;
 
-      if (await isBlockingMessages(commentOwnerId, userId)) return;
 
       const { postId } = commentSnap.data()!;
       const senderName = await getSenderName(userId);

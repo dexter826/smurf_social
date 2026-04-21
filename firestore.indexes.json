@@ -138,7 +138,6 @@
         }
       ]
     },
-
     {
       "collectionGroup": "notifications",
       "queryScope": "COLLECTION",
@@ -243,6 +242,14 @@
     }
   ],
   "fieldOverrides": [
+    {
+      "collectionGroup": "blockedUsers",
+      "fieldPath": "blockedUid",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" },
+        { "order": "DESCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    },
     {
       "collectionGroup": "notifications",
       "fieldPath": "data.commentId",

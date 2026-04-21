@@ -4,7 +4,6 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { NotificationType, CommentStatus } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
-import { isBlockingMessages } from '../helpers/blockHelper';
 
 /**
  * Xử lý tất cả thay đổi trên bình luận (Create, Soft-delete)
@@ -30,33 +29,42 @@ export const onCommentWrite = onDocumentWritten(
                 await batch.commit();
 
                 const senderName = await getSenderName(senderId);
+                const postSnap = await db.collection('posts').doc(postId).get();
 
-                let receiverId = after.replyToUserId;
-                if (!receiverId) {
-                    const postDoc = await db.collection('posts').doc(postId).get();
-                    receiverId = postDoc.data()?.authorId;
+                if (!postSnap.exists) {
+                    console.log(`[onCommentWrite] Bài viết ${postId} không tồn tại, bỏ qua thông báo.`);
+                    return;
                 }
 
-                if (receiverId && receiverId !== senderId) {
-                    if (await isBlockingMessages(receiverId, senderId)) {
-                        console.log(`[onCommentWrite] ${receiverId} blocked messages from ${senderId}, skipping notification.`);
-                        return;
-                    }
+                const postOwnerId = postSnap.data()?.authorId;
+                const replyToUserId = after.replyToUserId;
+
+                // Danh sách những người cần nhận thông báo (Chủ bài và người được reply)
+                const receivers = new Set<string>();
+                if (postOwnerId && postOwnerId !== senderId) receivers.add(postOwnerId);
+                if (replyToUserId && replyToUserId !== senderId) receivers.add(replyToUserId);
+
+                if (receivers.size > 0) {
                     const body = buildPushBody(NotificationType.COMMENT, senderName, { contentSnippet });
-                    await createNotification({
-                        receiverId,
-                        actorId: senderId,
-                        type: NotificationType.COMMENT,
-                        data: { postId, commentId, contentSnippet },
+                    
+                    const promises = Array.from(receivers).map(async (receiverId) => {
+                        await createNotification({
+                            receiverId,
+                            actorId: senderId,
+                            type: NotificationType.COMMENT,
+                            data: { postId, commentId, contentSnippet },
+                        });
+                        await sendPushNotification({
+                            receiverId,
+                            type: NotificationType.COMMENT,
+                            body,
+                            data: { postId, commentId },
+                        });
                     });
-                    await sendPushNotification({
-                        receiverId,
-                        type: NotificationType.COMMENT,
-                        body,
-                        data: { postId, commentId },
-                    });
+
+                    await Promise.all(promises);
                 }
-                console.log(`[onCommentWrite/Create] Đã xử lý bình luận ${commentId}`);
+                console.log(`[onCommentWrite/Create] Đã xử lý thông báo cho ${receivers.size} người.`);
             } catch (error) {
                 console.error('[onCommentWrite/Create] Lỗi:', error);
             }
