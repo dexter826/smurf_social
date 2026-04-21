@@ -374,6 +374,7 @@ export const AppLayout: React.FC = () => {
           calleeId={session.participants[0]}
           calleeAvatar={session.calleeAvatar}
           callType={session.callType}
+          isGroupCall={session.isGroupCall}
           endReason={callEndReason}
           onCancel={() => endCall('missed')}
           onDismiss={dismissEndedCall}

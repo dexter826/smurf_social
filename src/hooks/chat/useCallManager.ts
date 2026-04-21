@@ -21,12 +21,17 @@ export function useCallManager(currentUserId: string) {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isBusyRespondingRef = useRef(false);
     const participantUnsubRef = useRef<(() => void) | null>(null);
+    const recipientSignalingUnsubRef = useRef<(() => void) | null>(null);
 
     const cleanup = useCallback(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         if (participantUnsubRef.current) {
             participantUnsubRef.current();
             participantUnsubRef.current = null;
+        }
+        if (recipientSignalingUnsubRef.current) {
+            recipientSignalingUnsubRef.current();
+            recipientSignalingUnsubRef.current = null;
         }
         resetCall();
     }, [resetCall]);
@@ -194,6 +199,23 @@ export function useCallManager(currentUserId: string) {
         });
 
         await rtdbCallService.startActiveCall(conversationId, currentUserId, callType, msgId);
+
+        if (isGroupCall) {
+            recipientSignalingUnsubRef.current = rtdbCallService.subscribeToMultipleSignaling(
+                recipientIds,
+                async (statuses) => {
+                    const anyoneRinging = Object.values(statuses).some(v => v === true);
+                    if (!anyoneRinging && phaseRef.current === 'outgoing') {
+                        const activeCall = await rtdbCallService.getActiveCall(conversationId);
+                        const count = activeCall?.participants ? Object.keys(activeCall.participants).length : 0;
+                        if (count <= 1) {
+                            await rtdbCallService.endCallSession(conversationId, updateCallMessage, 'missed');
+                            cleanup();
+                        }
+                    }
+                }
+            );
+        }
 
         timeoutRef.current = setTimeout(async () => {
             await rtdbCallService.clearSignalingForUsers([currentUserId, ...recipientIds]);

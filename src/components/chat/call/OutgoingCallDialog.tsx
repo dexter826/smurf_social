@@ -9,6 +9,7 @@ interface OutgoingCallDialogProps {
   calleeId: string;
   calleeAvatar?: string;
   callType: 'voice' | 'video';
+  isGroupCall?: boolean;
   endReason: CallEndReason;
   onCancel: () => void;
   onDismiss: () => void;
@@ -30,7 +31,7 @@ const endReasonConfig = {
 } as const;
 
 export const OutgoingCallDialog: React.FC<OutgoingCallDialogProps> = ({
-  calleeName, calleeId, calleeAvatar, callType, endReason, onCancel, onDismiss,
+  calleeName, calleeId, calleeAvatar, callType, isGroupCall, endReason, onCancel, onDismiss,
 }) => {
   const [dots, setDots] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -63,7 +64,13 @@ export const OutgoingCallDialog: React.FC<OutgoingCallDialogProps> = ({
         </p>
 
         {/* Avatar */}
-        <UserAvatar userId={calleeId} name={calleeName} src={calleeAvatar} size="xl" />
+        <UserAvatar 
+          userId={isGroupCall ? '' : calleeId} 
+          name={calleeName} 
+          src={calleeAvatar} 
+          size="xl" 
+          isGroup={isGroupCall}
+        />
 
         {/* Name + status */}
         <div className="text-center">

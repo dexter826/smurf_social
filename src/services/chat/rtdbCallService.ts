@@ -108,6 +108,27 @@ export const rtdbCallService = {
         return snapshot.exists() ? (snapshot.val() as RtdbCallSignaling) : null;
     },
 
+    subscribeToMultipleSignaling: (
+        uids: string[],
+        callback: (statuses: Record<string, boolean>) => void,
+    ): (() => void) => {
+        const unsubs: (() => void)[] = [];
+        const statuses: Record<string, boolean> = {};
+        uids.forEach(uid => statuses[uid] = true);
+
+        uids.forEach((uid) => {
+            const signalingRef = ref(rtdb, `call_signaling/${uid}`);
+            const handler = (snapshot: any) => {
+                statuses[uid] = snapshot.exists();
+                callback({ ...statuses });
+            };
+            onValue(signalingRef, handler);
+            unsubs.push(() => off(signalingRef, 'value', handler));
+        });
+
+        return () => unsubs.forEach(unsub => unsub());
+    },
+
     startActiveCall: async (
         convId: string,
         callerId: string,
