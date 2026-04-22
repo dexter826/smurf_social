@@ -36,11 +36,9 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(({
   useEffect(() => {
     if (!autoResize || !innerRef.current) return;
     const el = innerRef.current;
+    el.style.height = 'auto';
     const target = Math.min(el.scrollHeight, maxHeight);
-    if (el.offsetHeight !== target) {
-      el.style.height = 'auto';
-      el.style.height = `${target}px`;
-    }
+    el.style.height = `${target}px`;
   }, [value, autoResize, maxHeight]);
 
   useEffect(() => {
