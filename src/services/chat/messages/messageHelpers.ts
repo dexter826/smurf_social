@@ -134,6 +134,7 @@ export async function createAndSendMediaMessage(
         mentions?: string[];
         voiceDuration?: number;
         messageId?: string;
+        content?: string;
     }
 ): Promise<string> {
     if (type === MessageType.IMAGE) validateImageFile(file);
@@ -163,7 +164,9 @@ export async function createAndSendMediaMessage(
     const messageData: RtdbMessage = {
         senderId,
         type,
-        content: type === MessageType.FILE ? '' : (type === MessageType.VOICE && options.voiceDuration ? String(options.voiceDuration) : ''),
+        content: options.content !== undefined 
+            ? options.content 
+            : (type === MessageType.FILE ? '' : (type === MessageType.VOICE && options.voiceDuration ? String(options.voiceDuration) : '')),
         media: [mediaPlaceholder],
         mentions: options.mentions || [],
         isForwarded: false,
@@ -247,6 +250,7 @@ export async function createAndSendMediaAlbumMessage(
         displayContent: string;
         mentions?: string[];
         messageId?: string;
+        content?: string;
     }
 ): Promise<string> {
     if (files.length === 0) throw new Error('Không có file để gửi');
@@ -268,7 +272,7 @@ export async function createAndSendMediaAlbumMessage(
     const messageData: RtdbMessage = {
         senderId,
         type: MessageType.IMAGE,
-        content: '',
+        content: options.content || '',
         media: mediaPlaceholders,
         mentions: options.mentions || [],
         isForwarded: false,

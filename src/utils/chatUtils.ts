@@ -13,7 +13,9 @@ export const getMessageDisplayContent = (message: RtdbMessage): string => {
         case MessageType.SHARE_POST:
             return '[Chia sẻ bài viết]';
         case MessageType.IMAGE:
-            return '[Hình ảnh]';
+            const isAlbum = (message.media || []).length > 1;
+            if (isAlbum) return '[Album hình ảnh]';
+            return message.content ? `[Hình ảnh] ${message.content.replace(/@\[([^\]]+)\]/g, '@$1')}` : '[Hình ảnh]';
         case MessageType.VIDEO:
             return '[Video]';
         case MessageType.GIF:

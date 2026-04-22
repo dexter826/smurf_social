@@ -137,6 +137,7 @@ export const messageSendService = {
             replyToId?: string;
             onProgressWithId?: ProgressWithId;
             mentions?: string[];
+            content?: string;
             messageId?: string;
         }
     ): Promise<string> => {
@@ -148,13 +149,15 @@ export const messageSendService = {
                 return await createAndSendMediaMessage(convId, senderId, files[0], MessageType.IMAGE, {
                     ...options,
                     compress: true,
-                    displayContent
+                    displayContent,
+                    content: options?.content,
+                    mentions: options?.mentions
                 });
             }
 
             return await createAndSendMediaAlbumMessage(convId, senderId, files, {
                 ...options,
-                displayContent
+                displayContent,
             });
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi sendImageMessage:', error);

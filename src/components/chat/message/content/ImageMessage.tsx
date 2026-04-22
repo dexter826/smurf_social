@@ -2,6 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { RtdbMessage } from '../../../../../shared/types';
 import { LazyImage, CircularProgressOverlay } from '../../../ui';
+import { MessageTextContent } from './MessageTextContent';
 
 interface ImageMessageProps {
   message: { id: string; data: RtdbMessage };
@@ -106,28 +107,37 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
         </div>
       );
     }
-    return contentUI;
+    return (
+      <div className="flex flex-col gap-2 w-full max-w-[320px]">
+        {contentUI}
+        <MessageTextContent content={count === 1 ? (content || '') : ''} isMe={isMe} isEdited={!!message.data.isEdited} />
+      </div>
+    );
   }
 
   const first = mediaItems[0];
   return (
-    <div className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative shadow-sm border border-border-light w-fit bg-bg-secondary" onClick={() => onOpenImage(0)}>
-      <LazyImage 
-        src={first.url} 
-        alt="media content" 
-        className="max-w-full max-h-[420px] object-contain" 
-        onLoad={onLoad}
-      />
-      
-      <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} />
-      
-      {!isUploading && (
-        <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="bg-black/20 p-3 rounded-full backdrop-blur-sm">
-            <ImageIcon className="text-white drop-shadow-md" size={24} />
+    <div className="flex flex-col gap-2">
+      <div className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative shadow-sm border border-border-light w-fit bg-bg-secondary" onClick={() => onOpenImage(0)}>
+        <LazyImage 
+          src={first.url} 
+          alt="media content" 
+          className="max-w-full max-h-[420px] object-contain" 
+          onLoad={onLoad}
+        />
+        
+        <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} />
+        
+        {!isUploading && (
+          <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-black/20 p-3 rounded-full backdrop-blur-sm">
+              <ImageIcon className="text-white drop-shadow-md" size={24} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      
+      <MessageTextContent content={count === 1 ? (content || '') : ''} isMe={isMe} isEdited={!!message.data.isEdited} />
     </div>
   );
 };

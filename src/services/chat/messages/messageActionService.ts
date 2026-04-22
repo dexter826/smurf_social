@@ -133,7 +133,12 @@ export const messageActionService = {
 
             let displayContent = srcMsg.content;
             if (srcMsg.type === MessageType.IMAGE) {
-                displayContent = (srcMsg.media || []).length > 1 ? '[Album hình ảnh]' : '[Hình ảnh]';
+                const isAlbum = (srcMsg.media || []).length > 1;
+                if (isAlbum) {
+                    displayContent = '[Album hình ảnh]';
+                } else {
+                    displayContent = srcMsg.content ? `[Hình ảnh] ${srcMsg.content}` : '[Hình ảnh]';
+                }
             } else if (srcMsg.type === MessageType.VIDEO) {
                 displayContent = '[Video]';
             } else if (srcMsg.type === MessageType.FILE) {

@@ -94,7 +94,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const isInteractionDisabled = isBlocked || isPartnerBanned;
 
   const canEdit = isMe && !message.data.isRecalled &&
-    message.data.type === MessageType.TEXT &&
+    (message.data.type === MessageType.TEXT || (message.data.type === MessageType.IMAGE && !!message.data.content)) &&
     (Date.now() - message.data.createdAt) <= TIME_LIMITS.MESSAGE_EDIT_WINDOW;
 
   const hasReactions = message.data.reactions && Object.keys(message.data.reactions).length > 0;
@@ -125,7 +125,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
     );
   }
 
-  const shouldWrapBackground = !isMedia || message.data.isRecalled;
+  const shouldWrapBackground = !isMedia || message.data.isRecalled || (message.data.type === MessageType.IMAGE && !!message.data.content);
 
   return (
     <>

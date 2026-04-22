@@ -18,7 +18,7 @@ import { getMessageDisplayContent } from '../../../utils/chatUtils';
 import { GiphyPicker } from './GiphyPicker';
 interface ChatInputProps {
   onSendText: (text: string, mentions?: string[], replyToId?: string) => void;
-  onSendImages: (files: File[], replyToId?: string) => Promise<void>;
+  onSendImages: (files: File[], options?: { content?: string; mentions?: string[]; replyToId?: string }) => Promise<void>;
   onSendFile: (file: File, replyToId?: string) => void;
   onSendVideo?: (file: File, replyToId?: string) => void;
   onSendVoice?: (file: File, replyToId?: string, duration?: number) => void;
@@ -240,18 +240,44 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onTyping(false);
 
     try {
-      const imageFiles = selectedFiles.filter(f => f.type === 'image').map(f => f.file);
-      const videoFiles = selectedFiles.filter(f => f.type === 'video').map(f => f.file);
+      const imageFiles = selectedFiles.filter(f => f.type === 'image');
+      const videoFiles = selectedFiles.filter(f => f.type === 'video');
       const otherFiles = selectedFiles.filter(f => f.type !== 'image' && f.type !== 'video');
 
+      const canCombineText = imageFiles.length === 1 && videoFiles.length === 0 && otherFiles.length === 0 && inputText.trim();
+      let textSentWithImages = false;
+
       if (imageFiles.length > 0) {
-        onSendImages(imageFiles, replyingTo?.id).catch(() => {
+        let combinedContent = '';
+        let combinedMentions: string[] = [];
+
+        if (canCombineText) {
+          const tempMentions = [...activeMentions];
+          combinedContent = inputText.trim().replace(/@([^\n\u200B]+)\u200B/g, (match, fullName) => {
+            const idx = tempMentions.findIndex(m => m.name === fullName);
+            if (idx !== -1) {
+              const mention = tempMentions[idx];
+              combinedMentions.push(mention.id);
+              tempMentions.splice(idx, 1);
+              return `@[${mention.id}:${mention.name}]`;
+            }
+            return match;
+          });
+          combinedMentions = [...new Set(combinedMentions)];
+          textSentWithImages = true;
+        }
+
+        onSendImages(imageFiles.map(f => f.file), {
+          replyToId: replyingTo?.id,
+          content: textSentWithImages ? combinedContent : undefined,
+          mentions: textSentWithImages ? (combinedMentions.length > 0 ? combinedMentions : undefined) : undefined
+        }).catch(() => {
           toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
         });
       }
 
       for (const video of videoFiles) {
-        try { onSendVideo?.(video, replyingTo?.id); } catch {
+        try { onSendVideo?.(video.file, replyingTo?.id); } catch {
           toast.error(TOAST_MESSAGES.CHAT.SEND_FAILED);
         }
       }
@@ -266,7 +292,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         }
       }
 
-      if (inputText.trim()) {
+      if (inputText.trim() && !textSentWithImages) {
         if (editingMessage) {
           if (inputText.trim() !== editingMessage.data.content) {
             await onEditMessage?.(inputText.trim());
@@ -293,6 +319,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             replyingTo?.id
           );
         }
+      }
+
+      if (inputText.trim()) {
         setInputText('');
         setActiveMentions([]);
         if (conversationId) {

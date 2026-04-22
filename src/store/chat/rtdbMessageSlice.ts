@@ -16,7 +16,7 @@ export interface RtdbMessageSlice {
     loadMoreMessages: (conversationId: string) => Promise<void>;
     sendTextMessage: (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => Promise<void>;
     sendSharedPostMessage: (conversationId: string, senderId: string, payload: SharedPostMessagePayload, replyToId?: string) => Promise<void>;
-    sendImageMessage: (conversationId: string, senderId: string, files: File[], replyToId?: string) => Promise<void>;
+    sendImageMessage: (conversationId: string, senderId: string, files: File[], options?: { content?: string; mentions?: string[]; replyToId?: string }) => Promise<void>;
     sendFileMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendVideoMessage: (conversationId: string, senderId: string, file: File, replyToId?: string) => Promise<void>;
     sendVoiceMessage: (conversationId: string, senderId: string, file: File, replyToId?: string, duration?: number) => Promise<void>;
@@ -226,17 +226,17 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
-    sendImageMessage: async (conversationId: string, senderId: string, files: File[], replyToId?: string) => {
+    sendImageMessage: async (conversationId: string, senderId: string, files: File[], options?: { content?: string; mentions?: string[]; replyToId?: string }) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
+        const { content = '', mentions = [], replyToId } = options || {};
         const msgId = rtdbMessageService.generateMessageId(conversationId);
         const createdAt = getServerSyncedNow();
 
-        // Optimistic update
         set((state) => {
             const existing = state.messages[conversationId] || [];
             const mediaPlaceholders = files.map(file => ({
-                url: URL.createObjectURL(file), // Local preview
+                url: URL.createObjectURL(file),
                 fileName: file.name,
                 mimeType: file.type,
                 size: file.size,
@@ -248,9 +248,9 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 data: {
                     senderId,
                     type: MessageType.IMAGE,
-                    content: '',
+                    content,
                     media: mediaPlaceholders,
-                    mentions: [],
+                    mentions,
                     isForwarded: false,
                     replyToId: replyToId || null,
                     isEdited: false,
@@ -279,6 +279,8 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         try {
             await rtdbMessageService.sendImageMessage(conversationId, senderId, files, {
                 replyToId,
+                content,
+                mentions,
                 messageId: msgId,
                 onProgressWithId: (messageId, progress) => {
                     get().setUploadProgress(messageId, progress.progress);

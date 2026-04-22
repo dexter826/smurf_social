@@ -41,7 +41,11 @@ export const onMessageCreated = onValueCreated(
 
       let contentSnippet = '';
       switch (type) {
-        case 'image': contentSnippet = 'đã gửi một hình ảnh'; break;
+        case 'image': 
+          contentSnippet = safeContent 
+            ? `đã gửi một hình ảnh: ${safeContent.replace(/@\[[^:]+:([^\]]+)\]/g, '@$1').substring(0, 80)}` 
+            : 'đã gửi một hình ảnh'; 
+          break;
         case 'video': contentSnippet = 'đã gửi một video'; break;
         case 'gif': contentSnippet = 'đã gửi một GIF'; break;
         case 'file': contentSnippet = 'đã gửi một tệp tin'; break;
