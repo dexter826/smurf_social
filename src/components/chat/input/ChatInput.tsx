@@ -9,7 +9,7 @@ import { useAudioRecorder } from '../../../hooks/chat/useAudioRecorder';
 import { useMentions } from '../../../hooks/chat/useMentions';
 import { useLinkPreview } from '../../../hooks/useLinkPreview';
 import { toast } from '../../../store/toastStore';
-import { TOAST_MESSAGES, FILE_LIMITS, TIME_LIMITS } from '../../../constants';
+import { TOAST_MESSAGES, FILE_LIMITS, TIME_LIMITS, VALIDATION } from '../../../constants';
 import { insertTextAtCursor, validateFile } from '../../../utils';
 import { useRtdbChatStore } from '../../../store';
 import { RtdbMessage, User, MessageType } from '../../../../shared/types';
@@ -162,7 +162,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const draftTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = e.target.value;
+    let text = e.target.value;
+    if (text.length > VALIDATION.MESSAGE_MAX_LENGTH) {
+      text = text.slice(0, VALIDATION.MESSAGE_MAX_LENGTH);
+    }
     setInputText(text);
 
     if (conversationId && !editingMessage) {
@@ -526,13 +529,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             className="rounded-xl bg-bg-secondary border-border-light"
             renderOverlay={renderMentionOverlay}
             rightElement={
-              <EmojiPicker
-                onEmojiSelect={(emoji) =>
-                  insertTextAtCursor(inputRef, inputText, emoji, setInputText)
-                }
-                disabled={disabled || isSending}
-                buttonClassName="p-1.5 text-text-tertiary hover:text-primary transition-colors"
-              />
+              <div className="flex items-center">
+                {inputText.length >= VALIDATION.MESSAGE_MAX_LENGTH * 0.8 && (
+                  <span className={`text-[9px] font-bold mr-1 px-1 rounded ${
+                    inputText.length >= VALIDATION.MESSAGE_MAX_LENGTH ? 'text-error bg-error/10' : 'text-text-tertiary'
+                  }`}>
+                    {inputText.length}/{VALIDATION.MESSAGE_MAX_LENGTH}
+                  </span>
+                )}
+                <EmojiPicker
+                  onEmojiSelect={(emoji) =>
+                    insertTextAtCursor(inputRef, inputText, emoji, setInputText)
+                  }
+                  disabled={disabled || isSending}
+                  buttonClassName="p-1.5 text-text-tertiary hover:text-primary transition-colors"
+                />
+              </div>
             }
           />
         )}

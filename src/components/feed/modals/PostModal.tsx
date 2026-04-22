@@ -7,7 +7,7 @@ import { toast } from '../../../store/toastStore';
 import { validateFile } from '../../../utils';
 import { User, Post, Visibility, MediaObject, PostType } from '../../../../shared/types';
 import { postSchema, PostFormValues } from '../../../utils/validation';
-import { MEDIA_CONSTRAINTS, TOAST_MESSAGES } from '../../../constants';
+import { MEDIA_CONSTRAINTS, TOAST_MESSAGES, VALIDATION } from '../../../constants';
 import { insertTextAtCursor } from '../../../utils/uiUtils';
 import { useAutoResizeTextarea } from '../../../hooks/utils';
 import { useAuthStore } from '../../../store/authStore';
@@ -323,21 +323,38 @@ export const PostModal: React.FC<PostModalProps> = ({
           {/* Body */}
           <div className="flex-1 px-4 md:px-6 pt-4 pb-6">
             {!isSystemPost && (
-              <textarea
-                {...register('content')}
-                ref={(e) => {
-                  register('content').ref(e);
-                  (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
-                }}
-                placeholder="Hãy viết gì đó..."
-                className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 leading-relaxed
-                  ${isLargeText
-                    ? 'text-xl md:text-2xl font-medium min-h-[120px]'
-                    : 'text-base md:text-lg min-h-[80px]'
-                  }`}
-                disabled={isSubmitting}
-                autoFocus
-              />
+              <div className="relative">
+                <textarea
+                  {...register('content')}
+                  ref={(e) => {
+                    register('content').ref(e);
+                    (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
+                  }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.length > VALIDATION.POST_CONTENT_MAX_LENGTH) {
+                      setValue('content', val.slice(0, VALIDATION.POST_CONTENT_MAX_LENGTH), { shouldValidate: true });
+                    }
+                  }}
+                  placeholder="Hãy viết gì đó..."
+                  className={`w-full resize-none outline-none bg-transparent text-text-primary placeholder:text-text-tertiary overflow-hidden transition-all duration-200 leading-relaxed
+                    ${isLargeText
+                      ? 'text-xl md:text-2xl font-medium min-h-[120px]'
+                      : 'text-base md:text-lg min-h-[80px]'
+                    }`}
+                  disabled={isSubmitting}
+                  autoFocus
+                />
+                <div className="flex justify-end mt-1">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                    (formData.content?.length || 0) >= VALIDATION.POST_CONTENT_MAX_LENGTH * 0.9 
+                      ? 'text-error bg-error/5' 
+                      : 'text-text-tertiary bg-bg-secondary'
+                  }`}>
+                    {formData.content?.length || 0}/{VALIDATION.POST_CONTENT_MAX_LENGTH}
+                  </span>
+                </div>
+              </div>
             )}
 
             {/* Link preview in composer */}

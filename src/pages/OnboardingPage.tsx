@@ -11,7 +11,7 @@ import type { SearchableOption } from '../components/ui/SearchableSelect';
 import { AuthBrandingPanel } from '../components/layout/AuthBrandingPanel';
 import { onboardingSchema, OnboardingFormValues } from '../utils/validation';
 import { toast } from '../store/toastStore';
-import { API_ENDPOINTS } from '../constants';
+import { API_ENDPOINTS, VALIDATION } from '../constants';
 
 
 
@@ -63,8 +63,8 @@ const OnboardingPage: React.FC = () => {
     const current = formData.interests ?? [];
     if (current.includes(tag)) return;
     
-    if (current.length >= 10) {
-      toast.error('Bạn chỉ có thể chọn tối đa 10 sở thích');
+    if (current.length >= VALIDATION.INTEREST_MAX_COUNT) {
+      toast.error(`Bạn chỉ có thể chọn tối đa ${VALIDATION.INTEREST_MAX_COUNT} sở thích`);
       return;
     }
     
@@ -159,7 +159,7 @@ const OnboardingPage: React.FC = () => {
                         Sở thích của bạn
                       </label>
                       <span className="text-[11px] font-bold text-text-tertiary bg-bg-secondary px-2 py-0.5 rounded-full border border-border-light">
-                        {formData.interests?.length ?? 0}/10
+                        {formData.interests?.length ?? 0}/{VALIDATION.INTEREST_MAX_COUNT}
                       </span>
                     </div>
                     <div className="relative group">
@@ -192,7 +192,7 @@ const OnboardingPage: React.FC = () => {
                           type="button"
                           onClick={() => handleAddInterest(tag)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all shadow-sm
-                            ${(formData.interests?.length ?? 0) >= 10 
+                            ${(formData.interests?.length ?? 0) >= VALIDATION.INTEREST_MAX_COUNT 
                               ? 'border-border-light bg-bg-secondary text-text-tertiary cursor-pointer' 
                               : 'border-border-light bg-bg-primary text-text-secondary hover:border-primary hover:text-primary hover:bg-primary/5'
                             }`}

@@ -8,7 +8,7 @@ import { Button, Input, TextArea, Select, DatePicker, Modal, SearchableSelect } 
 import type { SearchableOption } from '../ui/SearchableSelect';
 import { toDate } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
-import { API_ENDPOINTS, TOAST_MESSAGES } from '../../constants';
+import { API_ENDPOINTS, TOAST_MESSAGES, VALIDATION } from '../../constants';
 import { profileSchema, ProfileFormValues } from '../../utils/validation';
 import { calculateGeneration } from '../../utils/userUtils';
 import schoolsData from '../../assets/data/schools.json';
@@ -108,7 +108,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     const tag = interestInput.trim();
     if (!tag) return;
     const current = formData.interests ?? [];
-    if (current.includes(tag) || current.length >= 10) return;
+    if (current.includes(tag) || current.length >= VALIDATION.INTEREST_MAX_COUNT) return;
     setValue('interests', [...current, tag], { shouldDirty: true });
     setInterestInput('');
   }, [interestInput, formData.interests, setValue]);
@@ -209,14 +209,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               label="Giới thiệu"
               {...register('bio')}
               onChange={(e) =>
-                setValue('bio', e.target.value.slice(0, 150), { shouldDirty: true })
+                setValue('bio', e.target.value.slice(0, VALIDATION.BIO_MAX_LENGTH), { shouldDirty: true })
               }
               error={errors.bio?.message}
               placeholder="Nhập vài dòng giới thiệu về bản thân..."
               rows={2}
               rightElement={
                 <div className="text-xs text-text-tertiary pr-2 pb-2 pointer-events-none">
-                  {formData.bio?.length || 0}/150
+                  {formData.bio?.length || 0}/{VALIDATION.BIO_MAX_LENGTH}
                 </div>
               }
             />
@@ -304,7 +304,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
           <div className="col-span-1 sm:col-span-2">
             <label className="text-xs font-semibold text-text-secondary px-1">
-              Sở thích (tối đa 10)
+              Sở thích (tối đa {VALIDATION.INTEREST_MAX_COUNT})
             </label>
             <div className="flex gap-2 mt-1.5">
               <input
@@ -313,7 +313,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 onChange={(e) => setInterestInput(e.target.value)}
                 onKeyDown={handleInterestKeyDown}
                 placeholder="Nhập sở thích rồi nhấn Enter..."
-                maxLength={30}
+                maxLength={VALIDATION.INTEREST_MAX_LENGTH}
                 className="flex-1 px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-secondary text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
               />
               <Button
@@ -321,7 +321,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 variant="secondary"
                 size="md"
                 onClick={handleAddInterest}
-                disabled={(formData.interests?.length ?? 0) >= 10}
+                disabled={(formData.interests?.length ?? 0) >= VALIDATION.INTEREST_MAX_COUNT}
               >
                 Thêm
               </Button>

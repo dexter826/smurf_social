@@ -56,6 +56,8 @@ export const VALIDATION = {
   COMMENT_MAX_LENGTH: 2000,
   MESSAGE_MAX_LENGTH: 5000,
   USER_NAME_MAX_LENGTH: 50,
+  INTEREST_MAX_COUNT: 10,
+  INTEREST_MAX_LENGTH: 30,
 } as const;
 
 // Giới hạn kích thước file (bytes)

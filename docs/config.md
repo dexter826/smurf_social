@@ -16,6 +16,8 @@ Tài liệu này chứa các cấu hình hệ thống quan trọng, bao gồm gi
 - **Nội dung bình luận**: Tối đa `2000` ký tự.
 - **Nội dung tin nhắn chat**: Tối đa `5000` ký tự.
 - **Tên hiển thị (User Name)**: Tối đa `50` ký tự.
+- **Số lượng sở thích tối đa**: `10` sở thích.
+- **Độ dài mỗi sở thích**: Tối đa `30` ký tự.
 
 ## 3. Thời gian và Timeout (Time Limits)
 

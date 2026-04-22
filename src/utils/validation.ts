@@ -78,7 +78,7 @@ export const profileSchema = z.object({
 // Schema cho Onboarding
 export const onboardingSchema = z.object({
   location: z.string().optional(),
-  interests: z.array(z.string()).max(10, 'Tối đa 10 sở thích').optional(),
+  interests: z.array(z.string()).max(VALIDATION.INTEREST_MAX_COUNT, `Tối đa ${VALIDATION.INTEREST_MAX_COUNT} sở thích`).optional(),
 });
 
 // Schema cho Đổi mật khẩu
