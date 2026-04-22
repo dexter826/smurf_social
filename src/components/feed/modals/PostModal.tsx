@@ -331,6 +331,7 @@ export const PostModal: React.FC<PostModalProps> = ({
                     (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
                   }}
                   onChange={(e) => {
+                    register('content').onChange(e);
                     const val = e.target.value;
                     if (val.length > VALIDATION.POST_CONTENT_MAX_LENGTH) {
                       setValue('content', val.slice(0, VALIDATION.POST_CONTENT_MAX_LENGTH), { shouldValidate: true });
