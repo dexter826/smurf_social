@@ -12,6 +12,8 @@ import { API_ENDPOINTS, TOAST_MESSAGES } from '../../constants';
 import { profileSchema, ProfileFormValues } from '../../utils/validation';
 import { calculateGeneration } from '../../utils/userUtils';
 import schoolsData from '../../assets/data/schools.json';
+import ProfilePrivacySelector from './ProfilePrivacySelector';
+import { Visibility, ProfilePrivacy } from '../../../shared/types';
 
 interface EditProfileModalProps {
   user: User;
@@ -59,6 +61,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       maritalStatus: user.maritalStatus,
       interests: user.interests || [],
       generation: user.generation || Generation.UNKNOWN,
+      profilePrivacy: user.profilePrivacy || {
+        email: Visibility.PRIVATE,
+        dob: Visibility.FRIENDS,
+        gender: Visibility.FRIENDS,
+        location: Visibility.FRIENDS,
+        school: Visibility.FRIENDS,
+        maritalStatus: Visibility.FRIENDS,
+      },
     },
   });
 
@@ -76,6 +86,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       maritalStatus: user.maritalStatus,
       interests: user.interests || [],
       generation: user.generation || Generation.UNKNOWN,
+      profilePrivacy: user.profilePrivacy || {
+        email: Visibility.PRIVATE,
+        dob: Visibility.FRIENDS,
+        gender: Visibility.FRIENDS,
+        location: Visibility.FRIENDS,
+        school: Visibility.FRIENDS,
+        maritalStatus: Visibility.FRIENDS,
+      },
     });
     setInterestInput('');
     fetch(API_ENDPOINTS.PROVINCES)
@@ -123,6 +141,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         ...(data.maritalStatus !== undefined && { maritalStatus: data.maritalStatus }),
         interests: data.interests?.length ? data.interests : [],
         ...(data.generation ? { generation: data.generation } : { generation: Generation.UNKNOWN }),
+        profilePrivacy: data.profilePrivacy,
       };
       await onSave(payload);
       toast.success(TOAST_MESSAGES.PROFILE.UPDATE_SUCCESS);
@@ -133,6 +152,21 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       setSaving(false);
     }
   };
+
+  const FieldWrapper: React.FC<{ label: string; privacyKey: keyof ProfilePrivacy; children: React.ReactNode; required?: boolean }> = ({ label, privacyKey, children, required }) => (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex justify-between items-center px-1">
+        <label className="text-xs font-semibold text-text-secondary cursor-pointer">
+          {label} {required && '*'}
+        </label>
+        <ProfilePrivacySelector
+          value={formData.profilePrivacy?.[privacyKey] || Visibility.FRIENDS}
+          onChange={(val) => setValue('profilePrivacy', { ...formData.profilePrivacy, [privacyKey]: val } as any, { shouldDirty: true })}
+        />
+      </div>
+      {children}
+    </div>
+  );
 
   return (
     <Modal
@@ -170,7 +204,6 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
 
-          {/* Bio */}
           <div className="col-span-1 sm:col-span-2">
             <TextArea
               label="Giới thiệu"
@@ -189,91 +222,91 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
 
-          {/* Email (read-only) */}
           <div>
-            <Input label="Email" value={user.email || ''} disabled size="lg" />
+            <FieldWrapper label="Email" privacyKey="email">
+              <Input value={user.email || ''} disabled size="lg" />
+            </FieldWrapper>
           </div>
 
-          {/* Province */}
           <div>
-            <SearchableSelect
-              label="Tỉnh/Thành phố"
-              value={formData.location || ''}
-              onChange={(val) => setValue('location', val, { shouldDirty: true })}
-              options={provinces}
-              placeholder="Chọn tỉnh/thành phố"
-              searchPlaceholder="Tìm tỉnh/thành phố..."
-              size="lg"
-            />
+            <FieldWrapper label="Tỉnh/Thành phố" privacyKey="location">
+              <SearchableSelect
+                value={formData.location || ''}
+                onChange={(val) => setValue('location', val, { shouldDirty: true })}
+                options={provinces}
+                placeholder="Chọn tỉnh/thành phố"
+                searchPlaceholder="Tìm tỉnh/thành phố..."
+                size="lg"
+              />
+            </FieldWrapper>
           </div>
 
-          {/* Gender */}
           <div>
-            <Select
-              label="Giới tính"
-              value={formData.gender || ''}
-              onChange={(val) => setValue('gender', val as Gender, { shouldDirty: true })}
-              options={[
-                { value: 'male', label: 'Nam' },
-                { value: 'female', label: 'Nữ' },
-              ]}
-              placeholder="Chọn giới tính"
-              size="lg"
-            />
+            <FieldWrapper label="Giới tính" privacyKey="gender">
+              <Select
+                value={formData.gender || ''}
+                onChange={(val) => setValue('gender', val as Gender, { shouldDirty: true })}
+                options={[
+                  { value: 'male', label: 'Nam' },
+                  { value: 'female', label: 'Nữ' },
+                ]}
+                placeholder="Chọn giới tính"
+                size="lg"
+              />
+            </FieldWrapper>
           </div>
 
-          {/* DOB */}
           <div>
-            <DatePicker
-              label="Ngày sinh"
-              value={formData.dob}
-              onChange={(ts) => {
-                setValue('dob', ts, { shouldDirty: true });
-                if (ts) {
-                  const gen = calculateGeneration(ts);
-                  setValue('generation', gen, { shouldDirty: true });
-                }
-              }}
-              placeholder="Chọn ngày sinh"
-              size="lg"
-              error={errors.dob?.message}
-            />
+            <FieldWrapper label="Ngày sinh" privacyKey="dob">
+              <DatePicker
+                value={formData.dob}
+                onChange={(ts) => {
+                  setValue('dob', ts, { shouldDirty: true });
+                  if (ts) {
+                    const gen = calculateGeneration(ts);
+                    setValue('generation', gen, { shouldDirty: true });
+                  }
+                }}
+                placeholder="Chọn ngày sinh"
+                size="lg"
+                error={errors.dob?.message}
+              />
+            </FieldWrapper>
           </div>
 
 
 
-          {/* Marital status */}
           <div>
-            <Select
-              label="Tình trạng hôn nhân"
-              value={formData.maritalStatus || ''}
-              onChange={(val) => setValue('maritalStatus', val as MaritalStatus, { shouldDirty: true })}
-              options={MARITAL_STATUS_OPTIONS}
-              placeholder="Chọn tình trạng"
-              size="lg"
-            />
+            <FieldWrapper label="Tình trạng hôn nhân" privacyKey="maritalStatus">
+              <Select
+                value={formData.maritalStatus || ''}
+                onChange={(val) => setValue('maritalStatus', val as MaritalStatus, { shouldDirty: true })}
+                options={MARITAL_STATUS_OPTIONS}
+                placeholder="Chọn tình trạng"
+                size="lg"
+              />
+            </FieldWrapper>
           </div>
 
-          {/* School */}
           <div className="col-span-1 sm:col-span-2">
-            <SearchableSelect
-              label="Trường học / Nơi học"
-              value={formData.school || ''}
-              onChange={(val) => setValue('school', val, { shouldDirty: true })}
-              options={schoolOptions}
-              placeholder="Chọn hoặc tìm trường học"
-              searchPlaceholder="Tìm theo tên trường hoặc mã (VD: BKA)..."
-              error={errors.school?.message}
-              size="lg"
-            />
+            <FieldWrapper label="Trường học / Nơi học" privacyKey="school">
+              <SearchableSelect
+                value={formData.school || ''}
+                onChange={(val) => setValue('school', val, { shouldDirty: true })}
+                options={schoolOptions}
+                placeholder="Chọn hoặc tìm trường học"
+                searchPlaceholder="Tìm theo tên trường hoặc mã (VD: BKA)..."
+                error={errors.school?.message}
+                size="lg"
+              />
+            </FieldWrapper>
           </div>
 
-          {/* Interests */}
           <div className="col-span-1 sm:col-span-2">
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">
-              Sở thích <span className="text-text-tertiary font-normal">(tối đa 10)</span>
+            <label className="text-xs font-semibold text-text-secondary px-1">
+              Sở thích (tối đa 10)
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-1.5">
               <input
                 type="text"
                 value={interestInput}

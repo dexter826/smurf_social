@@ -65,14 +65,20 @@ export const profileSchema = z.object({
   maritalStatus: z.enum([MaritalStatus.NONE, MaritalStatus.SINGLE, MaritalStatus.MARRIED, MaritalStatus.DIVORCED, MaritalStatus.WIDOWED, MaritalStatus.OTHER]).optional(),
   interests: z.array(z.string()).optional(),
   generation: z.nativeEnum(Generation).optional(),
+  profilePrivacy: z.object({
+    email: z.nativeEnum(Visibility),
+    dob: z.nativeEnum(Visibility),
+    gender: z.nativeEnum(Visibility),
+    location: z.nativeEnum(Visibility),
+    school: z.nativeEnum(Visibility),
+    maritalStatus: z.nativeEnum(Visibility),
+  }).optional(),
 });
 
 // Schema cho Onboarding
 export const onboardingSchema = z.object({
-  location: z.string().min(1, 'Vui lòng chọn nơi ở hiện tại'),
-  interests: z.array(z.string())
-    .min(3, 'Vui lòng chọn ít nhất 3 sở thích')
-    .max(10, 'Tối đa 10 sở thích'),
+  location: z.string().optional(),
+  interests: z.array(z.string()).max(10, 'Tối đa 10 sở thích').optional(),
 });
 
 // Schema cho Đổi mật khẩu

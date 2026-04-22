@@ -370,7 +370,7 @@ export const friendService = {
         .filter((u): u is User => 
           Boolean(u) && 
           u.status !== 'banned' && 
-          !blockedUsersMap[u.id] // Lọc những người mình đã chặn
+          !blockedUsersMap[u.id]
         );
     } catch (error) {
       console.error("Lỗi lấy gợi ý kết bạn đã cache", error);

@@ -11,6 +11,8 @@ import { useProfileFriend } from './profile/useProfileFriend';
 import { useProfileMedia } from './profile/useProfileMedia';
 import { useProfileBlock } from './profile/useProfileBlock';
 import { getDirectConversationId } from '../utils/chatUtils';
+import { getMaskedProfile } from '../utils/privacyUtils';
+import { useMemo } from 'react';
 
 type TabType = 'posts' | 'media';
 
@@ -49,6 +51,17 @@ export const useProfile = () => {
 
   const isBannedProfile = profile?.status === 'banned';
   const canViewContent = true;
+
+  // Lọc profile theo quyền riêng tư
+  const maskedProfile = useMemo(() => {
+    if (!profile || !currentUser) return profile;
+    return getMaskedProfile(
+      profile,
+      currentUser.id,
+      friendStatus === FriendStatus.FRIEND,
+      profile.profilePrivacy
+    );
+  }, [profile, currentUser, friendStatus]);
 
   const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
 
@@ -92,7 +105,7 @@ export const useProfile = () => {
 
   return {
     currentUser,
-    profile: data.profile,
+    profile: maskedProfile,
     latestMedia: data.latestMedia,
     loading: data.loading,
     profileUserId,

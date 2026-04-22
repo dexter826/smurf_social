@@ -177,7 +177,7 @@ const ProfilePage: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-4 md:gap-6">
               {/* ── Left sidebar ── */}
               <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 space-y-4">
-                <ProfileAboutCard profile={profile} />
+                <ProfileAboutCard profile={profile} isOwnProfile={isOwnProfile} />
                 <ProfileMediaPreview 
                   media={latestMedia} 
                   isBlocked={isBlockedByPartner || !!currentBlockOptions?.hideTheirActivity} 

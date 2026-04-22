@@ -189,6 +189,15 @@ export interface UserSettings {
     updatedAt: Timestamp;
 }
 
+export interface ProfilePrivacy {
+    email: Visibility;
+    dob: Visibility;
+    gender: Visibility;
+    location: Visibility;
+    school: Visibility;
+    maritalStatus: Visibility;
+}
+
 // ========== CORE INTERFACES ==========
 
 export interface User extends BaseEntity {
@@ -211,6 +220,7 @@ export interface User extends BaseEntity {
     maritalStatus?: MaritalStatus;
     interests?: string[];
     generation?: Generation;
+    profilePrivacy?: ProfilePrivacy;
 }
 
 export interface FriendRequest extends BaseEntity {

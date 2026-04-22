@@ -56,6 +56,7 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 | `userVector`             | Array<Number> | _Optional_        | Vector hồ sơ dùng cho cosine similarity trong Cloud Function gợi ý bạn bè. Ghi bởi hệ thống, không do user nhập |
 | `suggestedFriends`       | Array<Object> | _Optional_        | Cache danh sách gợi ý gồm `{ id: string, mutualCount: number }`. Ghi bởi Cloud Function                         |
 | `suggestionsLastUpdated` | Timestamp     | _Optional_        | Thời điểm cập nhật gợi ý gần nhất                                                                               |
+| `profilePrivacy`         | Object        | **Required**      | Cấu trúc phân quyền riêng tư (Xem mục 1.6)                                                                      |
 | `createdAt`              | Timestamp     | **Required**      | Thời điểm tạo                                                                                                   |
 | `updatedAt`              | Timestamp     | **Required**      | Thời điểm cập nhật                                                                                              |
 
@@ -106,6 +107,21 @@ _Ghi chú: `id` là Document ID (UID Firebase Auth), không lưu thành field ri
 | `authorId`  | String    | **Required**      | ID tác giả          |
 | `createdAt` | Timestamp | **Required**      | Thời điểm tạo       |
 | `updatedAt` | Timestamp | **Required**      | Thời điểm cập nhật  |
+
+**1.6. Cấu trúc Object `profilePrivacy` (Phân quyền riêng tư)**
+
+_Mô tả: Quy định quyền xem các trường thông tin nhạy cảm trên hồ sơ cá nhân._
+
+| Field           | Type        | Default     | Description                                                    |
+| :-------------- | :---------- | :---------- | :------------------------------------------------------------- |
+| `email`         | String Enum | `"friends"` | Quyền xem Email. Giá trị: `"public"`, `"friends"`, `"private"` |
+| `dob`           | String Enum | `"friends"` | Quyền xem Ngày sinh.                                           |
+| `gender`        | String Enum | `"friends"` | Quyền xem Giới tính                                            |
+| `location`      | String Enum | `"friends"` | Quyền xem Vị trí                                               |
+| `school`        | String Enum | `"friends"` | Quyền xem Trường học                                           |
+| `maritalStatus` | String Enum | `"friends"` | Quyền xem Tình trạng hôn nhân                                  |
+
+_Ghi chú: Các trường `fullName`, `bio`, `avatar`, `cover` và `interests` luôn mặc định ở chế độ công khai để đảm bảo tính kết nối của mạng xã hội._
 
 ### 2. Collection `friendRequests`
 

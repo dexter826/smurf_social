@@ -126,6 +126,14 @@ export const userService = {
         generation: data.generation || Generation.UNKNOWN,
         maritalStatus: data.maritalStatus || MaritalStatus.NONE,
         suggestedFriends: [],
+        profilePrivacy: {
+          email: Visibility.PRIVATE,
+          dob: Visibility.FRIENDS,
+          gender: Visibility.FRIENDS,
+          location: Visibility.FRIENDS,
+          school: Visibility.FRIENDS,
+          maritalStatus: Visibility.FRIENDS
+        },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
