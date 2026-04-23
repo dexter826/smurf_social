@@ -12,24 +12,26 @@ export const getMessageDisplayContent = (message: RtdbMessage): string => {
             return message.content.replace(/@\[([^\]]+)\]/g, '@$1');
         case MessageType.SHARE_POST:
             return '[Chia sẻ bài viết]';
-        case MessageType.IMAGE:
+        case MessageType.IMAGE: {
             const isAlbum = (message.media || []).length > 1;
-            if (isAlbum) return '[Album hình ảnh]';
-            return message.content ? `[Hình ảnh] ${message.content.replace(/@\[([^\]]+)\]/g, '@$1')}` : '[Hình ảnh]';
+            const prefix = isAlbum ? '[Album hình ảnh]' : '[Hình ảnh]';
+            if (message.content?.startsWith(prefix)) return message.content;
+            return message.content ? `${prefix} ${message.content.replace(/@\[([^\]]+)\]/g, '@$1')}` : prefix;
+        }
         case MessageType.VIDEO:
-            return '[Video]';
+            return message.content?.startsWith('[Video]') ? message.content : '[Video]';
         case MessageType.GIF:
-            return '[GIF]';
+            return message.content?.startsWith('[GIF]') ? message.content : '[GIF]';
         case MessageType.FILE:
-            return `[File] ${message.media?.[0]?.fileName || ''}`;
+            return message.content?.startsWith('[File]') ? message.content : `[File] ${message.media?.[0]?.fileName || ''}`;
         case MessageType.VOICE:
-            return '[Tin nhắn thoại]';
+            return message.content?.startsWith('[Tin nhắn thoại]') ? message.content : '[Tin nhắn thoại]';
         case MessageType.CALL:
-            return '[Cuộc gọi]';
+            return message.content?.startsWith('[Cuộc gọi]') ? message.content : '[Cuộc gọi]';
         case MessageType.SYSTEM:
             return message.content;
         default:
-            return '[Tin nhắn]';
+            return message.content?.startsWith('[Tin nhắn]') ? message.content : '[Tin nhắn]';
     }
 };
 

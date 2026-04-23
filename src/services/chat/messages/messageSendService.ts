@@ -143,7 +143,9 @@ export const messageSendService = {
     ): Promise<string> => {
         try {
             const files = Array.isArray(file) ? file : [file];
-            const displayContent = files.length > 1 ? '[Album hình ảnh]' : '[Hình ảnh]';
+            const isAlbum = files.length > 1;
+            const caption = options?.content ? ` ${options.content}` : '';
+            const displayContent = isAlbum ? `[Album hình ảnh]${caption}` : `[Hình ảnh]${caption}`;
 
             if (files.length <= 1) {
                 return await createAndSendMediaMessage(convId, senderId, files[0], MessageType.IMAGE, {

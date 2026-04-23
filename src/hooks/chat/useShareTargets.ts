@@ -114,7 +114,6 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
 
     const friendEntries: ShareableEntry[] = allFriends
       .filter(friend => friend.id !== currentUserId)
-      .filter(friend => !existingChatPartnerIds.has(friend.id))
       .filter(friend => {
         const blocked = blockedUsers[friend.id];
         const blockedBy = blockedByPartners[friend.id];
@@ -126,8 +125,13 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
         item: friend
       }));
 
+    const searchItems: ShareableEntry[] = [
+      ...convEntries,
+      ...friendEntries.filter(f => !existingChatPartnerIds.has((f.item as any).id))
+    ];
+
     return {
-      allItems: [...convEntries, ...friendEntries],
+      allItems: searchItems,
       recentItems: convEntries,
       friendItems: friendEntries
     };

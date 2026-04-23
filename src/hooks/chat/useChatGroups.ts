@@ -118,15 +118,7 @@ export const useChatGroups = ({
       ? systemMessages.TOGGLE_APPROVAL_ON(getActorName())
       : systemMessages.TOGGLE_APPROVAL_OFF(getActorName());
     await sendGroupSystemMessage(selectedConversationId, currentUserId, msg);
-
-    for (const uid of autoApprovedUids) {
-      await sendGroupSystemMessage(
-        selectedConversationId,
-        currentUserId,
-        systemMessages.APPROVE_MEMBER(getActorName(), getName(uid))
-      );
-    }
-  }, [selectedConversationId, currentUserId, toggleApprovalMode, sendGroupSystemMessage, getActorName, getName]);
+  }, [selectedConversationId, currentUserId, toggleApprovalMode, sendGroupSystemMessage, getActorName]);
 
   const handleRemoveMember = useCallback(async (userId: string) => {
     if (!selectedConversationId) return;
