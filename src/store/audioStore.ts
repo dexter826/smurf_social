@@ -13,9 +13,12 @@ export const useAudioStore = create<AudioState>((set) => ({
     currentlyPlayingId: null,
     isPlaying: false,
 
+    /** Thiết lập ID âm thanh đang phát */
     setCurrentlyPlaying: (id) => set({ currentlyPlayingId: id }),
+    /** Cập nhật trạng thái phát */
     setIsPlaying: (isPlaying) => set({ isPlaying }),
 
+    /** Chuyển đổi trạng thái phát */
     togglePlay: (id) => set((state) => {
         if (state.currentlyPlayingId === id) {
             return { isPlaying: !state.isPlaying };
@@ -23,5 +26,6 @@ export const useAudioStore = create<AudioState>((set) => ({
         return { currentlyPlayingId: id, isPlaying: true };
     }),
 
+    /** Dừng tất cả âm thanh */
     stopAll: () => set({ currentlyPlayingId: null, isPlaying: false }),
 }));

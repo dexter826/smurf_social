@@ -1,8 +1,6 @@
 import { getStorage } from 'firebase-admin/storage';
 
-/**
- * Trích xuất đường dẫn từ URL
- */
+/** Lấy đường dẫn lưu trữ từ địa chỉ URL */
 export function extractStoragePath(url: string): string | null {
   if (!url || !url.includes('firebasestorage.googleapis.com')) return null;
   try {
@@ -13,9 +11,7 @@ export function extractStoragePath(url: string): string | null {
   }
 }
 
-/**
- * Xóa file trên Storage
- */
+/** Xóa tệp tin khỏi bộ lưu trữ đám mây */
 export async function deleteStorageFile(url: string): Promise<void> {
   const path = extractStoragePath(url);
   if (!path) return;

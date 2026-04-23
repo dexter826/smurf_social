@@ -15,13 +15,11 @@ interface UserCacheState {
   setUser: (user: User) => void;
   updateUser: (user: User) => void;
   invalidateUser: (id: string) => void;
-  _updateAccess: (id: string) => void; // Quản lý nội bộ thứ tự truy cập
+  _updateAccess: (id: string) => void;
   reset: () => void;
 }
 
-/**
- * Quản lý Cache người dùng với chính sách LRU
- */
+
 export const useUserCache = create<UserCacheState>()(
   persist(
     (set, get) => ({
@@ -29,13 +27,12 @@ export const useUserCache = create<UserCacheState>()(
       loadingIds: [],
       accessOrder: [],
 
-  // Cập nhật thứ tự truy cập (LRU Eviction)
+  /** Cập nhật thứ tự truy cập LRU */
   _updateAccess: (id: string) => {
     const { accessOrder, users } = get();
     const newOrder = accessOrder.filter(oid => oid !== id);
     newOrder.push(id);
     
-    // Giới hạn dung lượng cache
     if (newOrder.length > PAGINATION.USER_CACHE_LIMIT) {
       const evictId = newOrder.shift();
       if (evictId) {
@@ -47,7 +44,7 @@ export const useUserCache = create<UserCacheState>()(
     }
   },
 
-  // Tải danh sách người dùng theo lô (Batching)
+  /** Tải danh sách người dùng theo lô */
   fetchUsers: async (ids: string[]) => {
     if (!ids?.length) return;
 
@@ -70,7 +67,7 @@ export const useUserCache = create<UserCacheState>()(
     }
   },
 
-  // Lấy và cập nhật cache cho một người dùng
+  /** Tải thông tin một người dùng */
   fetchUser: async (id: string) => {
     const { users, _updateAccess, fetchUsers } = get();
     if (users[id]) {
@@ -84,19 +81,19 @@ export const useUserCache = create<UserCacheState>()(
     return updatedUser;
   },
 
-  // Lấy dữ liệu nhanh từ cache (Synchronous)
+  /** Lấy người dùng từ bộ nhớ đệm */
   getUser: (id: string) => {
     return get().users[id];
   },
 
-  // Ghi mới dữ liệu vào cache
+  /** Lưu người dùng vào bộ nhớ đệm */
   setUser: (user: User) => {
     if (!user?.id) return;
     set(state => ({ users: { ...state.users, [user.id]: user } }));
     get()._updateAccess(user.id);
   },
 
-  // Cập nhật thông tin chi tiết
+  /** Cập nhật thông tin người dùng */
   updateUser: (user: User) => {
     if (!user?.id) return;
     const { users } = get();
@@ -107,7 +104,7 @@ export const useUserCache = create<UserCacheState>()(
     }));
   },
 
-  // Thu hồi cache của một người dùng
+  /** Xóa người dùng khỏi bộ nhớ đệm */
   invalidateUser: (id: string) => {
     set(state => {
       const { [id]: _, ...rest } = state.users;
@@ -118,6 +115,7 @@ export const useUserCache = create<UserCacheState>()(
     });
   },
 
+  /** Đặt lại bộ nhớ đệm */
   reset: () => {
     set({ users: {}, loadingIds: [], accessOrder: [] });
   }

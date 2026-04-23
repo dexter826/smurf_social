@@ -14,6 +14,7 @@ interface MessageRequestBannerProps {
   onBlock: () => void;
 }
 
+/** Banner thông báo tin nhắn từ người lạ */
 export const MessageRequestBanner: React.FC<MessageRequestBannerProps> = ({
   partnerName, friendRequestStatus = 'none',
   onAddFriend, onAcceptFriend, onDeclineFriend, onCancelFriend, onBlock,

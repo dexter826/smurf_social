@@ -38,6 +38,7 @@ interface Action {
   isActive?: boolean;
 }
 
+/** Các hành động trong bảng chi tiết hội thoại */
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   conversation, currentUserId, partner,
   onToggleMute, onTogglePin, onToggleBlock, onToggleArchive,
@@ -164,7 +165,7 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         ))}
       </div>
 
-      {/* Cài đặt nhóm (Chỉ Admin/Creator) */}
+      {/* Group Settings */}
       {isGroup && isAdminOrCreator && onToggleApprovalMode && (
         <div className="mt-2 border-t border-border-light pt-2">
           <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wide">

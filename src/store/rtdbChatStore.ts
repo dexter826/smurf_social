@@ -27,6 +27,7 @@ export const useRtdbChatStore = create<RtdbChatState>()(
 
             draftMessages: {} as Record<string, string>,
 
+            /** Lưu tin nhắn nháp */
             saveDraft: (convId: string, text: string) => {
                 const [set] = a;
                 if (text.trim()) {
@@ -40,6 +41,7 @@ export const useRtdbChatStore = create<RtdbChatState>()(
                 }
             },
 
+            /** Xóa tin nhắn nháp */
             clearDraft: (convId: string) => {
                 const [set] = a;
                 set(state => {
@@ -49,6 +51,7 @@ export const useRtdbChatStore = create<RtdbChatState>()(
                 });
             },
 
+            /** Đặt lại trạng thái chat */
             reset: () => {
                 const [set] = a;
                 set({
@@ -74,7 +77,6 @@ export const useRtdbChatStore = create<RtdbChatState>()(
             partialize: (state) => {
                 const cachedMessages: Record<string, Array<{ id: string; data: RtdbMessage }>> = {};
                 
-                // Chỉ cache số lượng tin nhắn giới hạn để tối ưu dung lượng localStorage
                 Object.keys(state.messages).forEach(convId => {
                     const msgs = state.messages[convId];
                     if (msgs?.length) {

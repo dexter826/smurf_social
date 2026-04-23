@@ -12,9 +12,7 @@ interface UseProfileDataProps {
   currentUser: User | null;
 }
 
-/**
- * Lấy và đồng bộ dữ liệu profile
- */
+/** Tải và cập nhật thông tin hồ sơ người dùng */
 export const useProfileData = ({ profileUserId, currentUser }: UseProfileDataProps) => {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

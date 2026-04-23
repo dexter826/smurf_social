@@ -17,12 +17,13 @@ interface ChatBoxHeaderProps {
   canCall?: boolean;
 }
 
+/** Header của khung chat */
 const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
   conversation, participants, chatName, avatarSrc, partner,
   usersMap, onBack, onInfoClick, onCall, onVideoCall, canCall = true,
 }) => (
   <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-4 h-16 border-b border-border-light bg-bg-primary transition-theme z-[var(--z-sticky)]">
-    {/* Left: back + avatar + name */}
+    {/* Left Content */}
     <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
       {onBack && (
         <IconButton
@@ -75,7 +76,7 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
       </div>
     </div>
 
-    {/* Right: actions */}
+    {/* Right Actions */}
     <div className="flex items-center gap-0.5 flex-shrink-0">
       {canCall && (
         <>

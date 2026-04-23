@@ -13,10 +13,11 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+/** Giao diện khi đang ghi âm tin nhắn thoại */
 export const RecordingUI: React.FC<RecordingUIProps> = ({ duration, onCancel, onStop }) => (
   <div className="flex-1 flex items-center justify-between bg-bg-secondary rounded-xl px-4 py-2.5 border border-primary/30 animate-fade-in">
     <div className="flex items-center gap-2.5">
-      {/* Pulsing mic indicator */}
+      {/* Pulsing Mic Indicator */}
       <div className="relative flex-shrink-0">
         <div className="w-7 h-7 rounded-full bg-error/15 flex items-center justify-center">
           <Mic size={14} className="text-error" />

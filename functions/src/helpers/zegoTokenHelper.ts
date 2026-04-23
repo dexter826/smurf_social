@@ -1,5 +1,6 @@
 import { createCipheriv } from 'crypto';
 
+/** Tạo mã xác thực ZegoCloud phiên bản 04 */
 export function generateToken04(
   appId: number,
   userId: string,
@@ -45,11 +46,13 @@ export function generateToken04(
   return '04' + result.toString('base64');
 }
 
+/** Tạo chuỗi khởi tạo ngẫu nhiên */
 function makeRandomIv(): string {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
   return Array.from({ length: 16 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
+/** Xác định thuật toán mã hóa dựa trên độ dài khóa */
 function getAlgorithm(key: string): string {
   switch (Buffer.from(key).length) {
     case 16: return 'aes-128-cbc';

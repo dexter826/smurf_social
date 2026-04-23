@@ -11,6 +11,7 @@ import { useReactionStore } from '../reactionStore';
 import { convertDoc } from '../../utils/firebaseUtils';
 
 export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set, get) => ({
+  /** Tạo bài viết mới */
   createPost: async (userId: string, content: string, media: MediaObject[], visibility: Visibility = Visibility.FRIENDS, pendingFiles?: File[]) => {
     const postId = postService.generatePostId();
     const previewMedia = pendingFiles?.map((f: File) => ({
@@ -68,6 +69,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
+  /** Cập nhật bài viết */
   updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility, pendingFiles?: File[]) => {
     const { posts, selectedPost } = get();
     const existing = posts.find(p => p.id === postId) || (selectedPost?.id === postId ? selectedPost : null);
@@ -123,6 +125,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
+  /** Xóa bài viết */
   deletePost: async (postId: string, userId: string) => {
     const { posts, selectedPost } = get();
     const snapshot = posts.find(p => p.id === postId) ?? null;
@@ -148,6 +151,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
+  /** Tương tác cảm xúc */
   reactToPost: async (postId: string, userId: string, reaction: ReactionType | 'REMOVE') => {
     const { setOptimisticReaction, clearOptimisticReaction } = useReactionStore.getState();
     setOptimisticReaction(postId, reaction === 'REMOVE' ? null : reaction);
@@ -161,6 +165,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
+  /** Tải lên phương tiện */
   uploadMedia: async (files: File[], userId: string) => {
     try {
       return await postService.uploadPostMedia(files, userId);
@@ -170,6 +175,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
+  /** Thiết lập bài viết đang chọn */
   setSelectedPost: (post: Post | null) => {
     const { selectedPost, selectedPostUnsubscribe } = get();
     if (post?.id === selectedPost?.id && !!selectedPostUnsubscribe === !!post) return;
@@ -199,6 +205,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
+  /** Lấy bài viết theo ID */
   fetchPostById: async (postId: string, currentUserId: string, friendIds: string[]) => {
     const { selectedPost, setSelectedPost } = get();
     if (selectedPost?.id === postId) return;
@@ -221,6 +228,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
     }
   },
 
+  /** Đặt lại trạng thái bài viết */
   reset: () => {
     const { abortController, selectedPostUnsubscribe } = get();
     if (abortController) abortController.abort();

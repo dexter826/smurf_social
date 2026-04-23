@@ -70,9 +70,7 @@ async function touchAuthorFeed(postId: string, authorId: string) {
     );
 }
 
-/**
- * Xử lý tất cả thay đổi trên bài viết (Create, Soft-delete)
- */
+/** Đồng bộ bài viết vào bảng tin khi có thay đổi */
 export const onPostWrite = onDocumentWritten(
     { document: 'posts/{postId}', region: 'asia-southeast1' },
     async (event) => {
@@ -80,19 +78,16 @@ export const onPostWrite = onDocumentWritten(
         const before = event.data?.before.data();
         const after = event.data?.after.data();
 
-        // 1. Xử lý CREATE (Fan-out)
         if (!before && after) {
             await handleFanout(postId, after);
             return;
         }
 
-        // 2. Xử lý DELETE (Soft-delete) hoặc Thay đổi trạng thái
         if (before && after && before.status !== 'deleted' && after.status === 'deleted') {
             await removeFeedEntriesIncludingAuthor(postId, after.authorId);
             return;
         }
 
-        // 3. Xử lý UPDATE (Nội dung, Media, Visibility)
         if (before && after && before.status === 'active' && after.status === 'active') {
             const visibilityChanged = before.visibility !== after.visibility;
             const contentChanged = before.content !== after.content ||
@@ -100,16 +95,13 @@ export const onPostWrite = onDocumentWritten(
 
             if (!visibilityChanged && !contentChanged) return;
 
-            // Nếu đổi sang Private: Xóa khỏi feeds của bạn bè (giữ lại feed của tác giả)
             if (visibilityChanged && after.visibility === 'private') {
                 await removeFeedEntriesExcludingAuthor(postId, after.authorId);
                 await touchAuthorFeed(postId, after.authorId);
             }
-            // Nếu đổi từ private sang friends/public: Fan-out lại cho bạn bè
             else if (visibilityChanged && !shouldFanoutToFriends(before.visibility) && shouldFanoutToFriends(after.visibility)) {
                 await handleFanout(postId, after);
             }
-            // Nếu chỉ đổi nội dung: Cập nhật updatedAt để kích hoạt listener tại client
             else {
                 await updateFeedEntries(postId, after.authorId, after.visibility);
             }
@@ -117,9 +109,7 @@ export const onPostWrite = onDocumentWritten(
     }
 );
 
-/**
- * Thêm bài viết vào Feed của bạn bè (Fan-out)
- */
+/** Phân phối bài viết tới bảng tin bạn bè */
 async function handleFanout(postId: string, postData: any) {
     const authorId = postData.authorId;
     if (!authorId) return;
@@ -153,9 +143,7 @@ async function handleFanout(postId: string, postData: any) {
     }
 }
 
-/**
- * Xóa bài viết khỏi Feed của bạn bè (không xóa khỏi feed của chính tác giả)
- */
+/** Gỡ bài viết khỏi bảng tin bạn bè (giữ lại trên bảng tin người đăng) */
 async function removeFeedEntriesExcludingAuthor(postId: string, authorId: string) {
     try {
         const friendsSnapshot = await db.collection('users').doc(authorId).collection('friends').get();
@@ -170,9 +158,7 @@ async function removeFeedEntriesExcludingAuthor(postId: string, authorId: string
     }
 }
 
-/**
- * Xóa bài viết khỏi Feed của tất cả (bao gồm cả tác giả)
- */
+/** Gỡ bài viết khỏi tất cả bảng tin */
 async function removeFeedEntriesIncludingAuthor(postId: string, authorId: string) {
     try {
         const friendsSnapshot = await db.collection('users').doc(authorId).collection('friends').get();
@@ -191,9 +177,7 @@ async function removeFeedEntriesIncludingAuthor(postId: string, authorId: string
     }
 }
 
-/**
- * Cập nhật timestamp để kích hoạt listener phía client
- */
+/** Cập nhật trạng thái bài viết trên bảng tin */
 async function updateFeedEntries(postId: string, authorId: string, visibility?: string) {
     try {
         const updatedAt = FieldValue.serverTimestamp();

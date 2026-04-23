@@ -5,6 +5,7 @@ import { User } from '../types';
 
 const geminiApiKey = defineString('GEMINI_API_KEY');
 
+/** Cập nhật vector hồ sơ khi thông tin người dùng thay đổi */
 export const onUserProfileUpdated = onDocumentWritten("users/{userId}", async (event) => {
   const change = event.data;
   if (!change) return;
@@ -14,7 +15,6 @@ export const onUserProfileUpdated = onDocumentWritten("users/{userId}", async (e
 
   if (!after) return;
 
-  // Kiểm tra thay đổi các trường quan trọng
   const interestsChanged = JSON.stringify(before?.interests || []) !== JSON.stringify(after.interests || []);
   const locationChanged = before?.location !== after.location;
   const schoolChanged = before?.school !== after.school;

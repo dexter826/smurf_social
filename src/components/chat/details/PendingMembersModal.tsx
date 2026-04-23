@@ -13,6 +13,7 @@ interface PendingMembersModalProps {
   onRejectMembers?: (uids: string[]) => Promise<void>;
 }
 
+/** Modal phê duyệt thành viên chờ tham gia nhóm */
 export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
   isOpen,
   onClose,
@@ -28,7 +29,7 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
   const pendingMembers = conversation.data.pendingMembers || {};
   const pendingEntries = Object.entries(pendingMembers);
 
-  /** Phê duyệt tất cả thành viên đang chờ */
+  /* Approve All Pending Members */
   const handleApproveAll = async () => {
     const uids = pendingEntries.map(([uid]) => uid);
     setIsProcessing(true);
@@ -41,7 +42,7 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
     }
   };
 
-  /** Phê duyệt một thành viên cụ thể */
+  /* Approve Single Member */
   const handleApproveSingle = async (uid: string) => {
     setIsProcessing(true);
     try {
@@ -52,7 +53,7 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
     }
   };
 
-  /** Từ chối một thành viên cụ thể */
+  /* Reject Single Member */
   const handleRejectSingle = async () => {
     if (!confirmReject) return;
     setIsProcessing(true);
@@ -75,7 +76,7 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
         padding="none"
       >
         <div className="flex flex-col max-h-[70vh]">
-          {/* Header phụ */}
+          {/* Sub Header */}
           <div className="px-4 py-3 bg-bg-secondary/50 border-b border-border-light flex items-center justify-between">
             <div className="flex items-center gap-2 text-text-secondary">
               <Users size={16} />
@@ -95,7 +96,7 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
             )}
           </div>
 
-          {/* Danh sách */}
+          {/* Members List */}
           <div className="overflow-y-auto">
             {pendingEntries.length > 0 ? (
               pendingEntries.map(([uid, info]) => {
@@ -148,7 +149,7 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
         </div>
       </Modal>
 
-      {/* Dialog xác nhận từ chối */}
+      {/* Reject Confirmation Dialog */}
       <ConfirmDialog
         isOpen={!!confirmReject}
         onClose={() => setConfirmReject(null)}
@@ -161,7 +162,7 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
         variant="danger"
       />
 
-      {/* Dialog xác nhận duyệt tất cả */}
+      {/* Approve All Confirmation Dialog */}
       <ConfirmDialog
         isOpen={confirmApproveAll}
         onClose={() => setConfirmApproveAll(false)}

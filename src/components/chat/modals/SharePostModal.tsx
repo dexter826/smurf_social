@@ -17,6 +17,7 @@ interface SharePostModalProps {
   currentUserId: string;
 }
 
+/** Modal chia sẻ bài viết vào tin nhắn chat */
 export const SharePostModal: React.FC<SharePostModalProps> = ({
   isOpen,
   onClose,
@@ -148,7 +149,7 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
           </div>
         )}
 
-        {/* Search */}
+        {/* Search Input */}
         <div className="relative group">
           <Input
             icon={<Search size={16} className="text-text-tertiary group-focus-within:text-primary transition-colors" />}

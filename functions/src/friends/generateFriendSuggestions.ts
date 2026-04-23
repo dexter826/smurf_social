@@ -8,7 +8,7 @@ const K_MIN_POOL_SIZE_FOR_REFRESH = 20;
 const K_SUGGESTION_LIMIT = 20;
 const K_MUTUAL_FRIEND_BONUS = 0.05;
 
-// Tính tương đồng cosine giữa 2 vector
+/** Tính độ tương đồng giữa hai hồ sơ người dùng */
 function cosineSimilarity(a: number[], b: number[]): number {
     let dot = 0;
     let magA = 0;
@@ -24,19 +24,19 @@ function cosineSimilarity(a: number[], b: number[]): number {
     return denom === 0 ? 0 : dot / denom;
 }
 
-// Lấy danh sách bạn bè của user
+/** Lấy danh sách bạn bè của người dùng */
 async function loadFriendIds(userId: string): Promise<Set<string>> {
     const snap = await db.collection('users').doc(userId).collection('friends').get();
     return new Set(snap.docs.map((d) => d.id));
 }
 
-// Lấy danh sách những người user đã chặn
+/** Lấy danh sách người bị chặn */
 async function loadBlockedIds(userId: string): Promise<Set<string>> {
     const snap = await db.collection('users').doc(userId).collection('blockedUsers').get();
     return new Set(snap.docs.map((d) => d.id));
 }
 
-// Gom danh sách bạn của bạn (Friends-of-friends)
+/** Thu thập danh sách bạn của bạn bè */
 async function collectFriendsOfFriendsPool(
     userId: string, 
     friendIds: Set<string>, 
@@ -59,7 +59,7 @@ async function collectFriendsOfFriendsPool(
     return pool;
 }
 
-// Lấy thông tin user theo danh sách ID
+/** Lấy dữ liệu hồ sơ theo danh sách ID */
 async function fetchUsersByIds(ids: string[]): Promise<Array<{ id: string; userVector?: number[]; status: string }>> {
     const results: Array<{ id: string; userVector?: number[]; status: string }> = [];
     for (let i = 0; i < ids.length; i += 30) {
@@ -78,7 +78,7 @@ async function fetchUsersByIds(ids: string[]): Promise<Array<{ id: string; userV
     return results;
 }
 
-// Xếp hạng ứng viên dựa trên Vector và Mutual Friends
+/** Xếp hạng gợi ý bạn bè theo điểm số */
 function rankByScore(
     candidates: Array<{ id: string; userVector?: number[] }>, 
     myVector: number[] | undefined, 
@@ -98,6 +98,7 @@ function rankByScore(
     return scored.slice(0, limit).map(({ id, mutualCount }) => ({ id, mutualCount }));
 }
 
+/** Tự động tạo danh sách gợi ý kết bạn */
 export const generateFriendSuggestions = onCall(
     { region: 'asia-southeast1', cors: true, invoker: 'public' }, 
     async (request) => {
@@ -119,7 +120,6 @@ export const generateFriendSuggestions = onCall(
         const friendIds = await loadFriendIds(userId);
         const myBlockedIds = await loadBlockedIds(userId);
         
-        // Lấy danh sách những người đã chặn mình (collectionGroup)
         const blockedMeSnap = await db.collectionGroup('blockedUsers')
             .where('blockedUid', '==', userId)
             .get();
@@ -134,7 +134,6 @@ export const generateFriendSuggestions = onCall(
         const oneWeekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
         const isStale = !lastUpdated || lastUpdated.toMillis() < oneWeekAgoMs;
 
-        // Trả về cache nếu chưa hết hạn
         if (!force && !isStale && cachedSuggestions.length > 0) {
             return { suggestionIds: cachedSuggestions.slice(0, limit).map(s => s.id) };
         }
@@ -142,19 +141,16 @@ export const generateFriendSuggestions = onCall(
         let finalSuggestions: Array<{ id: string; mutualCount: number }> = [];
 
         if (friendIds.size === 0) {
-            // Trường hợp chưa có bạn: lấy người dùng active ngẫu nhiên
             const snap = await db.collection('users').where('status', '==', UserStatus.ACTIVE).limit(100).get();
             const candidates = snap.docs
                 .filter((d) => d.id !== userId && !blockedIds.has(d.id))
                 .map((d) => ({ id: d.id, userVector: d.data().userVector }));
             finalSuggestions = rankByScore(candidates, myVector, new Map(), limit);
         } else {
-            // Trường hợp đã có bạn: dùng Friends-of-friends
             const mutualCountMap = new Map<string, number>();
             const poolIds = await collectFriendsOfFriendsPool(userId, friendIds, blockedIds, mutualCountMap);
             
             if (poolIds.size < K_MIN_POOL_SIZE_FOR_REFRESH) {
-                // Pool quá nhỏ, pad thêm người lạ
                 const snap = await db.collection('users').where('status', '==', UserStatus.ACTIVE).limit(50).get();
                 for (const d of snap.docs) {
                     if (d.id !== userId && !friendIds.has(d.id) && !blockedIds.has(d.id)) {
@@ -169,7 +165,6 @@ export const generateFriendSuggestions = onCall(
             finalSuggestions = rankByScore(activeUsers, myVector, mutualCountMap, limit);
         }
 
-        // Lưu cache mới
         await userRef.update({
             suggestedFriends: finalSuggestions,
             suggestionsLastUpdated: FieldValue.serverTimestamp(),

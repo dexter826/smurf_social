@@ -10,12 +10,13 @@ const API_KEY = import.meta.env.VITE_LINKPREVIEW_API_KEY as string;
 const CACHE_PREFIX = 'lp:';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 
-// Regex to extract first URL from text
+// Regex tách URL từ văn bản
 const URL_REGEX = /(?:https?:\/\/|www\.)[^\s<>"{}|\\^`[\]]+/i;
 
-// File extensions to skip (already handled as media)
+// Đuôi file bỏ qua (đã xử lý là media)
 const SKIP_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv|pdf|zip|rar)(\?.*)?$/i;
 
+/** Tách URL đầu tiên trong văn bản */
 export function extractFirstUrl(text: string): string | null {
     const match = text.match(URL_REGEX);
     if (!match) return null;
@@ -44,7 +45,7 @@ function cleanupCache(): void {
         const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
         if (keys.length < 100) return; // Chỉ dọn dẹp nếu > 100 mục
 
-        // Xóa các mục đã hết hạn
+
         keys.forEach(key => {
             const raw = localStorage.getItem(key);
             if (raw) {
@@ -55,7 +56,7 @@ function cleanupCache(): void {
             }
         });
 
-        // Nếu vẫn còn quá nhiều, xóa bớt mục cũ nhất
+
         const remainingKeys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
         if (remainingKeys.length > 150) {
             const sorted = remainingKeys.map(key => {
@@ -79,9 +80,9 @@ function setCache(url: string, data: LinkPreviewData): void {
     }
 }
 
-// In-flight request deduplication
 const pending = new Map<string, Promise<LinkPreviewData | null>>();
 
+/** Lấy thông tin xem trước liên kết */
 export async function fetchLinkPreview(url: string): Promise<LinkPreviewData | null> {
     if (!API_KEY || API_KEY === 'your_linkpreview_api_key_here') return null;
 
@@ -118,7 +119,7 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewData | n
                 image: json.image || '',
             };
 
-            // Extract site name from URL
+
             try {
                 const hostname = new URL(data.url).hostname.replace(/^www\./, '');
                 data.siteName = hostname;

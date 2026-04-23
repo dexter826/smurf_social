@@ -42,6 +42,7 @@ interface MessageBubbleProps {
   onMarkAsRead?: (messageId: string) => void;
 }
 
+/** Bong bóng hiển thị nội dung tin nhắn */
 const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   message, isMe, sender, showAvatar, showName, isLastMessage,
   onRecall, onDeleteForMe, onForward, onReply, onEdit,
@@ -114,7 +115,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   );
 
 
-  /* ── System message ── */
+  /* System Message */
   if (message.data.type === MessageType.SYSTEM) {
     return (
       <div className="flex justify-center my-2">
@@ -134,7 +135,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
         ref={observerRef}
         className={`flex w-full group ${isMe ? 'justify-end' : 'justify-start gap-2'} ${hasReactions ? 'mb-4' : 'mb-0.5'}`}
       >
-        {/* Avatar (received only) */}
+        {/* Avatar Received Only */}
         {!isMe && (
           <div className="w-8 flex-shrink-0 flex items-end pb-1">
             {showAvatar && (
@@ -150,7 +151,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
         )}
 
         <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'} relative`}>
-          {/* Sender name (group only) */}
+          {/* Sender Name Group Only */}
           {!isMe && showName && (
             <button
               className="text-xs text-text-secondary ml-1 mb-0.5 font-semibold hover:text-primary transition-colors duration-200"
@@ -160,7 +161,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             </button>
           )}
 
-          {/* Bubble + reaction zone */}
+          {/* Bubble And Reaction Zone */}
           <div className={`relative group/message w-fit max-w-full`}>
             <ReactionDetailsModal
               isOpen={showReactionDetails}
@@ -186,7 +187,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   }
                 `}
               >
-                {/* Reply preview */}
+                {/* Reply Preview */}
                 {!message.data.isRecalled && message.data.replyToId && (() => {
                   const replyToMsg = allMessages.find(m => m.id === message.data.replyToId);
                   const replyAuthorName = replyToMsg?.data.senderId === currentUserId
@@ -249,7 +250,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               </div>
             </div>
 
-            {/* Reaction badge + emoji button */}
+            {/* Reaction Badge Emoji Button */}
             {!message.data.isRecalled && message.data.type !== MessageType.CALL && (
               <div
                 className={`absolute -bottom-3 flex items-center gap-1 ${isMe ? 'left-2' : 'right-2'}`}
@@ -296,7 +297,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               </div>
             )}
 
-            {/* Message actions (hover) */}
+            {/* Message Actions Hover */}
             {!message.data.isRecalled && (
               <MessageActions
                 message={message}
@@ -315,7 +316,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
             )}
           </div>
 
-          {/* Read status */}
+          {/* Read Status */}
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (
             <div className={hasReactions ? "mt-4" : "mt-1"}>
               <div

@@ -23,8 +23,9 @@ import { userService } from './userService';
 import { isFullyBlocked } from '../utils/blockUtils';
 import { useUserCache } from '../store/userCacheStore';
 
+/** Dịch vụ quản lý bạn bè */
 export const friendService = {
-  // Kiểm tra yêu cầu kết bạn đang chờ
+  /** Kiểm tra yêu cầu kết bạn đang chờ */
   checkFriendRequestExists: async (senderId: string, receiverId: string): Promise<boolean> => {
     try {
       const q = query(
@@ -41,6 +42,7 @@ export const friendService = {
     }
   },
 
+  /** Gửi lời mời kết bạn */
   sendFriendRequest: async (senderId: string, receiverId: string): Promise<FriendRequest | void> => {
     try {
       if (senderId === receiverId) {
@@ -107,6 +109,7 @@ export const friendService = {
     }
   },
 
+  /** Lấy danh sách lời mời đã nhận */
   getReceivedRequests: async (userId: string): Promise<FriendRequest[]> => {
     try {
       const q = query(
@@ -124,6 +127,7 @@ export const friendService = {
     }
   },
 
+  /** Theo dõi lời mời đã nhận realtime */
   subscribeToReceivedRequests: (userId: string, callback: (requests: FriendRequest[]) => void) => {
     const q = query(
       collection(db, 'friendRequests'),
@@ -139,6 +143,7 @@ export const friendService = {
     });
   },
 
+  /** Lấy danh sách lời mời đã gửi */
   getSentRequests: async (userId: string): Promise<FriendRequest[]> => {
     try {
       const q = query(
@@ -156,6 +161,7 @@ export const friendService = {
     }
   },
 
+  /** Theo dõi lời mời đã gửi realtime */
   subscribeToSentRequests: (userId: string, callback: (requests: FriendRequest[]) => void) => {
     const q = query(
       collection(db, 'friendRequests'),
@@ -171,6 +177,7 @@ export const friendService = {
     });
   },
 
+  /** Chấp nhận lời mời kết bạn */
   acceptFriendRequest: async (requestId: string, senderId: string, receiverId: string): Promise<void> => {
     try {
       const [blockToMe, blockByMe] = await Promise.all([
@@ -199,6 +206,7 @@ export const friendService = {
     }
   },
 
+  /** Từ chối lời mời kết bạn */
   rejectFriendRequest: async (requestId: string): Promise<void> => {
     try {
       const requestRef = doc(db, 'friendRequests', requestId);
@@ -212,6 +220,7 @@ export const friendService = {
     }
   },
 
+  /** Hủy lời mời kết bạn đã gửi */
   cancelFriendRequest: async (requestId: string): Promise<void> => {
     try {
       await deleteDoc(doc(db, 'friendRequests', requestId));
@@ -221,6 +230,7 @@ export const friendService = {
     }
   },
 
+  /** Hủy kết bạn */
   unfriend: async (userId: string, friendId: string): Promise<void> => {
     try {
       const batch = writeBatch(db);
@@ -250,6 +260,7 @@ export const friendService = {
     }
   },
 
+  /** Lấy toàn bộ danh sách bạn bè */
   getAllFriends: async (currentUserId: string): Promise<User[]> => {
     try {
       const snap = await getDocs(collection(db, 'users', currentUserId, 'friends'));
@@ -263,6 +274,7 @@ export const friendService = {
     }
   },
 
+  /** Theo dõi danh sách bạn bè realtime */
   subscribeToFriends: (userId: string, callback: (friends: User[]) => void): (() => void) => {
     const friendsRef = collection(db, 'users', userId, 'friends');
     let previousFriendIds: string[] = [];
@@ -294,6 +306,7 @@ export const friendService = {
     });
   },
 
+  /** Tìm kiếm bạn bè */
   searchFriends: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
       const snap = await getDocs(collection(db, 'users', currentUserId, 'friends'));
@@ -314,6 +327,7 @@ export const friendService = {
     }
   },
 
+  /** Xóa gợi ý kết bạn */
   removeSuggestion: async (currentUserId: string, targetUserId: string): Promise<void> => {
     try {
       const userRef = doc(db, 'users', currentUserId);
@@ -333,6 +347,7 @@ export const friendService = {
     }
   },
 
+  /** Tự động tạo gợi ý kết bạn mới */
   generateFriendSuggestions: async (limit?: number, force: boolean = false): Promise<string[]> => {
     try {
       const fn = httpsCallable<{ limit?: number, force?: boolean }, { suggestionIds: string[] }>(
@@ -350,6 +365,7 @@ export const friendService = {
     }
   },
 
+  /** Lấy danh sách gợi ý đã lưu */
   getCachedSuggestions: async (userId: string): Promise<User[]> => {
     try {
       const [userSnap, blockedUsersMap] = await Promise.all([

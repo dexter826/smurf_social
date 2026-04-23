@@ -26,6 +26,7 @@ interface MessageListProps {
   onMarkAsRead?: (messageId: string) => void;
 }
 
+/** Danh sách tin nhắn trong hội thoại */
 const MessageListInner: React.FC<MessageListProps> = ({
   messages, currentUserId, usersMap, conversation, participants,
   lastReadByMap, onRecall, onDeleteForMe, onForward, onReply, onEdit,
@@ -74,7 +75,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
     return dayMessages[index - 1].data.senderId !== msg.data.senderId;
   };
 
-  /* ── Empty state ── */
+  /* Empty State */
   if (groupedMessages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 text-center py-12">
@@ -98,7 +99,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
     <div className="space-y-1">
       {groupedMessages.map((group, groupIndex) => (
         <div key={groupIndex}>
-          {/* Date separator */}
+          {/* Date Separator */}
           <div className="flex items-center justify-center my-4">
             <span className="bg-bg-tertiary text-text-tertiary text-xs px-3 py-1 rounded-full font-medium">
               {group.date}

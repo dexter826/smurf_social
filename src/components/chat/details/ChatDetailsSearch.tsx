@@ -12,6 +12,7 @@ interface ChatDetailsSearchProps {
   onMessageClick?: (messageId: string) => void;
 }
 
+/** Highlight văn bản tìm kiếm */
 const highlightText = (text: string, term: string): React.ReactNode => {
   if (!term.trim()) return text;
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -23,6 +24,7 @@ const highlightText = (text: string, term: string): React.ReactNode => {
   );
 };
 
+/** Tìm kiếm tin nhắn trong hội thoại */
 export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
   messages, usersMap, onMessageClick,
 }) => {
@@ -64,7 +66,7 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
         Tìm kiếm tin nhắn
       </p>
 
-      {/* Search input */}
+      {/* Search Input */}
       <div className="px-4 mb-3">
         <Input
           type="text"

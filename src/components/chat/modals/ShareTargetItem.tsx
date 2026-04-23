@@ -14,6 +14,7 @@ interface ShareTargetItemProps {
   variant?: 'vertical' | 'horizontal';
 }
 
+/** Item hiển thị đích đến (người dùng/nhóm) khi chia sẻ */
 export const ShareTargetItem: React.FC<ShareTargetItemProps> = ({
   entry,
   currentUserId,
@@ -74,7 +75,7 @@ export const ShareTargetItem: React.FC<ShareTargetItemProps> = ({
             }`}
           />
 
-          {/* Badge Check - đặt chính xác ở góc */}
+          {/* Badge Check Indicator */}
           {selected && (
             <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-primary text-white border-2 border-bg-primary flex items-center justify-center shadow-md z-20 animate-in zoom-in-50 duration-300">
               <Check size={8} strokeWidth={5} />

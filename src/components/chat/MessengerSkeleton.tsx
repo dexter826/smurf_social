@@ -2,10 +2,11 @@ import React from 'react';
 import { Skeleton } from '../ui/Skeleton';
 import { ConversationItem } from './conversation/ConversationItem';
 
+/** Skeleton hiển thị cho toàn bộ trang Messenger */
 export const MessengerSkeleton: React.FC = () => (
   <div className="flex h-full w-full bg-bg-primary overflow-hidden">
 
-    {/* ── Sidebar skeleton ── */}
+    {/* Sidebar Skeleton */}
     <div className="flex flex-col w-full md:w-[300px] lg:w-[360px] border-r border-border-light flex-shrink-0">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border-light space-y-3">
@@ -20,7 +21,7 @@ export const MessengerSkeleton: React.FC = () => (
         </div>
       </div>
 
-      {/* Conversation list */}
+      {/* Conversation List */}
       <div className="flex-1 overflow-hidden p-1">
         {[...Array(7)].map((_, i) => (
           <ConversationItem.Skeleton key={i} />
@@ -28,7 +29,7 @@ export const MessengerSkeleton: React.FC = () => (
       </div>
     </div>
 
-    {/* ── Main chat skeleton (desktop only) ── */}
+    {/* Main Chat Skeleton Desktop */}
     <div className="hidden md:flex flex-1 flex-col bg-bg-chat">
       {/* Chat header */}
       <div className="h-16 px-4 border-b border-border-light bg-bg-primary flex items-center justify-between flex-shrink-0">

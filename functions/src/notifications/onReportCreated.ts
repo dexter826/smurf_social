@@ -4,9 +4,7 @@ import { NotificationType, REPORT_TYPE_LABELS, REPORT_REASON_LABELS, ReportType,
 import { createNotification } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 
-/**
- * Xử lý khi có báo cáo mới
- */
+/** Gửi thông báo cho Admin khi có báo cáo mới */
 export const onReportCreated = onDocumentCreated(
   { document: 'reports/{reportId}', region: 'asia-southeast1' },
   async (event) => {

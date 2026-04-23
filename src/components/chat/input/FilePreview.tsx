@@ -75,6 +75,7 @@ const getFileStyle = (fileName: string) => {
   };
 };
 
+/** Hiển thị danh sách tệp đính kèm trước khi gửi */
 export const FilePreview: React.FC<FilePreviewProps> = ({
   files, onRemove, onPlayVoice, playingIndex, isSending,
 }) => {
@@ -147,7 +148,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 )}
               </div>
 
-              {/* Tên tệp hiển thị phía dưới */}
+              {/* File Name Display Below */}
               {item.type === 'file' && (
                 <div className="mt-1.5 px-0.5">
                   <p className="text-[10px] text-text-secondary font-medium truncate w-[72px] text-center">

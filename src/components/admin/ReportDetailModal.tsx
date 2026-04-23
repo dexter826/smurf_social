@@ -47,7 +47,7 @@ const ACTION_CONFIRM: Record<ActionType, { title: string; message: string; varia
   ban: { title: 'Khóa tài khoản', message: 'Tài khoản sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị ngay lập tức.', variant: 'danger' },
 };
 
-/* ── Status badge ── */
+/** Badge hiển thị trạng thái báo cáo */
 const StatusBadge: React.FC<{ status: ReportStatus }> = ({ status }) => {
   const map: Record<ReportStatus, { icon: React.ReactNode; label: string; cls: string }> = {
     [ReportStatus.PENDING]: { icon: <Clock size={11} />, label: 'Chờ xử lý', cls: 'bg-warning/10 text-warning' },
@@ -62,7 +62,7 @@ const StatusBadge: React.FC<{ status: ReportStatus }> = ({ status }) => {
   );
 };
 
-/* ── User row ── */
+/** Dòng hiển thị thông tin người dùng */
 const UserRow: React.FC<{ user: User | null; isLoading: boolean }> = ({ user, isLoading }) => {
   if (isLoading) {
     return (
@@ -86,6 +86,7 @@ const UserRow: React.FC<{ user: User | null; isLoading: boolean }> = ({ user, is
   );
 };
 
+/** Modal chi tiết và xử lý báo cáo vi phạm */
 export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, onClose }) => {
   const { user: currentUser } = useAuthStore();
   const [report, setReport] = useState<Report | null>(null);
@@ -170,7 +171,6 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
           toast.success(TOAST_MESSAGES.REPORT.REJECT_SUCCESS);
         }
         
-        // Refresh báo cáo để cập nhật status badge
         const updatedReport = await reportService.getReportById(report.id);
         if (updatedReport) setReport(updatedReport);
     } catch {
@@ -220,7 +220,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
           className="bg-bg-primary w-full max-w-4xl max-h-[92vh] rounded-2xl shadow-xl border border-border-light flex flex-col overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
-          {/* ── Modal header ── */}
+          {/* Modal Header */}
           <div className="px-5 py-4 border-b border-border-light flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-error/10 rounded-xl flex items-center justify-center text-error flex-shrink-0">
@@ -242,13 +242,13 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
             </div>
           </div>
 
-          {/* ── Body: 2 columns ── */}
+          {/* Body Two Columns */}
           <div className="flex-1 overflow-hidden flex flex-col lg:flex-row min-h-0">
 
-            {/* LEFT: Reported content */}
+            {/* Left Reported Content */}
             <div className="flex-1 overflow-y-auto scroll-hide p-5 space-y-5 lg:border-r border-border-light min-w-0">
 
-              {/* Type + reason */}
+              {/* Type And Reason */}
               {isLoading ? (
                 <div className="space-y-2.5">
                   <div className="flex gap-2">
@@ -284,7 +284,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                 </div>
               )}
 
-              {/* Reported content body */}
+              {/* Reported Content Body */}
               {isLoading ? (
                 <div className="space-y-2.5">
                   <Skeleton className="h-4 w-32" />
@@ -365,7 +365,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                   )}
                 </div>
               ) : (
-                /* User report */
+                /* User Report */
                 <div className="space-y-2.5">
                   <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">
                     Tài khoản bị báo cáo
@@ -380,7 +380,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                 </div>
               )}
 
-              {/* Evidence images */}
+              {/* Evidence Images */}
               {!isLoading && report?.images && report.images.length > 0 && (
                 <div className="space-y-2.5">
                   <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">
@@ -409,7 +409,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
               )}
             </div>
 
-            {/* RIGHT: Metadata + Actions */}
+            {/* Right Metadata Actions */}
             <div className="w-full lg:w-[300px] flex-shrink-0 flex flex-col overflow-y-auto scroll-hide border-t lg:border-t-0 border-border-light">
               <div className="p-5 space-y-4 flex-1">
                 <div className="space-y-1.5">
@@ -424,7 +424,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                   </div>
                 )}
 
-                {/* Resolution result */}
+                {/* Resolution Result */}
                 {!isLoading && report && !isPending && (
                   <div className={`p-3.5 rounded-xl border space-y-2.5
                     ${report.status === ReportStatus.RESOLVED
@@ -464,7 +464,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                 )}
               </div>
 
-              {/* Action footer */}
+              {/* Action Footer */}
               {!isLoading && (
                 <div className="p-4 border-t border-border-light bg-bg-secondary/20 space-y-2">
                   {isPending ? (

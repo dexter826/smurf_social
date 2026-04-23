@@ -4,9 +4,7 @@ import { Post } from '../../shared/types';
 import { usePostStore } from '../store';
 import { useAuthStore } from '../store/authStore';
 
-/**
- * Quản lý điều hướng và trạng thái hiển thị chi tiết bài viết qua URL
- */
+/** Điều hướng và quản lý trạng thái xem chi tiết bài viết */
 export const usePostNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();

@@ -41,6 +41,7 @@ export const useContactStore = create<ContactState>()(
       searchResults: [],
       suggestions: [],
 
+      /** Đặt lại trạng thái danh sách liên hệ */
       reset: () => {
         set({
           friends: [],
@@ -51,6 +52,7 @@ export const useContactStore = create<ContactState>()(
         });
       },
 
+      /** Theo dõi danh sách bạn bè */
       subscribeToFriends: (userId: string) => {
         useLoadingStore.getState().setLoading('contacts.friends', true);
         return friendService.subscribeToFriends(userId, (friends) => {
@@ -59,6 +61,7 @@ export const useContactStore = create<ContactState>()(
         });
       },
 
+      /** Theo dõi lời mời kết bạn */
       subscribeToRequests: (userId: string) => {
         const unsubscribeReceived = friendService.subscribeToReceivedRequests(userId, (requests) => {
           set({ receivedRequests: requests });
@@ -74,6 +77,7 @@ export const useContactStore = create<ContactState>()(
         };
       },
 
+      /** Tìm kiếm người dùng */
       searchUsers: async (searchTerm: string, userId: string) => {
         if (!searchTerm.trim()) {
           set({ searchResults: [] });
@@ -90,6 +94,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Tải gợi ý kết bạn */
       loadSuggestions: async (userId: string) => {
         useLoadingStore.getState().setLoading('contacts.suggestions', true);
         try {
@@ -106,6 +111,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Làm mới gợi ý kết bạn */
       refreshSuggestions: async (limit?: number, force: boolean = true) => {
         useLoadingStore.getState().setLoading('contacts.suggestions', true);
         try {
@@ -130,12 +136,14 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Bỏ qua gợi ý kết bạn */
       dismissSuggestion: (userId: string) => {
         set(state => ({
           suggestions: state.suggestions.filter(u => u.id !== userId),
         }));
       },
 
+      /** Gửi lời mời kết bạn */
       sendFriendRequest: async (senderId: string, receiverId: string) => {
         const tempId = `temp-${Date.now()}`;
         const tempRequest: FriendRequest = {
@@ -167,6 +175,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Chấp nhận lời mời kết bạn */
       acceptFriendRequest: async (requestId: string, senderId: string, receiverId: string) => {
         const previousRequests = get().receivedRequests;
         set(state => ({
@@ -182,6 +191,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Từ chối lời mời kết bạn */
       rejectFriendRequest: async (requestId: string) => {
         const previousRequests = get().receivedRequests;
         set(state => ({
@@ -197,6 +207,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Hủy lời mời kết bạn đã gửi */
       cancelFriendRequest: async (requestId: string) => {
         const previousRequests = get().sentRequests;
         set(state => ({
@@ -212,6 +223,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Hủy kết bạn */
       unfriend: async (userId: string, friendId: string) => {
         const previousFriends = get().friends;
         set((state) => ({
@@ -228,6 +240,7 @@ export const useContactStore = create<ContactState>()(
         }
       },
 
+      /** Xóa kết quả tìm kiếm */
       clearSearchResults: () => set({ searchResults: [] }),
     }),
     {

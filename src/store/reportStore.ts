@@ -38,6 +38,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
   pendingCount: 0,
   data: initialData,
 
+  /** Mở modal báo cáo */
   openReportModal: (type, id, ownerId) => {
     set({
       isOpen: true,
@@ -46,6 +47,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     });
   },
 
+  /** Đóng modal báo cáo */
   closeReportModal: () => {
     set({
       isOpen: false,
@@ -54,6 +56,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     });
   },
 
+  /** Gửi báo cáo vi phạm */
   submitReport: async (reporterId, reason, description, images, blockUser = false) => {
     const { data } = get();
     const { type: targetType, id: targetId, ownerId: targetOwnerId } = data;
@@ -126,6 +129,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     }
   },
 
+  /** Đặt lại trạng thái báo cáo */
   reset: () => {
     set({
       isOpen: false,
@@ -136,6 +140,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     });
   },
 
+  /** Lấy số lượng báo cáo chờ */
   fetchPendingCount: async () => {
     try {
       const count = await reportService.getPendingCount();

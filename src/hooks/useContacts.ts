@@ -49,9 +49,7 @@ interface UseContactsReturn {
   handleUnblock: (targetId: string) => Promise<void>;
 }
 
-/**
- * Hook quản lý danh bạ
- */
+/** Quản lý danh sách bạn bè và lời mời kết bạn */
 export const useContacts = (): UseContactsReturn => {
   const { user: currentUser } = useAuthStore();
   const {

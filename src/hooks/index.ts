@@ -1,13 +1,9 @@
-// Utils hooks
 export * from './utils';
 
-// Chat hooks  
 export * from './chat';
 
-// Profile hooks
 export * from './profile';
 
-// Feature hooks
 export { useFeed } from './useFeed';
 export { useChat } from './useChat';
 export { useContacts } from './useContacts';

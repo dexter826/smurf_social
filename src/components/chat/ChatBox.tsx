@@ -49,6 +49,7 @@ interface ChatBoxProps {
   handleMarkAsRead?: (messageId: string) => void;
 }
 
+/** Component khung chat chính */
 export const ChatBox: React.FC<ChatBoxProps> = ({
   conversation, messages, participants, currentUserId,
   currentUserFriendIds = [], friendRequestStatus = 'none',

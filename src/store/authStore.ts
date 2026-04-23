@@ -55,8 +55,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   isBanned: false,
 
+  /** Cập nhật thông tin người dùng */
   setUser: (user) => set({ user }),
 
+  /** Đăng nhập vào hệ thống */
   login: async (email, pass, remember = false) => {
     useLoadingStore.getState().setLoading("auth.login", true);
     try {
@@ -100,6 +102,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Đăng ký tài khoản mới */
   register: async (email, pass, name, dob, generation) => {
     useLoadingStore.getState().setLoading("auth.register", true);
     try {
@@ -119,6 +122,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Đăng xuất khỏi hệ thống */
   logout: async (keepBanned = false) => {
     const { user } = get();
 
@@ -140,6 +144,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Đặt lại mật khẩu qua email */
   resetPassword: async (email) => {
     useLoadingStore.getState().setLoading("auth", true);
     try {
@@ -149,6 +154,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Gửi lại email xác thực */
   sendVerificationEmail: async () => {
     try {
       await authService.sendVerificationEmail();
@@ -158,6 +164,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Kiểm tra trạng thái xác thực email */
   checkVerificationStatus: async () => {
     const firebaseUser = auth.currentUser;
     if (firebaseUser) {
@@ -186,7 +193,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
             useUserCache.getState().setUser(userData);
 
-            // Kích hoạt subscription sau khi xác thực thành công
             const setupSub = (get() as any)._setupUserSubscription;
             if (setupSub) setupSub(firebaseUser.uid);
           }
@@ -197,6 +203,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Cập nhật hồ sơ cá nhân */
   updateUserProfile: async (updates) => {
     const { user } = get();
     if (!user) return;
@@ -216,6 +223,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Cập nhật ảnh đại diện */
   updateAvatar: (avatar) => {
     const { user } = get();
     if (!user) return;
@@ -224,6 +232,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useUserCache.getState().setUser(updatedUser);
   },
 
+  /** Cập nhật cấu hình người dùng */
   updateSettings: async (settingsUpdates) => {
     const { user, settings } = get();
     if (!user || !settings) return;
@@ -240,6 +249,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Thêm hoặc xóa chặn người dùng */
   updateBlockEntry: async (action, targetUserId, options?) => {
     const { user, blockedUsers } = get();
     if (!user) return;
@@ -283,6 +293,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Hoàn tất thông tin ban đầu */
   completeOnboarding: async (data) => {
     const { user } = get();
     if (!user) return;
@@ -305,6 +316,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /** Khởi tạo trạng thái và lắng nghe thay đổi */
   initialize: () => {
     let userUnsubscribe: (() => void) | null = null;
     let settingsUnsubscribe: (() => void) | null = null;

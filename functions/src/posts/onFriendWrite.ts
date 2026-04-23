@@ -24,9 +24,7 @@ async function commitInChunks(ops: Array<(batch: FirebaseFirestore.WriteBatch) =
     }
 }
 
-/**
- * Xử lý tất cả thay đổi trên quan hệ bạn bè (Add, Remove)
- */
+/** Cập nhật bảng tin khi kết bạn hoặc hủy kết bạn */
 export const onFriendWrite = onDocumentWritten(
     { document: 'users/{userId}/friends/{friendId}', region: 'asia-southeast1' },
     async (event) => {
@@ -35,7 +33,6 @@ export const onFriendWrite = onDocumentWritten(
         const before = event.data?.before.data();
         const after = event.data?.after.data();
 
-        // 1. Xử lý ADD (Fan-out bài viết của bạn mới vào feed của user)
         if (!before && after) {
             try {
                 const friendPostsSnapshot = await db.collection('posts')
@@ -65,7 +62,6 @@ export const onFriendWrite = onDocumentWritten(
             return;
         }
 
-        // 2. Xử lý REMOVE (Xóa bài viết của bạn cũ khỏi feed của user)
         if (before && !after) {
             try {
                 const feedSnapshot = await db.collection('users').doc(userId).collection('feeds').get();

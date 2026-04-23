@@ -14,6 +14,7 @@ interface AddMemberModalProps {
   onAddMembers: (userIds: string[]) => Promise<void>;
 }
 
+/** Modal thêm thành viên vào nhóm chat */
 export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   isOpen, conversation, currentUserId, onClose, onAddMembers,
 }) => {
@@ -97,14 +98,14 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       <div className="flex flex-col gap-4 min-h-0">
         {/* Approval mode banner */}
 
-        {/* Member count */}
+        {/* Member Count */}
         <p className="text-xs text-text-secondary">
           Số thành viên hiện tại:{' '}
           <span className="font-semibold text-text-primary">{existingMemberIds.length}</span>
           <span className="text-text-tertiary"> / {GROUP_LIMITS.MAX_MEMBERS}</span>
         </p>
 
-        {/* Search */}
+        {/* Search Input */}
         <Input
           icon={<Search size={15} />}
           placeholder="Tìm bạn bè..."
@@ -113,7 +114,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
           className="bg-bg-secondary"
         />
 
-        {/* List */}
+        {/* Friend List */}
         <div className="overflow-y-auto scroll-hide min-h-0 max-h-72 space-y-0.5">
           {isLoading ? (
             <div className="flex justify-center py-8">

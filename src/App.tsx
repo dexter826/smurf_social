@@ -24,6 +24,7 @@ const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage'));
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 
+/** Route bảo vệ cho tài khoản bị khóa */
 const BannedRoute: React.FC = () => {
   const { user, isBanned, isInitialized } = useAuthStore();
   if (!isInitialized) return <Loading variant="page" />;
@@ -33,6 +34,7 @@ const BannedRoute: React.FC = () => {
   return <BannedPage />;
 };
 
+/** Quản lý trạng thái hiện diện toàn cục */
 const GlobalPresenceManager: React.FC = () => {
   const { user } = useAuthStore();
   const location = useLocation();
@@ -43,17 +45,18 @@ const GlobalPresenceManager: React.FC = () => {
   return null;
 };
 
+/** Thành phần gốc ứng dụng */
 const App: React.FC = () => {
   const { user } = useAuthStore();
   const initializeAuth = useAuthStore(state => state.initialize);
 
-  // Khởi tạo Auth listener
+
   useEffect(() => {
     const unsubscribeAuth = initializeAuth();
     return () => unsubscribeAuth();
   }, [initializeAuth]);
 
-  // Quản lý thông báo tập trung
+
   useNotifications();
 
   return (

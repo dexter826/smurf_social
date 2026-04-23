@@ -44,7 +44,7 @@ function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] 
 }
 
 export const postService = {
-  /** Lấy danh sách bài viết từ Feed Fan-out */
+  /** Lấy danh sách bài viết từ Feed */
   getFeedFromFanout: async (
     userId: string,
     limitCount: number = PAGINATION.FEED_POSTS,
@@ -113,7 +113,7 @@ export const postService = {
     }
   },
 
-  /** Theo dõi bài viết Feed Fan-out thời gian thực */
+  /** Theo dõi bài viết Feed thời gian thực */
   subscribeToFeedFanout: (
     userId: string,
     callback: (action: 'add' | 'update' | 'remove', posts: Post[]) => void,
@@ -182,7 +182,7 @@ export const postService = {
     });
   },
 
-  /** Lấy danh sách bài viết của người dùng cụ thể */
+  /** Lấy danh sách bài viết của người dùng */
   getUserPosts: async (userId: string, currentUserId: string, friendIds: string[], limitCount: number = PAGINATION.USER_POSTS, lastDoc?: DocumentSnapshot): Promise<{ posts: Post[], lastDoc: DocumentSnapshot | null }> => {
     try {
       if (!currentUserId) {
@@ -238,7 +238,7 @@ export const postService = {
     }
   },
 
-  /** Theo dõi bài viết của người dùng thời gian thực */
+  /** Theo dõi bài viết người dùng thời gian thực */
   subscribeToUserPosts: (
     userId: string,
     currentUserId: string,
@@ -365,9 +365,10 @@ export const postService = {
     }
   },
 
+  /** Tạo ID bài viết mới */
   generatePostId: () => doc(collection(db, 'posts')).id,
 
-  /** Cập nhật nội dung và thuộc tính bài viết */
+  /** Cập nhật nội dung bài viết */
   updatePost: async (postId: string, content: string, media: MediaObject[], visibility: Visibility): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
@@ -396,7 +397,7 @@ export const postService = {
     }
   },
 
-  /** Xóa bài viết bằng cách chuyển trạng thái sang DELETED */
+  /** Xóa bài viết (soft-delete) */
   deletePost: async (postId: string, userId: string): Promise<void> => {
     try {
       const postRef = doc(db, 'posts', postId);
@@ -440,7 +441,7 @@ export const postService = {
     }
   },
 
-  /** Lấy reaction của người dùng hiện tại tại bài viết */
+  /** Lấy reaction của bản thân tại bài viết */
   getMyReactionForPost: async (postId: string, userId: string): Promise<string | null> => {
     try {
       const snap = await getDoc(doc(db, 'posts', postId, 'reactions', userId));
@@ -451,7 +452,7 @@ export const postService = {
   },
 
 
-  /** Lấy thông tin bài viết theo ID kèm phân quyền (Admin bypass) */
+  /** Lấy thông tin bài viết theo ID */
   getPostById: async (postId: string, currentUserId: string, friendIds: string[], isAdmin: boolean = false): Promise<Post | null> => {
     try {
       const postRef = doc(db, 'posts', postId);
@@ -498,7 +499,7 @@ export const postService = {
     }
   },
 
-  /** Lấy thông tin bài viết cho Admin (không check quyền) */
+  /** Lấy thông tin bài viết cho Admin */
   getPostByIdForAdmin: async (postId: string): Promise<Post | null> => {
     try {
       const postRef = doc(db, 'posts', postId);
@@ -513,7 +514,7 @@ export const postService = {
     }
   },
 
-  /** Tải lên phương tiện cho bài viết */
+  /** Tải lên ảnh/video cho bài viết */
   uploadPostMedia: async (
     files: File[],
     userId: string,

@@ -17,9 +17,7 @@ interface MessageContentProps {
   onJoinCall?: (callType: 'voice' | 'video') => void;
 }
 
-/**
- * Component điều hướng hiển thị nội dung tin nhắn dựa trên MessageType.
- */
+/** Phân loại hiển thị nội dung theo MessageType */
 const MessageContentInner: React.FC<MessageContentProps> = ({
   message, isMe, isGroup = false, uploadProgress,
   onOpenImage, onLoad, onCall, onJoinCall,

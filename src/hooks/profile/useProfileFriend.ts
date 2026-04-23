@@ -14,9 +14,7 @@ interface UseProfileFriendProps {
   loadProfile: () => Promise<void>;
 }
 
-/**
- * Xử lý friend request và friend status
- */
+/** Quản lý trạng thái và lời mời kết bạn trong hồ sơ */
 export const useProfileFriend = ({
   currentUser,
   profile,
@@ -28,7 +26,7 @@ export const useProfileFriend = ({
   const [pendingRequestId, setPendingRequestId] = useState<string | undefined>();
   const friendIds = useFriendIds();
 
-  // Dùng chung cho 2 callbacks, không bị stale closure
+
   const sentRequestRef = useRef<FriendRequest | null>(null);
   const receivedRequestRef = useRef<FriendRequest | null>(null);
 
@@ -64,13 +62,13 @@ export const useProfileFriend = ({
       updateStatus();
     });
 
-    // Trigger update khi friendIds thay đổi
+
     updateStatus();
 
     return () => {
       unsubscribeSent();
       unsubscribeReceived();
-      // Xóa data cũ khi profileUserId đổi
+
       sentRequestRef.current = null;
       receivedRequestRef.current = null;
     };

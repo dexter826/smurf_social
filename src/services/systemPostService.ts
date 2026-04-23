@@ -2,13 +2,9 @@ import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Post, PostStatus, Visibility, PostType, MediaObject } from '../../shared/types';
 
-/**
- * Service chuyên biệt để tạo các bài viết hệ thống (Avatar update, Cover update)
- */
+/** Dịch vụ tạo bài viết hệ thống */
 export const systemPostService = {
-  /**
-   * Tạo bài viết cập nhật profile (Avatar hoặc Cover)
-   */
+  /** Tạo bài viết cập nhật hồ sơ */
   createProfileUpdatePost: async (params: {
     userId: string;
     type: PostType.AVATAR_UPDATE | PostType.COVER_UPDATE;

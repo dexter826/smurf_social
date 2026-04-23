@@ -3,9 +3,7 @@ import { db } from '../app';
 import { NotificationType, NotificationData } from '../types';
 
 
-/**
- * Tạo thông báo
- */
+/** Tạo bản ghi thông báo mới trong hệ thống */
 export async function createNotification(data: NotificationData): Promise<string> {
 
   const docRef = await db.collection('notifications').add({
@@ -17,9 +15,7 @@ export async function createNotification(data: NotificationData): Promise<string
   return docRef.id;
 }
 
-/**
- * Lấy tên người gửi
- */
+/** Lấy họ tên hiển thị của người dùng */
 export async function getSenderName(senderId: string): Promise<string> {
   if (senderId === 'system') return 'Hệ thống';
   try {
@@ -30,9 +26,7 @@ export async function getSenderName(senderId: string): Promise<string> {
   }
 }
 
-/**
- * Xây dựng nội dung push notification
- */
+/** Soạn thảo nội dung thông báo đẩy theo loại */
 export function buildPushBody(
   type: NotificationType,
   senderName: string,

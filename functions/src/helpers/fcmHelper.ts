@@ -1,7 +1,7 @@
 import { messaging, db } from '../app';
 import { NotificationType } from '../types';
 
-// Tiêu đề cho từng loại notification
+/** Tiêu đề mặc định cho các loại thông báo */
 const NOTIFICATION_TITLES: Partial<Record<NotificationType, string>> = {
   [NotificationType.REACTION]: 'Cảm xúc mới',
   [NotificationType.COMMENT]: 'Bình luận mới',
@@ -12,9 +12,7 @@ const NOTIFICATION_TITLES: Partial<Record<NotificationType, string>> = {
   [NotificationType.MENTION]: 'Bạn được nhắc đến',
 };
 
-/**
- * Lấy danh sách token FCM của user
- */
+/** Lấy danh sách token thiết bị của người dùng */
 async function getUserFcmTokens(userId: string): Promise<string[]> {
   try {
     const fcmDoc = await db.collection('users').doc(userId)
@@ -26,7 +24,7 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
   }
 }
 
-// Tự dọn token khi FCM báo invalid
+/** Xóa bỏ token không còn hiệu lực */
 async function removeInvalidToken(userId: string, token: string): Promise<void> {
   try {
     const { FieldValue } = await import('firebase-admin/firestore');
@@ -44,7 +42,7 @@ interface SendPushOptions {
   data?: Record<string, string>;
 }
 
-// Gửi FCM đến tất cả thiết bị của user
+/** Gửi thông báo đẩy tới thiết bị người dùng */
 export async function sendPushNotification(opts: SendPushOptions): Promise<void> {
   const { receiverId, type, body, data = {} } = opts;
 

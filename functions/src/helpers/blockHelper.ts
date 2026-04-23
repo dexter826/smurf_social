@@ -1,6 +1,6 @@
 import { db } from '../app';
 
-// Kiểm tra quyền nhận tin nhắn dựa trên Block và Chặn người lạ.
+/** Kiểm tra quyền nhận tin nhắn dựa trên cài đặt chặn */
 export const isBlockingMessages = async (receiverId: string, senderId: string, creatorId?: string): Promise<boolean> => {
   try {
     const blockSnap = await db

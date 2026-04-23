@@ -18,6 +18,7 @@ interface MessageActionsProps {
   isPartnerBanned?: boolean;
 }
 
+/** Các thao tác với tin nhắn */
 export const MessageActions: React.FC<MessageActionsProps> = ({
   message, isMe, canEdit, showMenu, setShowMenu,
   onReply, onForward, onEdit, setShowRecallConfirm,

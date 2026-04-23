@@ -69,6 +69,7 @@ const TYPE_BADGE: Record<ReportType, React.ReactNode> = {
   ),
 };
 
+/** Card hiển thị chỉ số báo cáo */
 const StatCard: React.FC<{ label: string; value: number; color: string }> = ({ label, value, color }) => (
   <div className="bg-bg-secondary/60 px-4 py-2.5 rounded-xl border border-border-light flex flex-col items-center min-w-[90px]">
     <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{label}</span>
@@ -76,6 +77,7 @@ const StatCard: React.FC<{ label: string; value: number; color: string }> = ({ l
   </div>
 );
 
+/** Trang danh sách và quản lý các báo cáo vi phạm */
 export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
   const {
     reports, stats, isLoading,
@@ -125,7 +127,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="bg-bg-primary px-4 md:px-6 py-4 border-b border-border-light flex-shrink-0 space-y-4">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -145,7 +147,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
         </div>
 
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 items-center justify-between">
-          {/* Status tabs */}
+          {/* Status Tabs */}
           <div className="flex bg-bg-secondary p-1 rounded-xl border border-border-light w-full sm:w-auto">
             {STATUS_TABS.map(tab => (
               <button
@@ -172,7 +174,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
         </div>
       </div>
 
-      {/* ── List ── */}
+      {/* Report List */}
       <div className="flex-1 overflow-y-auto scroll-hide p-4 md:p-6 bg-bg-secondary/30">
         <div className="max-w-5xl mx-auto space-y-3">
           {isLoading ? (
@@ -211,7 +213,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
                       onClick={() => onSelectReport(report.id)}
                       className="w-full text-left bg-bg-primary p-4 rounded-2xl border border-border-light hover:border-primary/30 hover:shadow-md transition-all duration-200 group outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
-                      {/* Top row */}
+                      {/* Top Row */}
                       <div className="flex items-center justify-between mb-2.5">
                         <div className="flex items-center gap-2">
                           {STATUS_BADGE[report.status]}
@@ -228,7 +230,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
                         {reasonConfig?.label}
                       </p>
 
-                      {/* Description snippet */}
+                      {/* Description Snippet */}
                       {report.description && (
                         <div className="bg-bg-secondary/50 px-3 py-2 rounded-xl border border-border-light mb-2.5">
                           <p className="text-xs text-text-secondary italic line-clamp-1">

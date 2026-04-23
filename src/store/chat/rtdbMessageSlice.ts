@@ -43,6 +43,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     isLoadingMore: {},
     uploadProgress: {},
 
+    /** Theo dõi tin nhắn */
     subscribeToMessages: (conversationId: string) => {
         set((state) => ({
             hasMoreMessages: {
@@ -79,6 +80,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         return unsubscribe;
     },
 
+    /** Tải thêm tin nhắn */
     loadMoreMessages: async (conversationId: string) => {
         const currentMessages = get().messages[conversationId] || [];
         if (currentMessages.length === 0) return;
@@ -120,6 +122,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Gửi tin nhắn văn bản */
     sendTextMessage: async (conversationId: string, senderId: string, content: string, mentions?: string[], replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
@@ -173,6 +176,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Chia sẻ bài viết */
     sendSharedPostMessage: async (conversationId: string, senderId: string, payload: SharedPostMessagePayload, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
@@ -226,6 +230,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Gửi tin nhắn ảnh */
     sendImageMessage: async (conversationId: string, senderId: string, files: File[], options?: { content?: string; mentions?: string[]; replyToId?: string }) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
@@ -301,6 +306,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Gửi tin nhắn tệp */
     sendFileMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
@@ -373,6 +379,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Gửi tin nhắn video */
     sendVideoMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
@@ -444,6 +451,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Gửi tin nhắn thoại */
     sendVoiceMessage: async (conversationId: string, senderId: string, file: File, replyToId?: string, duration?: number) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
@@ -516,6 +524,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Gửi tin nhắn GIF */
     sendGifMessage: async (conversationId: string, senderId: string, gifUrl: string, replyToId?: string) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         
@@ -565,6 +574,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Gửi tin nhắn cuộc gọi */
     sendCallMessage: async (conversationId, senderId, payload) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         const msgId = rtdbMessageService.generateMessageId(conversationId);
@@ -613,6 +623,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Cập nhật tin nhắn cuộc gọi */
     updateCallMessage: async (conversationId, messageId, payload) => {
         try {
             const content = JSON.stringify(payload);
@@ -648,6 +659,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Đánh dấu đã đọc */
     markAsRead: async (conversationId: string, userId: string) => {
         if (get().conversations.some(c => c.id === conversationId)) {
             try {
@@ -658,6 +670,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Đánh dấu đã phát */
     markAsDelivered: async (conversationId: string, userId: string) => {
         if (get().conversations.some(c => c.id === conversationId)) {
             try {
@@ -668,6 +681,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Thu hồi tin nhắn */
     recallMessage: async (conversationId: string, messageId: string) => {
         const userId = useAuthStore.getState().user?.id;
         if (!userId) return;
@@ -707,6 +721,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Xóa tin nhắn phía tôi */
     deleteMessageForMe: async (conversationId: string, messageId: string, userId: string) => {
         const snapshot = get().messages[conversationId]?.find(m => m.id === messageId);
         set(state => {
@@ -738,6 +753,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Chuyển tiếp tin nhắn */
     forwardMessage: async (targetConversationId, senderId, srcMessage) => {
         if (useAuthStore.getState().isBanned) throw new Error('Account is banned');
         const msgId = rtdbMessageService.generateMessageId(targetConversationId);
@@ -778,6 +794,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Chỉnh sửa tin nhắn */
     editMessage: async (conversationId: string, messageId: string, content: string) => {
         const userId = useAuthStore.getState().user?.id;
         if (!userId) return;
@@ -817,6 +834,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Tương tác tin nhắn */
     toggleReaction: async (conversationId: string, messageId: string, userId: string, emoji: string) => {
         const snapshot = get().messages[conversationId]?.find(m => m.id === messageId);
 
@@ -858,6 +876,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         }
     },
 
+    /** Xóa danh sách tin nhắn */
     clearMessages: (conversationId: string) => {
         set((state) => {
             const newMessages = { ...state.messages };
@@ -866,6 +885,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         });
     },
 
+    /** Cập nhật tiến độ tải lên */
     setUploadProgress: (messageId: string, progress: number) => {
         set((state) => {
             const next = { ...state.uploadProgress };
@@ -878,6 +898,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
         });
     },
 
+    /** Thiết lập lỗi tải lên */
     setUploadError: (messageId: string, isError: boolean) => {
         set((state) => ({
             uploadProgress: {

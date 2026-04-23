@@ -14,9 +14,7 @@ interface UseProfileMediaProps {
   currentUser: User | null;
 }
 
-/**
- * Xử lý upload/delete avatar và cover image
- */
+/** Quản lý ảnh đại diện và ảnh bìa người dùng */
 export const useProfileMedia = ({
   profile,
   setProfile,

@@ -5,9 +5,7 @@ import { NotificationType, ReportStatus, REPORT_TYPE_LABELS, ReportType } from '
 import { createNotification } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 
-/**
- * Từ chối báo cáo
- */
+/** Từ chối báo cáo vi phạm */
 export const rejectReport = onCall(
   {
     region: 'asia-southeast1',

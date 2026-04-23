@@ -2,8 +2,9 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { db, storage } from '../app';
 import { FriendRequestStatus, PostStatus, CommentStatus } from '../types';
 
-// Hàng tuần: Dọn dẹp hệ thống (Notifications, Friend Requests, Soft-deleted Content)
 
+
+/** Xóa tệp tin trên Storage theo đường dẫn URL */
 async function deleteStorageFileByUrl(url: string): Promise<void> {
   if (!url || !url.includes('firebasestorage.googleapis.com')) return;
   try {
@@ -11,10 +12,10 @@ async function deleteStorageFileByUrl(url: string): Promise<void> {
     if (!path) return;
     await storage.bucket().file(path).delete({ ignoreNotFound: true });
   } catch {
-    // Không throw để tránh crash cleanup flow
   }
 }
 
+/** Tự động dọn dẹp dữ liệu cũ định kỳ hàng tuần */
 export const systemCleanup = onSchedule({ schedule: 'every sunday 03:00', region: 'asia-southeast1', timeZone: 'Asia/Ho_Chi_Minh' },
   async () => {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
@@ -22,7 +23,6 @@ export const systemCleanup = onSchedule({ schedule: 'every sunday 03:00', region
     const BATCH_SIZE = 400;
 
     try {
-      // 1. Xóa notifications đã đọc > 90 ngày
       const notifSnap = await db.collection('notifications').where('isRead', '==', true).where('createdAt', '<', ninetyDaysAgo).get();
       if (!notifSnap.empty) {
         for (let i = 0; i < notifSnap.docs.length; i += BATCH_SIZE) {
@@ -33,7 +33,6 @@ export const systemCleanup = onSchedule({ schedule: 'every sunday 03:00', region
         console.log(`[systemCleanup] Đã xóa ${notifSnap.size} notifications`);
       }
 
-      // 2. Xóa friend requests PENDING > 30 ngày
       const freqSnap = await db.collection('friendRequests').where('status', '==', FriendRequestStatus.PENDING).where('createdAt', '<', thirtyDaysAgo).get();
       if (!freqSnap.empty) {
         for (let i = 0; i < freqSnap.docs.length; i += BATCH_SIZE) {
@@ -44,7 +43,6 @@ export const systemCleanup = onSchedule({ schedule: 'every sunday 03:00', region
         console.log(`[systemCleanup] Đã xóa ${freqSnap.size} requests`);
       }
 
-      // 3. Hard delete posts/comments đã soft delete > 90 ngày
       const postsSnap = await db.collection('posts').where('status', '==', PostStatus.DELETED).where('deletedAt', '<', ninetyDaysAgo).get();
       if (!postsSnap.empty) {
         for (let i = 0; i < postsSnap.docs.length; i += BATCH_SIZE) {

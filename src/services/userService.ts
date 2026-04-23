@@ -39,9 +39,10 @@ import {
 import { useUserCache } from '../store/userCacheStore';
 
 
-// Xử lý document thành đối tượng User
+/** Chuyển đổi document sang đối tượng User */
 const userConverter = (doc: DocumentSnapshot) => convertDoc<User>(doc);
 
+/** Chuẩn hóa giá trị hiển thị bài đăng mặc định */
 const normalizeDefaultPostVisibility = (value: unknown): Visibility => {
   if (value === Visibility.PUBLIC || value === Visibility.FRIENDS || value === Visibility.PRIVATE) {
     return value;
@@ -50,7 +51,7 @@ const normalizeDefaultPostVisibility = (value: unknown): Visibility => {
 };
 
 export const userService = {
-  // Lấy thông tin user
+  /** Lấy thông tin người dùng */
   getUserById: async (id: string): Promise<User | undefined> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', id));
@@ -68,6 +69,7 @@ export const userService = {
 
 
 
+  /** Tìm kiếm người dùng */
   searchUsers: async (searchTerm: string, currentUserId: string): Promise<User[]> => {
     try {
       const fn = httpsCallable<{ searchTerm: string; currentUserId: string }, { users: User[] }>(functions, 'searchUsers');
@@ -79,7 +81,7 @@ export const userService = {
     }
   },
 
-  // Cập nhật hồ sơ
+  /** Cập nhật hồ sơ */
   updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
     try {
       if (data.fullName !== undefined) {
@@ -104,7 +106,7 @@ export const userService = {
     }
   },
 
-  // Khởi tạo document người dùng khi đăng ký mới
+  /** Khởi tạo dữ liệu người dùng mới */
   createUserDocument: async (userId: string, data: Partial<User>): Promise<void> => {
     try {
       const batch = writeBatch(db);
@@ -155,6 +157,7 @@ export const userService = {
     }
   },
 
+  /** Tải lên tệp đa phương tiện hồ sơ */
   uploadProfileMedia: async (
     userId: string,
     file: File,
@@ -216,7 +219,8 @@ export const userService = {
     }
   },
 
-  // Tải lên ảnh đại diện
+
+  /** Tải lên ảnh đại diện */
   uploadAvatar: async (
     userId: string,
     file: File,
@@ -226,7 +230,8 @@ export const userService = {
     return userService.uploadProfileMedia(userId, file, 'avatar', visibility, onProgress);
   },
 
-  // Tải lên ảnh bìa
+
+  /** Tải lên ảnh bìa */
   uploadCoverImage: async (
     userId: string,
     file: File,
@@ -238,7 +243,7 @@ export const userService = {
 
 
 
-  // Danh sách user bị chặn
+  /** Danh sách người dùng bị chặn */
   getBlockedUsers: async (userId: string): Promise<Record<string, BlockedUserEntry>> => {
     try {
       const snap = await getDocs(collection(db, 'users', userId, 'blockedUsers'));
@@ -261,7 +266,7 @@ export const userService = {
     }
   },
 
-  // Lấy thông tin chặn cụ thể
+  /** Lấy chi tiết thông tin chặn */
   getBlockEntry: async (userId: string, targetId: string): Promise<BlockedUserEntry | null> => {
     try {
       const docSnap = await getDoc(doc(db, 'users', userId, 'blockedUsers', targetId));
@@ -275,7 +280,7 @@ export const userService = {
     }
   },
 
-  // Kiểm tra hàng loạt xem danh sách chặn
+  /** Kiểm tra trạng thái chặn hàng loạt */
   checkMultipleBlockStatuses: async (partnerIds: string[], currentUserId: string): Promise<Record<string, BlockOptions>> => {
     try {
       const results: Record<string, BlockOptions> = {};
@@ -293,7 +298,7 @@ export const userService = {
     }
   },
 
-  // Chặn người dùng
+  /** Chặn người dùng */
   blockUser: async (userId: string, blockedUserId: string, options: BlockOptions): Promise<void> => {
     try {
       await setDoc(
@@ -312,7 +317,7 @@ export const userService = {
     }
   },
 
-  // Cập nhật từng options của block
+  /** Cập nhật tùy chọn chặn */
   updateBlockOptions: async (userId: string, blockedUserId: string, options: Partial<BlockOptions>): Promise<void> => {
     try {
       await updateDoc(
@@ -325,7 +330,7 @@ export const userService = {
     }
   },
 
-  // Bỏ chặn — xóa document khỏi subcollection
+  /** Bỏ chặn người dùng */
   unblockUser: async (userId: string, blockedUserId: string): Promise<void> => {
     try {
       await deleteDoc(doc(db, 'users', userId, 'blockedUsers', blockedUserId));
@@ -335,7 +340,7 @@ export const userService = {
     }
   },
 
-  // Theo dõi user realtime
+  /** Theo dõi người dùng thời gian thực */
   subscribeToUser: (userId: string, callback: (user: User) => void): (() => void) => {
     const userRef = doc(db, 'users', userId);
     return onSnapshot(userRef, (snapshot) => {
@@ -347,7 +352,7 @@ export const userService = {
     });
   },
 
-  // Danh sách user cho Admin
+  /** Danh sách người dùng cho Admin */
   getAdminUsers: async (
     limitCount: number = PAGINATION.ADMIN_USERS,
     lastVisibleDoc?: DocumentSnapshot
@@ -375,7 +380,7 @@ export const userService = {
     }
   },
 
-  // Thống kê cho Admin
+  /** Thống kê người dùng cho Admin */
   getAdminStats: async (): Promise<{ total: number, active: number, banned: number }> => {
     try {
       const usersRef = collection(db, 'users');
@@ -394,7 +399,7 @@ export const userService = {
     }
   },
 
-  // Theo dõi user cho Admin
+  /** Theo dõi người dùng cho Admin */
   subscribeToAdminUsers: (
     limitCount: number = PAGINATION.ADMIN_USERS,
     callback: (users: User[]) => void,
@@ -414,9 +419,7 @@ export const userService = {
     });
   },
 
-  /**
-   * Lấy cài đặt người dùng từ sub-collection private/settings
-   */
+  /** Lấy cài đặt cá nhân */
   getUserSettings: async (userId: string): Promise<UserSettings> => {
     try {
       const settingsDoc = await getDoc(doc(db, 'users', userId, 'private', 'settings'));
@@ -432,7 +435,7 @@ export const userService = {
         } as UserSettings;
       }
 
-      // Trả về mặc định nếu chưa có document
+
       return {
         showOnlineStatus: true,
         showReadReceipts: true,
@@ -447,9 +450,7 @@ export const userService = {
     }
   },
 
-  /**
-   * Cập nhật cài đặt người dùng
-   */
+  /** Cập nhật cài đặt cá nhân */
   updateUserSettings: async (userId: string, settings: Partial<UserSettings>): Promise<void> => {
     try {
       const settingsRef = doc(db, 'users', userId, 'private', 'settings');

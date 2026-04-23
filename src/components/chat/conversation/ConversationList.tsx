@@ -42,6 +42,7 @@ interface ConversationListProps {
   onMarkAllRead?: () => void;
 }
 
+/** Danh sách các cuộc hội thoại */
 export const ConversationList = React.memo<ConversationListProps>(({
   conversations, selectedId, currentUserId,
   currentUserFriendIds = [],
@@ -132,7 +133,7 @@ export const ConversationList = React.memo<ConversationListProps>(({
         onMarkAllRead={onMarkAllRead}
       />
 
-      {/* Filter bar / archive label */}
+      {/* Filter Bar Or Archive Label */}
       {!isSearchFocused && !searchTerm && (
         viewMode === 'normal' ? (
           <ConversationFilters
@@ -183,7 +184,7 @@ export const ConversationList = React.memo<ConversationListProps>(({
             conversations={conversations}
           />
         ) : (friendConversations.length === 0 && requestConversations.length === 0) ? (
-          /* Empty state */
+          /* Empty State */
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4 border border-border-light">
               <Users size={26} className="text-text-tertiary" />

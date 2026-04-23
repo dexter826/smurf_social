@@ -24,7 +24,7 @@ import { convertDoc, convertDocs } from '../utils/firebaseUtils';
 import { validateImageFile, FileValidationError } from '../utils/fileValidation';
 
 export const reportService = {
-  /** Upload ảnh bằng chứng cho báo cáo (tối đa 5 ảnh) */
+  /** Tải lên ảnh bằng chứng */
   uploadReportImages: async (
     files: File[],
     reporterId: string,
@@ -67,7 +67,7 @@ export const reportService = {
     }
   },
 
-  /** Tạo báo cáo */
+  /** Tạo báo cáo vi phạm */
   createReport: async (data: Omit<Report, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<string> => {
     try {
       const cleanData = Object.fromEntries(
@@ -89,7 +89,7 @@ export const reportService = {
     }
   },
 
-  /** Kiểm tra user đã báo cáo nội dung này chưa */
+  /** Kiểm tra trạng thái đã báo cáo */
   hasUserReported: async (
     reporterId: string,
     targetType: ReportType,
@@ -110,7 +110,7 @@ export const reportService = {
     }
   },
 
-  /** Lấy danh sách báo cáo chờ xử lý (Admin) */
+  /** Lấy báo cáo chờ xử lý */
   getPendingReports: async (limitCount: number = PAGINATION.ADMIN_REPORTS): Promise<Report[]> => {
     try {
       const q = query(
@@ -127,7 +127,7 @@ export const reportService = {
     }
   },
 
-  /** Lấy tất cả báo cáo (Admin) */
+  /** Lấy toàn bộ báo cáo */
   getAllReports: async (limitCount: number = PAGINATION.ADMIN_REPORTS): Promise<Report[]> => {
     try {
       const q = query(
@@ -143,7 +143,7 @@ export const reportService = {
     }
   },
 
-  /** Lắng nghe thay đổi báo cáo theo thời gian thực */
+  /** Theo dõi báo cáo thời gian thực */
   subscribeToReports: (
     callback: (reports: Report[]) => void,
     onError?: (error: any) => void,
@@ -172,7 +172,7 @@ export const reportService = {
     );
   },
 
-  /** Admin xử lý báo cáo qua Cloud Function */
+  /** Xử lý báo cáo (Admin) */
   resolveReport: async (
     reportId: string,
     resolution: string = 'Đã xử lý',
@@ -182,13 +182,13 @@ export const reportService = {
     await fn({ reportId, resolution, action });
   },
 
-  /** Admin từ chối báo cáo qua Cloud Function */
+  /** Từ chối báo cáo (Admin) */
   rejectReport: async (reportId: string): Promise<void> => {
     const fn = httpsCallable(functions, 'rejectReport');
     await fn({ reportId });
   },
 
-  // Thống kê report (Cho Admin Dashboard)
+  /** Thống kê báo cáo (Admin) */
   getAdminStats: async (): Promise<{ pending: number, resolved: number, rejected: number }> => {
     try {
       const reportsRef = collection(db, 'reports');
@@ -209,7 +209,7 @@ export const reportService = {
     }
   },
 
-  // Đếm số báo cáo pending (cho badge)
+  /** Đếm số báo cáo đang chờ */
   getPendingCount: async (): Promise<number> => {
     try {
       const q = query(
@@ -223,7 +223,7 @@ export const reportService = {
     }
   },
 
-  // Lấy báo cáo theo ID
+  /** Lấy chi tiết báo cáo theo ID */
   getReportById: async (reportId: string): Promise<Report | null> => {
     try {
       const reportSnap = await getDoc(doc(db, 'reports', reportId));

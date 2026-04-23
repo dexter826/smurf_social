@@ -5,9 +5,7 @@ import { sendPushNotification } from '../helpers/fcmHelper';
 import { db } from '../app';
 
 
-/**
- * Xử lý tất cả thay đổi trên friendRequests
- */
+/** Thông báo khi có lời mời kết bạn hoặc chấp nhận kết bạn */
 export const onFriendRequestWrite = onDocumentWritten(
     { document: 'friendRequests/{reqId}', region: 'asia-southeast1' },
     async (event) => {
@@ -15,7 +13,6 @@ export const onFriendRequestWrite = onDocumentWritten(
         const after = event.data?.after.data();
         const reqId = event.params.reqId;
 
-        // 1. Xử lý CREATE
         if (!before && after) {
             const { senderId, receiverId } = after;
             try {
@@ -41,7 +38,6 @@ export const onFriendRequestWrite = onDocumentWritten(
             return;
         }
 
-        // 2. Xử lý DELETE
         if (before && !after) {
             try {
                 const notificationsSnapshot = await db.collection('notifications')
@@ -61,7 +57,6 @@ export const onFriendRequestWrite = onDocumentWritten(
             return;
         }
 
-        // 3. Xử lý UPDATE (Chấp nhận lời mời)
         if (before && after) {
             if (
                 before.status === FriendRequestStatus.PENDING &&

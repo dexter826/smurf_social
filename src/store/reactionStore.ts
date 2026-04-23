@@ -11,6 +11,7 @@ interface ReactionState {
 export const useReactionStore = create<ReactionState>((set) => ({
     optimisticReactions: {},
 
+    /** Thiết lập phản hồi lạc quan */
     setOptimisticReaction: (sourceId: string, reaction: ReactionType | null) => {
         set((state) => ({
             optimisticReactions: {
@@ -20,6 +21,7 @@ export const useReactionStore = create<ReactionState>((set) => ({
         }));
     },
 
+    /** Xóa phản hồi lạc quan */
     clearOptimisticReaction: (sourceId: string) => {
         set((state) => {
             const { [sourceId]: _, ...rest } = state.optimisticReactions;
@@ -27,6 +29,7 @@ export const useReactionStore = create<ReactionState>((set) => ({
         });
     },
 
+    /** Đặt lại trạng thái phản hồi */
     reset: () => {
         set({ optimisticReactions: {} });
     }

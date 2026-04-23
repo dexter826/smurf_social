@@ -12,11 +12,13 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       mode: 'light',
+      /** Chuyển đổi chế độ giao diện */
       toggleTheme: () => {
         const newMode = get().mode === 'light' ? 'dark' : 'light';
         set({ mode: newMode });
         get().applyTheme();
       },
+      /** Áp dụng giao diện hiện tại */
       applyTheme: () => {
         const { mode } = get();
         if (mode === 'dark') {

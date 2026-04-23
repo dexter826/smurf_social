@@ -19,18 +19,17 @@ export const usePresenceStore = create<PresenceState>()((set, get) => ({
   subscriberCounts: {},
   unsubscribes: {},
 
+  /** Theo dõi trạng thái hiện diện */
   subscribe: (userId: string) => {
     if (!userId) return;
     const { subscriberCounts, unsubscribes } = get();
     const currentCount = subscriberCounts[userId] || 0;
 
-    // Nếu đã subscribe rồi, chỉ tăng counter
     if (currentCount > 0) {
       set({ subscriberCounts: { ...subscriberCounts, [userId]: currentCount + 1 } });
       return;
     }
 
-    // Subscribe mới
     const unsub = presenceService.subscribeToPresence(userId, (presence) => {
       set(state => {
         if (presence) {
@@ -50,13 +49,13 @@ export const usePresenceStore = create<PresenceState>()((set, get) => ({
     });
   },
 
+  /** Ngừng theo dõi trạng thái hiện diện */
   unsubscribe: (userId: string) => {
     if (!userId) return;
     const { subscriberCounts, unsubscribes } = get();
     const currentCount = subscriberCounts[userId] || 0;
 
     if (currentCount <= 1) {
-      // Unsubscribe hoàn toàn
       unsubscribes[userId]?.();
       const { [userId]: _unsub, ...restUnsubs } = unsubscribes;
       const { [userId]: _count, ...restCounts } = subscriberCounts;
@@ -67,15 +66,18 @@ export const usePresenceStore = create<PresenceState>()((set, get) => ({
     }
   },
 
+  /** Lấy trạng thái hiện diện */
   getPresence: (userId: string) => {
     return get().presenceMap[userId] || null;
   },
 
+  /** Kiểm tra trạng thái trực tuyến */
   isOnline: (userId: string) => {
     const presence = get().presenceMap[userId];
     return presence?.isOnline || false;
   },
 
+  /** Đặt lại toàn bộ trạng thái */
   reset: () => {
     const { unsubscribes } = get();
     Object.values(unsubscribes).forEach(unsub => unsub());

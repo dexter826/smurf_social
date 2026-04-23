@@ -17,6 +17,7 @@ export const createFetchSlice: StateCreator<PostStoreState, [], [], any> = (set,
   selectedPost: null,
   selectedPostUnsubscribe: null,
 
+  /** Tải danh sách bài viết */
   fetchPosts: async (currentUserId: string, loadMore = false, force = false) => {
     const { abortController: currentController, posts, lastFetchTime, lastDoc } = get();
     const loadingStore = useLoadingStore.getState();
@@ -65,6 +66,7 @@ export const createFetchSlice: StateCreator<PostStoreState, [], [], any> = (set,
     }
   },
 
+  /** Theo dõi bài viết mới */
   subscribeToPosts: (currentUserId: string) => {
     const currentCount = Math.max(get().posts.length, PAGINATION.FEED_POSTS);
 
@@ -121,13 +123,16 @@ export const createFetchSlice: StateCreator<PostStoreState, [], [], any> = (set,
     );
   },
 
+  /** Làm mới bảng tin */
   refreshFeed: async (currentUserId: string) => {
     set({ posts: [], lastDoc: null, hasMore: true, lastFetchTime: null });
     await get().fetchPosts(currentUserId, false, true);
   },
 
+  /** Xóa danh sách bài viết */
   clearPosts: () => set({ posts: [], lastDoc: null, hasMore: true }),
 
+  /** Lọc bài viết theo tác giả */
   filterPostsByAuthor: (authorId: string) => {
     set((state) => ({
       posts: state.posts.filter(p => p.authorId !== authorId),

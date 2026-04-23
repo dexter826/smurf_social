@@ -8,12 +8,12 @@ interface TransferAdminModalProps {
   isOpen: boolean;
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
   currentUserId: string;
-  /** 'transfer_only': chỉ chuyển quyền, ở lại nhóm | 'transfer_and_leave': chuyển rồi rời nhóm */
   mode?: 'transfer_only' | 'transfer_and_leave';
   onClose: () => void;
   onConfirm: (newAdminId: string) => Promise<void>;
 }
 
+/** Modal chuyển quyền trưởng nhóm chat */
 export const TransferAdminModal: React.FC<TransferAdminModalProps> = ({
   isOpen, conversation, currentUserId, mode = 'transfer_and_leave', onClose, onConfirm,
 }) => {

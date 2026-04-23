@@ -24,6 +24,7 @@ export interface RtdbGroupSlice {
 type RtdbGroupSliceWithConversation = RtdbGroupSlice & RtdbConversationSlice & RtdbMessageSlice;
 
 export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, [], [], RtdbGroupSlice> = (set, get) => ({
+    /** Tạo nhóm mới */
     createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: File | MediaObject) => {
         try {
             let avatarMedia: MediaObject | undefined;
@@ -45,6 +46,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Cập nhật thông tin nhóm */
     updateGroupInfo: async (conversationId: string, updates: { name?: string; avatar?: MediaObject }) => {
         try {
             await rtdbGroupService.updateGroupInfo(conversationId, updates);
@@ -54,6 +56,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Thêm thành viên */
     addMember: async (conversationId: string, userId: string | string[]) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -66,6 +69,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Mời thành viên */
     inviteMember: async (conversationId: string, userId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -77,6 +81,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Duyệt thành viên */
     approveMembers: async (conversationId: string, uids: string[]) => {
         try {
             await rtdbGroupService.approveMembers(conversationId, uids);
@@ -86,6 +91,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Từ chối thành viên */
     rejectMembers: async (conversationId: string, uids: string[]) => {
         try {
             await rtdbGroupService.rejectMembers(conversationId, uids);
@@ -95,6 +101,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Chuyển đổi chế độ duyệt */
     toggleApprovalMode: async (conversationId: string, enabled: boolean) => {
         try {
             return await rtdbGroupService.toggleApprovalMode(conversationId, enabled);
@@ -104,6 +111,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Xóa thành viên */
     removeMember: async (conversationId: string, userId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -115,6 +123,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Rời nhóm */
     leaveGroup: async (conversationId: string, userId: string) => {
         try {
             await rtdbGroupService.leaveGroup(conversationId, userId);
@@ -124,6 +133,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Cập nhật vai trò */
     updateMemberRole: async (conversationId: string, userId: string, role: 'admin' | 'member') => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -135,6 +145,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Chuyển quyền trưởng nhóm */
     transferCreator: async (conversationId: string, newCreatorId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -146,6 +157,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Giải tán nhóm */
     disbandGroup: async (conversationId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -157,6 +169,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
+    /** Gửi tin nhắn hệ thống */
     sendGroupSystemMessage: async (conversationId: string, actorId: string, content: string) => {
         try {
             await rtdbGroupService.sendGroupSystemMessage(conversationId, actorId, content);

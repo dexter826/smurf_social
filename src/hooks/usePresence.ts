@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
 import { usePresenceStore } from '../store/presenceStore';
 
-/**
- * Hook quản lý trạng thái online/offline
- */
+/** Theo dõi trạng thái hoạt động của người dùng */
 export const usePresence = (userId: string | undefined, initialStatus?: 'active' | 'banned') => {
   const subscribe = usePresenceStore(state => state.subscribe);
   const unsubscribe = usePresenceStore(state => state.unsubscribe);

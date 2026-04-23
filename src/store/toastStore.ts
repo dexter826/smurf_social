@@ -17,8 +17,8 @@ interface ToastState {
 
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
+  /** Thêm thông báo toast mới */
   addToast: (message, type = 'info') => {
-    // Kiểm tra xem tin nhắn này đã đang hiển thị chưa
     const isDuplicate = useToastStore.getState().toasts.some(t => t.message === message);
     if (isDuplicate) return;
 
@@ -27,13 +27,13 @@ export const useToastStore = create<ToastState>((set) => ({
       toasts: [...state.toasts, { id, message, type }]
     }));
 
-    // Tự động xóa sau thời gian cấu hình
     setTimeout(() => {
       set((state) => ({
         toasts: state.toasts.filter((t) => t.id !== id)
       }));
     }, TIME_LIMITS.TOAST_DURATION);
   },
+  /** Xóa thông báo toast */
   removeToast: (id) =>
     set((state) => ({
       toasts: state.toasts.filter((t) => t.id !== id)

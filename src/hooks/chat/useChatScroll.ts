@@ -29,7 +29,7 @@ export const useChatScroll = ({
   const scrollHeightBeforeLoad = useRef(0);
   const loadMoreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cuộn xuống đáy
+/** Tự động cuộn xuống tin nhắn mới nhất */
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'instant') => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior });
@@ -73,7 +73,7 @@ export const useChatScroll = ({
           setUnreadCount(prev => prev + 1);
         }
       } else if (messagesContainerRef.current) {
-        // Handle pagination (prepended messages)
+
         const currentScrollHeight = messagesContainerRef.current.scrollHeight;
         messagesContainerRef.current.scrollTop = currentScrollHeight - scrollHeightBeforeLoad.current;
       }

@@ -25,6 +25,7 @@ interface GiphyImage {
 const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY;
 const GIPHY_BASE_URL = 'https://api.giphy.com/v1/gifs';
 
+/** Bộ chọn ảnh GIF từ Giphy */
 export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [gifs, setGifs] = useState<GiphyImage[]>([]);
@@ -159,7 +160,7 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
         )}
       </div>
 
-      {/* Footer / Attribution */}
+      {/* Footer Attribution */}
       <div className="px-3 py-2 border-t border-border-light bg-bg-secondary/20 flex items-center justify-between">
         <img
           src="https://giphy.com/static/img/powered_by_giphy_light.png"

@@ -8,6 +8,7 @@ import { toast } from '../toastStore';
 import { TOAST_MESSAGES } from '../../constants';
 
 export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (set, get) => ({
+  /** Tạo bình luận mới */
   createComment: async (postId, userId, content, parentId, replyToUserId, replyToId, image) => {
     const realId = commentService.generateCommentId();
     
@@ -111,6 +112,7 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     }
   },
 
+  /** Cập nhật bình luận */
   updateComment: async (postId, commentId, content, parentId, _replyToUserId, _replyToId, image) => {
     try {
       let finalImage = image instanceof File ? undefined : image;
@@ -152,6 +154,7 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     }
   },
 
+  /** Xóa bình luận */
   deleteComment: async (postId, commentId, userId, parentId) => {
     const prev = { rootComments: { ...get().rootComments }, replies: { ...get().replies } };
     set(s => {
@@ -169,6 +172,7 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     catch (err) { set(prev); console.error('Lỗi xóa bình luận:', err); throw err; }
   },
 
+  /** Tương tác cảm xúc */
   reactToComment: async (postId, commentId, userId, reaction) => {
     const { setOptimisticReaction, clearOptimisticReaction } = useReactionStore.getState();
     setOptimisticReaction(commentId, reaction === 'REMOVE' ? null : reaction);
@@ -178,6 +182,7 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     } catch (err) { console.error('Lỗi react bình luận:', err); clearOptimisticReaction(commentId); throw err; }
   },
 
+  /** Cập nhật bình luận trong store */
   updateCommentInStore: (postId, commentId, content, parentId, _replyToUserId, _replyToId, image) => set(s => {
     const update = (c: Comment) => ({ ...c, content, updatedAt: Timestamp.now(), ...(image !== undefined && { image }) });
     if (!parentId) {
@@ -187,6 +192,7 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
     return { replies: { ...s.replies, [postId]: { ...pr, [parentId]: (pr[parentId] || []).map(r => r.id === commentId ? update(r) : r) } } };
   }),
 
+  /** Đặt lại trạng thái bình luận */
   reset: () => set({ 
     rootComments: {}, 
     replies: {}, 

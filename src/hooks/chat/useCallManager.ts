@@ -89,7 +89,6 @@ export function useCallManager(currentUserId: string) {
                 return;
             }
 
-            // Bên caller
             if (data.callerId === currentUserId) {
                 if (data.status === 'accepted') {
                     if (sessionRef.current) {

@@ -14,7 +14,7 @@ import { useRtdbChatStore } from '../../../store';
 import { getLastName } from '../../../utils/uiUtils';
 import { TIME_LIMITS } from '../../../constants';
 
-/* ── Skeleton ── */
+/** Skeleton hiển thị khi đang tải hội thoại */
 const ConversationItemSkeleton: React.FC = () => (
   <div className="flex items-center gap-3 px-3 py-3 mx-1 my-0.5 rounded-xl animate-pulse">
     <div className="w-11 h-11 rounded-full bg-bg-tertiary flex-shrink-0" />
@@ -61,6 +61,7 @@ const renderMessagePreview = (preview: string): React.ReactNode => {
   return preview;
 };
 
+/** Item hiển thị một hội thoại trong danh sách */
 const ConversationItemInner: React.FC<ConversationItemProps> = ({
   conversation, isActive, currentUserId, currentUserFriendIds = [],
   showMessageRequestBadge = false, onClick,
@@ -123,7 +124,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        {/* Name row */}
+        {/* Name Row */}
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <h3 className={`text-sm truncate ${isUnread ? 'font-semibold text-text-primary' : 'font-medium text-text-secondary'}`}>
@@ -144,7 +145,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
           </span>
         </div>
 
-        {/* Preview row */}
+        {/* Preview Row */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0 overflow-hidden">
             {typingText ? (
@@ -184,7 +185,7 @@ const ConversationItemInner: React.FC<ConversationItemProps> = ({
         </div>
       </div>
 
-      {/* Context menu */}
+      {/* Context Menu */}
       <div className={`md:absolute md:top-2 md:right-2 flex-shrink-0 transition-all duration-200 ${isMenuOpen ? 'opacity-100 md:z-10' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
         <Dropdown
           isOpen={isMenuOpen}

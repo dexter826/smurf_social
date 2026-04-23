@@ -13,6 +13,7 @@ interface ForwardModalProps {
   currentUserId: string;
 }
 
+/** Modal chuyển tiếp tin nhắn */
 export const ForwardModal: React.FC<ForwardModalProps> = ({
   isOpen, onClose, message, currentUserId,
 }) => {
@@ -97,7 +98,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
       }
     >
       <div className="flex flex-col gap-6 min-h-0 px-1 py-1">
-        {/* Message preview */}
+        {/* Message Preview */}
         <div className="p-4 bg-bg-secondary/50 rounded-2xl border border-border-light/50 backdrop-blur-sm">
           <p className="text-[10px] text-text-tertiary mb-1.5 font-black uppercase tracking-widest opacity-70">Nội dung chuyển tiếp</p>
           <p className="text-sm text-text-primary line-clamp-2 italic leading-relaxed font-medium">
@@ -105,7 +106,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
           </p>
         </div>
 
-        {/* Search */}
+        {/* Search Input */}
         <div className="relative group">
           <Input
             icon={<Search size={16} className="text-text-tertiary group-focus-within:text-primary transition-colors" />}

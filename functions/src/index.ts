@@ -1,6 +1,6 @@
 import { setGlobalOptions } from 'firebase-functions/v2';
 
-// Cấu hình tối ưu để tiết kiệm Quota CPU/Memory
+
 setGlobalOptions({
     region: 'asia-southeast1',
     memory: '512MiB',
@@ -11,7 +11,7 @@ setGlobalOptions({
 
 
 
-// Notification Triggers
+
 export { onPostReactionWrite } from './notifications/onPostReactionWrite';
 export { onCommentReactionWrite } from './notifications/onCommentReactionWrite';
 export { onCommentWrite } from './notifications/onCommentWrite';
@@ -21,7 +21,6 @@ export { onReportCreated } from './notifications/onReportCreated';
 export { onPostWrite } from './posts/onPostWrite';
 export { onFriendWrite } from './posts/onFriendWrite';
 export { onBlockedUserWrite } from './posts/onBlockedUserWrite';
-
 export { resolveReport } from './admin/resolveReport';
 export { rejectReport } from './admin/rejectReport';
 export { banUser } from './admin/banUser';
@@ -30,8 +29,5 @@ export { systemCleanup } from './scheduled/cleanup';
 export { generateZegoToken } from './call/generateZegoToken';
 export { generateFriendSuggestions } from './friends/generateFriendSuggestions';
 export { onUserProfileUpdated } from './friends/onUserProfileUpdated';
-
 export { onMessageCreated } from './notifications/onMessageCreated';
-
-
 export { startDirectConversation } from './chat/startDirectConversation';

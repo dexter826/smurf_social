@@ -52,7 +52,7 @@ export const useChatGroups = ({
     );
   }, [currentUserId, createGroup, sendGroupSystemMessage, getActorName]);
 
-  /** Thêm thành viên trực tiếp (Admin/Creator) */
+
   const handleAddMembers = useCallback(async (userIds: string[]) => {
     if (!selectedConversationId) return;
     try {
@@ -71,7 +71,7 @@ export const useChatGroups = ({
     }
   }, [selectedConversationId, addMember, sendGroupSystemMessage, currentUserId, getActorName, getName]);
 
-  /** Mời thành viên — phân nhánh direct/pending theo approval mode */
+
   const handleInviteMembers = useCallback(async (userIds: string[]) => {
     if (!selectedConversationId || !currentUserId) return;
     try {
@@ -118,7 +118,7 @@ export const useChatGroups = ({
       ? systemMessages.TOGGLE_APPROVAL_ON(getActorName())
       : systemMessages.TOGGLE_APPROVAL_OFF(getActorName());
     await sendGroupSystemMessage(selectedConversationId, currentUserId, msg);
-    // Gửi system message cho từng người được auto-approve khi tắt mode
+
     for (const uid of autoApprovedUids) {
       await sendGroupSystemMessage(
         selectedConversationId,
@@ -177,7 +177,7 @@ export const useChatGroups = ({
     await leaveGroup(selectedConversationId, currentUserId);
   }, [selectedConversationId, currentUserId, updateMemberRole, leaveGroup, sendGroupSystemMessage, getActorName, getName]);
 
-  /** Chuyển quyền Trưởng nhóm mà không rời nhóm */
+
   const handleTransferCreator = useCallback(async (newCreatorId: string) => {
     if (!selectedConversationId || !currentUserId) return;
     await transferCreator(selectedConversationId, newCreatorId);

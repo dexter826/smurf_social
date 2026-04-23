@@ -9,6 +9,7 @@ interface ChatDetailsHeaderProps {
   partner?: User;
 }
 
+/** Header của bảng chi tiết hội thoại */
 export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
   conversation, currentUserId, participants, partner,
 }) => {

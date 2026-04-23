@@ -1,7 +1,7 @@
 import { getValidatedEnvConfig } from '../utils/validateEnv';
 import { ReactionType } from '../../shared/types';
 
-// Phân trang
+/** Cấu hình phân trang cho các danh sách */
 export const PAGINATION = {
   FEED_POSTS: 15,
   USER_POSTS: 20,
@@ -21,12 +21,12 @@ export const PAGINATION = {
   SHARE_SEARCH_LIMIT: 50,
 } as const;
 
-// Giới hạn Firebase
+/** Giới hạn truy vấn Firebase */
 export const FIREBASE_LIMITS = {
   QUERY_IN_LIMIT: 10,
 } as const;
 
-// Giới hạn thời gian (ms)
+/** Giới hạn thời gian cho các tác vụ */
 export const TIME_LIMITS = {
   MESSAGE_EDIT_WINDOW: 5 * 60 * 1000,
   TYPING_TIMEOUT: 3000,
@@ -34,21 +34,21 @@ export const TIME_LIMITS = {
   VOICE_MAX_DURATION: 5 * 60 * 1000,
 } as const;
 
-// Giới hạn Media
+/** Giới hạn số lượng tệp đa phương tiện */
 export const MEDIA_CONSTRAINTS = {
   MAX_IMAGES_PER_POST: 10,
   MAX_VIDEOS_PER_POST: 3,
   MAX_IMAGES_PER_COMMENT: 1,
 } as const;
 
-// Giới hạn nhóm chat
+/** Giới hạn cho cuộc trò chuyện nhóm */
 export const GROUP_LIMITS = {
   MIN_MEMBERS: 2,
   MAX_MEMBERS: 100,
   NAME_MAX_LENGTH: 50,
 } as const;
 
-// Validation
+/** Quy tắc kiểm tra tính hợp lệ của dữ liệu */
 export const VALIDATION = {
   PASSWORD_MIN_LENGTH: 6,
   BIO_MAX_LENGTH: 500,
@@ -60,7 +60,7 @@ export const VALIDATION = {
   INTEREST_MAX_LENGTH: 30,
 } as const;
 
-// Giới hạn kích thước file (bytes)
+/** Giới hạn kích thước tệp tải lên */
 export const FILE_LIMITS = {
   IMAGE: 5 * 1024 * 1024,      // 5MB — avatars, comment images
   VIDEO: 50 * 1024 * 1024,     // 50MB — post videos
@@ -72,7 +72,7 @@ export const FILE_LIMITS = {
 
 export type FileLimitType = keyof typeof FILE_LIMITS;
 
-// Cấu hình nén ảnh
+/** Thông số nén ảnh cho từng loại nội dung */
 export const IMAGE_COMPRESSION = {
   AVATAR: { maxSizeMB: 0.5, maxWidthOrHeight: 512 },
   COVER: { maxSizeMB: 1, maxWidthOrHeight: 1920 },
@@ -82,7 +82,7 @@ export const IMAGE_COMPRESSION = {
   REPORT: { maxSizeMB: 1, maxWidthOrHeight: 1280 },
 } as const;
 
-// Cấu hình báo cáo
+/** Cấu hình cho hệ thống báo cáo vi phạm */
 export const REPORT_CONFIG = {
   DESCRIPTION_MAX_LENGTH: 500,
   MAX_IMAGES_PER_REPORT: 5,
@@ -101,7 +101,7 @@ export const REPORT_CONFIG = {
   }
 } as const;
 
-// Phản ứng (Reactions)
+/** Các loại cảm xúc trong hệ thống */
 export const REACTIONS = [
   ReactionType.LIKE,
   ReactionType.LOVE,
@@ -120,7 +120,7 @@ export const REACTION_LABELS: Record<ReactionType, string> = {
   [ReactionType.ANGRY]: 'Phẫn nộ'
 };
 
-// API Endpoints
+/** Các địa chỉ kết nối API ngoại vi */
 const envConfig = getValidatedEnvConfig();
 
 export const API_ENDPOINTS = {

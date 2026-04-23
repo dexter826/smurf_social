@@ -75,6 +75,7 @@ const initialLoadingStates: Record<LoadingKey, boolean> = {
 export const useLoadingStore = create<LoadingState>((set, get) => ({
     loadingStates: { ...initialLoadingStates },
 
+    /** Cập nhật trạng thái tải */
     setLoading: (key, isLoading) => {
         set((state) => ({
             loadingStates: {
@@ -84,6 +85,7 @@ export const useLoadingStore = create<LoadingState>((set, get) => ({
         }));
     },
 
+    /** Cập nhật nhiều trạng thái tải */
     setMultipleLoading: (keys, isLoading) => {
         set((state) => {
             const updates = keys.reduce((acc, key) => {
@@ -100,15 +102,18 @@ export const useLoadingStore = create<LoadingState>((set, get) => ({
         });
     },
 
+    /** Kiểm tra trạng thái tải */
     isLoading: (key) => {
         return get().loadingStates[key] || false;
     },
 
+    /** Kiểm tra nếu có bất kỳ tác vụ nào đang tải */
     isAnyLoading: (...keys) => {
         const { loadingStates } = get();
         return keys.some((key) => loadingStates[key]);
     },
 
+    /** Đặt lại tất cả trạng thái tải */
     reset: () => {
         set({ loadingStates: { ...initialLoadingStates } });
     },

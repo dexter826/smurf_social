@@ -24,6 +24,7 @@ interface ConfirmState {
 
 const CONFIRM_CLOSED: ConfirmState = { isOpen: false, type: 'ban', userId: '', userName: '' };
 
+/** Card hiển thị chỉ số người dùng */
 const StatCard: React.FC<{ label: string; value: number; color: string }> = ({ label, value, color }) => (
   <div className="bg-bg-secondary/60 px-4 py-2.5 rounded-xl border border-border-light flex flex-col items-center min-w-[90px]">
     <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{label}</span>
@@ -31,6 +32,7 @@ const StatCard: React.FC<{ label: string; value: number; color: string }> = ({ l
   </div>
 );
 
+/** Trang quản lý danh sách người dùng */
 export const UsersView: React.FC = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
@@ -90,7 +92,7 @@ export const UsersView: React.FC = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="bg-bg-primary px-4 md:px-6 py-4 border-b border-border-light flex-shrink-0 space-y-4">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -109,7 +111,7 @@ export const UsersView: React.FC = () => {
           </div>
         </div>
 
-        {/* Search & filter */}
+        {/* Search And Filter */}
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative group">
             <Search
@@ -134,7 +136,7 @@ export const UsersView: React.FC = () => {
         </div>
       </div>
 
-      {/* ── List ── */}
+      {/* User List */}
       <div className="flex-1 overflow-y-auto scroll-hide p-4 md:p-6 bg-bg-secondary/30">
         <div className="max-w-5xl mx-auto">
           {isLoading ? (
@@ -195,7 +197,7 @@ export const UsersView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Action buttons */}
+                    {/* Action Buttons */}
                     <div className="flex items-center gap-1 ml-3 flex-shrink-0">
                       <IconButton
                         icon={<Eye size={15} />}

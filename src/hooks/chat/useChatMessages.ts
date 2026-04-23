@@ -6,7 +6,7 @@ interface UseChatMessagesProps {
   currentUserId: string | null;
 }
 
-// Xử lý gửi và quản lý tin nhắn
+/** Gửi và quản lý các loại tin nhắn trong hội thoại */
 export const useChatMessages = ({
   selectedConversationId,
   currentUserId

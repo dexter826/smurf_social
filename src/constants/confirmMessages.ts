@@ -1,4 +1,4 @@
-// Thông báo xác nhận.
+/** Thông báo xác nhận hành động người dùng */
 
 export const CONFIRM_MESSAGES = {
   FRIEND: {

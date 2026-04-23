@@ -3,6 +3,7 @@ import { db, auth, rtdb } from '../app';
 import { UserStatus, FriendRequestStatus } from '../types';
 import { ServerValue } from 'firebase-admin/database';
 
+/** Khóa tài khoản người dùng và thu hồi quyền truy cập */
 export async function banUserById(userId: string): Promise<void> {
     await db.collection('users').doc(userId).update({
         status: UserStatus.BANNED,

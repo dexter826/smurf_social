@@ -40,12 +40,18 @@ const initialState = {
 export const useCallStore = create<CallState>((set) => ({
   ...initialState,
 
+  /** Cập nhật giai đoạn cuộc gọi */
   setPhase: (phase) => set({ phase }),
+  /** Thiết lập phiên cuộc gọi */
   setSession: (session) => set({ session }),
+  /** Lưu tín hiệu cuộc gọi đến */
   setIncomingSignal: (incomingSignal) => set({ incomingSignal }),
+  /** Thiết lập lý do kết thúc */
   setCallEndReason: (callEndReason) => set({ callEndReason }),
 
+  /** Đặt lại cuộc gọi */
   resetCall: () => set(initialState),
+  /** Đặt lại toàn bộ trạng thái */
   reset: () => set(initialState),
 }));
 import { registerStore } from './storeUtils';

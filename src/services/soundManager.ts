@@ -50,9 +50,7 @@ class SoundManager {
     }
   }
 
-  /**
-   * Play a sound, considering visibility and cross-tab sync.
-   */
+  /** Phát âm thanh thông báo */
   public async play(type: SoundType = 'message', options: { force?: boolean } = {}): Promise<void> {
     const now = Date.now();
 

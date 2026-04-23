@@ -1,14 +1,9 @@
-/**
- * Tiện ích quản lý State trung tâm.
- */
+
 
 type ResetFn = () => void;
 const reseters: Set<ResetFn> = new Set();
 
-/**
- * Đăng ký hàm reset cho store.
- * @param resetFn Hàm thực hiện reset state về mặc định
- */
+/** Đăng ký hàm reset cho store */
 export const registerStore = (resetFn: ResetFn) => {
   reseters.add(resetFn);
   return () => {
@@ -16,16 +11,12 @@ export const registerStore = (resetFn: ResetFn) => {
   };
 };
 
-/**
- * Reset tất cả các store đã đăng ký.
- */
+/** Reset tất cả các store đã đăng ký */
 export const resetAllStores = () => {
   reseters.forEach((reset) => reset());
 };
 
-/**
- * Helper để cập nhật mảng lồng nhau (không cần immer).
- */
+/** Cập nhật mảng lồng nhau */
 export const updateMapItem = <T>(
   map: Record<string, T[]>, 
   key: string, 

@@ -5,9 +5,7 @@ import { NotificationType, CommentStatus } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 
-/**
- * Xử lý tất cả thay đổi trên bình luận (Create, Soft-delete)
- */
+/** Thông báo khi có bình luận hoặc xóa bình luận */
 export const onCommentWrite = onDocumentWritten(
     { document: 'comments/{commentId}', region: 'asia-southeast1' },
     async (event) => {
@@ -15,7 +13,6 @@ export const onCommentWrite = onDocumentWritten(
         const before = event.data?.before.data();
         const after = event.data?.after.data();
 
-        // 1. Xử lý CREATE
         if (!before && after) {
             const { postId, authorId: senderId, parentId, content } = after;
             const contentSnippet: string = (content || '').substring(0, 50);
@@ -39,7 +36,6 @@ export const onCommentWrite = onDocumentWritten(
                 const postOwnerId = postSnap.data()?.authorId;
                 const replyToUserId = after.replyToUserId;
 
-                // Danh sách những người cần nhận thông báo (Chủ bài và người được reply)
                 const receivers = new Set<string>();
                 if (postOwnerId && postOwnerId !== senderId) receivers.add(postOwnerId);
                 if (replyToUserId && replyToUserId !== senderId) receivers.add(replyToUserId);
@@ -71,7 +67,6 @@ export const onCommentWrite = onDocumentWritten(
             return;
         }
 
-        // 2. Xử lý DELETE (Soft-delete)
         if (before && after && before.status === CommentStatus.ACTIVE && after.status === CommentStatus.DELETED) {
             const { postId, parentId } = after;
             try {

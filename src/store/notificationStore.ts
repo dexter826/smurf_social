@@ -29,6 +29,7 @@ export const useNotificationStore = create<NotificationState>()(
       currentLimit: PAGINATION.NOTIFICATIONS,
       _unsubscribe: null as (() => void) | null,
 
+      /** Đặt lại trạng thái thông báo */
       reset: () => {
         const { _unsubscribe } = get();
         if (_unsubscribe) _unsubscribe();
@@ -41,11 +42,13 @@ export const useNotificationStore = create<NotificationState>()(
         });
       },
 
+      /** Cập nhật danh sách thông báo */
       setNotifications: (notifications) => {
         const unreadCount = notifications.filter(n => !n.isRead).length;
         set({ notifications, unreadCount });
       },
 
+      /** Thêm thông báo mới */
       addNotification: (notification) => {
         set((state) => {
           const exists = state.notifications.find(n => n.id === notification.id);
@@ -59,6 +62,7 @@ export const useNotificationStore = create<NotificationState>()(
         });
       },
 
+      /** Đánh dấu đã đọc thông báo */
       markAsRead: async (id) => {
         const notification = get().notifications.find(n => n.id === id);
         const wasUnread = notification && !notification.isRead;
@@ -83,6 +87,7 @@ export const useNotificationStore = create<NotificationState>()(
         }
       },
 
+      /** Đánh dấu tất cả đã đọc */
       markAllAsRead: async (userId) => {
         const previousNotifications = [...get().notifications];
         const previousUnreadCount = get().unreadCount;
@@ -100,6 +105,7 @@ export const useNotificationStore = create<NotificationState>()(
         }
       },
 
+      /** Xóa thông báo */
       deleteNotification: async (id) => {
         const previousNotifications = [...get().notifications];
         const previousUnreadCount = get().unreadCount;
@@ -120,11 +126,13 @@ export const useNotificationStore = create<NotificationState>()(
         }
       },
 
+      /** Xóa tất cả thông báo */
       clearAllNotifications: async (userId) => {
         await notificationService.deleteAllNotifications(userId);
         set({ notifications: [], unreadCount: 0 });
       },
 
+      /** Khởi tạo và theo dõi thông báo */
       initialize: (userId, limit = PAGINATION.NOTIFICATIONS) => {
         const { _unsubscribe, currentLimit } = get();
         
@@ -164,6 +172,7 @@ export const useNotificationStore = create<NotificationState>()(
         return wrappedUnsubscribe;
       },
 
+      /** Tải thêm thông báo */
       loadMore: (userId) => {
         const newLimit = get().currentLimit + PAGINATION.NOTIFICATIONS;
         get().initialize(userId, newLimit);

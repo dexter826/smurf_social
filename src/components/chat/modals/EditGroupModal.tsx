@@ -16,6 +16,7 @@ interface EditGroupModalProps {
   onSave: (updates: { name?: string; avatar?: MediaObject }) => Promise<void>;
 }
 
+/** Modal chỉnh sửa thông tin nhóm chat */
 export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   isOpen, conversation, currentUserId, onClose, onSave,
 }) => {
@@ -107,7 +108,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
         }
       >
         <div className="space-y-5">
-          {/* Avatar */}
+          {/* Group Avatar */}
           <div className="flex flex-col items-center">
             <div className="relative">
               <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
@@ -128,7 +129,7 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
             <p className="text-xs text-text-tertiary mt-2">Nhấn để thay đổi ảnh nhóm</p>
           </div>
 
-          {/* Name */}
+          {/* Group Name */}
           <Input
             label="Tên nhóm"
             placeholder="Nhập tên nhóm..."

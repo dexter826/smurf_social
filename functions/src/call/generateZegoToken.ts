@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { generateToken04 } from '../helpers/zegoTokenHelper';
 
 
+/** Tạo mã xác thực cuộc gọi ZegoCloud */
 export const generateZegoToken = onCall(
   {
     region: 'asia-southeast1',

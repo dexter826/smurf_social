@@ -10,6 +10,7 @@ interface ConversationFiltersProps {
   badges?: Partial<Record<FilterType, number>>;
 }
 
+/** Bộ lọc danh sách hội thoại */
 export const ConversationFilters: React.FC<ConversationFiltersProps> = ({
   activeFilter, onFilterChange, onMarkAllRead, badges = {},
 }) => {

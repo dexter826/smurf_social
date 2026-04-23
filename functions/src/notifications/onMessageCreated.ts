@@ -5,9 +5,7 @@ import { getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 import { isBlockingMessages } from '../helpers/blockHelper';
 
-/**
- * Xử lý khi có tin nhắn mới trong RTDB
- */
+/** Gửi thông báo khi có tin nhắn mới */
 export const onMessageCreated = onValueCreated(
   {
     ref: '/messages/{convId}/{msgId}',

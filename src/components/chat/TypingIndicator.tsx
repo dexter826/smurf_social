@@ -8,6 +8,7 @@ interface TypingIndicatorProps {
   usersMap: Record<string, User>;
 }
 
+/** Chỉ báo đang soạn tin nhắn */
 export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   typingUsers, currentUserId, usersMap,
 }) => {
@@ -29,7 +30,7 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
       style={{ zIndex: 'var(--z-sticky)' }}
     >
       <div className="flex items-center gap-2 bg-bg-primary border border-border-light/50 rounded-full px-3 py-1.5 shadow-sm">
-        {/* Animated dots */}
+        {/* Animated Dots */}
         <div className="flex items-center gap-0.5">
           {[0, 1, 2].map((i) => (
             <span

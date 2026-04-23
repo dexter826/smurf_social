@@ -53,6 +53,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
     typingUsers: {},
     userChats: {},
 
+    /** Theo dõi danh sách hội thoại */
     subscribeToConversations: (userId: string) => {
         const hasCache = get().conversations.length > 0;
         useLoadingStore.getState().setLoading('chat', !hasCache);
@@ -96,6 +97,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         return unsubscribe;
     },
 
+    /** Lựa chọn hội thoại */
     selectConversation: (conversationId: string | null) => {
         set({ selectedConversationId: conversationId });
 
@@ -109,12 +111,14 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Lấy hoặc tạo hội thoại cá nhân */
     getOrCreateConversation: (user1Id: string, user2Id: string) => {
         const conversationId = getDirectConversationId(user1Id, user2Id);
         set({ selectedConversationId: conversationId });
         return conversationId;
     },
 
+    /** Tìm kiếm hội thoại */
     searchConversations: async (userId: string, term: string) => {
         set({ searchTerm: term });
         useLoadingStore.getState().setLoading('contacts.search', true);
@@ -163,6 +167,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Ghim hội thoại */
     togglePin: async (conversationId: string, userId: string, pinned: boolean) => {
         set(state => ({
             conversations: state.conversations.map(c =>
@@ -195,6 +200,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Tắt thông báo hội thoại */
     toggleMute: async (conversationId: string, userId: string, muted: boolean) => {
         set(state => ({
             conversations: state.conversations.map(c =>
@@ -227,6 +233,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Lưu trữ hội thoại */
     toggleArchive: async (conversationId: string, userId: string, archived: boolean) => {
         set(state => ({
             conversations: state.conversations.map(c =>
@@ -259,6 +266,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Đánh dấu chưa đọc */
     toggleMarkUnread: async (conversationId: string, userId: string, markedUnread: boolean) => {
         const prevUnread = get().userChats[conversationId]?.unreadCount ?? 0;
         const nextUnread = markedUnread ? Math.max(prevUnread, 1) : 0;
@@ -298,6 +306,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Xóa hội thoại */
     deleteConversation: async (conversationId: string, userId: string) => {
         set(state => ({
             selectedConversationId: state.selectedConversationId === conversationId ? null : state.selectedConversationId
@@ -315,6 +324,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Trạng thái tập trung tìm kiếm */
     setSearchFocused: (focused: boolean) => {
         set({ isSearchFocused: focused });
         if (!focused) {
@@ -322,6 +332,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Thêm vào lịch sử tìm kiếm */
     addToSearchHistory: (item: User | { id: string; data: RtdbConversation; userChat: RtdbUserChat }, userId: string) => {
         set((state) => {
             const userHistory = state.searchHistory[userId] || [];
@@ -336,6 +347,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         });
     },
 
+    /** Xóa khỏi lịch sử tìm kiếm */
     removeFromSearchHistory: (itemId: string, userId: string) => {
         set((state) => ({
             searchHistory: {
@@ -345,6 +357,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }));
     },
 
+    /** Xóa toàn bộ lịch sử tìm kiếm */
     clearSearchHistory: (userId: string) => {
         set((state) => ({
             searchHistory: {
@@ -354,14 +367,17 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }));
     },
 
+    /** Cập nhật từ khóa tìm kiếm */
     setSearchTerm: (term: string) => {
         set({ searchTerm: term });
     },
 
+    /** Trạng thái hiển thị khung chat */
     setIsChatVisible: (visible: boolean) => {
         set({ isChatVisible: visible });
     },
 
+    /** Đánh dấu tất cả đã đọc */
     markAllAsRead: async (userId: string) => {
         try {
             await rtdbConversationService.markAllAsRead(userId);
@@ -370,6 +386,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Cập nhật trạng thái đang nhập */
     setTyping: async (conversationId: string, userId: string, isTyping: boolean) => {
         try {
             await rtdbConversationService.setTyping(conversationId, userId, isTyping);
@@ -378,6 +395,7 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
         }
     },
 
+    /** Theo dõi trạng thái đang nhập */
     subscribeToTyping: (conversationId: string) => {
         const unsubscribe = rtdbConversationService.subscribeToTyping(conversationId, (typingUserIds) => {
             set((state) => ({

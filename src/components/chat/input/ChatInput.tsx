@@ -42,6 +42,7 @@ interface ChatInputProps {
   isLoadingSettings?: boolean;
 }
 
+/** Component nhập tin nhắn chat */
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSendText, onSendImages, onSendFile, onSendVideo, onSendVoice, onSendGif,
   onTyping, disabled = false, blockedMessage,
@@ -91,7 +92,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     handleKeyDown: handleMentionKeyDown,
   } = useMentions({ inputText, setInputText, participants, currentUserId, isGroup, inputRef });
 
-  // Link preview - only active when not editing
+  /* Link Preview */
   const linkPreview = useLinkPreview(editingMessage ? '' : inputText);
 
   const onSelectMention = useCallback((user: User) => {
@@ -394,7 +395,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     );
   }
 
-  /* ── Blocked / disbanded state ── */
+  /* Blocked Or Disbanded State */
   if (blockedMessage || isDisbanded) {
     return (
       <div
@@ -449,7 +450,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      {/* File previews */}
+      {/* File Previews */}
       <FilePreview
         files={selectedFiles}
         onRemove={removeFile}
@@ -458,7 +459,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         isSending={isSending}
       />
 
-      {/* Link preview */}
+      {/* Link Preview */}
       {!editingMessage && linkPreview.url && !linkPreview.isDismissed && (
         <div className="px-3 pt-2">
           <LinkPreviewCard
@@ -470,7 +471,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      {/* Reply / edit banner */}
+      {/* Reply Or Edit Banner */}
       {(replyingTo || editingMessage) && (
         <div className="px-4 py-2 border-b border-border-light bg-bg-secondary/80 backdrop-blur-md flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 border-l-4 border-primary pl-3">
@@ -507,9 +508,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      {/* Input row */}
+      {/* Input Row */}
       <form onSubmit={handleSubmit} className="relative flex items-end gap-2 px-3 py-2.5">
-        {/* Mention dropdown */}
+        {/* Mention Dropdown */}
         {showMentions && filteredParticipants.length > 0 && (
           <MentionList
             users={filteredParticipants}
@@ -578,7 +579,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           />
         )}
 
-        {/* Send button */}
+        {/* Send Button */}
         <button
           type="submit"
           disabled={disabled || !!blockedMessage || (!inputText.trim() && selectedFiles.length === 0) || isSending}

@@ -79,7 +79,7 @@ export const useConversationGroups = ({
       });
     }
 
-    // Tab Chính (all) hiện tại chỉ hiện filteredList (không bao gồm người lạ)
+
     const allConversations = filteredList;
 
     return allConversations.sort((a, b) => {

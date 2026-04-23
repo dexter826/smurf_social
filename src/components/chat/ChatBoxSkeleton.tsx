@@ -1,6 +1,7 @@
 import React from 'react';
 import { Skeleton } from '../ui/Skeleton';
 
+/** Skeleton hiển thị khi đang tải tin nhắn */
 export const ChatBoxSkeleton: React.FC = () => (
   <div className="flex flex-col gap-5 px-3 md:px-4 py-4 h-full overflow-hidden">
     {/* Received */}
@@ -23,7 +24,7 @@ export const ChatBoxSkeleton: React.FC = () => (
       <Skeleton height={38} width={160} className="rounded-xl rounded-bl-sm" />
     </div>
 
-    {/* Sent — image-like */}
+    {/* Sent Image Like */}
     <div className="flex flex-col items-end gap-1.5 max-w-[72%] ml-auto">
       <Skeleton height={140} width={220} className="rounded-xl rounded-br-sm bg-primary/15" />
     </div>

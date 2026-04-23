@@ -7,7 +7,7 @@ interface UseChatActionsProps {
   selectConversation: (id: string | null) => void;
 }
 
-// Các actions cho conversation: pin, mute, archive, mark unread
+/** Thao tác quản lý hội thoại: ghim, tắt thông báo, lưu trữ */
 export const useChatActions = ({
   selectedConversationId,
   currentUserId,

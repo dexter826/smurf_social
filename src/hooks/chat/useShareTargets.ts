@@ -12,9 +12,7 @@ export type ShareableEntry =
   | { type: 'conversation'; id: string; item: { id: string; data: RtdbConversation; userChat: RtdbUserChat } }
   | { type: 'friend'; id: string; item: User };
 
-/**
- * Hook quản lý danh sách và tìm kiếm đối tượng chia sẻ (Hội thoại + Bạn bè)
- */
+/** Tìm kiếm và quản lý danh sách chia sẻ qua hội thoại và bạn bè */
 export const useShareTargets = (currentUserId: string, searchTerm: string, isOpen: boolean) => {
   const conversations = useRtdbChatStore(state => state.conversations);
   const { users: usersMap, fetchUsers } = useUserCache();
@@ -23,7 +21,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
   const [blockedByPartners, setBlockedByPartners] = useState<Record<string, BlockOptions>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load cache thông tin thành viên trong hội thoại
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -36,7 +34,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
     }
   }, [isOpen, conversations, fetchUsers, currentUserId]);
 
-  // Load toàn bộ danh sách bạn bè
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -55,7 +53,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
     loadFriends();
   }, [isOpen, currentUserId]);
 
-  // Load thông tin những người chặn mình (để chặn 2 chiều)
+
   useEffect(() => {
     if (!isOpen) {
       setBlockedByPartners({});
@@ -80,9 +78,9 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
     loadBlockedBy();
   }, [isOpen, conversations, allFriends, currentUserId]);
 
-  // Tổng hợp danh sách có thể chia sẻ
+
   const shareableItems = useMemo(() => {
-    // 1. Lọc các hội thoại hợp lệ
+
     const validConvs = conversations.filter(conv => {
       if (conv.data.isDisbanded) return false;
       if (!conv.data.isGroup) {
@@ -106,7 +104,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
       item: conv
     }));
 
-    // 2. Lấy danh sách bạn bè chưa có hội thoại
+
     const existingChatPartnerIds = new Set(
       validConvs
         .filter(c => !c.data.isGroup)
@@ -135,7 +133,7 @@ export const useShareTargets = (currentUserId: string, searchTerm: string, isOpe
     };
   }, [conversations, allFriends, currentUserId, blockedUsers, blockedByPartners, usersMap]);
 
-  // Filter theo search term
+
   const filteredItems = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     

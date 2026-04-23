@@ -5,9 +5,7 @@ import { NotificationType } from '../types';
 import { createNotification, getSenderName, buildPushBody } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 
-/**
- * Xử lý khi có reaction mới trên bình luận
- */
+/** Gửi thông báo khi có lượt thích bình luận */
 export const onCommentReactionWrite = onDocumentWritten(
   { document: 'comments/{commentId}/reactions/{userId}', region: 'asia-southeast1' },
   async (event) => {

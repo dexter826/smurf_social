@@ -10,6 +10,7 @@ interface MessageStatusProps {
   readers: User[];
 }
 
+/** Hiển thị trạng thái đã xem của tin nhắn */
 export const MessageStatus: React.FC<MessageStatusProps> = ({
   isMine, isRead, isDelivered, readers,
 }) => {

@@ -27,9 +27,7 @@ async function commitInChunks(
     }
 }
 
-/**
- * Đồng bộ feed khi hideTheirActivity thay đổi
- */
+/** Cập nhật bảng tin khi thay đổi trạng thái ẩn hoặc chặn */
 export const onBlockedUserWrite = onDocumentWritten(
     { document: 'users/{userId}/blockedUsers/{blockedUid}', region: 'asia-southeast1' },
     async (event) => {
@@ -57,9 +55,7 @@ export const onBlockedUserWrite = onDocumentWritten(
     }
 );
 
-/**
- * Xóa bài viết khỏi feed
- */
+/** Gỡ bài viết khỏi bảng tin người dùng */
 async function removePostsFromFeed(db: Firestore, targetUserId: string, authorId: string): Promise<void> {
     try {
         const feedSnap = await db.collection('users').doc(targetUserId).collection('feeds').get();
@@ -91,9 +87,7 @@ async function removePostsFromFeed(db: Firestore, targetUserId: string, authorId
     }
 }
 
-/**
- * Khôi phục bài viết vào feed nếu là bạn
- */
+/** Khôi phục bài viết vào bảng tin nếu là bạn bè */
 async function restorePostsIfFriend(db: Firestore, targetUserId: string, authorId: string): Promise<void> {
     try {
         const friendSnap = await db.collection('users').doc(targetUserId).collection('friends').doc(authorId).get();

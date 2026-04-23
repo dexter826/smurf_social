@@ -8,6 +8,7 @@ interface MentionListProps {
   onSelect: (user: User) => void;
 }
 
+/** Danh sách gợi ý nhắc tên (mentions) */
 export const MentionList: React.FC<MentionListProps> = ({ users, selectedIndex, onSelect }) => {
   if (users.length === 0) return null;
 

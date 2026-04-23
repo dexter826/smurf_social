@@ -37,7 +37,7 @@ export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app, 'asia-southeast1');
 
-// Kết nối Emulator nếu chạy ở localhost hoặc IP nội bộ
+/** Kết nối Firebase Emulator khi chạy local */
 const hostname = window.location.hostname;
 const isLocal = hostname === 'localhost' || 
                 hostname === '127.0.0.1' || 

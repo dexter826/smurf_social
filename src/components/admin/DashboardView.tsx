@@ -10,6 +10,7 @@ import { formatRelativeTime } from '../../utils/dateUtils';
 import { REPORT_CONFIG } from '../../constants';
 import { useUserCache } from '../../store/userCacheStore';
 
+/** Card hiển thị thông số thống kê */
 const StatCard: React.FC<{ label: string; value: number | string; color: string; icon: React.ReactNode }> = ({ label, value, color, icon }) => (
   <div className="bg-bg-primary p-4 rounded-2xl border border-border-light flex items-center justify-between transition-all hover:border-primary/30 hover:shadow-sm">
     <div className="flex flex-col">
@@ -22,6 +23,7 @@ const StatCard: React.FC<{ label: string; value: number | string; color: string;
   </div>
 );
 
+/** Trang quản trị tổng quan hệ thống */
 export const DashboardView: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -49,7 +51,6 @@ export const DashboardView: React.FC = () => {
           setReportStats(rStats);
           setRecentReports(pendingReps);
 
-          // Fetch reporters cache
           const userIds = [...new Set(pendingReps.map(r => r.reporterId))];
           if (userIds.length > 0) {
             fetchUsers(userIds);
@@ -68,7 +69,7 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="bg-bg-primary px-4 md:px-6 py-5 border-b border-border-light flex-shrink-0">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
@@ -83,7 +84,7 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Scrollable Content ── */}
+      {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto scroll-hide p-4 md:p-6 bg-bg-secondary/30">
         <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
           

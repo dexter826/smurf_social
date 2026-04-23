@@ -18,6 +18,7 @@ interface CreateGroupModalProps {
   onCreateGroup: (memberIds: string[], groupName: string, groupAvatar?: File) => Promise<void>;
 }
 
+/** Modal tạo nhóm chat mới */
 export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   isOpen, currentUserId, onClose, onCreateGroup,
 }) => {
@@ -121,7 +122,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     f.fullName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  /* ── Step 1: Select members ── */
+  /* Step 1: Select Members */
   const renderSelectStep = () => (
     <div className="flex flex-col gap-4 min-h-0">
       <Input
@@ -132,7 +133,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         className="bg-bg-secondary"
       />
 
-      {/* Selected chips */}
+      {/* Selected Chips */}
       {formData.memberIds.length > 0 && (
         <div className="flex flex-wrap gap-1.5 p-3 bg-bg-secondary rounded-xl max-h-[100px] overflow-y-auto scroll-hide">
           {formData.memberIds.map(id => {
@@ -157,7 +158,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         </div>
       )}
 
-      {/* Friend list */}
+      {/* Friend List */}
       <div className="overflow-y-auto scroll-hide min-h-0 max-h-64 space-y-0.5">
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -198,13 +199,13 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     </div>
   );
 
-  /* ── Step 2: Group details ── */
+  /** Step 2: Group Details */
   const renderDetailsStep = () => {
     const { user: currentUser } = useAuthStore.getState();
     const totalMembers = formData.memberIds.length + 1;
     return (
       <div className="space-y-5">
-        {/* Avatar picker */}
+        {/* Avatar Picker */}
         <div className="flex flex-col items-center">
           <div className="relative">
             <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
@@ -227,7 +228,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           </p>
         </div>
 
-        {/* Group name */}
+        {/* Group Name */}
         <Input
           label="Tên nhóm"
           placeholder="Nhập tên nhóm..."
@@ -236,7 +237,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           className="bg-bg-secondary"
         />
 
-        {/* Member chips */}
+        {/* Member Chips */}
         <div>
           <p className="text-xs font-semibold text-text-secondary mb-2">
             Thành viên ({totalMembers})

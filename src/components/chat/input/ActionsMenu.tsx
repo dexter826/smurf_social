@@ -9,6 +9,7 @@ interface ActionsMenuProps {
   disabled?: boolean;
 }
 
+/** Menu các hành động đính kèm tin nhắn */
 export const ActionsMenu: React.FC<ActionsMenuProps> = ({
   isOpen, onToggle, onAction, disabled,
 }) => (

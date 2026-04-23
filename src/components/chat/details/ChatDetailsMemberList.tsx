@@ -26,6 +26,7 @@ interface ChatDetailsMemberListProps {
   onRejectMembers?: (uids: string[]) => Promise<void>;
 }
 
+/** Danh sách thành viên trong nhóm chat */
 export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
   conversation, currentUserId, participants, usersMap,
   onMemberClick, onAddMember, onRemoveMember,
@@ -54,7 +55,6 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
     return 'member';
   };
 
-  /** Admin chỉ xóa được Member, Creator xóa được tất cả */
   const canManageMember = (memberId: string) => {
     if (memberId === currentUserId) return false;
     if (memberId === creatorId) return false;
@@ -66,7 +66,6 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
 
   return (
     <div className="py-3">
-      {/* Nút mở danh sách chờ duyệt - Chỉ Admin thấy */}
       {canManageMembers && pendingEntries.length > 0 && (
         <button
           onClick={() => setShowPendingModal(true)}
@@ -83,7 +82,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
         </button>
       )}
 
-      {/* Header thành viên */}
+      {/* Members Header */}
       <div className="flex items-center justify-between px-4 py-2">
         <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">
           Thành viên ({participants.length})
@@ -99,7 +98,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
         )}
       </div>
 
-      {/* Danh sách thành viên */}
+      {/* Members List */}
       <div>
         {participants.map((member) => {
           const isCurrentUser = member.id === currentUserId;
@@ -199,7 +198,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
         })}
       </div>
 
-      {/* Modal duyệt thành viên */}
+      {/* Pending Members Modal */}
       <PendingMembersModal
         isOpen={showPendingModal}
         onClose={() => setShowPendingModal(false)}
@@ -209,7 +208,7 @@ export const ChatDetailsMemberList: React.FC<ChatDetailsMemberListProps> = ({
         onRejectMembers={onRejectMembers}
       />
 
-      {/* Confirm xóa thành viên */}
+      {/* Remove Member Confirmation */}
       <ConfirmDialog
         isOpen={!!confirmRemove}
         onClose={() => setConfirmRemove(null)}

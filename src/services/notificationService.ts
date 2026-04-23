@@ -23,7 +23,7 @@ import { getValidatedEnvConfig } from '../utils/validateEnv';
 import { convertDocs } from '../utils/firebaseUtils';
 
 export const notificationService = {
-  // Theo dõi thông báo mới nhất
+  /** Theo dõi thông báo thời gian thực */
   subscribeToNotifications: (
     userId: string,
     callback: (notifications: Notification[]) => void,
@@ -49,7 +49,7 @@ export const notificationService = {
     );
   },
 
-  // Đánh dấu thông báo đã đọc
+  /** Đánh dấu thông báo đã đọc */
   markAsRead: async (notificationId: string): Promise<void> => {
     try {
       const docRef = doc(db, 'notifications', notificationId);
@@ -62,7 +62,7 @@ export const notificationService = {
     }
   },
 
-  // Đánh dấu tất cả là đã đọc
+  /** Đánh dấu tất cả đã đọc */
   markAllAsRead: async (userId: string): Promise<void> => {
     try {
       const CHUNK_SIZE = 400;
@@ -93,7 +93,7 @@ export const notificationService = {
     }
   },
 
-  // Xóa thông báo
+  /** Xóa thông báo */
   deleteNotification: async (notificationId: string): Promise<void> => {
     try {
       await deleteDoc(doc(db, 'notifications', notificationId));
@@ -103,7 +103,7 @@ export const notificationService = {
     }
   },
 
-  // Xóa tất cả thông báo
+  /** Xóa toàn bộ thông báo */
   deleteAllNotifications: async (userId: string): Promise<void> => {
     try {
       const CHUNK_SIZE = 400;
@@ -130,7 +130,7 @@ export const notificationService = {
     }
   },
 
-  // Đăng ký FCM Token
+  /** Đăng ký nhận thông báo đẩy */
   requestPushPermission: async (userId: string): Promise<string | null> => {
     try {
       const permission = await window.Notification.requestPermission();
@@ -172,7 +172,7 @@ export const notificationService = {
     }
   },
 
-  // Lấy thông báo mới nhất
+  /** Lấy thông báo hệ thống mới nhất */
   getLatestSystemNotifications: async (userId: string): Promise<Notification[]> => {
     try {
       const q = query(
@@ -190,7 +190,7 @@ export const notificationService = {
     }
   },
 
-  // Văn bản hiển thị cho thông báo
+  /** Lấy nội dung hiển thị thông báo */
   getNotificationText: (notification: Notification): string => {
     switch (notification.type) {
       case NotificationType.REACTION:

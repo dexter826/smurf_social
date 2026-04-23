@@ -3,9 +3,7 @@ import { db } from '../app';
 import { UserStatus } from '../types';
 import { banUserById } from '../helpers/adminHelper';
 
-/**
- * Khóa/mở khóa tài khoản
- */
+/** Khóa hoặc mở khóa tài khoản người dùng */
 export const banUser = onCall(
   {
     region: 'asia-southeast1',

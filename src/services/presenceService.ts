@@ -13,6 +13,7 @@ import { RtdbPresence } from '../../shared/types';
 import { userService } from './userService';
 
 export const presenceService = {
+    /** Đặt trạng thái online */
     setOnline: async (uid: string): Promise<void> => {
         try {
             if (auth.currentUser?.uid !== uid) return;
@@ -53,9 +54,7 @@ export const presenceService = {
         }
     },
 
-    /**
-     * Set user offline thủ công
-     */
+    /** Đặt trạng thái offline */
     setOffline: async (uid: string): Promise<void> => {
         try {
             if (!auth.currentUser || auth.currentUser.uid !== uid) return;
@@ -73,9 +72,7 @@ export const presenceService = {
         }
     },
 
-    /**
-     * Lấy presence của một user
-     */
+    /** Lấy trạng thái hiện diện */
     getPresence: async (uid: string): Promise<RtdbPresence | null> => {
         try {
             const snapshot = await get(presenceRef(uid));
@@ -89,9 +86,7 @@ export const presenceService = {
         }
     },
 
-    /**
-     * Subscribe presence của một user
-     */
+    /** Theo dõi trạng thái hiện diện */
     subscribeToPresence: (uid: string, callback: (presence: RtdbPresence | null) => void): (() => void) => {
         const userPresenceRef = presenceRef(uid);
 
@@ -108,9 +103,7 @@ export const presenceService = {
         });
     },
 
-    /**
-     * Subscribe presence của nhiều users
-     */
+    /** Theo dõi trạng thái hàng loạt */
     subscribeToMultiplePresences: (
         uids: string[],
         callback: (presences: Record<string, RtdbPresence>) => void
@@ -135,9 +128,7 @@ export const presenceService = {
         };
     },
 
-    /**
-     * Batch get presences của nhiều users
-     */
+    /** Lấy trạng thái hàng loạt */
     batchGetPresences: async (uids: string[]): Promise<Record<string, RtdbPresence>> => {
         try {
             const presences: Record<string, RtdbPresence> = {};
@@ -157,9 +148,7 @@ export const presenceService = {
         }
     },
 
-    /**
-     * Hủy disconnect
-     */
+    /** Hủy đăng ký ngắt kết nối */
     cancelDisconnect: async (uid: string): Promise<void> => {
         try {
             const userPresenceRef = presenceRef(uid);

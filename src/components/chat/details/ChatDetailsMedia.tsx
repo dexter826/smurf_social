@@ -33,6 +33,7 @@ const formatDuration = (seconds?: string | number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+/** Hiển thị phương tiện (ảnh, video, file) trong hội thoại */
 const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMessageClick }) => {
   const [activeTab, setActiveTab] = useState<MediaTab>('images');
   const [viewer, setViewer] = useState<MediaViewerState>({ isOpen: false, index: 0, items: [] });
@@ -300,7 +301,7 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Sub-tab bar */}
+      {/* Sub Tab Bar */}
       <div className="flex border-b border-border-light flex-shrink-0 w-full">
         {tabs.map((tab) => (
           <button

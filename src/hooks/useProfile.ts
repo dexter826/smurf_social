@@ -52,7 +52,7 @@ export const useProfile = () => {
   const isBannedProfile = profile?.status === 'banned';
   const canViewContent = true;
 
-  // Lọc profile theo quyền riêng tư
+
   const maskedProfile = useMemo(() => {
     if (!profile || !currentUser) return profile;
     return getMaskedProfile(
@@ -62,8 +62,6 @@ export const useProfile = () => {
       profile.profilePrivacy
     );
   }, [profile, currentUser, friendStatus]);
-
-  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
 
   const handleMessage = useCallback(async (bypassSettingsCheck: boolean = false) => {
     if (!currentUser || !profile) return;

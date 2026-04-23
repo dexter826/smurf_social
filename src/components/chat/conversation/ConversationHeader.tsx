@@ -17,6 +17,7 @@ interface ConversationHeaderProps {
   onMarkAllRead?: () => void;
 }
 
+/** Header danh sách hội thoại */
 export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   searchTerm, onSearchChange, onClearSearch,
   isSearchFocused, onSearchFocus, onCancelSearch,
@@ -24,7 +25,7 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   archivedCount, onMarkAllRead,
 }) => (
   <div className="flex-shrink-0 px-3 h-16 flex items-center border-b border-border-light gap-1.5 bg-bg-primary">
-    {/* Search input */}
+    {/* Search Input */}
     <div className="flex items-center gap-1.5 flex-1 min-w-0">
       <div className="relative flex-1 flex items-center">
         <Input
@@ -57,7 +58,7 @@ export const ConversationHeader: React.FC<ConversationHeaderProps> = ({
       )}
     </div>
 
-    {/* Action buttons */}
+    {/* Action Buttons */}
     {!isSearchFocused && !searchTerm && (
       <div className="flex items-center gap-0.5 flex-shrink-0">
         {onNewGroup && (

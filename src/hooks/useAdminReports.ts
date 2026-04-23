@@ -14,9 +14,7 @@ interface Stats {
   rejected: number;
 }
 
-/**
- * Hook quản lý báo cáo (admin)
- */
+/** Quản lý danh sách báo cáo vi phạm cho Admin */
 export function useAdminReports() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -32,7 +30,7 @@ export function useAdminReports() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [actionType, setActionType] = useState<'resolve' | 'reject' | null>(null);
 
-  // Chặn truy cập phi admin
+
   useEffect(() => {
     if (user && user.role !== UserRole.ADMIN) {
       toast.error(TOAST_MESSAGES.ADMIN.NO_PERMISSION);
@@ -103,12 +101,12 @@ export function useAdminReports() {
     };
   }, [user, statusFilter, typeFilter, fetchUsers, setLoading]);
 
-  // Lấy user info từ cache
+
   const getUser = useCallback((id: string): User | undefined => {
     return userCache[id];
   }, [userCache]);
 
-  // Xử lý action (resolve/reject)
+
   const handleAction = useCallback(async () => {
     if (!selectedReport || !actionType || !user) return;
 
@@ -130,13 +128,13 @@ export function useAdminReports() {
     }
   }, [selectedReport, actionType, user]);
 
-  // Open confirm dialog
+
   const openConfirmDialog = useCallback((report: Report, action: 'resolve' | 'reject') => {
     setSelectedReport(report);
     setActionType(action);
   }, []);
 
-  // Close confirm dialog
+
   const closeConfirmDialog = useCallback(() => {
     setSelectedReport(null);
     setActionType(null);

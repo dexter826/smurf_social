@@ -2,9 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../app';
 import { User } from '../types';
 
-/**
- * Tìm kiếm người dùng theo email
- */
+/** Tìm kiếm người dùng chính xác theo địa chỉ email */
 export const searchUsers = onCall(
   {
     region: 'asia-southeast1',

@@ -16,6 +16,7 @@ import { createNotification } from '../helpers/notificationHelper';
 import { sendPushNotification } from '../helpers/fcmHelper';
 import { banUserById } from '../helpers/adminHelper';
 
+/** Xóa bài viết vi phạm */
 async function deletePostById(postId: string, adminId: string): Promise<void> {
   const postRef = db.collection('posts').doc(postId);
   const postSnap = await postRef.get();
@@ -46,6 +47,7 @@ async function deletePostById(postId: string, adminId: string): Promise<void> {
   await batch.commit();
 }
 
+/** Xóa bình luận vi phạm */
 async function deleteCommentById(commentId: string, adminId: string): Promise<void> {
   const commentRef = db.collection('comments').doc(commentId);
   const commentSnap = await commentRef.get();
@@ -60,6 +62,7 @@ async function deleteCommentById(commentId: string, adminId: string): Promise<vo
   }
 }
 
+/** Xử lý báo cáo vi phạm */
 export const resolveReport = onCall(
   {
     region: 'asia-southeast1',
@@ -121,7 +124,6 @@ export const resolveReport = onCall(
       ? reportData.targetId
       : reportData.targetOwnerId || reportData.targetId;
 
-    // Thông báo cho người báo cáo
     await Promise.all([
       createNotification({
         receiverId: reportData.reporterId,
@@ -140,7 +142,6 @@ export const resolveReport = onCall(
       }),
     ]);
 
-    // Thông báo cho người bị xử lý
     if (action === 'delete_content' && reportData.targetOwnerId) {
       const msg = `Nội dung ${typeLabel} của bạn đã bị gỡ bỏ do vi phạm quy tắc: ${reasonLabel}.`;
       await Promise.all([

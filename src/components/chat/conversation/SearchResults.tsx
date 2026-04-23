@@ -21,6 +21,7 @@ interface SearchResultsProps {
   isLoading?: boolean;
 }
 
+/** Kết quả tìm kiếm hội thoại và bạn bè */
 export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC } = ({
   searchTerm, results, currentUserId, selectedId,
   history, onSelectConversation, onSelectUser,
@@ -28,7 +29,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
 }) => {
   if (isLoading) return <SearchResults.Skeleton />;
 
-  /* ── No search term: show history ── */
+  /* History View */
   if (!searchTerm) {
     if (history.length === 0) {
       return (
@@ -99,7 +100,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
     );
   }
 
-  /* ── Search results ── */
+  /* Results View */
   const hasConversations = results.conversations.length > 0;
   const hasUsers = results.users.length > 0;
 
@@ -116,7 +117,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
 
   return (
     <div className="flex flex-col py-2">
-      {/* 1. Conversations Section (Groups) */}
+      {/* Conversations Section */}
       {hasConversations && (
         <div className="mb-4">
           <div className="flex items-center px-4 py-2 mb-1">
@@ -138,7 +139,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
         </div>
       )}
 
-      {/* 2. Users Section (Friends) */}
+      {/* Users Section */}
       {hasUsers && (
         <div>
           <div className="flex items-center px-4 py-2 mb-1">
@@ -169,7 +170,7 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
   );
 };
 
-/* ── History conversation item ── */
+/** Item hội thoại trong lịch sử tìm kiếm */
 interface HistoryConversationItemProps {
   conversation: { id: string; data: RtdbConversation; userChat: RtdbUserChat };
   currentUserId: string;
