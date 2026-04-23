@@ -1,7 +1,7 @@
 import { db } from '../app';
 
 /** Kiểm tra quyền nhận tin nhắn dựa trên cài đặt chặn */
-export const isBlockingMessages = async (receiverId: string, senderId: string, creatorId?: string): Promise<boolean> => {
+export const isBlockingMessages = async (receiverId: string, senderId: string, conversationData?: any): Promise<boolean> => {
   try {
     const blockSnap = await db
       .collection('users')
@@ -36,7 +36,15 @@ export const isBlockingMessages = async (receiverId: string, senderId: string, c
       const isFriend = friendSnap.exists;
 
       if (!isFriend) {
-        if (creatorId !== receiverId) {
+        let canBypass = false;
+        if (conversationData && conversationData.lastMessageAt && conversationData.lastMessageAt[receiverId]) {
+          const lastTimeReceiverSent = conversationData.lastMessageAt[receiverId];
+          if (Date.now() - lastTimeReceiverSent < 24 * 60 * 60 * 1000) {
+            canBypass = true;
+          }
+        }
+        
+        if (!canBypass) {
           return true;
         }
       }

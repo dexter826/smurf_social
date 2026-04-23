@@ -120,12 +120,25 @@ export const useChatBlock = ({
       if (isMessageBlockedByPartner) return { blockedMessage: 'Không thể gửi tin nhắn cho người dùng này.' };
       
       if (!isFriend) {
-        const isInitiator = !conversation || conversation.creatorId === currentUser?.id;
-        
-        if (isPartnerBlockingStrangers && isInitiator) {
-          return {
-            blockedMessage: 'Người dùng này không nhận tin nhắn từ người lạ.',
-          };
+        if (isPartnerBlockingStrangers) {
+          let canBypass = false;
+          let hasTalked = false;
+          
+          if (conversation && conversation.lastMessageAt && partnerId && conversation.lastMessageAt[partnerId]) {
+            hasTalked = true;
+            const lastTimePartnerSent = conversation.lastMessageAt[partnerId];
+            if (Date.now() - lastTimePartnerSent < 24 * 60 * 60 * 1000) {
+              canBypass = true;
+            }
+          }
+          
+          if (!canBypass) {
+            return {
+              blockedMessage: hasTalked 
+                ? 'Cuộc trò chuyện đã quá 24h. Người này không nhận tin nhắn từ người lạ.'
+                : 'Người dùng này không nhận tin nhắn từ người lạ.',
+            };
+          }
         }
       }
     }

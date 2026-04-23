@@ -248,6 +248,7 @@ export interface RtdbConversation {
         readBy?: Record<string, number>;
         deliveredTo?: Record<string, number>;
     };
+    lastMessageAt?: Record<string, number>;
     createdAt: number;
     updatedAt: number;
     isDisbanded?: boolean;

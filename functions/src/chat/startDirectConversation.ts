@@ -20,6 +20,14 @@ export const startDirectConversation = onCall(
     }
 
     try {
+      const sortedIds = [currentUserId, targetUserId].sort();
+      const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
+      const now = Date.now();
+
+      const convRef = rtdb.ref(`conversations/${convId}`);
+      const convSnap = await convRef.get();
+      const conversationData = convSnap.exists() ? convSnap.val() : null;
+
       const friendSnap = await db
         .collection('users')
         .doc(currentUserId)
@@ -41,10 +49,20 @@ export const startDirectConversation = onCall(
         const allowStrangers = settings?.allowMessagesFromStrangers ?? true;
 
         if (!allowStrangers) {
-          throw new HttpsError(
-            'failed-precondition',
-            'Người dùng này đã tắt tính năng nhận tin nhắn từ người lạ.'
-          );
+          let canBypass = false;
+          if (conversationData && conversationData.lastMessageAt && conversationData.lastMessageAt[targetUserId]) {
+            const lastTime = conversationData.lastMessageAt[targetUserId];
+            if (now - lastTime < 24 * 60 * 60 * 1000) {
+              canBypass = true;
+            }
+          }
+
+          if (!canBypass) {
+            throw new HttpsError(
+              'failed-precondition',
+              'Người dùng này đã tắt tính năng nhận tin nhắn từ người lạ.'
+            );
+          }
         }
       }
 
@@ -57,14 +75,7 @@ export const startDirectConversation = onCall(
         throw new HttpsError('permission-denied', 'Không thể bắt đầu trò chuyện với người dùng này.');
       }
 
-      const sortedIds = [currentUserId, targetUserId].sort();
-      const convId = `direct_${sortedIds[0]}_${sortedIds[1]}`;
-      const now = Date.now();
-
-      const convRef = rtdb.ref(`conversations/${convId}`);
-      const convSnap = await convRef.get();
-
-      if (!convSnap.exists()) {
+      if (!conversationData) {
         const updates: Record<string, any> = {};
         
         updates[`conversations/${convId}`] = {
@@ -76,7 +87,8 @@ export const startDirectConversation = onCall(
           },
           createdAt: now,
           updatedAt: now,
-          lastMessage: null
+          lastMessage: null,
+          lastMessageAt: {}
         };
 
         [currentUserId, targetUserId].forEach(uid => {

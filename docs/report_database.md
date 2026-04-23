@@ -265,6 +265,7 @@ _Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Grou
 | `isDisbanded`      | Boolean     | _Optional_        | Đã giải tán hay chưa. Mặc định `false`. _(Chỉ Người tạo nhóm mới có quyền xóa)_           |
 | `typing`           | Map         | _Optional_        | Trạng thái đang gõ (UID: Timestamp)                                                       |
 | `lastMessage`      | Object      | _Optional_        | Snippet tin nhắn mới nhất                                                                 |
+| `lastMessageAt`    | Map         | _Optional_        | Timestamp tin nhắn cuối của từng thành viên (UID: Timestamp). Dùng để Bypass chặn 24h     |
 | `joinApprovalMode` | Boolean     | _Optional_        | Chế độ phê duyệt: Khi bật, thành viên mới do Member mời phải chờ duyệt. Mặc định `false`. |
 | `pendingMembers`   | Map         | _Optional_        | Danh sách chờ duyệt: `{ uid: { addedBy: string, timestamp: number } }`                    |
 | `activeCall`       | Object      | _Optional_        | `{ callerId, callType, messageId, startedAt, participants: { uid: timestamp } }`          |

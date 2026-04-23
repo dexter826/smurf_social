@@ -83,7 +83,7 @@ export const onMessageCreated = onValueCreated(
       }
 
       for (const receiverId of memberIds) {
-        if (!isGroup && await isBlockingMessages(receiverId, senderId, conversation.creatorId)) {
+        if (!isGroup && await isBlockingMessages(receiverId, senderId, conversation)) {
           continue;
         }
 
