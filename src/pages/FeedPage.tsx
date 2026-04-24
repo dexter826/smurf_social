@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { StickyNote, Sparkles } from 'lucide-react';
-import { PostItem, PostModal, CreatePost, FeedSkeleton, FriendSuggestionsWidget } from '../components/feed';
+import { PostItem, PostModal, CreatePost, FeedSkeleton, FriendSuggestionsWidget, BirthdayWidget } from '../components/feed';
 
 import { useAuthStore } from '../store/authStore';
 import { useSharePostStore } from '../store';
@@ -64,6 +64,8 @@ const FeedPage: React.FC = () => {
     >
       <div className="w-full max-w-[680px] py-4 md:py-6 px-3 sm:px-4 md:px-0 pb-6 md:pb-10">
         <CreatePost currentUser={currentUser} />
+
+        <BirthdayWidget />
         
         <FriendSuggestionsWidget />
 

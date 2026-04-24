@@ -109,3 +109,25 @@ export const formatDob = (date: DateLike): string => {
   if (!d) return '';
   return format(d, 'dd MMMM yyyy', { locale: vi });
 };
+// Kiểm tra có phải sinh nhật hôm nay không
+export const isBirthdayToday = (date: DateLike): boolean => {
+  const d = toDate(date);
+  if (!d) return false;
+
+  const now = new Date();
+  const birthMonth = d.getMonth();
+  const birthDate = d.getDate();
+  const currentMonth = now.getMonth();
+  const currentDate = now.getDate();
+
+  // Xử lý trường hợp đặc biệt: sinh ngày 29/02
+  if (birthMonth === 1 && birthDate === 29) {
+    const isLeapYear = (year: number) => (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    if (!isLeapYear(now.getFullYear())) {
+      // Nếu không phải năm nhuận, coi sinh nhật là ngày 28/02
+      return currentMonth === 1 && currentDate === 28;
+    }
+  }
+
+  return birthMonth === currentMonth && birthDate === currentDate;
+};

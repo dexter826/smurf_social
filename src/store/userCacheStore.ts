@@ -20,6 +20,8 @@ interface UserCacheState {
 }
 
 
+  const pendingFetches = new Map<string, Promise<Record<string, User>>>();
+
 export const useUserCache = create<UserCacheState>()(
   persist(
     (set, get) => ({
@@ -44,28 +46,46 @@ export const useUserCache = create<UserCacheState>()(
     }
   },
 
-  /** Tải danh sách người dùng theo lô */
-  fetchUsers: async (ids: string[]) => {
-    if (!ids?.length) return;
+    /** Tải danh sách người dùng theo lô */
+    fetchUsers: async (ids: string[]) => {
+      if (!ids?.length) return;
 
-    const { users, loadingIds } = get();
-    const missingIds = ids.filter(id => !users[id] && !loadingIds.includes(id));
-    if (missingIds.length === 0) return;
+      const { users } = get();
+      
+      const missingIds = ids.filter(id => !users[id] && !pendingFetches.has(id));
+      
+      const getPromises = () => {
+        const currentPromises: Promise<any>[] = [];
+        ids.forEach(id => {
+          const p = pendingFetches.get(id);
+          if (p) currentPromises.push(p);
+        });
+        return currentPromises;
+      };
 
-    set({ loadingIds: [...loadingIds, ...missingIds] });
+      if (missingIds.length > 0) {
+        set(state => ({ loadingIds: [...state.loadingIds, ...missingIds] }));
 
-    try {
-      const newUsers = await batchGetUsers(missingIds);
-      set(state => ({ 
-        users: { ...state.users, ...newUsers },
-        loadingIds: state.loadingIds.filter(id => !missingIds.includes(id))
-      }));
-    } catch (error) {
-      set(state => ({ 
-        loadingIds: state.loadingIds.filter(id => !missingIds.includes(id))
-      }));
-    }
-  },
+        const fetchPromise = batchGetUsers(missingIds).then(newUsers => {
+          set(state => ({
+            users: { ...state.users, ...newUsers },
+            loadingIds: state.loadingIds.filter(id => !missingIds.includes(id))
+          }));
+          missingIds.forEach(id => pendingFetches.delete(id));
+          return newUsers;
+        }).catch(err => {
+          set(state => ({
+            loadingIds: state.loadingIds.filter(id => !missingIds.includes(id))
+          }));
+          missingIds.forEach(id => pendingFetches.delete(id));
+          throw err;
+        });
+
+        missingIds.forEach(id => pendingFetches.set(id, fetchPromise));
+      }
+
+      await Promise.allSettled(getPromises());
+    },
 
   /** Tải thông tin một người dùng */
   fetchUser: async (id: string) => {

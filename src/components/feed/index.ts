@@ -5,3 +5,4 @@ export * from './FriendSuggestionsWidget';
 export * from './comment';
 export * from './modals';
 export * from './shared';
+export * from './BirthdayWidget';
