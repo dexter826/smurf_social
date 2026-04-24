@@ -40,7 +40,7 @@ interface ChatDetailsPanelProps {
 
 type TabId = 'info' | 'members' | 'media' | 'search';
 
-/** Panel hiển thị chi tiết hội thoại (thông tin, thành viên, media) */
+/** Bảng thông tin chi tiết hội thoại. */
 export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
   conversation, messages, currentUserId, usersMap,
   isOpen, isBlocked, onClose,

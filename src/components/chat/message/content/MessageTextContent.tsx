@@ -25,7 +25,7 @@ export const MessageTextContent: React.FC<MessageTextContentProps> = ({ content,
           const [, userId, name] = match;
           return (
             <a key={index} href={`/profile/${userId}`}
-              className={`font-bold hover:underline transition-all duration-200 ${isMe ? 'text-black/90 dark:text-white/90' : 'text-primary'}`}
+              className={`font-bold hover:underline transition-all duration-200 text-primary`}
               onClick={(e) => e.stopPropagation()}
             >
               @{name}
@@ -37,7 +37,7 @@ export const MessageTextContent: React.FC<MessageTextContentProps> = ({ content,
       if (part.startsWith('@') && part.endsWith('\u200B')) {
         const name = part.slice(1, -1);
         return (
-          <span key={index} className={`font-bold ${isMe ? 'text-black/90 dark:text-white/90' : 'text-primary'}`}>
+          <span key={index} className={`font-bold text-primary`}>
             @{name}
           </span>
         );
@@ -47,7 +47,7 @@ export const MessageTextContent: React.FC<MessageTextContentProps> = ({ content,
         const href = part.startsWith('www.') ? `https://${part}` : part;
         return (
           <a key={index} href={href} target="_blank" rel="noopener noreferrer"
-            className={`underline break-all transition-all duration-200 hover:opacity-80 ${isMe ? 'text-black/90 dark:text-white/90' : 'text-primary'}`}
+            className={`underline break-all transition-all duration-200 hover:opacity-80 text-primary`}
             onClick={(e) => e.stopPropagation()}
           >
             {part}

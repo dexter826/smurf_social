@@ -165,8 +165,6 @@ export const useChat = () => {
     selectedConversationId,
     currentUserId: currentUser?.id ?? null,
     conversations,
-    usersMap,
-    currentUserName: currentUser?.fullName,
   });
 
   const isConversationInStore = useMemo(

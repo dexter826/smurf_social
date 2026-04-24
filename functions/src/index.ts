@@ -31,3 +31,17 @@ export { generateFriendSuggestions } from './friends/generateFriendSuggestions';
 export { onUserProfileUpdated } from './friends/onUserProfileUpdated';
 export { onMessageCreated } from './notifications/onMessageCreated';
 export { startDirectConversation } from './chat/startDirectConversation';
+export { 
+    createGroup, 
+    addGroupMembers, 
+    leaveGroup, 
+    removeGroupMember, 
+    disbandGroup, 
+    updateGroupInfo, 
+    updateMemberRole, 
+    transferCreator, 
+    toggleApprovalMode, 
+    inviteMember, 
+    approveMembers, 
+    rejectMembers 
+} from './chat/groupActions';

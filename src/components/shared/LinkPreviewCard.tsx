@@ -84,7 +84,7 @@ export const LinkPreviewCard: React.FC<LinkPreviewCardProps> = ({
                     />
                 )}
                 <div className="flex-1 min-w-0 py-2 pr-2">
-                    <p className="text-xs font-semibold text-text-primary truncate leading-tight">{data.title}</p>
+                    <p className="text-xs font-semibold text-primary truncate leading-tight">{data.title}</p>
                     {data.description && (
                         <p className="text-xs text-text-secondary truncate mt-0.5">{data.description}</p>
                     )}
@@ -127,7 +127,7 @@ export const LinkPreviewCard: React.FC<LinkPreviewCardProps> = ({
                 {data.siteName && (
                     <p className="text-xs text-text-tertiary uppercase tracking-wide mb-1 truncate">{data.siteName}</p>
                 )}
-                <p className="text-sm font-semibold text-text-primary line-clamp-2 leading-snug">{data.title}</p>
+                <p className="text-sm font-semibold text-primary line-clamp-2 leading-snug">{data.title}</p>
                 {data.description && (
                     <p className="text-xs text-text-secondary mt-1 line-clamp-2 leading-relaxed">{data.description}</p>
                 )}

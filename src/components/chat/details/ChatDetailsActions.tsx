@@ -56,7 +56,7 @@ const QuickActionButton: React.FC<{
   </button>
 );
 
-/** Các hành động trong bảng chi tiết hội thoại */
+/** Hành động và cài đặt hội thoại. */
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   conversation, currentUserId, partner,
   onToggleMute, onTogglePin, onToggleBlock, onToggleArchive,
@@ -105,9 +105,10 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
           active={isPinned}
         />
         <QuickActionButton
-          icon={<Search size={18} />}
-          label="Tìm kiếm"
-          onClick={() => onSetTab?.('search')}
+          icon={<ArchiveIcon size={18} />}
+          label={isArchived ? 'Bỏ lưu trữ' : 'Lưu trữ'}
+          onClick={onToggleArchive}
+          active={isArchived}
         />
         {!isGroup && partner && (
           <QuickActionButton
@@ -125,137 +126,97 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         )}
       </div>
 
-      <div className="h-px bg-border-light mx-4" />
-
+      <div className="h-px bg-border-light" />
       {/* Main Settings Sections */}
-      <div className="py-2">
+      <div className="pt-2 pb-6">
         {/* Section: Group Special Settings */}
         {isGroup && isAdminOrCreator && onToggleApprovalMode && (
-          <div className="py-1">
-            <div
-              className="flex items-center justify-between w-full px-5 py-3 hover:bg-bg-hover transition-colors cursor-pointer group"
-              onClick={handleApprovalToggle}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
-                  ${approvalMode ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
-                  <ShieldCheck size={18} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-text-primary leading-tight">Phê duyệt thành viên</span>
-                  <span className="text-[10px] text-text-tertiary">Kiểm soát người mới</span>
-                </div>
+          <div
+            className="flex items-center justify-between w-full px-5 py-3 hover:bg-bg-hover transition-colors cursor-pointer group"
+            onClick={handleApprovalToggle}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                ${approvalMode ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
+                <ShieldCheck size={18} />
               </div>
-              <div className={`w-9 h-5 rounded-full transition-all duration-300 relative
-                ${approvalMode ? 'bg-primary' : 'bg-bg-tertiary border border-border-light'}`}>
-                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-300
-                  ${approvalMode ? 'left-5' : 'left-1'}`} />
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-text-primary leading-tight">Phê duyệt thành viên</span>
+                <span className="text-[10px] text-text-tertiary">Kiểm soát người mới</span>
               </div>
+            </div>
+            <div className={`w-9 h-5 rounded-full transition-all duration-300 relative
+              ${approvalMode ? 'bg-primary' : 'bg-bg-tertiary border border-border-light'}`}>
+              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-300
+                ${approvalMode ? 'left-5' : 'left-1'}`} />
             </div>
           </div>
         )}
 
-        {/* Section: General */}
-        <div className={`py-1 ${isGroup && isAdminOrCreator && onToggleApprovalMode ? 'border-t border-border-light/50' : ''}`}>
-          <div className="flex flex-col">
+        {/* Section: General & Actions */}
+        <div className="flex flex-col">
+          {isGroup && isCreator && onTransferCreator && (
             <button
-              onClick={onToggleArchive}
+              onClick={() => setShowTransferConfirm(true)}
               className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-hover transition-colors text-left group"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-bg-secondary flex items-center justify-center text-text-secondary group-hover:text-text-primary transition-colors">
-                  <ArchiveIcon size={16} />
+                <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center text-warning transition-colors">
+                  <Crown size={16} />
                 </div>
-                <span className="text-sm font-medium text-text-primary">
-                  {isArchived ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện'}
-                </span>
+                <span className="text-sm font-medium text-warning">Chuyển quyền trưởng nhóm</span>
               </div>
               <ChevronRight size={14} className="text-text-tertiary" />
             </button>
+          )}
 
-            {isGroup && isCreator && onTransferCreator && (
+          {!isGroup && partner?.status !== UserStatus.BANNED && (
+            <>
               <button
-                onClick={() => setShowTransferConfirm(true)}
-                className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-hover transition-colors text-left group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center text-warning transition-colors">
-                    <Crown size={16} />
-                  </div>
-                  <span className="text-sm font-medium text-warning">Chuyển quyền trưởng nhóm</span>
-                </div>
-                <ChevronRight size={14} className="text-text-tertiary" />
-              </button>
-            )}
-
-            {!isGroup && (
-               <button
-               onClick={onViewProfile}
-               className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-hover transition-colors text-left group"
-             >
-               <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-lg bg-bg-secondary flex items-center justify-center text-text-secondary group-hover:text-text-primary transition-colors">
-                  <UserIcon size={16} />
-                 </div>
-                 <span className="text-sm font-medium text-text-primary">Xem trang cá nhân</span>
-               </div>
-               <ChevronRight size={14} className="text-text-tertiary" />
-             </button>
-            )}
-          </div>
-        </div>
-
-        {/* Section: Danger Zone */}
-        <div className="py-1 border-t border-border-light">
-          <div className="flex flex-col">
-            {!isGroup && partner?.status !== UserStatus.BANNED && (
-              <>
-                <button
-                  onClick={onToggleBlock}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
-                    <Ban size={16} />
-                  </div>
-                  <span className="text-sm font-medium">Quản lý chặn</span>
-                </button>
-                <button
-                  onClick={() => {
-                    const partnerId = Object.keys(conversation.data.members).find(id => id !== currentUserId);
-                    if (partnerId) openReportModal(ReportType.USER, partnerId, partnerId);
-                  }}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
-                    <Flag size={16} />
-                  </div>
-                  <span className="text-sm font-medium">Báo cáo người dùng</span>
-                </button>
-              </>
-            )}
-
-            {isGroup && onLeaveGroup && (
-              <button
-                onClick={() => setShowLeaveConfirm(true)}
+                onClick={onToggleBlock}
                 className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
               >
                 <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
-                  <LogOut size={16} />
+                  <Ban size={16} />
                 </div>
-                <span className="text-sm font-medium">Rời khỏi nhóm</span>
+                <span className="text-sm font-medium">Quản lý chặn</span>
               </button>
-            )}
+              <button
+                onClick={() => {
+                  const partnerId = Object.keys(conversation.data.members).find(id => id !== currentUserId);
+                  if (partnerId) openReportModal(ReportType.USER, partnerId, partnerId);
+                }}
+                className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
+                  <Flag size={16} />
+                </div>
+                <span className="text-sm font-medium">Báo cáo người dùng</span>
+              </button>
+            </>
+          )}
 
+          {isGroup && onLeaveGroup && (
             <button
-              onClick={() => setShowDeleteConfirm(true)}
+              onClick={() => setShowLeaveConfirm(true)}
               className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
             >
               <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
-                <Trash2 size={16} />
+                <LogOut size={16} />
               </div>
-              <span className="text-sm font-medium">{isDisbandAction ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}</span>
+              <span className="text-sm font-medium">Rời khỏi nhóm</span>
             </button>
-          </div>
+          )}
+
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
+              <Trash2 size={16} />
+            </div>
+            <span className="text-sm font-medium">{isDisbandAction ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}</span>
+          </button>
         </div>
       </div>
 

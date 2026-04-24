@@ -18,13 +18,12 @@ export interface RtdbGroupSlice {
     updateMemberRole: (conversationId: string, userId: string, role: 'admin' | 'member') => Promise<void>;
     transferCreator: (conversationId: string, newCreatorId: string) => Promise<void>;
     disbandGroup: (conversationId: string) => Promise<void>;
-    sendGroupSystemMessage: (conversationId: string, actorId: string, content: string) => Promise<void>;
 }
 
 type RtdbGroupSliceWithConversation = RtdbGroupSlice & RtdbConversationSlice & RtdbMessageSlice;
 
-export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, [], [], RtdbGroupSlice> = (set, get) => ({
-    /** Tạo nhóm mới */
+export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, [], [], RtdbGroupSlice> = (set, _get) => ({
+    /** Tạo nhóm mới và xử lý avatar */
     createGroup: async (creatorId: string, memberIds: string[], groupName: string, groupAvatar?: File | MediaObject) => {
         try {
             let avatarMedia: MediaObject | undefined;
@@ -56,7 +55,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Thêm thành viên */
+    /** Thêm thành viên vào nhóm */
     addMember: async (conversationId: string, userId: string | string[]) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -69,7 +68,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Mời thành viên */
+    /** Mời thành viên tham gia nhóm */
     inviteMember: async (conversationId: string, userId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -81,7 +80,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Duyệt thành viên */
+    /** Duyệt danh sách chờ gia nhập */
     approveMembers: async (conversationId: string, uids: string[]) => {
         try {
             await rtdbGroupService.approveMembers(conversationId, uids);
@@ -91,7 +90,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Từ chối thành viên */
+    /** Từ chối danh sách chờ gia nhập */
     rejectMembers: async (conversationId: string, uids: string[]) => {
         try {
             await rtdbGroupService.rejectMembers(conversationId, uids);
@@ -101,7 +100,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Chuyển đổi chế độ duyệt */
+    /** Thay đổi chế độ duyệt thành viên */
     toggleApprovalMode: async (conversationId: string, enabled: boolean) => {
         try {
             return await rtdbGroupService.toggleApprovalMode(conversationId, enabled);
@@ -111,7 +110,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Xóa thành viên */
+    /** Xóa thành viên khỏi nhóm */
     removeMember: async (conversationId: string, userId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -123,7 +122,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Rời nhóm */
+    /** Rời khỏi nhóm chat */
     leaveGroup: async (conversationId: string, userId: string) => {
         try {
             await rtdbGroupService.leaveGroup(conversationId, userId);
@@ -133,7 +132,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Cập nhật vai trò */
+    /** Cập nhật vai trò thành viên */
     updateMemberRole: async (conversationId: string, userId: string, role: 'admin' | 'member') => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -145,7 +144,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Chuyển quyền trưởng nhóm */
+    /** Chuyển nhượng quyền trưởng nhóm */
     transferCreator: async (conversationId: string, newCreatorId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -157,7 +156,7 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
         }
     },
 
-    /** Giải tán nhóm */
+    /** Giải tán toàn bộ nhóm */
     disbandGroup: async (conversationId: string) => {
         try {
             const uid = useAuthStore.getState().user?.id;
@@ -168,14 +167,4 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
             throw error;
         }
     },
-
-    /** Gửi tin nhắn hệ thống */
-    sendGroupSystemMessage: async (conversationId: string, actorId: string, content: string) => {
-        try {
-            await rtdbGroupService.sendGroupSystemMessage(conversationId, actorId, content);
-        } catch (error) {
-            console.error('[rtdbGroupSlice] Lỗi sendGroupSystemMessage:', error);
-            throw error;
-        }
-    }
 });
