@@ -54,7 +54,7 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
     return (
       <div
         key={`${message.id}-media-${idx}`}
-        className="relative overflow-hidden cursor-pointer border border-border-light/30 aspect-square group"
+        className="relative overflow-hidden cursor-pointer aspect-square group"
         onClick={() => onOpenImage(idx)}
       >
         <LazyImage 
@@ -78,7 +78,7 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
     const rowLayouts: Record<number, number[]> = { 5: [3, 2], 7: [4, 3], 10: [4, 3, 3] };
     const singleGrid: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-2', 6: 'grid-cols-3', 8: 'grid-cols-4', 9: 'grid-cols-3' };
 
-    const wrapperClass = "relative overflow-hidden flex flex-col gap-0.5 w-full max-w-[320px] border border-border-light bg-bg-secondary shadow-sm";
+    const wrapperClass = `relative overflow-hidden flex flex-col gap-0.5 w-full max-w-[320px] ${message.data.content ? 'rounded-t-xl' : 'rounded-xl'}`;
 
     let contentUI;
     if (rowLayouts[count]) {
@@ -101,24 +101,34 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
     } else {
       const cols = singleGrid[count] ?? 'grid-cols-3';
       contentUI = (
-        <div className={`relative rounded-xl overflow-hidden grid gap-0.5 ${cols} shadow-sm bg-bg-secondary w-full max-w-[320px] border border-border-light`}>
+        <div className={`relative overflow-hidden grid gap-0.5 ${cols} w-full max-w-[320px] ${message.data.content ? 'rounded-t-xl' : 'rounded-xl'}`}>
           {mediaItems.map((item, idx) => renderItem(item, idx))}
           <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} size="md" />
         </div>
       );
     }
     return (
-      <div className="flex flex-col gap-2 w-full max-w-[320px]">
+      <div className="flex flex-col w-full max-w-[320px]">
         {contentUI}
-        <MessageTextContent content={count === 1 ? (content || '') : ''} isMe={isMe} isEdited={!!message.data.isEdited} />
+        {message.data.content && (
+          <div className="px-3 pb-2 pt-2 border-t border-border-light/40">
+            <MessageTextContent content={message.data.content} isMe={isMe} isEdited={!!message.data.isEdited} />
+          </div>
+        )}
       </div>
     );
   }
 
   const first = mediaItems[0];
   return (
-    <div className="flex flex-col gap-2">
-      <div className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative shadow-sm border border-border-light w-fit bg-bg-secondary" onClick={() => onOpenImage(0)}>
+    <div className="flex flex-col">
+      <div 
+        className={`
+          overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative w-fit
+          ${message.data.content ? 'rounded-t-xl' : 'rounded-xl'}
+        `} 
+        onClick={() => onOpenImage(0)}
+      >
         <LazyImage 
           src={first.url} 
           alt="media content" 
@@ -137,7 +147,11 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
         )}
       </div>
       
-      <MessageTextContent content={count === 1 ? (content || '') : ''} isMe={isMe} isEdited={!!message.data.isEdited} />
+      {message.data.content && (
+        <div className="px-3 pb-2 pt-2 border-t border-border-light/40">
+          <MessageTextContent content={message.data.content} isMe={isMe} isEdited={!!message.data.isEdited} />
+        </div>
+      )}
     </div>
   );
 };

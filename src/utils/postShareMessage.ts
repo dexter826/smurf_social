@@ -41,9 +41,9 @@ export const getPreviewMedia = (post: Post): { url?: string; type?: 'image' | 'v
 
 export const getShareUrl = (postId: string): string => {
   if (typeof window === 'undefined') {
-    return `/feed/post/${postId}`;
+    return `/?post=${postId}`;
   }
-  return `${window.location.origin}/feed/post/${postId}`;
+  return `${window.location.origin}/?post=${postId}`;
 };
 
 export const buildSharedPostPayload = (post: Post, authorName: string): SharedPostPayload => {

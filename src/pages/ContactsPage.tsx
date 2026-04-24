@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { UserPlus, Users, Search, Bell, ArrowUpDown, Sparkles, RefreshCw } from 'lucide-react';
 import { useContacts } from '../hooks';
 import { Button, Input, ConfirmDialog, BlockOptionsModal } from '../components/ui';
@@ -13,6 +13,7 @@ type Tab = 'all' | 'requests' | 'sent' | 'suggestions';
 
 const ContactsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     friends, receivedRequests, sentRequests, filteredSuggestions,
     groupedFriends, userCache, isLoading, isSuggestionsLoading,
@@ -23,6 +24,13 @@ const ContactsPage: React.FC = () => {
     handleDismissSuggestion, handleRefreshSuggestions,
     handleApplyBlock, handleUnblock,
   } = useContacts();
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab as Tab);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, setActiveTab, navigate, location.pathname]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [unfriendId, setUnfriendId] = useState<string | null>(null);

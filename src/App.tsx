@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { Loading, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
@@ -23,6 +23,7 @@ const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage'));
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 
 /** Route bảo vệ cho tài khoản bị khóa */
 const BannedRoute: React.FC = () => {
@@ -61,7 +62,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <HashRouter>
+      <BrowserRouter>
         <GlobalPresenceManager />
         <React.Suspense fallback={<Loading variant="page" />}>
           <Routes>
@@ -73,14 +74,13 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }>
               <Route index element={<ChatPage />} />
-              <Route path="feed/*" element={<FeedPage />} />
+              <Route path="feed" element={<FeedPage />} />
               <Route path="contacts" element={<ContactsPage />} />
-              <Route path="profile/*" element={<ProfilePage />} />
-              <Route path="profile/:userId/*" element={<ProfilePage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="profile/:userId" element={<ProfilePage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="menu" element={<MobileMenuPage />} />
-              <Route path="post/:postId" element={<Navigate to="/feed" replace />} />
             </Route>
 
             <Route path="/admin" element={
@@ -97,13 +97,13 @@ const App: React.FC = () => {
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/banned" element={<BannedRoute />} />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </React.Suspense>
         <ConnectionStatus />
         <ToastContainer />
         <ReportModal />
-      </HashRouter>
+      </BrowserRouter>
     </ErrorBoundary>
   );
 };

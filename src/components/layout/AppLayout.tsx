@@ -104,8 +104,8 @@ export const AppLayout: React.FC = () => {
     }
   }, [selectedPost, usersMap, fetchUsers]);
 
-  const postMatch = location.pathname.match(/\/post\/([^/]+)/);
-  const postId = postMatch?.[1];
+  const searchParams = new URLSearchParams(location.search);
+  const postId = searchParams.get('post');
 
   useEffect(() => {
     if (postId && user) {

@@ -18,12 +18,12 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
   const avatarSrc = isGroup ? conversation.data.avatar?.url : partner?.avatar?.url;
 
   return (
-    <div className="flex flex-col items-center py-6 px-4 border-b border-border-light">
+    <div className="flex flex-col items-center py-5 px-4 border-b border-border-light">
       {isGroup ? (
         <Avatar
           src={avatarSrc}
           name={displayName}
-          size="xl"
+          size="lg"
           isGroup
           members={participants}
         />
@@ -32,13 +32,13 @@ export const ChatDetailsHeader: React.FC<ChatDetailsHeaderProps> = ({
           userId={partner?.id ?? ''}
           src={avatarSrc}
           name={displayName}
-          size="xl"
+          size="lg"
           initialStatus={partner?.status}
           showStatus={false}
         />
       )}
 
-      <div className="mt-4 flex items-center gap-2 justify-center">
+      <div className="mt-3 flex items-center gap-2 justify-center">
         <h2 className="text-base font-semibold text-text-primary text-center">
           {displayName}
         </h2>

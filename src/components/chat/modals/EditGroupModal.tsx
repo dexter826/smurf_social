@@ -29,7 +29,6 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const participants = useConversationParticipants(Object.keys(conversation.data.members));
 
   useEffect(() => {
     if (!isOpen) return;
@@ -138,9 +137,6 @@ export const EditGroupModal: React.FC<EditGroupModalProps> = ({
             className="bg-bg-secondary"
           />
 
-          <p className="text-xs text-text-tertiary text-center">
-            {participants.length} thành viên
-          </p>
         </div>
       </Modal>
 

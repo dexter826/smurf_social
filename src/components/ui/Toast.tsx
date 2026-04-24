@@ -35,11 +35,11 @@ export const ToastContainer: React.FC = () => {
         return (
           <div
             key={toast.id}
-            className="pointer-events-auto relative flex items-center gap-3 bg-bg-primary border border-border-light pl-4 pr-3 py-3 rounded-xl shadow-lg animate-fade-in w-full max-w-md overflow-hidden transition-theme"
+            className="pointer-events-auto relative flex items-center gap-3 bg-bg-primary border border-border-light pl-6 pr-3 py-3 rounded-xl shadow-lg animate-fade-in w-full max-w-md overflow-hidden transition-theme"
             role="alert"
           >
-            {/* Left accent bar */}
-            <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${config.bar}`} />
+            {/* Trạng thái dạng Floating Pill */}
+            <div className={`absolute left-1.5 top-3 bottom-3 w-1 rounded-full ${config.bar} opacity-60`} />
             <div className="shrink-0">{config.icon}</div>
             <p className="flex-1 text-sm font-medium text-text-primary">{toast.message}</p>
             <IconButton

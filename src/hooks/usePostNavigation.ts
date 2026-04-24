@@ -1,36 +1,28 @@
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCallback } from 'react';
 import { Post } from '../../shared/types';
-import { usePostStore } from '../store';
-import { useAuthStore } from '../store/authStore';
 
 /** Điều hướng và quản lý trạng thái xem chi tiết bài viết */
 export const usePostNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const params = useParams();
-  const { user: currentUser } = useAuthStore();
 
   const viewPost = useCallback((post: Post) => {
-    const currentPath = location.pathname;
-    if (currentPath.includes(`/post/${post.id}`)) return;
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('post') === post.id) return;
 
-    if (currentPath.startsWith('/profile')) {
-      const userId = params.userId || currentUser?.id || 'me';
-      navigate(`/profile/${userId}/post/${post.id}`);
-    } else {
-      navigate(`/feed/post/${post.id}`);
-    }
-  }, [navigate, location.pathname, params.userId, currentUser?.id]);
+    searchParams.set('post', post.id);
+    navigate(`${location.pathname}?${searchParams.toString()}`);
+  }, [navigate, location.pathname, location.search]);
 
   const closePost = useCallback(() => {
-    const currentPath = location.pathname;
-    const basePath = currentPath.split('/post/')[0];
-    
-    if (basePath !== currentPath) {
-      navigate(basePath || '/feed');
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.has('post')) {
+      searchParams.delete('post');
+      const newSearch = searchParams.toString();
+      navigate(newSearch ? `${location.pathname}?${newSearch}` : location.pathname);
     }
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, location.search]);
 
   return { viewPost, closePost };
 };

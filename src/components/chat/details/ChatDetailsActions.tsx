@@ -3,7 +3,7 @@ import { RtdbConversation, RtdbUserChat, ReportType, User, UserStatus } from '..
 import {
   Bell, BellOff, Pin, PinOff, Trash2, ChevronRight,
   Ban, LogOut, Edit3, User as UserIcon, Flag, Archive as ArchiveIcon,
-  Crown, Shield, ToggleLeft, ToggleRight, ShieldCheck,
+  Crown, Shield, ToggleLeft, ToggleRight, ShieldCheck, Search,
 } from 'lucide-react';
 import { ConfirmDialog } from '../../ui';
 import { useReportStore } from '../../../store/reportStore';
@@ -25,25 +25,43 @@ interface ChatDetailsActionsProps {
   onViewProfile?: () => void;
   onTransferCreator?: () => void;
   onToggleApprovalMode?: (enabled: boolean) => Promise<void>;
+  onSetTab?: (tabId: 'info' | 'members' | 'media' | 'search') => void;
 }
 
-type ActionVariant = 'default' | 'danger';
-
-interface Action {
+const QuickActionButton: React.FC<{
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
-  variant: ActionVariant;
-  isToggle?: boolean;
-  isActive?: boolean;
-}
+  active?: boolean;
+  danger?: boolean;
+}> = ({ icon, label, onClick, active, danger }) => (
+  <button
+    onClick={onClick}
+    className="flex flex-col items-center gap-1.5 group outline-none"
+  >
+    <div className={`
+      w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200
+      ${danger
+        ? 'bg-error/10 text-error hover:bg-error hover:text-white'
+        : active
+          ? 'bg-primary/10 text-primary'
+          : 'bg-bg-secondary text-text-secondary hover:bg-bg-active hover:text-text-primary border border-transparent'
+      }
+    `}>
+      {icon}
+    </div>
+    <span className={`text-[10px] font-semibold transition-colors ${danger ? 'text-error' : active ? 'text-primary' : 'text-text-tertiary group-hover:text-text-primary'}`}>
+      {label}
+    </span>
+  </button>
+);
 
 /** Các hành động trong bảng chi tiết hội thoại */
 export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   conversation, currentUserId, partner,
   onToggleMute, onTogglePin, onToggleBlock, onToggleArchive,
   onDelete, onLeaveGroup, onEditGroup, onViewProfile,
-  onTransferCreator, onToggleApprovalMode,
+  onTransferCreator, onToggleApprovalMode, onSetTab,
 }) => {
   const { openReportModal } = useReportStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -58,6 +76,8 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
   const isAdminOrCreator = isAdmin || isCreator;
   const isDisbandAction = isGroup && isCreator;
   const isMuted = memberSettings?.isMuted || false;
+  const isPinned = memberSettings?.isPinned || false;
+  const isArchived = memberSettings?.isArchived || false;
   const approvalMode = conversation.data.joinApprovalMode ?? false;
 
   const handleApprovalToggle = () => {
@@ -68,131 +88,176 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
     }
   };
 
-  const actions: Action[] = [
-    {
-      icon: isMuted ? <Bell size={18} /> : <BellOff size={18} />,
-      label: isMuted ? 'Bật thông báo' : 'Tắt thông báo',
-      onClick: onToggleMute,
-      variant: 'default',
-    },
-    {
-      icon: memberSettings?.isPinned ? <PinOff size={18} /> : <Pin size={18} />,
-      label: memberSettings?.isPinned ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện',
-      onClick: onTogglePin,
-      variant: 'default',
-    },
-    ...(onToggleArchive ? [{
-      icon: <ArchiveIcon size={18} />,
-      label: memberSettings?.isArchived ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện',
-      onClick: onToggleArchive,
-      variant: 'default' as ActionVariant,
-    }] : []),
-    ...(isGroup && onEditGroup ? [{
-      icon: <Edit3 size={18} />,
-      label: 'Chỉnh sửa nhóm',
-      onClick: onEditGroup,
-      variant: 'default' as ActionVariant,
-    }] : []),
-    // Chuyển quyền Creator — chỉ Creator
-    ...(isGroup && isCreator && onTransferCreator ? [{
-      icon: <Crown size={18} />,
-      label: 'Chuyển quyền trưởng nhóm',
-      onClick: () => setShowTransferConfirm(true),
-      variant: 'default' as ActionVariant,
-    }] : []),
-    ...(!isGroup && onViewProfile ? [{
-      icon: <UserIcon size={18} />,
-      label: 'Xem trang cá nhân',
-      onClick: onViewProfile,
-      variant: 'default' as ActionVariant,
-    }] : []),
-    ...(!isGroup && partner?.status !== UserStatus.BANNED ? [
-      {
-        icon: <Ban size={18} />,
-        label: 'Quản lý chặn',
-        onClick: onToggleBlock,
-        variant: 'danger' as ActionVariant,
-      },
-      ...(() => {
-        const partnerId = Object.keys(conversation.data.members).find(id => id !== currentUserId);
-        return partnerId ? [{
-          icon: <Flag size={18} />,
-          label: 'Báo cáo người dùng',
-          onClick: () => openReportModal(ReportType.USER, partnerId, partnerId),
-          variant: 'danger' as ActionVariant,
-        }] : [];
-      })(),
-    ] : []),
-    ...(isGroup && onLeaveGroup ? [{
-      icon: <LogOut size={18} />,
-      label: 'Rời khỏi nhóm',
-      onClick: () => setShowLeaveConfirm(true),
-      variant: 'danger' as ActionVariant,
-    }] : []),
-    ...(onDelete ? [{
-      icon: <Trash2 size={18} />,
-      label: isDisbandAction ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện',
-      onClick: () => setShowDeleteConfirm(true),
-      variant: 'danger' as ActionVariant,
-    }] : []),
-  ];
-
   return (
-    <div className="py-3 border-t border-border-light">
-      <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wide">
-        Tùy chọn
-      </p>
-
-      <div>
-        {actions.map((action, index) => (
-          <button
-            key={index}
-            onClick={action.onClick}
-            className={`
-              w-full flex items-center gap-3 px-4 py-3 transition-colors duration-200 text-left
-              ${action.variant === 'danger'
-                ? 'text-error hover:bg-error/5 active:bg-error/10'
-                : 'text-text-primary hover:bg-bg-hover active:bg-bg-active'
-              }
-            `}
-          >
-            <span className={`flex-shrink-0 ${action.variant === 'danger' ? 'text-error' : action.isActive ? 'text-primary' : 'text-text-secondary'}`}>
-              {action.icon}
-            </span>
-            <span className="flex-1 text-sm font-medium">{action.label}</span>
-            {!action.isToggle && <ChevronRight size={14} className="text-text-tertiary flex-shrink-0" />}
-          </button>
-        ))}
+    <div className="flex flex-col">
+      {/* Quick Actions Row */}
+      <div className="flex items-center justify-around px-4 py-5 bg-bg-primary">
+        <QuickActionButton
+          icon={isMuted ? <Bell size={18} /> : <BellOff size={18} />}
+          label={isMuted ? 'Bật âm' : 'Tắt âm'}
+          onClick={onToggleMute}
+          active={isMuted}
+        />
+        <QuickActionButton
+          icon={isPinned ? <PinOff size={18} /> : <Pin size={18} />}
+          label={isPinned ? 'Bỏ ghim' : 'Ghim'}
+          onClick={onTogglePin}
+          active={isPinned}
+        />
+        <QuickActionButton
+          icon={<Search size={18} />}
+          label="Tìm kiếm"
+          onClick={() => onSetTab?.('search')}
+        />
+        {!isGroup && partner && (
+          <QuickActionButton
+            icon={<UserIcon size={18} />}
+            label="Trang cá nhân"
+            onClick={onViewProfile}
+          />
+        )}
+        {isGroup && (
+          <QuickActionButton
+            icon={<Edit3 size={18} />}
+            label="Sửa nhóm"
+            onClick={onEditGroup}
+          />
+        )}
       </div>
 
-      {/* Group Settings */}
-      {isGroup && isAdminOrCreator && onToggleApprovalMode && (
-        <div className="mt-2 border-t border-border-light pt-2">
-          <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wide">
-            Cài đặt nhóm
-          </p>
-          <div
-            className="flex items-center justify-between w-full px-4 py-3 hover:bg-bg-hover transition-colors cursor-pointer group"
-            onClick={handleApprovalToggle}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors
-                ${approvalMode ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
-                <ShieldCheck size={20} />
+      <div className="h-px bg-border-light mx-4" />
+
+      {/* Main Settings Sections */}
+      <div className="py-2">
+        {/* Section: Group Special Settings */}
+        {isGroup && isAdminOrCreator && onToggleApprovalMode && (
+          <div className="py-1">
+            <div
+              className="flex items-center justify-between w-full px-5 py-3 hover:bg-bg-hover transition-colors cursor-pointer group"
+              onClick={handleApprovalToggle}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                  ${approvalMode ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
+                  <ShieldCheck size={18} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-text-primary leading-tight">Phê duyệt thành viên</span>
+                  <span className="text-[10px] text-text-tertiary">Kiểm soát người mới</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-text-primary">Phê duyệt thành viên</span>
-                <span className="text-[10px] text-text-tertiary">Kiểm soát người mới vào nhóm</span>
+              <div className={`w-9 h-5 rounded-full transition-all duration-300 relative
+                ${approvalMode ? 'bg-primary' : 'bg-bg-tertiary border border-border-light'}`}>
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-300
+                  ${approvalMode ? 'left-5' : 'left-1'}`} />
               </div>
-            </div>
-            <div className={`w-9 h-5 rounded-full transition-all duration-300 relative
-              ${approvalMode ? 'bg-primary' : 'bg-bg-secondary border border-border-light'}`}>
-              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-300
-                ${approvalMode ? 'left-5' : 'left-1'}`} />
             </div>
           </div>
+        )}
+
+        {/* Section: General */}
+        <div className={`py-1 ${isGroup && isAdminOrCreator && onToggleApprovalMode ? 'border-t border-border-light/50' : ''}`}>
+          <div className="flex flex-col">
+            <button
+              onClick={onToggleArchive}
+              className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-hover transition-colors text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-bg-secondary flex items-center justify-center text-text-secondary group-hover:text-text-primary transition-colors">
+                  <ArchiveIcon size={16} />
+                </div>
+                <span className="text-sm font-medium text-text-primary">
+                  {isArchived ? 'Bỏ lưu trữ' : 'Lưu trữ cuộc trò chuyện'}
+                </span>
+              </div>
+              <ChevronRight size={14} className="text-text-tertiary" />
+            </button>
+
+            {isGroup && isCreator && onTransferCreator && (
+              <button
+                onClick={() => setShowTransferConfirm(true)}
+                className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-hover transition-colors text-left group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center text-warning transition-colors">
+                    <Crown size={16} />
+                  </div>
+                  <span className="text-sm font-medium text-warning">Chuyển quyền trưởng nhóm</span>
+                </div>
+                <ChevronRight size={14} className="text-text-tertiary" />
+              </button>
+            )}
+
+            {!isGroup && (
+               <button
+               onClick={onViewProfile}
+               className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-hover transition-colors text-left group"
+             >
+               <div className="flex items-center gap-3">
+                 <div className="w-8 h-8 rounded-lg bg-bg-secondary flex items-center justify-center text-text-secondary group-hover:text-text-primary transition-colors">
+                  <UserIcon size={16} />
+                 </div>
+                 <span className="text-sm font-medium text-text-primary">Xem trang cá nhân</span>
+               </div>
+               <ChevronRight size={14} className="text-text-tertiary" />
+             </button>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Section: Danger Zone */}
+        <div className="py-1 border-t border-border-light">
+          <div className="flex flex-col">
+            {!isGroup && partner?.status !== UserStatus.BANNED && (
+              <>
+                <button
+                  onClick={onToggleBlock}
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
+                    <Ban size={16} />
+                  </div>
+                  <span className="text-sm font-medium">Quản lý chặn</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const partnerId = Object.keys(conversation.data.members).find(id => id !== currentUserId);
+                    if (partnerId) openReportModal(ReportType.USER, partnerId, partnerId);
+                  }}
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
+                    <Flag size={16} />
+                  </div>
+                  <span className="text-sm font-medium">Báo cáo người dùng</span>
+                </button>
+              </>
+            )}
+
+            {isGroup && onLeaveGroup && (
+              <button
+                onClick={() => setShowLeaveConfirm(true)}
+                className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
+                  <LogOut size={16} />
+                </div>
+                <span className="text-sm font-medium">Rời khỏi nhóm</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-error/5 transition-colors text-left text-error group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error transition-colors">
+                <Trash2 size={16} />
+              </div>
+              <span className="text-sm font-medium">{isDisbandAction ? 'Giải tán nhóm' : 'Xóa cuộc trò chuyện'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}
@@ -219,7 +284,6 @@ export const ChatDetailsActions: React.FC<ChatDetailsActionsProps> = ({
         confirmLabel={CONFIRM_MESSAGES.CHAT.LEAVE_GROUP.CONFIRM}
         variant="danger"
       />
-
 
       <ConfirmDialog
         isOpen={showApprovalOffConfirm}

@@ -133,30 +133,15 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         className="bg-bg-secondary"
       />
 
-      {/* Selected Chips */}
-      {formData.memberIds.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 p-3 bg-bg-secondary rounded-xl max-h-[100px] overflow-y-auto scroll-hide">
-          {formData.memberIds.map(id => {
-            const friend = friends.find(f => f.id === id);
-            if (!friend) return null;
-            return (
-              <div
-                key={id}
-                className="flex items-center gap-1.5 bg-primary/10 text-primary px-2.5 py-1 rounded-full text-xs font-medium"
-              >
-                <span>{friend.fullName.split(' ')[0]}</span>
-                <button
-                  type="button"
-                  onClick={() => toggleSelect(id)}
-                  className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                >
-                  <X size={11} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {/* Selection Count Info */}
+      <div className="flex justify-between items-center px-1 text-[11px]">
+        <span className="text-text-secondary font-medium">
+          Đã chọn: <span className="text-primary">{formData.memberIds.length}</span> thành viên
+        </span>
+        <span className="text-text-tertiary">
+          Tối đa {GROUP_LIMITS.MAX_MEMBERS} người
+        </span>
+      </div>
 
       {/* Friend List */}
       <div className="overflow-y-auto scroll-hide min-h-0 max-h-64 space-y-0.5">
@@ -237,29 +222,37 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           className="bg-bg-secondary"
         />
 
-        {/* Member Chips */}
-        <div>
-          <p className="text-xs font-semibold text-text-secondary mb-2">
-            Thành viên ({totalMembers})
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {currentUser && (
-              <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20">
-                <Avatar src={currentUser.avatar?.url} name={currentUser.fullName} size="xs" />
-                <span className="text-xs text-primary font-medium">{currentUser.fullName}</span>
-                <Crown size={11} className="text-primary" />
-              </div>
-            )}
-            {formData.memberIds.map(id => {
-              const friend = friends.find(f => f.id === id);
-              if (!friend) return null;
-              return (
-                <div key={id} className="flex items-center gap-2 bg-bg-secondary px-3 py-1.5 rounded-xl border border-border-light">
-                  <Avatar src={friend.avatar?.url} name={friend.fullName} size="xs" />
-                  <span className="text-xs text-text-primary">{friend.fullName}</span>
+        {/* Member Stack (Flat Design) */}
+        <div className="pt-4 border-t border-border-light/50">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">
+              Thành viên ({totalMembers})
+            </span>
+          </div>
+          <div className="flex justify-center">
+            <div className="flex -space-x-2.5 overflow-hidden">
+              {currentUser && (
+                <div className="relative inline-block rounded-full ring-2 ring-bg-primary">
+                  <Avatar src={currentUser.avatar?.url} name={currentUser.fullName} size="sm" />
+                  <div className="absolute -top-1 -left-1 bg-bg-primary rounded-full p-0.5 border border-border-light shadow-sm">
+                    <Crown size={8} className="text-warning fill-warning" />
+                  </div>
                 </div>
-              );
-            })}
+              )}
+              {formData.memberIds.slice(0, 7).map(id => {
+                const friend = friends.find(f => f.id === id);
+                return (
+                  <div key={id} className="relative inline-block rounded-full ring-2 ring-bg-primary">
+                    <Avatar src={friend?.avatar?.url} name={friend?.fullName || ''} size="sm" />
+                  </div>
+                );
+              })}
+              {totalMembers > 8 && (
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-bg-secondary border-2 border-bg-primary text-[10px] font-bold text-text-tertiary">
+                  +{totalMembers - 8}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -286,7 +279,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                 onClick={handleNext}
                 disabled={formData.memberIds.length < GROUP_LIMITS.MIN_MEMBERS}
               >
-                Tiếp tục ({formData.memberIds.length}/{GROUP_LIMITS.MAX_MEMBERS - 1})
+                Tiếp tục
               </Button>
             ) : (
               <Button

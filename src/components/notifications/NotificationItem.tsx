@@ -35,10 +35,10 @@ const NotificationItemInner: React.FC<NotificationItemProps> = ({ notification, 
     switch (notification.type) {
       case NotificationType.REACTION:
       case NotificationType.COMMENT:
-        if (notification.data.postId) navigate(`/feed/post/${notification.data.postId}`);
+        if (notification.data.postId) navigate(`?post=${notification.data.postId}`);
         break;
       case NotificationType.FRIEND_REQUEST:
-        navigate('/contacts');
+        navigate('/contacts', { state: { tab: 'requests' } });
         break;
       case NotificationType.FRIEND_ACCEPT:
         navigate(`/profile/${notification.actorId}`);

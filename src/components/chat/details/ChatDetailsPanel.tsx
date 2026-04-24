@@ -26,6 +26,7 @@ interface ChatDetailsPanelProps {
   onMemberClick?: (userId: string) => void;
   onMessageClick?: (messageId: string) => void;
   onLeaveGroup?: () => void;
+  onSetTab?: (tabId: TabId) => void;
   onEditGroup?: () => void;
   onAddMember?: () => void;
   onRemoveMember?: (userId: string) => void;
@@ -94,6 +95,7 @@ export const ChatDetailsPanel: React.FC<ChatDetailsPanelProps> = ({
               onViewProfile={() => partner && onMemberClick?.(partner.id)}
               onToggleApprovalMode={onToggleApprovalMode}
               onTransferCreator={onTransferCreator}
+              onSetTab={setActiveTab}
             />
           </>
         );

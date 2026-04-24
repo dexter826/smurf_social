@@ -17,7 +17,7 @@ export const SharedPostMessage: React.FC<SharedPostMessageProps> = ({
   const navigate = useNavigate();
 
   const handleOpenPost = useCallback(() => {
-    if (payload.postId) { navigate(`/feed/post/${payload.postId}`); return; }
+    if (payload.postId) { navigate(`?post=${payload.postId}`); return; }
     window.open(payload.url, '_blank', 'noopener,noreferrer');
   }, [navigate, payload.postId, payload.url]);
 

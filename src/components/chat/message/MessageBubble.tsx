@@ -178,7 +178,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 className={`
                   relative text-sm transition-all duration-300 animate-in fade-in max-w-full
                   ${shouldWrapBackground
-                    ? `shadow-sm min-w-[80px]
+                    ? `shadow-sm min-w-[80px] overflow-hidden
                         ${isMe
                         ? 'bg-bg-message-sent border border-primary/10 text-text-primary rounded-xl rounded-br-sm'
                         : 'bg-bg-message-received border border-border-light text-text-primary rounded-xl rounded-bl-sm'
@@ -220,7 +220,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   );
                 })()}
 
-                <div className={shouldWrapBackground ? "px-3 py-2" : ""}>
+                <div className={shouldWrapBackground && message.data.type !== MessageType.IMAGE ? "px-3 py-2" : ""}>
                   <MessageContent
                     message={message}
                     isMe={isMe}
