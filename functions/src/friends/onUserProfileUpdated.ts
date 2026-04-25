@@ -31,9 +31,10 @@ export const onUserProfileUpdated = onDocumentWritten("users/{userId}", async (e
     const genAI = new GoogleGenerativeAI(geminiApiKey.value());
     const model = genAI.getGenerativeModel({ model: "gemini-embedding-2-preview" });
     const result = await model.embedContent(profileText);
+    const vector = result.embedding.values.slice(0, 99);
     
     await change.after.ref.update({
-      userVector: result.embedding.values
+      userVector: vector
     });
   } catch (error) {
     console.error(`Lỗi tạo Embedding cho user ${event.params.userId}:`, error);

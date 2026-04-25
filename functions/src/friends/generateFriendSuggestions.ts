@@ -3,7 +3,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../app';
 import { UserStatus } from '../types';
 
-const K_PROFILE_VECTOR_DIMENSIONS = 100;
+const K_PROFILE_VECTOR_DIMENSIONS = 99;
 const K_MIN_POOL_SIZE_FOR_REFRESH = 20;
 const K_SUGGESTION_LIMIT = 20;
 const K_MUTUAL_FRIEND_BONUS = 0.05;
@@ -13,13 +13,13 @@ function cosineSimilarity(a: number[], b: number[]): number {
     let dot = 0;
     let magA = 0;
     let magB = 0;
+    
     for (let i = 0; i < K_PROFILE_VECTOR_DIMENSIONS; i++) {
-        const ai = i < a.length ? a[i] : 0;
-        const bi = i < b.length ? b[i] : 0;
-        dot += ai * bi;
-        magA += ai * ai;
-        magB += bi * bi;
+        dot += a[i] * b[i];
+        magA += a[i] * a[i];
+        magB += b[i] * b[i];
     }
+    
     const denom = Math.sqrt(magA) * Math.sqrt(magB);
     return denom === 0 ? 0 : dot / denom;
 }
