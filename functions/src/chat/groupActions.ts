@@ -1,10 +1,28 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { rtdb } from '../app';
 import { RtdbConversation, MemberRole, MediaObject } from '../types';
-import { getUserName, sendSystemMessage, groupSystemMessages } from './groupHelper';
+import { getUserName, getUserProfile, sendSystemMessage, groupSystemMessages } from './groupHelper';
 import { ServerValue } from 'firebase-admin/database';
+import { randomBytes } from 'crypto';
 
 const REGION = 'asia-southeast1';
+const MAX_GROUP_MEMBERS = 100;
+
+function generateInviteToken(): string {
+    return randomBytes(18).toString('base64url');
+}
+
+function normalizeBaseUrl(baseUrl?: string): string {
+    if (!baseUrl || typeof baseUrl !== 'string') return '';
+    if (!/^https?:\/\//i.test(baseUrl)) return '';
+    return baseUrl.replace(/\/+$/, '');
+}
+
+function buildInviteLink(token: string, baseUrl?: string): string {
+    const path = `/join/${encodeURIComponent(token)}`;
+    const normalizedBase = normalizeBaseUrl(baseUrl);
+    return normalizedBase ? `${normalizedBase}${path}` : path;
+}
 
 /** Tạo nhóm chat mới */
 export const createGroup = onCall({ region: REGION, cors: true }, async (request) => {
@@ -26,11 +44,13 @@ export const createGroup = onCall({ region: REGION, cors: true }, async (request
         memberIds.forEach(id => { if (id !== creatorId) members[id] = 'member'; });
 
         const now = Date.now();
+        const inviteToken = generateInviteToken();
         const conversationData: any = {
             isGroup: true,
             name,
             avatar: avatar || null,
             creatorId,
+            inviteLink: inviteToken,
             members,
             joinApprovalMode: false,
             createdAt: now,
@@ -39,7 +59,8 @@ export const createGroup = onCall({ region: REGION, cors: true }, async (request
         };
 
         const updates: Record<string, any> = {
-            [`conversations/${convId}`]: conversationData
+            [`conversations/${convId}`]: conversationData,
+            [`invite_links/${inviteToken}`]: convId
         };
 
         allMemberIds.forEach(uid => {
@@ -518,3 +539,199 @@ export const rejectMembers = onCall({ region: REGION, cors: true }, async (reque
         throw new HttpsError('internal', 'Không thể từ chối thành viên.');
     }
 });
+
+/** Lấy link mời tham gia nhóm */
+export const getGroupInviteLink = onCall({ region: REGION, cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Bạn cần đăng nhập.');
+    const { convId, baseUrl } = request.data as { convId: string; baseUrl?: string };
+    const actorId = request.auth.uid;
+
+    if (!convId) {
+        throw new HttpsError('invalid-argument', 'Thiếu convId.');
+    }
+
+    try {
+        const convRef = rtdb.ref(`conversations/${convId}`);
+        const convSnap = await convRef.get();
+        if (!convSnap.exists()) throw new HttpsError('not-found', 'Nhóm không tồn tại.');
+
+        const conversation = convSnap.val() as RtdbConversation;
+        const memberIds = Object.keys(conversation.members || {});
+        if (!memberIds.includes(actorId)) {
+            throw new HttpsError('permission-denied', 'Bạn không phải thành viên nhóm.');
+        }
+
+        let inviteLink = conversation.inviteLink || '';
+        if (!conversation.inviteLink) {
+            inviteLink = generateInviteToken();
+            await convRef.update({
+                inviteLink,
+                updatedAt: ServerValue.TIMESTAMP
+            });
+            await rtdb.ref(`invite_links/${inviteLink}`).set(convId);
+        }
+
+        return { inviteLink: buildInviteLink(inviteLink, baseUrl) };
+    } catch (error) {
+        if (error instanceof HttpsError) throw error;
+        console.error('[getGroupInviteLink] Lỗi:', error);
+        throw new HttpsError('internal', 'Không thể lấy link mời.');
+    }
+});
+
+/** Đặt lại link mời nhóm */
+export const regenerateGroupInviteLink = onCall({ region: REGION, cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Bạn cần đăng nhập.');
+    const { convId, baseUrl } = request.data as { convId: string; baseUrl?: string };
+    const actorId = request.auth.uid;
+
+    if (!convId) {
+        throw new HttpsError('invalid-argument', 'Thiếu convId.');
+    }
+
+    try {
+        const convRef = rtdb.ref(`conversations/${convId}`);
+        const convSnap = await convRef.get();
+        if (!convSnap.exists()) throw new HttpsError('not-found', 'Nhóm không tồn tại.');
+
+        const conversation = convSnap.val() as RtdbConversation;
+        const memberIds = Object.keys(conversation.members || {});
+        if (!memberIds.includes(actorId)) {
+            throw new HttpsError('permission-denied', 'Bạn không phải thành viên nhóm.');
+        }
+
+        const oldInviteLink = conversation.inviteLink || null;
+        const inviteLink = generateInviteToken();
+        const updates: Record<string, any> = {
+            [`conversations/${convId}/inviteLink`]: inviteLink,
+            [`conversations/${convId}/updatedAt`]: ServerValue.TIMESTAMP,
+            [`invite_links/${inviteLink}`]: convId,
+        };
+        if (oldInviteLink) {
+            updates[`invite_links/${oldInviteLink}`] = null;
+        }
+        await rtdb.ref().update(updates);
+
+        return { inviteLink: buildInviteLink(inviteLink, baseUrl) };
+    } catch (error) {
+        if (error instanceof HttpsError) throw error;
+        console.error('[regenerateGroupInviteLink] Lỗi:', error);
+        throw new HttpsError('internal', 'Không thể đặt lại link mời.');
+    }
+});
+
+/** Tham gia nhóm qua link */
+export const joinGroupByLink = onCall({ region: REGION, cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Bạn cần đăng nhập.');
+    const { token } = request.data as { token: string };
+    const actorId = request.auth.uid;
+
+    if (!token || typeof token !== 'string') {
+        throw new HttpsError('invalid-argument', 'Dữ liệu không hợp lệ.');
+    }
+
+    try {
+        const linkSnap = await rtdb.ref(`invite_links/${token}`).get();
+        if (!linkSnap.exists()) return { status: 'invalid' as const };
+        const convId = String(linkSnap.val() || '');
+        if (!convId) return { status: 'invalid' as const };
+
+        const convRef = rtdb.ref(`conversations/${convId}`);
+        const convSnap = await convRef.get();
+        if (!convSnap.exists()) return { status: 'invalid' as const };
+
+        const conversation = convSnap.val() as RtdbConversation;
+        const memberIds = Object.keys(conversation.members || {});
+        const pendingMembers = conversation.pendingMembers || {};
+
+        if (conversation.isDisbanded) return { status: 'disbanded' as const, convId };
+        if (memberIds.includes(actorId)) return { status: 'already_member' as const, convId };
+        if (memberIds.length >= MAX_GROUP_MEMBERS) return { status: 'full' as const, convId };
+        if (!conversation.inviteLink) return { status: 'invalid' as const };
+        if (token !== conversation.inviteLink) return { status: 'invalid' as const };
+
+        const actorName = await getUserName(actorId);
+        const updates: Record<string, any> = {};
+        const now = Date.now();
+
+        if (conversation.joinApprovalMode) {
+            if (!pendingMembers[actorId]) {
+                updates[`conversations/${convId}/pendingMembers/${actorId}`] = {
+                    addedBy: actorId,
+                    timestamp: now
+                };
+                updates[`conversations/${convId}/updatedAt`] = ServerValue.TIMESTAMP;
+                await rtdb.ref().update(updates);
+                await sendSystemMessage(convId, groupSystemMessages.REQUEST_JOIN_BY_LINK(actorName), memberIds, actorId);
+            }
+            return { status: 'pending' as const, convId };
+        }
+
+        updates[`conversations/${convId}/members/${actorId}`] = 'member';
+        updates[`user_chats/${actorId}/${convId}`] = {
+            isPinned: false,
+            isMuted: false,
+            isArchived: false,
+            unreadCount: 0,
+            lastReadMsgId: null,
+            lastMsgTimestamp: now,
+            clearedAt: now,
+            createdAt: now,
+            updatedAt: now
+        };
+        updates[`conversations/${convId}/updatedAt`] = ServerValue.TIMESTAMP;
+
+        await rtdb.ref().update(updates);
+        await sendSystemMessage(convId, groupSystemMessages.JOIN_BY_LINK(actorName), [...memberIds, actorId], actorId);
+        return { status: 'joined' as const, convId };
+    } catch (error) {
+        if (error instanceof HttpsError) throw error;
+        console.error('[joinGroupByLink] Lỗi:', error);
+        throw new HttpsError('internal', 'Không thể tham gia nhóm.');
+    }
+});
+
+/** Lấy thông tin nhóm từ link mời */
+export const getGroupInviteInfo = onCall({ region: REGION, cors: true }, async (request) => {
+    const { token } = request.data as { token: string };
+    const actorId = request.auth?.uid;
+
+    if (!token || typeof token !== 'string') {
+        throw new HttpsError('invalid-argument', 'Dữ liệu không hợp lệ.');
+    }
+
+    try {
+        const linkSnap = await rtdb.ref(`invite_links/${token}`).get();
+        if (!linkSnap.exists()) return { status: 'invalid' as const };
+        const convId = String(linkSnap.val() || '');
+
+        const convSnap = await rtdb.ref(`conversations/${convId}`).get();
+        if (!convSnap.exists()) return { status: 'invalid' as const };
+
+        const conversation = convSnap.val() as RtdbConversation;
+        const memberIds = Object.keys(conversation.members || {});
+        const pendingMembers = conversation.pendingMembers || {};
+
+        if (conversation.isDisbanded) return { status: 'disbanded' as const };
+        if (token !== conversation.inviteLink) return { status: 'invalid' as const };
+
+        const sampleMemberIds = memberIds.slice(0, 4);
+        const membersInfo = await Promise.all(sampleMemberIds.map(uid => getUserProfile(uid)));
+
+        return {
+            status: 'success' as const,
+            convId,
+            name: conversation.name,
+            avatar: conversation.avatar || null,
+            memberCount: memberIds.length,
+            members: membersInfo,
+            isMember: actorId ? memberIds.includes(actorId) : false,
+            isPending: actorId ? !!pendingMembers[actorId] : false,
+            joinApprovalMode: !!conversation.joinApprovalMode
+        };
+    } catch (error) {
+        console.error('[getGroupInviteInfo] Lỗi:', error);
+        throw new HttpsError('internal', 'Không thể lấy thông tin nhóm.');
+    }
+});
+

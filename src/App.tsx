@@ -24,6 +24,7 @@ const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage'));
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+const JoinGroupPage = React.lazy(() => import('./pages/JoinGroupPage'));
 
 /** Route bảo vệ cho tài khoản bị khóa */
 const BannedRoute: React.FC = () => {
@@ -96,6 +97,7 @@ const App: React.FC = () => {
             <Route path="/verify-email" element={<EmailVerificationPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/banned" element={<BannedRoute />} />
+            <Route path="/join/:token" element={<JoinGroupPage />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

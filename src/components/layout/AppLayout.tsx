@@ -9,8 +9,8 @@ import { useLoadingStore } from '../../store/loadingStore';
 import { UserAvatar, ConfirmDialog, IconButton, Loading } from '../ui';
 import { ReactionType, Post } from '../../../shared/types';
 import { PostViewModal, PostModal } from '../feed';
-import { SharePostModal } from '../chat';
-import { usePostStore } from '../../store';
+import { SharePostModal, JoinGroupModal } from '../chat';
+import { usePostStore, toast } from '../../store';
 import { usePostNavigation } from '../../hooks/usePostNavigation';
 import { useUserCache } from '../../store/userCacheStore';
 import { postService } from '../../services/postService';
@@ -24,14 +24,18 @@ import { useCallManager } from '../../hooks/chat/useCallManager';
 import { IncomingCallDialog } from '../chat/call/IncomingCallDialog';
 import { OutgoingCallDialog } from '../chat/call/OutgoingCallDialog';
 import { CallWindow } from '../chat/call/CallWindow';
-import { CONFIRM_MESSAGES } from '../../constants';
+import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../constants';
 import { soundManager } from '../../services/soundManager';
 import { useSharePostStore } from '../../store/sharePostStore';
 
 export const AppLayout: React.FC = () => {
   const { user } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
-  const { subscribeToConversations, selectedConversationId, conversations, markAsDelivered } = useRtdbChatStore();
+  const {
+    subscribeToConversations, selectedConversationId, conversations, markAsDelivered,
+    globalInviteInfo, setGlobalInviteInfo, handleGlobalJoinConfirm, fetchGroupInviteInfo
+  } = useRtdbChatStore();
+  const processedTokensRef = React.useRef<Set<string>>(new Set());
   const { receivedRequests, subscribeToRequests, subscribeToFriends } = useContactStore();
   const { initialize: initNotifications, unreadCount: unreadNotifications } = useNotificationStore();
 
@@ -97,6 +101,108 @@ export const AppLayout: React.FC = () => {
       window.removeEventListener('touchstart', unlock);
     };
   }, []);
+
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (!anchor || !anchor.href) return;
+
+      const url = new URL(anchor.href);
+      if (url.origin === window.location.origin && url.pathname.startsWith('/join/')) {
+        const token = url.pathname.split('/join/')[1];
+        if (token) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          processedTokensRef.current.delete(token);
+          
+          const processToken = async (t: string) => {
+            setGlobalInviteInfo({ token: t, isFetching: true });
+            try {
+              const info = await fetchGroupInviteInfo(t);
+              if (info.status === 'success') {
+                const existingConv = conversations.find(c => c.id === info.convId);
+                const userCache = useUserCache.getState().users;
+                
+                const resolvedMembers = info.members || (existingConv ? Object.keys(existingConv.data.members || {}).map(uid => ({
+                  id: uid,
+                  fullName: userCache[uid]?.fullName || '...',
+                  avatar: userCache[uid]?.avatar
+                })) : undefined);
+
+                const infoWithMembers = { 
+                  ...info, 
+                  members: resolvedMembers as any[]
+                };
+
+                if (info.isMember) {
+                  toast.info(TOAST_MESSAGES.GROUP.ALREADY_MEMBER);
+                  setGlobalInviteInfo({ token: null, info: null, isFetching: false });
+                  navigate(`/?conv=${info.convId}`, { replace: true });
+                } else {
+                  setGlobalInviteInfo({ info: infoWithMembers, isFetching: false });
+                }
+              } else {
+                toast.error(TOAST_MESSAGES.GROUP.INVALID_LINK);
+                setGlobalInviteInfo({ token: null, info: null, isFetching: false });
+              }
+            } catch (err) {
+              toast.error(TOAST_MESSAGES.GROUP.FETCH_INFO_FAILED);
+              setGlobalInviteInfo({ token: null, info: null, isFetching: false });
+            }
+          };
+
+          processToken(token);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick, true);
+    return () => document.removeEventListener('click', handleGlobalClick, true);
+  }, [navigate, fetchGroupInviteInfo, setGlobalInviteInfo]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const joinToken = searchParams.get('joinToken');
+    
+    if (joinToken && user && !globalInviteInfo.token && !processedTokensRef.current.has(joinToken)) {
+      const processToken = async (t: string) => {
+        setGlobalInviteInfo({ token: t, isFetching: true });
+        try {
+          const info = await fetchGroupInviteInfo(t);
+          if (info.status === 'success') {
+            const existingConv = conversations.find(c => c.id === info.convId);
+            const userCache = useUserCache.getState().users;
+
+            const resolvedMembers = info.members || (existingConv ? Object.keys(existingConv.data.members || {}).map(uid => ({
+              id: uid,
+              fullName: userCache[uid]?.fullName || '...',
+              avatar: userCache[uid]?.avatar
+            })) : undefined);
+
+            const infoWithMembers = { 
+              ...info, 
+              members: resolvedMembers as any[]
+            };
+
+            if (info.isMember) {
+              toast.info(TOAST_MESSAGES.GROUP.ALREADY_MEMBER);
+              setGlobalInviteInfo({ token: null, info: null, isFetching: false });
+              navigate(`/?conv=${info.convId}`, { replace: true });
+            } else {
+              setGlobalInviteInfo({ info: infoWithMembers, isFetching: false });
+            }
+          } else {
+            toast.error(TOAST_MESSAGES.GROUP.INVALID_LINK);
+            setGlobalInviteInfo({ token: null, info: null, isFetching: false });
+          }
+        } catch (err) {
+          setGlobalInviteInfo({ token: null, info: null, isFetching: false });
+        }
+      };
+      processToken(joinToken);
+    }
+  }, [location.search, user, globalInviteInfo.token, fetchGroupInviteInfo, setGlobalInviteInfo, conversations]);
 
   useEffect(() => {
     if (selectedPost && !usersMap[selectedPost.authorId]) {
@@ -390,6 +496,42 @@ export const AppLayout: React.FC = () => {
           isGroupCall={session.isGroupCall}
           callType={session.callType}
           onClose={() => endCall('ended')}
+        />
+      )}
+
+      {user && (
+        <JoinGroupModal
+          isOpen={!!globalInviteInfo.info}
+          onClose={() => {
+            if (globalInviteInfo.token) {
+              processedTokensRef.current.add(globalInviteInfo.token);
+            }
+            setGlobalInviteInfo({ token: null, info: null });
+            const params = new URLSearchParams(location.search);
+            if (params.has('joinToken')) {
+              params.delete('joinToken');
+              const newSearch = params.toString();
+              navigate(location.pathname + (newSearch ? `?${newSearch}` : ''), { replace: true });
+            }
+          }}
+          onJoin={async () => {
+            try {
+              const result: any = await handleGlobalJoinConfirm();
+              if (result.status === 'joined') {
+                toast.success(TOAST_MESSAGES.GROUP.JOIN_SUCCESS(globalInviteInfo.info?.name || ''));
+                navigate(`/?conv=${result.convId}`);
+              } else if (result.status === 'already_member') {
+                toast.info(TOAST_MESSAGES.GROUP.ALREADY_MEMBER);
+                navigate(`/?conv=${result.convId}`);
+              } else if (result.status === 'pending') {
+                toast.info(TOAST_MESSAGES.GROUP.PENDING_APPROVAL);
+              }
+            } catch (err) {
+              toast.error(TOAST_MESSAGES.GROUP.JOIN_FAILED);
+            }
+          } }
+          isLoading={globalInviteInfo.isJoining}
+          groupInfo={globalInviteInfo.info}
         />
       )}
     </div>

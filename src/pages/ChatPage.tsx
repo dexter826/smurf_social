@@ -15,7 +15,9 @@ import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
   TransferAdminModal, ForwardModal, MessengerSkeleton,
+  JoinGroupModal,
 } from '../components/chat';
+
 import { scrollToMessage } from '../utils';
 
 const ChatPage: React.FC = () => {
@@ -38,7 +40,10 @@ const ChatPage: React.FC = () => {
     handleCreateGroup, handleAddMembers, handleInviteMembers, handleRemoveMember,
     handleLeaveGroup, handleAssignAdminAndLeave, handlePromoteToAdmin,
     handleDemoteFromAdmin, handleEditGroup, handleDisbandGroup,
+    handleCopyInviteLink, handleResetInviteLink,
+    handleJoinGroupByLink, fetchGroupInviteInfo,
     handleApproveMembers, handleRejectMembers, handleToggleApprovalMode, handleTransferCreator,
+
     addToSearchHistory, removeFromSearchHistory, clearSearchHistory,
     getOrCreateConversation, setIsChatVisible,
     isLoadingMore, hasMoreMessages, handleLoadMoreMessages,
@@ -59,12 +64,15 @@ const ChatPage: React.FC = () => {
 
   const [searchParams] = useSearchParams();
   const convIdFromUrl = searchParams.get('conv');
+  const joinTokenFromUrl = searchParams.get('joinToken');
 
   useEffect(() => {
     if (!convIdFromUrl) return;
     handleSelectConversation(convIdFromUrl);
     navigate('/', { replace: true });
   }, [convIdFromUrl, handleSelectConversation, navigate]);
+
+
 
   const [showDetails, setShowDetails] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -154,6 +162,7 @@ const ChatPage: React.FC = () => {
     handleSelectConversation(null);
     navigate('/', { replace: true });
   };
+
 
   return (
     <div className="flex h-full w-full overflow-hidden">
@@ -318,6 +327,8 @@ const ChatPage: React.FC = () => {
           onRejectMembers={handleRejectMembers}
           onToggleApprovalMode={handleToggleApprovalMode}
           onTransferCreator={() => setShowTransferCreator(true)}
+          onCopyInviteLink={handleCopyInviteLink}
+          onResetInviteLink={handleResetInviteLink}
           onMemberClick={(userId) => navigate(`/profile/${userId}`)}
           onMessageClick={(messageId) => scrollToMessage(messageId)}
         />
@@ -378,6 +389,8 @@ const ChatPage: React.FC = () => {
         message={forwardingMessage}
         currentUserId={currentUser.id}
       />
+
+
 
       {(partner || blockTarget) && (
         <BlockOptionsModal

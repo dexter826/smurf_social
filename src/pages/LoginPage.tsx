@@ -33,6 +33,7 @@ const LoginPage: React.FC = () => {
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [showResend, setShowResend] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -55,8 +56,11 @@ const LoginPage: React.FC = () => {
   }, [loginForm]);
 
   useEffect(() => {
-    const state = location.state as { reason?: string; source?: string } | null;
+    const state = location.state as { reason?: string; source?: string; redirectTo?: string } | null;
     if (!state) return;
+    if (state.redirectTo) {
+      setRedirectTo(state.redirectTo);
+    }
     if (state.source === 'register') {
       setInfoMessage('Tài khoản đã tạo. Vui lòng xác thực email để tiếp tục.');
       setShowResend(true);
@@ -95,7 +99,7 @@ const LoginPage: React.FC = () => {
       await login(data.email, data.password, rememberMe);
       if (rememberMe) localStorage.setItem('remembered_email', data.email);
       else localStorage.removeItem('remembered_email');
-      navigate('/');
+      navigate(redirectTo || '/');
     } catch (error) { handleAuthError(error); }
   };
 

@@ -237,6 +237,7 @@ export interface RtdbConversation {
     name?: string;
     avatar?: MediaObject;
     creatorId: string;
+    inviteLink?: string;
     members: Record<string, MemberRole>;
     typing?: Record<string, number>;
     lastMessage?: {

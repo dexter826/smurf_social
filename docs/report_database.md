@@ -5,10 +5,10 @@
 
 ## I. TỔNG QUAN KIẾN TRÚC
 
-Hệ thống lưu trữ bao gồm **tổng cộng 19 collection/node** dữ liệu lồng nhau, chia thành 2 nhóm chính:
+Hệ thống lưu trữ bao gồm **tổng cộng 20 collection/node** dữ liệu lồng nhau, chia thành 2 nhóm chính:
 
 1. **Cloud Firestore (14 Collection):** Dùng để lưu trữ dữ liệu tĩnh, cấu trúc phức tạp, cần query nhiều chiều (Người dùng, Bảng tin, Bài viết, Bình luận, Báo cáo, Thông báo). Áp dụng kiến trúc **Fan-out** cho Bảng tin. Gồm 6 collections gốc và 8 sub-collections.
-2. **Realtime Database (5 Node):** Dùng chuyên biệt cho **Hệ thống Chat và Hiện diện** (Trạng thái Online, Tin nhắn, Đã xem/Đang gõ, Signaling cuộc gọi). Giúp hệ thống chịu tải hàng triệu tin nhắn mà không bị quá giới hạn quota đọc/ghi của Firestore.
+2. **Realtime Database (6 Node):** Dùng chuyên biệt cho **Hệ thống Chat và Hiện diện** (Trạng thái Online, Tin nhắn, Đã xem/Đang gõ, Signaling cuộc gọi, Link mời nhóm). Giúp hệ thống chịu tải hàng triệu tin nhắn mà không bị quá giới hạn quota đọc/ghi của Firestore.
 3. **Cloud Storage:** Lưu trữ file vật lý.
 
 ---
@@ -269,6 +269,7 @@ _Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Grou
 | `joinApprovalMode` | Boolean     | _Optional_        | Chế độ phê duyệt: Khi bật, thành viên mới do Member mời phải chờ duyệt. Mặc định `false`. |
 | `pendingMembers`   | Map         | _Optional_        | Danh sách chờ duyệt: `{ uid: { addedBy: string, timestamp: number } }`                    |
 | `activeCall`       | Object      | _Optional_        | `{ callerId, callType, messageId, startedAt, participants: { uid: timestamp } }`          |
+| `inviteLink`       | String      | _Optional_        | Mã Token duy nhất của link mời nhóm (18 bytes base64url)                                  |
 
 ### 3. Node `messages`
 
@@ -324,3 +325,11 @@ _Mô tả: Bảng tạm (Ephemeral) để báo hiệu cuộc gọi tới các Us
 | `isGroupCall`    | Boolean     | _Optional_        | Gọi nhóm. Mặc định `false`                         |
 | `createdAt`      | Number      | **Required**      | Timestamp tạo                                      |
 | `updatedAt`      | Number      | **Required**      | Timestamp cập nhật                                 |
+
+### 6. Node `invite_links`
+
+_Mô tả: Bảng tra cứu ngược từ Token của link mời sang ID cuộc hội thoại nhóm._
+
+| Field     | Type   | Required/Optional | Description/Default                    |
+| :-------- | :----- | :---------------- | :------------------------------------- |
+| `{token}` | String | **Required**      | Document ID của nhóm (`conversationId`) |

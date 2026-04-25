@@ -18,6 +18,28 @@ export interface RtdbGroupSlice {
     updateMemberRole: (conversationId: string, userId: string, role: 'admin' | 'member') => Promise<void>;
     transferCreator: (conversationId: string, newCreatorId: string) => Promise<void>;
     disbandGroup: (conversationId: string) => Promise<void>;
+    getGroupInviteLink: (conversationId: string) => Promise<string>;
+    regenerateGroupInviteLink: (conversationId: string) => Promise<string>;
+    joinGroupByLink: (token: string) => Promise<{ status: 'joined' | 'pending' | 'already_member' | 'invalid' | 'disbanded' | 'full'; convId?: string }>;
+    fetchGroupInviteInfo: (token: string) => Promise<{
+        status: 'success' | 'invalid' | 'disbanded';
+        convId?: string;
+        name?: string;
+        avatar?: MediaObject;
+        members?: any[];
+        memberCount?: number;
+        isMember?: boolean;
+        isPending?: boolean;
+        joinApprovalMode?: boolean;
+    }>;
+    globalInviteInfo: {
+        token: string | null;
+        info: any | null;
+        isFetching: boolean;
+        isJoining: boolean;
+    };
+    setGlobalInviteInfo: (updates: Partial<RtdbGroupSlice['globalInviteInfo']>) => void;
+    handleGlobalJoinConfirm: () => Promise<{ status: 'joined' | 'pending' | 'already_member' | 'invalid' | 'disbanded' | 'full'; convId?: string }>;
 }
 
 type RtdbGroupSliceWithConversation = RtdbGroupSlice & RtdbConversationSlice & RtdbMessageSlice;
@@ -167,4 +189,78 @@ export const createRtdbGroupSlice: StateCreator<RtdbGroupSliceWithConversation, 
             throw error;
         }
     },
+
+    /** Lấy link mời nhóm */
+    getGroupInviteLink: async (conversationId: string) => {
+        try {
+            return await rtdbGroupService.getGroupInviteLink(conversationId);
+        } catch (error) {
+            console.error('[rtdbGroupSlice] Lỗi lấy link mời:', error);
+            throw error;
+        }
+    },
+
+    /** Đặt lại link mời nhóm */
+    regenerateGroupInviteLink: async (conversationId: string) => {
+        try {
+            return await rtdbGroupService.regenerateGroupInviteLink(conversationId);
+        } catch (error) {
+            console.error('[rtdbGroupSlice] Lỗi đặt lại link mời:', error);
+            throw error;
+        }
+    },
+
+    /** Tham gia nhóm qua link */
+    joinGroupByLink: async (token: string) => {
+        try {
+            return await rtdbGroupService.joinGroupByLink(token);
+        } catch (error) {
+            console.error('[rtdbGroupSlice] Lỗi tham gia nhóm qua link:', error);
+            throw error;
+        }
+    },
+
+    /** Lấy thông tin nhóm từ link mời */
+    fetchGroupInviteInfo: async (token: string) => {
+        try {
+            return await rtdbGroupService.getGroupInviteInfo(token);
+        } catch (error) {
+            console.error('[rtdbGroupSlice] Lỗi lấy thông tin nhóm qua link:', error);
+            throw error;
+        }
+    },
+
+    globalInviteInfo: {
+        token: null,
+        info: null,
+        isFetching: false,
+        isJoining: false
+    },
+
+    setGlobalInviteInfo: (updates) => {
+        set((state) => ({
+            globalInviteInfo: { ...state.globalInviteInfo, ...updates }
+        }));
+    },
+
+    handleGlobalJoinConfirm: async () => {
+        const { globalInviteInfo, joinGroupByLink, setGlobalInviteInfo, selectConversation } = _get();
+        if (!globalInviteInfo.token) return;
+
+        setGlobalInviteInfo({ isJoining: true });
+        try {
+            const result = await joinGroupByLink(globalInviteInfo.token);
+            if (result.status === 'joined' || result.status === 'already_member') {
+                if (result.convId) {
+                    selectConversation(result.convId);
+                }
+            }
+            setGlobalInviteInfo({ token: null, info: null, isJoining: false });
+            return result;
+        } catch (error) {
+            setGlobalInviteInfo({ isJoining: false });
+            throw error;
+        }
+    }
 });
+

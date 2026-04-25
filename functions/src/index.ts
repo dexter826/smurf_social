@@ -43,5 +43,10 @@ export {
     toggleApprovalMode, 
     inviteMember, 
     approveMembers, 
-    rejectMembers 
+    rejectMembers,
+    getGroupInviteLink,
+    regenerateGroupInviteLink,
+    joinGroupByLink,
+    getGroupInviteInfo
 } from './chat/groupActions';
+

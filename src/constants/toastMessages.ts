@@ -92,4 +92,13 @@ export const TOAST_MESSAGES = {
     CREATE_FAILED: (detail?: string) => detail ? `Lỗi bình luận: ${detail}` : 'Không thể gửi bình luận.',
     UPDATE_FAILED: (detail?: string) => detail ? `Lỗi cập nhật: ${detail}` : 'Không thể cập nhật bình luận.',
   },
+  GROUP: {
+    JOIN_SUCCESS: (name: string) => `Bạn đã tham gia nhóm ${name} thành công.`,
+    ALREADY_MEMBER: 'Bạn đã là thành viên của nhóm này',
+    PENDING_APPROVAL: 'Đã gửi yêu cầu tham gia nhóm. Vui lòng chờ duyệt.',
+    INVALID_LINK: 'Link tham gia không hợp lệ hoặc đã hết hạn.',
+    DISBANDED: 'Nhóm này đã giải tán.',
+    FETCH_INFO_FAILED: 'Không thể lấy thông tin nhóm.',
+    JOIN_FAILED: 'Lỗi tham gia nhóm.',
+  },
 } as const;

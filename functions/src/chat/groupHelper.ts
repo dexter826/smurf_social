@@ -1,5 +1,6 @@
 import { rtdb, db } from '../app';
 import { ServerValue } from 'firebase-admin/database';
+import { MediaObject } from '../types';
 
 /** Lấy tên hiển thị từ Firestore */
 export async function getUserName(uid: string): Promise<string> {
@@ -9,6 +10,25 @@ export async function getUserName(uid: string): Promise<string> {
     } catch (error) {
         console.error(`[groupHelper] Lỗi lấy tên người dùng ${uid}:`, error);
         return 'Người dùng';
+    }
+}
+
+/** Lấy thông tin cơ bản người dùng từ Firestore */
+export async function getUserProfile(uid: string): Promise<{ id: string; fullName: string; avatar: MediaObject | null }> {
+    try {
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+            const data = userDoc.data();
+            return {
+                id: uid,
+                fullName: data?.fullName || 'Người dùng',
+                avatar: data?.avatar || null
+            };
+        }
+        return { id: uid, fullName: 'Người dùng', avatar: null };
+    } catch (error) {
+        console.error(`[groupHelper] Lỗi lấy profile người dùng ${uid}:`, error);
+        return { id: uid, fullName: 'Người dùng', avatar: null };
     }
 }
 
@@ -73,4 +93,6 @@ export const groupSystemMessages = {
     TOGGLE_APPROVAL_ON: (actor: string) => `${actor} đã bật chế độ phê duyệt thành viên`,
     TOGGLE_APPROVAL_OFF: (actor: string) => `${actor} đã tắt chế độ phê duyệt. Tất cả thành viên chờ đã được chấp nhận`,
     TRANSFER_CREATOR: (actor: string, target: string) => `${actor} đã chuyển quyền trưởng nhóm cho ${target}`,
+    JOIN_BY_LINK: (actor: string) => `${actor} đã tham gia nhóm qua link`,
+    REQUEST_JOIN_BY_LINK: (actor: string) => `${actor} đã gửi yêu cầu tham gia nhóm qua link`,
 };

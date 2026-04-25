@@ -1,5 +1,7 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { parseTextWithMentions } from '../../../../utils/chatUtils';
+
 import { extractFirstUrl } from '../../../../services/linkPreviewService';
 import { LinkPreviewCard } from '../../../shared/LinkPreviewCard';
 
@@ -13,7 +15,9 @@ interface MessageTextContentProps {
  * Thành phần hiển thị nội dung văn bản trong tin nhắn
  */
 export const MessageTextContent: React.FC<MessageTextContentProps> = ({ content, isMe, isEdited }) => {
+  const navigate = useNavigate();
   if (!content) return null;
+
   
   const parts = parseTextWithMentions(content);
 
@@ -45,10 +49,22 @@ export const MessageTextContent: React.FC<MessageTextContentProps> = ({ content,
       
       if (/^(https?:\/\/|www\.)/.test(part)) {
         const href = part.startsWith('www.') ? `https://${part}` : part;
+        const isInternal = part.includes(window.location.host);
+        
         return (
-          <a key={index} href={href} target="_blank" rel="noopener noreferrer"
+          <a key={index} href={href} 
+            target={isInternal ? undefined : "_blank"} 
+            rel={isInternal ? undefined : "noopener noreferrer"}
             className={`underline break-all transition-all duration-200 hover:opacity-80 text-primary`}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isInternal) {
+                e.preventDefault();
+                const url = new URL(href);
+                navigate(url.pathname + url.search);
+              }
+            }}
+
           >
             {part}
           </a>

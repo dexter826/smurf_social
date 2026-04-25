@@ -28,9 +28,14 @@ export const useChatGroups = ({
     updateMemberRole,
     transferCreator,
     disbandGroup,
+    getGroupInviteLink,
+    regenerateGroupInviteLink,
+    joinGroupByLink,
+    fetchGroupInviteInfo,
   } = useRtdbChatStore();
 
   const handleCreateGroup = useCallback(async (
+
     memberIds: string[],
     groupName: string,
     groupAvatar?: File | MediaObject,
@@ -135,6 +140,32 @@ export const useChatGroups = ({
     await disbandGroup(id);
   }, [selectedConversationId, disbandGroup]);
 
+  const handleCopyInviteLink = useCallback(async () => {
+    if (!selectedConversationId) return;
+    try {
+      const inviteLink = await getGroupInviteLink(selectedConversationId);
+      await navigator.clipboard.writeText(inviteLink);
+      toast.success('Đã sao chép link tham gia nhóm');
+    } catch (error: any) {
+      toast.error(error?.message || 'Không thể sao chép link nhóm');
+    }
+  }, [selectedConversationId, getGroupInviteLink]);
+
+  const handleResetInviteLink = useCallback(async () => {
+    if (!selectedConversationId) return;
+    try {
+      const inviteLink = await regenerateGroupInviteLink(selectedConversationId);
+      await navigator.clipboard.writeText(inviteLink);
+      toast.success('Đã reset và sao chép link nhóm mới');
+    } catch (error: any) {
+      toast.error(error?.message || 'Không thể reset link nhóm');
+    }
+  }, [selectedConversationId, regenerateGroupInviteLink]);
+
+  const handleJoinGroupByLink = useCallback(async (token: string) => {
+    return await joinGroupByLink(token);
+  }, [joinGroupByLink]);
+
   return {
     handleCreateGroup,
     handleAddMembers,
@@ -150,5 +181,10 @@ export const useChatGroups = ({
     handleDemoteFromAdmin,
     handleEditGroup,
     handleDisbandGroup,
+    handleCopyInviteLink,
+    handleResetInviteLink,
+    handleJoinGroupByLink,
+    fetchGroupInviteInfo,
   };
 };
+

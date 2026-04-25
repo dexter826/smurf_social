@@ -48,6 +48,71 @@ export const rtdbGroupService = {
         }
     },
 
+    /** Lấy link mời nhóm */
+    getGroupInviteLink: async (convId: string): Promise<string> => {
+        try {
+            const getLink = httpsCallable<{ convId: string; baseUrl: string }, { inviteLink: string }>(functions, 'getGroupInviteLink');
+            const result = await getLink({ convId, baseUrl: window.location.origin });
+            return result.data.inviteLink;
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi getGroupInviteLink:', error);
+            throw error;
+        }
+    },
+
+    /** Đặt lại link mời nhóm */
+    regenerateGroupInviteLink: async (convId: string): Promise<string> => {
+        try {
+            const resetLink = httpsCallable<{ convId: string; baseUrl: string }, { inviteLink: string }>(functions, 'regenerateGroupInviteLink');
+            const result = await resetLink({ convId, baseUrl: window.location.origin });
+            return result.data.inviteLink;
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi regenerateGroupInviteLink:', error);
+            throw error;
+        }
+    },
+
+    /** Tham gia nhóm qua link */
+    joinGroupByLink: async (
+        token: string
+    ): Promise<{ status: 'joined' | 'pending' | 'already_member' | 'invalid' | 'disbanded' | 'full'; convId?: string }> => {
+        try {
+            const joinLink = httpsCallable<
+                { token: string },
+                { status: 'joined' | 'pending' | 'already_member' | 'invalid' | 'disbanded' | 'full'; convId?: string }
+            >(functions, 'joinGroupByLink');
+            const result = await joinLink({ token });
+            return result.data;
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi joinGroupByLink:', error);
+            throw error;
+        }
+    },
+    
+    /** Lấy thông tin nhóm từ link mời */
+    getGroupInviteInfo: async (
+        token: string
+    ): Promise<{
+        status: 'success' | 'invalid' | 'disbanded';
+        convId?: string;
+        name?: string;
+        avatar?: MediaObject;
+        memberCount?: number;
+        isMember?: boolean;
+        isPending?: boolean;
+        joinApprovalMode?: boolean;
+    }> => {
+        try {
+            const getInfo = httpsCallable<{ token: string }, any>(functions, 'getGroupInviteInfo');
+            const result = await getInfo({ token });
+            return result.data;
+        } catch (error) {
+            console.error('[rtdbGroupService] Lỗi getGroupInviteInfo:', error);
+            throw error;
+        }
+    },
+
+
     /** Phê duyệt thành viên gia nhập */
     approveMembers: async (convId: string, uids: string[]): Promise<void> => {
         try {
