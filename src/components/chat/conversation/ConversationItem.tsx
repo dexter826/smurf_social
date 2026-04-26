@@ -287,9 +287,8 @@ export const ConversationItem = Object.assign(
     return (
       prev.isActive === next.isActive &&
       prev.conversation.id === next.conversation.id &&
+      prev.conversation.data.lastMessage?.messageId === next.conversation.data.lastMessage?.messageId &&
       prev.conversation.data.updatedAt === next.conversation.data.updatedAt &&
-      prev.conversation.data.avatar?.url === next.conversation.data.avatar?.url &&
-      prev.conversation.data.name === next.conversation.data.name &&
       prev.conversation.userChat.updatedAt === next.conversation.userChat.updatedAt &&
       prev.currentUserId === next.currentUserId &&
       prev.onClick === next.onClick &&

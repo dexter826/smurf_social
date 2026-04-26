@@ -4,10 +4,17 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { batchGetUsers } from '../utils/batchUtils';
 
+interface UserCache extends User {
+  _accessCount?: number;
+  _lastAccessed?: number;
+  _cachedAt?: number;
+}
+
 interface UserCacheState {
-  users: Record<string, User>;
+  users: Record<string, UserCache>;
   loadingIds: string[];
   accessOrder: string[];
+  pendingFetches: Map<string, Promise<Record<string, UserCache>>>;
   
   fetchUsers: (ids: string[]) => Promise<void>;
   fetchUser: (id: string) => Promise<User | undefined>;
@@ -19,8 +26,7 @@ interface UserCacheState {
   reset: () => void;
 }
 
-
-  const pendingFetches = new Map<string, Promise<Record<string, User>>>();
+const STALE_TIME = 1000 * 60 * 60; // 1 giờ
 
 export const useUserCache = create<UserCacheState>()(
   persist(
@@ -28,6 +34,7 @@ export const useUserCache = create<UserCacheState>()(
       users: {},
       loadingIds: [],
       accessOrder: [],
+      pendingFetches: new Map(),
 
   /** Cập nhật thứ tự truy cập LRU */
   _updateAccess: (id: string) => {
@@ -48,43 +55,45 @@ export const useUserCache = create<UserCacheState>()(
 
     /** Tải danh sách người dùng theo lô */
     fetchUsers: async (ids: string[]) => {
-      if (!ids?.length) return;
+      const { users, pendingFetches } = get();
+      const now = Date.now();
+      const targetIds = ids.filter(id => {
+        const cachedUser = users[id];
+        const isPending = pendingFetches.has(id);
+        const isStale = cachedUser && (!cachedUser._cachedAt || now - cachedUser._cachedAt > STALE_TIME);
+        
+        return (!cachedUser || isStale) && !isPending;
+      });
 
-      const { users } = get();
-      
-      const missingIds = ids.filter(id => !users[id] && !pendingFetches.has(id));
-      
-      const getPromises = () => {
-        const currentPromises: Promise<any>[] = [];
-        ids.forEach(id => {
-          const p = pendingFetches.get(id);
-          if (p) currentPromises.push(p);
-        });
-        return currentPromises;
-      };
+      if (targetIds.length === 0) return;
 
-      if (missingIds.length > 0) {
-        set(state => ({ loadingIds: [...state.loadingIds, ...missingIds] }));
+      set(state => ({ loadingIds: [...state.loadingIds, ...targetIds] }));
 
-        const fetchPromise = batchGetUsers(missingIds).then(newUsers => {
-          set(state => ({
-            users: { ...state.users, ...newUsers },
-            loadingIds: state.loadingIds.filter(id => !missingIds.includes(id))
-          }));
-          missingIds.forEach(id => pendingFetches.delete(id));
-          return newUsers;
-        }).catch(err => {
-          set(state => ({
-            loadingIds: state.loadingIds.filter(id => !missingIds.includes(id))
-          }));
-          missingIds.forEach(id => pendingFetches.delete(id));
-          throw err;
-        });
+      const fetchPromise = batchGetUsers(targetIds).then(newUsers => {
+        const usersWithTimestamp = Object.entries(newUsers).reduce((acc, [id, user]) => {
+          acc[id] = { ...user, _cachedAt: Date.now() };
+          return acc;
+        }, {} as Record<string, UserCache>);
 
-        missingIds.forEach(id => pendingFetches.set(id, fetchPromise));
-      }
+        set(state => ({
+          users: { ...state.users, ...usersWithTimestamp },
+          loadingIds: state.loadingIds.filter(id => !targetIds.includes(id))
+        }));
+        
+        const { pendingFetches: currentPending } = get();
+        targetIds.forEach(id => currentPending.delete(id));
+        return usersWithTimestamp;
+      }).catch(err => {
+        set(state => ({
+          loadingIds: state.loadingIds.filter(id => !targetIds.includes(id))
+        }));
+        const { pendingFetches: currentPending } = get();
+        targetIds.forEach(id => currentPending.delete(id));
+        throw err;
+      });
 
-      await Promise.allSettled(getPromises());
+      targetIds.forEach(id => pendingFetches.set(id, fetchPromise));
+      await fetchPromise;
     },
 
   /** Tải thông tin một người dùng */
@@ -109,7 +118,8 @@ export const useUserCache = create<UserCacheState>()(
   /** Lưu người dùng vào bộ nhớ đệm */
   setUser: (user: User) => {
     if (!user?.id) return;
-    set(state => ({ users: { ...state.users, [user.id]: user } }));
+    const userWithTimestamp = { ...user, _cachedAt: Date.now() };
+    set(state => ({ users: { ...state.users, [user.id]: userWithTimestamp } }));
     get()._updateAccess(user.id);
   },
 
@@ -117,10 +127,12 @@ export const useUserCache = create<UserCacheState>()(
   updateUser: (user: User) => {
     if (!user?.id) return;
     const { users } = get();
-    if (!users[user.id]) return;
+    
+    const existingUser = users[user.id] || {};
+    const updatedUser = { ...existingUser, ...user, _cachedAt: Date.now() };
     
     set(state => ({
-      users: { ...state.users, [user.id]: { ...state.users[user.id], ...user } }
+      users: { ...state.users, [user.id]: updatedUser }
     }));
   },
 

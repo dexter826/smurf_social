@@ -22,6 +22,8 @@ interface UseContactsReturn {
   friends: User[];
   receivedRequests: FriendRequest[];
   sentRequests: FriendRequest[];
+  filteredReceivedRequests: FriendRequest[];
+  filteredSentRequests: FriendRequest[];
   suggestions: User[];
   filteredSuggestions: User[];
   filteredFriends: User[];
@@ -97,6 +99,22 @@ export const useContacts = (): UseContactsReturn => {
     friend.email?.toLowerCase().includes(searchTerm.toLowerCase())
   ), [friends, searchTerm]);
 
+  const filteredReceivedRequests = useMemo(() => {
+    if (!searchTerm) return receivedRequests;
+    return receivedRequests.filter(req => {
+      const user = userCache[req.senderId];
+      return user?.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }, [receivedRequests, userCache, searchTerm]);
+
+  const filteredSentRequests = useMemo(() => {
+    if (!searchTerm) return sentRequests;
+    return sentRequests.filter(req => {
+      const user = userCache[req.receiverId];
+      return user?.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }, [sentRequests, userCache, searchTerm]);
+
   const groupedFriends = useMemo(() => {
     const groups: Record<string, User[]> = {};
     filteredFriends.forEach(friend => {
@@ -128,8 +146,11 @@ export const useContacts = (): UseContactsReturn => {
       ...sentRequests.map(r => r.receiverId),
       ...receivedRequests.map(r => r.senderId),
     ]);
-    return suggestions.filter(u => !excludeIds.has(u.id));
-  }, [suggestions, friends, sentRequests, receivedRequests]);
+    return suggestions.filter(u => 
+      !excludeIds.has(u.id) && 
+      u.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [suggestions, friends, sentRequests, receivedRequests, searchTerm]);
 
   const handleAcceptRequest = useCallback(async (requestId: string, friendId: string) => {
     if (!currentUser) return;
@@ -211,6 +232,8 @@ export const useContacts = (): UseContactsReturn => {
     friends,
     receivedRequests,
     sentRequests,
+    filteredReceivedRequests,
+    filteredSentRequests,
     suggestions,
     filteredSuggestions,
     filteredFriends,

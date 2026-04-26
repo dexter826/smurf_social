@@ -143,7 +143,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
             {/* Avatar */}
             <div className="relative -mt-14 md:-mt-16 mx-auto md:mx-0 flex-shrink-0" style={{ zIndex: 'var(--z-sticky)' }}>
-              <div className="p-1 bg-bg-primary rounded-full shadow-md">
+              <div className="p-1 bg-bg-primary rounded-full shadow-md overflow-hidden">
                 <UserAvatar
                   userId={user.id}
                   src={user.avatar?.url}

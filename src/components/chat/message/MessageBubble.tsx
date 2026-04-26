@@ -15,6 +15,7 @@ import { MessageContent } from './MessageContent';
 import { MessageActions } from './MessageActions';
 import { MessageStatus } from './MessageStatus';
 import { useIntersectionObserver } from '../../../hooks/utils/useIntersectionObserver';
+import { useClickOutside } from '../../../hooks/utils/useClickOutside';
 
 interface MessageBubbleProps {
   message: { id: string; data: RtdbMessage };
@@ -57,7 +58,11 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const [showReaders, setShowReaders] = useState(false);
   const [showReactionSelector, setShowReactionSelector] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const { toggleReaction, uploadProgress } = useRtdbChatStore();
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useClickOutside([containerRef], () => setShowActions(false), showActions);
 
   const isMedia = useMemo(() => 
     message.data.type === MessageType.IMAGE || 
@@ -133,7 +138,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
       <div
         id={`msg-${message.id}`}
         ref={observerRef}
-        className={`flex w-full group ${isMe ? 'justify-end' : 'justify-start gap-2'} ${hasReactions ? 'mb-4' : 'mb-0.5'}`}
+        className={`flex w-full group ${isMe ? 'justify-end' : 'justify-start gap-2'} ${hasReactions ? 'mb-3' : 'mb-0.5'}`}
       >
         {/* Avatar Received Only */}
         {!isMe && (
@@ -162,7 +167,10 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
           )}
 
           {/* Bubble And Reaction Zone */}
-          <div className={`relative group/message w-fit max-w-full`}>
+          <div 
+            ref={containerRef}
+            className={`relative group/message w-fit max-w-full`}
+          >
             <ReactionDetailsModal
               isOpen={showReactionDetails}
               onClose={() => setShowReactionDetails(false)}
@@ -172,13 +180,19 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
               currentUserId={currentUserId}
             />
 
-            <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} w-full`}>
+            <div 
+              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} w-full cursor-pointer md:cursor-default`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowActions(!showActions);
+              }}
+            >
               {/* Main Content Bubble */}
               <div
                 className={`
                   relative text-sm transition-all duration-300 animate-in fade-in max-w-full
                   ${shouldWrapBackground
-                    ? `shadow-sm min-w-[80px] overflow-hidden
+                    ? `shadow-sm ${hasReactions ? 'min-w-[92px]' : 'min-w-[60px]'} overflow-hidden
                         ${isMe
                         ? 'bg-bg-message-sent border border-primary/10 text-text-primary rounded-xl rounded-br-sm'
                         : 'bg-bg-message-received border border-border-light text-text-primary rounded-xl rounded-bl-sm'
@@ -241,7 +255,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                     ${isContentReady ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
                     ${!shouldWrapBackground
                       ? `absolute bottom-2 ${isMe ? 'right-2' : 'left-2'} px-1.5 py-0.5 rounded-full bg-black/40 text-white backdrop-blur-sm z-20`
-                      : `pb-1.5 ${isMe ? 'justify-end text-text-primary opacity-60 px-3' : 'justify-start text-text-tertiary px-3'}`
+                      : `${hasReactions ? 'pb-3' : 'pb-1.5'} ${isMe ? 'justify-end text-text-primary opacity-60 px-3' : 'justify-start text-text-tertiary px-3'}`
                     }
                   `}>
                     {formatTimeOnly(message.data.createdAt)}
@@ -266,7 +280,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                 )}
 
                 {!isInteractionDisabled && (
-                  <div className={`relative ${hasReactions ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-opacity duration-200`}>
+                  <div className={`relative ${(hasReactions || showActions) ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'} transition-opacity duration-200`}>
                     <button
                       className="w-7 h-6 flex items-center justify-center bg-bg-primary rounded-full border border-border-light shadow-sm text-text-tertiary hover:text-primary hover:border-primary/30 transition-all duration-200"
                       onClick={(e) => { e.stopPropagation(); setShowReactionSelector(!showReactionSelector); }}
@@ -284,7 +298,10 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                     />
                     <div className={`absolute bottom-full mb-1 ${isMe ? 'right-0' : 'left-0'} z-[var(--z-popover)]`}>
                       <ReactionSelector
-                        onSelect={(emoji) => toggleReaction(conversationId, message.id, currentUserId, emoji)}
+                        onSelect={(emoji) => {
+                          toggleReaction(conversationId, message.id, currentUserId, emoji);
+                          setShowActions(false);
+                        }}
                         onClose={() => setShowReactionSelector(false)}
                         autoClose={false}
                         className="relative shadow-xl animate-fade-in"
@@ -299,26 +316,27 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
             {/* Message Actions Hover */}
             {!message.data.isRecalled && (
-              <MessageActions
-                message={message}
-                isMe={isMe}
-                canEdit={canEdit}
-                showMenu={showMenu}
-                setShowMenu={setShowMenu}
-                onReply={onReply}
-                onForward={onForward}
-                onEdit={onEdit}
-                setShowRecallConfirm={setShowRecallConfirm}
-                onDeleteForMe={onDeleteForMe}
-                isBlocked={isBlocked}
-                isPartnerBanned={isPartnerBanned}
-              />
+                <MessageActions
+                  message={message}
+                  isMe={isMe}
+                  canEdit={canEdit}
+                  showMenu={showMenu}
+                  setShowMenu={setShowMenu}
+                  showActions={showActions}
+                  onReply={(msg) => { onReply?.(msg); setShowActions(false); }}
+                  onForward={(msg) => { onForward?.(msg); setShowActions(false); }}
+                  onEdit={(msg) => { onEdit?.(msg); setShowActions(false); }}
+                  setShowRecallConfirm={(show) => { setShowRecallConfirm(show); if (show) setShowActions(false); }}
+                  onDeleteForMe={(id) => { onDeleteForMe?.(id); setShowActions(false); }}
+                  isBlocked={isBlocked}
+                  isPartnerBanned={isPartnerBanned}
+                />
             )}
           </div>
 
           {/* Read Status */}
           {isMe && (isLastMessage || lastReadByUsers.length > 0) && (
-            <div className={hasReactions ? "mt-4" : "mt-1"}>
+            <div className={hasReactions ? "mt-2.5" : "mt-1"}>
               <div
                 className="cursor-pointer"
                 onClick={() => isGroup && lastReadByUsers.length > 0 && setShowReaders(!showReaders)}

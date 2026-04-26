@@ -346,7 +346,7 @@ export const userService = {
     return onSnapshot(userRef, (snapshot) => {
       if (snapshot.exists()) {
         const user = userConverter(snapshot);
-        useUserCache.getState().updateUser(user);
+        useUserCache.getState().setUser(user);
         callback(user);
       }
     });

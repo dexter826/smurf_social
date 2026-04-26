@@ -1,4 +1,4 @@
-import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Post, PostStatus, Visibility, PostType, MediaObject } from '../../shared/types';
 
@@ -22,8 +22,8 @@ export const systemPostService = {
         visibility: params.visibility,
         media: params.media,
         commentCount: 0,
-        createdAt: serverTimestamp() as any,
-        updatedAt: serverTimestamp() as any
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
       };
 
       await setDoc(postRef, dataToSave);

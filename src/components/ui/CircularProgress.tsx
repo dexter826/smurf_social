@@ -109,7 +109,7 @@ export const CircularProgressOverlay: React.FC<CircularProgressOverlayProps> = (
 }) => {
   if (!isVisible) return null;
   return (
-    <div className={`absolute inset-0 flex items-center justify-center bg-black/20 z-10 animate-fade-in ${blur ? 'backdrop-blur-[2px]' : ''}`}>
+    <div className={`absolute inset-0 flex items-center justify-center bg-black/20 z-10 animate-fade-in rounded-[inherit] ${blur ? 'backdrop-blur-[2px]' : ''}`}>
       <CircularProgress {...props} className="bg-bg-primary/90 p-1 rounded-full shadow-lg" />
     </div>
   );

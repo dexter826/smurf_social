@@ -16,6 +16,7 @@ interface MessageActionsProps {
   onDeleteForMe?: (messageId: string) => void;
   isBlocked: boolean;
   isPartnerBanned?: boolean;
+  showActions?: boolean;
 }
 
 /** Các thao tác với tin nhắn */
@@ -23,6 +24,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   message, isMe, canEdit, showMenu, setShowMenu,
   onReply, onForward, onEdit, setShowRecallConfirm,
   onDeleteForMe, isBlocked, isPartnerBanned = false,
+  showActions = false,
 }) => {
   const isInteractionDisabled = isBlocked || isPartnerBanned;
 
@@ -30,7 +32,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
     <div
       className={`
         absolute top-0 transition-opacity duration-200 flex items-center gap-0.5
-        ${showMenu ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100 [@media(hover:none)]:opacity-100'}
+        ${(showMenu || showActions) ? 'opacity-100' : 'opacity-0 group-hover/message:opacity-100'}
         ${isMe ? 'right-full mr-1.5' : 'left-full ml-1.5'}
       `}
     >
@@ -40,7 +42,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           size="sm"
           title="Trả lời"
           onClick={() => onReply?.(message)}
-          className="hover:text-primary transition-all duration-200"
+          className="hidden md:flex hover:text-primary transition-all duration-200"
         />
       )}
 
@@ -58,6 +60,14 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       >
         {message.data.type !== 'call' && (
           <>
+            {!isInteractionDisabled && (
+              <DropdownItem
+                icon={<Reply size={14} />}
+                label="Trả lời"
+                className="md:hidden"
+                onClick={() => { onReply?.(message); setShowMenu(false); }}
+              />
+            )}
             {!isInteractionDisabled && (
               <DropdownItem
                 icon={<Forward size={14} />}

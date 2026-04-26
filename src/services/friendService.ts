@@ -281,12 +281,6 @@ export const friendService = {
 
     return onSnapshot(friendsRef, async (snapshot) => {
       const friendIds = snapshot.docs.map(d => d.id);
-      const isIdsChanged = friendIds.length !== previousFriendIds.length ||
-        !friendIds.every((id) => previousFriendIds.includes(id));
-
-      if (!isIdsChanged && previousFriendIds.length > 0) return;
-      previousFriendIds = friendIds;
-
       if (friendIds.length === 0) {
         callback([]);
         return;

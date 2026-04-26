@@ -128,7 +128,7 @@ const SettingsPage: React.FC = () => {
 
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex flex-col w-[280px] lg:w-[320px] border-r border-border-light bg-bg-primary flex-shrink-0">
-        <div className="px-5 py-5 border-b border-border-light">
+        <div className="h-16 px-5 border-b border-border-light flex items-center">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 btn-gradient rounded-xl flex items-center justify-center shadow-accent flex-shrink-0">
               <Settings size={16} className="text-white" />

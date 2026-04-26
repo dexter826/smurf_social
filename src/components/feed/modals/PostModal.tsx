@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { X, Image as ImageIcon, Video, Users, Lock, Globe2 } from 'lucide-react';
+import { X, Image as ImageIcon, Video, Users, Lock, Globe } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserAvatar, Button, EmojiPicker, Select, Modal, IconButton, ConfirmDialog } from '../../ui';
@@ -311,7 +311,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               value={formData.visibility}
               onChange={(v) => setValue('visibility', v as Visibility, { shouldDirty: true, shouldValidate: true })}
               options={[
-                { value: Visibility.PUBLIC, label: 'Công khai', icon: <Globe2 size={13} /> },
+                { value: Visibility.PUBLIC, label: 'Công khai', icon: <Globe size={13} /> },
                 { value: Visibility.FRIENDS, label: 'Bạn bè', icon: <Users size={13} /> },
                 { value: Visibility.PRIVATE, label: 'Chỉ mình tôi', icon: <Lock size={13} /> },
               ]}

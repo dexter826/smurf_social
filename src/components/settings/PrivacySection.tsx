@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Eye, MessageCircle, Users, Lock, ChevronDown, Globe2 } from 'lucide-react';
+import { Eye, MessageCircle, Users, Lock, ChevronDown, Globe, CheckCheck, MessageSquareQuote } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { presenceService } from '../../services/presenceService';
@@ -42,7 +42,7 @@ const PrivacySection: React.FC = () => {
   if (!settings || !currentUser) return <Skeleton height={200} className="rounded-2xl" />;
 
   const visibilityMap: Record<Visibility, { label: string; Icon: typeof Users }> = {
-    [Visibility.PUBLIC]: { label: 'Công khai', Icon: Globe2 },
+    [Visibility.PUBLIC]: { label: 'Công khai', Icon: Globe },
     [Visibility.FRIENDS]: { label: 'Bạn bè', Icon: Users },
     [Visibility.PRIVATE]: { label: 'Chỉ mình tôi', Icon: Lock },
   };
@@ -59,14 +59,14 @@ const PrivacySection: React.FC = () => {
       />
 
       <SettingItem
-        icon={<MessageCircle size={18} />}
+        icon={<CheckCheck size={18} />}
         title="Thông báo đã xem"
         description="Cho phép người khác biết khi bạn đã xem tin nhắn"
         action={<Toggle enabled={settings.showReadReceipts} onToggle={handleToggleReadReceipts} />}
       />
 
       <SettingItem
-        icon={<MessageCircle size={18} />}
+        icon={<MessageSquareQuote size={18} />}
         title="Tin nhắn từ người lạ"
         description="Cho phép người lạ khởi đầu cuộc trò chuyện với bạn"
         action={<Toggle enabled={settings.allowMessagesFromStrangers} onToggle={handleToggleAllowMessagesFromStrangers} />}
@@ -99,7 +99,7 @@ const PrivacySection: React.FC = () => {
           }
         >
           <DropdownItem
-            icon={<Globe2 size={15} />}
+            icon={<Globe size={15} />}
             label="Công khai"
             onClick={() => handleChangeVisibility(Visibility.PUBLIC)}
           />

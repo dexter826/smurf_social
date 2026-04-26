@@ -24,28 +24,17 @@ interface BirthdayRowProps {
 }
 
 const BirthdayRow: React.FC<BirthdayRowProps> = ({ friend, onQuickWish, onOpenChat }) => (
-  <div className="p-4 sm:p-5 flex items-start gap-4 hover:bg-bg-secondary/30 transition-colors">
+  <div className="p-4 flex items-center gap-3 hover:bg-bg-secondary/30 transition-colors">
     <Link to={`/profile/${friend.id}`} className="shrink-0">
-      <Avatar src={friend.avatar?.url} name={friend.fullName} size="md" />
+      <Avatar src={friend.avatar?.url} name={friend.fullName} size="lg" />
     </Link>
     
     <div className="flex-grow min-w-0">
-      <div className="flex items-center justify-between gap-2">
-        <Link to={`/profile/${friend.id}`} className="text-sm font-bold text-text-primary hover:text-primary transition-colors truncate">
-          {friend.fullName}
-        </Link>
-        <button 
-          onClick={() => onOpenChat(friend)}
-          className="p-1.5 text-text-tertiary hover:text-primary hover:bg-primary/10 rounded-full transition-all"
-          title="Vào Chat"
-        >
-          <MessageCircle size={18} />
-        </button>
-      </div>
+      <Link to={`/profile/${friend.id}`} className="text-sm font-bold text-text-primary hover:text-primary transition-colors truncate block">
+        {friend.fullName}
+      </Link>
       
-      <p className="text-[11px] text-text-secondary mb-2">Hôm nay là sinh nhật của họ 🎂</p>
-      
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 mt-1">
         {BIRTHDAY_WISHES.map((wish, i) => (
           <button
             key={i}
@@ -57,6 +46,14 @@ const BirthdayRow: React.FC<BirthdayRowProps> = ({ friend, onQuickWish, onOpenCh
         ))}
       </div>
     </div>
+
+    <button 
+      onClick={() => onOpenChat(friend)}
+      className="p-2 text-text-tertiary hover:text-primary hover:bg-primary/5 rounded-full transition-all shrink-0"
+      title="Vào Chat"
+    >
+      <MessageCircle size={20} strokeWidth={1.5} />
+    </button>
   </div>
 );
 
@@ -148,27 +145,17 @@ export const BirthdayWidget: React.FC = () => {
                 )}
               </div>
             ) : friendsWithBirthday.length === 1 ? (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div 
+                className="flex items-center justify-between cursor-pointer group w-full"
+                onClick={() => setIsModalOpen(true)}
+              >
                 <div className="min-w-0">
-                  <h3 className="text-xs font-bold text-text-primary truncate">Sinh nhật {firstFriend.fullName}</h3>
-                  <div className="flex gap-1.5 mt-1 sm:mt-0.5">
-                    {BIRTHDAY_WISHES.map((wish, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleQuickWish(firstFriend, wish)}
-                        className="whitespace-nowrap px-2 py-0.5 rounded-md bg-bg-secondary border border-border-light text-[9px] font-medium text-text-secondary hover:border-primary/40 hover:text-primary transition-all"
-                      >
-                        {wish.includes("🎂") ? "Chúc mừng 🎉" : wish.includes("✨") ? "Rực rỡ ✨" : "Hạnh phúc 🎉"}
-                      </button>
-                    ))}
-                  </div>
+                  <h3 className="text-xs font-bold text-text-primary truncate group-hover:text-primary transition-colors">Sinh nhật bạn bè</h3>
+                  <p className="text-[10px] text-text-secondary truncate mt-0.5">Hôm nay là sinh nhật của {firstFriend.fullName} 🎂</p>
                 </div>
-                <button 
-                  onClick={() => handleOpenChat(firstFriend)}
-                  className="hidden sm:flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shrink-0"
-                >
-                  <MessageCircle size={14} />
-                </button>
+                <div className="flex items-center">
+                  <Avatar src={firstFriend.avatar?.url} name={firstFriend.fullName} size="xs" className="ring-2 ring-bg-primary" />
+                </div>
               </div>
             ) : (
               <div 
@@ -176,9 +163,9 @@ export const BirthdayWidget: React.FC = () => {
                 onClick={() => setIsModalOpen(true)}
               >
                 <div className="min-w-0">
-                  <h3 className="text-xs font-bold text-text-primary">Sinh nhật bạn bè</h3>
-                  <p className="text-[10px] text-text-secondary truncate group-hover:text-primary transition-colors">
-                    {firstFriend.fullName} và {friendsWithBirthday.length - 1} người khác...
+                  <h3 className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors">Sinh nhật bạn bè</h3>
+                  <p className="text-[10px] text-text-secondary truncate mt-0.5">
+                    Hôm nay là sinh nhật của {firstFriend.fullName} và {friendsWithBirthday.length - 1} người khác 🎂
                   </p>
                 </div>
                 <div className="flex items-center -space-x-2">
@@ -197,6 +184,7 @@ export const BirthdayWidget: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         title="Sinh nhật hôm nay"
         maxWidth="md"
+        padding="none"
       >
         <div className="max-h-[70vh] overflow-y-auto divide-y divide-border-light scroll-hide">
           {friendsWithBirthday.map((friend) => (

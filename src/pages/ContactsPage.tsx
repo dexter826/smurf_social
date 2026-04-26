@@ -15,7 +15,7 @@ const ContactsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const {
-    friends, receivedRequests, sentRequests, filteredSuggestions,
+    friends, receivedRequests, sentRequests, filteredReceivedRequests, filteredSentRequests, filteredSuggestions,
     groupedFriends, userCache, isLoading, isSuggestionsLoading,
     activeTab, setActiveTab,
     searchTerm, setSearchTerm, sortOrder, toggleSortOrder,
@@ -72,11 +72,11 @@ const ContactsPage: React.FC = () => {
     }
   };
 
-  const tabConfig: { id: Tab; label: string; icon: React.ReactNode; count?: number; badge?: boolean }[] = [
-    { id: 'all', label: 'Tất cả bạn bè', icon: <Users size={18} />, count: friends.length },
-    { id: 'suggestions', label: 'Gợi ý kết bạn', icon: <Sparkles size={18} /> },
-    { id: 'requests', label: 'Lời mời kết bạn', icon: <Bell size={18} />, count: receivedRequests.length, badge: receivedRequests.length > 0 },
-    { id: 'sent', label: 'Lời mời đã gửi', icon: <UserPlus size={18} />, count: sentRequests.length },
+  const tabConfig: { id: Tab; label: string; mobileLabel: string; icon: React.ReactNode; count?: number; badge?: boolean }[] = [
+    { id: 'all', label: 'Tất cả bạn bè', mobileLabel: 'Bạn bè', icon: <Users size={18} />, count: friends.length },
+    { id: 'suggestions', label: 'Gợi ý kết bạn', mobileLabel: 'Gợi ý', icon: <Sparkles size={18} />, count: filteredSuggestions.length },
+    { id: 'requests', label: 'Lời mời kết bạn', mobileLabel: 'Lời mời', icon: <Bell size={18} />, count: receivedRequests.length, badge: receivedRequests.length > 0 },
+    { id: 'sent', label: 'Lời mời đã gửi', mobileLabel: 'Đã gửi', icon: <UserPlus size={18} />, count: sentRequests.length },
   ];
 
 
@@ -90,14 +90,15 @@ const ContactsPage: React.FC = () => {
             fullWidth
             icon={<UserPlus size={17} />}
             onClick={() => setShowAddModal(true)}
+            className="btn-gradient"
           >
             Thêm bạn bè
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-          <p className="px-3 pt-2 pb-1.5 text-xs font-semibold text-text-tertiary uppercase tracking-widest">
-            Danh sách
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          <p className="px-3 pt-2 pb-2 text-[10px] font-bold text-text-tertiary uppercase tracking-[0.1em] opacity-80">
+            Danh mục
           </p>
           {tabConfig.map(({ id, label, icon, count, badge }) => (
             <button
@@ -105,18 +106,20 @@ const ContactsPage: React.FC = () => {
               onClick={() => setActiveTab(id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl transition-all duration-200 text-sm font-medium
                 ${activeTab === id
-                  ? 'bg-primary/10 text-primary font-semibold'
-                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary active:bg-bg-active'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
                 }`}
             >
-              <span className="flex-shrink-0">{icon}</span>
+              <span className={`flex-shrink-0 transition-colors ${activeTab === id ? 'text-primary' : 'text-text-tertiary'}`}>
+                {icon}
+              </span>
               <span className="flex-1 text-left">{label}</span>
               {badge ? (
-                <span className="text-[10px] font-bold bg-error text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                <span className="text-[10px] font-bold bg-error text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
                   {count}
                 </span>
               ) : count !== undefined && count > 0 ? (
-                <span className="text-[10px] text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full border border-border-light">
+                <span className="text-[10px] font-semibold text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full border border-border-light">
                   {count}
                 </span>
               ) : null}
@@ -126,101 +129,122 @@ const ContactsPage: React.FC = () => {
       </aside>
 
       {/* ── Main content ── */}
-      <div className="flex-1 flex flex-col h-full min-w-0">
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-bg-primary bg-app-pattern">
 
         {/* Header */}
         <div
-          className="flex-shrink-0 p-4 border-b border-border-light bg-bg-primary sticky top-0"
+          className="flex-shrink-0 px-4 md:px-6 pt-4 pb-3 border-b border-border-light bg-bg-primary/80 backdrop-blur-md sticky top-0"
           style={{ zIndex: 'var(--z-sticky)' }}
         >
           {/* Mobile tab switcher */}
-          <div className="flex md:hidden bg-bg-secondary rounded-xl p-1 mb-3 border border-border-light">
-            {tabConfig.map(({ id, label, badge }) => (
+          <div className="flex md:hidden bg-bg-secondary rounded-xl p-1 mb-4 border border-border-light">
+            {tabConfig.map(({ id, mobileLabel, count, badge }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`flex-1 relative py-2 min-h-[40px] text-xs font-semibold rounded-lg transition-all duration-200
+                className={`flex-1 relative py-2.5 min-h-[40px] text-[11px] font-bold rounded-lg transition-all duration-200 flex flex-col items-center justify-center gap-0.5
                   ${activeTab === id
-                    ? 'bg-primary/10 text-primary shadow-sm'
+                    ? 'bg-bg-primary text-primary shadow-sm ring-1 ring-black/5'
                     : 'text-text-tertiary hover:text-text-secondary'
                   }`}
               >
-                {id === 'all' ? 'Bạn bè' : id === 'suggestions' ? 'Gợi ý' : id === 'requests' ? 'Lời mời' : 'Đã gửi'}
+                <span>{mobileLabel}</span>
+                {count !== undefined && count > 0 && (
+                  <span className={`text-[9px] ${badge ? 'text-error' : 'text-text-tertiary opacity-70'}`}>
+                    {count}
+                  </span>
+                )}
                 {badge && (
-                  <span className="absolute top-1 right-2 w-1.5 h-1.5 bg-error rounded-full" />
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-error rounded-full ring-2 ring-bg-secondary" />
                 )}
               </button>
             ))}
           </div>
 
           {/* Title row */}
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-text-primary">
-              {activeTab === 'all' && `Bạn bè (${friends.length})`}
-              {activeTab === 'suggestions' && `Gợi ý kết bạn (${filteredSuggestions.length})`}
-              {activeTab === 'requests' && `Lời mời (${receivedRequests.length})`}
-              {activeTab === 'sent' && `Đã gửi (${sentRequests.length})`}
-            </h2>
-            <Button
-              size="sm"
-              icon={<UserPlus size={15} />}
-              onClick={() => setShowAddModal(true)}
-              className="md:hidden"
-            >
-              Thêm
-            </Button>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col">
+              <h2 className="text-xl font-bold text-text-primary tracking-tight">
+                {tabConfig.find(t => t.id === activeTab)?.label}
+              </h2>
+              <p className="text-xs text-text-tertiary font-medium">
+                {activeTab === 'all' && `${friends.length} người bạn`}
+                {activeTab === 'suggestions' && `${filteredSuggestions.length} gợi ý`}
+                {activeTab === 'requests' && `${receivedRequests.length} lời mời chờ xác nhận`}
+                {activeTab === 'sent' && `Đã gửi ${sentRequests.length} lời mời`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {activeTab === 'suggestions' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<RefreshCw size={14} className={isSuggestionsLoading ? 'animate-spin' : ''} />}
+                  onClick={handleRefreshSuggestions}
+                  disabled={isSuggestionsLoading}
+                  className="text-primary hover:bg-primary/5 hidden md:flex"
+                >
+                  Làm mới
+                </Button>
+              )}
+              <Button
+                size="sm"
+                icon={<UserPlus size={15} />}
+                onClick={() => setShowAddModal(true)}
+                className="md:hidden btn-gradient"
+              >
+                Thêm
+              </Button>
+            </div>
           </div>
 
-          {/* Search + sort (friends tab only) */}
-          {activeTab === 'all' && (
-            <div className="flex items-center gap-2">
+          {/* Action Row - Now Standardized for all tabs */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 flex items-center gap-2">
               <Input
-                placeholder="Tìm kiếm..."
+                placeholder={`Tìm kiếm trong ${tabConfig.find(t => t.id === activeTab)?.mobileLabel.toLowerCase()}...`}
                 icon={<Search size={16} />}
-                className="bg-bg-secondary"
+                className="bg-bg-secondary border-none focus:ring-1 focus:ring-primary/20"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 containerClassName="flex-1"
               />
-              <Button
-                variant="ghost"
-                size="md"
-                icon={<ArrowUpDown size={16} />}
-                onClick={toggleSortOrder}
-                className="flex-shrink-0"
-              >
-                {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
-              </Button>
+              {activeTab === 'all' && (
+                <Button
+                  variant="ghost"
+                  size="md"
+                  icon={<ArrowUpDown size={16} />}
+                  onClick={toggleSortOrder}
+                  className="flex-shrink-0 text-text-secondary hover:text-primary hover:bg-primary/5"
+                >
+                  {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
+                </Button>
+              )}
+              {activeTab === 'suggestions' && (
+                <Button
+                  variant="ghost"
+                  size="md"
+                  icon={<RefreshCw size={16} className={isSuggestionsLoading ? 'animate-spin' : ''} />}
+                  onClick={handleRefreshSuggestions}
+                  disabled={isSuggestionsLoading}
+                  className="flex-shrink-0 text-text-secondary hover:text-primary hover:bg-primary/5 md:hidden"
+                />
+              )}
             </div>
-          )}
-
-          {/* Refresh button (suggestions tab only) */}
-          {activeTab === 'suggestions' && (
-            <div className="flex justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<RefreshCw size={14} className={isSuggestionsLoading ? 'animate-spin' : ''} />}
-                onClick={handleRefreshSuggestions}
-                disabled={isSuggestionsLoading}
-              >
-                Làm mới
-              </Button>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-3 md:p-4">
-          <>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="w-full">
             {/* All friends */}
             {activeTab === 'all' && (
               isLoading ? (
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {[...Array(2)].map((_, i) => (
                     <div key={i}>
-                      <div className="w-8 h-3 bg-bg-tertiary rounded mb-2 mx-1 animate-pulse" />
-                      <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                      <div className="w-12 h-4 bg-bg-tertiary rounded mb-3 mx-1 animate-pulse" />
+                      <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
                         {[...Array(3)].map((_, j) => <FriendItem.Skeleton key={j} />)}
                       </div>
                     </div>
@@ -230,15 +254,16 @@ const ContactsPage: React.FC = () => {
                 <EmptyState
                   icon={<Users size={32} className="text-text-tertiary" />}
                   title="Không tìm thấy bạn bè nào"
+                  subtitle="Thử tìm kiếm với tên khác hoặc thêm bạn mới"
                 />
               ) : (
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {groupedFriends.map(group => (
                     <div key={group.letter}>
-                      <p className="text-xs font-bold text-primary mb-2 px-1 uppercase tracking-widest">
+                      <p className="text-xs font-bold text-primary mb-3 px-2 uppercase tracking-widest opacity-80">
                         {group.letter}
                       </p>
-                      <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                      <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
                         {group.friends.map(friend => (
                           <FriendItem
                             key={friend.id}
@@ -258,17 +283,18 @@ const ContactsPage: React.FC = () => {
             {/* Received requests */}
             {activeTab === 'requests' && (
               isLoading ? (
-                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
                   {[...Array(3)].map((_, i) => <FriendRequestItem.Skeleton key={i} />)}
                 </div>
-              ) : receivedRequests.length === 0 ? (
+              ) : filteredReceivedRequests.length === 0 ? (
                 <EmptyState
                   icon={<Bell size={32} className="text-text-tertiary" />}
                   title="Không có lời mời kết bạn nào"
+                  subtitle={searchTerm ? "Không tìm thấy lời mời nào khớp với tìm kiếm" : "Những lời mời bạn nhận được sẽ hiển thị ở đây"}
                 />
               ) : (
-                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                  {receivedRequests.map(request => {
+                <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
+                  {filteredReceivedRequests.map(request => {
                     const sender = userCache[request.senderId];
                     return sender ? (
                       <FriendRequestItem
@@ -288,17 +314,18 @@ const ContactsPage: React.FC = () => {
             {/* Sent requests */}
             {activeTab === 'sent' && (
               isLoading ? (
-                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
                   {[...Array(3)].map((_, i) => <FriendRequestItem.Skeleton key={i} />)}
                 </div>
-              ) : sentRequests.length === 0 ? (
+              ) : filteredSentRequests.length === 0 ? (
                 <EmptyState
                   icon={<UserPlus size={32} className="text-text-tertiary" />}
                   title="Chưa gửi lời mời kết bạn nào"
+                  subtitle={searchTerm ? "Không tìm thấy lời mời nào khớp với tìm kiếm" : "Tìm kiếm bạn bè để gửi lời mời kết bạn"}
                 />
               ) : (
-                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
-                  {sentRequests.map(request => {
+                <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
+                  {filteredSentRequests.map(request => {
                     const receiver = userCache[request.receiverId];
                     return receiver ? (
                       <FriendRequestItem
@@ -317,17 +344,17 @@ const ContactsPage: React.FC = () => {
             {/* Suggestions */}
             {activeTab === 'suggestions' && (
               isSuggestionsLoading ? (
-                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
                   {[...Array(5)].map((_, i) => <SuggestionItem.Skeleton key={i} />)}
                 </div>
               ) : filteredSuggestions.length === 0 ? (
                 <EmptyState
                   icon={<Sparkles size={32} className="text-text-tertiary" />}
                   title="Chưa có gợi ý kết bạn nào"
-                  subtitle="Nhấn Làm mới để tạo gợi ý mới"
+                  subtitle="Nhấn Làm mới để cập nhật danh sách gợi ý"
                 />
               ) : (
-                <div className="bg-bg-primary rounded-2xl border border-border-light overflow-hidden">
+                <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
                   {filteredSuggestions.map(user => (
                     <SuggestionItem
                       key={user.id}
@@ -339,7 +366,7 @@ const ContactsPage: React.FC = () => {
                 </div>
               )
             )}
-          </>
+          </div>
         </div>
       </div>
 
@@ -374,12 +401,13 @@ const ContactsPage: React.FC = () => {
 
 /* ── Reusable empty state ── */
 const EmptyState: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({ icon, title, subtitle }) => (
-  <div className="flex flex-col items-center justify-center py-16 text-center">
-    <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4 border border-border-light">
-      {icon}
+  <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+    <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mb-6 border border-border-light shadow-inner relative">
+      <div className="absolute inset-0 bg-primary/5 rounded-full animate-pulse" />
+      <div className="relative z-10">{icon}</div>
     </div>
-    <p className="text-sm font-medium text-text-secondary">{title}</p>
-    {subtitle && <p className="text-xs text-text-tertiary mt-1">{subtitle}</p>}
+    <h3 className="text-base font-bold text-text-primary mb-2">{title}</h3>
+    {subtitle && <p className="text-sm text-text-tertiary max-w-xs leading-relaxed">{subtitle}</p>}
   </div>
 );
 

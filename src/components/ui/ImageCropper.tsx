@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { Modal, Button } from './index';
-import { ZoomIn, ZoomOut, RotateCcw, ImagePlus, Globe2, Users, Lock, ChevronDown } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, ImagePlus, Globe, Users, Lock, ChevronDown } from 'lucide-react';
 import { Visibility } from '../../../shared/types';
 import { Dropdown, DropdownItem } from './index';
 import { getCroppedImg } from '../../utils/imageUtils';
@@ -100,7 +100,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
               <Dropdown
                 trigger={
                   <button className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-primary hover:bg-bg-hover rounded-lg border border-border-light transition-all text-sm font-medium text-text-primary">
-                    {visibility === Visibility.PUBLIC && <Globe2 size={16} className="text-primary flex-shrink-0" />}
+                    {visibility === Visibility.PUBLIC && <Globe size={16} className="text-primary flex-shrink-0" />}
                     {visibility === Visibility.FRIENDS && <Users size={16} className="text-primary flex-shrink-0" />}
                     {visibility === Visibility.PRIVATE && <Lock size={16} className="text-primary flex-shrink-0" />}
                     <span>
@@ -114,7 +114,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                 align="right"
               >
                 <DropdownItem 
-                  icon={<Globe2 size={15} />} 
+                  icon={<Globe size={15} />} 
                   label="Công khai" 
                   onClick={() => setVisibility(Visibility.PUBLIC)}
                 />
