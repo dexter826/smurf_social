@@ -23,6 +23,7 @@ export { ForwardModal } from './modals/ForwardModal';
 export { SharePostModal } from './modals/SharePostModal';
 export { JoinGroupModal } from './modals/JoinGroupModal';
 export { QRCodeModal } from './modals/QRCodeModal';
+export { AiSummaryModal } from './modals/AiSummaryModal';
 
 
 export * from './MessengerSkeleton';

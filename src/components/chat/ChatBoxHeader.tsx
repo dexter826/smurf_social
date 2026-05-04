@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Video, Info, ChevronLeft } from 'lucide-react';
+import { Phone, Video, Info, ChevronLeft, Sparkles } from 'lucide-react';
 import { RtdbConversation, RtdbUserChat, User, UserStatus } from '../../../shared/types';
 import { Avatar, UserAvatar, UserStatusText, IconButton, BannedBadge } from '../ui';
 
@@ -14,13 +14,14 @@ interface ChatBoxHeaderProps {
   onInfoClick?: () => void;
   onCall?: () => void;
   onVideoCall?: () => void;
+  onAiClick?: () => void;
   canCall?: boolean;
 }
 
 /** Header của khung chat */
 const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
   conversation, participants, chatName, avatarSrc, partner,
-  usersMap, onBack, onInfoClick, onCall, onVideoCall, canCall = true,
+  usersMap, onBack, onInfoClick, onCall, onVideoCall, onAiClick, canCall = true,
 }) => (
   <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-4 h-16 border-b border-border-light bg-bg-primary transition-theme z-[var(--z-sticky)]">
     {/* Left Content */}
@@ -78,6 +79,14 @@ const ChatBoxHeaderInner: React.FC<ChatBoxHeaderProps> = ({
 
     {/* Right Actions */}
     <div className="flex items-center gap-0.5 flex-shrink-0">
+      <IconButton
+        onClick={onAiClick}
+        title="AI Assistant (Tóm tắt cuộc trò chuyện)"
+        variant="ghost"
+        className="text-primary hover:bg-primary/10"
+        icon={<Sparkles size={19} />}
+        size="md"
+      />
       {canCall && (
         <>
           <IconButton
