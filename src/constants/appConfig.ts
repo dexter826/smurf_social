@@ -58,6 +58,35 @@ export const VALIDATION = {
   USER_NAME_MAX_LENGTH: 50,
   INTEREST_MAX_COUNT: 10,
   INTEREST_MAX_LENGTH: 30,
+  SCHOOL_NAME_MAX_LENGTH: 100,
+} as const;
+
+/** Giới hạn người dùng */
+export const USER_LIMITS = {
+  MIN_AGE: 13,
+  MAX_AGE: 120,
+} as const;
+
+/** Hằng số thời gian */
+export const DATE_CONSTANTS = {
+  MS_IN_YEAR: 365.25 * 24 * 60 * 60 * 1000,
+} as const;
+
+/** Các mốc năm sinh cho các thế hệ */
+export const GENERATION_THRESHOLDS = {
+  ALPHA: 2013,
+  Z: 1997,
+  MILLENNIALS: 1981,
+  X: 1965,
+} as const;
+
+/** Đường dẫn lưu trữ Firebase Storage */
+export const STORAGE_PATHS = {
+  AVATARS: 'avatars',
+  COVERS: 'covers',
+  POSTS: 'posts',
+  COMMENTS: 'comments',
+  CHAT: 'chat',
 } as const;
 
 /** Giới hạn kích thước tệp tải lên */
@@ -126,3 +155,17 @@ const envConfig = getValidatedEnvConfig();
 export const API_ENDPOINTS = {
   PROVINCES: envConfig.api.provincesUrl,
 } as const;
+
+/** Cấu hình Giphy API */
+export const GIPHY_CONFIG = {
+  BASE_URL: 'https://api.giphy.com/v1/gifs',
+  API_KEY: import.meta.env.VITE_GIPHY_API_KEY as string,
+  LIMIT: '20',
+  RATING: 'pg',
+} as const;
+
+export const INTEREST_SUGGESTIONS = [
+  'Du lịch', 'Âm nhạc', 'Thể thao', 'Đọc sách', 'Gaming', 'Nấu ăn',
+  'Nhiếp ảnh', 'Phim ảnh', 'Fitness', 'Nghệ thuật', 'Công nghệ', 'Thời trang',
+  'Yoga', 'Cà phê', 'Bóng đá', 'Bơi lội', 'Vẽ tranh', 'Karaoke',
+];

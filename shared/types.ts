@@ -11,8 +11,12 @@ export enum UserStatus {
 export enum Gender {
     MALE = "male",
     FEMALE = "female",
-    NONE = "",
 }
+
+export const GENDER_LABELS: Record<Gender, string> = {
+    [Gender.MALE]: 'Nam',
+    [Gender.FEMALE]: 'Nữ',
+};
 
 export enum Visibility {
     FRIENDS = "friends",
@@ -123,6 +127,15 @@ export enum MaritalStatus {
     WIDOWED = "widowed",
     OTHER = "other",
 }
+
+export const MARITAL_STATUS_LABELS: Record<MaritalStatus, string> = {
+    [MaritalStatus.NONE]: 'Không tiết lộ',
+    [MaritalStatus.SINGLE]: 'Độc thân',
+    [MaritalStatus.MARRIED]: 'Đã kết hôn',
+    [MaritalStatus.DIVORCED]: 'Đã ly hôn',
+    [MaritalStatus.WIDOWED]: 'Góa',
+    [MaritalStatus.OTHER]: 'Phức tạp',
+};
 
 export enum Generation {
     UNKNOWN = "",
@@ -407,22 +420,3 @@ export interface BlockedUserEntry extends BlockOptions {
     updatedAt: Timestamp;
 }
 
-// Sub-collections interfaces
-export interface UserFeedItem {
-    postId: string;
-    authorId: string;
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
-}
-
-export interface UserFriendItem {
-    friendId: string;
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
-}
-
-export interface FCMTokenDoc {
-    fcmTokens: string[];
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
-}

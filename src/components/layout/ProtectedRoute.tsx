@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { UserStatus, UserRole } from '../../../shared/types';
 import { Loading } from '../ui';
 
 interface ProtectedRouteProps {
@@ -19,7 +20,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return <Navigate to="/verify-email" replace />;
   }
 
-  if (isBanned || user?.status === 'banned') {
+  if (isBanned || user?.status === UserStatus.BANNED) {
     return <Navigate to="/banned" replace />;
   }
 
@@ -27,7 +28,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return <Navigate to="/login" replace />;
   }
 
-  if (requireAdmin && user?.role !== 'admin') {
+  if (requireAdmin && user?.role !== UserRole.ADMIN) {
     return <Navigate to="/" replace />;
   }
 

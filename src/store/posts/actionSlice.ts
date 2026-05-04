@@ -55,7 +55,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
           posts: state.posts.map(p => p.id === postId ? { ...p, media: finalMedia } : p)
         };
       });
-      toast.success(TOAST_MESSAGES.POST.CREATE_SUCCESS);
+      toast.success(TOAST_MESSAGES.FEED.CREATE_SUCCESS);
     } catch (error: any) {
       console.error("[postStore] Lỗi đăng bài:", error);
       const msg = error?.message || 'Lỗi không xác định';
@@ -63,7 +63,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
         posts: state.posts.filter(p => p.id !== postId),
         uploadingStates: { ...state.uploadingStates, [postId]: { ...state.uploadingStates[postId], error: msg } }
       }));
-      toast.error(TOAST_MESSAGES.POST.CREATE_FAILED(msg));
+      toast.error(TOAST_MESSAGES.FEED.CREATE_FAILED(msg));
     } finally {
       previewMedia.forEach((m: MediaObject) => URL.revokeObjectURL(m.url));
     }
@@ -108,7 +108,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
             : state.selectedPost
         };
       });
-      toast.success(TOAST_MESSAGES.POST.UPDATE_SUCCESS);
+      toast.success(TOAST_MESSAGES.FEED.UPDATE_SUCCESS);
     } catch (error: any) {
       console.error("Lỗi cập nhật bài viết:", error);
       const msg = error?.message || 'Lỗi tải lên';
@@ -119,7 +119,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
           uploadingStates: { ...state.uploadingStates, [postId]: { ...state.uploadingStates[postId], error: msg } }
         }));
       }
-      toast.error(TOAST_MESSAGES.POST.UPDATE_FAILED(msg));
+      toast.error(TOAST_MESSAGES.FEED.UPDATE_FAILED(msg));
     } finally {
       previewMedia.forEach((m: MediaObject) => URL.revokeObjectURL(m.url));
     }
@@ -137,7 +137,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
 
     try {
       await postService.deletePost(postId, userId);
-      toast.success(TOAST_MESSAGES.POST.DELETE_SUCCESS);
+      toast.success(TOAST_MESSAGES.FEED.DELETE_SUCCESS);
     } catch (error) {
       if (snapshot) {
         set(state => ({
@@ -146,7 +146,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
         }));
       }
       console.error("Lỗi xóa bài viết:", error);
-      toast.error(TOAST_MESSAGES.POST.DELETE_FAILED);
+      toast.error(TOAST_MESSAGES.FEED.DELETE_FAILED);
       throw error;
     }
   },
@@ -221,7 +221,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       setSelectedPost(post);
     } catch (error) {
       console.error("[PostStore] Lỗi lấy chi tiết bài viết:", error);
-      toast.error('Không thể tải bài viết');
+      toast.error(TOAST_MESSAGES.FEED.LOAD_FAILED);
       setSelectedPost(null);
     } finally {
       loadingStore.setLoading('post.detail', false);

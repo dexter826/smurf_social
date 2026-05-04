@@ -11,15 +11,10 @@ import type { SearchableOption } from '../components/ui/SearchableSelect';
 import { AuthBrandingPanel } from '../components/layout/AuthBrandingPanel';
 import { onboardingSchema, OnboardingFormValues } from '../utils/validation';
 import { toast } from '../store/toastStore';
-import { API_ENDPOINTS, VALIDATION } from '../constants';
+import { API_ENDPOINTS, VALIDATION, INTEREST_SUGGESTIONS, TOAST_MESSAGES } from '../constants';
 
 
 
-const INTEREST_SUGGESTIONS = [
-  'Du lịch', 'Âm nhạc', 'Thể thao', 'Đọc sách', 'Gaming', 'Nấu ăn',
-  'Nhiếp ảnh', 'Phim ảnh', 'Fitness', 'Nghệ thuật', 'Công nghệ', 'Thời trang',
-  'Yoga', 'Cà phê', 'Bóng đá', 'Bơi lội', 'Vẽ tranh', 'Karaoke',
-];
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -64,7 +59,7 @@ const OnboardingPage: React.FC = () => {
     if (current.includes(tag)) return;
     
     if (current.length >= VALIDATION.INTEREST_MAX_COUNT) {
-      toast.error(`Bạn chỉ có thể chọn tối đa ${VALIDATION.INTEREST_MAX_COUNT} sở thích`);
+      toast.error(TOAST_MESSAGES.PROFILE.INTEREST_LIMIT(VALIDATION.INTEREST_MAX_COUNT));
       return;
     }
     
@@ -102,10 +97,10 @@ const OnboardingPage: React.FC = () => {
         location: data.location,
         interests: data.interests,
       });
-      toast.success('Hồ sơ đã sẵn sàng!');
+      toast.success(TOAST_MESSAGES.PROFILE.ONBOARDING_SUCCESS);
       navigate('/', { replace: true });
     } catch {
-      toast.error('Không thể cập nhật, vui lòng thử lại');
+      toast.error(TOAST_MESSAGES.PROFILE.ONBOARDING_FAILED);
     } finally {
       setIsSubmitting(false);
     }

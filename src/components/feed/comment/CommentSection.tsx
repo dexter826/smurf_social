@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { X, MessageCircle, ChevronDown, ListFilter } from 'lucide-react';
 import { Button, ConfirmDialog, UploadProgress, Dropdown, DropdownItem } from '../../ui';
-import { CONFIRM_MESSAGES } from '../../../constants';
+import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../../constants';
 import { toast } from '../../../store/toastStore';
 import { Comment, User, ReportType, MediaObject } from '../../../../shared/types';
 
@@ -153,8 +153,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       await deleteComment(postId, commentToDelete.id, currentUser.id, commentToDelete.parentId);
       setCommentToDelete(null);
+      toast.success(TOAST_MESSAGES.FEED.DELETE_COMMENT_SUCCESS);
     } catch {
-      toast.error('Không thể xóa bình luận này');
+      toast.error(TOAST_MESSAGES.FEED.DELETE_COMMENT_FAILED);
     }
   }, [commentToDelete, postId, currentUser.id, deleteComment]);
 

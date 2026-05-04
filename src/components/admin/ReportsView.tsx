@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Flag, Clock, CheckCircle, XCircle, AlertTriangle, FileText, MessageSquare, User as UserIcon, Trash2, Lock, X } from 'lucide-react';
 import { Report, ReportStatus, ReportType } from '../../../shared/types';
 import { UserAvatar, Skeleton, Select, IconButton, ConfirmDialog } from '../ui';
-import { REPORT_CONFIG, TOAST_MESSAGES } from '../../constants';
+import { REPORT_CONFIG, TOAST_MESSAGES, CONFIRM_MESSAGES } from '../../constants';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { useAdminReports } from '../../hooks/useAdminReports';
 import { reportService } from '../../services/reportService';
@@ -11,9 +11,21 @@ import { toast } from '../../store/toastStore';
 type ActionType = 'resolve' | 'reject' | 'ban';
 
 const ACTION_CONFIRM: Record<ActionType, { title: string; message: string; variant: 'danger' | 'primary' }> = {
-  resolve: { title: 'Xác nhận xóa nội dung', message: 'Nội dung vi phạm sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.', variant: 'danger' },
-  reject: { title: 'Bỏ qua báo cáo', message: 'Báo cáo sẽ được đóng lại, nội dung vẫn được giữ nguyên.', variant: 'primary' },
-  ban: { title: 'Khóa tài khoản', message: 'Tài khoản người dùng sẽ bị KHÓA ngay lập tức.', variant: 'danger' },
+  resolve: { 
+    title: CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.TITLE, 
+    message: CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.MESSAGE, 
+    variant: 'danger' 
+  },
+  reject: { 
+    title: CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.TITLE, 
+    message: CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.MESSAGE, 
+    variant: 'primary' 
+  },
+  ban: { 
+    title: CONFIRM_MESSAGES.ADMIN.BAN_USER.TITLE, 
+    message: CONFIRM_MESSAGES.ADMIN.BAN_USER.MESSAGE, 
+    variant: 'danger' 
+  },
 };
 
 interface ReportsViewProps {

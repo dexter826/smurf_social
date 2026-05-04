@@ -1,3 +1,5 @@
+import { IMAGE_COMPRESSION } from '../constants/appConfig';
+
 const AVATAR_GRADIENTS = [
   ['#FF6B6B', '#FF8E53'],
   ['#4E54C8', '#8F94FB'],
@@ -40,9 +42,13 @@ interface CompressionOptions {
 // Nén ảnh, bỏ qua nếu đã nhỏ hơn limit
 export const compressImage = async (
   file: File,
-  options: CompressionOptions = {}
+  options: CompressionOptions = IMAGE_COMPRESSION.POST
 ): Promise<File> => {
-  const { maxSizeMB = 1, maxWidthOrHeight = 1920, quality = 0.8 } = options;
+  const { 
+    maxSizeMB = IMAGE_COMPRESSION.POST.maxSizeMB, 
+    maxWidthOrHeight = IMAGE_COMPRESSION.POST.maxWidthOrHeight, 
+    quality = 0.8 
+  } = options;
 
   // Bỏ qua nếu đã đủ nhỏ
   const maxBytes = maxSizeMB * 1024 * 1024;

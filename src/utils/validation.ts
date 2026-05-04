@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG, MEDIA_CONSTRAINTS } from '../constants/appConfig';
+import { VALIDATION, GROUP_LIMITS, REPORT_CONFIG, MEDIA_CONSTRAINTS, USER_LIMITS, DATE_CONSTANTS } from '../constants/appConfig';
 import { ReportReason, Visibility, Gender, MaritalStatus, PostType, Generation } from '../../shared/types';
 
 // Schema cho Đăng nhập
@@ -16,12 +16,12 @@ export const loginSchema = z.object({
 const dobValidation = z.number({ message: 'Vui lòng chọn ngày sinh' })
   .refine((val) => val <= Date.now(), 'Ngày sinh không được là ngày trong tương lai')
   .refine((val) => {
-    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
-    return age >= 13;
-  }, 'Bạn phải từ 13 tuổi trở lên')
+    const age = (Date.now() - val) / DATE_CONSTANTS.MS_IN_YEAR;
+    return age >= USER_LIMITS.MIN_AGE;
+  }, `Bạn phải từ ${USER_LIMITS.MIN_AGE} tuổi trở lên`)
   .refine((val) => {
-    const age = (Date.now() - val) / (365.25 * 24 * 60 * 60 * 1000);
-    return age <= 120;
+    const age = (Date.now() - val) / DATE_CONSTANTS.MS_IN_YEAR;
+    return age <= USER_LIMITS.MAX_AGE;
   }, 'Ngày sinh không hợp lệ');
 
 // Schema cho Đăng ký
@@ -59,10 +59,10 @@ export const profileSchema = z.object({
     .max(VALIDATION.BIO_MAX_LENGTH, `Giới thiệu không được quá ${VALIDATION.BIO_MAX_LENGTH} ký tự`)
     .optional(),
   location: z.string().optional(),
-  gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.NONE]).optional(),
+  gender: z.nativeEnum(Gender).optional(),
   dob: dobValidation,
-  school: z.string().max(100, 'Trường học không được quá 100 ký tự').optional(),
-  maritalStatus: z.enum([MaritalStatus.NONE, MaritalStatus.SINGLE, MaritalStatus.MARRIED, MaritalStatus.DIVORCED, MaritalStatus.WIDOWED, MaritalStatus.OTHER]).optional(),
+  school: z.string().max(VALIDATION.SCHOOL_NAME_MAX_LENGTH, `Trường học không được quá ${VALIDATION.SCHOOL_NAME_MAX_LENGTH} ký tự`).optional(),
+  maritalStatus: z.nativeEnum(MaritalStatus).optional(),
   interests: z.array(z.string()).optional(),
   generation: z.nativeEnum(Generation).optional(),
   profilePrivacy: z.object({

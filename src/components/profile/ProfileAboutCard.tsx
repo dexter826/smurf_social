@@ -3,7 +3,7 @@ import {
   Cake, MapPin, GraduationCap, Heart, CalendarDays, 
   Mail, Globe, Users as UsersIcon, Lock 
 } from 'lucide-react';
-import { Gender, MaritalStatus, User, Visibility } from '../../../shared/types';
+import { Gender, MaritalStatus, User, Visibility, GENDER_LABELS, MARITAL_STATUS_LABELS } from '../../../shared/types';
 import { toDate } from '../../utils/dateUtils';
 
 interface ProfileAboutCardProps {
@@ -49,7 +49,7 @@ export const ProfileAboutCard: React.FC<ProfileAboutCardProps> = ({ profile, isO
               <span className="flex-1">
                 Giới tính{' '}
                 <strong className="text-text-primary font-medium">
-                  {profile.gender === Gender.MALE ? 'Nam' : 'Nữ'}
+                  {GENDER_LABELS[profile.gender as Gender]}
                 </strong>
               </span>
               <PrivacyIcon field="gender" />
@@ -121,11 +121,7 @@ export const ProfileAboutCard: React.FC<ProfileAboutCardProps> = ({ profile, isO
               <span className="flex-1">
                 Trạng thái:{' '}
                 <strong className="text-text-primary font-medium">
-                  {profile.maritalStatus === MaritalStatus.SINGLE ? 'Độc thân vui vẻ' :
-                   profile.maritalStatus === MaritalStatus.MARRIED ? 'Đã kết hôn' :
-                   profile.maritalStatus === MaritalStatus.DIVORCED ? 'Đã ly hôn' :
-                   profile.maritalStatus === MaritalStatus.WIDOWED ? 'Chăn đơn gối chiếc' :
-                   'Mối quan hệ phức tạp'}
+                  {MARITAL_STATUS_LABELS[profile.maritalStatus]}
                 </strong>
               </span>
               <PrivacyIcon field="maritalStatus" />

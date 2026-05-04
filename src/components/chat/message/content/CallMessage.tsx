@@ -1,6 +1,6 @@
 import React from 'react';
 import { PhoneIncoming, Phone, PhoneMissed, Video as VideoIcon } from 'lucide-react';
-import { RtdbMessage } from '../../../../../shared/types';
+import { RtdbMessage, CallMessagePayload } from '../../../../../shared/types';
 
 interface CallMessageProps {
   message: { id: string; data: RtdbMessage };
@@ -13,11 +13,7 @@ interface CallMessageProps {
 export const CallMessage: React.FC<CallMessageProps> = ({ 
   message, isMe, isGroup = false, onCall, onJoinCall 
 }) => {
-  let parsed: { 
-    callType: 'voice' | 'video'; 
-    status: 'ended' | 'missed' | 'rejected' | 'started'; 
-    duration?: number 
-  };
+  let parsed: CallMessagePayload;
   
   try { 
     parsed = JSON.parse(message.data.content); 

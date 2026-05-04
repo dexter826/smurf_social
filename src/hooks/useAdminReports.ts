@@ -78,7 +78,7 @@ export function useAdminReports() {
           console.error('[useAdminReports] Subscription error:', error);
           setLoading('admin.reports', false);
           if (error.code === 'permission-denied') {
-            toast.error("Bạn không có quyền truy cập dữ liệu quản trị.");
+            toast.error(TOAST_MESSAGES.ADMIN.ACCESS_DENIED);
           } else {
             toast.error(TOAST_MESSAGES.REPORT.LOAD_FAILED);
           }

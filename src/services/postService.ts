@@ -17,15 +17,16 @@ import {
   DocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Post, Visibility, ReactionType, ReactionDoc, PostStatus, MediaObject, PostType } from '../../shared/types'
+import { Post, Visibility, ReactionType, ReactionDoc, PostStatus, MediaObject, PostType, UserStatus } from '../../shared/types'
 import { batchGetUsers } from '../utils/batchUtils';
 import { userService } from './userService';
-import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
+import { PAGINATION, IMAGE_COMPRESSION, STORAGE_PATHS } from '../constants';
 import { compressImage, isImageFile } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback, deleteStorageFiles, generateVideoThumbnail } from '../utils/uploadUtils';
 import { convertDoc, convertDocs } from '../utils/firebaseUtils';
 import { getSafeMillis } from '../utils/timestampHelpers';
+import { filterBlockedItems } from '../utils/blockUtils';
 import {
   validatePostContent,
   validateImageFile,
@@ -44,7 +45,6 @@ function getVisibilityFilter(isOwner: boolean, isFriend: boolean): Visibility[] 
 }
 
 export const postService = {
-  /** Lấy danh sách bài viết từ Feed */
   getFeedFromFanout: async (
     userId: string,
     limitCount: number = PAGINATION.FEED_POSTS,
@@ -70,33 +70,18 @@ export const postService = {
       }
 
       const postIds = feedSnapshot.docs.map(doc => doc.data().postId);
-
-      const posts: Post[] = [];
-
-      const postPromises = postIds.map(id => getDoc(doc(db, 'posts', id)));
-      const postResults = await Promise.allSettled(postPromises);
-
-      for (const result of postResults) {
-        if (result.status === 'fulfilled' && result.value.exists()) {
-          const postData = result.value.data();
-          if (postData.status === PostStatus.ACTIVE) {
-            posts.push(convertDoc<Post>(result.value));
-          }
-        }
-      }
+      const postsQuery = query(
+        collection(db, 'posts'),
+        where('__name__', 'in', postIds),
+        where('status', '==', PostStatus.ACTIVE)
+      );
+      const postsSnapshot = await getDocs(postsQuery);
+      const posts = convertDocs<Post>(postsSnapshot.docs);
 
       posts.sort((a, b) => getSafeMillis(b.createdAt) - getSafeMillis(a.createdAt));
 
       const blockedUsersMap = await userService.getBlockedUsers(userId);
-      const hiddenAuthorIds = Object.keys(blockedUsersMap).filter(
-        id => blockedUsersMap[id].hideTheirActivity
-      );
-      const authorIds = [...new Set(posts.map(p => p.authorId))];
-      const usersMap = await batchGetUsers(authorIds);
-      const filteredPosts = posts.filter(p =>
-        usersMap[p.authorId]?.status !== 'banned' &&
-        !hiddenAuthorIds.includes(p.authorId)
-      );
+      const filteredPosts = filterBlockedItems(posts, blockedUsersMap);
 
       const hasMore = filteredPosts.length > limitCount;
       const finalPosts = filteredPosts.slice(0, limitCount);
@@ -210,7 +195,7 @@ export const postService = {
       }
 
       const user = await userService.getUserById(userId);
-      if (user?.status === 'banned') {
+      if (user?.status === UserStatus.BANNED) {
         return { posts: [], lastDoc: null };
       }
 
@@ -276,7 +261,7 @@ export const postService = {
       const currentUser = await userService.getUserById(currentUserId);
       if (isCancelled) return;
 
-      if (user?.status === 'banned' || currentUser?.status === 'banned') {
+      if (user?.status === UserStatus.BANNED || currentUser?.status === UserStatus.BANNED) {
         callback('remove', []);
         return;
       }
@@ -540,7 +525,7 @@ export const postService = {
         const typeFolder = isVideo ? 'videos' : 'images';
         const createdAt = Date.now();
         const fileName = `${createdAt}_${file.name}`;
-        const path = `posts/${userId}/${typeFolder}/${fileName}`;
+        const path = `${STORAGE_PATHS.POSTS}/${userId}/${typeFolder}/${fileName}`;
 
         let thumbnailUrl: string | undefined = undefined;
 

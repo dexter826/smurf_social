@@ -120,7 +120,7 @@ export const PostModal: React.FC<PostModalProps> = ({
     const currentTotal = formData.media.length + pendingFiles.length;
     const remainingSlots = MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST - currentTotal;
     if (remainingSlots <= 0) {
-      toast.error(TOAST_MESSAGES.POST.MEDIA_LIMIT(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST));
+      toast.error(TOAST_MESSAGES.FEED.MEDIA_LIMIT(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST));
       return;
     }
 
@@ -134,11 +134,11 @@ export const PostModal: React.FC<PostModalProps> = ({
     let processedPreviews = newPreviews;
 
     if (newVideos.length > 0 && remainingVideoSlots <= 0) {
-      toast.error(TOAST_MESSAGES.POST.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
+      toast.error(TOAST_MESSAGES.FEED.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
       processedFiles = validFiles.filter(f => !f.type.startsWith('video/'));
       processedPreviews = newPreviews.filter(p => p.type !== 'video');
     } else if (newVideos.length > remainingVideoSlots) {
-      toast.error(TOAST_MESSAGES.POST.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
+      toast.error(TOAST_MESSAGES.FEED.VIDEO_LIMIT(MEDIA_CONSTRAINTS.MAX_VIDEOS_PER_POST));
       let videosAdded = 0;
       const tempFiles: File[] = [];
       const tempPreviews: { url: string; type: 'image' | 'video' }[] = [];
@@ -157,7 +157,7 @@ export const PostModal: React.FC<PostModalProps> = ({
 
     let filesToAdd = processedFiles;
     if (processedFiles.length > remainingSlots) {
-      toast.error(TOAST_MESSAGES.POST.MEDIA_LIMIT(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST));
+      toast.error(TOAST_MESSAGES.FEED.MEDIA_LIMIT(MEDIA_CONSTRAINTS.MAX_IMAGES_PER_POST));
       processedPreviews.slice(remainingSlots).forEach(p => URL.revokeObjectURL(p.url));
       filesToAdd = processedFiles.slice(0, remainingSlots);
       processedPreviews = processedPreviews.slice(0, remainingSlots);

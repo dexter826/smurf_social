@@ -11,6 +11,7 @@ import { friendService } from '../services/friendService';
 import { useConversationMemberSettings } from '../hooks/chat/useConversationMemberSettings';
 import { useCallManager } from '../hooks/chat/useCallManager';
 import { toast } from '../store/toastStore';
+import { TOAST_MESSAGES } from '../constants';
 import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
@@ -117,8 +118,8 @@ const ChatPage: React.FC = () => {
       : (partner ? [partner.id] : []);
     if (recipientIds.length === 0) return;
     if (!isGroup) {
-      if (isCallBlockedByMe) { toast.error('Bạn đã chặn cuộc gọi với người dùng này.'); return; }
-      if (isCallBlockedByPartner) { toast.error('Không thể thực hiện cuộc gọi cho người dùng này.'); return; }
+      if (isCallBlockedByMe) { toast.error(TOAST_MESSAGES.CHAT.CALL_BLOCKED_BY_ME); return; }
+      if (isCallBlockedByPartner) { toast.error(TOAST_MESSAGES.CHAT.CALL_BLOCKED_BY_PARTNER); return; }
     }
     const result = await startCall(
       recipientIds, currentUser.fullName, currentUser.avatar?.url ?? '',
@@ -129,12 +130,12 @@ const ChatPage: React.FC = () => {
     );
     if (result && !result.success) {
       const messages: Record<string, string> = {
-        busy: 'Người dùng này hiện đang bận.',
-        blocked: 'Không thể thực hiện cuộc gọi với người dùng này.',
-        not_friend: 'Chỉ có thể gọi cho bạn bè.',
-        already_in_call: 'Bạn đang trong một cuộc gọi khác.',
+        busy: TOAST_MESSAGES.CHAT.CALL_BUSY,
+        blocked: TOAST_MESSAGES.CHAT.CALL_BLOCKED_BY_PARTNER,
+        not_friend: TOAST_MESSAGES.CHAT.CALL_NOT_FRIEND,
+        already_in_call: TOAST_MESSAGES.CHAT.CALL_ALREADY_IN,
       };
-      toast.error(messages[result.reason ?? ''] ?? 'Không thể thực hiện cuộc gọi.');
+      toast.error(messages[result.reason ?? ''] ?? TOAST_MESSAGES.CHAT.CALL_FAILED);
     }
   };
 

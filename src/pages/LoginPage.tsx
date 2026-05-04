@@ -62,11 +62,11 @@ const LoginPage: React.FC = () => {
       setRedirectTo(state.redirectTo);
     }
     if (state.source === 'register') {
-      setInfoMessage('Tài khoản đã tạo. Vui lòng xác thực email để tiếp tục.');
+      setInfoMessage(TOAST_MESSAGES.AUTH.REGISTER_SUCCESS);
       setShowResend(true);
     }
     if (state.reason === 'verify_requires_login') {
-      setInfoMessage('Vui lòng đăng nhập để xác thực email.');
+      setInfoMessage(TOAST_MESSAGES.AUTH.ERRORS.EMAIL_NOT_VERIFIED);
       setShowResend(false);
     }
     navigate(location.pathname, { replace: true, state: null });
@@ -76,20 +76,22 @@ const LoginPage: React.FC = () => {
     const err = error as { code?: string; message?: string };
     if (err.code === 'auth/email-not-verified') {
       setAuthError(null);
-      setInfoMessage('Email chưa được xác thực. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác thực.');
+      setInfoMessage(TOAST_MESSAGES.AUTH.ERRORS.EMAIL_NOT_VERIFIED);
       setShowResend(true);
       return;
     }
     if (err.code === 'auth/user-disabled') { navigate('/banned'); return; }
+    
     const messages: Record<string, string> = {
-      'auth/invalid-email': 'Email không hợp lệ.',
-      'auth/user-not-found': 'Email hoặc mật khẩu không chính xác.',
-      'auth/wrong-password': 'Email hoặc mật khẩu không chính xác.',
-      'auth/invalid-credential': 'Email hoặc mật khẩu không chính xác.',
-      'auth/email-already-in-use': 'Email này đã được sử dụng.',
-      'auth/weak-password': 'Mật khẩu quá yếu.',
+      'auth/invalid-email': TOAST_MESSAGES.AUTH.ERRORS.INVALID_EMAIL,
+      'auth/user-not-found': TOAST_MESSAGES.AUTH.ERRORS.USER_NOT_FOUND,
+      'auth/wrong-password': TOAST_MESSAGES.AUTH.ERRORS.WRONG_PASSWORD,
+      'auth/invalid-credential': TOAST_MESSAGES.AUTH.ERRORS.INVALID_CREDENTIAL,
+      'auth/email-already-in-use': TOAST_MESSAGES.AUTH.ERRORS.EMAIL_ALREADY_IN_USE,
+      'auth/weak-password': TOAST_MESSAGES.AUTH.ERRORS.WEAK_PASSWORD,
     };
-    const message = (err.code && messages[err.code]) || err.message || 'Thao tác thất bại.';
+    
+    const message = (err.code && messages[err.code]) || err.message || TOAST_MESSAGES.COMMON.ERROR;
     setAuthError(message);
   };
 
@@ -107,7 +109,8 @@ const LoginPage: React.FC = () => {
     try {
       setAuthError(null); setInfoMessage(null); setShowResend(false);
       const gen = calculateGeneration(data.dob);
-      await register(data.email, data.password, data.name, data.dob, gen);
+      await register(data.email, data.password, data.name, data.dob, gen);      
+      localStorage.setItem('remembered_email', data.email);
       toast.success(TOAST_MESSAGES.AUTH.REGISTER_SUCCESS);
       navigate('/verify-email', { state: { source: 'register' } });
     } catch (error) { handleAuthError(error); }
@@ -119,12 +122,10 @@ const LoginPage: React.FC = () => {
       await resetPassword(data.email);
       toast.success(TOAST_MESSAGES.AUTH.RESET_PASSWORD_SUCCESS);
       setVerificationSent(true);
-    } catch (error: unknown) {
-      const err = error as { code?: string };
-      const message = err.code === 'auth/user-not-found'
-        ? 'Email này chưa được đăng ký.'
-        : 'Có lỗi xảy ra khi gửi email.';
-      toast.error(message);
+    } catch (error: any) {
+      toast.error(error.code === 'auth/user-not-found'
+        ? TOAST_MESSAGES.AUTH.ERRORS.USER_NOT_FOUND
+        : TOAST_MESSAGES.AUTH.SEND_EMAIL_FAILED);
     }
   };
 
@@ -203,7 +204,7 @@ const LoginPage: React.FC = () => {
                 {verificationSent && (
                   <div className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-xl animate-fade-in">
                     <CheckCircle size={17} className="text-success shrink-0" />
-                    <p className="text-xs font-medium text-success">Email đặt lại mật khẩu đã được gửi!</p>
+                    <p className="text-xs font-medium text-success">Link đặt lại mật khẩu đã được gửi!</p>
                   </div>
                 )}
                 <Input

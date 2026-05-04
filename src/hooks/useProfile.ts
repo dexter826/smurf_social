@@ -71,7 +71,7 @@ export const useProfile = () => {
     }
 
     if (block.isMessageBlockedByPartner) {
-      toast.error("Bạn không thể nhắn tin cho người dùng này do cài đặt quyền riêng tư.");
+      toast.error(TOAST_MESSAGES.CHAT.BLOCKED_USER);
       return;
     }
 
@@ -81,7 +81,7 @@ export const useProfile = () => {
       navigate(`/?conv=${convId}`);
     } catch (error: any) {
       console.error('[handleMessage] Lỗi:', error);
-      toast.error("Không thể khởi tạo cuộc trò chuyện.");
+      toast.error(TOAST_MESSAGES.CHAT.INIT_FAILED);
     }
   }, [currentUser, profile, navigate, block.isMessageBlockedByPartner]);
 

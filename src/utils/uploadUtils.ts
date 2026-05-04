@@ -21,7 +21,7 @@ export const validateFile = (file: File, type: FileLimitType): { isValid: boolea
     if (!isVideo) {
       return {
         isValid: false,
-        error: 'Chỉ hỗ trợ định dạng file video'
+        error: TOAST_MESSAGES.MEDIA.INVALID_VIDEO_FORMAT
       };
     }
   }
@@ -40,8 +40,6 @@ export const validateFile = (file: File, type: FileLimitType): { isValid: boolea
   return { isValid: true };
 };
 
-// Duy trì alias cho tương thích ngược
-export const validateFileSize = validateFile;
 
 
 export interface UploadProgress {

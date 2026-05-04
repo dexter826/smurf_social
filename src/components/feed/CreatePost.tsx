@@ -32,8 +32,8 @@ export const CreatePost: React.FC<CreatePostProps> & { Skeleton: React.FC } = ({
     let selectedFiles = files;
     if (files.length > limit) {
       toast.error(isVideo
-        ? TOAST_MESSAGES.POST.VIDEO_LIMIT(limit)
-        : TOAST_MESSAGES.POST.MEDIA_LIMIT(limit)
+        ? TOAST_MESSAGES.FEED.VIDEO_LIMIT(limit)
+        : TOAST_MESSAGES.FEED.MEDIA_LIMIT(limit)
       );
       selectedFiles = files.slice(0, limit);
     }

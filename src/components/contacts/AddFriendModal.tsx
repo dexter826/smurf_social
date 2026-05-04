@@ -109,7 +109,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
       navigate(`/?conv=${convId}`);
     } catch (error: any) {
       console.error('[handleMessage] Lỗi:', error);
-      toast.error("Không thể khởi tạo cuộc trò chuyện.");
+      toast.error(TOAST_MESSAGES.CHAT.INIT_FAILED);
     }
   };
 

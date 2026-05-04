@@ -9,6 +9,7 @@ import { Visibility, MediaObject, Post } from '../../shared/types';
 import { useFeed, usePostNavigation } from '../hooks';
 import { ConfirmDialog } from '../components/ui';
 import { useFriendIds } from '../hooks/utils';
+import { CONFIRM_MESSAGES } from '../constants';
 
 const FeedPage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
@@ -134,9 +135,9 @@ const FeedPage: React.FC = () => {
         isOpen={!!postToDelete}
         onClose={() => setPostToDelete(null)}
         onConfirm={handleDeletePost}
-        title="Xóa bài viết"
-        message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác."
-        confirmLabel="Xóa ngay"
+        title={CONFIRM_MESSAGES.FEED.DELETE_POST.TITLE}
+        message={CONFIRM_MESSAGES.FEED.DELETE_POST.MESSAGE}
+        confirmLabel={CONFIRM_MESSAGES.FEED.DELETE_POST.CONFIRM}
         variant="danger"
       />
     </div>

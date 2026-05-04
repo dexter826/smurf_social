@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { onAuthStateChanged } from "firebase/auth";
 import { onSnapshot, doc, Timestamp } from 'firebase/firestore';
 import { auth, db } from "../firebase/config";
-import { User, BlockOptions, UserSettings, Visibility, Generation, MediaObject } from "../../shared/types";
+import { User, BlockOptions, UserSettings, Visibility, Generation, MediaObject, UserStatus, UserRole } from "../../shared/types";
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
 import { friendService } from "../services/friendService";
@@ -78,7 +78,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       ]);
 
       if (userData) {
-        if (userData.status === 'banned') {
+        if (userData.status === UserStatus.BANNED) {
           await authService.logout();
           const err = new Error("Account banned") as Error & { code?: string };
           err.code = 'auth/user-disabled';
@@ -180,7 +180,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             userService.getUserSettings(firebaseUser.uid)
           ]);
           if (userData) {
-            if (userData.status === 'banned') {
+            if (userData.status === UserStatus.BANNED) {
               set({ user: userData, isBanned: true, isInitialized: true });
               await get().logout(true);
               return;
@@ -331,7 +331,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       userUnsubscribe = userService.subscribeToUser(
         uid,
         async (updatedUser) => {
-          if (updatedUser.status === 'banned') {
+          if (updatedUser.status === UserStatus.BANNED) {
             if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
             if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
 
@@ -391,7 +391,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           ]);
 
           if (userData) {
-            if (userData.status === 'banned') {
+            if (userData.status === UserStatus.BANNED) {
               set({ user: userData, isInitialized: true, isBanned: true });
               await get().logout(true);
               return;

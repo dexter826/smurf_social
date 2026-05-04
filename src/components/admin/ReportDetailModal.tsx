@@ -14,7 +14,7 @@ import { postService } from '../../services/postService';
 import { commentService } from '../../services/commentService';
 import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, MediaViewer } from '../ui';
 import { PostMediaGrid } from '../feed/shared/PostMediaGrid';
-import { REPORT_CONFIG, TOAST_MESSAGES } from '../../constants';
+import { REPORT_CONFIG, TOAST_MESSAGES, CONFIRM_MESSAGES } from '../../constants';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
 import { toast } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
@@ -41,10 +41,26 @@ const TYPE_CONFIG: Record<ReportType, { label: string; icon: React.ReactNode; co
 };
 
 const ACTION_CONFIRM: Record<ActionType, { title: string; message: string; variant: 'danger' | 'primary' }> = {
-  resolve: { title: 'Xác nhận xóa nội dung', message: 'Nội dung vi phạm sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.', variant: 'danger' },
-  reject: { title: 'Bỏ qua báo cáo', message: 'Báo cáo sẽ được đóng lại, nội dung vẫn được giữ nguyên.', variant: 'primary' },
-  warn: { title: 'Gửi cảnh báo', message: 'Người dùng sẽ nhận được cảnh báo về hành vi vi phạm.', variant: 'primary' },
-  ban: { title: 'Khóa tài khoản', message: 'Tài khoản sẽ bị KHÓA và đăng xuất khỏi mọi thiết bị ngay lập tức.', variant: 'danger' },
+  resolve: { 
+    title: CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.TITLE, 
+    message: CONFIRM_MESSAGES.ADMIN.RESOLVE_REPORT.MESSAGE, 
+    variant: 'danger' 
+  },
+  reject: { 
+    title: CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.TITLE, 
+    message: CONFIRM_MESSAGES.ADMIN.REJECT_REPORT.MESSAGE, 
+    variant: 'primary' 
+  },
+  warn: { 
+    title: CONFIRM_MESSAGES.ADMIN.WARN_USER.TITLE, 
+    message: CONFIRM_MESSAGES.ADMIN.WARN_USER.MESSAGE, 
+    variant: 'primary' 
+  },
+  ban: { 
+    title: CONFIRM_MESSAGES.ADMIN.BAN_USER.TITLE, 
+    message: CONFIRM_MESSAGES.ADMIN.BAN_USER.MESSAGE, 
+    variant: 'danger' 
+  },
 };
 
 /** Badge hiển thị trạng thái báo cáo */

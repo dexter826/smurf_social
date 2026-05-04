@@ -36,6 +36,8 @@ const EmailVerificationPage: React.FC = () => {
     try {
       await checkVerificationStatus();
       if (!useAuthStore.getState().isPendingVerification) {
+        const email = auth.currentUser?.email;
+        if (email) localStorage.setItem('remembered_email', email);
         toast.success(TOAST_MESSAGES.AUTH.VERIFY_EMAIL_SUCCESS);
         navigate('/onboarding');
       } else {

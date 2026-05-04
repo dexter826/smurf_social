@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Timestamp } from 'firebase/firestore';
 import { X } from 'lucide-react';
-import { User, Gender, MaritalStatus, Generation } from '../../../shared/types';
+import { User, Gender, MaritalStatus, Generation, GENDER_LABELS, MARITAL_STATUS_LABELS } from '../../../shared/types';
 import { Button, Input, TextArea, Select, DatePicker, Modal, SearchableSelect } from '../ui';
 import type { SearchableOption } from '../ui/SearchableSelect';
 import { toDate } from '../../utils/dateUtils';
@@ -22,14 +22,15 @@ interface EditProfileModalProps {
   onSave: (data: Partial<User>) => Promise<void>;
 }
 
-const MARITAL_STATUS_OPTIONS = [
-  { value: MaritalStatus.NONE, label: 'Không muốn nói' },
-  { value: MaritalStatus.SINGLE, label: 'Độc thân' },
-  { value: MaritalStatus.MARRIED, label: 'Đã kết hôn' },
-  { value: MaritalStatus.DIVORCED, label: 'Đã ly hôn' },
-  { value: MaritalStatus.WIDOWED, label: 'Góa' },
-  { value: MaritalStatus.OTHER, label: 'Khác' },
-];
+const MARITAL_STATUS_OPTIONS = Object.entries(MARITAL_STATUS_LABELS).map(([value, label]) => ({
+  value: value as MaritalStatus,
+  label
+}));
+
+const GENDER_OPTIONS = Object.entries(GENDER_LABELS).map(([value, label]) => ({
+  value: value as Gender,
+  label
+}));
 
 
 
@@ -246,10 +247,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <Select
                 value={formData.gender || ''}
                 onChange={(val) => setValue('gender', val as Gender, { shouldDirty: true })}
-                options={[
-                  { value: 'male', label: 'Nam' },
-                  { value: 'female', label: 'Nữ' },
-                ]}
+                options={GENDER_OPTIONS}
                 placeholder="Chọn giới tính"
                 size="lg"
               />

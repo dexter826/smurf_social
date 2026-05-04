@@ -30,7 +30,7 @@ const JoinGroupPage: React.FC = () => {
 
     if (!token) {
       hasHandledRef.current = true;
-      setErrorText('Link tham gia không hợp lệ.');
+      setErrorText(TOAST_MESSAGES.GROUP.INVALID_LINK);
       return;
     }
 

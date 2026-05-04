@@ -20,13 +20,14 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Comment, ReactionType, ReactionDoc, CommentStatus, MediaObject } from '../../shared/types'
-import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
+import { Comment, ReactionType, ReactionDoc, CommentStatus, MediaObject, UserStatus } from '../../shared/types'
+import { PAGINATION, IMAGE_COMPRESSION, STORAGE_PATHS } from '../constants';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { uploadWithProgress } from '../utils/uploadUtils';
 import { withRetry } from '../utils/retryUtils';
 import { convertDoc, convertDocs } from '../utils/firebaseUtils';
+import { filterBlockedItems } from '../utils/blockUtils';
 import {
   validateCommentContent,
   validateImageFile,
@@ -70,8 +71,7 @@ export const commentService = {
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-      const comments = convertDocs<Comment>(docsToProcess)
-        .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+        const comments = filterBlockedItems(convertDocs<Comment>(docsToProcess), undefined, hiddenActivityUserIds, usersMap as any);
 
       return {
         comments,
@@ -107,8 +107,7 @@ export const commentService = {
       const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-      const replies = convertDocs<Comment>(docsToProcess)
-        .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+      const replies = filterBlockedItems(convertDocs<Comment>(docsToProcess), undefined, hiddenActivityUserIds, usersMap as any);
 
       return {
         replies,
@@ -293,8 +292,7 @@ export const commentService = {
         const hasMore = snapshot.docs.length > limitCount;
         const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
-        const comments = convertDocs<Comment>(docsToProcess)
-          .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+        const comments = filterBlockedItems(convertDocs<Comment>(docsToProcess), undefined, hiddenActivityUserIds, usersMap as any);
 
         callback('initial', {
           comments,
@@ -306,9 +304,10 @@ export const commentService = {
 
       const changes = snapshot.docChanges();
       
-      const changeDocs = changes
-        .map(change => ({ change, comment: commentConverter(change.doc) }))
-        .filter(({ comment }) => !hiddenActivityUserIds.includes(comment.authorId) && usersMap[comment.authorId]?.status !== 'banned');
+      const rawComments = changes.map(change => ({ change, comment: commentConverter(change.doc) }));
+      const filteredComments = filterBlockedItems(rawComments.map(r => r.comment), undefined, hiddenActivityUserIds, usersMap as any);
+      
+      const changeDocs = rawComments.filter(r => filteredComments.includes(r.comment));
 
       const added = changeDocs.filter(d => d.change.type === 'added').map(d => d.comment);
       const modified = changeDocs.filter(d => d.change.type === 'modified').map(d => d.comment);
@@ -351,9 +350,7 @@ export const commentService = {
         const hasMore = snapshot.docs.length > limitCount;
         const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
 
-        const replies = docsToProcess
-          .map(commentConverter)
-          .filter(c => !hiddenActivityUserIds.includes(c.authorId) && usersMap[c.authorId]?.status !== 'banned');
+        const replies = filterBlockedItems(docsToProcess.map(commentConverter), undefined, hiddenActivityUserIds, usersMap as any);
 
         callback('initial', {
           replies,
@@ -363,10 +360,12 @@ export const commentService = {
         return;
       }
 
-      snapshot.docChanges().forEach(change => {
-        const reply = commentConverter(change.doc);
-        if (hiddenActivityUserIds.includes(reply.authorId)) return;
+      const rawChanges = snapshot.docChanges().map(change => ({ change, reply: commentConverter(change.doc) }));
+      const filteredReplies = filterBlockedItems(rawChanges.map(r => r.reply), undefined, hiddenActivityUserIds, usersMap as any);
 
+      rawChanges.forEach(({ change, reply }) => {
+        if (!filteredReplies.includes(reply)) return;
+        
         if (change.type === 'added') {
           callback('add', [reply]);
         } else if (change.type === 'modified') {
@@ -392,7 +391,7 @@ export const commentService = {
 
       const createdAt = Date.now();
       const fileName = `comment_img_${createdAt}_${file.name}`;
-      const path = `comments/${userId}/images/${fileName}`;
+      const path = `${STORAGE_PATHS.COMMENTS}/${userId}/images/${fileName}`;
 
       const url = await withRetry(() => uploadWithProgress(path, compressedFile, (p) => {
         onProgress?.(p.progress);

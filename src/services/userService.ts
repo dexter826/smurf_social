@@ -27,7 +27,7 @@ import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { withRetry } from '../utils/retryUtils';
 import { uploadWithProgress, ProgressCallback, deleteStorageFile } from '../utils/uploadUtils';
-import { PAGINATION, IMAGE_COMPRESSION } from '../constants';
+import { PAGINATION, IMAGE_COMPRESSION, STORAGE_PATHS } from '../constants';
 import { convertDoc } from '../utils/firebaseUtils';
 import {
   validateUserName,
@@ -116,7 +116,7 @@ export const userService = {
         fullName: data.fullName || '',
         email: data.email || '',
         dob: data.dob || null,
-        gender: data.gender || Gender.NONE,
+        gender: data.gender || undefined,
         location: data.location || '',
         bio: data.bio || '',
         avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
@@ -177,7 +177,7 @@ export const userService = {
 
       const fileExt = file.name.split('.').pop();
       const prefix = type === 'avatar' ? 'avatar' : 'cover';
-      const folder = type === 'avatar' ? 'avatars' : 'covers';
+      const folder = type === 'avatar' ? STORAGE_PATHS.AVATARS : STORAGE_PATHS.COVERS;
       const fileName = `${prefix}_${userId}_${Date.now()}.${fileExt}`;
       const path = `${folder}/${userId}/${fileName}`;
 
@@ -386,7 +386,7 @@ export const userService = {
       const usersRef = collection(db, 'users');
       const [totalSnap, bannedSnap] = await Promise.all([
         getCountFromServer(usersRef),
-        getCountFromServer(query(usersRef, where('status', '==', 'banned')))
+        getCountFromServer(query(usersRef, where('status', '==', UserStatus.BANNED)))
       ]);
 
       const total = totalSnap.data().count;

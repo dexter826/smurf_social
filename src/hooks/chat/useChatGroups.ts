@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { MediaObject } from '../../../shared/types';
 import { useRtdbChatStore } from '../../store';
 import { toast } from '../../store/toastStore';
+import { TOAST_MESSAGES } from '../../constants';
 
 interface UseChatGroupsProps {
   selectedConversationId: string | null;
@@ -62,7 +63,7 @@ export const useChatGroups = ({
         await inviteMember(selectedConversationId, uid);
       }
     } catch (error: any) {
-      toast.error(error?.message || 'Không thể mời thành viên');
+      toast.error(error?.message || TOAST_MESSAGES.CHAT.INVITE_MEMBER_FAILED);
     }
   }, [selectedConversationId, currentUserId, inviteMember]);
 
@@ -86,7 +87,7 @@ export const useChatGroups = ({
     try {
       await removeMember(selectedConversationId, userId);
     } catch (error: any) {
-      toast.error(error?.message || 'Không thể xóa thành viên');
+      toast.error(error?.message || TOAST_MESSAGES.CHAT.REMOVE_MEMBER_FAILED);
     }
   }, [selectedConversationId, removeMember]);
 
@@ -145,9 +146,9 @@ export const useChatGroups = ({
     try {
       const inviteLink = await getGroupInviteLink(selectedConversationId);
       await navigator.clipboard.writeText(inviteLink);
-      toast.success('Đã sao chép link tham gia nhóm');
+      toast.success(TOAST_MESSAGES.CHAT.COPY_LINK_SUCCESS);
     } catch (error: any) {
-      toast.error(error?.message || 'Không thể sao chép link nhóm');
+      toast.error(error?.message || TOAST_MESSAGES.CHAT.COPY_LINK_FAILED);
     }
   }, [selectedConversationId, getGroupInviteLink]);
 
@@ -156,9 +157,9 @@ export const useChatGroups = ({
     try {
       const inviteLink = await regenerateGroupInviteLink(selectedConversationId);
       await navigator.clipboard.writeText(inviteLink);
-      toast.success('Đã reset và sao chép link nhóm mới');
+      toast.success(TOAST_MESSAGES.CHAT.RESET_LINK_SUCCESS);
     } catch (error: any) {
-      toast.error(error?.message || 'Không thể reset link nhóm');
+      toast.error(error?.message || TOAST_MESSAGES.CHAT.COPY_LINK_FAILED);
     }
   }, [selectedConversationId, regenerateGroupInviteLink]);
 

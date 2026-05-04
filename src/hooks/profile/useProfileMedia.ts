@@ -46,7 +46,7 @@ export const useProfileMedia = ({
         useAuthStore.getState().updateAvatar(newAvatarMedia);
       }
 
-      toast.success('Đã cập nhật ảnh đại diện!');
+      toast.success(TOAST_MESSAGES.MEDIA.UPDATE_AVATAR_SUCCESS);
     } catch (error) {
       console.error("Lỗi upload avatar", error);
       toast.error(TOAST_MESSAGES.MEDIA.UPLOAD_AVATAR_FAILED);
@@ -74,7 +74,7 @@ export const useProfileMedia = ({
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
 
-      toast.success('Đã cập nhật ảnh bìa!');
+      toast.success(TOAST_MESSAGES.MEDIA.UPDATE_COVER_SUCCESS);
     } catch (error) {
       console.error("Lỗi upload cover", error);
       toast.error(TOAST_MESSAGES.MEDIA.UPLOAD_COVER_FAILED);

@@ -9,6 +9,7 @@ import { canViewField } from '../../utils/privacyUtils';
 import { useRtdbChatStore } from '../../store/rtdbChatStore';
 import { rtdbMessageService } from '../../services/chat/rtdbMessageService';
 import { toast } from '../../store/toastStore';
+import { TOAST_MESSAGES } from '../../constants';
 import { Avatar } from '../ui/Avatar';
 import { Modal } from '../ui/Modal';
 
@@ -95,9 +96,9 @@ export const BirthdayWidget: React.FC = () => {
       const convId = getOrCreateConversation(currentUser.id, friend.id);
       
       await rtdbMessageService.sendTextMessage(convId, currentUser.id, wish);
-      toast.success(`Đã gửi lời chúc đến ${friend.fullName}!`);
+      toast.success(TOAST_MESSAGES.FRIEND.BIRTHDAY_WISH_SUCCESS(friend.fullName));
     } catch (error) {
-      toast.error("Không thể gửi lời chúc lúc này.");
+      toast.error(TOAST_MESSAGES.FRIEND.BIRTHDAY_WISH_FAILED);
     }
   };
 

@@ -22,10 +22,8 @@ interface GiphyImage {
   title: string;
 }
 
-const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY;
-const GIPHY_BASE_URL = 'https://api.giphy.com/v1/gifs';
+import { GIPHY_CONFIG } from '../../../constants/appConfig';
 
-/** Bộ chọn ảnh GIF từ Giphy */
 export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [gifs, setGifs] = useState<GiphyImage[]>([]);
@@ -34,8 +32,8 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
   const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const fetchGifs = useCallback(async (query = '') => {
-    if (!GIPHY_API_KEY) {
-      setError('Thiếu Giphy API Key trong cấu hình.');
+    if (!GIPHY_CONFIG.API_KEY) {
+      setError('Thiếu Giphy API Key');
       return;
     }
 
@@ -44,14 +42,14 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
 
     const endpoint = query ? 'search' : 'trending';
     const params = new URLSearchParams({
-      api_key: GIPHY_API_KEY,
-      limit: '20',
-      rating: 'pg',
+      api_key: GIPHY_CONFIG.API_KEY,
+      limit: GIPHY_CONFIG.LIMIT,
+      rating: GIPHY_CONFIG.RATING,
       ...(query && { q: query }),
     });
 
     try {
-      const response = await fetch(`${GIPHY_BASE_URL}/${endpoint}?${params}`);
+      const response = await fetch(`${GIPHY_CONFIG.BASE_URL}/${endpoint}?${params}`);
       const result = await response.json();
       
       if (response.ok) {

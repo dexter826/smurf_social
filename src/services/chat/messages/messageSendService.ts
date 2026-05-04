@@ -1,6 +1,6 @@
 import { ref, update, push } from 'firebase/database';
 import { rtdb } from '../../../firebase/config';
-import { RtdbMessage, MessageType, SharedPostMessagePayload } from '../../../../shared/types';
+import { RtdbMessage, MessageType, SharedPostMessagePayload, CallMessagePayload } from '../../../../shared/types';
 import { validateMessageContent, FileValidationError } from '../../../utils/fileValidation';
 import {
     ProgressWithId,
@@ -337,7 +337,7 @@ export const messageSendService = {
     sendCallMessage: async (
         convId: string,
         senderId: string,
-        payload: { callType: 'voice' | 'video'; status: 'ended' | 'missed' | 'rejected' | 'started'; duration?: number },
+        payload: CallMessagePayload,
         messageId?: string
     ): Promise<string> => {
         try {

@@ -9,6 +9,7 @@ import { friendService } from '../services/friendService';
 import { userService } from '../services/userService';
 import { toast } from '../store/toastStore';
 import { getDirectConversationId } from '../utils/chatUtils';
+import { TOAST_MESSAGES } from '../constants';
 
 type TabType = 'all' | 'requests' | 'sent' | 'suggestions';
 
@@ -183,7 +184,7 @@ export const useContacts = (): UseContactsReturn => {
       return conversationId;
     } catch (error: any) {
       console.error('[handleMessage] Lỗi không xác định:', error);
-      toast.error("Đã có lỗi xảy ra khi khởi tạo cuộc trò chuyện.");
+      toast.error(TOAST_MESSAGES.CHAT.INIT_FAILED);
       return null;
     }
   }, [currentUser, friends, selectConversation]);

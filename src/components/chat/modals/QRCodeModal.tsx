@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Download, Copy, Check, X, Share2 } from 'lucide-react';
 import { Modal, Button } from '../../ui';
 import { toast } from '../../../store/toastStore';
+import { TOAST_MESSAGES } from '../../../constants';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -30,10 +31,10 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
-      toast.success('Đã sao chép link tham gia');
+      toast.success(TOAST_MESSAGES.CHAT.COPY_LINK_SUCCESS);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast.error('Không thể sao chép link');
+      toast.error(TOAST_MESSAGES.CHAT.COPY_LINK_FAILED);
     }
   };
 

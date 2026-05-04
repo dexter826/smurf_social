@@ -25,6 +25,7 @@ export const authService = {
 
   /** Đăng ký tài khoản mới */
   register: async (email: string, pass: string): Promise<FirebaseUser> => {
+    await setPersistence(auth, browserLocalPersistence);
     const { user } = await createUserWithEmailAndPassword(auth, email.trim(), pass);
     return user;
   },
