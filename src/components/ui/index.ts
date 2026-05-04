@@ -29,3 +29,4 @@ export * from './ReactionDetailsModal';
 export * from './BlockOptionsModal';
 export * from './SensitiveMediaGuard';
 export * from './ProgressBar';
+export * from './SplashScreen';

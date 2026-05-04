@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { AppLayout } from './components/layout/AppLayout';
-import { Loading, ToastContainer, ConnectionStatus, ErrorBoundary } from './components/ui';
+import { Loading, ToastContainer, ConnectionStatus, ErrorBoundary, SplashScreen } from './components/ui';
 import { ReportModal } from './components/ui/ReportModal';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -26,7 +26,7 @@ const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const JoinGroupPage = React.lazy(() => import('./pages/JoinGroupPage'));
 
-/** Route bảo vệ cho tài khoản bị khóa */
+/** Bảo vệ route khi tài khoản bị khóa. */
 const BannedRoute: React.FC = () => {
   const { user, isBanned, isInitialized } = useAuthStore();
   if (!isInitialized) return <Loading variant="page" />;
@@ -36,7 +36,7 @@ const BannedRoute: React.FC = () => {
   return <BannedPage />;
 };
 
-/** Quản lý trạng thái hiện diện toàn cục */
+/** Quản lý trạng thái hiện diện. */
 const GlobalPresenceManager: React.FC = () => {
   const { user } = useAuthStore();
   const location = useLocation();
@@ -47,19 +47,29 @@ const GlobalPresenceManager: React.FC = () => {
   return null;
 };
 
-/** Thành phần gốc ứng dụng */
+/** Gốc ứng dụng điều phối Splash và Routes. */
 const App: React.FC = () => {
-  const { user } = useAuthStore();
+  const { isInitialized } = useAuthStore();
   const initializeAuth = useAuthStore(state => state.initialize);
-
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const unsubscribeAuth = initializeAuth();
+    
+    if (typeof window !== 'undefined') {
+      import('./pages/FeedPage').catch(() => {});
+      import('./pages/ProfilePage').catch(() => {});
+      import('./pages/ContactsPage').catch(() => {});
+    }
+
     return () => unsubscribeAuth();
   }, [initializeAuth]);
 
-
   useNotifications();
+
+  if (showSplash) {
+    return <SplashScreen isReady={isInitialized} onFinish={() => setShowSplash(false)} />;
+  }
 
   return (
     <ErrorBoundary>

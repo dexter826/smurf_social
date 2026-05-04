@@ -16,6 +16,7 @@
     "dexie": "^4.4.2",
     "emoji-picker-react": "^4.17.1",
     "firebase": "10.13.2",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.563.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.3",

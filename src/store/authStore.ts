@@ -45,6 +45,7 @@ interface AuthState {
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
   updateBlockEntry: (action: "add" | "remove", targetUserId: string, options?: BlockOptions) => Promise<void>;
   completeOnboarding: (data: Partial<User>) => Promise<void>;
+  _setupUserSubscription?: (uid: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -55,10 +56,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   isBanned: false,
 
-  /** Cập nhật thông tin người dùng */
+  /** Cập nhật thông tin người dùng. */
   setUser: (user) => set({ user }),
 
-  /** Đăng nhập vào hệ thống */
+  /** Đăng nhập vào hệ thống. */
   login: async (email, pass, remember = false) => {
     useLoadingStore.getState().setLoading("auth.login", true);
     try {
@@ -102,7 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Đăng ký tài khoản mới */
+  /** Đăng ký tài khoản mới. */
   register: async (email, pass, name, dob, generation) => {
     useLoadingStore.getState().setLoading("auth.register", true);
     try {
@@ -122,7 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Đăng xuất khỏi hệ thống */
+  /** Đăng xuất khỏi hệ thống. */
   logout: async (keepBanned = false) => {
     const { user } = get();
 
@@ -144,7 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Đặt lại mật khẩu qua email */
+  /** Đặt lại mật khẩu. */
   resetPassword: async (email) => {
     useLoadingStore.getState().setLoading("auth", true);
     try {
@@ -154,7 +155,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Gửi lại email xác thực */
+  /** Gửi lại email xác thực. */
   sendVerificationEmail: async () => {
     try {
       await authService.sendVerificationEmail();
@@ -164,7 +165,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Kiểm tra trạng thái xác thực email */
+  /** Kiểm tra trạng thái xác thực email. */
   checkVerificationStatus: async () => {
     const firebaseUser = auth.currentUser;
     if (firebaseUser) {
@@ -193,7 +194,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
             useUserCache.getState().setUser(userData);
 
-            const setupSub = (get() as any)._setupUserSubscription;
+            const setupSub = get()._setupUserSubscription;
             if (setupSub) setupSub(firebaseUser.uid);
           }
         } catch (error) {
@@ -203,7 +204,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Cập nhật hồ sơ cá nhân */
+  /** Cập nhật hồ sơ cá nhân. */
   updateUserProfile: async (updates) => {
     const { user } = get();
     if (!user) return;
@@ -223,7 +224,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Cập nhật ảnh đại diện */
+  /** Cập nhật ảnh đại diện. */
   updateAvatar: (avatar) => {
     const { user } = get();
     if (!user) return;
@@ -232,7 +233,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useUserCache.getState().setUser(updatedUser);
   },
 
-  /** Cập nhật cấu hình người dùng */
+  /** Cập nhật cấu hình người dùng. */
   updateSettings: async (settingsUpdates) => {
     const { user, settings } = get();
     if (!user || !settings) return;
@@ -249,7 +250,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Thêm hoặc xóa chặn người dùng */
+  /** Thêm hoặc xóa chặn người dùng. */
   updateBlockEntry: async (action, targetUserId, options?) => {
     const { user, blockedUsers } = get();
     if (!user) return;
@@ -293,7 +294,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Hoàn tất thông tin ban đầu */
+  /** Hoàn tất thông tin ban đầu. */
   completeOnboarding: async (data) => {
     const { user } = get();
     if (!user) return;
@@ -316,7 +317,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /** Khởi tạo trạng thái và lắng nghe thay đổi */
+  /** Khởi tạo auth và theo dõi trạng thái. */
   initialize: () => {
     let userUnsubscribe: (() => void) | null = null;
     let settingsUnsubscribe: (() => void) | null = null;
@@ -368,7 +369,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
     };
 
-    (set as any)({ _setupUserSubscription: setupSubscriptions });
+    set({ _setupUserSubscription: setupSubscriptions });
 
     const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
