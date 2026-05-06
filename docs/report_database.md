@@ -330,6 +330,6 @@ _Mô tả: Bảng tạm (Ephemeral) để báo hiệu cuộc gọi tới các Us
 
 _Mô tả: Bảng tra cứu ngược từ Token của link mời sang ID cuộc hội thoại nhóm._
 
-| Field     | Type   | Required/Optional | Description/Default                    |
-| :-------- | :----- | :---------------- | :------------------------------------- |
+| Field     | Type   | Required/Optional | Description/Default                     |
+| :-------- | :----- | :---------------- | :-------------------------------------- |
 | `{token}` | String | **Required**      | Document ID của nhóm (`conversationId`) |

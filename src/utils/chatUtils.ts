@@ -50,3 +50,30 @@ export const getDirectConversationId = (userId1: string, userId2: string): strin
     const sortedIds = [userId1, userId2].sort();
     return `direct_${sortedIds[0]}_${sortedIds[1]}`;
 };
+
+/**
+ * Format tin nhắn trước khi gửi: Chuyển đổi Mentions (@Name) thành @[id:Name]
+ */
+export const formatMessageForSending = (
+    text: string, 
+    activeMentions: { id: string; name: string }[]
+): { content: string, mentions: string[] } => {
+    const mentionsFound: string[] = [];
+    const tempMentions = [...activeMentions];
+
+    const content = text.replace(/@([^\n\u200B]+)\u200B/g, (match, fullName) => {
+        const idx = tempMentions.findIndex(m => m.name === fullName);
+        if (idx !== -1) {
+            const mention = tempMentions[idx];
+            mentionsFound.push(mention.id);
+            tempMentions.splice(idx, 1);
+            return `@[${mention.id}:${mention.name}]`;
+        }
+        return match;
+    });
+
+    return { 
+        content, 
+        mentions: mentionsFound.length > 0 ? [...new Set(mentionsFound)] : []
+    };
+};

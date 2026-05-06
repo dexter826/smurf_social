@@ -16,7 +16,7 @@ import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
   TransferAdminModal, ForwardModal, MessengerSkeleton,
-  JoinGroupModal, AiSummaryModal,
+  JoinGroupModal, AiSummaryModal, DragDropZone
 } from '../components/chat';
 
 import { scrollToMessage } from '../utils';
@@ -208,7 +208,7 @@ const ChatPage: React.FC = () => {
       {/* ── Chat area ── */}
       <div className={`flex-1 flex flex-col min-w-0 ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
         {selectedConversation ? (
-          <>
+          <DragDropZone disabled={!!blockedMessage || !!selectedConversation?.data.isDisbanded}>
             <ChatBox
               conversation={selectedConversation}
               messages={currentMessages}
@@ -273,7 +273,7 @@ const ChatPage: React.FC = () => {
               conversationId={selectedConversationId}
               isLoadingSettings={isLoadingSettings}
             />
-          </>
+          </DragDropZone>
         ) : (
           /* ── Empty state ── */
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
