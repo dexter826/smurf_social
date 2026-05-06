@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat, BlockOptions } from '../../../shared/types';
-import { Loading } from '../ui';
-import { ChevronDown } from 'lucide-react';
+import { Loading, EmptyState } from '../ui';
+import { ChevronDown, Users } from 'lucide-react';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageRequestBanner } from './message/MessageRequestBanner';
 import { useChatScroll } from '../../hooks/chat/useChatScroll';
@@ -152,11 +152,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         {isLoading ? (
           <ChatBoxSkeleton />
         ) : conversation.data.isDisbanded ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <p className="text-sm text-text-secondary">
-              Nhóm đã giải tán. Bạn có thể xóa hội thoại này.
-            </p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="Nhóm đã giải tán"
+            description="Nhóm không còn hoạt động. Bạn có thể xóa hội thoại này."
+            className="h-full"
+          />
         ) : (
           <div className="px-3 md:px-4 pt-2.5 pb-2 min-h-full flex flex-col">
             <div className="flex-1" />

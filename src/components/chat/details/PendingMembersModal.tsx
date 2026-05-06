@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, RtdbConversation } from '../../../../shared/types';
-import { Modal, UserAvatar, ConfirmDialog, Button } from '../../ui';
+import { Modal, UserAvatar, ConfirmDialog, Button, EmptyState } from '../../ui';
 import { Check, X, Users } from 'lucide-react';
 import { CONFIRM_MESSAGES } from '../../../constants/confirmMessages';
 
@@ -137,13 +137,13 @@ export const PendingMembersModal: React.FC<PendingMembersModalProps> = ({
                 );
               })
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                <div className="w-12 h-12 rounded-full bg-bg-secondary flex items-center justify-center mb-3 text-text-tertiary">
-                  <Check size={24} />
-                </div>
-                <p className="text-sm font-medium text-text-primary">Không có yêu cầu nào</p>
-                <p className="text-xs text-text-tertiary mt-1">Tất cả yêu cầu đã được xử lý</p>
-              </div>
+              <EmptyState
+                icon={Check}
+                title="Không có yêu cầu nào"
+                description="Tất cả yêu cầu đã được xử lý hoặc chưa có yêu cầu mới."
+                size="sm"
+                className="py-12"
+              />
             )}
           </div>
         </div>

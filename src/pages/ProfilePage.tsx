@@ -250,6 +250,7 @@ const ProfilePage: React.FC = () => {
 
       <BlockOptionsModal
         isOpen={isBlockModalOpen}
+        targetId={profile.id}
         targetName={profile.fullName}
         initialOptions={currentBlockOptions}
         onApply={handleApplyBlock}

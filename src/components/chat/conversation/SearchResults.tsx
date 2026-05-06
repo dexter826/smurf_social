@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X, Clock } from 'lucide-react';
-import { Skeleton, Avatar, UserAvatar } from '../../ui';
+import { Skeleton, Avatar, UserAvatar, EmptyState } from '../../ui';
 import { RtdbConversation, User, UserStatus, RtdbUserChat } from '../../../../shared/types';
 import { useConversationParticipants } from '../../../hooks/chat/useConversationParticipants';
 
@@ -33,12 +33,13 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
   if (!searchTerm) {
     if (history.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-8">
-          <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-            <Search size={22} className="text-text-tertiary" />
-          </div>
-          <p className="text-sm text-text-secondary">Tìm kiếm cuộc trò chuyện hoặc bạn bè</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="Tìm kiếm cuộc trò chuyện"
+          description="Tìm kiếm theo tên người dùng hoặc tên nhóm để bắt đầu nhắn tin."
+          size="sm"
+          className="mt-8 px-8"
+        />
       );
     }
 
@@ -106,12 +107,13 @@ export const SearchResults: React.FC<SearchResultsProps> & { Skeleton: React.FC 
 
   if (!hasConversations && !hasUsers) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[200px] text-center p-8">
-        <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-          <Search size={22} className="text-text-tertiary" />
-        </div>
-        <p className="text-sm text-text-secondary">Không tìm thấy kết quả phù hợp</p>
-      </div>
+      <EmptyState
+        icon={Search}
+        title="Không tìm thấy kết quả"
+        description="Thử tìm kiếm với từ khóa khác hoặc kiểm tra lại chính tả."
+        size="sm"
+        className="min-h-[200px] px-8"
+      />
     );
   }
 

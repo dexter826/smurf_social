@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { X, MessageCircle, ChevronDown, ListFilter } from 'lucide-react';
-import { Button, ConfirmDialog, UploadProgress, Dropdown, DropdownItem } from '../../ui';
+import { Button, ConfirmDialog, UploadProgress, Dropdown, DropdownItem, EmptyState } from '../../ui';
 import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../../constants';
 import { toast } from '../../../store/toastStore';
 import { Comment, User, ReportType, MediaObject } from '../../../../shared/types';
@@ -209,28 +209,20 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               <CommentSkeleton />
             </div>
           ) : filteredRootComments.length === 0 ? (
-            /* Empty state */
             !readonly ? (
-              <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-                <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center mb-3 border border-border-light">
-                  <MessageCircle size={18} className="text-text-tertiary" />
-                </div>
-                <p className="text-sm text-text-secondary font-medium">
-                  {hasAnyHidden
-                    ? `Có ${totalCommentCount} bình luận trong bài viết này.`
-                    : 'Hãy là người đầu tiên bình luận!'}
-                </p>
-                {!hasAnyHidden && (
-                  <p className="text-xs text-text-tertiary mt-1">Gửi gắm suy nghĩ của bạn vào đây nào!</p>
-                )}
-              </div>
+                <EmptyState
+                  icon={MessageCircle}
+                  title={hasAnyHidden ? `Có ${totalCommentCount} bình luận (Bị giới hạn)` : 'Chưa có bình luận nào'}
+                  size="sm"
+                  className="py-10"
+                />
             ) : (
               readonlyMessage !== "" && (
-                <div className="flex flex-col items-center justify-center py-10 px-6 text-center opacity-60">
-                  <p className="text-xs text-text-tertiary italic">
-                    {readonlyMessage || 'Bạn không thể tương tác với bài viết này.'}
-                  </p>
-                </div>
+                <EmptyState
+                  title={readonlyMessage || 'Tính năng này bị hạn chế'}
+                  size="sm"
+                  className="py-10 opacity-60"
+                />
               )
             )
           ) : (

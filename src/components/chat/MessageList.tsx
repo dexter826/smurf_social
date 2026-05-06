@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat } from '../../../shared/types';
-import { UserAvatar } from '../ui';
+import { UserAvatar, EmptyState } from '../ui';
 import { MessageBubble } from './message/MessageBubble';
 
 interface MessageListProps {
@@ -78,20 +78,23 @@ const MessageListInner: React.FC<MessageListProps> = ({
   /* Empty State */
   if (groupedMessages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 text-center py-12">
-        <UserAvatar
-          userId={conversation.data.isGroup ? '' : partner?.id ?? ''}
-          src={avatarSrc}
-          name={chatName}
-          size="xl"
-          isGroup={conversation.data.isGroup}
-          members={participants}
-          initialStatus={partner?.status}
-          showStatus={false}
-        />
-        <h3 className="text-base font-semibold text-text-primary mt-4 mb-1">{chatName}</h3>
-        <p className="text-sm text-text-secondary">Bắt đầu cuộc trò chuyện</p>
-      </div>
+      <EmptyState
+        icon={
+          <UserAvatar
+            userId={conversation.data.isGroup ? '' : partner?.id ?? ''}
+            src={avatarSrc}
+            name={chatName}
+            size="xl"
+            isGroup={conversation.data.isGroup}
+            members={participants}
+            initialStatus={partner?.status}
+            showStatus={false}
+          />
+        }
+        title={chatName}
+        description="Bắt đầu cuộc trò chuyện"
+        className="flex-1 py-12"
+      />
     );
   }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Play } from 'lucide-react';
-import { Modal, Input, Button, UserAvatar } from '../../ui';
+import { Modal, Input, Button, UserAvatar, EmptyState } from '../../ui';
 import { Post, Visibility } from '../../../../shared/types';
 import { useRtdbChatStore } from '../../../store';
 import { toast } from '../../../store/toastStore';
@@ -201,9 +201,12 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
                       />
                     ))
                   ) : (
-                    <div className="py-6 text-center text-xs text-text-tertiary font-medium bg-bg-secondary/30 rounded-xl border border-dashed border-border-light/50">
-                      Chưa có bạn bè trong danh sách
-                    </div>
+                    <EmptyState
+                      title="Trống"
+                      description="Chưa có bạn bè trong danh sách"
+                      size="sm"
+                      className="py-6"
+                    />
                   )}
                 </div>
               </div>
@@ -227,9 +230,12 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
                     />
                   ))
                 ) : (
-                  <div className="py-12 text-center text-sm text-text-tertiary font-medium">
-                    Không tìm thấy người dùng phù hợp
-                  </div>
+                  <EmptyState
+                    icon={Search}
+                    title="Không tìm thấy kết quả"
+                    size="sm"
+                    className="py-12"
+                  />
                 )}
               </div>
             </div>

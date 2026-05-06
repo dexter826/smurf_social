@@ -7,7 +7,7 @@ import { useSharePostStore } from '../store';
 import { useLoadingStore } from '../store/loadingStore';
 import { Visibility, MediaObject, Post } from '../../shared/types';
 import { useFeed, usePostNavigation } from '../hooks';
-import { ConfirmDialog } from '../components/ui';
+import { ConfirmDialog, EmptyState } from '../components/ui';
 import { useFriendIds } from '../hooks/utils';
 import { CONFIRM_MESSAGES } from '../constants';
 
@@ -63,7 +63,7 @@ const FeedPage: React.FC = () => {
       className="flex justify-center h-full w-full overflow-y-auto transition-theme scroll-smooth"
       id="feed-container"
     >
-      <div className="w-full max-w-[680px] py-4 md:py-6 px-3 sm:px-4 md:px-0 pb-6 md:pb-10">
+      <div className="w-full max-w-[680px] py-4 md:py-6 px-3 sm:px-4 md:px-0 pb-20 md:pb-24">
         <CreatePost currentUser={currentUser} />
 
         <BirthdayWidget />
@@ -71,19 +71,17 @@ const FeedPage: React.FC = () => {
         <FriendSuggestionsWidget />
 
         {posts.length === 0 ? (
-          /* ── Empty state ── */
-          <div className="bg-bg-primary rounded-2xl p-10 border border-border-light text-center animate-fade-in">
-            <div className="relative w-16 h-16 mx-auto mb-5">
-              <div className="absolute inset-0 rounded-full bg-primary/10 blur-md" />
-              <div className="relative w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center border border-border-light">
-                <StickyNote size={26} className="text-text-tertiary" />
-              </div>
-            </div>
-            <p className="text-text-primary text-base font-semibold mb-1.5">Chưa có bài viết nào</p>
-            <p className="text-text-secondary text-sm max-w-[260px] mx-auto leading-relaxed">
-              Hãy kết nối với bạn bè hoặc chia sẻ khoảnh khắc đầu tiên của bạn!
-            </p>
-          </div>
+          <>
+            <EmptyState
+              icon={StickyNote}
+              title="Chưa có bài viết nào"
+              description="Hãy kết nối với bạn bè hoặc chia sẻ khoảnh khắc đầu tiên của bạn!"
+              variant="boxed"
+              size="lg"
+              className="mt-4"
+            />
+            <div className="h-12 w-full flex-shrink-0" />
+          </>
         ) : (
           <>
             <div className="space-y-3 md:space-y-4">
@@ -119,6 +117,7 @@ const FeedPage: React.FC = () => {
                 <p className="text-text-tertiary text-sm font-medium">Bạn đã xem hết bài viết.</p>
               </div>
             )}
+            <div className="h-12 w-full flex-shrink-0" />
           </>
         )}
       </div>

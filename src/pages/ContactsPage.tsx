@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserPlus, Users, Search, Bell, ArrowUpDown, Sparkles, RefreshCw } from 'lucide-react';
 import { useContacts } from '../hooks';
-import { Button, Input, ConfirmDialog, BlockOptionsModal } from '../components/ui';
+import { Button, Input, ConfirmDialog, BlockOptionsModal, EmptyState } from '../components/ui';
 import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../constants';
 import { FriendRequestItem, FriendItem, AddFriendModal, SuggestionItem } from '../components/contacts';
 import { useAuthStore } from '../store/authStore';
@@ -252,9 +252,10 @@ const ContactsPage: React.FC = () => {
                 </div>
               ) : groupedFriends.length === 0 ? (
                 <EmptyState
-                  icon={<Users size={32} className="text-text-tertiary" />}
-                  title="Không tìm thấy bạn bè nào"
-                  subtitle="Thử tìm kiếm với tên khác hoặc thêm bạn mới"
+                  icon={Users}
+                  title={searchTerm ? "Không tìm thấy kết quả" : "Danh sách bạn bè trống"}
+                  description={searchTerm ? "Thử tìm kiếm với tên khác hoặc từ khóa khác." : "Bắt đầu kết nối với mọi người để xây dựng mạng lưới của bạn."}
+                  className="py-24"
                 />
               ) : (
                 <div className="space-y-6">
@@ -288,9 +289,10 @@ const ContactsPage: React.FC = () => {
                 </div>
               ) : filteredReceivedRequests.length === 0 ? (
                 <EmptyState
-                  icon={<Bell size={32} className="text-text-tertiary" />}
-                  title="Không có lời mời kết bạn nào"
-                  subtitle={searchTerm ? "Không tìm thấy lời mời nào khớp với tìm kiếm" : "Những lời mời bạn nhận được sẽ hiển thị ở đây"}
+                  icon={Bell}
+                  title="Không có lời mời"
+                  description={searchTerm ? "Không tìm thấy lời mời nào khớp với tìm kiếm." : "Hiện tại bạn không có lời mời kết bạn mới nào."}
+                  className="py-24"
                 />
               ) : (
                 <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
@@ -319,9 +321,10 @@ const ContactsPage: React.FC = () => {
                 </div>
               ) : filteredSentRequests.length === 0 ? (
                 <EmptyState
-                  icon={<UserPlus size={32} className="text-text-tertiary" />}
-                  title="Chưa gửi lời mời kết bạn nào"
-                  subtitle={searchTerm ? "Không tìm thấy lời mời nào khớp với tìm kiếm" : "Tìm kiếm bạn bè để gửi lời mời kết bạn"}
+                  icon={UserPlus}
+                  title="Danh sách trống"
+                  description={searchTerm ? "Không tìm thấy lời mời đã gửi phù hợp." : "Bạn chưa gửi lời mời kết bạn nào."}
+                  className="py-24"
                 />
               ) : (
                 <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
@@ -349,9 +352,10 @@ const ContactsPage: React.FC = () => {
                 </div>
               ) : filteredSuggestions.length === 0 ? (
                 <EmptyState
-                  icon={<Sparkles size={32} className="text-text-tertiary" />}
-                  title="Chưa có gợi ý kết bạn nào"
-                  subtitle="Nhấn Làm mới để cập nhật danh sách gợi ý"
+                  icon={Sparkles}
+                  title="Chưa có gợi ý"
+                  description="Chúng tôi sẽ hiển thị những người bạn có thể biết tại đây."
+                  className="py-24"
                 />
               ) : (
                 <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden shadow-sm">
@@ -387,6 +391,7 @@ const ContactsPage: React.FC = () => {
       {blockTarget && (
         <BlockOptionsModal
           isOpen
+          targetId={blockTarget.id}
           targetName={blockTarget.fullName}
           initialOptions={currentBlockOptions}
           onApply={onApplyBlock}
@@ -398,17 +403,5 @@ const ContactsPage: React.FC = () => {
     </div>
   );
 };
-
-/* ── Reusable empty state ── */
-const EmptyState: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({ icon, title, subtitle }) => (
-  <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-    <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mb-6 border border-border-light shadow-inner relative">
-      <div className="absolute inset-0 bg-primary/5 rounded-full animate-pulse" />
-      <div className="relative z-10">{icon}</div>
-    </div>
-    <h3 className="text-base font-bold text-text-primary mb-2">{title}</h3>
-    {subtitle && <p className="text-sm text-text-tertiary max-w-xs leading-relaxed">{subtitle}</p>}
-  </div>
-);
 
 export default ContactsPage;

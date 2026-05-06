@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ban, Settings2, MessageSquareOff, PhoneOff, EyeOff, Eye } from 'lucide-react';
 import { User, BlockOptions, BlockedUserEntry } from '../../../shared/types';
-import { UserAvatar, Button, Skeleton } from '../ui';
+import { UserAvatar, Button, Skeleton, EmptyState } from '../ui';
 
 export interface BlockedUserWithOptions {
   user: User;
@@ -66,12 +66,12 @@ const BlockedUsersSection: React.FC<BlockedUsersSectionProps> = ({
 
   if (blockedList.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-14 text-center bg-bg-primary rounded-2xl border border-border-light animate-fade-in">
-        <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-          <Ban size={24} className="text-text-tertiary" />
-        </div>
-        <p className="text-sm font-medium text-text-secondary">Chưa có người dùng nào bị chặn</p>
-      </div>
+      <EmptyState
+        icon={Ban}
+        title="Chưa chặn người dùng nào"
+        size="md"
+        className="py-14"
+      />
     );
   }
 

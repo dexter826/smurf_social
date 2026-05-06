@@ -4,7 +4,7 @@ import { User, UserStatus } from '../../../shared/types';
 import { userService } from '../../services/userService';
 import { functions } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { UserAvatar, Skeleton, IconButton, Select, ConfirmDialog } from '../ui';
+import { UserAvatar, Skeleton, IconButton, Select, ConfirmDialog, EmptyState } from '../ui';
 import { CONFIRM_MESSAGES, TOAST_MESSAGES } from '../../constants';
 import { toast } from '../../store/toastStore';
 import { useNavigate } from 'react-router-dom';
@@ -152,13 +152,14 @@ export const UsersView: React.FC = () => {
               ))}
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 bg-bg-primary rounded-2xl border border-dashed border-border-light">
-              <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-                <Users size={22} className="text-text-tertiary" />
-              </div>
-              <p className="text-sm font-semibold text-text-primary mb-1">Không tìm thấy người dùng</p>
-              <p className="text-xs text-text-tertiary">Thử thay đổi từ khóa hoặc bộ lọc</p>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="Không tìm thấy người dùng"
+              description="Thử thay đổi từ khóa hoặc bộ lọc tìm kiếm."
+              variant="boxed"
+              size="lg"
+              className="py-16"
+            />
           ) : (
             <>
               {/* Mobile Card View */}

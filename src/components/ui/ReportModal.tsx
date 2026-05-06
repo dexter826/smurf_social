@@ -9,6 +9,7 @@ import { Checkbox } from './Checkbox';
 import { ReportReason, ReportType } from '../../../shared/types';
 import { useReportStore } from '../../store/reportStore';
 import { useAuthStore } from '../../store/authStore';
+import { useContactStore } from '../../store/contactStore';
 import { toast } from '../../store/toastStore';
 import { REPORT_CONFIG, TOAST_MESSAGES } from '../../constants';
 import { reportSchema, ReportFormValues } from '../../utils/validation';
@@ -151,20 +152,35 @@ export const ReportModal: React.FC = () => {
     <div className="flex flex-col gap-3 w-full">
       {/* Tùy chọn chặn */}
       {formData.reason !== '' && (
-        <div className="flex items-start gap-3 p-3 rounded-xl border border-warning/20 bg-warning/5 hover:bg-warning/10 transition-colors duration-200 animate-fade-in">
+        <div className={`
+          flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 animate-fade-in
+          ${shouldBlock 
+            ? 'border-error/20 bg-error/5' 
+            : 'border-border-light bg-bg-hover/30 hover:bg-bg-hover'
+          }
+        `}>
           <div className="flex-shrink-0 mt-0.5">
             <Checkbox
               id="report-block-user"
               checked={shouldBlock}
               onChange={(e) => setShouldBlock(e.target.checked)}
+              className="checked:bg-error checked:border-error hover:border-error/50 focus-visible:ring-error/40"
             />
           </div>
           <label htmlFor="report-block-user" className="cursor-pointer flex-1 min-w-0">
-            <div className="text-sm font-medium text-text-primary">Chặn người dùng này</div>
-            <div className="text-xs text-text-secondary mt-0.5">Họ sẽ không thể nhắn tin hay xem trang cá nhân của bạn</div>
+            <div className={`text-sm font-medium transition-colors ${shouldBlock ? 'text-error' : 'text-text-primary'}`}>Chặn người dùng này</div>
+            <div className={`text-xs mt-0.5 transition-colors ${shouldBlock ? 'text-error/80' : 'text-text-secondary'}`}>
+              Họ sẽ không thể nhắn tin hay xem trang cá nhân của bạn
+              {(() => {
+                const targetId = reportContext?.type === ReportType.USER ? reportContext.id : reportContext?.ownerId;
+                const isFriend = useContactStore.getState().friends.some(f => f.id === targetId);
+                return isFriend ? (
+                  <> và hành động này sẽ <span className="font-bold">hủy kết bạn</span></>
+                ) : null;
+              })()}
+            </div>
           </label>
         </div>
-
       )}
 
       {/* Buttons */}
@@ -203,15 +219,6 @@ export const ReportModal: React.FC = () => {
       footer={modalFooter}
     >
       <form id="report-form" onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-        {/* Header info */}
-        <div className="flex items-center gap-2 text-text-secondary text-sm bg-warning/10 p-3 rounded-xl border border-warning/20">
-          <AlertTriangle size={15} className="text-warning flex-shrink-0" />
-          <span>{isUserReport
-            ? "Hãy cho chúng tôi biết người dùng này đang vi phạm điều gì"
-            : "Chọn lý do phù hợp nhất để giúp chúng tôi xử lý nhanh hơn"}
-          </span>
-        </div>
-
         {/* Danh sách lý do */}
         <div className="space-y-2">
           {reasonEntries.map(([key, value]) => (

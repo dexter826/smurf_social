@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import { Modal, Input, Button } from '../../ui';
+import { Modal, Input, Button, EmptyState } from '../../ui';
 import { RtdbMessage } from '../../../../shared/types';
 import { useRtdbChatStore } from '../../../store';
 import { useShareTargets } from '../../../hooks/chat';
@@ -158,9 +158,12 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                       />
                     ))
                   ) : (
-                    <div className="py-6 text-center text-xs text-text-tertiary font-medium bg-bg-secondary/30 rounded-xl border border-dashed border-border-light/50">
-                      Chưa có bạn bè trong danh sách
-                    </div>
+                    <EmptyState
+                      title="Trống"
+                      description="Chưa có bạn bè trong danh sách"
+                      size="sm"
+                      className="py-6"
+                    />
                   )}
                 </div>
               </div>
@@ -184,9 +187,12 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                     />
                   ))
                 ) : (
-                  <div className="py-12 text-center text-sm text-text-tertiary font-medium">
-                    Không tìm thấy người dùng phù hợp
-                  </div>
+                  <EmptyState
+                    icon={Search}
+                    title="Không tìm thấy kết quả"
+                    size="sm"
+                    className="py-12"
+                  />
                 )}
               </div>
             </div>

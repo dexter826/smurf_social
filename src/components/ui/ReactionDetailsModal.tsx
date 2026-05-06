@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Modal, UserAvatar, Skeleton } from './index';
+import { Modal, UserAvatar, Skeleton, EmptyState } from './index';
 import { User, ReactionType } from '../../../shared/types';
 import { batchGetUsers } from '../../utils/batchUtils';
 import { getReactionIcon } from '../chat/reactions/ReactionIcons';
@@ -148,43 +148,41 @@ export const ReactionDetailsModal: React.FC<ReactionDetailsModalProps> = ({
                 </div>
               ))}
             </div>
-          ) : (displayList.length > 0) ? (
-            <div className={`flex flex-col h-full ${displayList.length === 0 ? 'items-center justify-center p-10' : 'p-2'}`}>
-              {displayList.length > 0 && (
-                <div className="space-y-1 w-full">
-                  {displayList.map(({ user, type, userId }) => (
-                    <div
-                      key={userId}
-                      className="flex items-center justify-between px-3 py-2.5 hover:bg-bg-hover rounded-xl transition-colors duration-200 cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <UserAvatar
-                            userId={userId}
-                            src={user.avatar?.url}
-                            name={user.fullName}
-                            size="md"
-                            showStatus={false}
-                          />
-                          <div className="absolute -bottom-1 -right-1 bg-bg-primary rounded-full p-0.5 shadow-sm border border-border-light">
-                            {getReactionIcon(type, "", 14)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors duration-200">
-                            {userId === currentUserId ? 'Bạn' : user.fullName}
-                          </div>
-                        </div>
+          ) : displayList.length > 0 ? (
+            <div className="space-y-1 w-full p-2">
+              {displayList.map(({ user, type, userId }) => (
+                <div
+                  key={userId}
+                  className="flex items-center justify-between px-3 py-2.5 hover:bg-bg-hover rounded-xl transition-colors duration-200 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <UserAvatar
+                        userId={userId}
+                        src={user.avatar?.url}
+                        name={user.fullName}
+                        size="md"
+                        showStatus={false}
+                      />
+                      <div className="absolute -bottom-1 -right-1 bg-bg-primary rounded-full p-0.5 shadow-sm border border-border-light">
+                        {getReactionIcon(type, "", 14)}
                       </div>
                     </div>
-                  ))}
+                    <div>
+                      <div className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors duration-200">
+                        {userId === currentUserId ? 'Bạn' : user.fullName}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-text-tertiary p-10">
-              <p className="italic text-sm">Chưa có ai bày tỏ cảm xúc này</p>
-            </div>
+            <EmptyState
+              title="Không có cảm xúc nào"
+              size="sm"
+              className="h-full"
+            />
           )}
         </div>
       </div>

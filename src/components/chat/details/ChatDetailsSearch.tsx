@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { RtdbMessage, User, MessageType } from '../../../../shared/types';
 import { Search, X, MessageCircle } from 'lucide-react';
 import { formatTimeOnly } from '../../../utils/dateUtils';
-import { Input, IconButton } from '../../ui';
+import { Input, IconButton, EmptyState } from '../../ui';
 import { PAGINATION } from '../../../constants';
 import { parseSharedPostMessage } from '../../../utils/postShareMessage';
 
@@ -88,10 +88,12 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
 
       {searchTerm ? (
         searchResults.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-text-tertiary">
-            <MessageCircle size={28} className="mb-2 opacity-40" />
-            <p className="text-sm">Không tìm thấy tin nhắn</p>
-          </div>
+          <EmptyState
+            icon={MessageCircle}
+            title="Không tìm thấy tin nhắn"
+            size="sm"
+            className="py-10"
+          />
         ) : (
           <div className="px-2 pb-4">
             <p className="px-2 text-xs text-text-tertiary mb-2">
@@ -142,10 +144,12 @@ export const ChatDetailsSearch: React.FC<ChatDetailsSearchProps> = ({
           </div>
         )
       ) : (
-        <div className="flex flex-col items-center justify-center py-10 text-text-tertiary">
-          <Search size={24} className="mb-2 opacity-40" />
-          <p className="text-sm">Nhập từ khóa để tìm kiếm</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="Nhập từ khóa để tìm kiếm"
+          size="sm"
+          className="py-10"
+        />
       )}
     </div>
   );

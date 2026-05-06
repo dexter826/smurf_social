@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Post, User, Visibility, MediaObject } from '../../../shared/types';
 import { PostItem, CreatePost, PostModal } from '../feed';
-import { ConfirmDialog } from '../ui';
+import { ConfirmDialog, EmptyState } from '../ui';
 import { usePostStore } from '../../store';
 import { useUserPosts, useIntersectionObserver } from '../../hooks';
 import { FileText } from 'lucide-react';
@@ -60,12 +60,12 @@ export const PostsTab: React.FC<PostsTabProps> = ({
       {userId === currentUser.id && <CreatePost currentUser={currentUser} />}
 
       {isViewActivityBlocked || posts.length === 0 ? (
-        <div className="bg-bg-primary rounded-2xl border border-border-light p-10 text-center">
-          <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-3 border border-border-light">
-            <FileText size={22} className="text-text-tertiary" />
-          </div>
-          <p className="text-sm text-text-secondary font-medium">Chưa có bài viết nào</p>
-        </div>
+        <EmptyState
+          icon={FileText}
+          title="Chưa có bài viết nào"
+          variant="boxed"
+          size="md"
+        />
       ) : (
         <>
           {posts.map((post) => (

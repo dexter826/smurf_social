@@ -5,7 +5,7 @@ import { userService } from '../../services/userService';
 import { reportService } from '../../services/reportService';
 import { Report, User, ReportStatus } from '../../../shared/types';
 import { useAuthStore } from '../../store/authStore';
-import { Skeleton, UserAvatar } from '../ui';
+import { Skeleton, UserAvatar, EmptyState } from '../ui';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { REPORT_CONFIG } from '../../constants';
 import { useUserCache } from '../../store/userCacheStore';
@@ -163,13 +163,13 @@ export const DashboardView: React.FC = () => {
                   <Skeleton className="h-10 w-full" />
                 </div>
               ) : recentReports.length === 0 ? (
-                <div className="p-6 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 bg-success/10 rounded-full flex items-center justify-center mb-3">
-                    <Flag size={20} className="text-success" />
-                  </div>
-                  <p className="text-sm font-semibold text-text-primary">Tuyệt vời!</p>
-                  <p className="text-xs text-text-tertiary">Hiện tại không có báo cáo nào đang chờ xử lý.</p>
-                </div>
+                <EmptyState
+                  icon={Flag}
+                  title="Hệ thống ổn định"
+                  description="Hiện tại không có báo cáo nào cần xử lý."
+                  size="sm"
+                  className="py-10"
+                />
               ) : (
                 <div className="divide-y divide-border-light">
                   {recentReports.map(report => {

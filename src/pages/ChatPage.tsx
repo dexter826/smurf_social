@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
-import { BlockOptionsModal, ConfirmDialog } from '../components/ui';
+import { BlockOptionsModal, ConfirmDialog, EmptyState } from '../components/ui';
 import { User } from '../../shared/types';
 import { useChat } from '../hooks';
 import { useLoadingStore } from '../store/loadingStore';
@@ -275,18 +275,13 @@ const ChatPage: React.FC = () => {
             />
           </DragDropZone>
         ) : (
-          /* ── Empty state ── */
-          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
-              <div className="relative w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
-                <MessageSquare size={40} className="text-primary" />
-              </div>
-            </div>
-            <h2 className="text-xl font-bold text-text-primary mb-2">Tin nhắn của bạn</h2>
-            <p className="text-sm text-text-secondary max-w-xs leading-relaxed">
-              Chọn một cuộc trò chuyện để bắt đầu nhắn tin với bạn bè ngay bây giờ!
-            </p>
+          <div className="flex-1 flex items-center justify-center p-6">
+            <EmptyState
+              icon={MessageSquare}
+              title="Tin nhắn của bạn"
+              description="Chọn một cuộc trò chuyện để bắt đầu nhắn tin với bạn bè ngay bây giờ!"
+              size="lg"
+            />
           </div>
         )}
       </div>
@@ -398,6 +393,7 @@ const ChatPage: React.FC = () => {
       {(partner || blockTarget) && (
         <BlockOptionsModal
           isOpen={isBlockModalOpen}
+          targetId={blockTarget?.id ?? partner?.id ?? ''}
           targetName={blockTarget?.name ?? partner?.fullName ?? ''}
           initialOptions={blockTarget ? useAuthStore.getState().blockedUsers[blockTarget.id] : myBlockOptions}
           onApply={async (opts) => { await handleApplyBlock(opts, blockTarget?.id); closeBlockModal(); }}

@@ -227,6 +227,7 @@ const SettingsPage: React.FC = () => {
       {manageBlockTarget && (
         <BlockOptionsModal
           isOpen
+          targetId={manageBlockTarget.user.id}
           targetName={manageBlockTarget.user.fullName}
           initialOptions={manageBlockTarget.options}
           onApply={handleUpdateBlockOptions}

@@ -5,9 +5,13 @@ import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { BlockOptions } from '../../../shared/types';
 import { useScrollLock } from '../../hooks/utils/useScrollLock';
+import { useContactStore } from '../../store/contactStore';
+import { AlertTriangle } from 'lucide-react';
+import { isFullyBlocked } from '../../utils/blockUtils';
 
 interface BlockOptionsModalProps {
   isOpen: boolean;
+  targetId: string;
   targetName: string;
   initialOptions?: Partial<BlockOptions>;
   onApply: (options: BlockOptions) => Promise<void>;
@@ -24,12 +28,15 @@ const DEFAULT_OPTIONS: BlockOptions = {
 
 export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
   isOpen,
+  targetId,
   targetName,
   initialOptions,
   onApply,
   onUnblock,
   onClose,
 }) => {
+  const friends = useContactStore(state => state.friends);
+  const isFriend = React.useMemo(() => friends.some(f => f.id === targetId), [friends, targetId]);
   const [options, setOptions] = useState<BlockOptions>(DEFAULT_OPTIONS);
   const [isLoading, setIsLoading] = useState(false);
   const [isActivityExpanded, setIsActivityExpanded] = useState(false);
@@ -215,6 +222,15 @@ export const BlockOptionsModal: React.FC<BlockOptionsModalProps> = ({
             )}
           </div>
         </div>
+
+        {/* Cảnh báo hủy kết bạn (Tối giản) */}
+        {isFriend && isFullyBlocked(options) && (
+          <div className="px-6 py-2 bg-error/5 border-t border-error/10 animate-fade-in">
+            <p className="text-[11px] text-error/80 text-center font-medium">
+              Lưu ý: Việc áp dụng tất cả các hạn chế sẽ đồng thời <span className="font-bold">hủy kết bạn</span>.
+            </p>
+          </div>
+        )}
 
         <div className="px-6 py-5 border-t border-divider flex gap-3 pb-[calc(20px+env(safe-area-inset-bottom))] sm:pb-6">
           <Button variant="secondary" onClick={onClose} className="flex-1 font-semibold h-11">

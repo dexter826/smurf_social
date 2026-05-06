@@ -1,6 +1,7 @@
 import React from 'react';
 import { MediaObject } from '../../../shared/types';
-import { SensitiveMediaGuard } from '../ui';
+import { SensitiveMediaGuard, EmptyState } from '../ui';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface ProfileMediaPreviewProps {
   media: MediaObject[];
@@ -43,9 +44,11 @@ export const ProfileMediaPreview: React.FC<ProfileMediaPreviewProps> = ({ media,
           ))}
         </div>
       ) : (
-        <p className="text-sm text-text-tertiary text-center py-2">
-          Chưa có ảnh hoặc video nào
-        </p>
+        <EmptyState
+          title="Chưa có ảnh hoặc video nào"
+          size="sm"
+          className="py-4"
+        />
       )}
     </div>
   );

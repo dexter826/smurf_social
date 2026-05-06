@@ -56,10 +56,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       fullName: user.fullName,
       bio: user.bio || '',
       location: user.location || '',
-      gender: user.gender as Gender,
+      gender: user.gender || '' as any,
       dob: user.dob ? toDate(user.dob)?.getTime() : undefined,
       school: user.school || '',
-      maritalStatus: user.maritalStatus,
+      maritalStatus: user.maritalStatus || '' as any,
       interests: user.interests || [],
       generation: user.generation || Generation.UNKNOWN,
       profilePrivacy: user.profilePrivacy || {
@@ -81,10 +81,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       fullName: user.fullName,
       bio: user.bio || '',
       location: user.location || '',
-      gender: user.gender as Gender,
+      gender: user.gender || '' as any,
       dob: user.dob ? toDate(user.dob)?.getTime() : undefined,
       school: user.school || '',
-      maritalStatus: user.maritalStatus,
+      maritalStatus: user.maritalStatus || '' as any,
       interests: user.interests || [],
       generation: user.generation || Generation.UNKNOWN,
       profilePrivacy: user.profilePrivacy || {
@@ -134,15 +134,15 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     try {
       const payload: Partial<User> = {
         fullName: data.fullName,
-        bio: data.bio,
-        location: data.location,
-        ...(data.gender !== undefined && { gender: data.gender }),
-        ...(data.dob !== undefined && { dob: Timestamp.fromDate(new Date(data.dob)) }),
-        ...(data.school ? { school: data.school } : { school: '' }),
-        ...(data.maritalStatus !== undefined && { maritalStatus: data.maritalStatus }),
-        interests: data.interests?.length ? data.interests : [],
-        ...(data.generation ? { generation: data.generation } : { generation: Generation.UNKNOWN }),
+        bio: data.bio || '',
+        location: data.location || '',
+        school: data.school || '',
+        interests: data.interests || [],
+        generation: data.generation || Generation.UNKNOWN,
         profilePrivacy: data.profilePrivacy,
+        ...(!!data.gender && { gender: data.gender as Gender }),
+        ...(data.dob && { dob: Timestamp.fromDate(new Date(data.dob)) }),
+        ...(!!data.maritalStatus && { maritalStatus: data.maritalStatus as MaritalStatus }),
       };
       await onSave(payload);
       toast.success(TOAST_MESSAGES.PROFILE.UPDATE_SUCCESS);
@@ -152,6 +152,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     } finally {
       setSaving(false);
     }
+  };
+
+  const onInvalid = (errs: typeof errors) => {
+    const firstError = Object.values(errs)[0];
+    if (firstError?.message) toast.error(firstError.message as string);
   };
 
   const FieldWrapper: React.FC<{ label: string; privacyKey: keyof ProfilePrivacy; children: React.ReactNode; required?: boolean }> = ({ label, privacyKey, children, required }) => (
@@ -183,9 +188,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </Button>
           <Button
             variant="primary"
-            onClick={handleSubmit(handleSave)}
+            onClick={handleSubmit(handleSave, onInvalid)}
             isLoading={saving}
-            disabled={saving || !isDirty}
+            disabled={saving}
           >
             Lưu thay đổi
           </Button>

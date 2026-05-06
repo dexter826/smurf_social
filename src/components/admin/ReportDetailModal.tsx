@@ -12,7 +12,7 @@ import { reportService } from '../../services/reportService';
 import { userService } from '../../services/userService';
 import { postService } from '../../services/postService';
 import { commentService } from '../../services/commentService';
-import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, MediaViewer } from '../ui';
+import { Button, UserAvatar, Skeleton, IconButton, ConfirmDialog, MediaViewer, EmptyState } from '../ui';
 import { PostMediaGrid } from '../feed/shared/PostMediaGrid';
 import { REPORT_CONFIG, TOAST_MESSAGES, CONFIRM_MESSAGES } from '../../constants';
 import { formatRelativeTime, formatDateTime } from '../../utils/dateUtils';
@@ -374,10 +374,13 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ reportId, 
                       )}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-10 bg-bg-secondary/30 rounded-xl border border-dashed border-border-light">
-                      <Trash2 size={24} className="text-text-tertiary opacity-30 mb-2" />
-                      <p className="text-sm text-text-tertiary">Nội dung đã bị xóa hoặc không còn tồn tại</p>
-                    </div>
+                    <EmptyState
+                      icon={Trash2}
+                      title="Nội dung không tồn tại"
+                      description="Nội dung đã bị xóa hoặc không còn tồn tại trên hệ thống."
+                      size="sm"
+                      className="py-10 bg-bg-secondary/30 rounded-xl border border-dashed border-border-light"
+                    />
                   )}
                 </div>
               ) : (

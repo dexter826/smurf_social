@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, X, Loader2, TrendingUp } from 'lucide-react';
-import { IconButton } from '../../ui';
+import { IconButton, EmptyState } from '../../ui';
 
 interface GiphyPickerProps {
   onSelect: (url: string) => void;
@@ -110,20 +110,22 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
             <span className="text-sm font-medium">Đang tải GIF...</span>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-error p-4 text-center">
-            <span className="text-sm font-medium">{error}</span>
-            <button
-              onClick={() => fetchGifs(searchQuery)}
-              className="text-xs text-primary hover:underline font-semibold"
-            >
-              Thử lại
-            </button>
-          </div>
+          <EmptyState
+            variant="error"
+            title="Lỗi tải GIF"
+            description={error}
+            size="sm"
+            action={{
+              label: 'Thử lại',
+              onClick: () => fetchGifs(searchQuery)
+            }}
+          />
         ) : gifs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2 text-text-tertiary">
-            <Search size={40} strokeWidth={1.5} className="opacity-20" />
-            <span className="text-sm">Không tìm thấy GIF nào</span>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="Không tìm thấy GIF"
+            size="sm"
+          />
         ) : (
           <div>
             {!searchQuery && (

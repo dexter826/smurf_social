@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Check, Loader2, UserPlus, Info } from 'lucide-react';
 import { User, RtdbConversation, RtdbUserChat } from '../../../../shared/types';
 import { friendService } from '../../../services/friendService';
-import { Modal, Input, Button, UserAvatar } from '../../ui';
+import { Modal, Input, Button, UserAvatar, EmptyState } from '../../ui';
 import { GROUP_LIMITS } from '../../../constants';
 import { toast } from '../../../store/toastStore';
 
@@ -121,17 +121,12 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
               <Loader2 className="animate-spin text-primary" size={22} />
             </div>
           ) : filteredFriends.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-center">
-              <UserPlus size={32} className="text-text-tertiary mb-2" />
-              <p className="text-sm text-text-tertiary">
-                {searchTerm
-                  ? 'Không tìm thấy bạn bè'
-                  : friends.length === 0
-                    ? 'Tất cả bạn bè đã trong nhóm'
-                    : 'Không có bạn bè để thêm'
-                }
-              </p>
-            </div>
+            <EmptyState
+              icon={UserPlus}
+              title={searchTerm ? "Không tìm thấy kết quả" : "Không có thành viên để thêm"}
+              size="sm"
+              className="py-8"
+            />
           ) : (
             filteredFriends.map(friend => {
               const isSelected = selectedIds.includes(friend.id);

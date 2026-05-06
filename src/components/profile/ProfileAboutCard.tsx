@@ -1,8 +1,9 @@
 import React from 'react';
 import { 
   Cake, MapPin, GraduationCap, Heart, CalendarDays, 
-  Mail, Globe, Users as UsersIcon, Lock 
+  Mail, Globe, Users as UsersIcon, Lock, Info
 } from 'lucide-react';
+import { EmptyState } from '../ui';
 import { Gender, MaritalStatus, User, Visibility, GENDER_LABELS, MARITAL_STATUS_LABELS } from '../../../shared/types';
 import { toDate } from '../../utils/dateUtils';
 
@@ -156,9 +157,11 @@ export const ProfileAboutCard: React.FC<ProfileAboutCardProps> = ({ profile, isO
           )}
         </div>
       ) : (
-        <p className="text-sm text-text-tertiary text-center py-2">
-          Chưa có thông tin giới thiệu
-        </p>
+        <EmptyState
+          title="Chưa có thông tin giới thiệu"
+          size="sm"
+          className="py-4"
+        />
       )}
     </div>
   );

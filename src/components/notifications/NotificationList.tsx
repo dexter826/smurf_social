@@ -1,5 +1,6 @@
 import React from 'react';
 import { BellOff } from 'lucide-react';
+import { EmptyState } from '../ui';
 import { NotificationType } from '../../../shared/types';
 import { useNotificationStore } from '../../store/notificationStore';
 import { useLoadingStore } from '../../store/loadingStore';
@@ -27,15 +28,12 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 
   if (visible.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="w-20 h-20 bg-bg-secondary rounded-3xl flex items-center justify-center mb-5 border border-divider shadow-sm rotate-3">
-          <BellOff size={32} className="text-text-tertiary opacity-40 -rotate-3" />
-        </div>
-        <h4 className="text-[16px] font-bold text-text-primary tracking-tight">Chưa có thông báo</h4>
-        <p className="text-[13px] mt-1.5 text-text-secondary leading-relaxed max-w-[200px]">
-          Các cập nhật và hoạt động mới nhất của bạn sẽ được hiển thị tại đây.
-        </p>
-      </div>
+      <EmptyState
+        icon={BellOff}
+        title="Chưa có thông báo"
+        description="Chưa có hoạt động mới nào."
+        className="py-20 px-10"
+      />
     );
   }
 

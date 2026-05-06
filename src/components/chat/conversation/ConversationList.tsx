@@ -3,7 +3,7 @@ import { Users, Archive } from 'lucide-react';
 import { RtdbConversation, RtdbUserChat, User } from '../../../../shared/types';
 import { ConversationItem } from './ConversationItem';
 import { SearchResults } from './SearchResults';
-import { Skeleton } from '../../ui/Skeleton';
+import { Skeleton, EmptyState } from '../../ui';
 import { useConversationGroups } from '../../../hooks/chat/useConversationGroups';
 import { ConversationHeader } from './ConversationHeader';
 import { ConversationFilters, FilterType } from './ConversationFilters';
@@ -184,29 +184,22 @@ export const ConversationList = React.memo<ConversationListProps>(({
             conversations={conversations}
           />
         ) : (friendConversations.length === 0 && requestConversations.length === 0) ? (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mb-4 border border-border-light">
-              <Users size={26} className="text-text-tertiary" />
-            </div>
-            <h3 className="text-sm font-semibold text-text-primary mb-1">
-              {searchTerm ? 'Không tìm thấy' : 'Chưa có cuộc trò chuyện'}
-            </h3>
-            <p className="text-xs text-text-secondary">
-              {searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Bắt đầu trò chuyện với bạn bè'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title={searchTerm ? 'Không tìm thấy' : 'Chưa có cuộc trò chuyện'}
+            description={searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Bắt đầu trò chuyện với bạn bè'}
+            size="md"
+            className="h-full px-8"
+          />
         ) : (
           <div className="py-1">
             {displayConversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-8 mt-8">
-                <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-                  <Users size={22} className="text-text-tertiary" />
-                </div>
-                <p className="text-sm text-text-secondary">
-                  {activeFilter === 'stranger' ? 'Không có tin nhắn chờ' : 'Không có cuộc trò chuyện nào'}
-                </p>
-              </div>
+              <EmptyState
+                icon={Users}
+                title={activeFilter === 'stranger' ? 'Không có tin nhắn chờ' : 'Không có cuộc trò chuyện'}
+                size="sm"
+                className="mt-8 px-8"
+              />
             ) : (
               displayConversations.map(renderConversationItem)
             )}

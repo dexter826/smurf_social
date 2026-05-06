@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { MessageType, MediaObject } from '../../../shared/types';
 import { postService } from '../../services/postService';
-import { Skeleton, MediaViewer, LazyImage, SensitiveMediaGuard } from '../ui';
+import { Skeleton, MediaViewer, LazyImage, SensitiveMediaGuard, EmptyState } from '../ui';
 import { Image as ImageIcon, Loader2, Play } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useFriendIds } from '../../hooks';
@@ -136,12 +136,12 @@ const PhotosTabInner: React.FC<PhotosTabProps> = ({
 
   if (media.length === 0 || isViewActivityBlocked) {
     return (
-      <div className="bg-bg-primary rounded-2xl border border-border-light p-10 text-center">
-        <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-3 border border-border-light">
-          <ImageIcon size={22} className="text-text-tertiary" />
-        </div>
-        <p className="text-sm text-text-secondary font-medium">Chưa có ảnh hoặc video nào</p>
-      </div>
+      <EmptyState
+        icon={ImageIcon}
+        title="Chưa có ảnh hoặc video nào"
+        variant="boxed"
+        size="md"
+      />
     );
   }
 

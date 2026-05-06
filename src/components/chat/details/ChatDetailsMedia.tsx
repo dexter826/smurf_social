@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { RtdbMessage, MediaObject, MessageType } from '../../../../shared/types';
 import { Image, Film, FileText, Download, Play, Mic, Link2, ExternalLink } from 'lucide-react';
-import { LazyImage, MediaViewer } from '../../ui';
+import { LazyImage, MediaViewer, EmptyState } from '../../ui';
 import { downloadFile } from '../../../utils';
 
 interface ChatDetailsMediaProps {
@@ -130,7 +130,9 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
   const renderContent = () => {
     switch (activeTab) {
       case 'images':
-        if (mediaItems.images.length === 0) return <EmptyState message="Chưa có ảnh nào được chia sẻ" />;
+        if (mediaItems.images.length === 0) return (
+          <EmptyState title="Chưa có ảnh" description="Chưa có ảnh nào được chia sẻ" size="sm" className="py-12" />
+        );
         return (
           <div className="grid grid-cols-3 gap-0.5 p-0.5">
             {mediaItems.images.map((item, index) => (
@@ -152,7 +154,9 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
         );
 
       case 'videos':
-        if (mediaItems.videos.length === 0) return <EmptyState message="Chưa có video nào được chia sẻ" />;
+        if (mediaItems.videos.length === 0) return (
+          <EmptyState title="Chưa có video" description="Chưa có video nào được chia sẻ" size="sm" className="py-12" />
+        );
         return (
           <div className="grid grid-cols-2 gap-1 p-1">
             {mediaItems.videos.map((item, index) => (
@@ -179,7 +183,9 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
         );
 
       case 'files':
-        if (mediaItems.files.length === 0) return <EmptyState message="Chưa có file nào được chia sẻ" />;
+        if (mediaItems.files.length === 0) return (
+          <EmptyState title="Chưa có file" description="Chưa có file nào được chia sẻ" size="sm" className="py-12" />
+        );
         return (
           <div className="space-y-0.5 p-2">
             {mediaItems.files.map((item) => (
@@ -216,7 +222,9 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
         );
 
       case 'voice':
-        if (mediaItems.voice.length === 0) return <EmptyState message="Chưa có tin nhắn thoại nào" />;
+        if (mediaItems.voice.length === 0) return (
+          <EmptyState title="Chưa có ghi âm" description="Chưa có tin nhắn thoại nào" size="sm" className="py-12" />
+        );
         return (
           <div className="space-y-0.5 p-2">
             {mediaItems.voice.map((item) => (
@@ -258,7 +266,9 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
         );
 
       case 'links':
-        if (mediaItems.links.length === 0) return <EmptyState message="Chưa có liên kết nào được chia sẻ" />;
+        if (mediaItems.links.length === 0) return (
+          <EmptyState title="Chưa có liên kết" description="Chưa có liên kết nào được chia sẻ" size="sm" className="py-12" />
+        );
         return (
           <div className="space-y-0.5 p-2">
             {mediaItems.links.map((item) => (
@@ -333,10 +343,5 @@ const ChatDetailsMediaInner: React.FC<ChatDetailsMediaProps> = ({ messages, onMe
   );
 };
 
-const EmptyState: React.FC<{ message: string }> = ({ message }) => (
-  <div className="flex flex-col items-center justify-center py-10 text-text-tertiary">
-    <p className="text-sm">{message}</p>
-  </div>
-);
 
 export const ChatDetailsMedia = React.memo(ChatDetailsMediaInner);

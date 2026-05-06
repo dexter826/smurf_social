@@ -57,14 +57,15 @@ export const profileSchema = z.object({
     .max(VALIDATION.USER_NAME_MAX_LENGTH, `Tên không được quá ${VALIDATION.USER_NAME_MAX_LENGTH} ký tự`),
   bio: z.string()
     .max(VALIDATION.BIO_MAX_LENGTH, `Giới thiệu không được quá ${VALIDATION.BIO_MAX_LENGTH} ký tự`)
-    .optional(),
-  location: z.string().optional(),
-  gender: z.nativeEnum(Gender).optional(),
+    .optional()
+    .or(z.literal('')),
+  location: z.string().optional().or(z.literal('')),
+  gender: z.nativeEnum(Gender).optional().or(z.literal('')).nullable(),
   dob: dobValidation,
-  school: z.string().max(VALIDATION.SCHOOL_NAME_MAX_LENGTH, `Trường học không được quá ${VALIDATION.SCHOOL_NAME_MAX_LENGTH} ký tự`).optional(),
-  maritalStatus: z.nativeEnum(MaritalStatus).optional(),
+  school: z.string().max(VALIDATION.SCHOOL_NAME_MAX_LENGTH, `Trường học không được quá ${VALIDATION.SCHOOL_NAME_MAX_LENGTH} ký tự`).optional().or(z.literal('')),
+  maritalStatus: z.nativeEnum(MaritalStatus).optional().or(z.literal('')),
   interests: z.array(z.string()).optional(),
-  generation: z.nativeEnum(Generation).optional(),
+  generation: z.nativeEnum(Generation).optional().or(z.literal('')),
   profilePrivacy: z.object({
     email: z.nativeEnum(Visibility),
     dob: z.nativeEnum(Visibility),

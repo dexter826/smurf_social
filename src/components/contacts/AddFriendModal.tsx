@@ -1,15 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, MessageCircle, User as UserIcon, Clock, Check, XCircle } from 'lucide-react';
-import { Button, Input, Loading, Modal, UserAvatar, ConfirmDialog } from '../ui';
+import { Search, UserPlus, MessageCircle, User as UserIcon, Clock, Check } from 'lucide-react';
+import { Button, Input, Modal, UserAvatar, EmptyState, Skeleton } from '../ui';
 import { useContactStore } from '../../store/contactStore';
 import { useAuthStore } from '../../store/authStore';
 import { useLoadingStore } from '../../store/loadingStore';
 import { useRtdbChatStore } from '../../store';
 import { toast } from '../../store/toastStore';
-import { userService } from '../../services/userService';
 import { User, FriendStatus } from '../../../shared/types';
 import { TOAST_MESSAGES } from '../../constants';
+
+/**
+ * Skeleton hiển thị khi đang tìm kiếm người dùng
+ */
+const SearchResultSkeleton = () => (
+  <div className="w-full flex flex-col items-center animate-pulse gap-5">
+    <Skeleton variant="circle" width={96} height={96} />
+    <div className="flex flex-col items-center gap-3 w-full">
+      <Skeleton width="40%" height={20} />
+      <Skeleton width="30%" height={12} />
+      <Skeleton width="60%" height={32} className="mt-2" />
+    </div>
+    <div className="flex gap-2 w-full justify-center mt-2">
+      <Skeleton width={90} height={36} className="rounded-xl" />
+      <Skeleton width={90} height={36} className="rounded-xl" />
+    </div>
+  </div>
+);
 
 interface AddFriendModalProps {
   isOpen: boolean;
@@ -32,6 +49,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
   const [notFound, setNotFound] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Xác định trạng thái quan hệ giữa người dùng hiện tại và người dùng tìm thấy
   const relationship = useMemo(() => {
     if (!foundUser || !currentUser) return FriendStatus.NOT_FRIEND;
     if (friends.some(f => f.id === foundUser.id)) return FriendStatus.FRIEND;
@@ -49,13 +67,13 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
     else setNotFound(true);
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setSearchTerm('');
     setFoundUser(null);
     setNotFound(false);
     clearSearchResults();
     onClose();
-  };
+  }, [onClose, clearSearchResults]);
 
   const withLoading = async (fn: () => Promise<void>) => {
     setActionLoading(true);
@@ -98,21 +116,16 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
     }
   });
 
-
-  const handleMessage = (bypassSettingsCheck: boolean = false) => {
+  const handleMessage = () => {
     if (!foundUser || !currentUser) return;
-
-
     try {
       const convId = getOrCreateConversation(currentUser.id, foundUser.id);
       handleClose();
       navigate(`/?conv=${convId}`);
     } catch (error: any) {
-      console.error('[handleMessage] Lỗi:', error);
       toast.error(TOAST_MESSAGES.CHAT.INIT_FAILED);
     }
   };
-
 
   const handleViewProfile = () => {
     if (!foundUser) return;
@@ -120,10 +133,115 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
     navigate(`/profile/${foundUser.id}`);
   };
 
+  /**
+   * Render nội dung chính dựa trên trạng thái tìm kiếm
+   */
+  const renderResultContent = () => {
+    if (isLoading) return <SearchResultSkeleton />;
+    
+    if (foundUser) {
+      return (
+        <div className="w-full flex flex-col items-center animate-fade-in gap-5">
+          <UserAvatar
+            userId={foundUser.id}
+            size="xl"
+            className="ring-2 ring-bg-primary shadow-lg"
+          />
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-text-primary mb-0.5">
+              {foundUser.fullName}
+            </h3>
+            <p className="text-xs text-text-tertiary">{foundUser.email}</p>
+            {foundUser.bio && (
+              <p className="text-xs text-text-secondary mt-2 max-w-xs mx-auto line-clamp-2 italic">
+                "{foundUser.bio}"
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+            {relationship === FriendStatus.FRIEND ? (
+              <Button
+                variant="secondary"
+                icon={<Check size={16} />}
+                className="bg-success/10 text-success border-success/20 hover:bg-success/15"
+                onClick={handleMessage}
+              >
+                Bạn bè
+              </Button>
+            ) : relationship === FriendStatus.PENDING_SENT ? (
+              <Button
+                variant="secondary"
+                icon={<Clock size={16} />}
+                onClick={handleCancelRequest}
+                isLoading={actionLoading}
+                className="hover:bg-error/10 hover:text-error hover:border-error/20 transition-colors"
+              >
+                Đã gửi lời mời
+              </Button>
+            ) : relationship === FriendStatus.PENDING_RECEIVED ? (
+              <Button
+                icon={<UserPlus size={16} />}
+                onClick={handleAcceptRequest}
+                isLoading={actionLoading}
+              >
+                Chấp nhận kết bạn
+              </Button>
+            ) : (
+              <Button
+                icon={<UserPlus size={16} />}
+                onClick={handleAddFriend}
+                isLoading={actionLoading}
+              >
+                Thêm bạn bè
+              </Button>
+            )}
+
+            <Button
+              variant="secondary"
+              icon={<MessageCircle size={16} />}
+              onClick={handleMessage}
+            >
+              Nhắn tin
+            </Button>
+
+            <Button
+              variant="ghost"
+              icon={<UserIcon size={16} />}
+              onClick={handleViewProfile}
+              className="text-text-secondary hover:text-primary"
+            >
+              Trang cá nhân
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (notFound) {
+      return (
+        <EmptyState
+          icon={Search}
+          title="Không tìm thấy người dùng"
+          description="Vui lòng kiểm tra lại chính xác địa chỉ email."
+          size="sm"
+        />
+      );
+    }
+
+    return (
+      <EmptyState
+        icon={Search}
+        title="Tìm kiếm bạn bè"
+        description="Nhập địa chỉ email để tìm kiếm và kết nối."
+        size="sm"
+      />
+    );
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Tìm kiếm người dùng" maxWidth="md" fullScreen="mobile">
       <div className="space-y-5">
-        {/* Search row */}
         <div className="flex gap-2">
           <Input
             placeholder="Nhập địa chỉ email chính xác..."
@@ -140,118 +258,17 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ isOpen, onClose 
           <Button
             onClick={handleSearch}
             disabled={isLoading || !searchTerm.trim()}
-            isLoading={isLoading}
           >
             Tìm
           </Button>
         </div>
 
-        {/* Result area */}
-        <div className="min-h-[180px] flex flex-col items-center justify-center border border-dashed border-border-light rounded-2xl p-6 bg-bg-secondary/40">
-          {isLoading ? (
-            <Loading variant="inline" size="md" />
-
-          ) : foundUser ? (
-            /* ── Found user ── */
-            <div className="w-full flex flex-col items-center animate-fade-in gap-5">
-              <UserAvatar
-                userId={foundUser.id}
-                size="xl"
-                className="ring-2 ring-bg-primary shadow-lg"
-              />
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-text-primary mb-0.5">
-                  {foundUser.fullName}
-                </h3>
-                <p className="text-xs text-text-tertiary">{foundUser.email}</p>
-                {foundUser.bio && (
-                  <p className="text-xs text-text-secondary mt-2 max-w-xs mx-auto line-clamp-2 italic">
-                    "{foundUser.bio}"
-                  </p>
-                )}
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-                {relationship === FriendStatus.FRIEND ? (
-                  <Button
-                    variant="secondary"
-                    icon={<Check size={16} />}
-                    className="bg-success/10 text-success border-success/20 hover:bg-success/15"
-                    onClick={() => handleMessage()}
-                  >
-                    Bạn bè
-                  </Button>
-                ) : relationship === FriendStatus.PENDING_SENT ? (
-                  <Button
-                    variant="secondary"
-                    icon={<Clock size={16} />}
-                    onClick={handleCancelRequest}
-                    isLoading={actionLoading}
-                    className="hover:bg-error/10 hover:text-error hover:border-error/20 transition-colors"
-                  >
-                    Đã gửi lời mời
-                  </Button>
-                ) : relationship === FriendStatus.PENDING_RECEIVED ? (
-                  <Button
-                    icon={<UserPlus size={16} />}
-                    onClick={handleAcceptRequest}
-                    isLoading={actionLoading}
-                  >
-                    Chấp nhận kết bạn
-                  </Button>
-                ) : (
-                  <Button
-                    icon={<UserPlus size={16} />}
-                    onClick={handleAddFriend}
-                    isLoading={actionLoading}
-                  >
-                    Thêm bạn bè
-                  </Button>
-                )}
-
-                <Button
-                  variant="secondary"
-                  icon={<MessageCircle size={16} />}
-                  onClick={() => handleMessage()}
-                >
-                  Nhắn tin
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  icon={<UserIcon size={16} />}
-                  onClick={handleViewProfile}
-                  className="text-text-secondary hover:text-primary"
-                >
-                  Trang cá nhân
-                </Button>
-              </div>
-            </div>
-
-          ) : notFound ? (
-            /* ── Not found ── */
-            <div className="text-center">
-              <div className="w-14 h-14 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-error/20">
-                <Search size={24} className="text-error/60" />
-              </div>
-              <p className="text-sm font-semibold text-text-primary">Không tìm thấy người dùng</p>
-              <p className="text-xs text-text-tertiary mt-1">Vui lòng kiểm tra lại địa chỉ email</p>
-            </div>
-
-          ) : (
-            /* ── Idle state ── */
-            <div className="text-center">
-              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-primary/20">
-                <Search size={24} className="text-primary/60" />
-              </div>
-              <p className="text-sm font-medium text-text-secondary">Tìm kiếm bạn bè</p>
-              <p className="text-xs text-text-tertiary mt-1">Nhập email để tìm kiếm và kết nối</p>
-            </div>
-          )}
+        <div className={`min-h-[220px] flex flex-col items-center justify-center rounded-2xl p-6 transition-all duration-300 ${
+          foundUser ? 'bg-bg-primary border border-border-light shadow-sm' : 'border border-dashed border-border-light bg-bg-secondary/40'
+        }`}>
+          {renderResultContent()}
         </div>
       </div>
-      
     </Modal>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Send, History, Sparkles, Loader2, Trash2, Clock } from 'lucide-react';
-import { Modal, Button, IconButton, TextArea } from '../../ui';
+import { Modal, Button, IconButton, TextArea, EmptyState } from '../../ui';
 import { aiSummaryService } from '../../../services/ai/aiSummaryService';
 import { localSummaryDb, ChatSummary } from '../../../services/ai/localSummaryDb';
 import { RtdbMessage, User } from '../../../../shared/types';
@@ -134,9 +134,12 @@ export const AiSummaryModal: React.FC<AiSummaryModalProps> = ({
 
         <div className="space-y-3">
           {history.length === 0 ? (
-            <div className="text-center py-8 text-text-tertiary text-sm italic">
-              Chưa có bản tóm tắt nào cho cuộc trò chuyện này.
-            </div>
+            <EmptyState
+              title="Trống"
+              description="Chưa có bản tóm tắt nào cho cuộc trò chuyện này."
+              size="sm"
+              className="py-8"
+            />
           ) : (
             history.map((item, index) => (
               <div 

@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Flag, Clock, CheckCircle, XCircle, AlertTriangle, FileText, MessageSquare, User as UserIcon, Trash2, Lock, X } from 'lucide-react';
 import { Report, ReportStatus, ReportType } from '../../../shared/types';
-import { UserAvatar, Skeleton, Select, IconButton, ConfirmDialog } from '../ui';
+import { UserAvatar, Skeleton, Select, IconButton, ConfirmDialog, EmptyState } from '../ui';
 import { REPORT_CONFIG, TOAST_MESSAGES, CONFIRM_MESSAGES } from '../../constants';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { useAdminReports } from '../../hooks/useAdminReports';
@@ -204,12 +204,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onSelectReport }) => {
               </div>
             ))
           ) : reports.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 bg-bg-primary rounded-2xl border border-dashed border-border-light">
-              <div className="w-14 h-14 bg-bg-secondary rounded-full flex items-center justify-center mb-3 border border-border-light">
-                <Flag size={22} className="text-text-tertiary" />
-              </div>
-              <p className="text-sm font-medium text-text-secondary">Không có báo cáo nào</p>
-            </div>
+            <EmptyState
+              icon={Flag}
+              title="Không có báo cáo nào"
+              variant="boxed"
+              size="lg"
+              className="py-16"
+            />
           ) : (
             <>
               {/* Mobile Card View */}
