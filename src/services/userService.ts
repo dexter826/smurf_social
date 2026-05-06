@@ -116,7 +116,7 @@ export const userService = {
         fullName: data.fullName || '',
         email: data.email || '',
         dob: data.dob || null,
-        gender: data.gender || undefined,
+        gender: data.gender || null,
         location: data.location || '',
         bio: data.bio || '',
         avatar: data.avatar || { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
