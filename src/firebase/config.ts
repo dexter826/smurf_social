@@ -2,7 +2,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
   initializeFirestore,
-  memoryLocalCache,
+  persistentLocalCache,
+  memoryLocalCache
 } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
@@ -29,21 +30,21 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 
-export const db = initializeFirestore(app, {
-  localCache: memoryLocalCache(),
-});
-
-export const rtdb = getDatabase(app);
-export const storage = getStorage(app);
-export const functions = getFunctions(app, 'asia-southeast1');
-
-/** Kết nối Firebase Emulator khi chạy local */
 const hostname = window.location.hostname;
 const isLocal = hostname === 'localhost' || 
                 hostname === '127.0.0.1' || 
                 hostname.startsWith('192.168.') || 
                 hostname.startsWith('10.') || 
                 hostname.startsWith('172.');
+
+export const db = initializeFirestore(app, {
+  localCache: isLocal ? memoryLocalCache() : persistentLocalCache({}),
+});
+
+export const rtdb = getDatabase(app);
+
+export const storage = getStorage(app);
+export const functions = getFunctions(app, 'asia-southeast1');
 
 if (isLocal) {
   console.log(`--- Đang kết nối với Firebase Emulator tại ${hostname} ---`);

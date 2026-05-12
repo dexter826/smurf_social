@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, CheckCheck } from 'lucide-react';
+import { Check, CheckCheck, AlertCircle } from 'lucide-react';
 import { User } from '../../../../shared/types';
 import { Avatar } from '../../ui';
 
@@ -7,14 +7,19 @@ interface MessageStatusProps {
   isMine: boolean;
   isRead: boolean;
   isDelivered: boolean;
+  isFailed?: boolean;
   readers: User[];
 }
 
-/** Hiển thị trạng thái đã xem của tin nhắn */
+/** Hiển thị trạng thái của tin nhắn (đã gửi, đã nhận, lỗi) */
 export const MessageStatus: React.FC<MessageStatusProps> = ({
-  isMine, isRead, isDelivered, readers,
+  isMine, isRead, isDelivered, isFailed, readers,
 }) => {
   if (!isMine) return null;
+
+  if (isFailed) {
+    return <AlertCircle size={13} strokeWidth={2.5} className="text-error" />;
+  }
 
   if (isRead && readers.length > 0) {
     return (

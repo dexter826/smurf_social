@@ -9,6 +9,7 @@ import { db } from '../../firebase/config';
 import { useLoadingStore } from '../loadingStore';
 import { useReactionStore } from '../reactionStore';
 import { convertDoc } from '../../utils/firebaseUtils';
+import { soundManager } from '../../services/soundManager';
 
 export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set, get) => ({
   /** Tạo bài viết mới */
@@ -55,7 +56,7 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
           posts: state.posts.map(p => p.id === postId ? { ...p, media: finalMedia } : p)
         };
       });
-      toast.success(TOAST_MESSAGES.FEED.CREATE_SUCCESS);
+      soundManager.play('success');
     } catch (error: any) {
       console.error("[postStore] Lỗi đăng bài:", error);
       const msg = error?.message || 'Lỗi không xác định';

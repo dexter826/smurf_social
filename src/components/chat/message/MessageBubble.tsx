@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smile } from 'lucide-react';
+import { Smile, RefreshCw, AlertCircle } from 'lucide-react';
 import { RtdbMessage, User, MessageType, UserStatus } from '../../../../shared/types';
 import {
   UserAvatar, ReactionDisplay, ReactionSelector,
@@ -59,7 +59,8 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   const [showReactionSelector, setShowReactionSelector] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [showActions, setShowActions] = useState(false);
-  const { toggleReaction, uploadProgress } = useRtdbChatStore();
+  const { toggleReaction, uploadProgress, failedMessageIds, resendMessage } = useRtdbChatStore();
+  const isFailed = failedMessageIds[message.id];
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   useClickOutside([containerRef], () => setShowActions(false), showActions);
@@ -345,9 +346,20 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   isMine={isMe}
                   isRead={lastReadByUsers.length > 0}
                   isDelivered={isDelivered}
+                  isFailed={isFailed}
                   readers={lastReadByUsers}
                 />
               </div>
+
+              {isFailed && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); resendMessage(conversationId, message.id); }}
+                  className="flex items-center gap-1 mt-1 text-[10px] text-error hover:text-error/80 transition-colors duration-200 font-medium"
+                >
+                  <RefreshCw size={10} />
+                  <span>Gửi lại</span>
+                </button>
+              )}
 
               {isGroup && lastReadByUsers.length > 0 && (
                 <Modal

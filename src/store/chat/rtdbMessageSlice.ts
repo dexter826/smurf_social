@@ -11,6 +11,7 @@ export interface RtdbMessageSlice {
     hasMoreMessages: Record<string, boolean>;
     isLoadingMore: Record<string, boolean>;
     uploadProgress: Record<string, { progress: number; error?: boolean; localUrls?: string[] }>;
+    failedMessageIds: Record<string, boolean>;
 
     subscribeToMessages: (conversationId: string) => () => void;
     loadMoreMessages: (conversationId: string) => Promise<void>;
@@ -30,6 +31,7 @@ export interface RtdbMessageSlice {
     forwardMessage: (targetConversationId: string, senderId: string, srcMessage: RtdbMessage) => Promise<void>;
     editMessage: (conversationId: string, messageId: string, content: string) => Promise<void>;
     toggleReaction: (conversationId: string, messageId: string, userId: string, emoji: string) => Promise<void>;
+    resendMessage: (conversationId: string, messageId: string) => Promise<void>;
     clearMessages: (conversationId: string) => void;
     setUploadProgress: (messageId: string, progress: number) => void;
     setUploadError: (messageId: string, isError: boolean) => void;
@@ -42,6 +44,7 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
     hasMoreMessages: {},
     isLoadingMore: {},
     uploadProgress: {},
+    failedMessageIds: {},
 
     /** Theo dõi tin nhắn */
     subscribeToMessages: (conversationId: string) => {
@@ -166,13 +169,16 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 replyToId,
                 messageId: msgId
             });
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendTextMessage:', error);
-            set((state) => {
-                const msgs = state.messages[conversationId] || [];
-                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
-            });
-            throw error;
+            set((state) => ({
+                failedMessageIds: { ...state.failedMessageIds, [msgId]: true }
+            }));
         }
     },
 
@@ -220,13 +226,16 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 replyToId,
                 messageId: msgId
             });
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendSharedPostMessage:', error);
-            set((state) => {
-                const msgs = state.messages[conversationId] || [];
-                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
-            });
-            throw error;
+            set((state) => ({
+                failedMessageIds: { ...state.failedMessageIds, [msgId]: true }
+            }));
         }
     },
 
@@ -291,18 +300,21 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendImageMessage:', error);
             set((state) => {
-                const msgs = state.messages[conversationId] || [];
                 const nextUploadProgress = { ...state.uploadProgress };
                 delete nextUploadProgress[msgId];
                 return { 
-                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    failedMessageIds: { ...state.failedMessageIds, [msgId]: true },
                     uploadProgress: nextUploadProgress
                 };
             });
-            throw error;
         }
     },
 
@@ -364,18 +376,21 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendFileMessage:', error);
             set((state) => {
-                const msgs = state.messages[conversationId] || [];
                 const nextUploadProgress = { ...state.uploadProgress };
                 delete nextUploadProgress[msgId];
                 return { 
-                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    failedMessageIds: { ...state.failedMessageIds, [msgId]: true },
                     uploadProgress: nextUploadProgress
                 };
             });
-            throw error;
         }
     },
 
@@ -436,18 +451,21 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendVideoMessage:', error);
             set((state) => {
-                const msgs = state.messages[conversationId] || [];
                 const nextUploadProgress = { ...state.uploadProgress };
                 delete nextUploadProgress[msgId];
                 return { 
-                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    failedMessageIds: { ...state.failedMessageIds, [msgId]: true },
                     uploadProgress: nextUploadProgress
                 };
             });
-            throw error;
         }
     },
 
@@ -509,18 +527,21 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                     get().setUploadProgress(messageId, progress.progress);
                 }
             });
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendVoiceMessage:', error);
             set((state) => {
-                const msgs = state.messages[conversationId] || [];
                 const nextUploadProgress = { ...state.uploadProgress };
                 delete nextUploadProgress[msgId];
                 return { 
-                    messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) },
+                    failedMessageIds: { ...state.failedMessageIds, [msgId]: true },
                     uploadProgress: nextUploadProgress
                 };
             });
-            throw error;
         }
     },
 
@@ -564,13 +585,16 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
 
         try {
             await rtdbMessageService.sendGifMessage(conversationId, senderId, gifUrl, { replyToId, messageId: msgId });
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendGifMessage:', error);
-            set((state) => {
-                const msgs = state.messages[conversationId] || [];
-                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
-            });
-            throw error;
+            set((state) => ({
+                failedMessageIds: { ...state.failedMessageIds, [msgId]: true }
+            }));
         }
     },
 
@@ -612,14 +636,18 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
 
         try {
             await rtdbMessageService.sendCallMessage(conversationId, senderId, payload, msgId);
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
             return msgId;
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi sendCallMessage:', error);
-            set((state) => {
-                const msgs = state.messages[conversationId] || [];
-                return { messages: { ...state.messages, [conversationId]: msgs.filter(m => m.id !== msgId) } };
-            });
-            throw error;
+            set((state) => ({
+                failedMessageIds: { ...state.failedMessageIds, [msgId]: true }
+            }));
+            return msgId;
         }
     },
 
@@ -785,12 +813,16 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
 
         try {
             await rtdbMessageService.forwardMessage(targetConversationId, senderId, srcMessage, msgId);
+            set((state) => {
+                const next = { ...state.failedMessageIds };
+                delete next[msgId];
+                return { failedMessageIds: next };
+            });
         } catch (error) {
             console.error('[rtdbMessageSlice] Lỗi forwardMessage:', error);
-            set((state) => {
-                const msgs = state.messages[targetConversationId] || [];
-                return { messages: { ...state.messages, [targetConversationId]: msgs.filter(m => m.id !== msgId) } };
-            });
+            set((state) => ({
+                failedMessageIds: { ...state.failedMessageIds, [msgId]: true }
+            }));
         }
     },
 
@@ -873,6 +905,55 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
             }
             console.error('[rtdbMessageSlice] Lỗi toggleReaction:', error);
             throw error;
+        }
+    },
+
+    /** Thử gửi lại tin nhắn bị lỗi */
+    resendMessage: async (conversationId: string, messageId: string) => {
+        const msgs = get().messages[conversationId] || [];
+        const msgObj = msgs.find(m => m.id === messageId);
+        if (!msgObj || !get().failedMessageIds[messageId]) return;
+
+        const { data } = msgObj;
+
+        set((state) => {
+            const next = { ...state.failedMessageIds };
+            delete next[messageId];
+            return { failedMessageIds: next };
+        });
+
+        try {
+            switch (data.type) {
+                case MessageType.TEXT:
+                    await rtdbMessageService.sendTextMessage(conversationId, data.senderId, data.content, {
+                        mentions: data.mentions,
+                        replyToId: data.replyToId,
+                        messageId
+                    });
+                    break;
+                case MessageType.IMAGE:
+                    console.warn('Resend media chưa được hỗ trợ đầy đủ nếu file gốc đã mất');
+                    break;
+                case MessageType.GIF:
+                    await rtdbMessageService.sendGifMessage(conversationId, data.senderId, data.content, {
+                        replyToId: data.replyToId,
+                        messageId
+                    });
+                    break;
+                case MessageType.SHARE_POST:
+                    await rtdbMessageService.sendSharedPostMessage(conversationId, data.senderId, JSON.parse(data.content), {
+                        replyToId: data.replyToId,
+                        messageId
+                    });
+                    break;
+                default:
+                    console.warn('Loại tin nhắn không hỗ trợ gửi lại tự động:', data.type);
+            }
+        } catch (error) {
+            console.error('[rtdbMessageSlice] Lỗi khi gửi lại tin nhắn:', error);
+            set((state) => ({
+                failedMessageIds: { ...state.failedMessageIds, [messageId]: true }
+            }));
         }
     },
 

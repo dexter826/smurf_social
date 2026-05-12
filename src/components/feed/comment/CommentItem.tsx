@@ -189,14 +189,14 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
               {/* Reaction badge — floats bottom-right of bubble */}
               {!isEditing && filteredCount > 0 && (
                 <button
-                  className="absolute -bottom-2.5 -right-1 transition-opacity duration-200 hover:opacity-80"
+                  className="absolute -bottom-1.5 -right-2 z-10 scale-[0.85] origin-bottom-right"
                   onClick={() => setShowReactionDetails(true)}
                 >
                   <ReactionDisplay
                     reactionSummary={filteredSummary}
                     reactionCount={filteredCount}
                     variant="xs"
-                    className="shadow-sm border border-bg-primary bg-bg-primary"
+                    className="shadow-sm border-2 border-bg-primary bg-bg-primary"
                   />
                 </button>
               )}
@@ -235,7 +235,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
 
           {/* Meta row: time · like · reply */}
           {!isEditing && (
-            <div className="flex items-center gap-3 mt-1.5 ml-1 text-xs text-text-tertiary font-medium">
+            <div className="flex items-center gap-3 mt-2 ml-1.5 text-xs text-text-tertiary font-medium">
               <span
                 className="text-[11px] text-text-tertiary"
                 title={formatDateTime(comment.createdAt)}
