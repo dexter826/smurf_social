@@ -1,6 +1,6 @@
 import React from 'react';
 import { RtdbMessage } from '../../../../../shared/types';
-import { LazyVideo, CircularProgressOverlay } from '../../../ui';
+import { LazyVideo, CircularProgressOverlay, SensitiveMediaGuard } from '../../../ui';
 
 interface VideoMessageProps {
   message: { id: string; data: RtdbMessage };
@@ -30,18 +30,24 @@ export const VideoMessage: React.FC<VideoMessageProps> = ({
   if (!videoUrl) return null;
 
   return (
-    <div className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] bg-black/5 relative shadow-sm border border-border-light w-fit">
-      <LazyVideo
-        src={videoUrl}
-        thumbnail={thumbnailUrl}
-        className="max-w-full max-h-[420px] object-contain"
-        autoPlay={!isUploading} 
-        muted
-        loop
-        controls={!isUploading} 
-      />
-      
-      <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} size="md" />
-    </div>
+    <SensitiveMediaGuard
+      isSensitive={message.data.media?.[0]?.isSensitive}
+      size="sm"
+      className="rounded-xl overflow-hidden max-w-[320px] max-h-[420px] bg-black/5 relative shadow-sm border border-border-light w-fit"
+    >
+      <div className="w-full h-full">
+        <LazyVideo
+          src={videoUrl}
+          thumbnail={thumbnailUrl}
+          className="max-w-full max-h-[420px] object-contain"
+          autoPlay={!isUploading} 
+          muted
+          loop
+          controls={!isUploading} 
+        />
+        
+        <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} size="md" />
+      </div>
+    </SensitiveMediaGuard>
   );
 };

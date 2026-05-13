@@ -158,7 +158,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
                     </p>
                     {comment.image && (
                       <div className="mt-2 rounded-xl overflow-hidden border border-border-light relative group/media">
-                        <SensitiveMediaGuard isSensitive={comment.image.isSensitive}>
+                        <SensitiveMediaGuard isSensitive={comment.image.isSensitive} size="sm">
                           <LazyImage
                             src={comment.image.url}
                             className={`max-h-52 w-full object-contain transition-all duration-200 ${isUploading ? 'blur-[1px] opacity-70' : ''}`}

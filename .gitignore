@@ -36,3 +36,10 @@ dist-ssr
 .firebase/
 *-debug.log
 emulator_data/
+
+# AI Moderation Worker
+.venv_worker/
+.ai_models/
+firebase_credentials.json
+sensitive-detection/
+run_local_worker.py

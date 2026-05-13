@@ -88,6 +88,12 @@ export const onPostWrite = onDocumentWritten(
             return;
         }
 
+        // Tự động gỡ bài khỏi bảng tin nếu vi phạm chính sách
+        if (before && after && before.status !== 'policy_violation' && after.status === 'policy_violation') {
+            await removeFeedEntriesIncludingAuthor(postId, after.authorId);
+            return;
+        }
+
         if (before && after && before.status === 'active' && after.status === 'active') {
             const visibilityChanged = before.visibility !== after.visibility;
             const contentChanged = before.content !== after.content ||

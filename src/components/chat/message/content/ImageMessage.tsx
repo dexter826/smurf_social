@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { RtdbMessage } from '../../../../../shared/types';
-import { LazyImage, CircularProgressOverlay } from '../../../ui';
+import { LazyImage, CircularProgressOverlay, SensitiveMediaGuard } from '../../../ui';
 import { MessageTextContent } from './MessageTextContent';
 
 interface ImageMessageProps {
@@ -52,25 +52,31 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
 
   const renderItem = (item: any, idx: number) => {
     return (
-      <div
+      <SensitiveMediaGuard
         key={`${message.id}-media-${idx}`}
+        isSensitive={item.isSensitive}
         className="relative overflow-hidden cursor-pointer aspect-square group"
-        onClick={() => onOpenImage(idx)}
+        size={count > 4 ? 'xs' : 'sm'}
       >
-        <LazyImage 
-          src={item.url} 
-          alt="media item" 
-          className="w-full h-full object-cover" 
-          wrapperClassName="w-full h-full" 
-          onLoad={handleItemLoad}
-        />
-        
-        <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="bg-black/10 p-2 rounded-full backdrop-blur-sm">
-            <ImageIcon className="text-white drop-shadow-md" size={16} />
+        <div
+          className="w-full h-full"
+          onClick={() => onOpenImage(idx)}
+        >
+          <LazyImage 
+            src={item.url} 
+            alt="media item" 
+            className="w-full h-full object-cover" 
+            wrapperClassName="w-full h-full" 
+            onLoad={handleItemLoad}
+          />
+          
+          <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-black/10 p-2 rounded-full backdrop-blur-sm">
+              <ImageIcon className="text-white drop-shadow-md" size={16} />
+            </div>
           </div>
         </div>
-      </div>
+      </SensitiveMediaGuard>
     );
   };
 
@@ -122,30 +128,36 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
   const first = mediaItems[0];
   return (
     <div className="flex flex-col">
-      <div 
+      <SensitiveMediaGuard
+        isSensitive={first.isSensitive}
+        size="sm"
         className={`
           overflow-hidden max-w-[320px] max-h-[420px] cursor-pointer group relative w-fit
           ${message.data.content ? 'rounded-t-xl' : 'rounded-xl'}
-        `} 
-        onClick={() => onOpenImage(0)}
+        `}
       >
-        <LazyImage 
-          src={first.url} 
-          alt="media content" 
-          className="max-w-full max-h-[420px] object-contain" 
-          onLoad={onLoad}
-        />
-        
-        <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} />
-        
-        {!isUploading && (
-          <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="bg-black/20 p-3 rounded-full backdrop-blur-sm">
-              <ImageIcon className="text-white drop-shadow-md" size={24} />
+        <div
+          className="w-full h-full"
+          onClick={() => onOpenImage(0)}
+        >
+          <LazyImage 
+            src={first.url} 
+            alt="media content" 
+            className="max-w-full max-h-[420px] object-contain" 
+            onLoad={onLoad}
+          />
+          
+          <CircularProgressOverlay isVisible={isUploading} progress={uploadProgress?.progress || 0} />
+          
+          {!isUploading && (
+            <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="bg-black/20 p-3 rounded-full backdrop-blur-sm">
+                <ImageIcon className="text-white drop-shadow-md" size={24} />
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </SensitiveMediaGuard>
       
       {message.data.content && (
         <div className="px-3 pb-2 pt-2 border-t border-border-light/40">

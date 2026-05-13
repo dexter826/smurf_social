@@ -4,6 +4,8 @@ import { Notification } from '../../shared/types';
 import { notificationService } from '../services/notificationService';
 import { PAGINATION } from '../constants/appConfig';
 import { useLoadingStore } from './loadingStore';
+import { toast } from './toastStore';
+import { NotificationType } from '../../shared/types';
 
 interface NotificationState {
   notifications: Notification[];
@@ -19,6 +21,7 @@ interface NotificationState {
   loadMore: (userId: string) => void;
   reset: () => void;
   _unsubscribe: (() => void) | null;
+  isInitialLoad: boolean;
 }
 
 export const useNotificationStore = create<NotificationState>()(
@@ -28,6 +31,7 @@ export const useNotificationStore = create<NotificationState>()(
       unreadCount: 0,
       currentLimit: PAGINATION.NOTIFICATIONS,
       _unsubscribe: null as (() => void) | null,
+      isInitialLoad: true,
 
       /** Đặt lại trạng thái thông báo */
       reset: () => {
@@ -145,7 +149,25 @@ export const useNotificationStore = create<NotificationState>()(
         const unsubscribe = notificationService.subscribeToNotifications(
           userId,
           (notifications) => {
-            get().setNotifications(notifications);
+            const state = get();
+            
+            // Phát hiện thông báo mới để hiện Toast
+            if (!state.isInitialLoad) {
+              const oldIds = new Set(state.notifications.map(n => n.id));
+              const newNotifications = notifications.filter(n => !oldIds.has(n.id) && !n.isRead);
+              
+              newNotifications.forEach(n => {
+                if (n.type === NotificationType.SYSTEM) {
+                  toast.error(n.data.contentSnippet || "Bạn có thông báo hệ thống mới");
+                }
+              });
+            }
+
+            set({ 
+              notifications, 
+              unreadCount: notifications.filter(n => !n.isRead).length,
+              isInitialLoad: false 
+            });
             useLoadingStore.getState().setLoading('notifications', false);
           },
           limit,
