@@ -70,13 +70,18 @@ export const postService = {
       }
 
       const postIds = feedSnapshot.docs.map(doc => doc.data().postId);
-      const postsQuery = query(
-        collection(db, 'posts'),
-        where('__name__', 'in', postIds),
-        where('status', '==', PostStatus.ACTIVE)
-      );
-      const postsSnapshot = await getDocs(postsQuery);
-      const posts = convertDocs<Post>(postsSnapshot.docs);
+      const postPromises = postIds.map(id => getDoc(doc(db, 'posts', id)));
+      const postResults = await Promise.allSettled(postPromises);
+
+      const posts: Post[] = [];
+      for (const result of postResults) {
+        if (result.status === 'fulfilled' && result.value.exists()) {
+          const postData = result.value.data();
+          if (postData.status === PostStatus.ACTIVE) {
+            posts.push(convertDoc<Post>(result.value));
+          }
+        }
+      }
 
       posts.sort((a, b) => getSafeMillis(b.createdAt) - getSafeMillis(a.createdAt));
 

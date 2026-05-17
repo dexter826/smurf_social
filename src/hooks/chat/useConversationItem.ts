@@ -1,4 +1,6 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
+import { ref, onValue } from 'firebase/database';
+import { rtdb } from '../../firebase/config';
 import { RtdbConversation, RtdbUserChat, UserStatus, MessageType } from '../../../shared/types';
 import { formatChatTime } from '../../utils/dateUtils';
 import { useUserCache } from '../../store/userCacheStore';
@@ -63,7 +65,56 @@ export const useConversationItem = ({
   const unreadCount = conversation.userChat?.unreadCount || 0;
   const isUnread = unreadCount > 0 && !isActive;
 
-  const lastMessage = conversation.data.lastMessage;
+  const [isLastMessageDeleted, setIsLastMessageDeleted] = useState(false);
+
+  useEffect(() => {
+    const msgId = conversation.data.lastMessage?.messageId;
+    if (!msgId) {
+      setIsLastMessageDeleted(false);
+      return;
+    }
+
+    const deletedRef = ref(rtdb, `messages/${conversation.id}/${msgId}/deletedBy/${currentUserId}`);
+    return onValue(deletedRef, (snapshot) => {
+      setIsLastMessageDeleted(snapshot.exists());
+    });
+  }, [conversation.id, conversation.data.lastMessage?.messageId, currentUserId]);
+
+  const effectiveLastMessage = useMemo(() => {
+    if (storeMessages.length > 0) {
+      const lastMsg = storeMessages[storeMessages.length - 1];
+      
+      if (lastMsg.id === conversation.data.lastMessage?.messageId && isLastMessageDeleted) {
+        return storeMessages.length > 1 ? {
+          messageId: storeMessages[storeMessages.length - 2].id,
+          senderId: storeMessages[storeMessages.length - 2].data.senderId,
+          content: storeMessages[storeMessages.length - 2].data.content,
+          type: storeMessages[storeMessages.length - 2].data.type,
+          timestamp: storeMessages[storeMessages.length - 2].data.createdAt,
+          readBy: storeMessages[storeMessages.length - 2].data.readBy,
+          deliveredTo: storeMessages[storeMessages.length - 2].data.deliveredTo
+        } : null;
+      }
+
+      return {
+        messageId: lastMsg.id,
+        senderId: lastMsg.data.senderId,
+        content: lastMsg.data.content,
+        type: lastMsg.data.type,
+        timestamp: lastMsg.data.createdAt,
+        readBy: lastMsg.data.readBy,
+        deliveredTo: lastMsg.data.deliveredTo
+      };
+    }
+
+    if (isLastMessageDeleted) {
+      return null;
+    }
+
+    return conversation.data.lastMessage;
+  }, [storeMessages, conversation.data.lastMessage, isLastMessageDeleted]);
+
+  const lastMessage = effectiveLastMessage;
 
   const lastMessagePreview = useMemo(() => {
     const clearedAt = conversation.userChat?.clearedAt || 0;
