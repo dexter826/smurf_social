@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
-import { User, MediaObject, Visibility } from '../../../shared/types';
+import { User, MediaObject, Visibility, PostType } from '../../../shared/types';
 import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
+import { systemPostService } from '../../services/systemPostService';
 import { useUserCache } from '../../store/userCacheStore';
 import { toast } from '../../store/toastStore';
 import { validateFile } from '../../utils';
@@ -90,6 +91,7 @@ export const useProfileMedia = ({
     try {
       const emptyAvatar: MediaObject = { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false };
       await userService.updateProfile(profile.id, { avatar: emptyAvatar });
+      await systemPostService.deleteLatestProfileUpdatePost(profile.id, PostType.AVATAR_UPDATE);
       const updatedProfile = { ...profile, avatar: emptyAvatar };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);
@@ -111,6 +113,7 @@ export const useProfileMedia = ({
     try {
       const emptyCover: MediaObject = { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false };
       await userService.updateProfile(profile.id, { cover: emptyCover });
+      await systemPostService.deleteLatestProfileUpdatePost(profile.id, PostType.COVER_UPDATE);
       const updatedProfile = { ...profile, cover: emptyCover };
       setProfile(updatedProfile);
       useUserCache.getState().setUser(updatedProfile);

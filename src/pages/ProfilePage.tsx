@@ -66,6 +66,7 @@ const ProfilePage: React.FC = () => {
         collection(db, 'posts'),
         where('authorId', '==', profile.id),
         where('type', '==', type),
+        where('status', '==', PostStatus.ACTIVE),
         orderBy('createdAt', 'desc'),
         limit(1)
       );
@@ -163,8 +164,8 @@ const ProfilePage: React.FC = () => {
           isMessageBlockedByPartner={isMessageBlockedByPartner}
           uploadingType={uploadingType}
           uploadProgress={uploadProgress}
-          onAvatarClick={() => handleMediaClick(PostType.AVATAR_UPDATE)}
-          onCoverClick={() => handleMediaClick(PostType.COVER_UPDATE)}
+          onAvatarClick={profile.avatar?.url ? () => handleMediaClick(PostType.AVATAR_UPDATE) : undefined}
+          onCoverClick={profile.cover?.url ? () => handleMediaClick(PostType.COVER_UPDATE) : undefined}
         />
         {canViewContent && (
           <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />

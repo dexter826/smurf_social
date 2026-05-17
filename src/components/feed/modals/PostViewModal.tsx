@@ -72,7 +72,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const isOwner = post?.authorId === currentUser.id;
   const isSystemPost = post?.type === PostType.AVATAR_UPDATE || post?.type === PostType.COVER_UPDATE;
   const isFriend = (post && friendIds?.includes(post.authorId)) || false;
-  const isDeleted = post?.status === PostStatus.DELETED;
+  const isViolation = (post?.status as any) === 'policy_violation';
+  const isDeleted = post?.status === PostStatus.DELETED || isViolation;
   const canAccessByVisibility = !post
     || isOwner
     || post.visibility === Visibility.PUBLIC
@@ -102,7 +103,7 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
   const shouldShowSkeleton = !!isLoading;
   const isCinema = post ? (post.media?.length ?? 0) > 0 : false;
 
-  if (!post && !shouldShowSkeleton) {
+  if ((!post || isDeleted) && !shouldShowSkeleton) {
     return (
       <Modal
         isOpen={isOpen}
@@ -115,9 +116,13 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           <div className="w-14 h-14 rounded-full bg-bg-secondary border border-border-light flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={24} className="text-text-tertiary" />
           </div>
-          <h3 className="text-lg font-semibold text-text-primary mb-2">Không thể truy cập bài viết</h3>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
+            {isViolation ? 'Nội dung đã bị gỡ' : 'Không thể truy cập bài viết'}
+          </h3>
           <p className="text-sm text-text-secondary leading-relaxed">
-            Bài viết đã bị xóa hoặc bạn không còn quyền xem nội dung này.
+            {isViolation
+              ? 'Bài viết này đã bị gỡ do vi phạm tiêu chuẩn cộng đồng.'
+              : 'Bài viết đã bị xóa hoặc bạn không còn quyền xem nội dung này.'}
           </p>
           <button
             type="button"

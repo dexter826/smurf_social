@@ -100,10 +100,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           <LazyImage
             src={user.cover?.url || '/cover-image.jpg'}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${uploadingType === 'cover' ? 'opacity-50' : 'opacity-100'} ${onCoverClick ? 'cursor-pointer' : ''}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${uploadingType === 'cover' ? 'opacity-50' : 'opacity-100'} ${user.cover?.url && onCoverClick ? 'cursor-pointer' : ''}`}
             wrapperClassName="absolute inset-0 w-full h-full"
             alt="Cover"
-            onClick={onCoverClick}
+            onClick={user.cover?.url ? onCoverClick : undefined}
           />
 
           {/* Cover upload progress */}
@@ -149,10 +149,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   src={user.avatar?.url}
                   name={user.fullName}
                   size="2xl"
-                  className={`border-4 border-bg-primary ${onAvatarClick ? 'cursor-pointer' : ''}`}
+                  className={`border-4 border-bg-primary ${user.avatar?.url && onAvatarClick ? 'cursor-pointer' : ''}`}
                   initialStatus={user.status}
                   showStatus={false}
-                  onClick={onAvatarClick}
+                  onClick={user.avatar?.url ? onAvatarClick : undefined}
                 />
                 {uploadingType === 'avatar' && uploadProgress !== undefined && (
                   <CircularProgressOverlay isVisible progress={uploadProgress} size="md" blur={false} />
