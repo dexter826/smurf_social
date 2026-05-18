@@ -189,6 +189,7 @@ export interface MediaObject {
     size: number;
     thumbnailUrl?: string;
     isSensitive: boolean;
+    isModerated?: boolean;
 }
 
 // ========== USER SETTINGS ==========

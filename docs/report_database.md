@@ -25,6 +25,7 @@ Mọi tệp tin (ảnh, video, tệp đính kèm chat) đều lưu dưới dạn
 | `size`         | Number  | **Required**      | Kích thước (Byte). Chặn: Ảnh > 5MB, Video > 50MB, File > 10MB |
 | `thumbnailUrl` | String  | _Optional_        | Ảnh thu nhỏ (Chỉ dành cho Video)                              |
 | `isSensitive`  | Boolean | **Required**      | Đánh dấu nội dung nhạy cảm. Mặc định `false`                  |
+| `isModerated`  | Boolean | _Optional_        | Đánh dấu đã được AI kiểm duyệt. Mặc định `false`              |
 
 ---
 
