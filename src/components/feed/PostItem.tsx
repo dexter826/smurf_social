@@ -91,6 +91,14 @@ const PostItemInner: React.FC<PostItemProps> = ({
             </span>
             <span className="opacity-40">·</span>
             <VisibilityBadge visibility={post.visibility} size={11} />
+            {post.status === PostStatus.PENDING && (
+              <>
+                <span className="opacity-40">·</span>
+                <span className="text-text-tertiary font-medium">
+                  Đang xử lý...
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -188,16 +196,18 @@ const PostItemInner: React.FC<PostItemProps> = ({
 
       {/* ── Reactions & comments ── */}
       {canShowInteractions && (
-        <InteractionActions
-          reactionSummary={filteredSummary}
-          reactionCount={filteredCount}
-          myReaction={currentUserReaction}
-          commentCount={post.commentCount}
-          onReact={(type) => onReact(post.id, type)}
-          onCommentClick={handleViewDetail}
-          onShareClick={canShare ? () => onShare?.(post, author?.fullName || 'Người dùng') : undefined}
-          onViewReactions={() => setIsReactionsModalOpen(true)}
-        />
+        <div className={post.status === PostStatus.PENDING ? "opacity-50 pointer-events-none" : ""}>
+          <InteractionActions
+            reactionSummary={filteredSummary}
+            reactionCount={filteredCount}
+            myReaction={currentUserReaction}
+            commentCount={post.commentCount}
+            onReact={(type) => onReact(post.id, type)}
+            onCommentClick={handleViewDetail}
+            onShareClick={canShare ? () => onShare?.(post, author?.fullName || 'Người dùng') : undefined}
+            onViewReactions={() => setIsReactionsModalOpen(true)}
+          />
+        </div>
       )}
 
       <ReactionDetailsModal

@@ -325,6 +325,14 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
               </span>
               <span className="opacity-40">·</span>
               <VisibilityBadge visibility={post.visibility} size={11} />
+              {post.status === PostStatus.PENDING && (
+                <>
+                  <span className="opacity-40">·</span>
+                  <span className="text-text-tertiary font-medium">
+                    Đang xử lý...
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -369,8 +377,8 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
           onProfileClick={onClose}
           postOwnerId={post.authorId}
           totalCommentCount={post.commentCount}
-          readonly={!canShowInteractions}
-          readonlyMessage={readonlyMessage}
+          readonly={!canShowInteractions || post.status === PostStatus.PENDING}
+          readonlyMessage={post.status === PostStatus.PENDING ? "Bài viết đang được xử lý." : readonlyMessage}
           header={
             <div className="flex flex-col">
               {/* Post text (Displayed first on mobile) */}
@@ -452,18 +460,20 @@ export const PostViewModal: React.FC<PostViewModalProps> = ({
 
               {/* Reaction actions */}
               {canShowInteractions && (
-                <InteractionActions
-                  reactionSummary={filteredSummary}
-                  reactionCount={filteredCount}
-                  myReaction={currentUserReaction}
-                  commentCount={post.commentCount}
-                  onReact={(type) => onReact(post.id, type)}
-                  onShareClick={canShare ? handleSharePost : undefined}
-                  onViewReactions={() => setIsReactionsModalOpen(true)}
-                  statsClassName="px-4 md:px-5 py-2.5 flex justify-between items-center border-b border-border-light/50"
-                  actionClassName="flex px-1 py-1 gap-0.5 border-b border-border-light"
-                  selectorPosition="bottom"
-                />
+                <div className={post.status === PostStatus.PENDING ? "opacity-50 pointer-events-none" : ""}>
+                  <InteractionActions
+                    reactionSummary={filteredSummary}
+                    reactionCount={filteredCount}
+                    myReaction={currentUserReaction}
+                    commentCount={post.commentCount}
+                    onReact={(type) => onReact(post.id, type)}
+                    onShareClick={canShare ? handleSharePost : undefined}
+                    onViewReactions={() => setIsReactionsModalOpen(true)}
+                    statsClassName="px-4 md:px-5 py-2.5 flex justify-between items-center border-b border-border-light/50"
+                    actionClassName="flex px-1 py-1 gap-0.5 border-b border-border-light"
+                    selectorPosition="bottom"
+                  />
+                </div>
               )}
             </div>
           }

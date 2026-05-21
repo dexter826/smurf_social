@@ -17,6 +17,9 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
       previewUrl = URL.createObjectURL(image);
     }
 
+    const hasImage = !!image;
+    const initialStatus = hasImage ? CommentStatus.PENDING : CommentStatus.ACTIVE;
+
     const opt: Comment = {
       id: realId, postId, authorId: userId, content, parentId: parentId || undefined,
       replyToUserId: replyToUserId || undefined, replyToId: replyToId || undefined,
@@ -24,7 +27,7 @@ export const createActionSlice: StateCreator<CommentStoreState, [], [], any> = (
         ? { url: previewUrl, fileName: image.name, mimeType: image.type, size: image.size, isSensitive: false } as MediaObject
         : image || undefined, 
       createdAt: Timestamp.now(), replyCount: 0,
-      status: CommentStatus.ACTIVE, updatedAt: Timestamp.now(),
+      status: initialStatus, updatedAt: Timestamp.now(),
     };
 
     set(s => {

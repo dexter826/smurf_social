@@ -22,6 +22,7 @@ import {
 import { db } from '../firebase/config';
 import { Comment, ReactionType, ReactionDoc, CommentStatus, MediaObject, UserStatus } from '../../shared/types'
 import { PAGINATION, IMAGE_COMPRESSION, STORAGE_PATHS } from '../constants';
+import { useAuthStore } from '../store/authStore';
 import { batchGetUsers } from '../utils/batchUtils';
 import { compressImage } from '../utils/imageUtils';
 import { uploadWithProgress } from '../utils/uploadUtils';
@@ -51,7 +52,9 @@ export const commentService = {
     sortOrder: 'asc' | 'desc' = 'desc'
   ) => {
     try {
-      let q = query(
+      const currentUserId = useAuthStore.getState().user?.id;
+
+      let activeQ = query(
         collection(db, 'comments'),
         where('postId', '==', postId),
         where('parentId', '==', null),
@@ -61,21 +64,53 @@ export const commentService = {
       );
 
       if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
+        activeQ = query(activeQ, startAfter(lastDoc));
       }
 
-      const snapshot = await getDocs(q);
-      const hasMore = snapshot.docs.length > limitCount;
-      const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+      let pendingPromise = Promise.resolve({ docs: [] as any[] });
+      if (currentUserId) {
+        const pendingQ = query(
+          collection(db, 'comments'),
+          where('postId', '==', postId),
+          where('parentId', '==', null),
+          where('authorId', '==', currentUserId),
+          where('status', '==', CommentStatus.PENDING),
+          orderBy('createdAt', sortOrder)
+        );
+        pendingPromise = getDocs(pendingQ);
+      }
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
+      const [activeSnapshot, pendingSnapshot] = await Promise.all([
+        getDocs(activeQ),
+        pendingPromise
+      ]);
+
+      const hasMore = activeSnapshot.docs.length > limitCount;
+      const activeDocs = hasMore ? activeSnapshot.docs.slice(0, limitCount) : activeSnapshot.docs;
+      const pendingDocs = pendingSnapshot.docs;
+
+      const mergedDocs = [...pendingDocs, ...activeDocs];
+      const seenIds = new Set<string>();
+      const docsToProcess = mergedDocs.filter(doc => {
+        if (seenIds.has(doc.id)) return false;
+        seenIds.add(doc.id);
+        return true;
+      });
+
+      const authorIds = [...new Set(docsToProcess.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-        const comments = filterBlockedItems(convertDocs<Comment>(docsToProcess), undefined, hiddenActivityUserIds, usersMap as any);
+      const comments = filterBlockedItems(convertDocs<Comment>(docsToProcess), undefined, hiddenActivityUserIds, usersMap as any);
+
+      comments.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+      });
 
       return {
         comments,
-        lastDoc: docsToProcess[docsToProcess.length - 1] || null,
+        lastDoc: activeDocs[activeDocs.length - 1] || null,
         hasMore
       };
     } catch (error) {
@@ -87,7 +122,9 @@ export const commentService = {
   /** Lấy danh sách phản hồi cho một bình luận */
   getReplies: async (postId: string, commentId: string, hiddenActivityUserIds: string[] = [], limitCount: number = PAGINATION.REPLIES, lastDoc?: DocumentSnapshot) => {
     try {
-      let q = query(
+      const currentUserId = useAuthStore.getState().user?.id;
+
+      let activeQ = query(
         collection(db, 'comments'),
         where('postId', '==', postId),
         where('parentId', '==', commentId),
@@ -97,21 +134,53 @@ export const commentService = {
       );
 
       if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
+        activeQ = query(activeQ, startAfter(lastDoc));
       }
 
-      const snapshot = await getDocs(q);
-      const hasMore = snapshot.docs.length > limitCount;
-      const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+      let pendingPromise = Promise.resolve({ docs: [] as any[] });
+      if (currentUserId) {
+        const pendingQ = query(
+          collection(db, 'comments'),
+          where('postId', '==', postId),
+          where('parentId', '==', commentId),
+          where('authorId', '==', currentUserId),
+          where('status', '==', CommentStatus.PENDING),
+          orderBy('createdAt', 'asc')
+        );
+        pendingPromise = getDocs(pendingQ);
+      }
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
+      const [activeSnapshot, pendingSnapshot] = await Promise.all([
+        getDocs(activeQ),
+        pendingPromise
+      ]);
+
+      const hasMore = activeSnapshot.docs.length > limitCount;
+      const activeDocs = hasMore ? activeSnapshot.docs.slice(0, limitCount) : activeSnapshot.docs;
+      const pendingDocs = pendingSnapshot.docs;
+
+      const mergedDocs = [...pendingDocs, ...activeDocs];
+      const seenIds = new Set<string>();
+      const docsToProcess = mergedDocs.filter(doc => {
+        if (seenIds.has(doc.id)) return false;
+        seenIds.add(doc.id);
+        return true;
+      });
+
+      const authorIds = [...new Set(docsToProcess.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
       const replies = filterBlockedItems(convertDocs<Comment>(docsToProcess), undefined, hiddenActivityUserIds, usersMap as any);
 
+      replies.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return timeA - timeB;
+      });
+
       return {
         replies,
-        lastDoc: docsToProcess[docsToProcess.length - 1] || null,
+        lastDoc: activeDocs[activeDocs.length - 1] || null,
         hasMore
       };
     } catch (error) {
@@ -135,6 +204,7 @@ export const commentService = {
   ): Promise<string> => {
     try {
       validateCommentContent(content);
+      const initialStatus = image ? CommentStatus.PENDING : CommentStatus.ACTIVE;
       const commentData: any = {
         postId,
         authorId: userId,
@@ -142,7 +212,7 @@ export const commentService = {
         parentId: parentId || null,
         replyToUserId: replyToUserId || null,
         replyToId: replyToId || null,
-        status: CommentStatus.ACTIVE,
+        status: initialStatus,
         replyCount: 0,
         createdAt: createdAt || serverTimestamp(),
         updatedAt: updatedAt || serverTimestamp()
@@ -269,8 +339,10 @@ export const commentService = {
     limitCount: number = PAGINATION.COMMENTS,
     sortOrder: 'asc' | 'desc' = 'desc'
   ) => {
+    const currentUserId = useAuthStore.getState().user?.id;
 
-    const rootQuery = query(
+    // 1. Truy vấn các bình luận active công khai
+    const activeQuery = query(
       collection(db, 'comments'),
       where('postId', '==', postId),
       where('parentId', '==', null),
@@ -279,45 +351,80 @@ export const commentService = {
       limit(limitCount + 1)
     );
 
-    let isInitialLoad = true;
+    // 2. Truy vấn các bình luận pending của chính user hiện tại
+    const pendingQuery = currentUserId ? query(
+      collection(db, 'comments'),
+      where('postId', '==', postId),
+      where('parentId', '==', null),
+      where('authorId', '==', currentUserId),
+      where('status', '==', CommentStatus.PENDING),
+      orderBy('createdAt', sortOrder)
+    ) : null;
 
-    return onSnapshot(rootQuery, async (snapshot) => {
-      const wasInitialLoad = isInitialLoad;
-      isInitialLoad = false;
+    let activeDocs: QueryDocumentSnapshot<DocumentData>[] = [];
+    let pendingDocs: QueryDocumentSnapshot<DocumentData>[] = [];
+    let hasMore = false;
+    let isInitialActive = true;
+    let isInitialPending = !pendingQuery;
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
+    const processAndEmit = async () => {
+      const allDocs = [...pendingDocs, ...activeDocs];
+      const seenIds = new Set<string>();
+      const uniqueDocs = allDocs.filter(d => {
+        if (seenIds.has(d.id)) return false;
+        seenIds.add(d.id);
+        return true;
+      });
+
+      const authorIds = [...new Set(uniqueDocs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-      if (wasInitialLoad) {
-        const hasMore = snapshot.docs.length > limitCount;
-        const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
-
-        const comments = filterBlockedItems(convertDocs<Comment>(docsToProcess), undefined, hiddenActivityUserIds, usersMap as any);
-
-        callback('initial', {
-          comments,
-          lastDoc: docsToProcess[docsToProcess.length - 1] || null,
-          hasMore
-        });
-        return;
-      }
-
-      const changes = snapshot.docChanges();
+      const comments = filterBlockedItems(convertDocs<Comment>(uniqueDocs), undefined, hiddenActivityUserIds, usersMap as any);
       
-      const rawComments = changes.map(change => ({ change, comment: commentConverter(change.doc) }));
-      const filteredComments = filterBlockedItems(rawComments.map(r => r.comment), undefined, hiddenActivityUserIds, usersMap as any);
+      comments.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+      });
+
+      const lastDoc = activeDocs[activeDocs.length - 1] || null;
+
+      callback('initial', {
+        comments,
+        lastDoc,
+        hasMore
+      });
+    };
+
+    const unsubActive = onSnapshot(activeQuery, async (snapshot) => {
+      const isFirst = isInitialActive;
+      isInitialActive = false;
+
+      const activeLimitDocs = snapshot.docs.length > limitCount ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+      hasMore = snapshot.docs.length > limitCount;
       
-      const changeDocs = rawComments.filter(r => filteredComments.includes(r.comment));
+      activeDocs = activeLimitDocs;
+      if (isFirst && isInitialPending === false) return;
+      await processAndEmit();
+    }, (error) => console.error("Lỗi subscribe active comments:", error));
 
-      const added = changeDocs.filter(d => d.change.type === 'added').map(d => d.comment);
-      const modified = changeDocs.filter(d => d.change.type === 'modified').map(d => d.comment);
-      const removed = changeDocs.filter(d => d.change.type === 'removed').map(d => d.comment);
+    let unsubPending = () => {};
+    if (pendingQuery) {
+      unsubPending = onSnapshot(pendingQuery, async (snapshot) => {
+        const isFirst = isInitialPending;
+        isInitialPending = false;
 
-      if (added.length > 0) callback('add', added);
-      if (modified.length > 0) callback('update', modified);
-      if (removed.length > 0) callback('remove', removed);
+        pendingDocs = snapshot.docs;
 
-    }, (error) => console.error("Lỗi subscribe comments:", error));
+        if (isFirst && isInitialActive === false) return;
+        await processAndEmit();
+      }, (error) => console.error("Lỗi subscribe pending comments:", error));
+    }
+
+    return () => {
+      unsubActive();
+      unsubPending();
+    };
   },
 
   /** Theo dõi phản hồi bài viết thời gian thực */
@@ -328,7 +435,10 @@ export const commentService = {
     callback: (action: 'initial' | 'add' | 'update' | 'remove', data: Comment[] | { replies: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }) => void,
     limitCount: number = PAGINATION.REPLIES
   ) => {
-    const q = query(
+    const currentUserId = useAuthStore.getState().user?.id;
+
+    // 1. Truy vấn các câu trả lời active công khai
+    const activeQuery = query(
       collection(db, 'comments'),
       where('postId', '==', postId),
       where('parentId', '==', parentId),
@@ -337,44 +447,80 @@ export const commentService = {
       limit(limitCount + 1)
     );
 
-    let isInitialLoad = true;
+    // 2. Truy vấn các câu trả lời pending của chính user hiện tại
+    const pendingQuery = currentUserId ? query(
+      collection(db, 'comments'),
+      where('postId', '==', postId),
+      where('parentId', '==', parentId),
+      where('authorId', '==', currentUserId),
+      where('status', '==', CommentStatus.PENDING),
+      orderBy('createdAt', 'asc')
+    ) : null;
 
-    return onSnapshot(q, async (snapshot) => {
-      const wasInitialLoad = isInitialLoad;
-      isInitialLoad = false;
+    let activeDocs: QueryDocumentSnapshot<DocumentData>[] = [];
+    let pendingDocs: QueryDocumentSnapshot<DocumentData>[] = [];
+    let hasMore = false;
+    let isInitialActive = true;
+    let isInitialPending = !pendingQuery;
 
-      const authorIds = [...new Set(snapshot.docs.map(d => d.data().authorId))];
+    const processAndEmit = async () => {
+      const allDocs = [...pendingDocs, ...activeDocs];
+      const seenIds = new Set<string>();
+      const uniqueDocs = allDocs.filter(d => {
+        if (seenIds.has(d.id)) return false;
+        seenIds.add(d.id);
+        return true;
+      });
+
+      const authorIds = [...new Set(uniqueDocs.map(d => d.data().authorId))];
       const usersMap = await batchGetUsers(authorIds);
 
-      if (wasInitialLoad) {
-        const hasMore = snapshot.docs.length > limitCount;
-        const docsToProcess = hasMore ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
-
-        const replies = filterBlockedItems(docsToProcess.map(commentConverter), undefined, hiddenActivityUserIds, usersMap as any);
-
-        callback('initial', {
-          replies,
-          lastDoc: docsToProcess[docsToProcess.length - 1] || null,
-          hasMore
-        });
-        return;
-      }
-
-      const rawChanges = snapshot.docChanges().map(change => ({ change, reply: commentConverter(change.doc) }));
-      const filteredReplies = filterBlockedItems(rawChanges.map(r => r.reply), undefined, hiddenActivityUserIds, usersMap as any);
-
-      rawChanges.forEach(({ change, reply }) => {
-        if (!filteredReplies.includes(reply)) return;
-        
-        if (change.type === 'added') {
-          callback('add', [reply]);
-        } else if (change.type === 'modified') {
-          callback('update', [reply]);
-        } else if (change.type === 'removed') {
-          callback('remove', [reply]);
-        }
+      const replies = filterBlockedItems(convertDocs<Comment>(uniqueDocs), undefined, hiddenActivityUserIds, usersMap as any);
+      
+      replies.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return timeA - timeB;
       });
-    }, (error) => console.error("Lỗi subscribe replies:", error));
+
+      const lastDoc = activeDocs[activeDocs.length - 1] || null;
+
+      callback('initial', {
+        replies,
+        lastDoc,
+        hasMore
+      });
+    };
+
+    const unsubActive = onSnapshot(activeQuery, async (snapshot) => {
+      const isFirst = isInitialActive;
+      isInitialActive = false;
+
+      const activeLimitDocs = snapshot.docs.length > limitCount ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
+      hasMore = snapshot.docs.length > limitCount;
+
+      activeDocs = activeLimitDocs;
+      if (isFirst && isInitialPending === false) return;
+      await processAndEmit();
+    }, (error) => console.error("Lỗi subscribe active replies:", error));
+
+    let unsubPending = () => {};
+    if (pendingQuery) {
+      unsubPending = onSnapshot(pendingQuery, async (snapshot) => {
+        const isFirst = isInitialPending;
+        isInitialPending = false;
+
+        pendingDocs = snapshot.docs;
+
+        if (isFirst && isInitialActive === false) return;
+        await processAndEmit();
+      }, (error) => console.error("Lỗi subscribe pending replies:", error));
+    }
+
+    return () => {
+      unsubActive();
+      unsubPending();
+    };
   },
 
   /** Tải lên ảnh cho bình luận và trả về MediaObject */

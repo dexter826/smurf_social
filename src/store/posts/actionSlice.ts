@@ -23,10 +23,13 @@ export const createActionSlice: StateCreator<PostStoreState, [], [], any> = (set
       isSensitive: false,
     } as MediaObject)) || [];
 
+    const hasMedia = media.length > 0 || (pendingFiles && pendingFiles.length > 0);
+    const initialStatus = hasMedia ? PostStatus.PENDING : PostStatus.ACTIVE;
+
     const tempPost: Post = {
       id: postId, authorId: userId, type: PostType.REGULAR, content,
       media: [...media, ...previewMedia], visibility, commentCount: 0,
-      createdAt: Timestamp.now(), updatedAt: Timestamp.now(), status: PostStatus.ACTIVE,
+      createdAt: Timestamp.now(), updatedAt: Timestamp.now(), status: initialStatus,
     };
 
     set(state => ({

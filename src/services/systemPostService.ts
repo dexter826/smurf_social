@@ -18,7 +18,7 @@ export const systemPostService = {
         authorId: params.userId,
         type: params.type,
         content: '', 
-        status: PostStatus.ACTIVE,
+        status: PostStatus.PENDING,
         visibility: params.visibility,
         media: params.media,
         commentCount: 0,
@@ -41,7 +41,7 @@ export const systemPostService = {
         collection(db, 'posts'),
         where('authorId', '==', userId),
         where('type', '==', type),
-        where('status', '==', PostStatus.ACTIVE),
+        where('status', 'in', [PostStatus.ACTIVE, PostStatus.PENDING]),
         orderBy('createdAt', 'desc'),
         limit(1)
       );

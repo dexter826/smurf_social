@@ -55,12 +55,14 @@ service cloud.firestore {
 
     function canReadPostData(postData) {
       return !isContentBlocked(postData.authorId) && (
-        (postData.status != 'deleted' && (
-          postData.authorId == request.auth.uid ||
-          postData.visibility == 'public' ||
-          (postData.visibility == 'friends' && isFriend(postData.authorId))
-        )) ||
-        (postData.type in ['avatar_update', 'cover_update'])
+        (postData.status != 'deleted' && postData.authorId == request.auth.uid) ||
+        (
+          postData.status == 'active' && (
+            postData.visibility == 'public' ||
+            (postData.visibility == 'friends' && isFriend(postData.authorId)) ||
+            (postData.type in ['avatar_update', 'cover_update'])
+          )
+        )
       );
     }
 
@@ -148,8 +150,13 @@ service cloud.firestore {
       allow read: if isNotBanned() &&
         'postId' in resource.data && (
           isAdmin() || (
-            resource.data.status != 'deleted' &&
-            canReadPostById(resource.data.postId)
+            resource.data.status != 'deleted' && (
+              resource.data.authorId == request.auth.uid ||
+              (
+                resource.data.status == 'active' &&
+                canReadPostById(resource.data.postId)
+              )
+            )
           )
         );
 

@@ -101,6 +101,8 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
 export enum PostStatus {
     ACTIVE = "active",
     DELETED = "deleted",
+    PENDING = "pending",
+    POLICY_VIOLATION = "policy_violation",
 }
 
 export enum PostType {
@@ -112,6 +114,8 @@ export enum PostType {
 export enum CommentStatus {
     ACTIVE = "active",
     DELETED = "deleted",
+    PENDING = "pending",
+    POLICY_VIOLATION = "policy_violation",
 }
 
 export enum UserRole {
@@ -190,6 +194,7 @@ export interface MediaObject {
     thumbnailUrl?: string;
     isSensitive: boolean;
     isModerated?: boolean;
+    moderationReason?: string;
 }
 
 // ========== USER SETTINGS ==========
@@ -358,6 +363,7 @@ export interface Comment extends BaseEntity, SoftDeletableEntity {
     image?: MediaObject;
     replyCount?: number;
     reactionCount?: number;
+    moderationReason?: string;
     updatedAt: Timestamp;
 }
 
@@ -378,6 +384,7 @@ export interface Post extends BaseEntity, SoftDeletableEntity {
     commentCount: number;
     reactionCount?: number;
     visibility: Visibility;
+    moderationReason?: string;
     updatedAt: Timestamp;
 }
 

@@ -7,7 +7,7 @@ import {
   SensitiveMediaGuard, UploadProgress,
 } from '../../ui';
 import { CommentInput } from './CommentInput';
-import { Comment, User, ReactionType, ReportType, MediaObject } from '../../../../shared/types';
+import { Comment, User, ReactionType, ReportType, MediaObject, CommentStatus } from '../../../../shared/types';
 import { formatRelativeTime, formatDateTime } from '../../../utils/dateUtils';
 import { TruncatedText } from '../shared';
 import { useCommentStore } from '../../../store';
@@ -203,7 +203,7 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
             </div>
 
             {/* Options menu — appears on hover */}
-            {!isEditing && (
+            {!isEditing && comment.status !== CommentStatus.PENDING && (
               <div className="opacity-0 group-hover/comment:opacity-100 transition-opacity duration-200 pt-1.5 flex-shrink-0">
                 <Dropdown
                   trigger={
@@ -236,48 +236,56 @@ const CommentItemInner: React.FC<CommentItemProps> = ({
           {/* Meta row: time · like · reply */}
           {!isEditing && (
             <div className="flex items-center gap-3 mt-2 ml-1.5 text-xs text-text-tertiary font-medium">
-              <span
-                className="text-[11px] text-text-tertiary"
-                title={formatDateTime(comment.createdAt)}
-              >
-                {formatRelativeTime(comment.createdAt)}
-              </span>
-
-              {/* Like with hover selector */}
-              <div
-                className="relative group/reaction-btn"
-                onMouseLeave={() => setShowReactions(false)}
-              >
-                {showReactions && (
-                  <div
-                    className="absolute bottom-full left-1/2 -translate-x-1/2 pb-1.5"
-                    style={{ zIndex: 'var(--z-popover)' }}
+              {comment.status === CommentStatus.PENDING ? (
+                <span className="text-text-tertiary font-medium text-[11px]">
+                  Đang xử lý...
+                </span>
+              ) : (
+                <>
+                  <span
+                    className="text-[11px] text-text-tertiary"
+                    title={formatDateTime(comment.createdAt)}
                   >
-                    <ReactionSelector
-                      className="relative shadow-xl animate-fade-in"
-                      size="xs"
-                      autoClose={false}
-                      onSelect={handleReact}
-                      onClose={() => setShowReactions(false)}
-                    />
-                  </div>
-                )}
-                <button
-                  onMouseEnter={() => setShowReactions(true)}
-                  onClick={() => handleReact(currentUserReaction ? 'REMOVE' : ReactionType.LIKE)}
-                  className={`font-semibold hover:text-text-primary transition-colors duration-200
-                    ${currentUserReaction ? getReactionColorClass(currentUserReaction) : 'hover:underline'}`}
-                >
-                  {currentUserReaction ? REACTION_LABELS[currentUserReaction] : 'Thích'}
-                </button>
-              </div>
+                    {formatRelativeTime(comment.createdAt)}
+                  </span>
 
-              <button
-                onClick={() => handleReplyClick(comment)}
-                className="font-semibold hover:text-text-primary hover:underline transition-colors duration-200"
-              >
-                Trả lời
-              </button>
+                  {/* Like with hover selector */}
+                  <div
+                    className="relative group/reaction-btn"
+                    onMouseLeave={() => setShowReactions(false)}
+                  >
+                    {showReactions && (
+                      <div
+                        className="absolute bottom-full left-1/2 -translate-x-1/2 pb-1.5"
+                        style={{ zIndex: 'var(--z-popover)' }}
+                      >
+                        <ReactionSelector
+                          className="relative shadow-xl animate-fade-in"
+                          size="xs"
+                          autoClose={false}
+                          onSelect={handleReact}
+                          onClose={() => setShowReactions(false)}
+                        />
+                      </div>
+                    )}
+                    <button
+                      onMouseEnter={() => setShowReactions(true)}
+                      onClick={() => handleReact(currentUserReaction ? 'REMOVE' : ReactionType.LIKE)}
+                      className={`font-semibold hover:text-text-primary transition-colors duration-200
+                        ${currentUserReaction ? getReactionColorClass(currentUserReaction) : 'hover:underline'}`}
+                    >
+                      {currentUserReaction ? REACTION_LABELS[currentUserReaction] : 'Thích'}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => handleReplyClick(comment)}
+                    className="font-semibold hover:text-text-primary hover:underline transition-colors duration-200"
+                  >
+                    Trả lời
+                  </button>
+                </>
+              )}
             </div>
           )}
 

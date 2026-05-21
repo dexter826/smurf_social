@@ -79,8 +79,16 @@ export const onPostWrite = onDocumentWritten(
         const after = event.data?.after.data();
 
         if (!before && after) {
-            await handleFanout(postId, after);
+            if (after.status === 'pending') {
+                await handleAuthorOnlyFeed(postId, after);
+            } else {
+                await handleFanout(postId, after);
+            }
             return;
+        }
+
+        if (before && after && before.status === 'pending' && after.status === 'active') {
+            await handleFanout(postId, after);
         }
 
         if (before && after && before.status !== 'deleted' && after.status === 'deleted') {
@@ -91,7 +99,26 @@ export const onPostWrite = onDocumentWritten(
         // Tự động gỡ bài khỏi bảng tin nếu vi phạm chính sách
         if (before && after && before.status !== 'policy_violation' && after.status === 'policy_violation') {
             await removeFeedEntriesIncludingAuthor(postId, after.authorId);
+            if (after.type === 'avatar_update' || after.type === 'cover_update') {
+                const field = after.type === 'avatar_update' ? 'avatar' : 'cover';
+                await db.collection('users').doc(after.authorId).update({
+                    [field]: { url: '', fileName: '', mimeType: '', size: 0, isSensitive: false },
+                    updatedAt: FieldValue.serverTimestamp(),
+                });
+            }
             return;
+        }
+
+        if (before && after && (after.type === 'avatar_update' || after.type === 'cover_update')) {
+            const mediaBefore = before.media?.[0];
+            const mediaAfter = after.media?.[0];
+            if (mediaAfter && JSON.stringify(mediaBefore) !== JSON.stringify(mediaAfter)) {
+                const field = after.type === 'avatar_update' ? 'avatar' : 'cover';
+                await db.collection('users').doc(after.authorId).update({
+                    [field]: mediaAfter,
+                    updatedAt: FieldValue.serverTimestamp(),
+                });
+            }
         }
 
         if (before && after && before.status === 'active' && after.status === 'active') {
@@ -114,6 +141,25 @@ export const onPostWrite = onDocumentWritten(
         }
     }
 );
+
+/** Chỉ phân phối bài viết vào bảng tin của chính tác giả */
+async function handleAuthorOnlyFeed(postId: string, postData: any) {
+    const authorId = postData.authorId;
+    if (!authorId) return;
+
+    try {
+        const feedEntry = {
+            postId,
+            authorId,
+            createdAt: postData.createdAt || FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+        };
+
+        await db.collection('users').doc(authorId).collection('feeds').doc(postId).set(feedEntry);
+    } catch (error) {
+        console.error(`[onPostWrite] Loi handleAuthorOnlyFeed cho post ${postId}:`, error);
+    }
+}
 
 /** Phân phối bài viết tới bảng tin bạn bè */
 async function handleFanout(postId: string, postData: any) {

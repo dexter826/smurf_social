@@ -77,7 +77,10 @@ export const postService = {
       for (const result of postResults) {
         if (result.status === 'fulfilled' && result.value.exists()) {
           const postData = result.value.data();
-          if (postData.status === PostStatus.ACTIVE) {
+          if (
+            postData.status === PostStatus.ACTIVE ||
+            (postData.status === PostStatus.PENDING && postData.authorId === userId)
+          ) {
             posts.push(convertDoc<Post>(result.value));
           }
         }
@@ -130,7 +133,10 @@ export const postService = {
         for (const result of postResults) {
           if (result.status === 'fulfilled' && result.value.exists()) {
             const postData = result.value.data();
-            if (postData.status === PostStatus.ACTIVE) {
+            if (
+              postData.status === PostStatus.ACTIVE ||
+              (postData.status === PostStatus.PENDING && postData.authorId === userId)
+            ) {
               posts.push(convertDoc<Post>(result.value));
             }
           }
@@ -159,7 +165,10 @@ export const postService = {
         for (const result of postResults) {
           if (result.status === 'fulfilled' && result.value.exists()) {
             const postData = result.value.data();
-            if (postData.status === PostStatus.ACTIVE) {
+            if (
+              postData.status === PostStatus.ACTIVE ||
+              (postData.status === PostStatus.PENDING && postData.authorId === userId)
+            ) {
               posts.push(convertDoc<Post>(result.value));
             }
           }
@@ -186,14 +195,22 @@ export const postService = {
         return { posts: [], lastDoc: null };
       }
 
-      let q = query(
-        collection(db, 'posts'),
-        where('authorId', '==', userId),
-        where('status', '==', PostStatus.ACTIVE),
-        where('visibility', 'in', visibilityFilter),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
+      let q = isOwner
+        ? query(
+            collection(db, 'posts'),
+            where('authorId', '==', userId),
+            where('status', 'in', [PostStatus.ACTIVE, PostStatus.PENDING]),
+            orderBy('createdAt', 'desc'),
+            limit(limitCount)
+          )
+        : query(
+            collection(db, 'posts'),
+            where('authorId', '==', userId),
+            where('status', '==', PostStatus.ACTIVE),
+            where('visibility', 'in', visibilityFilter),
+            orderBy('createdAt', 'desc'),
+            limit(limitCount)
+          );
 
       if (lastDoc) {
         q = query(q, startAfter(lastDoc));
@@ -249,14 +266,22 @@ export const postService = {
       return () => { };
     }
 
-    const q = query(
-      collection(db, 'posts'),
-      where('authorId', '==', userId),
-      where('status', '==', PostStatus.ACTIVE),
-      where('visibility', 'in', visibilityFilter),
-      orderBy('createdAt', 'desc'),
-      limit(limitCount)
-    );
+    const q = isOwner
+      ? query(
+          collection(db, 'posts'),
+          where('authorId', '==', userId),
+          where('status', 'in', [PostStatus.ACTIVE, PostStatus.PENDING]),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount)
+        )
+      : query(
+          collection(db, 'posts'),
+          where('authorId', '==', userId),
+          where('status', '==', PostStatus.ACTIVE),
+          where('visibility', 'in', visibilityFilter),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount)
+        );
 
     let unsubscribe: (() => void) | null = null;
     let isCancelled = false;
@@ -329,11 +354,14 @@ export const postService = {
 
       const postRef = predefinedId ? doc(db, 'posts', predefinedId) : doc(collection(db, 'posts'));
 
+      const hasMedia = postData.media && postData.media.length > 0;
+      const initialStatus = hasMedia ? PostStatus.PENDING : PostStatus.ACTIVE;
+
       const dataToSave: any = {
         authorId: postData.authorId,
         type: postData.type || PostType.REGULAR,
         content: postData.content || '',
-        status: PostStatus.ACTIVE,
+        status: initialStatus,
         visibility: postData.visibility || Visibility.FRIENDS,
         commentCount: 0,
         createdAt: postData.createdAt || serverTimestamp(),
@@ -452,15 +480,20 @@ export const postService = {
 
       const data = postSnap.data();
 
+      if (data.status === PostStatus.DELETED) return null;
+
+      const isOwner = data.authorId === currentUserId;
+
+      if ((data.status === PostStatus.PENDING || data.status === PostStatus.POLICY_VIOLATION) && !isAdmin && !isOwner) {
+        return null;
+      }
+
       const isSystemPost = data.type === PostType.AVATAR_UPDATE || data.type === PostType.COVER_UPDATE;
 
       if (isAdmin || isSystemPost) {
         return convertDoc<Post>(postSnap);
       }
 
-      if (data.status === PostStatus.DELETED) return null;
-
-      const isOwner = data.authorId === currentUserId;
       const isFriend = friendIds?.includes(data.authorId) || false;
 
       if (data.visibility === Visibility.PRIVATE && !isOwner) {
