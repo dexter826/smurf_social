@@ -271,6 +271,7 @@ _Mô tả: Lưu cấu trúc Core của Nhóm chat và Chat 1-1, cấu hình Grou
 | `pendingMembers`   | Map         | _Optional_        | Danh sách chờ duyệt: `{ uid: { addedBy: string, timestamp: number } }`                    |
 | `activeCall`       | Object      | _Optional_        | `{ callerId, callType, messageId, startedAt, participants: { uid: timestamp } }`          |
 | `inviteLink`       | String      | _Optional_        | Mã Token duy nhất của link mời nhóm (18 bytes base64url)                                  |
+| `pinnedMessages`   | Map         | _Optional_        | Danh sách tin nhắn ghim: `{ msgId: { pinnedBy: string, pinnedAt: number } }` (Tối đa 3 tin) |
 
 ### 3. Node `messages`
 

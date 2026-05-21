@@ -37,6 +37,9 @@ export const messageActionService = {
                     updates[`conversations/${convId}/lastMessage/content`] = 'Tin nhắn đã thu hồi';
                     updates[`conversations/${convId}/updatedAt`] = getRtdbServerTimestamp();
                 }
+                if (conv.pinnedMessages && conv.pinnedMessages[msgId]) {
+                    updates[`conversations/${convId}/pinnedMessages/${msgId}`] = null;
+                }
             }
 
             await update(ref(rtdb), updates);
@@ -221,6 +224,103 @@ export const messageActionService = {
             }
         } catch (error) {
             console.error('[rtdbMessageService] Lỗi updateMessageContent:', error);
+            throw error;
+        }
+    },
+
+    /** Ghim tin nhắn trong hội thoại */
+    pinMessage: async (convId: string, msgId: string, uid: string, senderName: string): Promise<void> => {
+        try {
+            const pinnedSnap = await get(ref(rtdb, `conversations/${convId}/pinnedMessages`));
+            const currentPinned = pinnedSnap.exists() ? pinnedSnap.val() : {};
+            const pinnedCount = Object.keys(currentPinned).length;
+
+            if (pinnedCount >= 3) {
+                throw new Error('Chạm giới hạn ghim tin nhắn (tối đa 3 tin)');
+            }
+
+            const systemMsgId = push(ref(rtdb, `messages/${convId}`)).key!;
+            const systemMessage: RtdbMessage = {
+                senderId: 'system',
+                type: MessageType.SYSTEM,
+                content: `${senderName} đã ghim một tin nhắn`,
+                media: [],
+                mentions: [],
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
+            };
+
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+            if (!convSnap.exists()) throw new Error('Hội thoại không tồn tại');
+            const conversation = convSnap.val() as RtdbConversation;
+
+            const updates = getConversationUpdatePaths(
+                convId,
+                'system',
+                systemMessage,
+                `${senderName} đã ghim một tin nhắn`,
+                conversation,
+                systemMsgId
+            );
+
+            updates[`conversations/${convId}/pinnedMessages/${msgId}`] = {
+                pinnedBy: uid,
+                pinnedAt: getRtdbServerTimestamp()
+            };
+
+            updates[`messages/${convId}/${systemMsgId}`] = {
+                ...systemMessage,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            };
+
+            await update(ref(rtdb), updates);
+        } catch (error) {
+            console.error('[rtdbMessageService] Lỗi pinMessage:', error);
+            throw error;
+        }
+    },
+
+    /** Bỏ ghim tin nhắn trong hội thoại */
+    unpinMessage: async (convId: string, msgId: string, uid: string, senderName: string): Promise<void> => {
+        try {
+            const systemMsgId = push(ref(rtdb, `messages/${convId}`)).key!;
+            const systemMessage: RtdbMessage = {
+                senderId: 'system',
+                type: MessageType.SYSTEM,
+                content: `${senderName} đã bỏ ghim tin nhắn`,
+                media: [],
+                mentions: [],
+                createdAt: getServerSyncedNow(),
+                updatedAt: getServerSyncedNow()
+            };
+
+            const convRef = ref(rtdb, `conversations/${convId}`);
+            const convSnap = await get(convRef);
+            if (!convSnap.exists()) throw new Error('Hội thoại không tồn tại');
+            const conversation = convSnap.val() as RtdbConversation;
+
+            const updates = getConversationUpdatePaths(
+                convId,
+                'system',
+                systemMessage,
+                `${senderName} đã bỏ ghim tin nhắn`,
+                conversation,
+                systemMsgId
+            );
+
+            updates[`conversations/${convId}/pinnedMessages/${msgId}`] = null;
+
+            updates[`messages/${convId}/${systemMsgId}`] = {
+                ...systemMessage,
+                createdAt: getRtdbServerTimestamp(),
+                updatedAt: getRtdbServerTimestamp()
+            };
+
+            await update(ref(rtdb), updates);
+        } catch (error) {
+            console.error('[rtdbMessageService] Lỗi unpinMessage:', error);
             throw error;
         }
     }

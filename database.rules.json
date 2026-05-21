@@ -28,6 +28,9 @@
         "pendingMembers": {
           ".write": "auth != null && data.parent().child('members').child(auth.uid).exists()"
         },
+        "pinnedMessages": {
+          ".write": "auth != null && data.parent().child('members').child(auth.uid).exists()"
+        },
         "isDisbanded": {
           ".write": "auth != null && data.parent().child('creatorId').val() === auth.uid"
         }

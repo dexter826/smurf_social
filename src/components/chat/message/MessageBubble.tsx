@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smile, RefreshCw, AlertCircle } from 'lucide-react';
+import { Smile, RefreshCw, AlertCircle, Pin } from 'lucide-react';
 import { RtdbMessage, User, MessageType, UserStatus } from '../../../../shared/types';
 import {
   UserAvatar, ReactionDisplay, ReactionSelector,
@@ -41,6 +41,9 @@ interface MessageBubbleProps {
   allMessages?: Array<{ id: string; data: RtdbMessage }>;
   onContentLoad?: () => void;
   onMarkAsRead?: (messageId: string) => void;
+  isPinned?: boolean;
+  onPin?: (message: { id: string; data: RtdbMessage }) => void;
+  onUnpin?: (message: { id: string; data: RtdbMessage }) => void;
 }
 
 /** Bong bóng hiển thị nội dung tin nhắn */
@@ -50,6 +53,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
   currentUserId, usersMap, isGroup = false, lastReadByUsers = [],
   isBlocked = false, partnerStatus, onCall, onJoinCall,
   conversationId, allMessages = [], onContentLoad, onMarkAsRead,
+  isPinned = false, onPin, onUnpin,
 }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -259,6 +263,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                       : `${hasReactions ? 'pb-3' : 'pb-1.5'} ${isMe ? 'justify-end text-text-primary opacity-60 px-3' : 'justify-start text-text-tertiary px-3'}`
                     }
                   `}>
+                    {isPinned && <Pin size={10} className="text-text-tertiary flex-shrink-0" />}
                     {formatTimeOnly(message.data.createdAt)}
                   </div>
                 )}
@@ -317,7 +322,7 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
 
             {/* Message Actions Hover */}
             {!message.data.isRecalled && (
-                <MessageActions
+                 <MessageActions
                   message={message}
                   isMe={isMe}
                   canEdit={canEdit}
@@ -331,6 +336,9 @@ const MessageBubbleInner: React.FC<MessageBubbleProps> = ({
                   onDeleteForMe={(id) => { onDeleteForMe?.(id); setShowActions(false); }}
                   isBlocked={isBlocked}
                   isPartnerBanned={isPartnerBanned}
+                  isPinned={isPinned}
+                  onPin={onPin}
+                  onUnpin={onUnpin}
                 />
             )}
           </div>

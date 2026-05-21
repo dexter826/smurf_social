@@ -1,13 +1,17 @@
 import { StateCreator } from 'zustand';
+import { ref, onValue, get as dbGet } from 'firebase/database';
+import { rtdb } from '../../firebase/config';
 import { RtdbMessage, MessageType, SharedPostMessagePayload } from '../../../shared/types';
 import { rtdbMessageService } from '../../services/chat/messages';
 import { useAuthStore } from '../authStore';
 import type { RtdbChatState } from '../rtdbChatStore';
 import { PAGINATION } from '../../constants';
 import { getServerSyncedNow } from '../../services/chat/chatTime';
+import { toast } from '../toastStore';
 
 export interface RtdbMessageSlice {
     messages: Record<string, Array<{ id: string; data: RtdbMessage }>>;
+    pinnedMessagesDetails: Record<string, Record<string, RtdbMessage>>;
     hasMoreMessages: Record<string, boolean>;
     isLoadingMore: Record<string, boolean>;
     uploadProgress: Record<string, { progress: number; error?: boolean; localUrls?: string[] }>;
@@ -35,12 +39,15 @@ export interface RtdbMessageSlice {
     clearMessages: (conversationId: string) => void;
     setUploadProgress: (messageId: string, progress: number) => void;
     setUploadError: (messageId: string, isError: boolean) => void;
+    pinMessage: (conversationId: string, messageId: string) => Promise<void>;
+    unpinMessage: (conversationId: string, messageId: string) => Promise<void>;
 }
 
 const LIMIT_PER_PAGE = PAGINATION.CHAT_MESSAGES;
 
 export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMessageSlice> = (set, get) => ({
     messages: {},
+    pinnedMessagesDetails: {},
     hasMoreMessages: {},
     isLoadingMore: {},
     uploadProgress: {},
@@ -80,7 +87,77 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
             });
         }, clearedAt);
 
-        return unsubscribe;
+        const pinnedRef = ref(rtdb, `conversations/${conversationId}/pinnedMessages`);
+        const unsubPinned = onValue(pinnedRef, async (snapshot) => {
+            if (snapshot.exists()) {
+                const pinnedData = snapshot.val() as Record<string, { pinnedBy: string; pinnedAt: number }>;
+                const msgIds = Object.keys(pinnedData);
+
+                for (const msgId of msgIds) {
+                    const currentDetails = get().pinnedMessagesDetails[conversationId]?.[msgId];
+                    if (!currentDetails) {
+                        const loadedMsg = get().messages[conversationId]?.find(m => m.id === msgId);
+                        if (loadedMsg) {
+                            set(state => ({
+                                pinnedMessagesDetails: {
+                                    ...state.pinnedMessagesDetails,
+                                    [conversationId]: {
+                                        ...(state.pinnedMessagesDetails[conversationId] || {}),
+                                        [msgId]: loadedMsg.data
+                                    }
+                                }
+                            }));
+                        } else {
+                            try {
+                                const msgSnap = await dbGet(ref(rtdb, `messages/${conversationId}/${msgId}`));
+                                if (msgSnap.exists()) {
+                                    const msgData = msgSnap.val() as RtdbMessage;
+                                    set(state => ({
+                                        pinnedMessagesDetails: {
+                                            ...state.pinnedMessagesDetails,
+                                            [conversationId]: {
+                                                ...(state.pinnedMessagesDetails[conversationId] || {}),
+                                                [msgId]: msgData
+                                            }
+                                        }
+                                    }));
+                                }
+                            } catch (error) {
+                                console.error('Lỗi tải tin nhắn ghim:', error);
+                            }
+                        }
+                    }
+                }
+
+                set(state => {
+                    const currentDetails = state.pinnedMessagesDetails[conversationId] || {};
+                    const nextDetails: Record<string, RtdbMessage> = {};
+                    msgIds.forEach(id => {
+                        if (currentDetails[id]) {
+                            nextDetails[id] = currentDetails[id];
+                        }
+                    });
+                    return {
+                        pinnedMessagesDetails: {
+                            ...state.pinnedMessagesDetails,
+                            [conversationId]: nextDetails
+                        }
+                    };
+                });
+            } else {
+                set(state => ({
+                    pinnedMessagesDetails: {
+                        ...state.pinnedMessagesDetails,
+                        [conversationId]: {}
+                    }
+                }));
+            }
+        });
+
+        return () => {
+            unsubscribe();
+            unsubPinned();
+        };
     },
 
     /** Tải thêm tin nhắn */
@@ -987,5 +1064,37 @@ export const createRtdbMessageSlice: StateCreator<RtdbChatState, [], [], RtdbMes
                 [messageId]: { ...state.uploadProgress[messageId], error: isError }
             }
         }));
+    },
+
+    /** Ghim tin nhắn */
+    pinMessage: async (conversationId: string, messageId: string) => {
+        const userId = useAuthStore.getState().user?.id;
+        const userName = useAuthStore.getState().user?.fullName;
+        if (!userId || !userName) return;
+
+        try {
+            await rtdbMessageService.pinMessage(conversationId, messageId, userId, userName);
+        } catch (error) {
+            console.error('[rtdbMessageSlice] Lỗi pinMessage:', error);
+            const errMsg = error instanceof Error ? error.message : 'Có lỗi xảy ra khi ghim tin nhắn';
+            toast.error(errMsg);
+            throw error;
+        }
+    },
+
+    /** Bỏ ghim tin nhắn */
+    unpinMessage: async (conversationId: string, messageId: string) => {
+        const userId = useAuthStore.getState().user?.id;
+        const userName = useAuthStore.getState().user?.fullName;
+        if (!userId || !userName) return;
+
+        try {
+            await rtdbMessageService.unpinMessage(conversationId, messageId, userId, userName);
+        } catch (error) {
+            console.error('[rtdbMessageSlice] Lỗi unpinMessage:', error);
+            const errMsg = error instanceof Error ? error.message : 'Có lỗi xảy ra khi bỏ ghim tin nhắn';
+            toast.error(errMsg);
+            throw error;
+        }
     }
 });

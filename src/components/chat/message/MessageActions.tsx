@@ -1,5 +1,5 @@
 import React from 'react';
-import { MoreVertical, Reply, Forward, RotateCcw, Edit2, Trash2 } from 'lucide-react';
+import { MoreVertical, Reply, Forward, RotateCcw, Edit2, Trash2, Pin } from 'lucide-react';
 import { RtdbMessage, MessageType } from '../../../../shared/types';
 import { IconButton, Dropdown, DropdownItem } from '../../ui';
 
@@ -17,6 +17,9 @@ interface MessageActionsProps {
   isBlocked: boolean;
   isPartnerBanned?: boolean;
   showActions?: boolean;
+  isPinned?: boolean;
+  onPin?: (message: { id: string; data: RtdbMessage }) => void;
+  onUnpin?: (message: { id: string; data: RtdbMessage }) => void;
 }
 
 /** Các thao tác với tin nhắn */
@@ -24,7 +27,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   message, isMe, canEdit, showMenu, setShowMenu,
   onReply, onForward, onEdit, setShowRecallConfirm,
   onDeleteForMe, isBlocked, isPartnerBanned = false,
-  showActions = false,
+  showActions = false, isPinned = false, onPin, onUnpin,
 }) => {
   const isInteractionDisabled = isBlocked || isPartnerBanned;
 
@@ -80,6 +83,20 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
                 icon={<Edit2 size={14} />}
                 label="Chỉnh sửa"
                 onClick={() => { onEdit?.(message); setShowMenu(false); }}
+              />
+            )}
+            {!isInteractionDisabled && (
+              <DropdownItem
+                icon={<Pin size={14} />}
+                label={isPinned ? "Bỏ ghim" : "Ghim tin nhắn"}
+                onClick={() => {
+                  if (isPinned) {
+                    onUnpin?.(message);
+                  } else {
+                    onPin?.(message);
+                  }
+                  setShowMenu(false);
+                }}
               />
             )}
             {!isInteractionDisabled && isMe && (

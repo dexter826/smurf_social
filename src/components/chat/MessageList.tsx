@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat } from '../../../shared/types';
 import { UserAvatar, EmptyState } from '../ui';
 import { MessageBubble } from './message/MessageBubble';
+import { useRtdbChatStore } from '../../store';
 
 interface MessageListProps {
   messages: Array<{ id: string; data: RtdbMessage }>;
@@ -33,6 +34,7 @@ const MessageListInner: React.FC<MessageListProps> = ({
   onCall, onJoinCall, chatName, avatarSrc, partner,
   isBlocked = false, partnerStatus, onContentLoad, onMarkAsRead,
 }) => {
+  const { pinMessage, unpinMessage } = useRtdbChatStore();
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Array<{ id: string; data: RtdbMessage }> }[] = [];
     let currentDate = '';
@@ -148,6 +150,9 @@ const MessageListInner: React.FC<MessageListProps> = ({
                   conversationId={conversation.id}
                   onContentLoad={onContentLoad}
                   onMarkAsRead={onMarkAsRead}
+                  isPinned={!!conversation.data.pinnedMessages?.[msg.id]}
+                  onPin={(m) => pinMessage(conversation.id, m.id)}
+                  onUnpin={(m) => unpinMessage(conversation.id, m.id)}
                 />
               );
             })}

@@ -276,6 +276,7 @@ export interface RtdbConversation {
         startedAt: number;
         participants?: Record<string, number>;
     };
+    pinnedMessages?: Record<string, { pinnedBy: string; pinnedAt: number }>;
 }
 
 export interface RtdbUserChat {

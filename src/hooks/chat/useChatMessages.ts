@@ -23,6 +23,8 @@ export const useChatMessages = ({
     deleteMessageForMe,
     editMessage,
     forwardMessage: storeForwardMessage,
+    pinMessage,
+    unpinMessage,
   } = useRtdbChatStore();
 
   const handleSendText = useCallback(async (
@@ -93,6 +95,16 @@ export const useChatMessages = ({
     await sendCallMessage(selectedConversationId, currentUserId, { callType, status, duration });
   }, [selectedConversationId, currentUserId, sendCallMessage]);
 
+  const handlePinMessage = useCallback(async (messageId: string) => {
+    if (!selectedConversationId) return;
+    await pinMessage(selectedConversationId, messageId);
+  }, [selectedConversationId, pinMessage]);
+
+  const handleUnpinMessage = useCallback(async (messageId: string) => {
+    if (!selectedConversationId) return;
+    await unpinMessage(selectedConversationId, messageId);
+  }, [selectedConversationId, unpinMessage]);
+
   return {
     handleSendText,
     handleSendImage,
@@ -106,5 +118,7 @@ export const useChatMessages = ({
     handleDeleteForMe,
     forwardMessage,
     replyToMessage,
+    handlePinMessage,
+    handleUnpinMessage,
   };
 };

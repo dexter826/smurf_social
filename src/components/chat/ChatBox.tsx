@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { RtdbMessage, User, UserStatus, RtdbConversation, RtdbUserChat, BlockOptions } from '../../../shared/types';
 import { Loading, EmptyState } from '../ui';
+import { PinnedMessageBanner } from './message/PinnedMessageBanner';
+import { useRtdbChatStore } from '../../store';
+import { scrollToMessage } from '../../utils';
 import { ChevronDown, Users } from 'lucide-react';
 import { ChatBoxSkeleton } from './ChatBoxSkeleton';
 import { MessageRequestBanner } from './message/MessageRequestBanner';
@@ -114,6 +117,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     isFriend,
   });
 
+  const { pinnedMessagesDetails, unpinMessage } = useRtdbChatStore();
+
   return (
     <div className="relative flex-1 flex flex-col min-h-0 bg-bg-chat bg-app-pattern transition-theme">
       <ChatBoxHeader
@@ -128,6 +133,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         onCall={() => onCall?.(false)}
         onVideoCall={onVideoCall}
         canCall={canCall}
+      />
+
+      <PinnedMessageBanner
+        pinnedMessages={conversation.data.pinnedMessages || {}}
+        pinnedMessagesDetails={pinnedMessagesDetails[conversation.id] || {}}
+        currentUserId={currentUserId}
+        onUnpin={(msgId) => unpinMessage(conversation.id, msgId)}
+        onGoToMessage={(msgId) => scrollToMessage(msgId)}
       />
 
       {isMessageRequest && partner && onAddFriend && onBlock && (
