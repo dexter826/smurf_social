@@ -47,7 +47,6 @@ interface ChatBoxProps {
   canCall?: boolean;
   onJoinCall?: (callType: 'voice' | 'video') => void;
   handleMarkAsRead?: (messageId: string) => void;
-  onAiClick?: () => void;
 }
 
 /** Component khung chat chính */
@@ -60,7 +59,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   isLoading, isLoadingMore, hasMoreMessages, onLoadMore,
   isBlocked = false, isBlockedByMe = false, partnerStatus,
   myBlockOptions, onUnblock, onManageBlock, shouldShowBlockBanner = false,
-  onCall, onVideoCall, canCall = true, onJoinCall, handleMarkAsRead, onAiClick,
+  onCall, onVideoCall, canCall = true, onJoinCall, handleMarkAsRead,
 }) => {
   const { 
     messagesEndRef, messagesContainerRef, handleScroll, scrollToBottom, 
@@ -128,7 +127,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
         onInfoClick={onInfoClick}
         onCall={() => onCall?.(false)}
         onVideoCall={onVideoCall}
-        onAiClick={onAiClick}
         canCall={canCall}
       />
 

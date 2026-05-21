@@ -16,7 +16,7 @@ import {
   ConversationList, ChatBox, ChatInput, ChatDetailsPanel,
   CreateGroupModal, AddMemberModal, EditGroupModal,
   TransferAdminModal, ForwardModal, MessengerSkeleton,
-  JoinGroupModal, AiSummaryModal, DragDropZone
+  JoinGroupModal, DragDropZone
 } from '../components/chat';
 
 import { scrollToMessage } from '../utils';
@@ -81,7 +81,7 @@ const ChatPage: React.FC = () => {
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [showAssignAdmin, setShowAssignAdmin] = useState(false);
   const [showTransferCreator, setShowTransferCreator] = useState(false);
-  const [showAiSummary, setShowAiSummary] = useState(false);
+
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
 
@@ -246,7 +246,6 @@ const ChatPage: React.FC = () => {
               canCall={canCall}
               onJoinCall={(callType) => joinActiveCall(selectedConversation.id, callType)}
               handleMarkAsRead={handleMarkAsRead}
-              onAiClick={() => setShowAiSummary(true)}
             />
             <ChatInput
               key={selectedConversationId}
@@ -402,22 +401,7 @@ const ChatPage: React.FC = () => {
         />
       )}
 
-      {selectedConversation && (
-        <AiSummaryModal
-          isOpen={showAiSummary}
-          onClose={() => setShowAiSummary(false)}
-          messages={currentMessages}
-          usersMap={usersMap}
-          currentUserId={currentUser.id}
-          conversationId={selectedConversation.id}
-          conversationName={
-            selectedConversation.data.name || 
-            Object.values(usersMap).find(u => u.id !== currentUser.id && selectedConversation.data.members[u.id])?.fullName || 
-            'Cuộc trò chuyện'
-          }
-          memberCount={Object.keys(selectedConversation.data.members).length}
-        />
-      )}
+
 
     </div>
   );
