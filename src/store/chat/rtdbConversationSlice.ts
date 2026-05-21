@@ -7,6 +7,8 @@ import { useLoadingStore } from '../loadingStore';
 import { useUserCache } from '../userCacheStore';
 import { getDirectConversationId } from '../../utils/chatUtils';
 import type { RtdbChatState } from '../rtdbChatStore';
+import { toast } from '../toastStore';
+import { CHAT_LIMITS, TOAST_MESSAGES } from '../../constants';
 
 export interface RtdbConversationSlice {
     conversations: Array<{ id: string; data: RtdbConversation; userChat: RtdbUserChat }>;
@@ -169,6 +171,18 @@ export const createRtdbConversationSlice: StateCreator<RtdbChatState, [], [], Rt
 
     /** Ghim hội thoại */
     togglePin: async (conversationId: string, userId: string, pinned: boolean) => {
+        if (pinned) {
+            const currentChat = get().conversations.find(c => c.id === conversationId);
+            const isAlreadyPinned = currentChat?.userChat?.isPinned ?? false;
+            if (!isAlreadyPinned) {
+                const pinnedCount = get().conversations.filter(c => c.userChat?.isPinned).length;
+                if (pinnedCount >= CHAT_LIMITS.MAX_PINNED) {
+                    toast.error(TOAST_MESSAGES.CHAT.PIN_LIMIT(CHAT_LIMITS.MAX_PINNED));
+                    return;
+                }
+            }
+        }
+
         set(state => ({
             conversations: state.conversations.map(c =>
                 c.id === conversationId

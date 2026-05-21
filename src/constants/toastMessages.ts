@@ -101,6 +101,7 @@ export const TOAST_MESSAGES = {
     COPY_LINK_SUCCESS: 'Đã sao chép link tham gia nhóm',
     COPY_LINK_FAILED: 'Không thể sao chép link nhóm',
     RESET_LINK_SUCCESS: 'Đã tạo mới và sao chép link nhóm',
+    PIN_LIMIT: (max: number) => `Bạn chỉ có thể ghim tối đa ${max} cuộc hội thoại`,
   },
 
   REPORT: {

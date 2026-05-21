@@ -48,6 +48,11 @@ export const GROUP_LIMITS = {
   NAME_MAX_LENGTH: 50,
 } as const;
 
+/** Giới hạn tính năng chat */
+export const CHAT_LIMITS = {
+  MAX_PINNED: 5,
+} as const;
+
 /** Quy tắc kiểm tra tính hợp lệ của dữ liệu */
 export const VALIDATION = {
   PASSWORD_MIN_LENGTH: 6,
