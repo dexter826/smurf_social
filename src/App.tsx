@@ -23,6 +23,7 @@ const MobileMenuPage = React.lazy(() => import('./pages/MobileMenuPage'));
 const AdminReportsPage = React.lazy(() => import('./pages/AdminReportsPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage'));
+const AdminModerationPage = React.lazy(() => import('./pages/AdminModerationPage'));
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const JoinGroupPage = React.lazy(() => import('./pages/JoinGroupPage'));
@@ -103,6 +104,7 @@ const App: React.FC = () => {
               <Route index element={<AdminDashboardPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="users" element={<AdminUsersPage />} />
+              <Route path="moderation" element={<AdminModerationPage />} />
             </Route>
 
             <Route path="/verify-email" element={<EmailVerificationPage />} />

@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { Send, X, Edit2, Reply, Ban } from 'lucide-react';
-import { EmojiPicker, Button, IconButton, TextArea } from '../../ui';
+import { EmojiPicker, Button, IconButton, TextArea, MediaViewer } from '../../ui';
 import { MentionList } from './MentionList';
 import { FilePreview } from './FilePreview';
 import { RecordingUI } from './RecordingUI';
@@ -63,6 +63,30 @@ export const ChatInput: React.FC<ChatInputProps> = (props) => {
   const { showMentions, filteredParticipants, mentionIndex } = mentionsProps;
 
   const linkPreview = useLinkPreview(editingMessage ? '' : inputText);
+
+  const [previewMediaIndex, setPreviewMediaIndex] = useState<number | null>(null);
+
+  const mediaPreviewItems = useMemo(() => {
+    return selectedFiles
+      .filter(item => item.type === 'image' || item.type === 'video')
+      .map(item => ({
+        type: item.type as 'image' | 'video',
+        url: item.preview || '',
+      }));
+  }, [selectedFiles]);
+
+  const handlePreviewMedia = useCallback((selectedFileIndex: number) => {
+    const selectedFile = selectedFiles[selectedFileIndex];
+    if (!selectedFile) return;
+
+    const filteredIndex = mediaPreviewItems.findIndex(
+      item => item.url === selectedFile.preview
+    );
+
+    if (filteredIndex !== -1) {
+      setPreviewMediaIndex(filteredIndex);
+    }
+  }, [selectedFiles, mediaPreviewItems]);
 
   const renderMentionOverlay = useCallback((value: string) => (
     <>
@@ -135,7 +159,14 @@ export const ChatInput: React.FC<ChatInputProps> = (props) => {
       )}
 
       {/* File Previews */}
-      <FilePreview files={selectedFiles} onRemove={removeFile} onPlayVoice={handlePlayVoice} playingIndex={playingPreview} isSending={isSending} />
+      <FilePreview
+        files={selectedFiles}
+        onRemove={removeFile}
+        onPlayVoice={handlePlayVoice}
+        playingIndex={playingPreview}
+        isSending={isSending}
+        onPreviewMedia={handlePreviewMedia}
+      />
 
       {/* Link Preview */}
       {!editingMessage && linkPreview.url && !linkPreview.isDismissed && (
@@ -230,6 +261,13 @@ export const ChatInput: React.FC<ChatInputProps> = (props) => {
           {isSending ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Send size={16} className={canSend ? 'fill-current' : ''} />}
         </button>
       </form>
+
+      <MediaViewer
+        media={mediaPreviewItems}
+        initialIndex={previewMediaIndex ?? 0}
+        isOpen={previewMediaIndex !== null}
+        onClose={() => setPreviewMediaIndex(null)}
+      />
     </div>
   );
 };

@@ -31,11 +31,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 const hostname = window.location.hostname;
-const isLocal = hostname === 'localhost' || 
+const isLocal = (hostname === 'localhost' || 
                 hostname === '127.0.0.1' || 
                 hostname.startsWith('192.168.') || 
                 hostname.startsWith('10.') || 
-                hostname.startsWith('172.');
+                hostname.startsWith('172.')) &&
+                import.meta.env.VITE_USE_FIREBASE_EMULATOR !== 'false';
 
 export const db = initializeFirestore(app, {
   localCache: isLocal ? memoryLocalCache() : persistentLocalCache({}),

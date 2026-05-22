@@ -147,18 +147,18 @@ service cloud.firestore {
 
     // Bình luận
     match /comments/{commentId} {
-      allow read: if isNotBanned() &&
-        'postId' in resource.data && (
-          isAdmin() || (
-            resource.data.status != 'deleted' && (
-              resource.data.authorId == request.auth.uid ||
-              (
-                resource.data.status == 'active' &&
-                canReadPostById(resource.data.postId)
-              )
+      allow read: if isNotBanned() && (
+        isAdmin() || (
+          'postId' in resource.data &&
+          resource.data.status != 'deleted' && (
+            resource.data.authorId == request.auth.uid ||
+            (
+              resource.data.status == 'active' &&
+              canReadPostById(resource.data.postId)
             )
           )
-        );
+        )
+      );
 
       allow create: if isNotBanned() &&
         request.resource.data.authorId == request.auth.uid &&

@@ -17,6 +17,7 @@ interface FilePreviewProps {
   onPlayVoice: (url: string, index: number) => void;
   playingIndex: number | null;
   isSending: boolean;
+  onPreviewMedia?: (index: number) => void;
 }
 
 const getFileStyle = (fileName: string) => {
@@ -77,7 +78,7 @@ const getFileStyle = (fileName: string) => {
 
 /** Hiển thị danh sách tệp đính kèm trước khi gửi */
 export const FilePreview: React.FC<FilePreviewProps> = ({
-  files, onRemove, onPlayVoice, playingIndex, isSending,
+  files, onRemove, onPlayVoice, playingIndex, isSending, onPreviewMedia,
 }) => {
   if (files.length === 0) return null;
 
@@ -92,8 +93,15 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               key={item.id}
               className="relative flex-shrink-0 group"
             >
-              <div className={`w-[72px] h-[72px] rounded-xl border overflow-hidden transition-all duration-200
-                ${item.type === 'file' ? `${fileStyle?.bg} ${fileStyle?.border}` : 'bg-bg-secondary border-border-light'}`}
+              <div 
+                className={`w-[72px] h-[72px] rounded-xl border overflow-hidden transition-all duration-200
+                  ${item.type === 'file' ? `${fileStyle?.bg} ${fileStyle?.border}` : 'bg-bg-secondary border-border-light'}
+                  ${(item.type === 'image' || item.type === 'video') && onPreviewMedia ? 'cursor-pointer hover:brightness-95' : ''}`}
+                onClick={() => {
+                  if ((item.type === 'image' || item.type === 'video') && onPreviewMedia) {
+                    onPreviewMedia(index);
+                  }
+                }}
               >
                 {item.preview ? (
                   item.type === 'video' ? (
@@ -125,7 +133,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <img src={item.preview} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    <img src={item.preview} alt="" className="w-full h-full object-cover" />
                   )
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-2 relative">

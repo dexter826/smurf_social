@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Shield, Users, Flag, LogOut, Moon, Sun, ChevronLeft, LayoutDashboard } from 'lucide-react';
+import { Shield, Users, Flag, LogOut, Moon, Sun, ChevronLeft, LayoutDashboard, ShieldAlert } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { ConfirmDialog, UserAvatar } from '../ui';
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Tổng quan' },
   { to: '/admin/reports', icon: Flag, label: 'Quản lý báo cáo' },
   { to: '/admin/users', icon: Users, label: 'Quản lý người dùng' },
+  { to: '/admin/moderation', icon: ShieldAlert, label: 'Quản lý vi phạm' },
 ];
 
 export const AdminLayout: React.FC = () => {
