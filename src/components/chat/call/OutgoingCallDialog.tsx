@@ -52,12 +52,12 @@ export const OutgoingCallDialog: React.FC<OutgoingCallDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md animate-fade-in"
       style={{ zIndex: 'var(--z-dialog)' }}
     >
       <audio ref={audioRef} src={waitRingSound} loop />
 
-      <div className="w-full sm:w-auto flex flex-col items-center gap-6 px-10 py-10 bg-[#1a1f2e] rounded-3xl shadow-2xl sm:min-w-[300px] border border-white/10">
+      <div className="w-full sm:w-auto flex flex-col items-center gap-6 px-10 py-10 bg-[#1a1f2e] rounded-t-3xl sm:rounded-3xl shadow-2xl sm:min-w-[300px] border border-white/10">
         {/* Label */}
         <p className="text-white/50 text-xs font-medium tracking-widest uppercase">
           {callType === 'video' ? 'Cuộc gọi video' : 'Cuộc gọi thoại'}

@@ -339,8 +339,6 @@ export const commentService = {
     limitCount: number = PAGINATION.COMMENTS,
     sortOrder: 'asc' | 'desc' = 'desc'
   ) => {
-    const currentUserId = useAuthStore.getState().user?.id;
-
     // 1. Truy vấn các bình luận active công khai
     const activeQuery = query(
       collection(db, 'comments'),
@@ -351,80 +349,37 @@ export const commentService = {
       limit(limitCount + 1)
     );
 
-    // 2. Truy vấn các bình luận pending của chính user hiện tại
-    const pendingQuery = currentUserId ? query(
-      collection(db, 'comments'),
-      where('postId', '==', postId),
-      where('parentId', '==', null),
-      where('authorId', '==', currentUserId),
-      where('status', '==', CommentStatus.PENDING),
-      orderBy('createdAt', sortOrder)
-    ) : null;
-
-    let activeDocs: QueryDocumentSnapshot<DocumentData>[] = [];
-    let pendingDocs: QueryDocumentSnapshot<DocumentData>[] = [];
     let hasMore = false;
-    let isInitialActive = true;
-    let isInitialPending = !pendingQuery;
 
-    const processAndEmit = async () => {
-      const allDocs = [...pendingDocs, ...activeDocs];
-      const seenIds = new Set<string>();
-      const uniqueDocs = allDocs.filter(d => {
-        if (seenIds.has(d.id)) return false;
-        seenIds.add(d.id);
-        return true;
-      });
-
-      const authorIds = [...new Set(uniqueDocs.map(d => d.data().authorId))];
-      const usersMap = await batchGetUsers(authorIds);
-
-      const comments = filterBlockedItems(convertDocs<Comment>(uniqueDocs), undefined, hiddenActivityUserIds, usersMap as any);
-      
-      comments.sort((a, b) => {
-        const timeA = a.createdAt?.toMillis?.() || 0;
-        const timeB = b.createdAt?.toMillis?.() || 0;
-        return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
-      });
-
-      const lastDoc = activeDocs[activeDocs.length - 1] || null;
-
-      callback('initial', {
-        comments,
-        lastDoc,
-        hasMore
-      });
-    };
-
-    const unsubActive = onSnapshot(activeQuery, async (snapshot) => {
-      const isFirst = isInitialActive;
-      isInitialActive = false;
-
+    const unsubActive = onSnapshot(activeQuery, (snapshot) => {
       const activeLimitDocs = snapshot.docs.length > limitCount ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
       hasMore = snapshot.docs.length > limitCount;
       
-      activeDocs = activeLimitDocs;
-      if (isFirst && isInitialPending === false) return;
-      await processAndEmit();
+      const processAndEmit = async () => {
+        const authorIds = [...new Set(activeLimitDocs.map(d => d.data().authorId))];
+        const usersMap = await batchGetUsers(authorIds);
+
+        const comments = filterBlockedItems(convertDocs<Comment>(activeLimitDocs), undefined, hiddenActivityUserIds, usersMap as any);
+        
+        comments.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis?.() || 0;
+          const timeB = b.createdAt?.toMillis?.() || 0;
+          return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+        });
+
+        const lastDoc = activeLimitDocs[activeLimitDocs.length - 1] || null;
+
+        callback('initial', {
+          comments,
+          lastDoc,
+          hasMore
+        });
+      };
+
+      processAndEmit().catch(err => console.error("Lỗi khi xử lý comments:", err));
     }, (error) => console.error("Lỗi subscribe active comments:", error));
 
-    let unsubPending = () => {};
-    if (pendingQuery) {
-      unsubPending = onSnapshot(pendingQuery, async (snapshot) => {
-        const isFirst = isInitialPending;
-        isInitialPending = false;
-
-        pendingDocs = snapshot.docs;
-
-        if (isFirst && isInitialActive === false) return;
-        await processAndEmit();
-      }, (error) => console.error("Lỗi subscribe pending comments:", error));
-    }
-
-    return () => {
-      unsubActive();
-      unsubPending();
-    };
+    return unsubActive;
   },
 
   /** Theo dõi phản hồi bài viết thời gian thực */
@@ -435,8 +390,6 @@ export const commentService = {
     callback: (action: 'initial' | 'add' | 'update' | 'remove', data: Comment[] | { replies: Comment[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }) => void,
     limitCount: number = PAGINATION.REPLIES
   ) => {
-    const currentUserId = useAuthStore.getState().user?.id;
-
     // 1. Truy vấn các câu trả lời active công khai
     const activeQuery = query(
       collection(db, 'comments'),
@@ -447,80 +400,37 @@ export const commentService = {
       limit(limitCount + 1)
     );
 
-    // 2. Truy vấn các câu trả lời pending của chính user hiện tại
-    const pendingQuery = currentUserId ? query(
-      collection(db, 'comments'),
-      where('postId', '==', postId),
-      where('parentId', '==', parentId),
-      where('authorId', '==', currentUserId),
-      where('status', '==', CommentStatus.PENDING),
-      orderBy('createdAt', 'asc')
-    ) : null;
-
-    let activeDocs: QueryDocumentSnapshot<DocumentData>[] = [];
-    let pendingDocs: QueryDocumentSnapshot<DocumentData>[] = [];
     let hasMore = false;
-    let isInitialActive = true;
-    let isInitialPending = !pendingQuery;
 
-    const processAndEmit = async () => {
-      const allDocs = [...pendingDocs, ...activeDocs];
-      const seenIds = new Set<string>();
-      const uniqueDocs = allDocs.filter(d => {
-        if (seenIds.has(d.id)) return false;
-        seenIds.add(d.id);
-        return true;
-      });
-
-      const authorIds = [...new Set(uniqueDocs.map(d => d.data().authorId))];
-      const usersMap = await batchGetUsers(authorIds);
-
-      const replies = filterBlockedItems(convertDocs<Comment>(uniqueDocs), undefined, hiddenActivityUserIds, usersMap as any);
-      
-      replies.sort((a, b) => {
-        const timeA = a.createdAt?.toMillis?.() || 0;
-        const timeB = b.createdAt?.toMillis?.() || 0;
-        return timeA - timeB;
-      });
-
-      const lastDoc = activeDocs[activeDocs.length - 1] || null;
-
-      callback('initial', {
-        replies,
-        lastDoc,
-        hasMore
-      });
-    };
-
-    const unsubActive = onSnapshot(activeQuery, async (snapshot) => {
-      const isFirst = isInitialActive;
-      isInitialActive = false;
-
+    const unsubActive = onSnapshot(activeQuery, (snapshot) => {
       const activeLimitDocs = snapshot.docs.length > limitCount ? snapshot.docs.slice(0, limitCount) : snapshot.docs;
       hasMore = snapshot.docs.length > limitCount;
 
-      activeDocs = activeLimitDocs;
-      if (isFirst && isInitialPending === false) return;
-      await processAndEmit();
+      const processAndEmit = async () => {
+        const authorIds = [...new Set(activeLimitDocs.map(d => d.data().authorId))];
+        const usersMap = await batchGetUsers(authorIds);
+
+        const replies = filterBlockedItems(convertDocs<Comment>(activeLimitDocs), undefined, hiddenActivityUserIds, usersMap as any);
+        
+        replies.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis?.() || 0;
+          const timeB = b.createdAt?.toMillis?.() || 0;
+          return timeA - timeB;
+        });
+
+        const lastDoc = activeLimitDocs[activeLimitDocs.length - 1] || null;
+
+        callback('initial', {
+          replies,
+          lastDoc,
+          hasMore
+        });
+      };
+
+      processAndEmit().catch(err => console.error("Lỗi khi xử lý replies:", err));
     }, (error) => console.error("Lỗi subscribe active replies:", error));
 
-    let unsubPending = () => {};
-    if (pendingQuery) {
-      unsubPending = onSnapshot(pendingQuery, async (snapshot) => {
-        const isFirst = isInitialPending;
-        isInitialPending = false;
-
-        pendingDocs = snapshot.docs;
-
-        if (isFirst && isInitialActive === false) return;
-        await processAndEmit();
-      }, (error) => console.error("Lỗi subscribe pending replies:", error));
-    }
-
-    return () => {
-      unsubActive();
-      unsubPending();
-    };
+    return unsubActive;
   },
 
   /** Tải lên ảnh cho bình luận và trả về MediaObject */

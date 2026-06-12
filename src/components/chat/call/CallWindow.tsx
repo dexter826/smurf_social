@@ -62,6 +62,11 @@ export const CallWindow: React.FC<CallWindowProps> = ({
           showUserList: false,
           showLeavingView: false,
           console: ZegoUIKitPrebuilt.ConsoleNone,
+          showLeaveRoomConfirmDialog: true,
+          leaveRoomDialogConfig: {
+            titleText: 'Kết thúc cuộc gọi',
+            descriptionText: 'Bạn có chắc chắn muốn kết thúc cuộc gọi này không?',
+          },
 
           onUserAvatarSetter: (userList: any[]) => {
             const usersMap = useUserCache.getState().users;
@@ -99,7 +104,7 @@ export const CallWindow: React.FC<CallWindowProps> = ({
   return (
     <div
       ref={containerRef}
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-toast)', width: '100%', height: '100%', background: '#000' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 150, width: '100%', height: '100%', background: '#000' }}
     />
   );
 };
