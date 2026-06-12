@@ -106,6 +106,7 @@ Dự án được xây dựng theo kiến trúc **Client-side SPA** với Fireba
 
 ## 🏗️ Kiến trúc tổng quan
 
+### Sơ đồ hệ thống tổng quát
 ```mermaid
 graph TB
     subgraph Client["🖥️ Client — React 19 + Vite + TypeScript"]
@@ -147,7 +148,6 @@ graph TB
 ```
 
 ### Luồng dữ liệu (Data Flow)
-
 ```mermaid
 flowchart LR
     A([User Action]) --> B[Component]
@@ -162,55 +162,146 @@ flowchart LR
     D --> B
 ```
 
+### Sơ đồ hoạt động của AI Moderation Worker (Dịch vụ Kiểm duyệt)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng
+    participant Client as React 19 Frontend
+    participant Firebase as Firebase (Firestore/RTDB/Storage)
+    participant AI as AI Moderation Worker (Python)
+
+    User->>Client: Đăng bài viết / Gửi tin nhắn / Đổi Avatar
+    Client->>Firebase: Upload Media lên Cloud Storage
+    Firebase-->>Client: Trả về URL Media
+    Client->>Firebase: Lưu Post/Message với trạng thái 'pending' (hoặc active)
+    
+    Note over AI: Polling mỗi 5 giây
+    AI->>Firebase: Quét các tài liệu media mới chưa được kiểm duyệt
+    Firebase-->>AI: Trả về danh sách Media cần kiểm duyệt
+    
+    AI->>AI: Tải media về thư mục tạm
+    alt Là hình ảnh
+        AI->>AI: Chạy Batch Inference qua model ViT (Batch size = 64)
+    else Là video
+        AI->>AI: Chạy Sequential Inference qua model VideoMAE (MHCM-MIL)
+    end
+    
+    alt Phát hiện vi phạm nặng (Level 2)
+        alt Đối với Post / Comment / Avatar
+            AI->>Firebase: Đổi trạng thái bài viết thành 'policy_violation' / Xóa Avatar
+            AI->>Firebase: Gửi thông báo hệ thống đến người dùng vi phạm
+            Firebase-->>Client: Real-time update (Ẩn bài viết / Reset avatar trên giao diện)
+        else Đối với Chat Message
+            AI->>Firebase: Chuyển xuống Level 1 (Chỉ đánh dấu che mờ, không xóa)
+            Firebase-->>Client: Real-time update (Che mờ ảnh tin nhắn trên giao diện)
+        end
+    else Phát hiện nhạy cảm nhẹ (Level 1)
+        AI->>Firebase: Gán cờ isSensitive = true cho media
+        Firebase-->>Client: Real-time update (Che mờ ảnh kèm cảnh báo nhạy cảm)
+    else An toàn (Level 0)
+        AI->>Firebase: Gán cờ isModerated = true, giữ trạng thái hoạt động bình thường
+    end
+    
+    AI->>AI: Dọn dẹp các tệp tải tạm thời
+```
+
 ### Phân tầng kiến trúc
 
-| Tầng               | Thư mục                 | Vai trò                                  |
-| ------------------ | ----------------------- | ---------------------------------------- |
-| **Presentation**   | `pages/`, `components/` | Giao diện, routing, tương tác người dùng |
-| **State**          | `store/`                | Trạng thái toàn cục với Zustand          |
-| **Logic**          | `hooks/`                | Xử lý nghiệp vụ, biến đổi dữ liệu        |
-| **Data Access**    | `services/`             | Gọi Firebase, gọi API ngoài              |
-| **Infrastructure** | `firebase/`             | Khởi tạo Firebase SDK                    |
-| **Backend**        | `functions/`            | Server-side logic (Cloud Functions)      |
-| **Shared**         | `utils/`, `constants/`  | Hàm tiện ích, hằng số, kiểu dữ liệu      |
+| Tầng | Thư mục | Vai trò |
+| :--- | :--- | :--- |
+| **Presentation** | `pages/`, `components/` | Giao diện, routing, tương tác người dùng |
+| **State** | `store/` | Trạng thái toàn cục với Zustand |
+| **Logic** | `hooks/` | Xử lý nghiệp vụ, biến đổi dữ liệu |
+| **Data Access** | `services/` | Gọi Firebase, gọi API ngoài |
+| **Infrastructure** | `firebase/` | Khởi tạo Firebase SDK |
+| **Backend** | `functions/` | Server-side logic (Cloud Functions) |
+| **Shared** | `utils/`, `constants/` | Hàm tiện ích, hằng số, kiểu dữ liệu |
+
+---
+
+## ⚡ Các tính năng kỹ thuật nổi bật
+
+### 1. Thuật toán gợi ý bạn bè (Cosine Similarity)
+Hệ thống sử dụng thuật toán tính toán độ tương đồng để đề xuất bạn bè thông minh, chạy dưới dạng một callable Cloud Function.
+
+```mermaid
+flowchart TD
+    A[Yêu cầu đề xuất bạn bè] --> B{Đã có bạn bè?}
+    B -- Chưa có --> C[Quét 100 Active Users ngẫu nhiên]
+    B -- Đã có --> D[Thu thập bạn của bạn bè - Friends of Friends pool]
+    D --> E{Pool < 20 người?}
+    E -- Có --> F[Bổ sung thêm Active Users khác]
+    E -- Không --> G[Lấy tối đa 200 ứng viên đầu tiên]
+    C --> H[Lọc bỏ người dùng bị chặn 2 chiều]
+    F --> H
+    G --> H
+    H --> I[Tính Cosine Similarity trên User Vector 99 chiều]
+    I --> J[Cộng điểm thưởng: Score = CosSim + 0.05 * MutualFriends]
+    J --> K[Sắp xếp giảm dần & Lấy Top 20 đề xuất]
+    K --> L[Lưu cache đề xuất vào Firestore & Trả về Client]
+    L --> M[Sử dụng cache trong vòng 7 ngày]
+```
+*   **Vector hồ sơ (User Vector):** Gồm 99 chiều thể hiện sở thích và hành vi của người dùng.
+*   **Điểm thưởng bạn chung (Mutual Friends Bonus):** Điểm xếp hạng cuối cùng được cộng thêm `0.05` cho mỗi bạn chung nhằm tăng cơ hội kết nối trong cùng vòng xã hội thực tế.
+*   **Cơ chế lưu đệm (Caching):** Danh sách đề xuất được cache trực tiếp trên Firestore và chỉ tính toán lại sau **7 ngày** (hoặc khi bắt buộc cập nhật bằng tham số `force: true`) nhằm tránh tốn tài nguyên và chi phí gọi API.
+
+### 2. Hệ thống kiểm duyệt nội dung tự động (AI Moderation System)
+AI Moderation Worker chạy độc lập bằng Python, kết nối thời gian thực với cơ sở dữ liệu để quét và xử lý nội dung nhạy cảm. Mã nguồn và mô hình AI kiểm duyệt chi tiết được lưu trữ tại repository chính thức: [TPH-Per/sensitive-detection](https://github.com/TPH-Per/sensitive-detection).
+*   **Phát hiện hình ảnh:** Sử dụng mô hình **ViT (Vision Transformer)** xử lý theo lô lớn (batch size = 64) nhằm tối ưu hiệu suất xử lý của GPU.
+*   **Phát hiện video:** Sử dụng mô hình **VideoMAE (LoRA v7)** xử lý tuần tự để tránh tràn bộ nhớ (OOM) GPU.
+*   **Cơ chế phân cấp xử lý:**
+    *   **Level 2 (Nghiêm trọng):** Bài viết/bình luận bị chuyển sang trạng thái `policy_violation` (ẩn khỏi feed), ảnh đại diện/ảnh bìa bị xóa về mặc định và hệ thống tự động gửi thông báo vi phạm cho tác giả.
+    *   **Level 1 (Nhạy cảm nhẹ):** Media được gắn cờ `isSensitive = true`. Client sẽ tự động che mờ (blur) ảnh/video và hiển thị cảnh báo, người dùng có thể nhấp vào để mở xem.
+    *   **Đặc lệ Chat:** Trên kênh chat nhắn tin, nội dung vi phạm Level 2 sẽ tự động hạ cấp xuống Level 1 (chỉ che mờ, không bao giờ ẩn/xóa tin nhắn) để giữ tính liền mạch của cuộc hội thoại.
+
+### 3. Progressive Web App (PWA) & Offline Caching
+Ứng dụng được cấu hình như một PWA hoàn chỉnh với khả năng hoạt động ngoại tuyến cơ bản và cơ chế lưu đệm nâng cao.
+```mermaid
+graph TD
+    A[Yêu cầu Media từ Storage] --> B{Kiểm tra Cache Service Worker?}
+    B -- Đã có --> C[Trả về media ngay lập tức]
+    C --> D[Tải ngầm phiên bản mới từ Firebase Storage]
+    D --> E[Cập nhật cache Service Worker]
+    B -- Chưa có --> F[Tải trực tiếp từ Firebase Storage]
+    F --> G[Trả về client và lưu vào Cache]
+```
+*   **Chiến lược Caching:** Sử dụng chiến lược `StaleWhileRevalidate` từ Workbox cho tất cả các yêu cầu tải tài nguyên từ Firebase Storage.
+*   **Hiệu năng & Chi phí:** Giới hạn lưu tối đa 100 tệp tin media trong 30 ngày. Giúp giảm tối đa số lần tải lại ảnh/video từ Firebase Storage khi người dùng lướt feed, mang lại trải nghiệm mượt mà và giảm đáng kể chi phí băng thông Cloud Storage.
 
 ---
 
 ## 🚀 Hướng dẫn cài đặt & chạy
 
-### Yêu cầu
+### Yêu cầu hệ thống
 
-| Công cụ      | Phiên bản                            |
-| ------------ | ------------------------------------ |
-| Node.js      | `>= 18.0.0`                          |
-| npm          | `>= 9.0.0`                           |
-| Firebase CLI | `>= 13.0.0` _(nếu cần deploy rules)_ |
+| Công cụ | Phiên bản |
+| :--- | :--- |
+| **Node.js** | `>= 18.0.0` |
+| **npm** | `>= 9.0.0` |
+| **Firebase CLI** | `>= 13.0.0` _(nếu cần deploy rules)_ |
 
 ### Bước 1 — Clone dự án
-
 ```bash
 git clone https://github.com/dexter826/smurf_social.git
 cd smurf_social
 ```
 
 ### Bước 2 — Cài đặt dependencies
-
 ```bash
 npm install
 ```
 
 ### Bước 3 — Thiết lập Firebase
-
-1. Vào [Firebase Console](https://console.firebase.google.com) → Tạo project mới
+1. Vào [Firebase Console](https://console.firebase.google.com) → Tạo project mới.
 2. Kích hoạt các dịch vụ sau:
-   - **Authentication** → Sign-in method → Email/Password
-   - **Cloud Firestore** → Tạo database (chọn region)
-   - **Realtime Database** → Tạo database
-   - **Storage** → Tạo bucket
-   - **Cloud Messaging** → Lấy VAPID key
+   * **Authentication** → Sign-in method → Email/Password
+   * **Cloud Firestore** → Tạo database (chọn region)
+   * **Realtime Database** → Tạo mặc định mặc định
+   * **Storage** → Tạo bucket mặc định
+   * **Cloud Messaging** → Tạo Web Push certificates và lấy VAPID key.
 
-3. _(Tuỳ chọn)_ Deploy security rules:
-
+3. _(Tuỳ chọn)_ Deploy security rules lên production:
 ```bash
 npm install -g firebase-tools
 firebase login
@@ -219,14 +310,13 @@ firebase deploy --only firestore:rules,storage,database
 ```
 
 ### Bước 4 — Cấu hình biến môi trường
-
+Tạo tệp `.env` từ `.env.example`:
 ```bash
 cp .env.example .env
-# Mở .env và điền các giá trị tương ứng
+# Mở file .env và điền các API key của bạn
 ```
 
 ### Bước 5 — Chạy ứng dụng
-
 ```bash
 npm run dev
 # Ứng dụng chạy tại http://localhost:5173
